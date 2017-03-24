@@ -93,7 +93,8 @@
                                                            tr-alkuosa
                                                            tr-alkuetaisyys
                                                            tr-loppuosa
-                                                           tr-loppuetaisyys]
+                                                           tr-loppuetaisyys
+                                                           geometria]
                                                     :as yllapitokohde}]
   {::t/urakka-id urakka-id
    ::t/urakan-nimi urakka-nimi
@@ -109,7 +110,8 @@
    ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
                              ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
                              ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-   ::t/osoite {::tr/tie tr-numero
+   ::t/osoite {::tr/geometria  geometria
+               ::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
                ::tr/aet tr-alkuetaisyys
                ::tr/losa tr-loppuosa
@@ -134,15 +136,6 @@
   (when haku
     (.clearTimeout js/window haku))
   (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
-
-
-(declare tyotyyppi-vaihtoehdot-map)
-(defn- yhdista-tyotyypit [ilmoitus]
-  (let [yhdistetty (apply merge (vals (select-keys ilmoitus [:tyotyypit-a :tyotyypit-b :tyotyypit-c :tyotyypit-d])))
-        _ (log "yhdista-tyotyypit: yhdistetty =" (pr-str yhdistetty))
-        yhdistetty-kantamuoto (fn [vaihtoehto-koodi]
-                                [vaihtoehto-koodi (get tyotyyppi-vaihtoehdot-map vaihtoehto-koodi)])]
-    (assoc ilmoitus ::t/tyotyypit (mapv yhdistetty-kantamuoto yhdistetty))))
 
 
 (defn nopeusrajoitukset-kanta->grid [nr-tiedot]

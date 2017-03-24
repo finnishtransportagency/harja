@@ -223,5 +223,7 @@
   (let [app (atom {:valittu-ilmoitus mock-ilmoitus})]
     (komponenttitesti
      [tuck app lomake-mock-komponentti]
-     (is (= "Tämä on testi-ilmoitus"
-            (.-value (u/sel1 "label[for=lisatietoja] + input")))))))
+     (is (= "Kuusamontie" (.-value (js/document.querySelector "label[for=tien-nimi] + input"))))
+     #_(is (= "Tämä on testi-ilmoitus"
+            (.-value (u/sel1 "label[for=lisatietoja] + input"))))
+     )))

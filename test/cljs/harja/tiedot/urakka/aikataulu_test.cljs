@@ -3,11 +3,6 @@
             [clojure.test :as t :refer-macros [deftest is testing]]
             [harja.pvm :as pvm]))
 
-(def kohde-valmis :aikataulu-kohde-valmis)
-(def kohde-aloitettu :aikataulu-kohde-alku)
-(def tiemerkinta-aloitettu :aikataulu-tiemerkinta-alku)
-(def tiemerkinta-lopetettu :aikataulu-tiemerkinta-loppu)
-
 (def +paallystys-ja-tiemerkinta-kesken+
   {:aikataulu-kohde-alku (pvm/->pvm "1.2.2017")
    :aikataulu-kohde-valmis nil
@@ -67,7 +62,7 @@
   (testing "Aloittamatta olevat kohteet luokitellaan oikein"
 
     (is (= :aloittamatta (aikataulu/luokittele-valmiuden-mukaan
-                     +paallystys-ja-tiemerkinta-aloittamatta1+ :paallystys (pvm/nyt))))
+                           +paallystys-ja-tiemerkinta-aloittamatta1+ :paallystys (pvm/nyt))))
     (is (= :aloittamatta (aikataulu/luokittele-valmiuden-mukaan
                            +paallystys-ja-tiemerkinta-aloittamatta1+ :tiemerkinta (pvm/nyt))))
     (is (= :aloittamatta (aikataulu/luokittele-valmiuden-mukaan

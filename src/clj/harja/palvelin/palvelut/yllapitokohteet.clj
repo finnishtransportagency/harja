@@ -31,7 +31,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
-            [harja.palvelin.komponentit.fim :as fim])
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -324,14 +325,15 @@
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
-                                                                :sopimus-id sopimus-id})]
+                                                                :sopimus-id sopimus-id
+                                                                :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma kokonaismassamaara]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -348,14 +350,14 @@
                                :paallystetyyppi paallystetyyppi
                                :raekoko raekoko
                                :tyomenetelma tyomenetelma
-                               :massamaara kokonaismassamaara
+                               :massamaara massamaara
                                :toimenpide toimenpide
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma kokonaismassamaara]
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
 
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -372,7 +374,7 @@
                                  :paallystetyyppi paallystetyyppi
                                  :raekoko raekoko
                                  :tyomenetelma tyomenetelma
-                                 :massamaara kokonaismassamaara
+                                 :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
                                  :urakka urakka-id}))
@@ -415,8 +417,20 @@
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
-  (let [{:keys [urakka-sampo-id] :as yllapitokohde}
-        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))]
+  (let [{:keys [urakka-sampo-id
+                tr-numero
+                tr-alkuosa
+                tr-alkuetaisyys
+                tr-loppuosa
+                tr-loppuetaisyys]
+         :as yllapitokohde}
+        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))
+        geometria (tr-haku/hae-tr-viiva db {:numero tr-numero
+                                            :alkuosa tr-alkuosa
+                                            :alkuetaisyys tr-alkuetaisyys
+                                            :loppuosa tr-loppuosa
+                                            :loppuetaisyys tr-loppuetaisyys})
+        yllapitokohde (assoc yllapitokohde :geometria geometria)]
     (if urakka-sampo-id
       (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
             hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))

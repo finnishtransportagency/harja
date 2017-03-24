@@ -123,5 +123,3 @@
     (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
     (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))
-
-

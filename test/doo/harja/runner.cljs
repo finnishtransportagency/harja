@@ -29,6 +29,7 @@
             [harja.views.ilmoitukset.tietyoilmoitushakulomake-test]
             [harja.views.ilmoitukset.tietyoilmoituslomake-test]
             [harja.views.kartta.tasot-test]
+            [harja.tiedot.urakka.yllapitokohteet-test]
             ;; uusi testi tähän
             ))
 
@@ -61,5 +62,6 @@
            'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
            'harja.views.ilmoitukset.tietyoilmoituslomake-test
            'harja.views.kartta.tasot-test
+           'harja.tiedot.urakka.yllapitokohteet-test
            ;; uusi testi tähän
            )

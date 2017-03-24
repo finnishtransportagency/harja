@@ -1,106 +1,23 @@
--- Refaktoroi tietyöilmoituksen taulua
 
--- Tehdään henkilötyyppi, jolla saadaan toistuvat kentät yhtenäistettyä
-CREATE TYPE tietyon_henkilo AS (
-  etunimi varchar(32),
-  sukunimi varchar(32),
-  matkapuhelin varchar(32),
-  sahkoposti varchar(128)
-);
+-- Poista muistetut laskutusyhteenvedot kun toteuma_tehtava muuttuu.
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_toteuma_tehtava() RETURNS trigger AS $$
+DECLARE
+  toteuma_alkanut DATE;
+  urakka_id INTEGER;
+  toteuma_id INTEGER;
+BEGIN
+  toteuma_id = NEW.toteuma;
+  SELECT alkanut FROM toteuma where id = toteuma_id INTO toteuma_alkanut;
+  SELECT urakka FROM toteuma where id = toteuma_id INTO urakka_id;
+  PERFORM poista_hoitokauden_muistetut_laskutusyht(urakka_id, toteuma_alkanut::DATE);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
-
--- Ajoneuvorajoitukset omaan tyyppiin
-CREATE TYPE tietyon_ajoneuvorajoitukset AS (
-  "max-korkeus"  double precision,
-  "max-leveys"   double precision,
-  "max-pituus"   double precision,
-  "max-paino"    double precision
-);
-
-DROP TABLE tietyoilmoitus;
-DROP TYPE tietyon_kaistajarjestelyt;
-DROP TYPE tietyon_tyoaika;
-
-CREATE TYPE tietyon_tyoaika AS (alkuaika TIME, loppuaika TIME, paivat viikonpaiva []);
-
-CREATE TYPE tietyon_kaistajarjestelytyyppi AS ENUM (
-  'ajokaistaSuljettu',
-  'ajorataSuljettu',
-  'tieSuljettu',
-  'muu');
-
-CREATE TYPE tietyon_kaistajarjestelyt AS (
-  jarjestely tietyon_kaistajarjestelytyyppi,
-  selite TEXT
-);
-
-
-CREATE TABLE tietyoilmoitus (
-  id                                    SERIAL PRIMARY KEY,
-  "tloik-id"                            INTEGER,
-  paatietyoilmoitus                     INTEGER REFERENCES tietyoilmoitus (id),
-  "tloik-paatietyoilmoitus-id"          INTEGER,
-
-  luotu                                 TIMESTAMP,
-  luoja                                 INTEGER REFERENCES kayttaja (id),
-  muokattu                              TIMESTAMP,
-  muokkaaja                             INTEGER REFERENCES kayttaja (id),
-  poistettu                             TIMESTAMP,
-  poistaja                              INTEGER REFERENCES kayttaja (id),
-
-  "ilmoittaja-id"                       INTEGER REFERENCES kayttaja (id),
-  ilmoittaja                            tietyon_henkilo,
-
-  "urakka-id"                           INTEGER REFERENCES urakka (id),
-  "urakan-nimi"                         VARCHAR(256),
-  urakkatyyppi                          urakkatyyppi,
-
-  "urakoitsijayhteyshenkilo-id"         INTEGER REFERENCES kayttaja (id),
-  urakoitsijayhteyshenkilo              tietyon_henkilo,
-
-  "tilaaja-id"                          INTEGER REFERENCES organisaatio (id),
-  "tilaajan-nimi"                       VARCHAR(128),
-
-  "tilaajayhteyshenkilo-id"             INTEGER REFERENCES kayttaja (id),
-  tilaajayhteyshenkilo                  tietyon_henkilo,
-
-  tyotyypit                             tietyon_tyypin_kuvaus [],
-  "luvan-diaarinumero"                  VARCHAR(32),
-  osoite                                tr_osoite,
-  "tien-nimi"                           VARCHAR(256),
-  kunnat                                VARCHAR,
-  "alkusijainnin-kuvaus"                VARCHAR,
-  "loppusijainnin-kuvaus"               VARCHAR,
-
-  alku                                  TIMESTAMP,
-  loppu                                 TIMESTAMP,
-  tyoajat                               tietyon_tyoaika [],
-
-  vaikutussuunta                        tietyon_vaikutussuunta,
-  kaistajarjestelyt                     tietyon_kaistajarjestelyt,
-
-  nopeusrajoitukset                     tietyon_nopeusrajoitus [],
-  tienpinnat                            tietyon_tienpinta [],
-
-  "kiertotien-pituus"                   INTEGER,
-  "kiertotien-mutkaisuus"               tietyon_mutkat,
-  kiertotienpinnat                      tietyon_tienpinta [],
-
-  liikenteenohjaus                      tietyon_liikenteenohjaus,
-  liikenteenohjaaja                     tietyon_liikenteenohjaaja,
-
-  "viivastys-normaali-liikenteessa"     INTEGER,
-  "viivastys-ruuhka-aikana"             INTEGER,
-
-  ajoneuvorajoitukset                   tietyon_ajoneuvorajoitukset,
-
-  huomautukset                          tietyon_huomautukset[],
-  "ajoittaiset-pysatykset"              BOOLEAN,
-  "ajoittain-suljettu-tie"              BOOLEAN,
-  "pysaytysten-alku"                    TIMESTAMP,
-  "pysaytysten-loppu"                   TIMESTAMP,
-  lisatietoja                           TEXT,
-  "urakoitsija-id"                      INTEGER REFERENCES organisaatio (id),
-  "urakoitsijan-nimi"                   VARCHAR(128),
-  yllapitokohde                         INTEGER REFERENCES yllapitokohde (id)
-  );
+-- Jos toteuma_tehtava muuttuu, poista laskutusyhteenvedot cachesta. koska
+-- esim määrän muutoksella on vaikutus yksikköhintaisten töiden kustannuksiin
+CREATE TRIGGER tg_poista_muistetut_laskutusyht_toteuma_tehtava
+AFTER INSERT OR UPDATE
+  ON toteuma_tehtava
+FOR EACH ROW
+EXECUTE PROCEDURE poista_muistetut_laskutusyht_toteuma_tehtava();
