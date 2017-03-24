@@ -70,7 +70,8 @@
                (urakat-q/hae-kaikki-urakat-aikavalilla
                  db (konv/sql-date alku) (konv/sql-date loppu)
                  (when urakoitsija urakoitsija)
-                 (when urakkatyyppi (name urakkatyyppi)) hallintayksikot))))
+                 (when urakkatyyppi (name urakkatyyppi))
+                 (not (empty? hallintayksikot)) hallintayksikot))))
      {:urakka :urakat}
      (juxt :tyyppi (comp :id :hallintayksikko)))))
 
@@ -132,7 +133,9 @@
   (kayttajan-urakat-aikavalilta
    db user
    (partial oikeudet/voi-lukea? oikeudet/urakat)
-   nil nil nil hallintayksikot
+   nil nil nil (if (empty? hallintayksikot)
+                 nil
+                 hallintayksikot)
    (pvm/nyt) (pvm/nyt)))
 
 (defrecord Kayttajatiedot []
@@ -151,8 +154,8 @@
                         (hae-yhteydenpidon-vastaanottajat db user hallintayksikot)))
     (julkaise-palvelu http
                       :kayttajan-urakat
-                      (fn [user _]
-                        (hae-kayttajan-urakat db user)))
+                      (fn [user hallintayksikot]
+                        (#'hae-kayttajan-urakat db user hallintayksikot)))
     this)
   (stop [this]
     (poista-palvelut (:http-palvelin this)
