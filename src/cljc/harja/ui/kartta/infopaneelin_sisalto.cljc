@@ -38,6 +38,7 @@
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.tietyoilmoitukset :as t-domain]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri.varusteet :as varusteet]))
 
@@ -365,6 +366,14 @@
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
+(defmethod infopaneeli-skeema :tietyoilmoitus [tietyoilmoitus]
+  {:tyyppi :tietyoilmoitus
+   :jarjesta-fn ::t-domain/alku
+   :otsikko "Tietyöilmoitus"
+   :tiedot [{:otsikko "Ilmoittaja" :hae (hakufunktio
+                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]}
+                                          #(str (get-in % [::t-domain/ilmoittaja ::t-domain/etunimi])))}]
+   :data tietyoilmoitus})
 
 (defmethod infopaneeli-skeema :silta [silta]
   {:tyyppi :silta
