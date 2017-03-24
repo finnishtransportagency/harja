@@ -62,7 +62,6 @@
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2005-12-20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["3043.95"]))
 
-           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :karttapaivamaara) ["2017-03-21"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["0"]))
