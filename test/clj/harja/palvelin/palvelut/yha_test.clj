@@ -39,7 +39,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest sido-yha-urakka-harja-urakkaan
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))
