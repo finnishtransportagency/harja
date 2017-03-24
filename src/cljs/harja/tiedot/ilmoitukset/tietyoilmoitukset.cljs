@@ -212,16 +212,13 @@
   HaeKayttajanUrakat
   (process-event [{hallintayksikot :hallintayksikot} app]
     (let [tulos! (tuck/send-async! ->KayttajanUrakatHaettu)]
-      (when hallintayksikot
-        (go (tulos! (async/<!
-                      (async/reduce nil-hylkiva-concat []
-                                    (async/merge
-                                      (mapv tiedot-urakat/hae-hallintayksikon-urakat hallintayksikot))))))))
+      (log "HAE käyttäjän urakat, hal: " (pr-str hallintayksikot))
+      (go (tulos! (async/<! (k/post! :kayttajan-urakat hallintayksikot)))))
     (assoc app :kayttajan-urakat nil))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (let [urakka (when @nav/valittu-urakka ((comp str :id) @nav/valittu-urakka))]
+    (let [urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka))))
 
