@@ -30,7 +30,6 @@
         (map (juxt :id :nimi))
         urakat))
 
-
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
@@ -44,11 +43,30 @@
   (log msg (with-out-str (cljs.pprint/pprint val)))
   val)
 
+(defn tienpinnat-komponentti-grid [e! avain tienpinnat-tiedot]
+  (let [tp-valinnat [["paallystetty" "Päällystetty"]
+                     ["jyrsitty" "Jyrsitty"]
+                     ["murske" "Murske"]]]
 
+    (log "tienpinnat-komponentti: tiedot" (pr-str tienpinnat-tiedot))
+    [muokkaus-grid {:otsikko ""
+                    :voi-muokata? (constantly true)
+                    :voi-poistaa? (constantly true)
+                    :piilota-toiminnot? false
+                    :tyhja "Ei tienpintatietoja"
+                    :jarjesta :jarjestysnro
+                    :tunniste :jarjestysnro}
+     [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
+       :valinnat tp-valinnat
+       :valinta-arvo first
+       :valinta-nayta second}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+     (r/wrap (tiedot/tienpinnat-kanta->grid tienpinnat-tiedot)
+             #(e! (tiedot/->PaivitaTienPinnatGrid % avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))
-  (log "nr-tiedot oli" (pr-str nr-tiedot))
+  ;; (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))
+  ;; (log "nr-tiedot oli" (pr-str nr-tiedot))
   (if (some? nr-tiedot)
     [muokkaus-grid {:otsikko ""
                     :voi-muokata? (constantly true)
@@ -64,7 +82,7 @@
      (r/wrap (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)
              #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
     ;; else
-    (log "nr-komponentti sai nil")))
+    (log "nopeusrajoitukset-komponentti sai nil")))
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -228,8 +246,7 @@
        :avaimet kentat/tr-osoite-domain-avaimet
        :ala-nayta-virhetta-komponentissa? true
        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
-       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
-       }
+       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))}
       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
        :tyyppi :string}
       {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
@@ -242,8 +259,7 @@
       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
       {:otsikko "Työn pituus" :nimi :tyon-pituus
        :tyyppi :positiivinen-numero
-       :placeholder "(Tyon pituus metreinä)"
-       }
+       :placeholder "(Tyon pituus metreinä)"}
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
@@ -279,23 +295,20 @@
 
                      }
                     {:otsikko "Tien pinta työmaalla"
-                     ;; tehdään muokkaus-grid tähän?
-                     :tyyppi :checkbox-group
-                     :nimi :tienpinta-materiaali
-                     :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske"]
-
+                     :nimi ::t/tienpinnat
+                     :tyyppi :komponentti
+                     :komponentti #(->> % :data ::t/tienpinnat (tienpinnat-komponentti-grid e! ::t/tienpinnat))
                      }
-                    {:otsikko "Metriä:"
-                     :tyyppi :positiivinen-numero
-                     :nimi :tienpinta-matka}
+                    {:otsikko "Kiertotietien pinnat"
+                     :nimi ::t/kiertotienpinnat
+                     :tyyppi :komponentti
+                     :komponentti #(->> % :data ::t/kiertotienpinnat (tienpinnat-komponentti-grid e! ::t/kiertotienpinnat))}
                     {:otsikko "Kiertotie"
                      :tyyppi :checkbox-group
                      :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
-
                      :valinnat ["Loivat mutkat", "Jyrkät mutkat (erkanee yli 45° kulmassa)" "Päällystetty" "Murske" "Kantavuus rajoittaa", "___ tonnia"]
                      ;; ___ metriä
                      ;; __ tonnia
-
                      }
                     {:otsikko "Kulkurajoituksia"
                      :tyyppi :checkbox-group
@@ -304,8 +317,7 @@
                      :vaihtoehto-nayta identity
                      :muu-vaihtoehto "Aikataulu:"
                      :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}
-                     }
-                    )
+                     })
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
                      :tyyppi :checkbox-group
@@ -321,9 +333,7 @@
                      :nimi ::t/lisatietoja
                      :tyyppi :text
                      :koko [90 8]})
-      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)
-
-      ]
+      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
      ilmoitus]]
    [napit/tallenna
     "Tallenna ilmoitus"
