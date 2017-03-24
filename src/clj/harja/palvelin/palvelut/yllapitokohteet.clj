@@ -411,7 +411,7 @@
       (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
+        (sort-by tr/tieosoitteen-jarjestys yllapitokohdeosat)))))
 
 
 (defrecord Yllapitokohteet []

@@ -112,7 +112,7 @@
             :nimi :paivamaara :tyyppi :pvm :leveys 3
             :validoi [[:ei-tyhja "Anna päivämäärä"]]
             :fmt pvm/pvm-opt}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet @tiemerkinnan-toteumat-atom)]]))))
 
 (defn paallystysurakan-kohteet
   [urakka paallystysurakan-kohteet]
@@ -172,7 +172,7 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet paallystysurakan-kohteet)]]))))
 
 (defn- yhteenveto [toteutuneet-tiemerkinnat]
   (let [suunniteltu-yhteensa (->> toteutuneet-tiemerkinnat

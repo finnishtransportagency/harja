@@ -1,7 +1,8 @@
 (ns harja.tiedot.urakka.yllapitokohteet-test
   (:require [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [cljs.test :as test :refer-macros [deftest is]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 (def testikohteet-kartalle
   [{:id 1
@@ -107,3 +108,18 @@
           {:tr-numero 4
            :yllapitokohdetyotyyppi :paikkaus
            :yhaid nil}])))
+
+(deftest yllapitokohteiden-jarjestys
+  (is (= (yllapitokohteet-domain/jarjesta-yllapitokohteet
+           [{:kohdenumero nil :tie 1 :aosa 2 :aet 1}
+            {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
+            {:kohdenumero "20a" :tie 1}
+            {:kohdenumero "" :tie 3 :aosa 1 :aet 1}
+            {:kohdenumero "20b" :tie 1}
+            {:kohdenumero "30" :tie 1}])
+         [{:kohdenumero "20a" :tie 1}
+          {:kohdenumero "20b" :tie 1}
+          {:kohdenumero "30" :tie 1}
+          {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
+          {:kohdenumero nil :tie 1 :aosa 2 :aet 1}
+          {:kohdenumero "" :tie 3 :aosa 1 :aet 1}])))

@@ -21,7 +21,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -52,7 +53,7 @@
                                                                             [:ilmoitustiedot :osoitteet])))]
                               (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
                                      kohdeosan-ilmoitustiedot))))
-                     (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
+                     (yllapitokohteet-domain/jarjesta-yllapitokohteet)
                      vec))
       (dissoc :kohdeosat)))
 

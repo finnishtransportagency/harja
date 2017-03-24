@@ -1,12 +1,17 @@
 (ns harja.domain.yllapitokohteet
   "Ylläpitokohteiden yhteisiä apureita"
   #?(:clj
-     (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-               [clojure.spec :as s]
-       #?@(:clj [
-               [clojure.future :refer :all]])))
+     (:require
+       [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+       [harja.domain.tierekisteri :as tr-domain]
+       [clojure.string :as str]
+       [clojure.spec :as s]
+       [clojure.future :refer :all]))
   #?(:cljs
-     (:require [cljs.spec :as s])))
+     (:require
+       [cljs.spec :as s]
+       [clojure.string :as str]
+       [harja.domain.tierekisteri :as tr-domain])))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
@@ -270,3 +275,9 @@ yllapitoluokkanimi->numero
                                       :yllapitokohde-id (:id kohde)))
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
+
+(defn jarjesta-yllapitokohteet [yllapitokohteet]
+  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
+        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
+    (vec (concat (tr-domain/jarjesta-tiet kohteet-kohdenumerolla)
+                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
