@@ -705,6 +705,11 @@
   ([eka toka marginaali]
    (< (Math/abs (double (- eka toka))) marginaali)))
 
+(defn- =ts [d1 d2]
+  (let [ts1 (and d1 (.getTime d1))
+        ts2 (and d2 (.getTime d2))]
+    (= ts1 ts2)))
+
 (defn tarkista-map-arvot
   "Tarkistaa, että mäpissä on oikeat arvot. Numeroita vertaillaan =marginaalissa? avulla, muita
   = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
@@ -713,17 +718,28 @@
   (doseq [k (keys odotetut)
           :let [odotettu-arvo (get odotetut k)
                 saatu-arvo (get saadut k ::ei-olemassa)]]
-    (if (= saatu-arvo ::ei-olemassa)
+    (cond
+      (= saatu-arvo ::ei-olemassa)
       (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
                      ", odotettiin arvoa: " odotettu-arvo))
 
-      (if (and (number? odotettu-arvo) (number? saatu-arvo))
-        (is (=marginaalissa? odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
-                 odotettu-arvo ", saatu: " saatu-arvo))
-        (is (= odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
-                 ", saatu: " saatu-arvo))))))
+      (and (number? odotettu-arvo) (number? saatu-arvo))
+      (is (=marginaalissa? odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+               odotettu-arvo  " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      (instance? java.util.Date odotettu-arvo)
+      (is (=ts odotettu-arvo saatu-arvo)
+          (str "Odotettu date arvo avaimelle " k " ei ole millisekunteina sama, odotettu: "
+               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      :default
+      (is (= odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+               " (" (type odotettu-arvo)
+               "), saatu: " saatu-arvo " (" (type odotettu-arvo) ")")))))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 

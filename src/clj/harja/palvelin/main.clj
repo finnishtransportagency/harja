@@ -343,7 +343,7 @@
 
       :tietyoilmoitukset (component/using
                      (tietyoilmoitukset/->Tietyoilmoitukset)
-                     [:http-palvelin :db :tloik])
+                     [:http-palvelin :db :pdf-vienti])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
