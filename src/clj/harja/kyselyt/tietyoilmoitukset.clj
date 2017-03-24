@@ -154,6 +154,22 @@
       [(str "ST_Intersects(ST_Buffer(?,?), " value-accessor ")")
        [geometry threshold]])))
 
+(defn intersects-envelope? [{:keys [xmin ymin xmax ymax]}]
+  (reify op/Op
+    (to-sql [this val]
+      [(str "ST_Intersects("val ", ST_MakeEnvelope(?,?,?,?))")
+       [xmin ymin xmax ymax]])))
+
+(defn overlaps? [rivi-alku rivi-loppu alku loppu]
+  (op/or {rivi-alku (op/between alku loppu)}
+         {rivi-loppu (op/between alku loppu)}))
+
+(defn interval? [start interval]
+  (reify op/Op
+    (to-sql [this value]
+      [(str "(? - "value" < ?::INTERVAL)")
+       [start interval]])))
+
 (defn hae-ilmoitukset [db {:keys [luotu-alku
                                   luotu-loppu
                                   kaynnissa-alku
@@ -172,13 +188,28 @@
                   (when sijainti
                     {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
            (when (and kaynnissa-alku kaynnissa-loppu)
-             (op/and {::t/alku (op/<= kaynnissa-alku)}
-                     {::t/loppu (op/>= kaynnissa-loppu)}))
+             (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu))
            (if organisaatio
              (op/or
                {::t/urakka-id (op/or op/null? (op/in urakat))}
                {::t/urakoitsija-id organisaatio})
              {::t/urakka-id (op/or op/null? (op/in urakat))}))))
+
+(defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
+                                                tilaaja?
+                                                urakat
+                                                alku
+                                                loppu
+                                                alue]}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+         (op/and
+           (if nykytilanne?
+               {::t/loppu (interval? loppu "7 days")}
+               (overlaps? ::t/alku ::t/loppu alku loppu))
+           {::t/osoite {::tr/geometria (intersects-envelope? alue)}}
+           (when-not tilaaja?
+             (when-not (empty? urakat)
+               {::t/urakka-id (op/or op/null? (op/in urakat))})))))
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet

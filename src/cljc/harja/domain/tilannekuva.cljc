@@ -30,6 +30,8 @@
   [tur :tiedoitus "TUR"]
   [urk :kysely "URK"]
 
+  [tietyoilmoitukset :tietyoilmoitukset "Tietyöilmoitukset"]
+
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
   [tietyomaat :tietyomaat "Tietyömaat"]
