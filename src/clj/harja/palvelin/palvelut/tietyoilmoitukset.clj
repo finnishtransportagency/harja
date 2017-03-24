@@ -117,7 +117,7 @@
 (defn hae-urakan-tiedot-tietyoilmoitukselle [db fim user urakka-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (let [{:keys [urakka-sampo-id] :as urakka}
-        (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id}))]
+        (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})]
     (if urakka-sampo-id
       (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
             urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
