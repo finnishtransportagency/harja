@@ -41,6 +41,8 @@
                                  ::t/id)}]
   )
 
+;; Löysennetään tyyppejä numeroiksi, koska kokonaisluvut tulevat
+;; transitin läpi longeina.
 (s/def ::t/max-korkeus number?)
 (s/def ::t/max-paino number?)
 (s/def ::t/max-pituus number?)
