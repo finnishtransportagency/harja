@@ -19,7 +19,9 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clojure.string :as str]
-            [harja.domain.tierekisteri.tietolajit :as tietolajit])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -76,7 +78,8 @@
   (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri nil)]
     (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
-(defn hae-tietolaji [tierekisteri parametrit kayttaja]
+(defn hae-tietolajit [tierekisteri parametrit kayttaja]
+  (oikeudet/ei-oikeustarkistusta!)
   (let [tunniste (get parametrit "tunniste")]
     (if (not (str/blank? tunniste))
       (do
@@ -198,34 +201,41 @@
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
   [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (let [nyt (t/now)
-        tulos
-        (cond
-          (not (str/blank? tunniste))
-          (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+  (try+
+    (let [nyt (t/now)
+          tulos
+          (cond
+            (not (str/blank? tunniste))
+            (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-          (and tierekisteriosoite
-               (not (str/blank? tietolaji)))
-          (tierekisteri/hae-tietueet
-            tierekisteri
-            {:numero (:numero tierekisteriosoite)
-             :aet (:alkuetaisyys tierekisteriosoite)
-             :aosa (:alkuosa tierekisteriosoite)
-             :let (:loppuetaisyys tierekisteriosoite)
-             :losa (:loppuosa tierekisteriosoite)}
-            tietolaji
-            nyt nyt)
+            (and tierekisteriosoite
+                 (not (str/blank? tietolaji)))
+            (tierekisteri/hae-tietueet
+              tierekisteri
+              {:numero (:numero tierekisteriosoite)
+               :aet (:alkuetaisyys tierekisteriosoite)
+               :aosa (:alkuosa tierekisteriosoite)
+               :let (:loppuetaisyys tierekisteriosoite)
+               :losa (:loppuosa tierekisteriosoite)}
+              tietolaji
+              nyt nyt)
 
-          :default
-          {:error "Ei hakuehtoja"})]
+            :default
+            {:error "Ei hakuehtoja"})]
+      
+      (if (:onnistunut tulos)
 
-    (if (:onnistunut tulos)
-      (merge {:onnistunut true}
-             (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-             (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
-      tulos)))
+        (merge {:onnistunut true}
+               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+               (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+        tulos))
+
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      {:onnistunut false
+       :virheet virheet})))
 
 (defrecord Varusteet []
   component/Lifecycle
@@ -235,7 +245,7 @@
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
-                                 (hae-tietolaji tierekisteri parametrit kayttaja)))))
+                                 (hae-tietolajit tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
@@ -274,7 +284,8 @@
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
-                        (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
+                        (let [tietolajit (hae-tietolajit tierekisteri {"tunniste" tietolaji} user)]
+                          (:tietolaji (first (:tietolajit tietolajit))))))
 
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]

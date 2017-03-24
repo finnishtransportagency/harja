@@ -27,6 +27,9 @@
 
 
 #?(:cljs
+   (defrecord Aika [tunnit minuutit sekunnit]))
+
+#?(:cljs
    ;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
    (extend-type DateTime
      IHash
@@ -719,6 +722,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn tuntia-sitten [tuntia]
      (t/minus (nyt) (t/hours tuntia))))
+
+#?(:cljs
+   (defn tunnin-paasta [tuntia]
+     (t/plus (nyt) (t/hours tuntia))))
 
 #?(:clj
    (defn tuntia-sitten [tuntia]

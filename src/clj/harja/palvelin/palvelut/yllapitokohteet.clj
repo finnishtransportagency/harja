@@ -31,7 +31,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.tierekisteri :as tr-domain])
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -412,8 +413,33 @@
       (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
+        (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
 
+(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
+  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (let [{:keys [urakka-sampo-id
+                tr-numero
+                tr-alkuosa
+                tr-alkuetaisyys
+                tr-loppuosa
+                tr-loppuetaisyys]
+         :as yllapitokohde}
+        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))
+        geometria (tr-haku/hae-tr-viiva db {:numero tr-numero
+                                            :alkuosa tr-alkuosa
+                                            :alkuetaisyys tr-alkuetaisyys
+                                            :loppuosa tr-loppuosa
+                                            :loppuetaisyys tr-loppuetaisyys})
+        yllapitokohde (assoc yllapitokohde :geometria geometria)]
+    (if urakka-sampo-id
+      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+            hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
+            urakoitsijan-yhteyshenkilo (hae "vastuuhenkilo")
+            tilaajan-yhteyshenkilo (hae "ELY_Urakanvalvoja")
+            yllapitokohde (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                               :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+        yllapitokohde)
+      yllapitokohde)))
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
@@ -452,6 +478,9 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
+      (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                        (fn [user tiedot]
+                          (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot)))
 
       this))
 
@@ -464,5 +493,6 @@
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu)
+      :tallenna-yllapitokohteiden-aikataulu
+      :hae-yllapitokohteen-tiedot-tietyoilmoitukselle)
     this))

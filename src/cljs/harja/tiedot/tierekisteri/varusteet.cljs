@@ -9,7 +9,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [clojure.walk :as walk]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma
@@ -88,9 +89,10 @@
     (hakutulokset app tietolaji varusteet))
 
   VarusteHakuEpaonnistui
-  (process-event [{virhe :virhe} app]
+  (process-event [{virhe :virhe :as vastaus} app]
     (log "[TR] Virhe haettaessa varusteita: " (pr-str virhe))
-    (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :warning)
+    (let [virheet (str/join ", " (mapv :viesti (:virheet virhe)))]
+      (viesti/nayta! (str "Virhe haettaessa varusteita Tierekisteristä: " virheet) :warning))
     (assoc-in app [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))
 
   ToimintoEpaonnistui
