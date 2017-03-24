@@ -244,19 +244,6 @@
        :tyyppi :positiivinen-numero
        :placeholder "(Tyon pituus metreinä)"
        }
-
-      #_(lomake/ryhma "Työvaihe"
-
-                      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi :alkusijainnin_kuvaus_b
-                       :tyyppi :string}
-                      {:otsikko "Työn aloituspvm" :nimi :alku_b :tyyppi :pvm}
-                      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi :loppusijainnin_kuvaus_b
-                       :tyyppi :string}
-                      {:otsikko "Työn lopetuspvm" :nimi :loppu_b :tyyppi :pvm}
-                      {:otsikko "Työn pituus" :nimi :tyon-pituus_b
-                       :tyyppi :positiivinen-numero
-                       :hae #(pvm-vali-paivina (:alku %) (:loppu %))}
-                      )
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
