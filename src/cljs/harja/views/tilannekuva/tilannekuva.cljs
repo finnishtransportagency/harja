@@ -264,7 +264,7 @@
         tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
         auki-oleva-checkbox-ryhma]
        (when
-         (harja.tiedot.istunto/ominaisuus-kaytossa? :tilannekuva)
+         (harja.tiedot.istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
          [yksittainen-suodatincheckbox "Tietyöilmoitukset"
          tiedot/suodattimet [:tietyoilmoitukset tk/tietyoilmoitukset]
          auki-oleva-checkbox-ryhma])]
