@@ -34,7 +34,7 @@ FROM urakka u
 WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
+      (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko));
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT

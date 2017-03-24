@@ -10,7 +10,8 @@
             [clojure.string :refer [trim]]))
 
 
-(def db {:connection-uri (trim (slurp ".specql-db"))})
+(def db (when *compile-files*
+          {:connection-uri (trim (slurp ".specql-db"))}))
 
 (s/def ::d/geometry any?)
 
