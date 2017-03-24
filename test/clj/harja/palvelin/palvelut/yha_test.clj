@@ -124,3 +124,57 @@
                                     :hae-yha-kohteet +kayttaja-jvh+
                                     {:urakka-id urakka-id})]
         (is (= (count vastaus) 0))))))
+
+(deftest tallenna-uudet-yha-kohteet
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))
+        yhatiedot-ennen-testia (first (q-map "SELECT id, sidonta_lukittu
+                                               FROM yhatiedot WHERE urakka = " urakka-id ";"))
+        kohteet-ennen-testia (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
+
+    (is (integer? (:id yhatiedot-ennen-testia)) "Urakka on jo sidottu ennen testiä")
+    (is (false? (:sidonta_lukittu yhatiedot-ennen-testia)) "Sidontaa ei ole lukittu ennen testiä")
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :kohteet [{:alikohteet
+                                [{:yha-id 1
+                                  :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                           :ajorata 1
+                                                           :kaista 1
+                                                           :aosa 1
+                                                           :aet 1
+                                                           :losa 1
+                                                           :let 2
+                                                           :tienumero 20}
+                                  :tunnus nil
+                                  :paallystystoimenpide {:kokonaismassamaara 10
+                                                         :paallystetyomenetelma 21
+                                                         :kuulamylly nil
+                                                         :raekoko 16
+                                                         :rc-prosentti nil
+                                                         :uusi-paallyste 14}}]
+                                :yha-id 2
+                                :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                         :ajorata 1
+                                                         :kaista 1
+                                                         :aosa 1
+                                                         :aet 1
+                                                         :losa 1
+                                                         :let 2
+                                                         :tienumero 20}
+                                :yha-kohdenumero 1
+                                :yllapitokohdetyyppi "paallyste"
+                                :nykyinen-paallyste 14
+                                :nimi "YHA-kohde"
+                                :yllapitokohdetyotyyppi :paallystys
+                                :yllapitoluokka 8
+                                :keskimaarainen-vuorokausiliikenne 5000}]})
+
+
+    (let [yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
+                                               FROM yhatiedot WHERE urakka = " urakka-id ";"))
+          kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
+
+      (is (true? (:sidonta_lukittu yhatiedot-testin-jalkeen)) "Sidonta lukittiin")
+      (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
