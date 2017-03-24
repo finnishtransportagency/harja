@@ -59,31 +59,56 @@
 (defn muu-tyo-lomake [e! tila {:keys [valittu-urakka valittu-sopimusnumero] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
         valinnat (:valinnat tila)
-        muokkausoikeus? (voi-kirjoittaa? (:id valittu-urakka))]
+        muokkausoikeus? (voi-kirjoittaa? (:id valittu-urakka))
+        tallenna (fn [{:keys [toteuma urakka-id sopimusnumero
+                              sopimuskauden-alkupvm sopimuskauden-loppupvm
+                              uusi-laskentakohde]} laskentakohteet]
+                   (tiedot/tallenna-toteuma {:toteuma toteuma
+                                             :urakka urakka-id
+                                             :sopimus sopimusnumero
+                                             :alkupvm sopimuskauden-alkupvm
+                                             :loppupvm sopimuskauden-loppupvm
+                                             :uusi-laskentakohde uusi-laskentakohde}
+                                            laskentakohteet))]
     (log "TILA:" (pr-str tila))
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
       #(e! (tiedot/->ValitseToteuma nil))]
-     [lomake {:otsikko      (if vanha-toteuma?
-                              "Muokkaa toteumaa"
-                              "Luo uusi toteuma")
-              :luokka       :horizontal
+     [lomake {:otsikko (if vanha-toteuma?
+                         "Muokkaa toteumaa"
+                         "Luo uusi toteuma")
+              :luokka :horizontal
               :voi-muokata? muokkausoikeus?
-              :muokkaa!     #(e! (tiedot/->MuokkaaToteumaa %))
-              :footer       [napit/palvelinkutsu-nappi
-                             "Tallenna toteuma"
-                             #(tiedot/tallenna-toteuma {:toteuma              (:valittu-toteuma tila)
-                                                        :urakka               (:id valittu-urakka)
-                                                        :sopimus              (first valittu-sopimusnumero)
-                                                        :alkupvm              (first (:sopimuskausi valinnat))
-                                                        :loppupvm             (second (:sopimuskausi valinnat))
-                                                        :uusi-laskentakohde   (:uusi-laskentakohde tila)}
-                                                       (:laskentakohteet tila))
-                             {:luokka       "nappi-ensisijainen"
-                              :ikoni        (ikonit/tallenna)
-                              :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
-                              :disabled     (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
-                                                (not muokkausoikeus?))}]}
+              :muokkaa! #(e! (tiedot/->MuokkaaToteumaa %))
+              :footer [:span
+                       [napit/palvelinkutsu-nappi
+                        "Tallenna toteuma"
+                        #(tallenna {:toteuma (:valittu-toteuma tila)
+                                    :urakka-id (:id valittu-urakka)
+                                    :sopimusnumero (first valittu-sopimusnumero)
+                                    :sopimuskauden-alkupvm (first (:sopimuskausi valinnat))
+                                    :sopimuskauden-loppupvm (second (:sopimuskausi valinnat))
+                                    :uusi-laskentakohde (:uusi-laskentakohde tila)}
+                                   (:laskentakohteet tila))
+                        {:luokka "nappi-ensisijainen"
+                         :ikoni (ikonit/tallenna)
+                         :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
+                         :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
+                                       (not muokkausoikeus?))}]
+                       [napit/palvelinkutsu-nappi
+                        "Poista toteuma"
+                        #(tallenna {:toteuma (assoc (:valittu-toteuma tila) :poistettu true)
+                                    :urakka-id (:id valittu-urakka)
+                                    :sopimusnumero (first valittu-sopimusnumero)
+                                    :sopimuskauden-alkupvm (first (:sopimuskausi valinnat))
+                                    :sopimuskauden-loppupvm (second (:sopimuskausi valinnat))
+                                    :uusi-laskentakohde (:uusi-laskentakohde tila)}
+                                   (:laskentakohteet tila))
+                        {:luokka "nappi-kielteinen pull-right"
+                         :ikoni (ikonit/livicon-trash)
+                         :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
+                         :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
+                                       (not muokkausoikeus?))}]]}
 
       [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Tyyppi" :nimi :tyyppi
@@ -99,20 +124,29 @@
         :fmt :nimi
         :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat}
 
-       {:otsikko               "Laskentakohde"
-        :nimi                  :laskentakohde
-        :placeholder           "Hae kohde tai luo uusi"
-        :tyyppi                :haku
-        :kun-muuttuu           #(e! (tiedot/->LaskentakohdeMuuttui %))
+       {:otsikko "Laskentakohde"
+        :nimi :laskentakohde
+        :placeholder "Hae kohde tai luo uusi"
+        :tyyppi :haku
+        :kun-muuttuu #(e! (tiedot/->LaskentakohdeMuuttui %))
         :hae-kun-yli-n-merkkia 0
-        :nayta                 second
-        :lahde                 tiedot/laskentakohdehaku
-        :sort-fn               #(let [termi (str/lower-case (second %))]
-                                  (if (nil? (first %))
-                                    "000" ;; verrattava samaa tyyppiä, siksi nil castattu stringiksi joka sorttautuu ensimmäiseksi
-                                    termi))}
+        :nayta second
+        :lahde tiedot/laskentakohdehaku
+        :sort-fn #(let [termi (str/lower-case (second %))]
+                    (if (nil? (first %))
+                      "000"                                 ;; verrattava samaa tyyppiä, siksi nil castattu stringiksi joka sorttautuu ensimmäiseksi
+                      termi))}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))
+
+
+(defn- yhteenveto [toteumat valittu-kustannustyyppi]
+  (let [toteumat-yhteensa (->> toteumat (map :hinta) (reduce +))]
+    [yleiset/taulukkotietonakyma {}
+     (str "Toteumat"
+          (when-not (nil? valittu-kustannustyyppi)
+            (str " tyyppiä " (name valittu-kustannustyyppi))) " yhteensä: ")
+     (fmt/euro-opt toteumat-yhteensa)]))
 
 (defn- muut-tyot-lista [e!
                         {:keys [toteumat] :as tila}
@@ -122,35 +156,37 @@
                                 valittu-kustannustyyppi valitse-kustannustyyppi
                                 kustannustyypit]
                          :as riippuvuudet}]
-  [:div
-   [valinnat e! {:valittu-urakka valittu-urakka
-                 :valittu-sopimusnumero valittu-sopimusnumero
-                 :valitse-sopimusnumero valitse-sopimusnumero
-                 :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
-                 :valittu-hoitokausi valittu-hoitokausi
-                 :valitse-hoitokausi valitse-hoitokausi
-                 :valittu-kustannustyyppi valittu-kustannustyyppi
-                 :valitse-kustannustyyppi valitse-kustannustyyppi
-                 :kustannustyypit kustannustyypit}]
-   [grid/grid
-    {:otsikko (str "Muut työt")
-     :tyhja (if (nil? toteumat)
-              [ajax-loader "Toteumia haetaan..."]
-              "Ei toteumia.")
-     :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
-                                               :urakka (:id valittu-urakka)}))}
-    [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
-     {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(str/capitalize (name %))}
-     {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
-     {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
-     {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
-      :hae #(when (:yllapitoluokka %) (get-in % [:yllapitoluokka :nimi]))
-      :leveys 10}
-     {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
-    (filter #(if-not (nil? @valittu-kustannustyyppi)
-               (= @valittu-kustannustyyppi (:tyyppi %))
-               identity)
-            toteumat)]])
+  (let [valitut-toteumat (filter #(if-not (nil? @valittu-kustannustyyppi)
+                                    (= @valittu-kustannustyyppi (:tyyppi %))
+                                    identity)
+                                 toteumat)]
+    [:div
+     [valinnat e! {:valittu-urakka valittu-urakka
+                   :valittu-sopimusnumero valittu-sopimusnumero
+                   :valitse-sopimusnumero valitse-sopimusnumero
+                   :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
+                   :valittu-hoitokausi valittu-hoitokausi
+                   :valitse-hoitokausi valitse-hoitokausi
+                   :valittu-kustannustyyppi valittu-kustannustyyppi
+                   :valitse-kustannustyyppi valitse-kustannustyyppi
+                   :kustannustyypit kustannustyypit}]
+     [grid/grid
+      {:otsikko (str "Muut työt")
+       :tyhja (if (nil? toteumat)
+                [ajax-loader "Toteumia haetaan..."]
+                "Ei toteumia.")
+       :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
+                                                 :urakka (:id valittu-urakka)}))}
+      [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
+       {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(str/capitalize (name %))}
+       {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
+       {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
+       {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
+        :hae #(when (:yllapitoluokka %) (get-in % [:yllapitoluokka :nimi]))
+        :leveys 10}
+       {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
+      valitut-toteumat]
+     [yhteenveto valitut-toteumat @valittu-kustannustyyppi]]))
 
 (defn- muut-tyot-paakomponentti [e! tila]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat

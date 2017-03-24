@@ -94,6 +94,7 @@
                                "muu")
                      :yllapitoluokka (:numero yllapitoluokka)
                      :laskentakohde laskentakohde-id
+                     :poistettu (boolean poistettu)
                      :kayttaja (:id user)}]
 
         (if (id/id-olemassa? (:id toteuma))
