@@ -349,8 +349,7 @@
                              (if rivi
                                (:nimi rivi)
                                "- Valitse kuulamylly -"))
-            :valinnat (conj pot/+kuulamyllyt+
-                            {:nimi "Ei kuulamyllyä" :lyhenne "Ei kuulamyllyä" :koodi nil})
+            :valinnat pot/+kuulamyllyt+
             :leveys 30}]
           paallystystoimenpiteet]
 
@@ -423,24 +422,21 @@
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
                     :valinnat pot/+verkkotyypit+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Verkon sijainti"
                     :nimi :verkon-sijainti
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
                     :valinnat pot/+verkon-sijainnit+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Verkon tarkoitus"
                     :nimi :verkon-tarkoitus
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
                     :valinnat pot/+verkon-tarkoitukset+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta

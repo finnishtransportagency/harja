@@ -57,7 +57,8 @@
    {:nimi "N14" :koodi 4}
    {:nimi "N19" :koodi 5}
    {:nimi "N30" :koodi 6}
-   {:nimi "N22" :koodi 7}])
+   {:nimi "N22" :koodi 7}
+   {:nimi "Ei kuulamyllyä" :koodi nil}])
 
 (def +kuulamylly+ "Kuulamylly annetulla koodilla"
   (apply s/enum (map :koodi +kuulamyllyt+)))
@@ -69,7 +70,8 @@
   "Verkkotyypit POT-lomake Excelistä"
   [{:nimi "Teräsverkko" :koodi 1}
    {:nimi "Lasikuituverkko" :koodi 2}
-   {:nimi "Muu" :koodi 9}])
+   {:nimi "Muu" :koodi 9}
+   {:nimi "Ei verkkotyyppiä" :koodi nil}])
 
 (def +verkkotyyppi+ "Verkkotyypin valinta koodilla"
   (apply s/enum (map :koodi +verkkotyypit+)))
@@ -175,7 +177,8 @@
    {:nimi "Levennyksen tukeminen" :koodi 3}
    {:nimi "Painumien ehkäisy" :koodi 4}
    {:nimi "Moniongelmaisen tukeminen" :koodi 5}
-   {:nimi "Muu tarkoitus" :koodi 9}])
+   {:nimi "Muu tarkoitus" :koodi 9}
+   {:nimi "Ei tarkoitusta" :koodi nil}])
 
 (def +verkon-tarkoitus+
   "Verkon tarkoituksen valinta koodilla"
@@ -189,7 +192,8 @@
    {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
    {:nimi "Kantavassa kerroksessa" :koodi 3}
    {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
-   {:nimi "Muu sijainti" :koodi 9}])
+   {:nimi "Muu sijainti" :koodi 9}
+   {:nimi "Ei sijaintia" :koodi nil}])
 
 (def +verkon-sijainti+
   "Verkon sijainnin valinta koodilla"
@@ -249,9 +253,9 @@
     :tr-loppuetaisyys s/Int
     :kasittelymenetelma +alustamenetelma+
     :paksuus s/Int ;; cm
-    :verkkotyyppi +verkkotyyppi+
-    :verkon-tarkoitus +verkon-tarkoitus+
-    :verkon-sijainti +verkon-sijainti+
+    :verkkotyyppi (s/maybe +verkkotyyppi+)
+    :verkon-tarkoitus (s/maybe +verkon-tarkoitus+)
+    :verkon-sijainti (s/maybe +verkon-sijainti+)
     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot

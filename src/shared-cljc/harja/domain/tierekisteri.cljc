@@ -125,11 +125,11 @@
                     (if (nil? (:teksti-tie? optiot))
                       sana
                       (when (:teksti-tie? optiot) sana)))
-         tie (or (:numero tr) (:tr-numero tr) (:tie tr))
-         alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
-         alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
-         loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
-         loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))
+         tie (or (:numero tr) (:tr-numero tr) (:tie tr) (::tie tr))
+         alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr) (::aosa tr))
+         alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr) (::aet tr))
+         loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr) (::losa tr))
+         loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr) (::let tr))
          ei-tierekisteriosoitetta (if (or (nil? (:teksti-ei-tr-osoitetta? optiot))
                                           (boolean (:teksti-ei-tr-osoitetta? optiot)))
                                     "Ei tierekisteriosoitetta"

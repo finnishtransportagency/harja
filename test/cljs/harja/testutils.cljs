@@ -24,7 +24,7 @@
 (defn- suorita-fake-palvelukutsu [palvelu parametrit]
   (let [[kanava vastaus-fn] (get @fake-palvelukutsut palvelu)
         ch (async/chan)]
-    (if kanava
+    (if vastaus-fn
       (go
         (let [vastaus (vastaus-fn parametrit)]
           (>! ch vastaus)
@@ -53,8 +53,14 @@
 
 (def jvh-fixture (luo-kayttaja-fixture kayttaja-jvh))
 
+(defn- clear-timeouts []
+  (let [max-timeout-id (.setTimeout js/window :D 0)]
+    (dotimes [i max-timeout-id]
+      (.clearTimeout js/window i))))
+
 (def fake-palvelut-fixture
   {:before #(do (reset! k/testmode suorita-fake-palvelukutsu)
                 (reset! fake-palvelukutsut {}))
-   :after #(do (reset! k/testmode nil)
+   :after #(do (clear-timeouts)
+               (reset! k/testmode nil)
                (reset! fake-palvelukutsut {}))})
