@@ -69,8 +69,7 @@
     sahkoposti))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [[nil "Kaikki urakat"]]
-                             (map (juxt (comp str :id) :nimi))
+  (let [urakkavalinnat (into [{:id nil :nimi "Kaikki urakat"}]
                              kayttajan-urakat)]
     [lomake/lomake
      {:luokka :horizontal
@@ -94,8 +93,8 @@
        :tyyppi :valinta
        :pakollinen? true
        :valinnat urakkavalinnat
-       :valinta-nayta second
-       :valinta-arvo first
+       :valinta-nayta :nimi
+       :valinta-arvo :id
        :muokattava? (constantly true)
        :palstoja 1}
       {:nimi :tierekisteriosoite

@@ -137,6 +137,7 @@
 (defrecord KayttajanUrakatHaettu [urakat])
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
+(defrecord PaivitaTienPinnatGrid [tienpinnat avain])
 (defrecord PaivitaTyoajatGrid [tyoajat])
 (defrecord TallennaIlmoitus [ilmoitus])
 (defrecord IlmoitusTallennettu [ilmoitus])
@@ -160,7 +161,16 @@
              {indeksi (select-keys rajoitus-map [::t/matka ::t/rajoitus])})
            nr-tiedot)))
 
+(defn tienpinnat-kanta->grid [nr-tiedot]
+  {:post [(some? %)]}
+  (apply merge
+         (map-indexed
+          (fn [indeksi rajoitus-map]
+            {indeksi (select-keys rajoitus-map [::t/matka ::t/materiaali])})
+          nr-tiedot)))
+
 (defn nopeusrajoitukset-grid->kanta* [grid-rajoitukset]
+  {:pre [(some? grid-rajoitukset)]}
   ;; {0 {:rajoitus "30", :matka 100}, -1 {:id -1, :koskematon true}}
   ;; -> [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
 
@@ -168,11 +178,23 @@
     (log "grid-rajoitukset:" (pr-str grid-rajoitukset))
     r))
 
+(defn tienpinnat-grid->kanta* [grid-pinnat]
+  {:pre [(some? grid-pinnat)]}
+  (vals grid-pinnat))
+
 (defn- nopeusrajoitukset-grid->kanta [ilmoitus]
   (let [grid-nopeusrajoitukset (:nopeusrajoitukset ilmoitus)
         kanta-nopeusrajoitukset (nopeusrajoitukset-grid->kanta* grid-nopeusrajoitukset)]
     (-> ilmoitus (dissoc :nopeusrajoitukset)
         (assoc ::t/nopeusrajoitukset kanta-nopeusrajoitukset))))
+
+(defn- tienpinnat-grid->kanta [ilmoitus]
+  {:post [(some? %)]}
+  (let [grid-tienpinnat (::t/tienpinnat ilmoitus)
+        kanta-tienpinnat (tienpinnat-grid->kanta* grid-tienpinnat)]
+    (log "tienpinnat-grid->kanta: muutetaan tienpinnat, grid oli" (pr-str grid-tienpinnat) "-> kanta" (pr-str kanta-tienpinnat))
+    (-> ilmoitus (dissoc ::t/tienpinnat)
+        (assoc ::t/tienpinnat kanta-tienpinnat))))
 
 (extend-protocol tuck/Event
   AsetaValinnat
@@ -223,16 +245,13 @@
   HaeKayttajanUrakat
   (process-event [{hallintayksikot :hallintayksikot} app]
     (let [tulos! (tuck/send-async! ->KayttajanUrakatHaettu)]
-      (when hallintayksikot
-        (go (tulos! (async/<!
-                      (async/reduce nil-hylkiva-concat []
-                                    (async/merge
-                                      (mapv tiedot-urakat/hae-hallintayksikon-urakat hallintayksikot))))))))
+      (go (tulos! (async/<! (k/post! :kayttajan-urakat (mapv :id hallintayksikot))))))
     (assoc app :kayttajan-urakat nil))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (let [urakka (when @nav/valittu-urakka ((comp str :id) @nav/valittu-urakka))]
+    (let [urakat (sort-by :nimi (mapcat :urakat urakat))
+          urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka))))
 
@@ -242,11 +261,20 @@
 
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
+    (assert (some? nopeusrajoitukset))
     (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
     (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] (nopeusrajoitukset-grid->kanta* nopeusrajoitukset)))
 
+  PaivitaTienPinnatGrid
+  (process-event [{:keys [tienpinnat avain] :as kamat} app]
+    (assert (some? tienpinnat) (str "mapista puuttui :tienpinnat, arg oli" (pr-str kamat)))
+    (assert (contains? #{::t/tienpinnat ::t/kiertotienpinnat} avain) (str "halutaan lomakkeen avain, saatiin: " (pr-str avain)))
+    (log "PaivitaTienpinnatGrid uusi arvo:" (pr-str (tienpinnat-grid->kanta* tienpinnat)))
+    (assoc-in app [:valittu-ilmoitus avain] (tienpinnat-grid->kanta* tienpinnat)))
+
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
+    (assert (some? tyoajat))
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
   TallennaIlmoitus
@@ -257,6 +285,7 @@
                              (-> ilmoitus
                                  (dissoc ::t/tyovaiheet)
                                  nopeusrajoitukset-grid->kanta
+                                 tienpinnat-grid->kanta
                                  (spec-apurit/poista-nil-avaimet)))]
           (if (k/virhe? tulos)
             (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]

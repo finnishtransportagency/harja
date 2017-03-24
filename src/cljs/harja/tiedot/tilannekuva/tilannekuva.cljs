@@ -62,6 +62,7 @@ hakutiheys-historiakuva 1200000)
                             tk/tur false
                             tk/urk false}}
      :turvallisuus {tk/turvallisuuspoikkeamat false}
+     :tietyoilmoitukset {tk/tietyoilmoitukset false}
      :laatupoikkeamat {tk/laatupoikkeama-tilaaja false
                        tk/laatupoikkeama-urakoitsija false
                        tk/laatupoikkeama-konsultti false}
