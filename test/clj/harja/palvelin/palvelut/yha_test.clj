@@ -73,6 +73,16 @@
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :sido-yha-urakka-harja-urakkaan +kayttaja-jvh+
-                                                   {:harja-urakka-id urakka-id
-                                                    :yha-tiedot {}})))))
+                                           :sido-yha-urakka-harja-urakkaan +kayttaja-jvh+
+                                           {:harja-urakka-id urakka-id
+                                            :yha-tiedot {}})))))
+
+(deftest alla-anna-sitoa-ilman-oikeuksia
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :sido-yha-urakka-harja-urakkaan +kayttaja-ulle+
+                                           {:harja-urakka-id urakka-id
+                                            :yha-tiedot {:yhatunnus "YHATUNNUS"
+                                                         :yhaid 666
+                                                         :yhanimi "YHANIMI"}})))))
