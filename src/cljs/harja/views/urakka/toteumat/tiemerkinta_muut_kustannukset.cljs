@@ -32,15 +32,27 @@
     oikeudet/urakat-toteutus-muuttyot
     urakka-id))
 
+(defn valinta-muun-kustannuksen-tyyppi
+  [kustannustyypit valittu-kustannustyyppi-atom valitse-fn]
+  [:div.label-ja-alasveto.muukustannustyyppi
+   [:span.alasvedon-otsikko "Tyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-kustannustyyppi-atom
+                         :format-fn #(if % (str/capitalize (name %)) "Kaikki")
+                         :valitse-fn valitse-fn}
+    (cons nil kustannustyypit)]])
+
 (defn- valinnat [e! {:keys [valittu-urakka valittu-sopimusnumero
                             valitse-sopimusnumero valitun-urakan-hoitokaudet
-                            valittu-hoitokausi valitse-hoitokausi]}]
+                            valittu-hoitokausi valitse-hoitokausi
+                            valittu-kustannustyyppi valitse-kustannustyyppi
+                            kustannustyypit]}]
   (let [muokkausoikeus? (voi-kirjoittaa? (:id valittu-urakka))]
     [:span
      (valinnat/urakan-sopimus-ja-hoitokausi
        valittu-urakka
        valittu-sopimusnumero valitse-sopimusnumero
        valitun-urakan-hoitokaudet valittu-hoitokausi valitse-hoitokausi)
+     [valinta-muun-kustannuksen-tyyppi kustannustyypit valittu-kustannustyyppi valitse-kustannustyyppi]
      [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiToteuma))
       {:disabled (not muokkausoikeus?)}]]))
 
@@ -74,6 +86,13 @@
                                                 (not muokkausoikeus?))}]}
 
       [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
+       {:otsikko "Tyyppi" :nimi :tyyppi
+        :pakollinen? true
+        :tyyppi :valinta
+        :valinta-nayta #(if (nil? %) "- Valitse tyyppi -" (str/capitalize (name %)))
+        :valinnat tiedot/+kustannustyypit+
+        :fmt #(str/capitalize (name %))
+        :validoi [[:ei-tyhja "Anna kustannustyyppi"]]}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- valitse -")
@@ -99,7 +118,9 @@
                         {:keys [toteumat] :as tila}
                         {:keys [valittu-urakka valittu-sopimusnumero
                                 valitse-sopimusnumero valitun-urakan-hoitokaudet
-                                valittu-hoitokausi valitse-hoitokausi]
+                                valittu-hoitokausi valitse-hoitokausi
+                                valittu-kustannustyyppi valitse-kustannustyyppi
+                                kustannustyypit]
                          :as riippuvuudet}]
   [:div
    [valinnat e! {:valittu-urakka valittu-urakka
@@ -107,7 +128,10 @@
                  :valitse-sopimusnumero valitse-sopimusnumero
                  :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
                  :valittu-hoitokausi valittu-hoitokausi
-                 :valitse-hoitokausi valitse-hoitokausi}]
+                 :valitse-hoitokausi valitse-hoitokausi
+                 :valittu-kustannustyyppi valittu-kustannustyyppi
+                 :valitse-kustannustyyppi valitse-kustannustyyppi
+                 :kustannustyypit kustannustyypit}]
    [grid/grid
     {:otsikko (str "Muut työt")
      :tyhja (if (nil? toteumat)
@@ -116,13 +140,17 @@
      :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
                                                :urakka (:id valittu-urakka)}))}
     [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
+     {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(str/capitalize (name %))}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
      {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
       :hae #(when (:yllapitoluokka %) (get-in % [:yllapitoluokka :nimi]))
       :leveys 10}
      {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
-    toteumat]])
+    (filter #(if-not (nil? @valittu-kustannustyyppi)
+               (= @valittu-kustannustyyppi (:tyyppi %))
+               identity)
+            toteumat)]])
 
 (defn- muut-tyot-paakomponentti [e! tila]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
@@ -142,7 +170,10 @@
            :valitse-sopimusnumero u/valitse-sopimusnumero!
            :valitun-urakan-hoitokaudet u/valitun-urakan-hoitokaudet
            :valittu-hoitokausi u/valittu-hoitokausi
-           :valitse-hoitokausi u/valitse-hoitokausi!}])])))
+           :valitse-hoitokausi u/valitse-hoitokausi!
+           :valittu-kustannustyyppi tiedot/valittu-kustannustyyppi
+           :valitse-kustannustyyppi tiedot/valitse-kustannustyyppi!
+           :kustannustyypit tiedot/+kustannustyypit+}])])))
 
 (defn muut-kustannukset []
   (komp/luo

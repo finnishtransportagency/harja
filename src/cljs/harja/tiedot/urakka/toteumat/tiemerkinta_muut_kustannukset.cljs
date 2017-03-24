@@ -11,6 +11,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(def +kustannustyypit+ [:muu :arvonmuutos :indeksi])
+
 ;; Tila
 (def muut-tyot (atom {:valittu-toteuma nil
                       :toteumat nil
@@ -21,11 +23,15 @@
                       ;; nimen. Sitä käytetään, jos ei lomakkeessa ei ole laskentakohdetta valittuna vaan halutaan luoda uusi
                       :uusi-laskentakohde nil}))
 
+(def valittu-kustannustyyppi (atom nil))
+(def valitse-kustannustyyppi! #(reset! valittu-kustannustyyppi %))
+
 (defonce valinnat
   (reaction
     {:urakka (:id @nav/valittu-urakka)
      :sopimus (first @u/valittu-sopimusnumero)
-     :sopimuskausi @u/valittu-hoitokausi}))
+     :sopimuskausi @u/valittu-hoitokausi
+     :valittu-kustannustyyppi valittu-kustannustyyppi}))
 
 ;; Tapahtumat
 
