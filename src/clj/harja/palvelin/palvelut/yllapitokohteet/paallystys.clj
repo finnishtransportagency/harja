@@ -34,7 +34,9 @@
     vastaus))
 
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
-  "Ottaa päällystysilmoituksen ja lisää sen kohdeosiin niiden vastaavat ilmoitustiedot."
+  "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
+   Lisää päällystysilmoitukselle ilmoitustiedot, jossa on kohdeosien tiedot ja niiden vastaavat ilmoitustiedot.
+   Poistaa päällystysilmoitukselta kohdeosien tiedot."
   [paallystysilmoitus]
   (-> paallystysilmoitus
       (assoc-in [:ilmoitustiedot :osoitteet]
@@ -67,6 +69,47 @@
                 (map #(assoc % :paksuus (int (:paksuus %)))
                      alustatoimet)))))
 
+(defn- muunna-ilmoitustiedot-tallennusmuotoon
+  "Muuntaa päällystysilmoitus-lomakkeen päällystystoimenpiteen tiedot sellaiseen muotoon,
+  josta se voidaan tallennetaan kantaan JSON-muunnoksen jälkeen."
+  [ilmoitustiedot]
+  (let [paivitetyt-osoitteet (mapv
+                               (fn [osoite]
+                                 (-> osoite (clojure.set/rename-keys
+                                              {:toimenpide-paallystetyyppi :paallystetyyppi
+                                               :toimenpide-raekoko :raekoko
+                                               :toimenpide-tyomenetelma :tyomenetelma})))
+                               (:osoitteet ilmoitustiedot))]
+    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
+
+(defn- poista-ilmoitustiedoista-alikohteen-tiedot
+  "Poistaa päällystysilmoituksen ilmoitustiedoista sellaiset tiedot, jotka tallennetaan
+   ylläpitokohdeosa-tauluun."
+  [ilmoitustiedot]
+  (let [paivitetyt-osoitteet (mapv
+                               (fn [osoite]
+                                 (-> osoite
+                                     (dissoc :tr-kaista :tr-ajorata :tr-loppuosa
+                                             :tunnus :tr-alkuosa :tr-loppuetaisyys
+                                             :nimi :tr-alkuetaisyys :tr-numero
+                                             :toimenpide :massamaara :raekoko
+                                             :paallystetyyppi :tyomenetelma)))
+                               (:osoitteet ilmoitustiedot))]
+    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
+
+(defn- muunna-tallennetut-ilmoitustiedot-lomakemuotoon
+  "Muuntaa päällystysilmoituksen ilmoitustiedot lomakkeessa esitettävään muotoon."
+  [ilmoitustiedot]
+  (let [paivitetyt-osoitteet (mapv
+                               (fn [osoite]
+                                 (clojure.set/rename-keys osoite
+                                                          {:paallystetyyppi :toimenpide-paallystetyyppi
+                                                           :raekoko :toimenpide-raekoko
+                                                           :tyomenetelma :toimenpide-tyomenetelma}))
+                               (:osoitteet ilmoitustiedot))]
+    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
+
+
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
@@ -94,11 +137,13 @@
                                     :id))
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (skeema/validoi pot-domain/+paallystysilmoitus+
-                            ilmoitustiedot))
+            (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus (taydenna-paallystysilmoituksen-kohdeosien-tiedot paallystysilmoitus)
+        paallystysilmoitus (as-> paallystysilmoitus p
+                                 (assoc p :ilmoitustiedot
+                                          (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
+                                 (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
@@ -125,27 +170,6 @@
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     paallystysilmoitus))
 
-
-(defn- poista-ilmoitustiedoista-tieosoitteet
-  "Poistaa päällystysilmoituksen ilmoitustiedoista sellaiset tiedot, jotka tallennetaan
-   ylläpitokohdeosa-tauluun."
-  [ilmoitustiedot]
-  (let [paivitetyt-osoitteet (mapv
-                               (fn [osoite]
-                                 (-> osoite
-                                     (dissoc :tr-kaista
-                                             :tr-ajorata
-                                             :tr-loppuosa
-                                             :tunnus
-                                             :tr-alkuosa
-                                             :tr-loppuetaisyys
-                                             :nimi
-                                             :tr-alkuetaisyys
-                                             :tr-numero
-                                             :toimenpide)))
-                               (:osoitteet ilmoitustiedot))]
-    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
-
 (defn- luo-paallystysilmoitus [db user urakka-id sopimus-id
                                {:keys [paallystyskohde-id ilmoitustiedot
                                        takuupvm]
@@ -156,9 +180,9 @@
                (:valmis-kasiteltavaksi paallystysilmoitus)
                (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
         ilmoitustiedot (-> ilmoitustiedot
-                           (poista-ilmoitustiedoista-tieosoitteet))
-        _ (skeema/validoi pot-domain/+paallystysilmoitus+
-                          ilmoitustiedot)
+                           (poista-ilmoitustiedoista-alikohteen-tiedot)
+                           (muunna-ilmoitustiedot-tallennusmuotoon))
+        _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (:id (q/luo-paallystysilmoitus<!
@@ -222,9 +246,10 @@
                      (:valmis-kasiteltavaksi paallystysilmoitus)
                      (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
               ilmoitustiedot (-> ilmoitustiedot
-                                 (poista-ilmoitustiedoista-tieosoitteet))
-              _ (skeema/validoi pot-domain/+paallystysilmoitus+
-                                ilmoitustiedot)
+                                 (poista-ilmoitustiedoista-alikohteen-tiedot)
+                                 (muunna-ilmoitustiedot-tallennusmuotoon))
+              _ (log/debug "PÄIVITETTÄVÄT ILMOITUSTIEDOT: " (pr-str ilmoitustiedot))
+              _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
           (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
           (log/debug "Asetetaan ilmoituksen tilaksi " tila)

@@ -29,7 +29,7 @@
 
 (defn laheta-maksuera-sampoon
   [sampo db _ maksueranumero]
-  (assert (not (nil? maksueranumero)) " maksueranumero ei saa olla nil.")
+  (assert (number? maksueranumero) " maksueranumeron oltava numero.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
   (sampo/laheta-maksuera-sampoon sampo maksueranumero)
   (let [tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
@@ -56,8 +56,9 @@
     maksuerat))
 
 (defn laheta-maksuerat-sampoon
-  "Palvelu, joka lähettää annetut maksuerät Sampoon. Ei vaadi erillisoikeuksia."
-  [sampo db user maksueranumerot]
+  "Palvelu, joka lähettää annetut maksuerät Sampoon."
+  [db user {:keys [sampo maksueranumerot urakka-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (mapv (fn [maksueranumero]
           (laheta-maksuera-sampoon sampo db user maksueranumero))
         maksueranumerot))
@@ -71,8 +72,12 @@
                                               (hae-urakan-maksuerat (:db this) user urakka-id)))
 
     (julkaise-palvelu (:http-palvelin this)
-                      :laheta-maksuerat-sampoon (fn [user maksueranumerot]
-                                                  (laheta-maksuerat-sampoon (:sampo this) (:db this) user maksueranumerot)))
+                      :laheta-maksuerat-sampoon (fn [user {:keys [maksueranumerot urakka-id]}]
+                                                  (laheta-maksuerat-sampoon (:db this)
+                                                                            user
+                                                                            {:sampo (:sampo this)
+                                                                             :maksueranumerot maksueranumerot
+                                                                             :urakka-id urakka-id})))
     this)
 
   (stop [this]

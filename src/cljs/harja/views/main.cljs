@@ -27,7 +27,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.tapahtumat :as t]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -52,6 +53,12 @@
                                                      (str "- Ei testikäyttäjänä -"))
                                        :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
+
+(defn harja-info []
+  [:a {:class "klikattava"
+       :id "infolinkki"
+       :href "http://finnishtransportagency.github.io/harja/"}
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
@@ -96,7 +103,8 @@
         (str k/+polku+ "laadunseuranta")]])]
 
    :right
-   [palaute/palaute-linkki @istunto/kayttaja (nav/nykyinen-url)]
+   [harja-info]
+   [palaute/palaute-linkki]
    [kayttajatiedot istunto/kayttaja]])
 
 (defn ladataan []

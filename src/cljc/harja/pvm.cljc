@@ -21,10 +21,13 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-     (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat)
-              (org.joda.time DateTimeZone))))
+           (:import (java.util Calendar Date)
+                    (java.text SimpleDateFormat)
+                    (org.joda.time DateTimeZone))))
 
+
+#?(:cljs
+   (defrecord Aika [tunnit minuutit sekunnit]))
 
 #?(:cljs
    ;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
@@ -249,6 +252,10 @@
 
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
+
+(defn aika-iso8601-ilman-millisekunteja
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
 
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
@@ -715,6 +722,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn tuntia-sitten [tuntia]
      (t/minus (nyt) (t/hours tuntia))))
+
+#?(:cljs
+   (defn tunnin-paasta [tuntia]
+     (t/plus (nyt) (t/hours tuntia))))
 
 #?(:clj
    (defn tuntia-sitten [tuntia]
