@@ -6,8 +6,7 @@
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
-            [harja.kyselyt.specql :refer [db]]
-            [harja.domain.roolit :as roolit]))
+            [harja.kyselyt.specql :refer [db]]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -205,11 +204,12 @@
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
            (if nykytilanne?
-             {::t/loppu (interval? loppu - < "7 days")}
-             (overlaps? ::t/alku ::t/loppu alku loppu))
+               {::t/loppu (interval? loppu - < "7 days")}
+               (overlaps? ::t/alku ::t/loppu alku loppu))
+           {::t/osoite {::tr/geometria (intersects-envelope? alue)}}
            (when-not tilaaja?
-             {::t/urakka-id (op/or op/null? (op/in urakat))})
-           {::t/osoite {::tr/geometria (intersects-envelope? alue)}})))
+             (when-not (empty? urakat)
+               {::t/urakka-id (op/or op/null? (op/in urakat))})))))
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
