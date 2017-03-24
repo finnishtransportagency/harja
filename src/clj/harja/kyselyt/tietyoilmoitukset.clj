@@ -172,6 +172,7 @@
                   (when sijainti
                     {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
            (when (and kaynnissa-alku kaynnissa-loppu)
+             ;; todo: käytä overlaps
              (op/and {::t/alku (op/<= kaynnissa-alku)}
                      {::t/loppu (op/>= kaynnissa-loppu)}))
            (if organisaatio

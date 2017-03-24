@@ -22,7 +22,8 @@
             [harja.ui.komponentti :as komp]
             [harja.domain.tierekisteri :as tr]
             [harja.transit :as transit]
-            [harja.asiakas.kommunikaatio :as k]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -256,5 +257,6 @@
              kayttajan-urakat :kayttajan-urakat
              :as app}]
       [:span.tietyoilmoitukset
+       [napit/uusi "Lisää tietyöilmoitus" #(e! (tiedot/->AloitaUusiTietyoilmoitus @nav/valittu-urakka-id))]
        [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
        [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])))
