@@ -124,19 +124,35 @@
     (log/debug "Vastaus: " vastaus)
     vastaus))
 
+(defn- hae-kayttajan-urakat
+  "Hakee kaikki urakat tyypin ja hallintayksikön mukaan ryhmiteltynä, joihin
+  käyttäjällä on jokin lukuoikeus."
+  [db user hallintayksikot]
+  (oikeudet/ei-oikeustarkistusta!)
+  (kayttajan-urakat-aikavalilta
+   db user
+   (partial oikeudet/voi-lukea? oikeudet/urakat)
+   nil nil nil hallintayksikot
+   (pvm/nyt) (pvm/nyt)))
+
 (defrecord Kayttajatiedot []
   component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
+  (start [{http :http-palvelin
+           db :db :as this}]
+    (julkaise-palvelu http
                       :kayttajatiedot
                       (fn [user alku]
                         (oikeudet/ei-oikeustarkistusta!)
                         (assoc user :urakkatyyppi
-                                    (oletusurakkatyyppi (:db this) user))))
-    (julkaise-palvelu (:http-palvelin this)
+                               (oletusurakkatyyppi db user))))
+    (julkaise-palvelu http
                       :yhteydenpito-vastaanottajat
+                      (fn [user hallintayksikot]
+                        (hae-yhteydenpidon-vastaanottajat db user hallintayksikot)))
+    (julkaise-palvelu http
+                      :kayttajan-urakat
                       (fn [user _]
-                        (hae-yhteydenpidon-vastaanottajat (:db this) user)))
+                        (hae-kayttajan-urakat db user)))
     this)
   (stop [this]
     (poista-palvelut (:http-palvelin this)
