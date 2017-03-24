@@ -79,7 +79,7 @@
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
-                                 :tr-loppuosa 4 ;; Päällystetoimenpiteen tiedot
+                                 :tr-loppuosa 4
                                  :tr-loppuetaisyys 5
                                  :tr-ajorata 1
                                  :tr-kaista 1

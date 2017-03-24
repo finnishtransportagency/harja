@@ -12,6 +12,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
+            [clojure.set :as s]
             [goog.string :as gstr]
             [goog.events.EventType :as EventType]
             [cljs.core.async :refer [<! >! chan] :as async]
@@ -30,7 +31,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-            [harja.ui.yleiset :as y])
+            [harja.ui.yleiset :as y]
+            [harja.domain.tierekisteri :as trd])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -344,11 +346,24 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   [:span ((or valinta-nayta str) @data)])
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
-                                               tyhjenna-kaikki? nayta-rivina? disabloi]} data]
+(defmethod tee-kentta :checkbox-group
+  [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
+           tyhjenna-kaikki? nayta-rivina? disabloi tasaa
+           muu-vaihtoehto muu-kentta
+           valitse-fn valittu-fn]} data]
+  (assert data)
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
-        valitut (set (or @data #{}))]
+        data-nyt @data
+        valitut (if valittu-fn
+                  (partial valittu-fn @data)
+                  (set (or data-nyt #{})))
+        valitse (if valitse-fn
+                  valitse-fn
+                  (fn [data valinta valittu?]
+                    (if valittu?
+                      (conj data valinta)
+                      (disj data valinta))))]
     [:div.boolean-group
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
@@ -357,27 +372,35 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
      (let [checkboxit (doall
-                       (for [v vaihtoehdot]
+                       (for [v vaihtoehdot
+                             :let [valittu? (valitut v)]]
                          ^{:key (str "boolean-group-" (name v))}
                          [:div.checkbox
                           [:label
-                           [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                           [:input {:type      "checkbox" :checked (boolean valittu?)
                                     :disabled (if disabloi
                                                 (disabloi valitut v)
                                                 false)
-                                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (reset! data
-                                                          ((if valittu? conj disj) valitut v)))}]
-                           (vaihtoehto-nayta v)]]))]
+                                    :on-change #(swap! data valitse v (not valittu?))}]
+                           (vaihtoehto-nayta v)]]))
+           muu (when (and muu-vaihtoehto
+                          (valitut muu-vaihtoehto))
+                 [tee-kentta muu-kentta
+                  (atomina muu-kentta data-nyt (partial reset! data))])]
        (if nayta-rivina?
-         [:table.boolean-group
+         [:table.boolean-group {:class (when (= tasaa :keskita) "keskita")}
           [:tbody
            [:tr
-           (map-indexed (fn [i cb]
-                          ^{:key i}
-                          [:td cb])
-                        checkboxit)]]]
-         checkboxit))]))
+            (map-indexed (fn [i cb]
+                           ^{:key i}
+                           [:td cb])
+                         checkboxit)
+            (when muu
+              ^{:key "muu"}
+              [:td.muu muu])]]]
+         [:span checkboxit
+          [:span.muu muu]]))]))
+
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
@@ -585,6 +608,21 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             (re-matches re t))
     (reset! atomi t)))
 
+(defn- aseta-aika! [aika-text aseta-fn!]
+  (if (re-matches #"\d{3}" aika-text)
+    ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
+    ;; niin 3 merkin kohdalla lisätään se automaattisesti
+    (let [alku (js/parseInt (.substring aika-text 0 2))]
+      (if (< alku 24)
+        ;; 123 => 12:3
+        (aseta-fn! (str (subs aika-text 0 2) ":" (subs aika-text 2)))
+        ;; 645 => 6:45
+        (aseta-fn! (str (subs aika-text 0 1) ":" (subs aika-text 1)))))
+
+    (when (or (str/blank? aika-text)
+              (re-matches +aika-regex+ aika-text))
+      (aseta-fn! aika-text))))
+
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]}
                                  data]
 
@@ -653,18 +691,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                             (reset! data nil)))))
 
              muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-             muuta-aika!  #(if (re-matches #"\d{3}" %)
-                             ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
-                             ;; niin 3 merkin kohdalla lisätään se automaattisesti
-                             (let [alku (js/parseInt (.substring % 0 2))]
-                               (if (< alku 24)
-                                 ;; 123 => 12:3
-                                 (reset! aika-teksti
-                                         (str (.substring % 0 2) ":" (.substring % 2)))
-                                 ;; 645 => 6:45
-                                 (reset! aika-teksti
-                                         (str (.substring % 0 1) ":" (.substring % 1)))))
-                             (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+             muuta-aika!  #(aseta-aika! % (partial reset! aika-teksti))
 
              koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
              koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
@@ -722,6 +749,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod tee-kentta :spinner [{:keys [viesti opts]}]
   [ajax-loader (or viesti "Lataa") opts])
 
+(defmethod tee-kentta :tyhja [{:keys [viesti opts]}]
+  [:span.tyhja])
+
 (defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
     (log "Haetaan geometria osoitteelle: " (pr-str osoite))
@@ -778,7 +808,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:thead
     [:tr
@@ -800,6 +830,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      [:td aet]
      [:td losa]
      [:td loppuet]
+     (when sijainnin-tyhjennys
+       [:td.sijannin-tyhjennys
+        sijainnin-tyhjennys])
      [:td.karttavalinta
       karttavalinta]
      (when virhe
@@ -808,7 +841,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defn- tierekisterikentat-rivitetty
   "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
   Rivittää tierekisterivalinnan usealle riville."
-  [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+  [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:tbody
     [:tr
@@ -829,6 +862,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      [:td [:label.control-label [:span.kentan-label "Loppuetäisyys"]]]]
     [:tr
      [:td losa] [:td loppuet]]
+    (when sijainnin-tyhjennys
+      [:tr [:td.sijannin-tyhjennys
+            sijainnin-tyhjennys]])
     [:tr
      [:td {:colSpan 2} karttavalinta]]
     (when virhe
@@ -836,8 +872,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:td {:colSpan 2} virhe]])]])
 
 
+(def ^:const tr-osoite-domain-avaimet [::trd/tie ::trd/aosa ::trd/aet ::trd/losa ::trd/let])
+(def ^:const tr-osoite-raaka-avaimet [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen?]} data]
+                                                   sijainti pakollinen? tyhjennys-sallittu?
+                                                   avaimet]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -873,6 +913,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                   :type :tr-valittu-osoite})
                                (keskita-kartta! arvo)))))
 
+        hae-tr (if avaimet
+                 (fn [tr-osoite-ch virheet osoite]
+                   (hae-tr tr-osoite-ch virheet
+                           (zipmap tr-osoite-raaka-avaimet
+                                   (map #(osoite %) avaimet))))
+                 hae-tr)
+
         tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
@@ -891,8 +938,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
         (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
-          (log (pr-str vanhat))
-          (log (pr-str uudet))
           (when (not= @vanha-osoite-atom @uusi-osoite-atom)
             (tee-tr-haku @uusi-osoite-atom))))
      (komp/kun-muuttuu
@@ -914,10 +959,22 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                    (kartta/zoomaa-geometrioihin)))
 
       (fn [{:keys [tyyli lomake? sijainti]} data]
-        (let [tierekisterikentat (if (= tyyli :rivitetty)
+        (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
+              _ (assert (= 5 (count avaimet))
+                        (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
+                             (count avaimet)))
+              [numero-avain alkuosa-avain alkuetaisyys-avain loppuosa-avain loppuetaisyys-avain]
+              avaimet
+
+              tierekisterikentat (if (= tyyli :rivitetty)
                                    tierekisterikentat-rivitetty
                                    tierekisterikentat-table)
-              {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
+
+              osoite @data
+
+              [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
+              (map #(when osoite (osoite %)) avaimet)
+
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               tr (swap! data assoc kentta (when (and (not (= "" v))
@@ -925,7 +982,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
-              kartta? @karttavalinta-kaynnissa]
+              kartta? @karttavalinta-kaynnissa
+              valinta-kaynnissa? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
@@ -934,11 +992,19 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
            [tierekisterikentat
             pakollinen?
-            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero numero-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa alkuosa-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys alkuetaisyys-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa loppuosa-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys loppuetaisyys-avain valinta-kaynnissa?]
+            (when  (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
+              [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
+                                                                       (tasot/poista-geometria! :tr-valittu-osoite)
+                                                                       (reset! sijainti nil)
+                                                                       (reset! data {})
+                                                                       (reset! virheet nil))
+                                                        :disabled (when (empty? @data) "disabled")}
+               (ikonit/livicon-delete)])
             (if-not @karttavalinta-kaynnissa
               [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
                                                           (reset! osoite-ennen-karttavalintaa osoite)
@@ -948,12 +1014,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
                                                   (reset! karttavalinta-kaynnissa false))
-                                  :paivita     #(swap! data merge %)
-                                  :kun-valmis  #(do
-                                                  (reset! data %)
-                                                  (reset! karttavalinta-kaynnissa false)
-                                                  (log "Saatiin tr-osoite! " (pr-str %))
-                                                  (go (>! tr-osoite-ch %)))}])
+                                  :paivita #(swap! data merge %)
+                                  :kun-valmis #(do
+                                                 (reset! data %)
+                                                 (reset! karttavalinta-kaynnissa false)
+                                                 (log "Saatiin tr-osoite! " (pr-str %))
+                                                 (go (>! tr-osoite-ch %)))}])
+
             (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
@@ -976,3 +1043,31 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
+
+(def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")
+
+(defn- parsi-aika [string]
+  (let [[_ t _ m _ s] (re-matches aika-pattern string)]
+    (if t
+      (pvm/map->Aika {:tunnit (js/parseInt t)
+                      :minuutit (js/parseInt m)
+                      :sekunnit (and s (js/parseInt s))})
+      {:keskenerainen string})))
+
+(defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
+  (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
+      [:input {:class (when lomake? "form-control")
+               :placeholder placeholder
+               on-change* (fn [e]
+                            (let [v (-> e .-target .-value)
+                                  [v aika] (aseta-aika! v (juxt identity parsi-aika))]
+                              (when aika
+                                (if (:tunnit aika)
+                                  (swap! data merge (assoc aika :keskenerainen v))
+                                  (swap! data assoc
+                                         :tunnit nil
+                                         :minuutit nil
+                                         :sekunnit nil
+                                         :keskenerainen v)))))
+               :on-focus on-focus
+               :value (or keskenerainen (fmt/aika aika))}]))

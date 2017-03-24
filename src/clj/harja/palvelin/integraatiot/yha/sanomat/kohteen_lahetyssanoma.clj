@@ -77,9 +77,12 @@
     [:let tr-loppuetaisyys]]
    [:kasittelymenetelma kasittelymenetelma]
    [:kasittelypaksuus paksuus]
-   [:verkkotyyppi verkkotyyppi]
-   [:verkon-tarkoitus verkon-tarkoitus]
-   [:verkon-sijainti verkon-sijainti]
+   (when verkkotyyppi
+     [:verkkotyyppi verkkotyyppi])
+   (when verkon-tarkoitus
+     [:verkon-tarkoitus verkon-tarkoitus])
+   (when verkon-sijainti
+     [:verkon-sijainti verkon-sijainti])
    (when tekninen-toimenpide
      [:tekninen-toimenpide tekninen-toimenpide])])
 
