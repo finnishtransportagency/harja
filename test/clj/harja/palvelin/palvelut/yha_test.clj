@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
+            [harja.palvelin.integraatiot.yha.urakan-kohdehaku-test :as urakan-kohdehaku-test]
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
@@ -86,3 +87,13 @@
                                             :yha-tiedot {:yhatunnus "YHATUNNUS"
                                                          :yhaid 666
                                                          :yhanimi "YHANIMI"}})))))
+
+(deftest hae-yha-urakan-kohteet
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))]
+
+    (with-fake-http [(urakan-kohdehaku-test/tee-url) +onnistunut-urakan-kohdehakuvastaus+]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-yha-kohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id})]
+        (is (= (count vastaus) 1))
+        (is (every? :yha-id vastaus))))))
