@@ -161,13 +161,14 @@
        [xmin ymin xmax ymax]])))
 
 (defn overlaps? [rivi-alku rivi-loppu alku loppu]
-  (op/or {rivi-alku (op/between alku loppu) rivi-loppu (op/between alku loppu)}))
+  (op/or {rivi-alku (op/between alku loppu)}
+         {rivi-loppu (op/between alku loppu)}))
 
-(defn interval? [start fn comp interval]
+(defn interval? [start interval]
   (reify op/Op
     (to-sql [this value]
-      [(str "? ? "value" ? INTERVAL '?'")
-       [start fn comp interval]])))
+      [(str "(? - "value" < ?::INTERVAL)")
+       [start interval]])))
 
 (defn hae-ilmoitukset [db {:keys [luotu-alku
                                   luotu-loppu
@@ -204,7 +205,7 @@
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
            (if nykytilanne?
-               {::t/loppu (interval? loppu - < "7 days")}
+               {::t/loppu (interval? loppu "7 days")}
                (overlaps? ::t/alku ::t/loppu alku loppu))
            {::t/osoite {::tr/geometria (intersects-envelope? alue)}}
            (when-not tilaaja?
