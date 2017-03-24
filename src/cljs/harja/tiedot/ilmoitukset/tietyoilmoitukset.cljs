@@ -311,7 +311,8 @@
                    :danger)
     (assoc app
            :tallennus-kaynnissa? false
-           :valittu-ilmoitus nil)))
+           :valittu-ilmoitus nil))
+
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]
     (let [tulos! (tuck/send-async! ->UusiTietyoilmoitus)]
