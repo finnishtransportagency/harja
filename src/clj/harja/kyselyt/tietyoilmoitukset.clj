@@ -188,8 +188,7 @@
                   (when sijainti
                     {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
            (when (and kaynnissa-alku kaynnissa-loppu)
-             (op/and {::t/alku (op/<= kaynnissa-alku)}
-                     {::t/loppu (op/>= kaynnissa-loppu)}))
+             (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu))
            (if organisaatio
              (op/or
                {::t/urakka-id (op/or op/null? (op/in urakat))}
