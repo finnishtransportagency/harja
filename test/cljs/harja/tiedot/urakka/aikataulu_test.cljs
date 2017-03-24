@@ -3,10 +3,10 @@
             [clojure.test :as t :refer-macros [deftest is testing]]
             [harja.pvm :as pvm]))
 
-kohde-valmis :aikataulu-kohde-valmis
-kohde-aloitettu :aikataulu-kohde-alku
-tiemerkinta-aloitettu :aikataulu-tiemerkinta-alku
-tiemerkinta-lopetettu :aikataulu-tiemerkinta-loppu
+(def kohde-valmis :aikataulu-kohde-valmis)
+(def kohde-aloitettu :aikataulu-kohde-alku)
+(def tiemerkinta-aloitettu :aikataulu-tiemerkinta-alku)
+(def tiemerkinta-lopetettu :aikataulu-tiemerkinta-loppu)
 
 (def +paallystys-ja-tiemerkinta-kesken+
   {:aikataulu-kohde-alku (pvm/->pvm "1.2.2017")
