@@ -150,8 +150,8 @@
                                (oletusurakkatyyppi db user))))
     (julkaise-palvelu http
                       :yhteydenpito-vastaanottajat
-                      (fn [user hallintayksikot]
-                        (hae-yhteydenpidon-vastaanottajat db user hallintayksikot)))
+                      (fn [user _]
+                        (hae-yhteydenpidon-vastaanottajat db user)))
     (julkaise-palvelu http
                       :kayttajan-urakat
                       (fn [user hallintayksikot]
