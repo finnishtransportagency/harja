@@ -30,7 +30,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.id :refer [id-olemassa?]])
+            [harja.id :refer [id-olemassa?]]
+            [harja.domain.tierekisteri :as tr-domain])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -411,7 +412,7 @@
       (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (sort-by tr/tieosoitteen-jarjestys yllapitokohdeosat)))))
+        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 
 (defrecord Yllapitokohteet []
