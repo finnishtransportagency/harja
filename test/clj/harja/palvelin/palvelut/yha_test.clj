@@ -39,7 +39,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest sido-yha-urakka-harja-urakkaan
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))
@@ -112,3 +112,15 @@
                                     {:urakka-id urakka-id})]
         (is (= (count vastaus) 1))
         (is (every? :yha-id vastaus))))))
+
+(deftest yha-kohteiden-haku-ei-palauta-harjassa-jo-olevia-kohteita
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+
+    (u "UPDATE yllapitokohde SET yhaid = 3 WHERE id = " leppajarven-ramppi-id ";")
+
+    (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +onnistunut-urakan-kohdehakuvastaus+]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-yha-kohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id})]
+        (is (= (count vastaus) 0))))))
