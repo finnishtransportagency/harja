@@ -99,7 +99,7 @@
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (doseq [{:keys [tierekisteriosoitevali
                     tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                     yllapitoluokka
@@ -108,7 +108,7 @@
                     nimi] :as kohde} kohteet]
       (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
       (let [kohde (yha-q/luo-yllapitokohde<!
-                    c
+                    db
                     {:urakka urakka-id
                      :tr_numero (:tienumero tierekisteriosoitevali)
                      :tr_alkuosa (:aosa tierekisteriosoitevali)
@@ -132,7 +132,7 @@
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
-                                c
+                                db
                                 {:yllapitokohde (:id kohde)
                                  :nimi nimi
                                  :tunnus tunnus
@@ -146,11 +146,11 @@
                                  :yhaid yha-id})]
             (when-not (:sijainti uusi-kohdeosa)
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi c user urakka-id)
+    (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-    (yy/paivita-yllapitourakan-geometria c urakka-id)
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
     (log/debug "Geometria päivitetty.")
-    (hae-urakan-yha-tiedot c urakka-id)))
+    (hae-urakan-yha-tiedot db urakka-id)))
 
 (defn- tarkista-lahetettavat-kohteet
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
