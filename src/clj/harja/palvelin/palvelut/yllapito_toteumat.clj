@@ -38,7 +38,7 @@
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka sopimus alkupvm loppupvm] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (into []
@@ -49,7 +49,7 @@
                                :loppupvm loppupvm}))))
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (first (into []
@@ -58,14 +58,14 @@
                                     :id id})))))
 
 (defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae laskentakohteet urakalle: " (pr-str urakka))
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
 (defn tallenna-yllapito-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toteumat]}]
   (log/debug "Tallenna ylläpidon toteuma:" toteumat)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muuttyot user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka-id)
 
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id] :as toteuma} toteumat]
