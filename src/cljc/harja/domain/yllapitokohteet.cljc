@@ -284,8 +284,8 @@ yllapitoluokkanimi->numero
          :aet :tr-alkuetaisyys) kohde))
 
 (defn- jarjesta-yllapitokohteet*
-  [tiet]
-  (sort-by yllapitokohteen-jarjestys tiet))
+  [kohteet]
+  (sort-by yllapitokohteen-jarjestys kohteet))
 
 (defn jarjesta-yllapitokohteet [yllapitokohteet]
   (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
