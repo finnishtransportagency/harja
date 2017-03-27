@@ -165,7 +165,6 @@
            nr-tiedot)))
 
 (defn tienpinnat-kanta->grid [nr-tiedot]
-  {:post [(some? %)]}
   (apply merge
          (map-indexed
           (fn [indeksi rajoitus-map]
@@ -173,7 +172,6 @@
           nr-tiedot)))
 
 (defn nopeusrajoitukset-grid->kanta* [grid-rajoitukset]
-  {:pre [(some? grid-rajoitukset)]}
   ;; {0 {:rajoitus "30", :matka 100}, -1 {:id -1, :koskematon true}}
   ;; -> [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
 
@@ -182,14 +180,12 @@
     r))
 
 (defn tienpinnat-grid->kanta* [grid-pinnat]
-  {:pre [(some? grid-pinnat)]}
   (vals grid-pinnat))
 
 (defn- nopeusrajoitukset-grid->kanta [ilmoitus]
   (update ilmoitus ::t/nopeusrajoitukset nopeusrajoitukset-grid->kanta*))
 
 (defn- tienpinnat-grid->kanta [ilmoitus]
-  {:post [(some? %)]}
   (let [grid-tienpinnat (::t/tienpinnat ilmoitus)
         kanta-tienpinnat (tienpinnat-grid->kanta* grid-tienpinnat)]
     ;; (log "tienpinnat-grid->kanta: muutetaan tienpinnat, grid oli" (pr-str grid-tienpinnat) "-> kanta" (pr-str kanta-tienpinnat))
@@ -261,20 +257,16 @@
 
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
-    (assert (some? nopeusrajoitukset))
     (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
     (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] (nopeusrajoitukset-grid->kanta* nopeusrajoitukset)))
 
   PaivitaTienPinnatGrid
   (process-event [{:keys [tienpinnat avain] :as kamat} app]
-    (assert (some? tienpinnat) (str "mapista puuttui :tienpinnat, arg oli" (pr-str kamat)))
-    (assert (contains? #{::t/tienpinnat ::t/kiertotienpinnat} avain) (str "halutaan lomakkeen avain, saatiin: " (pr-str avain)))
     (log "PaivitaTienpinnatGrid uusi arvo:" (pr-str (tienpinnat-grid->kanta* tienpinnat)))
     (assoc-in app [:valittu-ilmoitus avain] (tienpinnat-grid->kanta* tienpinnat)))
 
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
-    (assert (some? tyoajat))
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
   TallennaIlmoitus
