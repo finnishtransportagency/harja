@@ -6,6 +6,7 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid]]
             [harja.ui.kentat :refer [tee-kentta]]
@@ -246,7 +247,8 @@
        :avaimet kentat/tr-osoite-domain-avaimet
        :ala-nayta-virhetta-komponentissa? true
        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
-       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))}
+       :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
+                         #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
        :tyyppi :string}
       {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
