@@ -100,7 +100,8 @@
       {:nimi :tierekisteriosoite
        :tyyppi :tierekisteriosoite
        :pakollinen? false
-       :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
+       :sijainti (r/wrap (:sijainti valinnat-nyt)
+                         #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
        :palstoja 1
        :tyhjennys-sallittu? true}
