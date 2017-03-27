@@ -180,23 +180,24 @@
                                   organisaatio
                                   kayttaja-id
                                   sijainti]}]
-  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
-         (op/and
-           (merge {::t/paatietyoilmoitus op/null?}
-                  (when (and luotu-alku luotu-loppu)
-                    {::t/luotu (op/between luotu-alku luotu-loppu)})
-                  (when kayttaja-id
-                    {::t/luoja kayttaja-id})
-                  (when sijainti
-                    {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
-           (if (and kaynnissa-alku kaynnissa-loppu)
-             (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu)
-             {::t/id op/not-null?})
-           (if (empty? urakat)
-             (if organisaatio
-               {::t/urakoitsija-id organisaatio}
-               {::t/id op/not-null?})
-             {::t/urakka-id (op/or op/null? (op/in urakat))}))))
+  (let [ilmoitukset (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+                           (op/and
+                             (merge {::t/paatietyoilmoitus op/null?}
+                                    (when (and luotu-alku luotu-loppu)
+                                      {::t/luotu (op/between luotu-alku luotu-loppu)})
+                                    (when kayttaja-id
+                                      {::t/luoja kayttaja-id})
+                                    (when sijainti
+                                      {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
+                             (if (and kaynnissa-alku kaynnissa-loppu)
+                               (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu)
+                               {::t/id op/not-null?})
+                             (if (empty? urakat)
+                               (if organisaatio
+                                 {::t/urakoitsija-id organisaatio}
+                                 {::t/id op/not-null?})
+                               {::t/urakka-id (op/or op/null? (op/in urakat))})))]
+    ilmoitukset))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
                                                 tilaaja?
