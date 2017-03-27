@@ -76,6 +76,10 @@
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5);"))
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
+    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5, true);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 100, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2018-01-01', null,
     'Testitoteuma 2', 21, 8, 5);"))
@@ -112,6 +116,10 @@
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
     (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
@@ -129,6 +137,10 @@
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 'arvonmuutos', 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
+    laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 'arvonmuutos', 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);"))
     (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 'arvonmuutos', 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
