@@ -32,6 +32,7 @@
 (def muutyo-xf
   (comp
     yllapitokohteet-domain/yllapitoluokka-xf
+    (map #(konv/string->keyword % :tyyppi))
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
                                    (get-in % [:laskentakohde-nimi])]))
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
@@ -71,7 +72,7 @@
       (vaadi-toteuma-kuuluu-urakkaan db id urakka-id))
 
     (doseq [toteuma toteumat]
-      (let [{:keys [id selite pvm hinta yllapitoluokka laskentakohde uusi-laskentakohde poistettu]} toteuma
+      (let [{:keys [id selite pvm hinta tyyppi yllapitoluokka laskentakohde uusi-laskentakohde poistettu]} toteuma
             uusi-tallennettava-laskentakohde {:nimi uusi-laskentakohde
                                               :urakka urakka-id
                                               :kayttaja (:id user)}
@@ -88,8 +89,12 @@
                      :selite selite
                      :pvm pvm
                      :hinta hinta
+                     :tyyppi (if tyyppi
+                               (name tyyppi)
+                               "muu")
                      :yllapitoluokka (:numero yllapitoluokka)
                      :laskentakohde laskentakohde-id
+                     :poistettu (boolean poistettu)
                      :kayttaja (:id user)}]
 
         (if (id/id-olemassa? (:id toteuma))
