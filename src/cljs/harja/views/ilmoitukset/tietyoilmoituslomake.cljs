@@ -62,8 +62,11 @@
        :valinta-arvo first
        :valinta-nayta second}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
-     (r/wrap (tiedot/tienpinnat-kanta->grid tienpinnat-tiedot)
-             #(e! (tiedot/->PaivitaTienPinnatGrid % avain)))]))
+     (r/wrap (into {}
+                   (map-indexed (fn [i ta]
+                                  [i ta]))
+                   tienpinnat-tiedot)
+             #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
   ;; (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))

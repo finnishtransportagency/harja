@@ -180,18 +180,11 @@
     (log "grid-rajoitukset:" (pr-str grid-rajoitukset))
     r))
 
-(defn tienpinnat-grid->kanta* [grid-pinnat]
-  (vals grid-pinnat))
-
 (defn- nopeusrajoitukset-grid->kanta [ilmoitus]
   (update ilmoitus ::t/nopeusrajoitukset nopeusrajoitukset-grid->kanta*))
 
 (defn- tienpinnat-grid->kanta [ilmoitus]
-  (let [grid-tienpinnat (::t/tienpinnat ilmoitus)
-        kanta-tienpinnat (tienpinnat-grid->kanta* grid-tienpinnat)]
-    ;; (log "tienpinnat-grid->kanta: muutetaan tienpinnat, grid oli" (pr-str grid-tienpinnat) "-> kanta" (pr-str kanta-tienpinnat))
-    (-> ilmoitus (dissoc ::t/tienpinnat)
-        (assoc ::t/tienpinnat kanta-tienpinnat))))
+  (update ilmoitus ::t/tienpinnat vals))
 
 (extend-protocol tuck/Event
   AsetaValinnat
@@ -267,8 +260,7 @@
 
   PaivitaTienPinnatGrid
   (process-event [{:keys [tienpinnat avain] :as kamat} app]
-    (log "PaivitaTienpinnatGrid uusi arvo:" (pr-str (tienpinnat-grid->kanta* tienpinnat)))
-    (assoc-in app [:valittu-ilmoitus avain] (tienpinnat-grid->kanta* tienpinnat)))
+    (assoc-in app [:valittu-ilmoitus avain] tienpinnat))
 
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
@@ -284,7 +276,6 @@
                                (-> ilmoitus
                                    (dissoc ::t/tyovaiheet)
                                    nopeusrajoitukset-grid->kanta
-                                   tienpinnat-grid->kanta
                                    (spec-apurit/poista-nil-avaimet)))]
             (if (k/virhe? tulos)
               (fail! tulos)
@@ -304,11 +295,10 @@
 
   IlmoitusEiTallennettu
   (process-event [{virhe :virhe} app]
-    (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
+    (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta ei tallennettu"]
                    :danger)
     (assoc app
-           :tallennus-kaynnissa? false
-           :valittu-ilmoitus nil))
+           :tallennus-kaynnissa? false))
 
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]
