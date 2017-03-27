@@ -276,8 +276,19 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
+(defn- yllapitokohteen-jarjestys
+  [kohde]
+  ((juxt :kohdenumero
+         :tie :tr-numero :tienumero
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn- jarjesta-yllapitokohteet*
+  [tiet]
+  (sort-by yllapitokohteen-jarjestys tiet))
+
 (defn jarjesta-yllapitokohteet [yllapitokohteet]
   (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
         kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
-    (vec (concat (tr-domain/jarjesta-tiet kohteet-kohdenumerolla)
+    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
                  (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))

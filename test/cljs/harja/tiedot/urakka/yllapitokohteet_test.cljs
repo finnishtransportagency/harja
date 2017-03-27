@@ -113,12 +113,14 @@
   (is (= (yllapitokohteet-domain/jarjesta-yllapitokohteet
            [{:kohdenumero nil :tie 1 :aosa 2 :aet 1}
             {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
-            {:kohdenumero "20a" :tie 1}
+            {:kohdenumero "20a" :tie 2}
+            {:kohdenumero "20c" :tie 1}
             {:kohdenumero "" :tie 3 :aosa 1 :aet 1}
-            {:kohdenumero "20b" :tie 1}
+            {:kohdenumero "20b" :tie 2}
             {:kohdenumero "30" :tie 1}])
-         [{:kohdenumero "20a" :tie 1}
-          {:kohdenumero "20b" :tie 1}
+         [{:kohdenumero "20a" :tie 2}
+          {:kohdenumero "20b" :tie 2}
+          {:kohdenumero "20c" :tie 1}
           {:kohdenumero "30" :tie 1}
           {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
           {:kohdenumero nil :tie 1 :aosa 2 :aet 1}
