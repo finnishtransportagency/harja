@@ -29,7 +29,7 @@
 
 (defn voi-kirjoittaa? [urakka-id]
   (oikeudet/voi-kirjoittaa?
-    oikeudet/urakat-toteutus-muuttyot
+    oikeudet/urakat-toteutus-muutkustannukset
     urakka-id))
 
 (defn valinta-muun-kustannuksen-tyyppi

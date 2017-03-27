@@ -40,6 +40,6 @@
 
           "Muut kustannukset"
           :muut
-          (when (oikeudet/urakat-toteutus-muuttyot id)
+          (when (oikeudet/urakat-toteutus-muutkustannukset id)
             ^{:key "muut-kustannukset"}
             [muut-kustannukset/muut-kustannukset ur])]]))))
