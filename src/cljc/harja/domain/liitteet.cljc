@@ -20,9 +20,13 @@
                          "application/vnd.ms-powerpoint" ; .ppt ym.
                          "application/vnd.openxmlformats-officedocument.presentationml.presentation" ; .pptx
                          "application/vnd.openxmlformats-officedocument.presentationml.template" ; .ppsx
-                         ;; LibreOffice / OpenOffice
-                         "application/vnd.oasis.opendocument.text"
-                         "application/vnd.oasis.opendocument.spreadsheet"
+                         ;; OpenDocument (LibreOffice / OpenOffice)
+                         "application/vnd.oasis.opendocument.text" ; .odt
+                         "application/vnd.oasis.opendocument.text.template" ; .ott
+                         "application/vnd.oasis.opendocument.spreadsheet" ; .ods
+                         "application/vnd.oasis.opendocument.spreadsheet-template" ; .ots
+                         "application/vnd.oasis.opendocument.presentation" ; .odp
+                         "application/vnd.oasis.opendocument.presentation-template" ; .otp
                          ;; Muut tekstidokumentit
                          "application/rtf"
                          "text/rtf"
