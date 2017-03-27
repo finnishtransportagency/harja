@@ -189,12 +189,13 @@
                     {::t/luoja kayttaja-id})
                   (when sijainti
                     {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
-           (when (and kaynnissa-alku kaynnissa-loppu)
-             (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu))
-           (if organisaatio
-             (op/or
-               {::t/urakka-id (op/or op/null? (op/in urakat))}
-               {::t/urakoitsija-id organisaatio})
+           (if (and kaynnissa-alku kaynnissa-loppu)
+             (overlaps? ::t/alku ::t/loppu kaynnissa-loppu kaynnissa-loppu)
+             {::t/id op/not-null?})
+           (if (empty? urakat)
+             (if organisaatio
+               {::t/urakoitsija-id organisaatio}
+               {::t/id op/not-null?})
              {::t/urakka-id (op/or op/null? (op/in urakat))}))))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
