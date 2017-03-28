@@ -68,7 +68,7 @@
 (def +kyylamyllyt-ja-nil+
   (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
 
-(def +kuulamylly+ "Kuulamylly annetulla koodilla"
+(def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
   (apply s/enum (map :koodi +kyylamyllyt-ja-nil+)))
 
 (defn kuulamylly-koodi-nimella [nimi]
@@ -230,7 +230,7 @@
     (s/optional-key :leveys) (s/maybe s/Num) ;; metriä
     (s/optional-key :kokonaismassamaara) (s/maybe s/Num) ;; tonnia
     (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
-    (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
+    (s/optional-key :kuulamylly) +kuulamylly-tai-nil+
     ;; Edellinen päällystetyyppi -arvoa käytettiin lomakkeessa aiemmin, nykyään ei ole enää kiinnostava tieto
     ;; Säilytetään skeemassa vanhan datan yhteensopivuuden vuoksi
     (s/optional-key :edellinen-paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+
