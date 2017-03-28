@@ -367,7 +367,7 @@
             :tyyppi :valinta
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+sideainetyypit+}
+            :valinnat pot/+sideainetyypit-ja-nil+}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
             :pituus-max 256}]
