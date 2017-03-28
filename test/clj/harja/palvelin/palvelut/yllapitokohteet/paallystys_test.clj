@@ -184,7 +184,7 @@
                                                       :esiintyma "asd"
                                                       :km-arvo "asd"
                                                       :muotoarvo "asd"
-                                                      :sideainetyyppi 1
+                                                      :sideainetyyppi nil ;; Sideainetyyppi on annettu, mutta arvo nil (ei sideainetta)
                                                       :pitoisuus 54
                                                       :lisaaineet "asd"}]
 
@@ -194,7 +194,9 @@
                                                          :tr-loppuetaisyys 5
                                                          :kasittelymenetelma 1
                                                          :paksuus 1234
-                                                         :tekninen-toimenpide 1}]}))]
+                                                         :tekninen-toimenpide 1
+                                                         ;; Verkkoon liittyvät avaimet puuttuu kokonaan, arvoja ei siis annettu
+                                                         }]}))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus

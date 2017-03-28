@@ -18,8 +18,6 @@
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
 
-
-
 (defn- rivi-poistettavissa? [m]
   (log "rivi-poistettavissa? " (pr-str m))
   (or (-> m :muokattava) (-> m :id neg?)))
