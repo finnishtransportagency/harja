@@ -163,12 +163,17 @@
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
 
-(defn tiekohteiden-jarjestys
+(defn- tieosoitteen-jarjestys
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
+
+(defn jarjesta-tiet
+  "Järjestää kohteet tieosoitteiden mukaiseen järjestykseen"
+  [tiet]
+  (sort-by tieosoitteen-jarjestys tiet))
 
 (defn jarjesta-kohteiden-kohdeosat
   "Palauttaa kohteet tieosoitteen mukaisessa järjestyksessä"
@@ -176,7 +181,7 @@
   (when kohteet
     (mapv
       (fn [kohde]
-        (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
+        (assoc kohde :kohdeosat (jarjesta-tiet (:kohdeosat kohde))))
       kohteet)))
 
 (defn tie-rampilla?

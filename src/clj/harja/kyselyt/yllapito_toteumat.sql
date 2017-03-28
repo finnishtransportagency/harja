@@ -5,6 +5,7 @@ SELECT
   yt.selite,
   yt.pvm,
   yt.hinta,
+  yt.tyyppi,
   yt.yllapitoluokka,
   lk.id   AS "laskentakohde-id",
   lk.nimi AS "laskentakohde-nimi"
@@ -22,6 +23,7 @@ SELECT
   yt.selite,
   yt.pvm,
   yt.hinta,
+  yt.tyyppi,
   yt.yllapitoluokka,
   lk.id   AS "laskentakohde-id",
   lk.nimi AS "laskentakohde-nimi"
@@ -33,8 +35,9 @@ WHERE yt.urakka = :urakka
 
 -- name: luo-uusi-muu-tyo<!
 INSERT INTO yllapito_muu_toteuma
-(urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
-VALUES (:urakka, :sopimus, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohde, NOW(), :kayttaja);
+  (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka, laskentakohde, luotu, luoja)
+VALUES
+  (:urakka, :sopimus, :selite, :pvm, :hinta, :tyyppi::yllapito_muu_toteuma_tyyppi, :yllapitoluokka, :laskentakohde, NOW(), :kayttaja);
 
 -- name: paivita-muu-tyo<!
 UPDATE yllapito_muu_toteuma
@@ -43,6 +46,7 @@ SET
   sopimus        = :sopimus,
   pvm            = :pvm,
   hinta          = :hinta,
+  tyyppi         = :tyyppi::yllapito_muu_toteuma_tyyppi,
   yllapitoluokka = :yllapitoluokka,
   laskentakohde  = :laskentakohde,
   muokattu       = NOW(),

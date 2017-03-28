@@ -262,7 +262,12 @@
       [:div.tk-yksittaiset-suodattimet.fontti-taso3
        [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
         tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-        auki-oleva-checkbox-ryhma]]
+        auki-oleva-checkbox-ryhma]
+       (when
+         (harja.tiedot.istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
+         [yksittainen-suodatincheckbox "Tietyöilmoitukset"
+         tiedot/suodattimet [:tietyoilmoitukset tk/tietyoilmoitukset]
+         auki-oleva-checkbox-ryhma])]
       [:div {:class "tk-suodatinryhmat"}
        [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]
         (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]

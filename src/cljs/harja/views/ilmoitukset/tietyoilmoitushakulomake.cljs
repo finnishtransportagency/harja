@@ -16,13 +16,15 @@
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.muokkaustiedot :as m]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.domain.tierekisteri :as tr]
             [harja.transit :as transit]
-            [harja.asiakas.kommunikaatio :as k]))
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -68,8 +70,7 @@
     sahkoposti))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [[nil "Kaikki urakat"]]
-                             (map (juxt (comp str :id) :nimi))
+  (let [urakkavalinnat (into [{:id nil :nimi "Kaikki urakat"}]
                              kayttajan-urakat)]
     [lomake/lomake
      {:luokka :horizontal
@@ -93,14 +94,15 @@
        :tyyppi :valinta
        :pakollinen? true
        :valinnat urakkavalinnat
-       :valinta-nayta second
-       :valinta-arvo first
+       :valinta-nayta :nimi
+       :valinta-arvo :id
        :muokattava? (constantly true)
        :palstoja 1}
       {:nimi :tierekisteriosoite
        :tyyppi :tierekisteriosoite
        :pakollinen? false
-       :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
+       :sijainti (r/wrap (:sijainti valinnat-nyt)
+                         #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
        :palstoja 1
        :tyhjennys-sallittu? true}
@@ -117,7 +119,7 @@
    {:otsikko "Tie" :nimi :tie
     :hae #(str (or (::tr/tie (::t/osoite %)) "(ei tien numeroa)") " " (::t/tien-nimi % "(ei tien nimeä)"))
     :leveys 4}
-   {:otsikko "Ilmoitettu" :nimi ::t/luotu
+   {:otsikko "Ilmoitettu" :nimi ::m/luotu
     :fmt pvm/pvm-aika-opt
     :leveys 2}
    {:otsikko "Alkupvm" :nimi ::t/alku
@@ -256,5 +258,6 @@
              kayttajan-urakat :kayttajan-urakat
              :as app}]
       [:span.tietyoilmoitukset
+       [napit/uusi "Lisää tietyöilmoitus" #(e! (tiedot/->AloitaUusiTietyoilmoitus @nav/valittu-urakka-id))]
        [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
        [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])))

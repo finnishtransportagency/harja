@@ -156,6 +156,7 @@
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
         [:div.aikataulu
          [vuosivalinta ur]
+         [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [u-valinnat/tienumero yllapito-tiedot/tienumero]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"

@@ -185,6 +185,9 @@ tr.uusitehtavakoodi td {
   &.toimenpide {
     .livi-alasveto(@alasvedon-leveys-tp);
   }
+  &.muukustannustyyppi {
+    .livi-alasveto(@alasvedon-leveys-hk);
+  }
 }
 
 .pvm-kentta,
@@ -192,44 +195,6 @@ tr.uusitehtavakoodi td {
   display: inline-block;
   position: relative;
   width: 100%;
-}
-
-.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
-  display: inline-block;
-  margin: @margin;
-  max-width: 100%;
-  width: @leveys;
-  .aikavali-valinnat {
-    text-align: center;
-  }
-  .pvm-kentta {
-    width: 46%;
-  }
-  .pvm-valiviiva-wrap {
-    display: inline-block;
-    height: @input-korkeus;
-    text-align: center;
-    width: 7%;
-
-  }
-  .pvm {
-    height: @valintakontrollin-korkeus;
-    max-width: 100%;
-    position: relative;
-    top: 1px;
-  }
-}
-
-.label-ja-aikavali {
-  .label-ja-aikavali-tpl(@valintakontrollin-leveys);
-}
-.label-ja-aikavali-lyhyt {
-  .label-ja-aikavali-tpl(85px);
-}
-
-.label-ja-aikavali-lomake {
- .label-ja-aikavali-tpl(100%, 0px);
- .pvm { width: 100%; }
 }
 
 .flash-viesti {

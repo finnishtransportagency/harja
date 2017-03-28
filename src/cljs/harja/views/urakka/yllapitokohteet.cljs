@@ -676,7 +676,7 @@
                                                      (:bonukset-ja-sakot rivi)
                                                      (:bitumi-indeksi rivi)
                                                      (:kaasuindeksi rivi)))])}]))
-          (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]

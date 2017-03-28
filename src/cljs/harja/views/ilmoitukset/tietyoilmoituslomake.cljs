@@ -6,6 +6,7 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid]]
             [harja.ui.kentat :refer [tee-kentta]]
@@ -17,7 +18,9 @@
                                                   kuvaus-ja-avainarvopareja]]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.kentat :as kentat]))
+            [harja.ui.kentat :as kentat]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.roolit :as roolit]))
 
 (def koskee-valinnat [[nil "Ilmoitus koskee..."]
                       [:ensimmainen "Ensimmäinen ilmoitus työstä"],
@@ -30,6 +33,8 @@
         (map (juxt :id :nimi))
         urakat))
 
+(defn- yllapitokohteet-valinnat [urakka-id]
+  nil)
 
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
@@ -44,11 +49,31 @@
   (log msg (with-out-str (cljs.pprint/pprint val)))
   val)
 
+(defn tienpinnat-komponentti-grid [e! avain tienpinnat-tiedot]
+  (let [tp-valinnat [["paallystetty" "Päällystetty"]
+                     ["jyrsitty" "Jyrsitty"]
+                     ["murske" "Murske"]]]
 
+    (log "tienpinnat-komponentti: tiedot" (pr-str tienpinnat-tiedot))
+    [muokkaus-grid {:otsikko ""
+                    :voi-muokata? (constantly true)
+                    :voi-poistaa? (constantly true)
+                    :piilota-toiminnot? false
+                    :tyhja "Ei tienpintatietoja"
+                    :jarjesta :jarjestysnro
+                    :tunniste :jarjestysnro}
+     [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
+       :valinnat tp-valinnat
+       :valinta-arvo first
+       :valinta-nayta second}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+     (r/wrap (into {}
+                   (map-indexed (fn [i ta]
+                                  [i ta]))
+                   tienpinnat-tiedot)
+             #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))
-  (log "nr-tiedot oli" (pr-str nr-tiedot))
   (if (some? nr-tiedot)
     [muokkaus-grid {:otsikko ""
                     :voi-muokata? (constantly true)
@@ -61,10 +86,14 @@
        :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
                     "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
-     (r/wrap (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)
-             #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
+     (r/wrap
+      (into {}
+            (map-indexed (fn [i na]
+                           [i na]))
+            nr-tiedot)
+      #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
     ;; else
-    (log "nr-komponentti sai nil")))
+    (log "nopeusrajoitukset-komponentti sai nil")))
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -197,17 +226,19 @@
        (if (:urakan-nimi-valinta ilmoitus)
          (assoc tyhja-kentta :nimi :blank-1)
          ;; else
-         {:nimi :urakan-nimi-syotetty
+         {:nimi ::t/urakan-nimi
           :uusi-rivi? true
           :otsikko "Projektin tai urakan nimi"
           :tyyppi :string
           :muokattava? (constantly true)})
-       (if (:urakan-nimi-valinta ilmoitus)
+       (assoc tyhja-kentta :nimi :blank-2)
+       #_(if  (:urakan-nimi-valinta ilmoitus)
          (assoc tyhja-kentta :nimi :blank-2)
          ;; else
          {:otsikko "Kohde urakassa"
-          :nimi :kohde
-          :tyyppi :string}))
+          :nimi ::t/yllapitokohde
+          :tyyppi :valinta
+          :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi
@@ -228,8 +259,8 @@
        :avaimet kentat/tr-osoite-domain-avaimet
        :ala-nayta-virhetta-komponentissa? true
        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
-       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
-       }
+       :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
+                         #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
        :tyyppi :string}
       {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
@@ -242,21 +273,7 @@
       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
       {:otsikko "Työn pituus" :nimi :tyon-pituus
        :tyyppi :positiivinen-numero
-       :placeholder "(Tyon pituus metreinä)"
-       }
-
-      #_(lomake/ryhma "Työvaihe"
-
-                      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi :alkusijainnin_kuvaus_b
-                       :tyyppi :string}
-                      {:otsikko "Työn aloituspvm" :nimi :alku_b :tyyppi :pvm}
-                      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi :loppusijainnin_kuvaus_b
-                       :tyyppi :string}
-                      {:otsikko "Työn lopetuspvm" :nimi :loppu_b :tyyppi :pvm}
-                      {:otsikko "Työn pituus" :nimi :tyon-pituus_b
-                       :tyyppi :positiivinen-numero
-                       :hae #(pvm-vali-paivina (:alku %) (:loppu %))}
-                      )
+       :placeholder "(Tyon pituus metreinä)"}
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
@@ -273,7 +290,7 @@
                      }
                     {:otsikko "Kaistajärjestelyt"
                      :tyyppi :checkbox-group
-                     :nimi :tietyon_kaistajarjestelyt
+                     :nimi ::t/kaistajarjestelyt
                      :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
                      :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
                      :muu-vaihtoehto "Muu"
@@ -289,26 +306,22 @@
                      :nimi :kokorajoituksia
                      :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
                                    "Painorajoitus"] ;; -> max paino
-
                      }
                     {:otsikko "Tien pinta työmaalla"
-                     ;; tehdään muokkaus-grid tähän?
-                     :tyyppi :checkbox-group
-                     :nimi :tienpinta-materiaali
-                     :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske"]
-
+                     :nimi ::t/tienpinnat
+                     :tyyppi :komponentti
+                     :komponentti #(->> % :data ::t/tienpinnat (tienpinnat-komponentti-grid e! ::t/tienpinnat))
                      }
-                    {:otsikko "Metriä:"
-                     :tyyppi :positiivinen-numero
-                     :nimi :tienpinta-matka}
+                    {:otsikko "Kiertotietien pinnat"
+                     :nimi ::t/kiertotienpinnat
+                     :tyyppi :komponentti
+                     :komponentti #(->> % :data ::t/kiertotienpinnat (tienpinnat-komponentti-grid e! ::t/kiertotienpinnat))}
                     {:otsikko "Kiertotie"
                      :tyyppi :checkbox-group
                      :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
-
                      :valinnat ["Loivat mutkat", "Jyrkät mutkat (erkanee yli 45° kulmassa)" "Päällystetty" "Murske" "Kantavuus rajoittaa", "___ tonnia"]
                      ;; ___ metriä
                      ;; __ tonnia
-
                      }
                     {:otsikko "Kulkurajoituksia"
                      :tyyppi :checkbox-group
@@ -317,8 +330,7 @@
                      :vaihtoehto-nayta identity
                      :muu-vaihtoehto "Aikataulu:"
                      :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}
-                     }
-                    )
+                     })
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
                      :tyyppi :checkbox-group
@@ -334,13 +346,12 @@
                      :nimi ::t/lisatietoja
                      :tyyppi :text
                      :koko [90 8]})
-      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)
-
-      ]
+      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
      ilmoitus]]
    [napit/tallenna
     "Tallenna ilmoitus"
     #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus)))
-    {:disabled tallennus-kaynnissa?
+    {;; todo: salli tallennus kaikille, kun feature on valmis
+     :disabled (or (roolit/jvh? @istunto/kayttaja) tallennus-kaynnissa?)
      :tallennus-kaynnissa? tallennus-kaynnissa?
      :ikoni (ikonit/tallenna)}]])
