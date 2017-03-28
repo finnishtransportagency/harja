@@ -1053,7 +1053,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       (pvm/map->Aika {:tunnit (js/parseInt t)
                       :minuutit (js/parseInt m)
                       :sekunnit (and s (js/parseInt s))})
-      {:keskenerainen string})))
+      (pvm/map->Aika {:keskenerainen string}))))
 
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
@@ -1064,7 +1064,11 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                   [v aika] (aseta-aika! v (juxt identity parsi-aika))]
                               (when aika
                                 (if (:tunnit aika)
-                                  (swap! data merge (assoc aika :keskenerainen v))
+                                  (swap! data
+                                         (fn [aika-nyt]
+                                           (pvm/map->Aika
+                                            (merge aika-nyt
+                                                   (assoc aika :keskenerainen v)))))
                                   (swap! data assoc
                                          :tunnit nil
                                          :minuutit nil
