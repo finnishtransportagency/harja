@@ -381,8 +381,6 @@
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
-           ;; FIXME: laskee TR pituuden väärin! 3 1 4 2 -> -1
-           ;; herjaa yo tiedoille "ei pääkohteen sisällä"
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :voi-muokata? alustatoimet-voi-muokata?
