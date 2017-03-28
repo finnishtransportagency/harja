@@ -7,10 +7,11 @@
             [harja.domain.urakka :as urakka]
             [clojure.spec :as s]
             [clojure.future :refer :all]
-            [clojure.string :refer [trim]]))
+            [clojure.string :refer [trim]]
+            [clojure.java.io :as io]))
 
 
-(def db (when *compile-files*
+(def db (when (.canRead (io/file ".specql-db"))
           {:connection-uri (trim (slurp ".specql-db"))}))
 
 (s/def ::d/geometry any?)
