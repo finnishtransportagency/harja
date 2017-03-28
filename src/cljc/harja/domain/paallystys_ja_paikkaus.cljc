@@ -20,18 +20,24 @@
    {:nimi "Soratien pintaus" :lyhenne "SOP" :koodi 31 :api-arvo "soratien pintaus"}
    {:nimi "Sora" :lyhenne "SORA" :koodi 41 :api-arvo "sora"}])
 
+(def +paallystetyypit-ja-nil+
+  (conj +paallystetyypit+ {:nimi "Ei päällystetyyppiä" :lyhenne "Ei päällystetyyppiä" :koodi nil :api-arvo nil}))
+
+(def +paallystetyyppi-tai-nil+ "Päällystetyypin valinta koodilla"
+  (apply s/enum (map :koodi +paallystetyypit-ja-nil+)))
+
 (defn hae-paallyste-koodilla
   "Hakee päällysteen nimen koodilla"
   [koodi]
-  (:nimi (first (filter #(= (:koodi %) koodi) +paallystetyypit+))))
+  (:nimi (first (filter #(= (:koodi %) koodi) +paallystetyypit-ja-nil+))))
 
 (defn hae-apin-paallyste-koodilla [koodi]
   "Hakee API:n päällysteen arvon koodilla"
-  (:api-arvo (first (filter #(= (:koodi %) koodi) +paallystetyypit+))))
+  (:api-arvo (first (filter #(= (:koodi %) koodi) +paallystetyypit-ja-nil+))))
 
 (defn hae-koodi-apin-paallysteella [koodi]
   "Hakee koodin API:n päällysteellä"
-  (:koodi (first (filter #(= (:api-arvo %) koodi) +paallystetyypit+))))
+  (:koodi (first (filter #(= (:api-arvo %) koodi) +paallystetyypit-ja-nil+))))
 
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
@@ -51,8 +57,7 @@
     :hylatty [:span.ilmoitus-hylatty (kuvaile-paatostyyppi tila)]
     ""))
 
-(def +paallystetyyppi+ "Päällystetyypin valinta koodilla"
-  (apply s/enum (map :koodi +paallystetyypit+)))
+
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)

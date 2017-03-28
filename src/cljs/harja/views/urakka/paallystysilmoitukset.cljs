@@ -345,11 +345,8 @@
             :nimi :kuulamylly
             :tyyppi :valinta
             :valinta-arvo :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (:nimi rivi)
-                               "- Valitse kuulamylly -"))
-            :valinnat pot/+kuulamyllyt+
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+kyylamyllyt-ja-nil+
             :leveys 30}]
           paallystystoimenpiteet]
 
@@ -369,12 +366,8 @@
            {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
             :tyyppi :valinta
             :valinta-arvo :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (:nimi rivi)
-                               "- Valitse sideainetyyppi -"))
-            :valinnat (conj pot/+sideainetyypit+
-                            {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+sideainetyypit+}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
             :pituus-max 256}]
@@ -406,10 +399,10 @@
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta (fn [rivi]
-                                     (if rivi
+                                     (if (:koodi rivi)
                                        (str (:lyhenne rivi) " - " (:nimi rivi))
-                                       "- Valitse menetelmä -"))
-                    :valinnat pot/+alustamenetelmat+
+                                       (:nimi rivi)))
+                    :valinnat pot/+alustamenetelmat-ja-nil+
                     :leveys 30
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
@@ -420,8 +413,8 @@
                     :nimi :verkkotyyppi
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
-                    :valinnat pot/+verkkotyypit+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkkotyypit-ja-nil+
                     :leveys 25}
                    {:otsikko "Verkon sijainti"
                     :nimi :verkon-sijainti
@@ -434,16 +427,15 @@
                     :nimi :verkon-tarkoitus
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
-                    :valinnat pot/+verkon-tarkoitukset+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkon-tarkoitukset-ja-nil+
                     :leveys 25}
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-                    :valinnat (conj pot/+tekniset-toimenpiteet+
-                                    {:nimi "Ei toimenpidettä" :lyhenne "Ei toimenpidettä" :koodi nil})
+                    :valinnat pot/+tekniset-toimenpiteet+
                     :leveys 30}]
                   alustalle-tehdyt-toimet]])]))))
 

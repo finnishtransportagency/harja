@@ -73,7 +73,6 @@
   (let [vastaus (into []
                       yllapitokohteet-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
-    (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
 (defn- hae-urakkatyyppi [db urakka-id]

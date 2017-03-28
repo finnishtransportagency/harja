@@ -113,13 +113,11 @@
    :nimi :paallystetyyppi
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse päällyste -"
-                        "")))
-   :valinnat paallystys-ja-paikkaus/+paallystetyypit+})
+                      (:nimi rivi)))
+   :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+})
 
 (def raekoko-grid-skeema
   {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
@@ -131,10 +129,8 @@
    :nimi :tyomenetelma
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse menetelmä -"
-                        "")))
-   :valinnat pot/+tyomenetelmat+})
+                      (:nimi rivi)))
+   :valinnat pot/+tyomenetelmat-ja-nil+})
