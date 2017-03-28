@@ -94,7 +94,8 @@
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet tie]
-   (when (on-alku-ja-loppu? tie)
+   (when (and (on-alku-ja-loppu? tie)
+              (not (empty? osien-pituudet)))
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa
