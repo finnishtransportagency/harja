@@ -65,6 +65,7 @@
          (t/year (:loppupvm ur))
          urakka/valittu-urakan-vuosi
          urakka/valitse-urakan-vuosi!]
+        [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
         [u-valinnat/tienumero yllapito-tiedot/tienumero]
 
         [yllapitokohteet-view/yllapitokohteet

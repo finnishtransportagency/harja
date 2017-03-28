@@ -31,6 +31,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
@@ -387,7 +388,6 @@
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
-    (log/debug "SAIN OSAT: " osat)
     (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
@@ -412,7 +412,7 @@
       (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
+        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
