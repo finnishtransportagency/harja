@@ -9,7 +9,8 @@
     [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+    [clojure.string :as str])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -18,20 +19,25 @@
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 
-(defn suodata-yllapitokohteet-tienumerolla [kohteet tienumero]
-  (filterv #(or (nil? tienumero)
-                (= (:tr-numero %) tienumero))
-           kohteet))
-
-(defn suodata-yllapitokohteet-tyypin-ja-yhan-mukaan [kohteet
-                                                     yha-kohteet?
-                                                     yllapitokohdetyotyyppi]
-  (filterv
-    #(and (if yha-kohteet?
-            (yha-kohde? %)
-            (not (yha-kohde? %)))
-          (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
-    kohteet))
+(defn suodata-yllapitokohteet
+  "Suodatusoptiot on map, jolla voi valita halutut suodatusperusteet:
+   :tienumero int
+   :yha-kohde? boolean
+   :yllapitokohdetyotyyppi keyword (:paallystys / :paikkaus)
+   :kohdenumero int
+   Jos jotain arvoa ei anneta, sitä ei huomioida suodatuksessa"
+  [kohteet suodatusoptiot]
+  (let [yha-kohde-fn yha-kohde?
+        {:keys [tienumero yha-kohde? yllapitokohdetyotyyppi kohdenumero]} suodatusoptiot]
+    (filterv
+      #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
+            (or (nil? tienumero) (= (:tr-numero %) tienumero))
+            (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
+            (or (str/blank? kohdenumero)
+                (and (:kohdenumero %)
+                     (= (str/lower-case (:kohdenumero %))
+                        (str/lower-case kohdenumero)))))
+      kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
@@ -203,7 +209,7 @@
                  (:paikkauskohde-id %)
                  (:yllapitokohde-id %))
          karttamuodossa (kartalla-esitettavaan-muotoon
-                         yllapitokohteet
-                         #(= (id lomakedata) (id %))
-                         yllapitokohteet-domain/yllapitokohde-kartalle-xf)]
-    karttamuodossa)))
+                          yllapitokohteet
+                          #(= (id lomakedata) (id %))
+                          yllapitokohteet-domain/yllapitokohde-kartalle-xf)]
+     karttamuodossa)))

@@ -1038,8 +1038,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
-  [:span.label-ja-kentta
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
+  [:span {:class (or luokka "label-ja-kentta")}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
