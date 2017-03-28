@@ -27,7 +27,7 @@ WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
 UPDATE yllapitokohde
-set poistettu = TRUE
+SET poistettu = TRUE
 WHERE urakka = :urakka;
 
 -- name: hae-yllapitokohteen-kohdeosat
