@@ -111,12 +111,6 @@
    {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
    {:nimi "Kaksiajorataisen toinen ajorata" :koodi 2}])
 
-(def +suunnat+
-  "Suuntavalinnat"
-  [{:nimi "Molemmat suunnat samassa" :koodi 0}
-   {:nimi "Tierekisterin suunta" :koodi 1}
-   {:nimi "Tierekisterin vastainen suunta" :koodi 2}])
-
 (def +kaistat+
   "Kaistavalinnat"
   [{:nimi "1" :koodi 1}
@@ -138,10 +132,6 @@
    {:nimi "27" :koodi 27}
    {:nimi "28" :koodi 28}
    {:nimi "29" :koodi 29}])
-
-(def +kaista+
-  "Kaistavalinta koodilla"
-  (apply s/enum (map :koodi +kaistat+)))
 
 (def +sideainetyypit+
   "Sideainetyypit"
@@ -221,11 +211,6 @@
    {:nimi "Tasaukset" :koodi :tasaukset}
    {:nimi "Jyrsinnät" :koodi :jyrsinnat}
    {:nimi "Muut" :koodi :muut}])
-
-(defn paallystystyon-tyypin-koodi-nimella [nimi]
-  (:koodi (first (filter
-                   #(= nimi (:nimi %))
-                   +paallystystyon-tyypit+))))
 
 (defn paallystystyon-tyypin-nimi-koodilla [koodi]
   (:nimi (first (filter
