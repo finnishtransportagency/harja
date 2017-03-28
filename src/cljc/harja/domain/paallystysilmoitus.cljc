@@ -111,19 +111,11 @@
    {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
    {:nimi "Kaksiajorataisen toinen ajorata" :koodi 2}])
 
-(def +ajorata+
-  "Ajoratavalinta koodilla"
-  (apply s/enum (map :koodi +ajoradat+)))
-
 (def +suunnat+
   "Suuntavalinnat"
   [{:nimi "Molemmat suunnat samassa" :koodi 0}
    {:nimi "Tierekisterin suunta" :koodi 1}
    {:nimi "Tierekisterin vastainen suunta" :koodi 2}])
-
-(def +suunta+
-  "Suuntavalinta koodilla"
-  (apply s/enum (map :koodi +suunnat+)))
 
 (def +kaistat+
   "Kaistavalinnat"
