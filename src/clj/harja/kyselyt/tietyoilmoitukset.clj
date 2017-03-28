@@ -176,7 +176,8 @@
 
 (defn overlaps? [rivi-alku rivi-loppu alku loppu]
   (op/or {rivi-alku (op/between alku loppu)}
-         {rivi-loppu (op/between alku loppu)}))
+         {rivi-loppu (op/between alku loppu)}
+         {rivi-alku (op/<= alku) rivi-loppu (op/>= loppu)}))
 
 (defn interval? [start interval]
   (reify op/Op
