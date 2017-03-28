@@ -283,7 +283,7 @@
                      }
                     {:otsikko "Kaistajärjestelyt"
                      :tyyppi :checkbox-group
-                     :nimi :tietyon_kaistajarjestelyt
+                     :nimi ::t/kaistajarjestelyt
                      :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
                      :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
                      :muu-vaihtoehto "Muu"
