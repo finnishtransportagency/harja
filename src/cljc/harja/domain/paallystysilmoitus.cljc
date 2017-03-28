@@ -94,15 +94,16 @@
   [{:nimi "Rakentaminen" :koodi 1}
    {:nimi "Suuntauksen parantaminen" :koodi 2}
    {:nimi "Raskas rakenteen parantaminen" :koodi 3}
-   {:nimi "Kevyt rakenteen parantaminen" :koodi 4}
-   {:nimi "Ei toimenpidettä" :koodi nil}])
+   {:nimi "Kevyt rakenteen parantaminen" :koodi 4}])
 
+(def +tekniset-toimenpiteet-ja-nil+
+  (conj +tekniset-toimenpiteet+ {:nimi "Ei toimenpidettä" :koodi nil}))
 
-(def +tekninen-toimenpide+ "Teknisen toimenpiteen valinta koodilla"
-  (apply s/enum (map :koodi +tekniset-toimenpiteet+)))
+(def +tekninen-toimenpide-tai-nil+ "Teknisen toimenpiteen valinta koodilla"
+  (apply s/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
 
 (defn tekninentoimenpide-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
 
 (def +ajoradat+
   "Ajoratavalinnat"
@@ -275,7 +276,7 @@
     (s/optional-key :verkkotyyppi) +verkkotyyppi-tai-nil+
     (s/optional-key :verkon-tarkoitus) +verkon-tarkoitus-tai-nil+
     (s/optional-key :verkon-sijainti) +verkon-sijainti-tai-nil+
-    (s/optional-key :tekninen-toimenpide) +tekninen-toimenpide+}])
+    (s/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+

@@ -434,8 +434,8 @@
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-                    :valinnat pot/+tekniset-toimenpiteet+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+tekniset-toimenpiteet-ja-nil+
                     :leveys 30}]
                   alustalle-tehdyt-toimet]])]))))
 
