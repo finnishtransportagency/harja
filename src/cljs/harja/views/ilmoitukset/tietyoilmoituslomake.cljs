@@ -93,6 +93,26 @@
     ;; else
     (log "nopeusrajoitukset-komponentti sai nil")))
 
+(defn kokorajoitukset-komponentti [e! ilmoitus]
+  [muokkaus-grid {:otsikko ""
+                  :voi-muokata? true
+                  :voi-poistaa? false
+                  :voi-lisata? false
+                  :piilota-toiminnot? true}
+   [
+    {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. pituus (m)" :nimi ::t/max-pituus
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. paino (kg)" :nimi ::t/max-paino
+     :tyyppi :positiivinen-numero}]
+   (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
+           #(e!
+             (tiedot/->IlmoitustaMuokattu
+              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
@@ -299,11 +319,11 @@
                      :nimi ::t/nopeusrajoitukset
 
                      }
-                    {:otsikko "Kokorajoituksia"
-                     :tyyppi :checkbox-group
-                     :nimi :kokorajoituksia
-                     :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
-                                   "Painorajoitus"] ;; -> max paino
+                    {:otsikko "Ajoneuvon kokorajoitukset"
+                     :tyyppi :komponentti
+                     :nimi :kokorajoitukset
+                     :komponentti #(kokorajoitukset-komponentti e! ilmoitus)
+
                      }
                     {:otsikko "Tien pinta työmaalla"
                      :nimi ::t/tienpinnat
