@@ -227,6 +227,14 @@
              (when-not (empty? urakat)
                {::t/urakka-id (op/or op/null? (op/in urakat))})))))
 
+(defn hae-ilmoitukset-tienakymaan [db {:keys [alku
+                                              loppu
+                                              sijainti] :as tiedot}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+         (op/and
+           (overlaps? ::t/alku ::t/loppu alku loppu)
+           {::t/osoite {::tr/geometria (intersects? 100 sijainti)}})))
+
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
           {::t/id tietyoilmoitus-id})))
