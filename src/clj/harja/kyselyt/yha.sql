@@ -120,12 +120,6 @@ VALUES (
                                       CAST(:tr_loppuetaisyys AS INTEGER))),
   :yhaid);
 
--- name: hae-yllapitokohde-idlla
--- single?: true
-SELECT *
-FROM yllapitokohde
-WHERE yhatunnus = :yhatunnus AND poistettu IS FALSE;
-
 -- name: hae-urakan-yha-id
 -- single?: true
 SELECT yhaid
