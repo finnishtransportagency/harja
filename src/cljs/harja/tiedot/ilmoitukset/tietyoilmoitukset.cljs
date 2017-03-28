@@ -68,11 +68,6 @@
                  (map #(assoc % :tyyppi-kartalla :tietyoilmoitus) tietyoilmoitukset)
                  #(= (::t/id %) (::t/id valittu-ilmoitus)))))))
 
-(defn- nil-hylkiva-concat [akku arvo]
-  (if (or (nil? arvo) (nil? akku))
-    nil
-    (concat akku arvo)))
-
 (defonce karttataso-ilmoitukset (atom false))
 
 (defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
