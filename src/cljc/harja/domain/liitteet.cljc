@@ -2,21 +2,37 @@
 
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 32000000
-        mime-whitelist #{"image/png"
+        mime-whitelist #{;; Kuvat
+                         "image/png"
                          "image/tiff"
                          "image/jpeg"
+                         ;; Arkistot
                          "application/zip"
                          "application/x-compressed"
                          "application/x-zip-compressed"
-                         "application/msword"
-                         "application/excel"
+                         ; MS Office
+                         "application/msword" ; .doc ym.
+                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ; .docx
+                         "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ; .dotx
+                         "application/excel" ; .xls ym.
+                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ; .xlsx
+                         "application/vnd.openxmlformats-officedocument.spreadsheetml.template" ; .xltx
+                         "application/vnd.ms-powerpoint" ; .ppt ym.
+                         "application/vnd.openxmlformats-officedocument.presentationml.presentation" ; .pptx
+                         "application/vnd.openxmlformats-officedocument.presentationml.template" ; .ppsx
+                         ;; OpenDocument (LibreOffice / OpenOffice)
+                         "application/vnd.oasis.opendocument.text" ; .odt
+                         "application/vnd.oasis.opendocument.text.template" ; .ott
+                         "application/vnd.oasis.opendocument.spreadsheet" ; .ods
+                         "application/vnd.oasis.opendocument.spreadsheet-template" ; .ots
+                         "application/vnd.oasis.opendocument.presentation" ; .odp
+                         "application/vnd.oasis.opendocument.presentation-template" ; .otp
+                         ;; Muut tekstidokumentit
                          "application/rtf"
-                         "application/xml"
                          "text/rtf"
+                         "application/xml"
                          "text/xml"
                          "application/pdf"
-                         "application/vnd.oasis.opendocument.text"
-                         "application/vnd.oasis.opendocument.spreadsheet"
                          "text/plain"}]
     (if (and (:koko liite) (:tyyppi liite))
       (if (> (:koko liite) max-koko-tavuina)

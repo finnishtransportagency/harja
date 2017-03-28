@@ -76,6 +76,10 @@
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5);"))
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
+    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5, true);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 100, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2018-01-01', null,
     'Testitoteuma 2', 21, 8, 5);"))
@@ -112,6 +116,10 @@
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
     (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
@@ -123,6 +131,26 @@
     laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);")) ; Poistettu
+
+    ;; arvonmuutokset
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 'arvonmuutos', 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
+    laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 'arvonmuutos', 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 'arvonmuutos', 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
+
+    ;; indeksit
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, tyyppi, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 'indeksi', 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
 
     ;; Sakot
     (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
@@ -212,7 +240,8 @@
   (testidata-uusiksi!)
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kk-vali?]
+                muut-tyot arvonmuutokset indeksit
+                sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
          :as raportin-tiedot}
         (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
                                        :urakka-id urakka-id
@@ -223,17 +252,43 @@
     (is (== yksikkohintaiset-toteumat 102))
     (is (== yksikkohintaiset-suunnitellut-tyot 5))
     (is (== muut-tyot 2001))
+    (is (== arvonmuutokset 2001))
+    (is (== indeksit 1001))
     (is (== sakot 1000))
     (is (== bonukset -1))
 
-    (is (== toteumat-yhteensa 3102)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
-    (is (false? kk-vali?))))
+    (is (== toteumat-yhteensa 6104)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
+    (is (false? kokonaisia-kuukausia-aikavalina?))))
+
+(deftest raportin-suoritus-urakalle-toimii
+  (testidata-uusiksi!)
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
+                muut-tyot arvonmuutokset indeksit
+                sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
+         :as raportin-tiedot}
+        (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
+                                       :urakka-id urakka-id
+                                       :alkupvm (pvm/luo-pvm 2014 9 1)
+                                       :loppupvm (pvm/luo-pvm 2014 11 31)})]
+    (is (map? raportin-tiedot))
+    (is (== kokonaishintaiset-tyot 0))
+    (is (== yksikkohintaiset-toteumat 0))
+    (is (== yksikkohintaiset-suunnitellut-tyot 0))
+    (is (== muut-tyot 1001))
+    (is (== arvonmuutokset 1001))
+    (is (== indeksit 1001))
+    (is (== sakot 0))
+    (is (== bonukset 0))
+
+    (is (== toteumat-yhteensa 3003)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
+    (is (true? kokonaisia-kuukausia-aikavalina?))))
 
 (deftest kok-hint-tyot-lasketaan-vain-kuukausivalille
   (testidata-uusiksi!)
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kk-vali?]
+                muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
          :as raportin-tiedot}
         (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
                                        :urakka-id urakka-id
@@ -248,4 +303,4 @@
     (is (== bonukset 0))
 
     (is (== toteumat-yhteensa 3))
-    (is (true? kk-vali?))))
+    (is (true? kokonaisia-kuukausia-aikavalina?))))
