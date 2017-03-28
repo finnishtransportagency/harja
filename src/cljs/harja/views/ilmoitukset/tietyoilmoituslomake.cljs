@@ -69,8 +69,6 @@
              #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  ;; (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))
-  ;; (log "nr-tiedot oli" (pr-str nr-tiedot))
   (if (some? nr-tiedot)
     [muokkaus-grid {:otsikko ""
                     :voi-muokata? (constantly true)
@@ -83,8 +81,12 @@
        :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
                     "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
-     (r/wrap (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)
-             #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
+     (r/wrap
+      (into {}
+            (map-indexed (fn [i na]
+                           [i na]))
+            nr-tiedot)
+      #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
     ;; else
     (log "nopeusrajoitukset-komponentti sai nil")))
 

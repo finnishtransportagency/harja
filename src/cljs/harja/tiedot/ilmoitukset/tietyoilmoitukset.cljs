@@ -7,7 +7,6 @@
             [harja.tiedot.urakat :as tiedot-urakat]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :as async]
-            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
@@ -152,39 +151,6 @@
     (.clearTimeout js/window haku))
   (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
 
-
-(defn nopeusrajoitukset-kanta->grid [nr-tiedot]
-  ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
-  ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
-  ;; mapiksi {indeksi {rajoitus matka}} -tupleja, esim:
-  ;; {0 {::t/rajoitus 100, ::t/matka 200}, 1 {::t/rajoitus 300, ::t/matka 20}}
-  (apply merge
-         (map-indexed
-           (fn [indeksi rajoitus-map]
-             {indeksi (select-keys rajoitus-map [::t/matka ::t/rajoitus])})
-           nr-tiedot)))
-
-(defn tienpinnat-kanta->grid [nr-tiedot]
-  (apply merge
-         (map-indexed
-          (fn [indeksi rajoitus-map]
-            {indeksi (select-keys rajoitus-map [::t/matka ::t/materiaali])})
-          nr-tiedot)))
-
-(defn nopeusrajoitukset-grid->kanta* [grid-rajoitukset]
-  ;; {0 {:rajoitus "30", :matka 100}, -1 {:id -1, :koskematon true}}
-  ;; -> [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
-
-  (let [r (vals grid-rajoitukset)]
-    (log "grid-rajoitukset:" (pr-str grid-rajoitukset))
-    r))
-
-(defn- nopeusrajoitukset-grid->kanta [ilmoitus]
-  (update ilmoitus ::t/nopeusrajoitukset nopeusrajoitukset-grid->kanta*))
-
-(defn- tienpinnat-grid->kanta [ilmoitus]
-  (update ilmoitus ::t/tienpinnat vals))
-
 (extend-protocol tuck/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -255,7 +221,7 @@
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
     (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
-    (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] (nopeusrajoitukset-grid->kanta* nopeusrajoitukset)))
+    (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] nopeusrajoitukset))
 
   PaivitaTienPinnatGrid
   (process-event [{:keys [tienpinnat avain] :as kamat} app]
@@ -274,7 +240,6 @@
           (let [tulos (k/post! :tallenna-tietyoilmoitus
                                (-> ilmoitus
                                    (dissoc ::t/tyovaiheet)
-                                   nopeusrajoitukset-grid->kanta
                                    (spec-apurit/poista-nil-avaimet)))]
             (if (k/virhe? tulos)
               (fail! tulos)
