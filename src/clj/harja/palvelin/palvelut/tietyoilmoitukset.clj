@@ -12,12 +12,15 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch upsert!]]
             [clojure.spec :as s]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
             [specql.op :as op]
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.komponentit.fim :as fim]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -71,11 +74,20 @@
 
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
-  (upsert! db ::t/ilmoitus
-           (update-in ilmoitus
-                      [::t/osoite ::tr/geometria]
-                      #(when % (geo/geometry (geo/clj->pg %))))
-           {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))
+  (let [org (get-in user [:organisaatio :id])
+        ilmoitus (-> ilmoitus
+                     (m/lisaa-muokkaustiedot ::t/id user)
+                     (update-in [::t/osoite ::tr/geometria]
+                                #(when % (geo/geometry (geo/clj->pg %)))))]
+    (println "TALLENNA ILMOITUS " (::t/id ilmoitus) " URAKASSA " (::t/urakka ilmoitus) "; ORG: " org)
+    (println "ILMO: " (pr-str ilmoitus))
+    (upsert! db ::t/ilmoitus
+             ilmoitus
+             (op/or
+              {::m/luoja-id (:id user)}
+              {::t/urakoitsija-id org}
+              {::t/tilaaja-id org}
+              {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
 
 
 (defn tietyoilmoitus-pdf [db user params]
@@ -84,14 +96,55 @@
                   q-tietyoilmoitukset/ilmoitus-pdf-kentat
                   {::t/id (:id params)}))))
 
-(s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
+(defn hae-yhteyshenkilo-roolissa [rooli kayttajat]
+  (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
 
+(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
+  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (let [{:keys [urakka-sampo-id
+                tr-numero
+                tr-alkuosa
+                tr-alkuetaisyys
+                tr-loppuosa
+                tr-loppuetaisyys]
+         :as yllapitokohde}
+        (first (q-tietyoilmoitukset/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))
+        geometria (tr-haku/hae-tr-viiva db {:numero tr-numero
+                                            :alkuosa tr-alkuosa
+                                            :alkuetaisyys tr-alkuetaisyys
+                                            :loppuosa tr-loppuosa
+                                            :loppuetaisyys tr-loppuetaisyys})
+        yllapitokohde (assoc yllapitokohde :geometria geometria)]
+    (if urakka-sampo-id
+      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+            urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
+            tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
+            yllapitokohde (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                               :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+        yllapitokohde)
+      yllapitokohde)))
+
+(defn hae-urakan-tiedot-tietyoilmoitukselle [db fim user urakka-id]
+  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (let [{:keys [urakka-sampo-id] :as urakka}
+        (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})]
+    (if urakka-sampo-id
+      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+            urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
+            tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
+            urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                 :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+        urakka)
+      urakka)))
+
+(s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
            http :http-palvelin
            pdf :pdf-vienti
+           fim :fim
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
@@ -106,6 +159,12 @@
                         (tallenna-tietyoilmoitus db user ilmoitus))
                       {:kysely-spec ::t/ilmoitus
                        :vastaus-spec ::t/ilmoitus})
+    (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                      (fn [user tiedot]
+                        (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot)))
+    (julkaise-palvelu http :hae-urakan-tiedot-tietyoilmoitukselle
+                      (fn [user tiedot]
+                        (hae-urakan-tiedot-tietyoilmoitukselle db fim user tiedot)))
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
@@ -115,7 +174,9 @@
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset
                      :hae-tietyoilmoitus
-                     :tallenna-tietyoilmoitus)
+                     :tallenna-tietyoilmoitus
+                     :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                     :hae-urakan-tiedot-tietyoilmoitukselle)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
     this))

@@ -998,12 +998,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa loppuosa-avain valinta-kaynnissa?]
             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys loppuetaisyys-avain valinta-kaynnissa?]
             (when  (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
-              [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
-                                                                       (tasot/poista-geometria! :tr-valittu-osoite)
-                                                                       (reset! sijainti nil)
-                                                                       (reset! data {})
-                                                                       (reset! virheet nil))
-                                                        :disabled (when (empty? @data) "disabled")}
+              [:button.nappi-tyhjenna.nappi-kielteinen
+               {:on-click #(do (.preventDefault %)
+                               (tasot/poista-geometria! :tr-valittu-osoite)
+                               (reset! data {})
+                               (reset! @sijainti-atom nil)
+                               (reset! virheet nil))
+                :disabled (when (empty? @data) "disabled")}
                (ikonit/livicon-delete)])
             (if-not @karttavalinta-kaynnissa
               [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
@@ -1038,8 +1039,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
-  [:span.label-ja-kentta
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
+  [:span {:class (or luokka "label-ja-kentta")}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
@@ -1052,7 +1053,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       (pvm/map->Aika {:tunnit (js/parseInt t)
                       :minuutit (js/parseInt m)
                       :sekunnit (and s (js/parseInt s))})
-      {:keskenerainen string})))
+      (pvm/map->Aika {:keskenerainen string}))))
 
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
@@ -1063,7 +1064,11 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                   [v aika] (aseta-aika! v (juxt identity parsi-aika))]
                               (when aika
                                 (if (:tunnit aika)
-                                  (swap! data merge (assoc aika :keskenerainen v))
+                                  (swap! data
+                                         (fn [aika-nyt]
+                                           (pvm/map->Aika
+                                            (merge aika-nyt
+                                                   (assoc aika :keskenerainen v)))))
                                   (swap! data assoc
                                          :tunnit nil
                                          :minuutit nil

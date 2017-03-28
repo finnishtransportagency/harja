@@ -1,7 +1,8 @@
 (ns harja.tiedot.urakka.yllapitokohteet-test
   (:require [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [cljs.test :as test :refer-macros [deftest is]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 (def testikohteet-kartalle
   [{:id 1
@@ -30,80 +31,81 @@
                (dissoc (testikohde-idlla kohde-id testikohteet-kartalle) :kohdeosat))
             "Ylläpitokohteet esitetään kohdeosina, joilla on pääkohteen tiedot")))))
 
+;; Tie 20
+(def kohde-1 {:tr-numero 20
+              :yllapitokohdetyotyyppi :paallystys
+              :yhaid 666})
+(def kohde-2 {:tr-numero 20
+              :yllapitokohdetyotyyppi :paallystys
+              :yhaid nil})
+(def kohde-3 {:tr-numero 20
+              :yllapitokohdetyotyyppi :paikkaus
+              :yhaid 666})
+(def kohde-4 {:tr-numero 20
+              :yllapitokohdetyotyyppi :paikkaus
+              :yhaid nil})
+
+;; Tie 4
+(def kohde-5 {:tr-numero 4
+              :yllapitokohdetyotyyppi :paallystys
+              :yhaid 666})
+(def kohde-6 {:tr-numero 4
+              :yllapitokohdetyotyyppi :paallystys
+              :yhaid nil})
+(def kohde-7 {:tr-numero 4
+              :yllapitokohdetyotyyppi :paikkaus
+              :yhaid 666})
+(def kohde-8 {:tr-numero 4
+              :yllapitokohdetyotyyppi :paikkaus
+              :yhaid nil})
+
+;; Muut
+(def kohde-9 {:tr-numero 5
+              :yllapitokohdetyotyyppi :paikkaus
+              :yhaid nil :kohdenumero "L03"})
 
 (def testikohteet-suodatukseen
-  [;; Tie 20
-   {:tr-numero 20
-    :yllapitokohdetyotyyppi :paallystys
-    :yhaid 666}
-   {:tr-numero 20
-    :yllapitokohdetyotyyppi :paallystys
-    :yhaid nil}
-   {:tr-numero 20
-    :yllapitokohdetyotyyppi :paikkaus
-    :yhaid 666}
-   {:tr-numero 20
-    :yllapitokohdetyotyyppi :paikkaus
-    :yhaid nil}
-   ;; Tie 4
-   {:tr-numero 4
-    :yllapitokohdetyotyyppi :paallystys
-    :yhaid 666}
-   {:tr-numero 4
-    :yllapitokohdetyotyyppi :paallystys
-    :yhaid nil}
-   {:tr-numero 4
-    :yllapitokohdetyotyyppi :paikkaus
-    :yhaid 666}
-   {:tr-numero 4
-    :yllapitokohdetyotyyppi :paikkaus
-    :yhaid nil}])
+  [kohde-1 kohde-2 kohde-3 kohde-4
+   kohde-5 kohde-6 kohde-7 kohde-8
+   kohde-9])
 
-(deftest suodata-yllapitokohteet-tienumerolla
-  (let [suodatut-kohteet (yllapitokohteet/suodata-yllapitokohteet-tienumerolla testikohteet-suodatukseen 4)]
-    (is (= suodatut-kohteet [{:tr-numero 4
-                              :yllapitokohdetyotyyppi :paallystys
-                              :yhaid 666}
-                             {:tr-numero 4
-                              :yllapitokohdetyotyyppi :paallystys
-                              :yhaid nil}
-                             {:tr-numero 4
-                              :yllapitokohdetyotyyppi :paikkaus
-                              :yhaid 666}
-                             {:tr-numero 4
-                              :yllapitokohdetyotyyppi :paikkaus
-                              :yhaid nil}]))))
+(deftest yllapitokohteiden-jarjestys
+  (is (= (yllapitokohteet-domain/jarjesta-yllapitokohteet
+           [{:kohdenumero nil :tie 1 :aosa 2 :aet 1}
+            {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
+            {:kohdenumero "20a" :tie 2}
+            {:kohdenumero "20c" :tie 1}
+            {:kohdenumero "" :tie 3 :aosa 1 :aet 1}
+            {:kohdenumero "20b" :tie 2}
+            {:kohdenumero "30" :tie 1}])
+         [{:kohdenumero "20a" :tie 2}
+          {:kohdenumero "20b" :tie 2}
+          {:kohdenumero "20c" :tie 1}
+          {:kohdenumero "30" :tie 1}
+          {:kohdenumero nil :tie 1 :aosa 1 :aet 1}
+          {:kohdenumero nil :tie 1 :aosa 2 :aet 1}
+          {:kohdenumero "" :tie 3 :aosa 1 :aet 1}])))
 
-(deftest suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen true :paallystys)
-         [{:tr-numero 20
-           :yllapitokohdetyotyyppi :paallystys
-           :yhaid 666}
-          {:tr-numero 4
-           :yllapitokohdetyotyyppi :paallystys
-           :yhaid 666}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen true :paikkaus)
-         [{:tr-numero 20
-           :yllapitokohdetyotyyppi :paikkaus
-           :yhaid 666}
-          {:tr-numero 4
-           :yllapitokohdetyotyyppi :paikkaus
-           :yhaid 666}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen false :paallystys)
-         [{:tr-numero 20
-           :yllapitokohdetyotyyppi :paallystys
-           :yhaid nil}
-          {:tr-numero 4
-           :yllapitokohdetyotyyppi :paallystys
-           :yhaid nil}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen false :paikkaus)
-         [{:tr-numero 20
-           :yllapitokohdetyotyyppi :paikkaus
-           :yhaid nil}
-          {:tr-numero 4
-           :yllapitokohdetyotyyppi :paikkaus
-           :yhaid nil}])))
+(deftest yllapitokohteiden-suodatus-toimii
+  (is (= (yllapitokohteet/suodata-yllapitokohteet testikohteet-suodatukseen {:tienumero 4})
+         [kohde-5 kohde-6 kohde-7 kohde-8]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys :kohdenumero nil})
+         [kohde-1 kohde-5]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde? true :yllapitokohdetyotyyppi :paikkaus :kohdenumero ""})
+         [kohde-3 kohde-7]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde? false :yllapitokohdetyotyyppi :paallystys})
+         [kohde-2 kohde-6]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus})
+         [kohde-4 kohde-8 kohde-9]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:kohdenumero "l03"})
+         [kohde-9])))
