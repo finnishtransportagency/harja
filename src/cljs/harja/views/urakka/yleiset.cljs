@@ -12,7 +12,7 @@
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
-            [harja.views.urakka.yhatuonti :as yha]
+            [harja.ui.yllapito.yha :as yha]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
 
