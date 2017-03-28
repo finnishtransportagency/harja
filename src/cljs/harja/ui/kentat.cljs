@@ -998,12 +998,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa loppuosa-avain valinta-kaynnissa?]
             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys loppuetaisyys-avain valinta-kaynnissa?]
             (when  (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
-              [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
-                                                                       (tasot/poista-geometria! :tr-valittu-osoite)
-                                                                       (reset! sijainti nil)
-                                                                       (reset! data {})
-                                                                       (reset! virheet nil))
-                                                        :disabled (when (empty? @data) "disabled")}
+              [:button.nappi-tyhjenna.nappi-kielteinen
+               {:on-click #(do (.preventDefault %)
+                               (tasot/poista-geometria! :tr-valittu-osoite)
+                               (reset! data {})
+                               (reset! @sijainti-atom nil)
+                               (reset! virheet nil))
+                :disabled (when (empty? @data) "disabled")}
                (ikonit/livicon-delete)])
             (if-not @karttavalinta-kaynnissa
               [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
