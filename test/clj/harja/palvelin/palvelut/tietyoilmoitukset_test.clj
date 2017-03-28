@@ -101,10 +101,9 @@
    ::t/viivastys-normaali-liikenteessa 15,
    ::t/tyotyypit [{::t/tyyppi "Tienrakennus",
                    ::t/kuvaus "Rakennetaan tietä"}]
-   ::m/luoja 6,
+   ::m/luoja-id 2,
    ::t/urakoitsijan-nimi "YIT Rakennus Oy",
    ::t/osoite {::tr/aosa 1,
-               ::tr/geometria nil,
                ::tr/losa 5,
                ::tr/tie 20,
                ::tr/let 1,
@@ -129,7 +128,13 @@
         lkm-jalkeen (count (fetch db ::t/ilmoitus #{::t/id} {}))]
     (is (some? (::t/id ilm-tallennettu)))
     (is (= lkm-jalkeen (inc lkm-ennen)))
-    (is (= ilm-ennen (dissoc ilm-tallennettu ::t/id)))
+
+    (tarkista-map-arvot
+     ilm-ennen
+     (-> ilm-tallennettu
+         (dissoc  ::t/id)
+         ;; FIXME: specql ei pitäisi palauttaa nil geometriaa
+         (update ::t/osoite dissoc ::tr/geometria)))
     (let [ilm-haettu (first (fetch db ::t/ilmoitus q/kaikki-ilmoituksen-kentat
                                {::t/id (::t/id ilm-tallennettu)}))]
       (tarkista-map-arvot

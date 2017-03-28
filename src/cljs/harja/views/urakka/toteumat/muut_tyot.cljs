@@ -148,7 +148,7 @@
               jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
               urakka-id (:id urakka)
               oikeus (if (= (:tyyppi urakka) :tiemerkinta)
-                       oikeudet/urakat-toteutus-muuttyot
+                       oikeudet/urakat-toteutus-muutkustannukset
                        oikeudet/urakat-toteumat-muutos-ja-lisatyot)
               kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeus urakka-id)
               lomaketta-voi-muokata? (and
@@ -387,7 +387,7 @@
                                                                                (:id toimenpideinstanssi))
                                                                            muut-tyot-hoitokaudella))))))
         oikeus (if (= (:tyyppi urakka) :tiemerkinta)
-                 oikeudet/urakat-toteutus-muuttyot
+                 oikeudet/urakat-toteutus-muutkustannukset
                  oikeudet/urakat-toteumat-muutos-ja-lisatyot)
         tyorivit
         (reaction
