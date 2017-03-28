@@ -518,7 +518,7 @@
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
-            (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
+            (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]

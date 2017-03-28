@@ -44,7 +44,7 @@
     :hyvaksytty "Hyväksytty"
     :hylatty "Hylätty"))
 
-(defn nayta-tila [tila]
+(defn kuvaile-ilmoituksen-tila [tila]
   (case tila
     :aloitettu "Aloitettu"
     :valmis "Valmis käsiteltäväksi"
@@ -56,8 +56,6 @@
     :hyvaksytty [:span.ilmoitus-hyvaksytty (kuvaile-paatostyyppi tila)]
     :hylatty [:span.ilmoitus-hylatty (kuvaile-paatostyyppi tila)]
     ""))
-
-
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)
