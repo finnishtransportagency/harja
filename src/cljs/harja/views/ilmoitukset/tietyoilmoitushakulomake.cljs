@@ -215,6 +215,7 @@
      (vaikutukset-liikenteelle)]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
+   [napit/uusi "Lisää työvaihe" #(e! (tiedot/->AloitaUusiTyovaiheilmoitus tietyoilmoitus)) {}]
    [grid
     {:otsikko "Työvaiheet"
      :tunniste ::t/id

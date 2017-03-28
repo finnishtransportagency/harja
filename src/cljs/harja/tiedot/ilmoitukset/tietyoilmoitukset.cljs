@@ -138,6 +138,7 @@
 (defrecord IlmoitusTallennettu [ilmoitus])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
+(defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
 
 
@@ -263,7 +264,16 @@
   (process-event [{urakka-id :urakka-id} app]
     (let [tulos! (tuck/send-async! ->UusiTietyoilmoitus)]
       (go
-       (tulos! (esitayta-tietyoilmoitus (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id))))))
+        (tulos! (esitayta-tietyoilmoitus (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id))))))
+    app)
+
+  AloitaUusiTyovaiheilmoitus
+  (process-event [{tietyoilmoitus :tietyoilmoitus} app]
+    (let [tulos! (tuck/send-async! ->UusiTietyoilmoitus)]
+      (go
+        (tulos! (-> tietyoilmoitus
+                    (assoc ::t/paatietyoilmoitus (::t/id tietyoilmoitus))
+                    (dissoc ::t/id)))))
     app)
 
   UusiTietyoilmoitus
