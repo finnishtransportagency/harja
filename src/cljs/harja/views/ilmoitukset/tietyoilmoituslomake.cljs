@@ -31,6 +31,9 @@
         (map (juxt :id :nimi))
         urakat))
 
+(defn- yllapitokohteet-valinnat [urakka-id]
+  nil)
+
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
@@ -226,12 +229,14 @@
           :otsikko "Projektin tai urakan nimi"
           :tyyppi :string
           :muokattava? (constantly true)})
-       (if (:urakan-nimi-valinta ilmoitus)
+       (assoc tyhja-kentta :nimi :blank-2)
+       #_(if  (:urakan-nimi-valinta ilmoitus)
          (assoc tyhja-kentta :nimi :blank-2)
          ;; else
          {:otsikko "Kohde urakassa"
-          :nimi :kohde
-          :tyyppi :string}))
+          :nimi ::t/yllapitokohde
+          :tyyppi :valinta
+          :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi
@@ -299,7 +304,6 @@
                      :nimi :kokorajoituksia
                      :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
                                    "Painorajoitus"] ;; -> max paino
-
                      }
                     {:otsikko "Tien pinta työmaalla"
                      :nimi ::t/tienpinnat
