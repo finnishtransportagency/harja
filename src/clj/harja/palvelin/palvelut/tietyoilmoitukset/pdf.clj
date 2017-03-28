@@ -5,7 +5,8 @@
             [harja.pvm :as pvm]
             [clojure.string :as str]
             [harja.domain.tietyoilmoitukset :as t]
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.domain.muokkaustiedot :as m]))
 
 
 (def ^:private border "solid 0.1mm black")
@@ -294,7 +295,7 @@
 (defn- muuta [{m ::t/huomautukset}]
   [:fo:block m])
 
-(defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::t/luotu muokattu ::t/muokattu}]
+(defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::m/luotu muokattu ::m/muokattu}]
   (tietotaulukko
    [(tieto "Nimi, puh."
            (yhteyshenkilo ilmoittaja))
