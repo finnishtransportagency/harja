@@ -101,7 +101,7 @@
    ::t/viivastys-normaali-liikenteessa 15,
    ::t/tyotyypit [{::t/tyyppi "Tienrakennus",
                    ::t/kuvaus "Rakennetaan tietä"}]
-   ::m/luoja 6,
+   ::m/luoja-id 6,
    ::t/urakoitsijan-nimi "YIT Rakennus Oy",
    ::t/osoite {::tr/aosa 1,
                ::tr/geometria nil,
