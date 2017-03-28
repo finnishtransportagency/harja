@@ -104,7 +104,6 @@
   (let [kayttaja @istunto/kayttaja]
     {::t/urakka-id urakka-id
      ::t/urakan-nimi urakka-nimi
-     ::t/luotu (pvm/nyt)
      ::t/yllapitokohde id
      ::t/alku alku
      ::t/loppu loppu

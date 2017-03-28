@@ -6,7 +6,8 @@
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
-            [harja.kyselyt.specql :refer [db]]))
+            [harja.kyselyt.specql :refer [db]]
+            [harja.domain.muokkaustiedot :as m]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -34,12 +35,23 @@
                                  ::t/id)
     ::t/tyovaiheet (rel/has-many ::t/id
                                  ::t/ilmoitus
-                                 ::t/paatietyoilmoitus)}]
+                                 ::t/paatietyoilmoitus)
+    "luoja" ::m/luoja-id
+    "luotu" ::m/luotu
+    "muokkaaja" ::m/muokkaaja-id
+    "muokattu" ::m/muokattu
+    "poistaja" ::m/poistaja-id
+    "poistettu" ::m/poistettu}]
   ["tietyoilmoitus_pituus" ::t/ilmoitus+pituus
    {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
                                  ::t/ilmoitus+pituus
-                                 ::t/id)}]
-  )
+                                 ::t/id)
+    "luoja" ::m/luoja-id
+    "luotu" ::m/luotu
+    "muokkaaja" ::m/muokkaaja-id
+    "muokattu" ::m/muokattu
+    "poistaja" ::m/poistaja-id
+    "poistettu" ::m/poistettu}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska kokonaisluvut tulevat
 ;; transitin läpi longeina.
@@ -54,12 +66,12 @@
     ::t/tloik-id
     ::t/paatietyoilmoitus
     ::t/tloik-paatietyoilmoitus-id
-    ::t/luotu
-    ::t/luoja
-    ::t/muokattu
-    ::t/muokkaaja
-    ::t/poistettu
-    ::t/poistaja
+    ::m/luotu
+    ::m/luoja-id
+    ::m/muokattu
+    ::m/muokkaaja-id
+    ::m/poistettu
+    ::m/poistaja-id
     ::t/ilmoittaja-id
     ::t/ilmoittaja
     ::t/urakka-id
@@ -184,9 +196,9 @@
                            (op/and
                              (merge {::t/paatietyoilmoitus op/null?}
                                     (when (and luotu-alku luotu-loppu)
-                                      {::t/luotu (op/between luotu-alku luotu-loppu)})
+                                      {::m/luotu (op/between luotu-alku luotu-loppu)})
                                     (when kayttaja-id
-                                      {::t/luoja kayttaja-id})
+                                      {::m/luoja-id kayttaja-id})
                                     (when sijainti
                                       {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
                              (if (and kaynnissa-alku kaynnissa-loppu)

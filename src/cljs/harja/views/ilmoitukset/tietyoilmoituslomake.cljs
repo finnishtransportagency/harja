@@ -219,7 +219,7 @@
        (if (:urakan-nimi-valinta ilmoitus)
          (assoc tyhja-kentta :nimi :blank-1)
          ;; else
-         {:nimi :urakan-nimi-syotetty
+         {:nimi ::t/urakan-nimi
           :uusi-rivi? true
           :otsikko "Projektin tai urakan nimi"
           :tyyppi :string

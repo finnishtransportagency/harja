@@ -11,6 +11,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
+            [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch]]
             [harja.kyselyt.tietyoilmoitukset :as q]))
 
@@ -100,7 +101,7 @@
    ::t/viivastys-normaali-liikenteessa 15,
    ::t/tyotyypit [{::t/tyyppi "Tienrakennus",
                    ::t/kuvaus "Rakennetaan tietä"}]
-   ::t/luoja 6,
+   ::m/luoja 6,
    ::t/urakoitsijan-nimi "YIT Rakennus Oy",
    ::t/osoite {::tr/aosa 1,
                ::tr/geometria nil,

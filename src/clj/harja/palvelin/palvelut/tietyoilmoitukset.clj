@@ -12,6 +12,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch upsert!]]
             [clojure.spec :as s]
             [clj-time.coerce :as c]
@@ -73,11 +74,20 @@
 
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
-  (upsert! db ::t/ilmoitus
-           (update-in ilmoitus
-                      [::t/osoite ::tr/geometria]
-                      #(when % (geo/geometry (geo/clj->pg %))))
-           {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))
+  (let [org (get-in user [:organisaatio :id])
+        ilmoitus (-> ilmoitus
+                     (m/lisaa-muokkaustiedot user)
+                     (update-in [::t/osoite ::tr/geometria]
+                                #(when % (geo/geometry (geo/clj->pg %)))))]
+    (println "TALLENNA ILMOITUS " (::t/id ilmoitus) " URAKASSA " (::t/urakka ilmoitus) "; ORG: " org)
+    (println "ILMO: " (pr-str ilmoitus))
+    (upsert! db ::t/ilmoitus
+             ilmoitus
+             (op/or
+              {::m/luoja-id (:id user)}
+              {::t/urakoitsija-id org}
+              {::t/tilaaja-id org}
+              {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
 
 
 (defn tietyoilmoitus-pdf [db user params]

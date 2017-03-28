@@ -16,6 +16,7 @@
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.muokkaustiedot :as m]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
@@ -118,7 +119,7 @@
    {:otsikko "Tie" :nimi :tie
     :hae #(str (or (::tr/tie (::t/osoite %)) "(ei tien numeroa)") " " (::t/tien-nimi % "(ei tien nimeä)"))
     :leveys 4}
-   {:otsikko "Ilmoitettu" :nimi ::t/luotu
+   {:otsikko "Ilmoitettu" :nimi ::m/luotu
     :fmt pvm/pvm-aika-opt
     :leveys 2}
    {:otsikko "Alkupvm" :nimi ::t/alku
