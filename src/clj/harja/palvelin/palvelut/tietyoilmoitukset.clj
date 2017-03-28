@@ -76,7 +76,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
   (let [org (get-in user [:organisaatio :id])
         ilmoitus (-> ilmoitus
-                     (m/lisaa-muokkaustiedot user)
+                     (m/lisaa-muokkaustiedot ::t/id user)
                      (update-in [::t/osoite ::tr/geometria]
                                 #(when % (geo/geometry (geo/clj->pg %)))))]
     (println "TALLENNA ILMOITUS " (::t/id ilmoitus) " URAKASSA " (::t/urakka ilmoitus) "; ORG: " org)

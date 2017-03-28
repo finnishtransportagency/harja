@@ -7,7 +7,6 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as y]
             [harja.pvm :as pvm]
-            [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
             [cljs.core.async :refer [<!]]

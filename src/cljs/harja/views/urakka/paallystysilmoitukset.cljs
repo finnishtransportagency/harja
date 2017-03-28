@@ -630,5 +630,6 @@
            (t/year (:loppupvm urakka))
            urakka/valittu-urakan-vuosi
            urakka/valitse-urakan-vuosi!]
+          [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
           [u-valinnat/tienumero yllapito-tiedot/tienumero]
           [ilmoitusluettelo]])])))

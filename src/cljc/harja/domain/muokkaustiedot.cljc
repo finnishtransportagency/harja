@@ -1,16 +1,19 @@
 (ns harja.domain.muokkaustiedot
   "Yleiset muokkaustiedot"
-  (:require [harja.pvm :as pvm]))
+  (:require [harja.pvm :as pvm]
+            [harja.id :as id]))
 
 
-(defn lisaa-muokkaustiedot [x user]
-  (if-not (::luoja x)
+(defn lisaa-muokkaustiedot [x id-kentta user]
+  (if-not (id/id-olemassa? (get x id-kentta))
     ;; X on uusi, lisätään luoja ja luontiaika
-    (assoc x
-           ::luoja-id (:id user)
-           ::luotu (pvm/nyt))
+    (-> x
+        (assoc ::luoja-id (:id user)
+               ::luotu (pvm/nyt))
+        (dissoc ::muokkaaja-id ::muokattu))
 
     ;; X on olemassaoleva, päivitetään muokkaustiedot
-    (assoc x
-           ::muokkaaja-id (:id user)
-           ::muokattu (pvm/nyt))))
+    (-> x
+        (assoc ::muokkaaja-id (:id user)
+               ::muokattu (pvm/nyt))
+        (dissoc ::luoja-id ::luotu))))
