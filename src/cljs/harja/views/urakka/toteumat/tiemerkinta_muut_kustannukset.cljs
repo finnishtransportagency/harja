@@ -107,7 +107,8 @@
                         {:luokka "nappi-kielteinen pull-right"
                          :ikoni (ikonit/livicon-trash)
                          :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
-                         :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
+                         :disabled (or (not vanha-toteuma?)
+                                       (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
                                        (not muokkausoikeus?))}]]}
 
       [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
