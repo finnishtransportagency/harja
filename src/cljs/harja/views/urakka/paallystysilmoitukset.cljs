@@ -399,10 +399,10 @@
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta (fn [rivi]
-                                     (if (:koodi rivi)
+                                     (if rivi
                                        (str (:lyhenne rivi) " - " (:nimi rivi))
-                                       (:nimi rivi)))
-                    :valinnat pot/+alustamenetelmat-ja-nil+
+                                       "- Valitse menetelmä -"))
+                    :valinnat pot/+alustamenetelmat+
                     :leveys 30
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
@@ -420,8 +420,8 @@
                     :nimi :verkon-sijainti
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
-                    :valinnat pot/+verkon-sijainnit+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkon-sijainnit-ja-nil+
                     :leveys 25}
                    {:otsikko "Verkon tarkoitus"
                     :nimi :verkon-tarkoitus
