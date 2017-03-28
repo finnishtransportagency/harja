@@ -18,9 +18,7 @@
                                                   kuvaus-ja-avainarvopareja]]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.kentat :as kentat]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.roolit :as roolit]))
+            [harja.ui.kentat :as kentat]))
 
 (def koskee-valinnat [[nil "Ilmoitus koskee..."]
                       [:ensimmainen "Ensimmäinen ilmoitus työstä"],
@@ -351,7 +349,6 @@
    [napit/tallenna
     "Tallenna ilmoitus"
     #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus)))
-    {;; todo: salli tallennus kaikille, kun feature on valmis
-     :disabled (or (roolit/jvh? @istunto/kayttaja) tallennus-kaynnissa?)
+    {:disabled tallennus-kaynnissa?
      :tallennus-kaynnissa? tallennus-kaynnissa?
      :ikoni (ikonit/tallenna)}]])
