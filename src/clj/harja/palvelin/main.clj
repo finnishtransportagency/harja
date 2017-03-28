@@ -343,7 +343,7 @@
 
       :tietyoilmoitukset (component/using
                      (tietyoilmoitukset/->Tietyoilmoitukset)
-                     [:http-palvelin :db :pdf-vienti])
+                     [:http-palvelin :db :pdf-vienti :fim])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
