@@ -191,8 +191,7 @@
    {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
    {:nimi "Kantavassa kerroksessa" :koodi 3}
    {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
-   {:nimi "Muu sijainti" :koodi 9}
-   {:nimi "Ei sijaintia" :koodi nil}])
+   {:nimi "Muu sijainti" :koodi 9}])
 
 (def +verkon-sijainnit-ja-nil+
   (conj +verkon-sijainnit+ {:nimi "Ei sijaintia" :koodi nil}))
