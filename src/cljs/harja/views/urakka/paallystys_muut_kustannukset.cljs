@@ -4,7 +4,7 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as tiedot]
+            [harja.tiedot.urakka.paallystys-muut-kustannukset :as tiedot]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.validointi :as validointi]
             [cljs-time.core :as t]
