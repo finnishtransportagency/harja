@@ -330,7 +330,7 @@
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla
                                       (:tila-kartalla yllapitokohde)))
         ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
+        viiva (ulkoasu/yllapidon-viiva valittu? tila tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
       :selite {:teksti (str teksti ", " tila-teksti)
