@@ -140,7 +140,6 @@
                                                (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
                                (mapv #(assoc % :yllapitokohteen-voi-poistaa?
                                                (yllapitokohteen-voi-poistaa? db (:id %)))))]
-      (log/debug "[DEBUG] VASTAUS ON " (pr-str yllapitokohteet))
       yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]

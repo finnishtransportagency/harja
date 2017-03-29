@@ -9,6 +9,7 @@
        [clojure.future :refer :all]
        [harja.pvm :as pvm]
        [clj-time.core :as t]
+       [taoensso.timbre :as log]
        [clj-time.coerce :as c]))
   #?(:cljs
      (:require
@@ -191,37 +192,48 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]
+     (log/debug "[DEBUG] KÄSITELLÄÄN: " (:nimi yllapitokohde))
+     (log/debug "[DEBUG] NYT: " (pvm/nyt-suomessa))
+     (log/debug "[DEBUG] KOHDE ALKUVM: " (:kohde-alkupvm yllapitokohde))
      (cond
        (and (:kohde-valmispvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-date (:kohde-valmispvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:kohde-valmispvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :kohde-valmis
 
        (and (:tiemerkinta-loppupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-date (:tiemerkinta-loppupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:tiemerkinta-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :tiemerkinta-valmis
 
        (and (:tiemerkinta-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-date (:tiemerkinta-alkupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:tiemerkinta-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :tiemerkinta-aloitettu
 
        (and (:paallystys-loppupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-time (:paallystys-loppupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :paallystys-valmis
 
        (and (:paallystys-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-time (:paallystys-alkupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :paallystys-aloitettu
 
        (and (:paikkaus-loppupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-time (:paikkaus-loppupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :paikkaus-valmis
 
        (and (:paikkaus-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-time (:paikkaus-alkupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :paikkaus-aloitettu
 
        (and (:kohde-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (c/from-sql-date (:kohde-alkupvm yllapitokohde)) (pvm/nyt-suomessa)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:kohde-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
        :kohde-aloitettu
 
        :default

@@ -75,6 +75,9 @@
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
 
+(defn- kohde-nimella [kohteet nimi]
+  (first (filter #(= (:nimi %) nimi) kohteet)))
+
 (defn yllapitokohde-id-jolla-on-paallystysilmoitus []
   (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
                    FROM yllapitokohde
@@ -92,11 +95,39 @@
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND poistettu IS NOT TRUE;")))
-        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                          kohteet))]
+        leppajarven-ramppi (kohde-nimella kohteet "Leppäjärven ramppi")]
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
+
+(deftest paallystyskohteiden-tila-paatellaan-oikein-kun-osa-kohteista-on-kesken
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
+    (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :urakan-yllapitokohteet +kayttaja-jvh+
+                                  {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                   :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
+          nakkilan-ramppi (kohde-nimella kohteet "Nakkilan ramppi")
+          leppajarven-ramppi (kohde-nimella kohteet "Leppäjärven ramppi")
+          kuusamontien-testi (kohde-nimella kohteet "Kuusamontien testi")
+          oulaisten-ohitusramppi (kohde-nimella kohteet "Oulaisten ohitusramppi")
+          oulun-ohitusramppi (kohde-nimella kohteet "Oulun ohitusramppi")]
+
+      (is (and nakkilan-ramppi leppajarven-ramppi kuusamontien-testi oulaisten-ohitusramppi oulun-ohitusramppi)
+          "Kaikki kohteet löytyvät vastauksesta")
+
+      ;; Palvelu palauttaa kohteiden tilat oikein
+      (is (= (:tila nakkilan-ramppi) :ei-aloitettu))
+      (is (= (:tila leppajarven-ramppi) :kohde-valmis))
+      (is (= (:tila kuusamontien-testi) :ei-aloitettu))
+      (is (= (:tila oulaisten-ohitusramppi) :ei-aloitettu))
+      (is (= (:tila oulun-ohitusramppi) :paallystys-aloitettu))
+
+      ;; Tila kartalla -päättely menee myös oikein
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila nakkilan-ramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila leppajarven-ramppi)) :valmis))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila kuusamontien-testi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulaisten-ohitusramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest infopaneelin-skeemojen-luonti-yllapitokohteet-palvelulle
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -119,7 +150,7 @@
                                   {:urakka-id (hae-muhoksen-paallystysurakan-id)
                                    :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
-        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aikataulu))
+        leppajarven-ramppi (kohde-nimella aikataulu "Oulun ohitusramppi")
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
         "Jokaiselle kohteelle saatiin haettua aikataulu")
@@ -150,7 +181,7 @@
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND vuodet @> ARRAY[2017]::int[]
                                       AND poistettu IS NOT TRUE")))
-        ei-yha-kohde (first (filter #(= (:nimi %) "Ei YHA-kohde") vastaus))
+        ei-yha-kohde (kohde-nimella vastaus "Ei YHA-kohde")
         muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
@@ -187,20 +218,19 @@
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})
           urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
-      (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
 
       ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
-      (let [lisatty-kohde (first (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa))
+      (let [lisatty-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")
             lisatty-kohde (assoc lisatty-kohde :poistettu true)
             kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                        :sopimus-id sopimus-id
                                                                                        :kohteet [lisatty-kohde]})
-            poistettu-kohde (first (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa))
+            poistettu-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             urakan-geometria-poiston-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
 
         (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
@@ -329,7 +359,7 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
-        vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))]
+        vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     ;; Muokatut kentät päivittyivät
@@ -374,7 +404,7 @@
                                                 (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                      " AND poistettu IS NOT TRUE;")))
-            vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))]
+            vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Muokatut kentät päivittyivät
@@ -521,10 +551,8 @@
                                                    {:urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi})
-            oulaisten-ohitusramppi-ennen-testia (first (filter #(= (:nimi %) "Oulaisten ohitusramppi")
-                                                               aikataulu-ennen-testia))
-            muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi")
-                                                     aikataulu-ennen-testia))
+            oulaisten-ohitusramppi-ennen-testia (kohde-nimella aikataulu-ennen-testia "Oulaisten ohitusramppi")
+            muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi") aikataulu-ennen-testia))
             vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
                                                            {:tiemerkintapvm tiemerkintapvm
@@ -532,10 +560,8 @@
                                                             :urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :vuosi vuosi})
-            oulaisten-ohitusramppi-testin-jalkeen (first (filter #(= (:nimi %) "Oulaisten ohitusramppi")
-                                                                 vastaus-kun-merkittu-valmiiksi))
-            muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi")
-                                                       vastaus-kun-merkittu-valmiiksi))]
+            oulaisten-ohitusramppi-testin-jalkeen (kohde-nimella vastaus-kun-merkittu-valmiiksi "Oulaisten ohitusramppi")
+            muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi") vastaus-kun-merkittu-valmiiksi))]
 
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
@@ -574,7 +600,7 @@
                                          {:urakka-id (hae-muhoksen-paallystysurakan-id)
                                           :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                           :vuosi vuosi})
-        aiempi-aikataulu-leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aiempi-aikataulu))
+        aiempi-aikataulu-leppajarven-ramppi (kohde-nimella aiempi-aikataulu "Leppäjärven ramppi")
         nykyinen-aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-yllapitokohteiden-aikataulu
                                            +kayttaja-jvh+
@@ -582,7 +608,7 @@
                                             :sopimus-id sopimus-id
                                             :vuosi vuosi
                                             :kohteet kohteet})
-        nykyinen-aikataulu-leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") nykyinen-aikataulu))]
+        nykyinen-aikataulu-leppajarven-ramppi (kohde-nimella nykyinen-aikataulu "Leppäjärven ramppi")]
     (is (not= (:suorittava-tiemerkintaurakka nykyinen-aikataulu-leppajarven-ramppi) lapin-urakka-id)
         "Suorittavaa tiemerkintäurakkaa ei vaihdettu, koska tiemerkintäurakasta on tehty kirjauksia kohteelle")
     (is (= (:suorittava-tiemerkintaurakka aiempi-aikataulu-leppajarven-ramppi)
