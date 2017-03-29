@@ -25,20 +25,28 @@
 (test/use-fixtures :each komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
 (deftest tien-pituus-laskettu-oikein
-  (let [tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
+  (let [osat {1 100
+              2 50}
+        ;; Tiet, jossa alku- ja loppuosa samat
+        tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
         tie2 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 5 :tr-loppuetaisyys 5}
         tie3 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys -100}
         tie4 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1 :tr-loppuetaisyys 2}
         tie5 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
         tie6 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1}
-        tie7 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}]
+        ;; Tiet, jossa alku- ja loppuosa erit
+        tie7 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
+        tie8 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 0}
+        tie9 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 20}]
     (is (= (tierekisteri-domain/laske-tien-pituus tie1) 2))
     (is (= (tierekisteri-domain/laske-tien-pituus tie2) 0))
     (is (= (tierekisteri-domain/laske-tien-pituus tie3) 103))
     (is (= (tierekisteri-domain/laske-tien-pituus tie4) 1))
     (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
     (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie7) nil)))) ;; Ei voida laskea ilman osien pituutta
+    (is (= (tierekisteri-domain/laske-tien-pituus tie7) nil))  ;; Ei voida laskea ilman osien pituutta
+    (is (= (tierekisteri-domain/laske-tien-pituus osat tie8) 100))
+    (is (= (tierekisteri-domain/laske-tien-pituus osat tie9) 120))))
 
 (def paallystysilmoituslomake-alkutila
   {:tila :aloitettu
