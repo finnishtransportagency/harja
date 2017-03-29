@@ -47,7 +47,7 @@
 
 #?(:clj
    (defn suomen-aikavyohykkeessa
-     "Palautteen uuden Joda-ajan suomen aikavyöhykkeellä niin, aika on sama, mutta aikavyöhyke muuttuu."
+     "Palautteen uuden Joda-ajan suomen aikavyöhykkeellä niin, että aika on sama, mutta aikavyöhyke muuttuu."
      [joda-time]
      (t/from-time-zone joda-time suomen-aikavyohyke)))
 
