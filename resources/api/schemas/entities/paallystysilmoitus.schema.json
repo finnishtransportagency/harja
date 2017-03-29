@@ -180,7 +180,6 @@
       "id": "urn:harja/alustatoimepiteet",
       "type": "array",
       "maxItems": 100,
-      "required": true,
       "items": {
         "id": "urn:harja/alustatoimepiteet/0",
         "type": "object",
