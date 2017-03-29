@@ -31,8 +31,12 @@
         (map (juxt :id :nimi))
         urakat))
 
-(defn- yllapitokohteet-valinnat [urakka-id]
-  nil)
+#_(defn- yllapitokohteet-valinnat [ilmoitus]
+  (let [urakka-id (::t/urakka-id ilmoitus)
+        kohteet-urakka (:kohteet-urakka ilmoitus)
+        kohteet (:kohteet ilmoitus)]
+    (when (= kohteet-urakka urakka-id)
+      (map first kohteet))))
 
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
@@ -214,6 +218,10 @@
              :tyyppi :string}])))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
+  (when (and (some? (::t/urakka-id ilmoitus))
+             (-> ilmoitus :kohdelista :urakka-id (not= (::t/urakka-id ilmoitus))))
+    (e! (tiedot/->UrakkaValittu (-> ilmoitus ::t/urakka-id))))
+
   [:div
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
@@ -241,7 +249,7 @@
         :valinta-nayta second
         :valinta-arvo first
         :muokattava? (constantly true)}
-       (if (:urakan-nimi-valinta ilmoitus)
+       (if (::t/urakka-id ilmoitus)
          (assoc tyhja-kentta :nimi :blank-1)
          ;; else
          {:nimi ::t/urakan-nimi
@@ -249,14 +257,18 @@
           :otsikko "Projektin tai urakan nimi"
           :tyyppi :string
           :muokattava? (constantly true)})
-       (assoc tyhja-kentta :nimi :blank-2)
-       #_(if  (:urakan-nimi-valinta ilmoitus)
+       (if (or (empty? (::t/urakan-nimi ilmoitus))
+               (empty? (-> ilmoitus :kohdelista :kohteet)))
          (assoc tyhja-kentta :nimi :blank-2)
          ;; else
          {:otsikko "Kohde urakassa"
           :nimi ::t/yllapitokohde
           :tyyppi :valinta
-          :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
+          :valinnat (or (-> ilmoitus :kohdelista :kohteet)
+                        [{:nimi "" :id -1}])
+          :valinta-nayta :nimi
+          :valinta-arvo :id
+          :muokattava? (constantly true)}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi

@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [harja.geo :as geo]
@@ -99,6 +100,11 @@
 (defn hae-yhteyshenkilo-roolissa [rooli kayttajat]
   (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
 
+(defn hae-urakan-yllapitokohdelista [db urakka-id]
+  (let [yllapitokohteet (q-yllapitokohteet/hae-kaikki-urakan-yllapitokohteet db {:urakka urakka-id})]
+    (log/debug "urakan" urakka-id "kohdelista:" (map #(select-keys % [:id :nimi]) (hae-urakan-yllapitokohteet db urakka-id)))
+    (map #(select-keys % [:id :nimi]) (hae-urakan-yllapitokohteet db urakka-id))))
+
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (let [{:keys [urakka-sampo-id
@@ -127,15 +133,19 @@
 (defn hae-urakan-tiedot-tietyoilmoitukselle [db fim user urakka-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (let [{:keys [urakka-sampo-id] :as urakka}
-        (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})]
-    (if urakka-sampo-id
-      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
-            urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
-            tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
-            urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
-                                 :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
-        urakka)
-      urakka)))
+        (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})
+        urakka (if urakka-sampo-id
+                 (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+                       urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
+                       tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
+                       urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                     :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+                   urakka)
+                 ;; else
+                 urakka)
+        kohdelista (hae-urakan-yllapitokohdelista db urakka-id)]
+    (log/debug "hae-urakan-tiedot-tti: kohteita" (count kohdelista))
+    (assoc urakka :kohteet kohdelista)))
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 

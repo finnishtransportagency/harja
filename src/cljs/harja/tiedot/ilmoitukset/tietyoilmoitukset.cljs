@@ -93,8 +93,10 @@
                                        tr-alkuetaisyys
                                        tr-loppuosa
                                        tr-loppuetaisyys
-                                       geometria]
+                                       geometria
+                                       kohteet]
                                 :as data}]
+  (log "esitayta-tti: kohteet" (pr-str kohteet))
   (let [kayttaja @istunto/kayttaja]
     {::t/urakka-id urakka-id
      ::t/urakan-nimi urakka-nimi
@@ -118,7 +120,8 @@
      ::t/ilmoittaja {::t/etunimi (:etunimi kayttaja)
                      ::t/sukunimi (:sukunimi kayttaja)
                      ::t/sahkoposti (:sahkoposti kayttaja)
-                     ::t/matkapuhelin (:puhelin kayttaja)}}))
+                     ::t/matkapuhelin (:puhelin kayttaja)}
+     :urakan-kohteet kohteet}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -140,6 +143,8 @@
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
+(defrecord UrakkaValittu [urakka-id])
+(defrecord UrakanTiedotHaettu [urakan-tiedot])
 
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
@@ -191,6 +196,7 @@
   IlmoitustaMuokattu
   (process-event [ilmoitus app]
     #_(log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
+
     (assoc app :valittu-ilmoitus (:ilmoitus ilmoitus)))
 
   HaeKayttajanUrakat
@@ -203,6 +209,9 @@
   (process-event [{urakat :urakat} app]
     (let [urakat (sort-by :nimi (mapcat :urakat urakat))
           urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
+      (when urakka
+        (let [tulos! (tuck/send-async! ->UrakkaValittu)]
+          (tulos! urakka)))
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka))))
 
@@ -278,7 +287,23 @@
 
   UusiTietyoilmoitus
   (process-event [{esitaytetyt-tiedot :esitaytetyt-tiedot} app]
-    (assoc app :valittu-ilmoitus esitaytetyt-tiedot)))
+    (assoc app :valittu-ilmoitus esitaytetyt-tiedot))
+
+  UrakkaValittu
+  (process-event [{urakka-id :urakka-id} app]
+    (log "urakka" urakka-id " valittu -> käynnistetään hae-urakan-tiedot")
+    (let [tulos! (tuck/send-async! ->UrakanTiedotHaettu)]
+      (go
+        (tulos! {:urakka-id urakka-id
+                 :kohteet (:kohteet (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))})))
+    app)
+
+
+  UrakanTiedotHaettu
+  (process-event [{urakan-tiedot :urakan-tiedot} app]
+    (log "saatiin urakan tiedot, kohteet:" (-> urakan-tiedot  pr-str))
+    (assoc-in app [:valittu-ilmoitus :kohdelista] urakan-tiedot)))
+
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
   [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]
