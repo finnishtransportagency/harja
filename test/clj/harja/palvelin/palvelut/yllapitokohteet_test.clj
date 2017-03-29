@@ -208,7 +208,7 @@
                                   {:urakka-id (hae-muhoksen-paallystysurakan-id)
                                    :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
-        leppajarven-ramppi (kohde-nimella aikataulu "Oulun ohitusramppi")
+        leppajarven-ramppi (kohde-nimella aikataulu "Leppäjärven ramppi")
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
         "Jokaiselle kohteelle saatiin haettua aikataulu")
