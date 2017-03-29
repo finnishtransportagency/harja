@@ -102,8 +102,7 @@
 
 (defn hae-urakan-yllapitokohdelista [db urakka-id]
   (let [yllapitokohteet (q-yllapitokohteet/hae-kaikki-urakan-yllapitokohteet db {:urakka urakka-id})]
-    (log/debug "urakan" urakka-id "kohdelista:" (map #(select-keys % [:id :nimi]) (hae-urakan-yllapitokohteet db urakka-id)))
-    (map #(select-keys % [:id :nimi]) (hae-urakan-yllapitokohteet db urakka-id))))
+    (map #(select-keys % [:id :nimi]) yllapitokohteet)))
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
