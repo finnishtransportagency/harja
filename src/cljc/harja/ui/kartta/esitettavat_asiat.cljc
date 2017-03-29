@@ -326,7 +326,6 @@
         :alue (maarittele-feature tp valittu? ikoni)))))
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
-  (log "KARTALLE YLLAPITOKOHDE: " (pr-str yllapitokohde))
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
         ikoni (ulkoasu/yllapidon-ikoni)
