@@ -1,4 +1,4 @@
-(ns harja.ui.edistymispalkki-testi
+(ns harja.ui.edistymispalkki-test
   (:require
     [harja.ui.openlayers.edistymispalkki :as palkki]
     [cljs.test :as test :refer-macros [deftest is]]))

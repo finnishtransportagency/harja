@@ -16,7 +16,7 @@
             [harja.ui.historia-test]
             [harja.ui.kentat-test]
             [harja.ui.grid-test]
-            [harja.ui.edistymispalkki-testi]
+            [harja.ui.edistymispalkki-test]
             [harja.fmt-test]
             [harja.tiedot.urakka.siirtymat-test]
             [harja.tiedot.tierekisteri.varusteet-test]
@@ -47,7 +47,7 @@
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
-           'harja.ui.edistymispalkki-testi
+           'harja.ui.edistymispalkki-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.valitavoitteet-test
            'harja.fmt-test
