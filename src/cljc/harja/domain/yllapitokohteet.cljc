@@ -233,22 +233,24 @@ yllapitoluokkanimi->numero
     :kohde-aloitettu "Kohde aloitettu"
     :paallystys-aloitettu "Päällystys aloitettu"
     :paallystys-valmis "Päällystys valmis"
+    :paikkaus-aloitettu "Paikkaus aloitettu"
+    :paikkaus-valmis "Paikkaus valmis"
     :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
     :tiemerkinta-valmis "Tiemerkintä valmis"
     :kohde-valmis "Kohde valmis"
     "Ei tiedossa"))
 
-#?(:clj
-   (defn yllapitokohteen-tila-kartalla [yllapitokohde]
-     (let [tarkka-tila (yllapitokohteen-tarkka-tila  yllapitokohde)]
-       (case tarkka-tila
-         :ei-aloitettu :ei-aloitettu
-         :kohde-aloitettu :kesken
-         :paallystys-aloitettu :kesken
-         :paallystys-valmis :kesken
-         :tiemerkinta-aloitettu :kesken
-         :tiemerkinta-valmis :kesken
-         :kohde-valmis :valmis))))
+(defn yllapitokohteen-tila-kartalla [tarkka-tila]
+  (case tarkka-tila
+    :ei-aloitettu :ei-aloitettu
+    :kohde-aloitettu :kesken
+    :paallystys-aloitettu :kesken
+    :paallystys-valmis :kesken
+    :paikkaus-aloitettu :kesken
+    :paikkaus-valmis :kesken
+    :tiemerkinta-aloitettu :kesken
+    :tiemerkinta-valmis :kesken
+    :kohde-valmis :valmis))
 
 (defn kuvaile-kohteen-tila-kartalla [tila]
   (case tila
@@ -267,7 +269,7 @@ yllapitoluokkanimi->numero
               (keep (fn [kohdeosa]
                       (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
                                       :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
-                                      :tila-kartalla (:tila-kartalla kohde)
+                                      :tila (:tila kohde)
                                       :yllapitokohde-id (:id kohde)))
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))

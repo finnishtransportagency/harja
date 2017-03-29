@@ -131,7 +131,7 @@
 
 #?(:clj
    (defn nyt-suomessa []
-     (suomen-aikavyohykkeeseen (t/now))))
+     (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
 
 (defn pvm?
   [pvm]
