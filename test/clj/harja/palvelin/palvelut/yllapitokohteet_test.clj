@@ -100,7 +100,7 @@
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
 
-(deftest paallystyskohteiden-tila-paatellaan-oikein-kun-osa-kohteista-on-kesken
+(deftest paallystyskohteiden-tila-paatellaan-oikein-kun-kesa-menossa
   (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
     (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :urakan-yllapitokohteet +kayttaja-jvh+
@@ -127,6 +127,64 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila leppajarven-ramppi)) :valmis))
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila kuusamontien-testi)) :ei-aloitettu))
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulaisten-ohitusramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
+
+(deftest paallystyskohteiden-tila-paatellaan-oikein-kun-kesa-tulossa
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 0 1)] ;; 1.1.2017
+    (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :urakan-yllapitokohteet +kayttaja-jvh+
+                                  {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                   :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
+          nakkilan-ramppi (kohde-nimella kohteet "Nakkilan ramppi")
+          leppajarven-ramppi (kohde-nimella kohteet "Leppäjärven ramppi")
+          kuusamontien-testi (kohde-nimella kohteet "Kuusamontien testi")
+          oulaisten-ohitusramppi (kohde-nimella kohteet "Oulaisten ohitusramppi")
+          oulun-ohitusramppi (kohde-nimella kohteet "Oulun ohitusramppi")]
+
+      (is (and nakkilan-ramppi leppajarven-ramppi kuusamontien-testi oulaisten-ohitusramppi oulun-ohitusramppi)
+          "Kaikki kohteet löytyvät vastauksesta")
+
+      ;; Palvelu palauttaa kohteiden tilat oikein
+      (is (= (:tila nakkilan-ramppi) :ei-aloitettu))
+      (is (= (:tila leppajarven-ramppi) :ei-aloitettu))
+      (is (= (:tila kuusamontien-testi) :ei-aloitettu))
+      (is (= (:tila oulaisten-ohitusramppi) :ei-aloitettu))
+      (is (= (:tila oulun-ohitusramppi) :ei-aloitettu))
+
+      ;; Tila kartalla -päättely menee myös oikein
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila nakkilan-ramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila leppajarven-ramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila kuusamontien-testi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulaisten-ohitusramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :ei-aloitettu)))))
+
+(deftest paallystyskohteiden-tila-paatellaan-oikein-kun-kesa-ohi
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 9 1)] ;; 1.10.2017
+    (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :urakan-yllapitokohteet +kayttaja-jvh+
+                                  {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                   :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
+          nakkilan-ramppi (kohde-nimella kohteet "Nakkilan ramppi")
+          leppajarven-ramppi (kohde-nimella kohteet "Leppäjärven ramppi")
+          kuusamontien-testi (kohde-nimella kohteet "Kuusamontien testi")
+          oulaisten-ohitusramppi (kohde-nimella kohteet "Oulaisten ohitusramppi")
+          oulun-ohitusramppi (kohde-nimella kohteet "Oulun ohitusramppi")]
+
+      (is (and nakkilan-ramppi leppajarven-ramppi kuusamontien-testi oulaisten-ohitusramppi oulun-ohitusramppi)
+          "Kaikki kohteet löytyvät vastauksesta")
+
+      ;; Palvelu palauttaa kohteiden tilat oikein
+      (is (= (:tila nakkilan-ramppi) :ei-aloitettu))
+      (is (= (:tila leppajarven-ramppi) :kohde-valmis))
+      (is (= (:tila kuusamontien-testi) :kohde-aloitettu))
+      (is (= (:tila oulaisten-ohitusramppi) :kohde-aloitettu))
+      (is (= (:tila oulun-ohitusramppi) :paallystys-aloitettu))
+
+      ;; Tila kartalla -päättely menee myös oikein
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila nakkilan-ramppi)) :ei-aloitettu))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila leppajarven-ramppi)) :valmis))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila kuusamontien-testi)) :kesken))
+      (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulaisten-ohitusramppi)) :kesken))
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest infopaneelin-skeemojen-luonti-yllapitokohteet-palvelulle
