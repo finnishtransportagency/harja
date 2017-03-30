@@ -283,7 +283,7 @@
        :tyyppi :tierekisteriosoite
        :avaimet kentat/tr-osoite-domain-avaimet
        :ala-nayta-virhetta-komponentissa? true
-       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
+       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
        :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
                          #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
@@ -357,10 +357,12 @@
                      })
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
-                     :tyyppi :checkbox-group
+                     :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
-                     :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map) ;; -> kaupunki?
-                     :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map
+                     :valinnat tiedot/vaikutussuunta-vaihtoehdot
+                     :valinta-nayta #(or (tiedot/vaikutussuunta-vaihtoehdot-map %)
+                                         "- Valitse -")
+                     :validoi [[:ei-tyhja]]
                      ;; muu?
                      }
 
@@ -375,7 +377,8 @@
    [napit/tallenna
     "Tallenna ilmoitus"
     #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
-    {:disabled tallennus-kaynnissa?
+    {:disabled (or tallennus-kaynnissa?
+                   (not (lomake/voi-tallentaa? ilmoitus)))
      :tallennus-kaynnissa? tallennus-kaynnissa?
      :ikoni (ikonit/tallenna)}]
    [:form {:target "_blank"
