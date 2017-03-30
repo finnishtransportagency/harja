@@ -16,7 +16,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.transit :as transit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -135,7 +136,7 @@
 (defrecord PaivitaTienPinnatGrid [tienpinnat avain])
 (defrecord PaivitaTyoajatGrid [tyoajat])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
@@ -228,8 +229,8 @@
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
   TallennaIlmoitus
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus} app]
-    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus)
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf?)
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
@@ -247,8 +248,12 @@
     (assoc app :tallennus-kaynnissa? true))
 
   IlmoitusTallennettu
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus :as kama} app]
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
+    (log "avaa pdf tallennuksen jälkeen? " avaa-pdf?)
+    (when avaa-pdf?
+      (.open js/window (k/pdf-url :tietyoilmoitus
+                                  "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
     (assoc app
       :tallennus-kaynnissa? false
       :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus)))
