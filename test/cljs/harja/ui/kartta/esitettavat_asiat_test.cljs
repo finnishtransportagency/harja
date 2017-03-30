@@ -2,8 +2,7 @@
   (:require [cljs.test :as test :refer-macros [deftest is testing]]
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]))
 
-;; FIXME En ymmärrä tätä, toimii paikallisesti ongelmitta, mutta Traviksella ei!?
-#_(deftest yllapitokohteen-esitys-kartalla
+(deftest yllapitokohteen-esitys-kartalla
   (= (esitettavat-asiat/yllapitokohde
                 :paallystys
                 {:tila :paallystys-aloitettu
