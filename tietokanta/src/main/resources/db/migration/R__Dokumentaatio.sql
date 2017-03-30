@@ -24,6 +24,9 @@ Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
 COMMENT ON TABLE yllapitokohteen_aikataulu IS
 E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetuksesta ensisijaisen urakan näkökulmasta. Lisäksi päällystykselle ja tiemerkinnälle on omat aloitus- ja lopetusaikataulut.';
 
+COMMENT ON TABLE yllapitokohteen_maksuerat IS
+E'Yksi rivi tässä taulussa sisältää ylläpitokohteeseen kuuluvat maksuerät (maksuerat-sarakkeessa, joka on taulukko). Maksuerä kuvastaa urakoitsijan tekemää ehdotusta ylläpitokohteen maksueristä. Tilaaja täyttää maksuerätunnuksen.';
+
 -- Ylläpito (päällystys)
 
 COMMENT ON TABLE paallystysilmoitus IS
