@@ -770,6 +770,6 @@
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id
                                                            :vuosi 2017})
-          bonukset-ja-sakot-maara (reduce + 0 (keep :bonukset-ja-sakot kohteet-kannassa))]
+          sakot-ja-bonukset-maara (reduce + 0 (keep :sakot-ja-bonukset kohteet-kannassa))]
       (is (not (nil? kohteet-kannassa)))
-      (is (= -1000M bonukset-ja-sakot-maara)))))
+      (is (= -1000M sakot-ja-bonukset-maara)))))
