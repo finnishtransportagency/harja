@@ -85,10 +85,10 @@
     (upsert! db ::t/ilmoitus
              ilmoitus
              (op/or
-              {::m/luoja-id (:id user)}
-              {::t/urakoitsija-id org}
-              {::t/tilaaja-id org}
-              {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
+               {::m/luoja-id (:id user)}
+               {::t/urakoitsija-id org}
+               {::t/tilaaja-id org}
+               {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
 
 
 (defn tietyoilmoitus-pdf [db user params]
@@ -106,7 +106,8 @@
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
-  (let [{:keys [urakka-sampo-id
+  (let [{:keys [urakka-id
+                urakka-sampo-id
                 tr-numero
                 tr-alkuosa
                 tr-alkuetaisyys
@@ -119,7 +120,8 @@
                                             :alkuetaisyys tr-alkuetaisyys
                                             :loppuosa tr-loppuosa
                                             :loppuetaisyys tr-loppuetaisyys})
-        yllapitokohde (assoc yllapitokohde :geometria geometria)]
+        urakan-yllapitokohteet (hae-urakan-yllapitokohdelista db urakka-id)
+        yllapitokohde (assoc yllapitokohde :geometria geometria :kohteet urakan-yllapitokohteet)]
     (if urakka-sampo-id
       (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
             urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
@@ -138,7 +140,7 @@
                        urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
                        tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
                        urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
-                                     :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+                                            :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
                    urakka)
                  ;; else
                  urakka)

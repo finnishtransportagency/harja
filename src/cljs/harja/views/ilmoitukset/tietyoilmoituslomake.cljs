@@ -242,8 +242,10 @@
          :valinta-nayta second
          :valinta-arvo first
          :aseta (fn [rivi arvo]
-                  (e! (tiedot/->UrakkaValittu arvo))
-                  (assoc rivi ::t/urakka-id arvo))
+                  (if (= (::t/urakka-id rivi) arvo)
+                    rivi
+                    (do (e! (tiedot/->UrakkaValittu arvo))
+                        (assoc rivi ::t/urakka-id arvo))))
          :muokattava? (constantly true)}
         (if (::t/urakka-id ilmoitus)
           (assoc tyhja-kentta :nimi :blank-1)

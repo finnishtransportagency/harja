@@ -96,7 +96,6 @@
                                        geometria
                                        kohteet]
                                 :as data}]
-  (log "---> esitayta-tti: kohteet" (pr-str kohteet))
   (let [kayttaja @istunto/kayttaja]
     {::t/urakka-id urakka-id
      ::t/urakan-nimi urakka-nimi
@@ -209,9 +208,6 @@
   (process-event [{urakat :urakat} app]
     (let [urakat (sort-by :nimi (mapcat :urakat urakat))
           urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
-      (when urakka
-        (let [tulos! (tuck/send-async! ->UrakkaValittu)]
-          (tulos! urakka)))
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka))))
 
@@ -299,8 +295,6 @@
 
   UrakanTiedotHaettu
   (process-event [{urakka :urakka} app]
-    (log "---> saatiin urakan tiedot" (pr-str urakka))
-    (log "---> kohteet" (pr-str (:kohteet urakka)))
     (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka))))
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
