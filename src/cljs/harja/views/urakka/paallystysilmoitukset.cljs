@@ -345,11 +345,8 @@
             :nimi :kuulamylly
             :tyyppi :valinta
             :valinta-arvo :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (:nimi rivi)
-                               "- Valitse kuulamylly -"))
-            :valinnat pot/+kuulamyllyt+
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+kyylamyllyt-ja-nil+
             :leveys 30}]
           paallystystoimenpiteet]
 
@@ -369,12 +366,8 @@
            {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
             :tyyppi :valinta
             :valinta-arvo :koodi
-            :valinta-nayta (fn [rivi]
-                             (if rivi
-                               (:nimi rivi)
-                               "- Valitse sideainetyyppi -"))
-            :valinnat (conj pot/+sideainetyypit+
-                            {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
+            :valinta-nayta #(:nimi %)
+            :valinnat pot/+sideainetyypit-ja-nil+}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
             :pituus-max 256}]
@@ -420,30 +413,29 @@
                     :nimi :verkkotyyppi
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
-                    :valinnat pot/+verkkotyypit+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkkotyypit-ja-nil+
                     :leveys 25}
                    {:otsikko "Verkon sijainti"
                     :nimi :verkon-sijainti
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
-                    :valinnat pot/+verkon-sijainnit+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkon-sijainnit-ja-nil+
                     :leveys 25}
                    {:otsikko "Verkon tarkoitus"
                     :nimi :verkon-tarkoitus
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
-                    :valinnat pot/+verkon-tarkoitukset+
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+verkon-tarkoitukset-ja-nil+
                     :leveys 25}
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
                     :valinta-arvo :koodi
-                    :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-                    :valinnat (conj pot/+tekniset-toimenpiteet+
-                                    {:nimi "Ei toimenpidettä" :lyhenne "Ei toimenpidettä" :koodi nil})
+                    :valinta-nayta #(:nimi %)
+                    :valinnat pot/+tekniset-toimenpiteet-ja-nil+
                     :leveys 30}]
                   alustalle-tehdyt-toimet]])]))))
 
@@ -526,7 +518,7 @@
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
-            (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
+            (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]

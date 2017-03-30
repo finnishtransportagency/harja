@@ -67,7 +67,7 @@
      ["Yksikköhintaiset työt" yksikkohintaiset-toteumat yksikkohintaiset-toteumat]
      ["Muut työt" muut-tyot muut-tyot]
      ["Arvonmuutokset" arvonmuutokset arvonmuutokset]
-     ["Indeksit" indeksit indeksit]
+     ["Indeksitarkistukset" indeksit indeksit]
      ["Sakot" sakot sakot]
      ["Bonukset" bonukset bonukset]
      ["Yhteensä" toteumat-yhteensa toteumat-yhteensa]]))

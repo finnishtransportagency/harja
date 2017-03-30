@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.yllapitokohteet.muut-kustannukset
-  "Päällystyskohteiden Muut kustannukset-taulukon tiedot.
+(ns harja.tiedot.urakka.paallystys-muut-kustannukset
+  "Päällystysurakan Muut kustannukset -taulukon tiedot.
 
   Tässä taulukossa näytetään sanktiot jotka eivät liity mihinkään ylläpitokohteeseen,
   sekä käsin syötetyt vapaamuotoiset muut kustannukset. Sanktioita ei voi muokata tai lisätä.

@@ -29,6 +29,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [harja.kyselyt.tienakyma :as q]
+            [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
             [clojure.core.async :as async]
@@ -103,6 +104,18 @@
         (async/close! ch)))
     ch))
 
+(defn- hae-tietyoilmoitukset [db parametrit]
+  (let [ch (async/chan 32)]
+    (async/thread
+      (let [tulokset (into []
+                           (map #(assoc % :tyyppi-kartalla :tietyoilmoitus))
+                           (tietyoilmoitukset-q/hae-ilmoitukset-tienakymaan db parametrit))]
+        (loop [[t & tulokset] tulokset]
+          (when (and t (async/>!! ch t))
+            (recur tulokset)))
+        (async/close! ch)))
+    ch))
+
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
   tienakyma-haut
@@ -110,7 +123,8 @@
    :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
-   :laatupoikkeamat #'hae-laatupoikkeamat})
+   :laatupoikkeamat #'hae-laatupoikkeamat
+   :tietyoilmoitukset #'hae-tietyoilmoitukset})
 
 (def +haun-max-kesto+ 20000)
 

@@ -922,9 +922,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :valiotsikot        mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
   :ulkoinen-validointi? jos true, grid ei tee validointia muokkauksen yhteydessä.
                         Käytä tätä, jos teet validoinnin muualla (esim jos grid data on wrap,
-                        jonka muutoksen yhteydessä validointi tehdään).
-
-  "
+                        jonka muutoksen yhteydessä validointi tehdään)."
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi?] :as opts}
