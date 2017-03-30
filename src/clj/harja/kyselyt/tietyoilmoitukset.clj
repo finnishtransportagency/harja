@@ -98,6 +98,7 @@
     ::t/kaistajarjestelyt
     ::t/nopeusrajoitukset
     ::t/tienpinnat
+    ::t/kiertotien-pituus
     ::t/kiertotien-mutkaisuus
     ::t/kiertotienpinnat
     ::t/liikenteenohjaus
@@ -231,7 +232,7 @@
 (defn hae-ilmoitukset-tienakymaan [db {:keys [alku
                                               loppu
                                               sijainti] :as tiedot}]
-  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
          (op/and
            (overlaps? ::t/alku ::t/loppu alku loppu)
            {::t/osoite {::tr/geometria (intersects? 100 sijainti)}})))
