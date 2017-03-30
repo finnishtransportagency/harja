@@ -607,6 +607,7 @@ WHERE id = :id;
 -- name: hae-yllapitokohde
 SELECT
   ypk.id,
+  ypk.urakka,
   sopimus,
   kohdenumero,
   nimi,
