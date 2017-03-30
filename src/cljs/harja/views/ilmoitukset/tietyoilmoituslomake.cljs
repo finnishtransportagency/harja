@@ -22,11 +22,6 @@
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]))
 
-(def koskee-valinnat [[nil "Ilmoitus koskee..."]
-                      [:ensimmainen "Ensimmäinen ilmoitus työstä"],
-                      [:muutos "Korjaus/muutos aiempaan tietoon"],
-                      [:tyovaihe "Työvaihetta koskeva ilmoitus"],
-                      [:paattyminen "Työn päättymisilmoitus"]]) ;; pidetäänkö päättymisilmoitus, oliko puhetta että jätetään pois?
 
 (defn- urakka-valinnat [urakat]
   (into [[nil "Ei liity HARJA-urakkaan"]]
@@ -233,18 +228,9 @@
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
                     :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
-                    :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)}
+                    :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)
+                    :luokka "ryhma-reuna"}
      [(lomake/ryhma
-        "Ilmoitus koskee"
-        {:nimi :koskee
-         :otsikko ""
-         :tyyppi :valinta
-         :valinnat koskee-valinnat
-         :valinta-nayta second
-         :valinta-arvo first
-         :muokattava? (constantly true)}
-        )
-      (lomake/ryhma
         "Urakka"
         {:nimi ::t/urakka-id
          :otsikko "Liittyy urakkaan"
@@ -258,17 +244,13 @@
                     (do (e! (tiedot/->UrakkaValittu arvo))
                         (assoc rivi ::t/urakka-id arvo))))
          :muokattava? (constantly true)}
-        (if (::t/urakka-id ilmoitus)
-          (assoc tyhja-kentta :nimi :blank-1)
-          ;; else
+        (when-not (::t/urakka-id ilmoitus)
           {:nimi ::t/urakan-nimi
-           :uusi-rivi? true
            :otsikko "Projektin tai urakan nimi"
            :tyyppi :string
            :muokattava? (constantly true)})
-        (if (or (empty? (::t/urakan-nimi ilmoitus))
-                (empty? (:urakan-kohteet ilmoitus)))
-          (assoc tyhja-kentta :nimi :blank-2)
+        (when-not (or (empty? (::t/urakan-nimi ilmoitus))
+                      (empty? (:urakan-kohteet ilmoitus)))
           {:otsikko "Kohde urakassa"
            :nimi ::t/yllapitokohde
            :tyyppi :valinta
@@ -296,25 +278,28 @@
                       :muokattava? (constantly true)
                       :tyyppi :string})
 
-      {:otsikko "Osoite"
-       :nimi ::t/osoite
-       :pakollinen? true
-       :tyyppi :tierekisteriosoite
-       :avaimet kentat/tr-osoite-domain-avaimet
-       :ala-nayta-virhetta-komponentissa? true
-       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
-       :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
-                         #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
-      {:otsikko "Tien nimi" :nimi ::t/tien-nimi
-       :tyyppi :string}
-      {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
-       :tyyppi :string}
-      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
-       :tyyppi :string}
-      {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
-      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
-       :tyyppi :string}
-      {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
+      (lomake/ryhma
+       "Tiedot kohteesta"
+       {:otsikko "Osoite"
+        :nimi ::t/osoite
+        :pakollinen? true
+        :tyyppi :tierekisteriosoite
+        :avaimet kentat/tr-osoite-domain-avaimet
+        :ala-nayta-virhetta-komponentissa? true
+        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
+        :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
+                          #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
+       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
+        :tyyppi :string :uusi-rivi? true}
+       {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
+        :tyyppi :string}
+       {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
+        :tyyppi :string}
+       {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
+        :tyyppi :string}
+       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
+       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm})
+
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
@@ -330,12 +315,20 @@
                      :tyyppi :positiivinen-numero
                      }
                     {:otsikko "Kaistajärjestelyt"
-                     :tyyppi :checkbox-group
+                     :tyyppi :valinta
                      :nimi ::t/kaistajarjestelyt
-                     :vaihtoehdot (map first t/kaistajarjestelyt-vaihtoehdot-map)
-                     :vaihtoehto-nayta t/kaistajarjestelyt-vaihtoehdot-map
-                     :muu-vaihtoehto "Muu"
-                     :muu-kentta {:otsikko "" :nimi :muu :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
+                     :hae #(get-in % [::t/kaistajarjestelyt ::t/jarjestely])
+                     :aseta #(assoc-in %1 [::t/kaistajarjestelyt ::t/jarjestely] %2)
+                     :valinnat t/kaistajarjestelyt-vaihtoehdot
+                     :valinta-nayta t/kaistajarjestelyt-vaihtoehdot-map
+                     }
+                    (if (= "muu" (get-in ilmoitus [::t/kaistajarjestelyt ::t/jarjestely]))
+                      {:otsikko "Muu kaistajärjestely"
+                       :nimi :muu-kaistajarjestely :tyyppi :string
+                       :placeholder "(muu kaistajärjestely?)"
+                       :hae #(get-in % [::t/kaistajarjestelyt ::t/selite])
+                       :aseta #(assoc-in %1 [::t/kaistajarjestelyt ::t/selite] %2)}
+                      (assoc tyhja-kentta :nimi :kaistajarjestely-blank))
                     {:otsikko "Nopeusrajoitukset"
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
@@ -383,9 +376,8 @@
                      :valinta-nayta {nil "(Ei valintaa)"
                                      "ohjataanVuorotellen" "Ohjataan vuorotellen"
                                      "ohjataanKaksisuuntaisena" "Ohjataan kaksisuuntaisena"}
-                     })
-      (lomake/ryhma "Vaikutussuunta"
-                    {:otsikko ""
+                     }
+                    {:otsikko "Vaikutussuunta"
                      :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
                      :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
