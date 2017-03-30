@@ -79,48 +79,55 @@
 (defn- hae-urakan-tiedot-tietyoilmoitukselle [urakka-id]
   (k/post! :hae-urakan-tiedot-tietyoilmoitukselle urakka-id))
 
+(defn yllapitokohteen-tiedot-tietyoilmoituksella [{:keys [yllapitokohde-id
+                                                          alku
+                                                          loppu
+                                                          tr-numero
+                                                          tr-alkuosa
+                                                          tr-alkuetaisyys
+                                                          tr-loppuosa
+                                                          tr-loppuetaisyys
+                                                          geometria]
+                                                   :as data}]
+  {::t/yllapitokohde yllapitokohde-id
+   ::t/alku alku
+   ::t/loppu loppu
+   ::t/osoite {::tr/geometria geometria
+               ::tr/tie tr-numero
+               ::tr/aosa tr-alkuosa
+               ::tr/aet tr-alkuetaisyys
+               ::tr/losa tr-loppuosa
+               ::tr/let tr-loppuetaisyys}})
+
 (defn esitayta-tietyoilmoitus [{:keys [yllapitokohde-id
                                        urakka-id
                                        urakka-nimi
-                                       alku
-                                       loppu
                                        urakoitsija-nimi
                                        urakoitsijan-yhteyshenkilo
                                        tilaaja-nimi
                                        tilaajan-yhteyshenkilo
-                                       tr-numero
-                                       tr-alkuosa
-                                       tr-alkuetaisyys
-                                       tr-loppuosa
-                                       tr-loppuetaisyys
-                                       geometria
                                        kohteet]
                                 :as data}]
-  (let [kayttaja @istunto/kayttaja]
-    {::t/urakka-id urakka-id
-     ::t/urakan-nimi urakka-nimi
-     ::t/yllapitokohde yllapitokohde-id
-     ::t/alku alku
-     ::t/loppu loppu
-     ::t/urakoitsijan-nimi urakoitsija-nimi
-     ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
-                                   ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
-                                   ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-     ::t/tilaajan-nimi tilaaja-nimi
-     ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
-                               ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
-                               ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-     ::t/osoite {::tr/geometria geometria
-                 ::tr/tie tr-numero
-                 ::tr/aosa tr-alkuosa
-                 ::tr/aet tr-alkuetaisyys
-                 ::tr/losa tr-loppuosa
-                 ::tr/let tr-loppuetaisyys}
-     ::t/ilmoittaja {::t/etunimi (:etunimi kayttaja)
-                     ::t/sukunimi (:sukunimi kayttaja)
-                     ::t/sahkoposti (:sahkoposti kayttaja)
-                     ::t/matkapuhelin (:puhelin kayttaja)}
-     :urakan-kohteet kohteet}))
+  (let [kayttaja @istunto/kayttaja
+        tietyoilmoitus {::t/urakka-id urakka-id
+                        ::t/urakan-nimi urakka-nimi
+
+                        ::t/urakoitsijan-nimi urakoitsija-nimi
+                        ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
+                                                      ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
+                                                      ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+                        ::t/tilaajan-nimi tilaaja-nimi
+                        ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
+                                                  ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
+                                                  ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+                        ::t/ilmoittaja {::t/etunimi (:etunimi kayttaja)
+                                        ::t/sukunimi (:sukunimi kayttaja)
+                                        ::t/sahkoposti (:sahkoposti kayttaja)
+                                        ::t/matkapuhelin (:puhelin kayttaja)}
+                        :urakan-kohteet kohteet}]
+    (if yllapitokohde-id
+      (merge tietyoilmoitus (yllapitokohteen-tiedot-tietyoilmoituksella data))
+      tietyoilmoitus)))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -144,6 +151,8 @@
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
 (defrecord UrakkaValittu [urakka-id])
 (defrecord UrakanTiedotHaettu [urakka])
+(defrecord ValitseYllapitokohde [yllapitokohde])
+(defrecord YllapitokohdeValittu [yllapitokohde])
 
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
@@ -287,7 +296,6 @@
 
   UrakkaValittu
   (process-event [{urakka-id :urakka-id} app]
-    (log "urakka" urakka-id " valittu -> käynnistetään hae-urakan-tiedot")
     (let [tulos! (tuck/send-async! ->UrakanTiedotHaettu)]
       (go
         (tulos! (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))))
@@ -295,7 +303,19 @@
 
   UrakanTiedotHaettu
   (process-event [{urakka :urakka} app]
-    (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka))))
+    (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka)))
+
+  ValitseYllapitokohde
+  (process-event [{yllapitokohde :yllapitokohde} app]
+    (let [tulos! (tuck/send-async! ->YllapitokohdeValittu)]
+      (go
+        (<! (async/timeout 1))
+        (tulos! (yllapitokohteen-tiedot-tietyoilmoituksella yllapitokohde))))
+    app)
+
+  YllapitokohdeValittu
+  (process-event [{yllapitokohde :yllapitokohde} app]
+    (assoc app :valittu-ilmoitus (merge yllapitokohde (:valittu-ilmoitus app)))))
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
   [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]

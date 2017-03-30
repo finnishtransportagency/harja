@@ -102,7 +102,20 @@
 
 (defn hae-urakan-yllapitokohdelista [db urakka-id]
   (let [yllapitokohteet (q-yllapitokohteet/hae-kaikki-urakan-yllapitokohteet db {:urakka urakka-id})]
-    (map #(select-keys % [:id :nimi]) yllapitokohteet)))
+    (mapv (fn [kohde]
+            {:yllapitokohde-id (:id kohde)
+             :nimi (:nimi kohde)
+             :alku (:kohde-alku kohde)
+             :loppu (:paallystys-loppu kohde)
+             :tr-kaista (:tr-kaista kohde)
+             :tr-ajorata (:tr-ajorata kohde)
+             :tr-loppuosa (:tr-loppuosa kohde)
+             :tr-alkuosa (:tr-alkuosa kohde)
+             :tr-loppuetaisyys (:tr-loppuetaisyys kohde)
+             :tr-alkuetaisyys (:tr-alkuetaisyys kohde)
+             :tr-numero (:tr-numero kohde)
+             :geometria (:kohdeosa_sijainti kohde)})
+          yllapitokohteet)))
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
@@ -145,7 +158,6 @@
                  ;; else
                  urakka)
         kohdelista (hae-urakan-yllapitokohdelista db urakka-id)]
-    (log/debug "hae-urakan-tiedot-tti: kohteita" (count kohdelista))
     (assoc urakka :kohteet kohdelista)))
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))

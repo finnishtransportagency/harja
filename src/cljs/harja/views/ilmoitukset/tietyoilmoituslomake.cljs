@@ -31,13 +31,6 @@
         (map (juxt :id :nimi))
         urakat))
 
-#_(defn- yllapitokohteet-valinnat [ilmoitus]
-    (let [urakka-id (::t/urakka-id ilmoitus)
-          kohteet-urakka (:kohteet-urakka ilmoitus)
-          kohteet (:kohteet ilmoitus)]
-      (when (= kohteet-urakka urakka-id)
-        (map first kohteet))))
-
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
@@ -259,10 +252,17 @@
           {:otsikko "Kohde urakassa"
            :nimi ::t/yllapitokohde
            :tyyppi :valinta
-           :valinnat (or (:urakan-kohteet ilmoitus)
-                         [{:nimi "" :id nil}])
+           :valinnat (concat [{:nimi "Ei kohdetta" :yllapitokohde-id nil}] (:urakan-kohteet ilmoitus))
            :valinta-nayta :nimi
-           :valinta-arvo :id
+           :valinta-arvo :yllapitokohde-id
+           :aseta (fn [rivi arvo]
+                    (if (= (::t/yllapitokohde rivi) arvo)
+                      rivi
+                      (do
+                        (e! (tiedot/->ValitseYllapitokohde
+                              (first
+                                (filter #(= arvo (:yllapitokohde-id %)) (:urakan-kohteet ilmoitus)))))
+                        (assoc rivi ::t/yllapitokohde arvo))))
            :muokattava? (constantly true)}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
