@@ -244,7 +244,7 @@
         (try
           (let [tulos (k/post! :tallenna-tietyoilmoitus
                                (-> ilmoitus
-                                   (dissoc ::t/tyovaiheet)
+                                   (dissoc ::t/tyovaiheet :kohdelista)
                                    (spec-apurit/poista-nil-avaimet)))]
             (if (k/virhe? tulos)
               (fail! tulos)
@@ -301,7 +301,7 @@
 
   UrakanTiedotHaettu
   (process-event [{urakan-tiedot :urakan-tiedot} app]
-    (log "saatiin urakan tiedot, kohteet:" (-> urakan-tiedot  pr-str))
+    (log "saatiin urakan tiedot, kohteet:" (-> urakan-tiedot pr-str))
     (assoc-in app [:valittu-ilmoitus :kohdelista] urakan-tiedot)))
 
 
