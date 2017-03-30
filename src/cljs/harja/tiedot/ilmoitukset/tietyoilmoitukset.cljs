@@ -79,7 +79,7 @@
 (defn- hae-urakan-tiedot-tietyoilmoitukselle [urakka-id]
   (k/post! :hae-urakan-tiedot-tietyoilmoitukselle urakka-id))
 
-(defn esitayta-tietyoilmoitus [{:keys [id
+(defn esitayta-tietyoilmoitus [{:keys [yllapitokohde-id
                                        urakka-id
                                        urakka-nimi
                                        alku
@@ -99,7 +99,7 @@
   (let [kayttaja @istunto/kayttaja]
     {::t/urakka-id urakka-id
      ::t/urakan-nimi urakka-nimi
-     ::t/yllapitokohde id
+     ::t/yllapitokohde yllapitokohde-id
      ::t/alku alku
      ::t/loppu loppu
      ::t/urakoitsijan-nimi urakoitsija-nimi

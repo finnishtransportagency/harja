@@ -103,8 +103,7 @@
                   :voi-poistaa? false
                   :voi-lisata? false
                   :piilota-toiminnot? true}
-   [
-    {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
+   [{:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
      :tyyppi :positiivinen-numero}
     {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
      :tyyppi :positiivinen-numero}
@@ -134,8 +133,7 @@
     {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
      :leveys 1}
     {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
-     :leveys 1}
-    ]
+     :leveys 1}]
    (r/wrap (into {}
                  (map-indexed (fn [i ta]
                                 [i (update ta ::t/paivat
