@@ -35,6 +35,13 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
+(defn hae-urakan-maksuerat [db user {:keys [urakka-id sopimus-id vuosi]}]
+  (log/debug "Haetaan päällystyksen maksuerät")
+  ;; TODO OIKEUSTARKISTUS
+  (let [vastaus (into []
+                      (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))]
+    vastaus))
+
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
   "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
    Lisää päällystysilmoitukselle ilmoitustiedot, jossa on kohdeosien tiedot ja niiden vastaavat ilmoitustiedot.
@@ -379,6 +386,9 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :hae-paallystyksen-maksuerat
+                        (fn [user tiedot]
+                          (hae-urakan-maksuerat db user tiedot)))
       this))
 
   (stop [this]

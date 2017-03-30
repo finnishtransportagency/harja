@@ -19,7 +19,7 @@ FROM yllapitokohde ypk
                                      AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
+      AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
       AND ypk.poistettu IS NOT TRUE;
@@ -104,7 +104,7 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Päivittää päällystysilmoituksen tiedot (ei käsittelyä tai asiatarkastusta, päivitetään erikseen)
 UPDATE paallystysilmoitus
 SET
-  tila           = :tila :: paallystystila,
+  tila           = :tila :: PAALLYSTYSTILA,
   ilmoitustiedot = :ilmoitustiedot :: JSONB,
   takuupvm       = :takuupvm,
   muokattu       = NOW(),
@@ -119,7 +119,7 @@ WHERE paallystyskohde = :id
 -- Päivittää päällystysilmoituksen käsittelytiedot
 UPDATE paallystysilmoitus
 SET
-  paatos_tekninen_osa        = :paatos_tekninen_osa :: paallystysilmoituksen_paatostyyppi,
+  paatos_tekninen_osa        = :paatos_tekninen_osa :: PAALLYSTYSILMOITUKSEN_PAATOSTYYPPI,
   perustelu_tekninen_osa     = :perustelu_tekninen_osa,
   kasittelyaika_tekninen_osa = :kasittelyaika_tekninen_osa,
   muokattu                   = NOW(),
@@ -148,7 +148,7 @@ WHERE paallystyskohde = :id
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
-        :tila :: paallystystila,
+        :tila :: PAALLYSTYSTILA,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
@@ -220,14 +220,14 @@ WHERE yllapitokohde = :id
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
                                          ennustettu_maara, toteutunut_maara,
                                          yksikkohinta, luoja, ulkoinen_id, jarjestelma)
-VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara,
+VALUES (:yllapitokohde, :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI, :tyo, :yksikko, :tilattu_maara,
                         :ennustettu_maara, :toteutunut_maara,
                         :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutos
 SET
-  tyon_tyyppi      = :tyon_tyyppi :: maaramuutos_tyon_tyyppi,
+  tyon_tyyppi      = :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI,
   tyo              = :tyo,
   yksikko          = :yksikko,
   tilattu_maara    = :tilattu_maara,
@@ -254,10 +254,23 @@ WHERE yllapitokohde = :yllapitokohdeid AND
 
 -- name: avaa-paallystysilmoituksen-lukko!
 UPDATE paallystysilmoitus
-SET tila = 'valmis' :: paallystystila
+SET tila = 'valmis' :: PAALLYSTYSTILA
 WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: lukitse-paallystysilmoitus!
 UPDATE paallystysilmoitus
-SET tila = 'lukittu' :: paallystystila
+SET tila = 'lukittu' :: PAALLYSTYSTILA
 WHERE paallystyskohde = :yllapitokohde_id
+
+-- name: hae-urakan-maksuerat
+SELECT
+  ym.id,
+  maksueratunnus
+FROM yllapitokohde ypk
+  JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
+WHERE ym.yllapitokohde IN (SELECT id
+                           FROM yllapitokohde
+                           WHERE urakka = :urakka AND sopimus = :sopimus)
+      AND ypk.poistettu IS NOT TRUE
+      AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                         OR vuodet @> ARRAY [:vuosi] :: INT []))

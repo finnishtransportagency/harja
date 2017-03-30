@@ -26,9 +26,8 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
 
-    (fn [e! tila]
+    (fn [e! {:keys [maksuerat] :as tila}]
       (let [valittu-urakka @nav/valittu-urakka
-            maksuerat nil
             voi-muokata? true] ;; TODO OIKEUSTARKISTUS
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka]
