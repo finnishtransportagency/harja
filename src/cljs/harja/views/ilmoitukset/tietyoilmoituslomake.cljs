@@ -220,6 +220,26 @@
               :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
               :tyyppi :string}])))
 
+(defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
+  [:span
+   [napit/tallenna
+    "Tallenna ilmoitus"
+    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
+    {:disabled (or tallennus-kaynnissa?
+                   (not (lomake/voi-tallentaa? ilmoitus)))
+     :tallennus-kaynnissa? tallennus-kaynnissa?
+     :ikoni (ikonit/tallenna)}]]
+  [:form {:target "_blank"
+          :method "POST"
+          :action (k/pdf-url :tietyoilmoitus)}
+   [:input {:type "hidden" :name "parametrit"
+            :value (transit/clj->transit {:id (when (::t/id ilmoitus) (js/parseInt (::t/id ilmoitus)))})}]
+   [:button.nappi-ensisijainen
+    {:type "submit" :on-click #(do
+                                 (.stopPropagation %)
+                                 (e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) false)))}
+    (ikonit/print) " Tallenna ja tulosta PDF"]])
+
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
    [:span
@@ -228,7 +248,8 @@
                     :muokkaa! #(do
 
                                  #_(log "muokkaa" (pr-str %))
-                                 (e! (tiedot/->IlmoitustaMuokattu %)))}
+                                 (e! (tiedot/->IlmoitustaMuokattu %)))
+                    :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)}
      [(lomake/ryhma
         "Ilmoitus koskee"
         {:nimi :koskee
@@ -374,20 +395,4 @@
                      :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
      ilmoitus]]
-   [napit/tallenna
-    "Tallenna ilmoitus"
-    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
-    {:disabled (or tallennus-kaynnissa?
-                   (not (lomake/voi-tallentaa? ilmoitus)))
-     :tallennus-kaynnissa? tallennus-kaynnissa?
-     :ikoni (ikonit/tallenna)}]
-   [:form {:target "_blank"
-           :method "POST"
-           :action (k/pdf-url :tietyoilmoitus)}
-    [:input {:type "hidden" :name "parametrit"
-             :value (transit/clj->transit {:id (when (::t/id ilmoitus) (js/parseInt (::t/id ilmoitus)))})}]
-    [:button.nappi-ensisijainen
-     {:type "submit" :on-click #(do
-                                  (.stopPropagation %)
-                                  (e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) false)))}
-     (ikonit/print) " Tallenna ja tulosta PDF"]]])
+   ])
