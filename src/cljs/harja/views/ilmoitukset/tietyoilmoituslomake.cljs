@@ -18,7 +18,9 @@
                                                   kuvaus-ja-avainarvopareja]]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [harja.ui.kentat :as kentat]))
+            [harja.ui.kentat :as kentat]
+            [harja.transit :as transit]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (def koskee-valinnat [[nil "Ilmoitus koskee..."]
                       [:ensimmainen "Ensimmäinen ilmoitus työstä"],
@@ -63,8 +65,10 @@
      [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
        :valinnat tp-valinnat
        :valinta-arvo first
-       :valinta-nayta second}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+       :valinta-nayta second
+       :leveys 1}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+       :leveys 1}]
      (r/wrap (into {}
                    (map-indexed (fn [i ta]
                                   [i ta]))
@@ -82,16 +86,39 @@
                     :tunniste :jarjestysnro}
      [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
        :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
-                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]
+       :leveys 1}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+       :leveys 1}]
      (r/wrap
-      (into {}
-            (map-indexed (fn [i na]
-                           [i na]))
-            nr-tiedot)
-      #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
+       (into {}
+             (map-indexed (fn [i na]
+                            [i na]))
+             nr-tiedot)
+       #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
     ;; else
     (log "nopeusrajoitukset-komponentti sai nil")))
+
+(defn kokorajoitukset-komponentti [e! ilmoitus]
+  [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
+                  :voi-muokata? true
+                  :voi-poistaa? false
+                  :voi-lisata? false
+                  :voi-kumota? false
+                  :piilota-toiminnot? true}
+   [
+    {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. pituus (m)" :nimi ::t/max-pituus
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Maks. paino (kg)" :nimi ::t/max-paino
+     :tyyppi :positiivinen-numero}]
+   (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
+           #(e!
+             (tiedot/->IlmoitustaMuokattu
+              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -152,46 +179,66 @@
                 :valittu-fn valittu-tyon-tyyppi?
                 :valitse-fn valitse-tyon-tyyppi})]
     (lomake/ryhma
-     "Työn tyyppi"
-     (osio :tyotyypit-a "Tienrakennustyöt" tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
-     (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" tiedot/tyotyyppi-vaihtoehdot-huolto)
-     (osio :tyotyypit-c "Asennustyöt" tiedot/tyotyyppi-vaihtoehdot-asennus)
-     (merge (osio :tyotyypit-d "Muut"  tiedot/tyotyyppi-vaihtoehdot-muut)
-            {:muu-vaihtoehto "Muu, mikä?"
-             :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
-                          :hae #(tyotyypin-kuvaus % "Muu, mikä?")
-                          :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
-                          :placeholder "(Muu tyyppi?)"}}))))
+      "Työn tyyppi"
+      (osio :tyotyypit-a "Tienrakennustyöt" tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
+      (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" tiedot/tyotyyppi-vaihtoehdot-huolto)
+      (osio :tyotyypit-c "Asennustyöt" tiedot/tyotyyppi-vaihtoehdot-asennus)
+      (merge (osio :tyotyypit-d "Muut" tiedot/tyotyyppi-vaihtoehdot-muut)
+             {:muu-vaihtoehto "Muu, mikä?"
+              :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
+                           :hae #(tyotyypin-kuvaus % "Muu, mikä?")
+                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
+                           :placeholder "(Muu tyyppi?)"}}))))
 
 (defn yhteyshenkilo [otsikko avain & kentat-ennen]
   (apply
-   lomake/ryhma
-   otsikko
+    lomake/ryhma
+    otsikko
 
-   (concat kentat-ennen
-           [{:nimi (keyword (name avain) "-etunimi")
-             :otsikko "Yhteyshenkilön etunimi"
-             :uusi-rivi? true
-             :hae #(-> % avain ::t/etunimi)
-             :aseta #(assoc-in %1 [avain ::t/etunimi] %2)
-             :muokattava? (constantly true)
-             :tyyppi :string}
-            {:nimi (keyword (name avain) "-sukunimi")
-             :otsikko "Yhteyshenkilön sukunimi"
-             :hae #(-> % avain ::t/sukunimi)
-             :aseta #(assoc-in %1 [avain ::t/sukunimi] %2)
-             :muokattava? (constantly true)
-             :tyyppi :string}
-            {:nimi (keyword (name avain) "-matkapuhelin")
-             :otsikko "Yhteyshenkilön puhelinnumero"
-             :hae #(-> % avain ::t/matkapuhelin)
-             :aseta #(assoc-in %1 [avain ::t/matkapuhelin] %2)
-             :tyyppi :puhelin}
-            {:nimi (keyword (name avain) "-sahkoposti")
-             :otsikko "Yhteyshenkilön sähköposti"
-             :hae #(-> % avain ::t/sahkoposti)
-             :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
-             :tyyppi :string}])))
+    (concat kentat-ennen
+            [{:nimi (keyword (name avain) "-etunimi")
+              :otsikko "Yhteyshenkilön etunimi"
+              :uusi-rivi? true
+              :hae #(-> % avain ::t/etunimi)
+              :aseta #(assoc-in %1 [avain ::t/etunimi] %2)
+              :muokattava? (constantly true)
+              :tyyppi :string}
+             {:nimi (keyword (name avain) "-sukunimi")
+              :otsikko "Yhteyshenkilön sukunimi"
+              :hae #(-> % avain ::t/sukunimi)
+              :aseta #(assoc-in %1 [avain ::t/sukunimi] %2)
+              :muokattava? (constantly true)
+              :tyyppi :string}
+             {:nimi (keyword (name avain) "-matkapuhelin")
+              :otsikko "Yhteyshenkilön puhelinnumero"
+              :hae #(-> % avain ::t/matkapuhelin)
+              :aseta #(assoc-in %1 [avain ::t/matkapuhelin] %2)
+              :tyyppi :puhelin}
+             {:nimi (keyword (name avain) "-sahkoposti")
+              :otsikko "Yhteyshenkilön sähköposti"
+              :hae #(-> % avain ::t/sahkoposti)
+              :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
+              :tyyppi :string}])))
+
+(defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
+  [:span
+   [napit/tallenna
+    "Tallenna ilmoitus"
+    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
+    {:disabled (or tallennus-kaynnissa?
+                   (not (lomake/voi-tallentaa? ilmoitus)))
+     :tallennus-kaynnissa? tallennus-kaynnissa?
+     :ikoni (ikonit/tallenna)}]]
+  [:form {:target "_blank"
+          :method "POST"
+          :action (k/pdf-url :tietyoilmoitus)}
+   [:input {:type "hidden" :name "parametrit"
+            :value (transit/clj->transit {:id (when (::t/id ilmoitus) (js/parseInt (::t/id ilmoitus)))})}]
+   [:button.nappi-ensisijainen
+    {:type "submit" :on-click #(do
+                                 (.stopPropagation %)
+                                 (e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) false)))}
+    (ikonit/print) " Tallenna ja tulosta PDF"]])
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -201,42 +248,43 @@
                     :muokkaa! #(do
 
                                  #_(log "muokkaa" (pr-str %))
-                                 (e! (tiedot/->IlmoitustaMuokattu %)))}
+                                 (e! (tiedot/->IlmoitustaMuokattu %)))
+                    :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)}
      [(lomake/ryhma
-       "Ilmoitus koskee"
-       {:nimi :koskee
-        :otsikko ""
-        :tyyppi :valinta
-        :valinnat koskee-valinnat
-        :valinta-nayta second
-        :valinta-arvo first
-        :muokattava? (constantly true)}
-       )
+        "Ilmoitus koskee"
+        {:nimi :koskee
+         :otsikko ""
+         :tyyppi :valinta
+         :valinnat koskee-valinnat
+         :valinta-nayta second
+         :valinta-arvo first
+         :muokattava? (constantly true)}
+        )
       (lomake/ryhma
-       "Urakka"
-       {:nimi ::t/urakka-id
-        :otsikko "Liittyy urakkaan"
-        :tyyppi :valinta
-        :valinnat (urakka-valinnat kayttajan-urakat)
-        :valinta-nayta second
-        :valinta-arvo first
-        :muokattava? (constantly true)}
-       (if (:urakan-nimi-valinta ilmoitus)
-         (assoc tyhja-kentta :nimi :blank-1)
-         ;; else
-         {:nimi ::t/urakan-nimi
-          :uusi-rivi? true
-          :otsikko "Projektin tai urakan nimi"
-          :tyyppi :string
-          :muokattava? (constantly true)})
-       (assoc tyhja-kentta :nimi :blank-2)
-       #_(if  (:urakan-nimi-valinta ilmoitus)
-         (assoc tyhja-kentta :nimi :blank-2)
-         ;; else
-         {:otsikko "Kohde urakassa"
-          :nimi ::t/yllapitokohde
-          :tyyppi :valinta
-          :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
+        "Urakka"
+        {:nimi ::t/urakka-id
+         :otsikko "Liittyy urakkaan"
+         :tyyppi :valinta
+         :valinnat (urakka-valinnat kayttajan-urakat)
+         :valinta-nayta second
+         :valinta-arvo first
+         :muokattava? (constantly true)}
+        (if (:urakan-nimi-valinta ilmoitus)
+          (assoc tyhja-kentta :nimi :blank-1)
+          ;; else
+          {:nimi ::t/urakan-nimi
+           :uusi-rivi? true
+           :otsikko "Projektin tai urakan nimi"
+           :tyyppi :string
+           :muokattava? (constantly true)})
+        (assoc tyhja-kentta :nimi :blank-2)
+        #_(if (:urakan-nimi-valinta ilmoitus)
+            (assoc tyhja-kentta :nimi :blank-2)
+            ;; else
+            {:otsikko "Kohde urakassa"
+             :nimi ::t/yllapitokohde
+             :tyyppi :valinta
+             :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi
@@ -256,7 +304,7 @@
        :tyyppi :tierekisteriosoite
        :avaimet kentat/tr-osoite-domain-avaimet
        :ala-nayta-virhetta-komponentissa? true
-       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
+       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
        :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
                          #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
@@ -299,11 +347,10 @@
                      :nimi ::t/nopeusrajoitukset
 
                      }
-                    {:otsikko "Kokorajoituksia"
-                     :tyyppi :checkbox-group
-                     :nimi :kokorajoituksia
-                     :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
-                                   "Painorajoitus"] ;; -> max paino
+                    {:tyyppi :komponentti
+                     :nimi :kokorajoitukset
+                     :komponentti #(kokorajoitukset-komponentti e! ilmoitus)
+
                      }
                     {:otsikko "Tien pinta työmaalla"
                      :nimi ::t/tienpinnat
@@ -331,10 +378,12 @@
                      })
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
-                     :tyyppi :checkbox-group
+                     :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
-                     :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map) ;; -> kaupunki?
-                     :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map
+                     :valinnat tiedot/vaikutussuunta-vaihtoehdot
+                     :valinta-nayta #(or (tiedot/vaikutussuunta-vaihtoehdot-map %)
+                                         "- Valitse -")
+                     :validoi [[:ei-tyhja]]
                      ;; muu?
                      }
 
@@ -346,9 +395,4 @@
                      :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
      ilmoitus]]
-   [napit/tallenna
-    "Tallenna ilmoitus"
-    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus)))
-    {:disabled tallennus-kaynnissa?
-     :tallennus-kaynnissa? tallennus-kaynnissa?
-     :ikoni (ikonit/tallenna)}]])
+   ])

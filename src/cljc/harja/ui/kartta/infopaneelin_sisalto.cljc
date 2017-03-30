@@ -132,14 +132,40 @@
 (defn- yllapitokohde-skeema
   "Ottaa ylläpitokohdeosan, jolla on lisäksi tietoa sen 'pääkohteesta' :yllapitokohde avaimen takana."
   [yllapitokohdeosa]
-  (let [aloitus :kohde-alkupvm
+  (let [kohde-aloitus :kohde-alkupvm
+        paallystys-aloitus :paallystys-alkupvm
         paallystys-valmis :paallystys-loppupvm
+        paikkaus-aloitus :paikkaus-alkupvm
         paikkaus-valmis :paikkaus-loppupvm
         tiemerkinta-aloitus :tiemerkinta-alkupvm
         tiemerkinta-valmis :tiemerkinta-loppupvm
-        kohde-valmis :kohde-valmispvm]
+        kohde-valmis :kohde-valmispvm
+        aikataulu-teksti (fn [pvm otsikko pvm-tyyppi]
+                           (if (and pvm (pvm/sama-tai-ennen? pvm (pvm/nyt)))
+                             (str otsikko " " (case pvm-tyyppi
+                                                    :aloitus "aloitettu"
+                                                    :valmistuminen "valmistunut"))
+                             (str otsikko " " (case pvm-tyyppi
+                                                    :aloitus "aloitetaan"
+                                                    :valmistuminen "valmistuu"))))
+        kohde-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
+                                               "Kohde" :aloitus)
+        paallystys-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
+                                                    "Päällystys" :aloitus)
+        paallystys-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
+                                                   "Päällystys" :valmistuminen)
+        paikkaus-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
+                                                  "Paikkaus" :aloitus)
+        paikkaus-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
+                                                 "Paikkaus" :valmistuminen)
+        tiemerkinta-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
+                                                     "Tiemerkintä" :aloitus)
+        tiemerkinta-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
+                                                    "Tiemerkintä" :valmistuminen)
+        kohde-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
+                                              "Kohde" :valmistuminen)]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-     :jarjesta-fn (let [fn #(get-in % [:yllapitokohde aloitus])]
+     :jarjesta-fn (let [fn #(get-in % [:yllapitokohde kohde-aloitus])]
                     (if (fn yllapitokohdeosa)
                       fn
                       ;; Ylläpitokohteella ei ole välttämättä alkupäivämäärää.
@@ -178,36 +204,52 @@
                :hae (hakufunktio
                       #{[:yllapitokohde :tila]}
                       #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila])))}
-              (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
-                {:otsikko "Kohde aloitettu" :tyyppi :pvm-aika
+              ;; Aikataulutiedot
+              (when (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
+                {:otsikko kohde-aloitus-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        #{[:yllapitokohde aloitus]}
-                        #(get-in % [:yllapitokohde aloitus]))})
+                        #{[:yllapitokohde kohde-aloitus]}
+                        #(get-in % [:yllapitokohde kohde-aloitus]))})
+
+              (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
+                {:otsikko paallystys-aloitus-teksti :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde paallystys-aloitus]}
+                        #(get-in % [:yllapitokohde paallystys-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
-                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika
+                {:otsikko paallystys-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde paallystys-valmis]}
                         #(get-in % [:yllapitokohde paallystys-valmis]))})
+
+              (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
+                {:otsikko paikkaus-aloitus-teksti :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde paikkaus-aloitus]}
+                        #(get-in % [:yllapitokohde paikkaus-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
-                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika
+                {:otsikko paikkaus-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
+
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
-                {:otsikko "Tiemerkintä aloitettu" :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-aloitus-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-aloitus]}
                         #(get-in % [:yllapitokohde tiemerkinta-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
-                {:otsikko "Tiemerkintä valmistunut" :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-valmis]}
                         #(get-in % [:yllapitokohde tiemerkinta-valmis]))})
+
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
-                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
+                {:otsikko kohde-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde kohde-valmis]}
                         #(get-in % [:yllapitokohde kohde-valmis]))})
+              ;; Muut
               {:otsikko "Urakka" :tyyppi :string :hae (hakufunktio
                                                         #{[:yllapitokohde :urakka]}
                                                         #(get-in % [:yllapitokohde :urakka]))}

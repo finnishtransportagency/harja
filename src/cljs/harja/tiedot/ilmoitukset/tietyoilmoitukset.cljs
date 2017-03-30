@@ -134,8 +134,8 @@
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTienPinnatGrid [tienpinnat avain])
 (defrecord PaivitaTyoajatGrid [tyoajat])
-(defrecord TallennaIlmoitus [ilmoitus])
-(defrecord IlmoitusTallennettu [ilmoitus])
+(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
@@ -228,18 +228,18 @@
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
   TallennaIlmoitus
-  (process-event [{ilmoitus :ilmoitus} app]
-    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu)
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus} app]
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus)
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
-          (let [tulos (k/post! :tallenna-tietyoilmoitus
-                               (-> ilmoitus
-                                   (dissoc ::t/tyovaiheet)
-                                   (spec-apurit/poista-nil-avaimet)))]
-            (if (k/virhe? tulos)
-              (fail! tulos)
-              (tulos! tulos)))
+          (let [vastaus (k/post! :tallenna-tietyoilmoitus
+                                 (-> ilmoitus
+                                     (dissoc ::t/tyovaiheet)
+                                     (spec-apurit/poista-nil-avaimet)))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! (<! vastaus))))
           (catch :default e
             (log "poikkeus lomakkeen tallennuksessa: " (pr-str e))
             (fail! nil)
@@ -247,18 +247,18 @@
     (assoc app :tallennus-kaynnissa? true))
 
   IlmoitusTallennettu
-  (process-event [{ilmoitus :ilmoitus} app]
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus :as kama} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
     (assoc app
       :tallennus-kaynnissa? false
-      :valittu-ilmoitus nil))
+      :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus)))
 
   IlmoitusEiTallennettu
   (process-event [{virhe :virhe} app]
     (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta ei tallennettu"]
                    :danger)
     (assoc app
-           :tallennus-kaynnissa? false))
+      :tallennus-kaynnissa? false))
 
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]
@@ -319,9 +319,13 @@
                                         "tieSuljettu" "Tie suljettu"
                                         "muu" "Muu, mikä"})
 
-(def vaikutussuunta-vaihtoehdot-map {"molemmat" "Haittaa molemmissa ajosuunnissa"
-                                     "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
-                                     "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
+(def vaikutussuunta-vaihtoehdot
+  [nil "molemmat" "tienumeronKasvusuuntaan" "vastenTienumeronKasvusuuntaa"])
+
+(def vaikutussuunta-vaihtoehdot-map
+  {"molemmat" "Haittaa molemmissa ajosuunnissa"
+   "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
+   "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
 
 (defn henkilo->nimi [henkilo]
   (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))

@@ -6,7 +6,7 @@
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset]
+    [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -117,13 +117,11 @@
    :nimi :paallystetyyppi
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse päällyste -"
-                        "")))
-   :valinnat paallystys-ja-paikkaus/+paallystetyypit+})
+                      (:nimi rivi)))
+   :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+})
 
 (def raekoko-grid-skeema
   {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
@@ -135,10 +133,8 @@
    :nimi :tyomenetelma
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse menetelmä -"
-                        "")))
-   :valinnat pot/+tyomenetelmat+})
+                      (:nimi rivi)))
+   :valinnat pot/+tyomenetelmat-ja-nil+})
