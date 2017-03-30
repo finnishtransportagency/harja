@@ -65,8 +65,10 @@
      [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
        :valinnat tp-valinnat
        :valinta-arvo first
-       :valinta-nayta second}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+       :valinta-nayta second
+       :leveys 1}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+       :leveys 1}]
      (r/wrap (into {}
                    (map-indexed (fn [i ta]
                                   [i ta]))
@@ -84,8 +86,10 @@
                     :tunniste :jarjestysnro}
      [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
        :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
-                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
+                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]
+       :leveys 1}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+       :leveys 1}]
      (r/wrap
        (into {}
              (map-indexed (fn [i na]
@@ -96,10 +100,11 @@
     (log "nopeusrajoitukset-komponentti sai nil")))
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
-  [muokkaus-grid {:otsikko ""
+  [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
                   :voi-muokata? true
                   :voi-poistaa? false
                   :voi-lisata? false
+                  :voi-kumota? false
                   :piilota-toiminnot? true}
    [
     {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
@@ -112,8 +117,8 @@
      :tyyppi :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
            #(e!
-              (tiedot/->IlmoitustaMuokattu
-                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+             (tiedot/->IlmoitustaMuokattu
+              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -321,8 +326,7 @@
                      :nimi ::t/nopeusrajoitukset
 
                      }
-                    {:otsikko "Ajoneuvon kokorajoitukset"
-                     :tyyppi :komponentti
+                    {:tyyppi :komponentti
                      :nimi :kokorajoitukset
                      :komponentti #(kokorajoitukset-komponentti e! ilmoitus)
 
