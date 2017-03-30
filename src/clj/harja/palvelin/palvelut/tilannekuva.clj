@@ -166,7 +166,6 @@
                           (comp
                             (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                            (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
