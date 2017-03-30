@@ -96,7 +96,7 @@
                                        geometria
                                        kohteet]
                                 :as data}]
-  (log "esitayta-tti: kohteet" (pr-str kohteet))
+  (log "---> esitayta-tti: kohteet" (pr-str kohteet))
   (let [kayttaja @istunto/kayttaja]
     {::t/urakka-id urakka-id
      ::t/urakan-nimi urakka-nimi

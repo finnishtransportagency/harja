@@ -222,10 +222,7 @@
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
-                    :muokkaa! #(do
-
-                                 #_(log "muokkaa" (pr-str %))
-                                 (e! (tiedot/->IlmoitustaMuokattu %)))}
+                    :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))}
      [(lomake/ryhma
         "Ilmoitus koskee"
         {:nimi :koskee
@@ -257,14 +254,13 @@
            :tyyppi :string
            :muokattava? (constantly true)})
         (if (or (empty? (::t/urakan-nimi ilmoitus))
-                (empty? (-> ilmoitus :kohdelista :kohteet)))
+                (empty? (:urakan-kohteet ilmoitus)))
           (assoc tyhja-kentta :nimi :blank-2)
-          ;; else
           {:otsikko "Kohde urakassa"
            :nimi ::t/yllapitokohde
            :tyyppi :valinta
-           :valinnat (or (-> ilmoitus :kohdelista :kohteet)
-                         [{:nimi "" :id -1}])
+           :valinnat (or (:urakan-kohteet ilmoitus)
+                         [{:nimi "" :id nil}])
            :valinta-nayta :nimi
            :valinta-arvo :id
            :muokattava? (constantly true)}))
