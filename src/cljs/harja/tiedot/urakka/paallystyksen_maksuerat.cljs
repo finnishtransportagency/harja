@@ -4,6 +4,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [tuck.core :as t]
+            [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.asiakas.kommunikaatio :as k])
