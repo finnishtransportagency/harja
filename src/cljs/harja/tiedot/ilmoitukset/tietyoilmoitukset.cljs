@@ -16,7 +16,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.transit :as transit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -44,19 +45,19 @@
 
 
 (defonce tietyoilmoitukset
-  (local-storage-atom
-   :tietyoilmoitukset
-   {:ilmoitusnakymassa? false
-    :valittu-ilmoitus nil
-    :tallennus-kaynnissa? false
-    :haku-kaynnissa? false
-    :tietyoilmoitukset nil
-    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
-               :luotu-alkuaika (pvm/tuntia-sitten 24)
-               :luotu-loppuaika (pvm/nyt)
-               :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
-               :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-               :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
+         (local-storage-atom
+           :tietyoilmoitukset
+           {:ilmoitusnakymassa? false
+            :valittu-ilmoitus nil
+            :tallennus-kaynnissa? false
+            :haku-kaynnissa? false
+            :tietyoilmoitukset nil
+            :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+                       :luotu-alkuaika (pvm/tuntia-sitten 24)
+                       :luotu-loppuaika (pvm/nyt)
+                       :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+                       :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+                       :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
@@ -79,46 +80,55 @@
 (defn- hae-urakan-tiedot-tietyoilmoitukselle [urakka-id]
   (k/post! :hae-urakan-tiedot-tietyoilmoitukselle urakka-id))
 
-(defn esitayta-tietyoilmoitus [{:keys [id
+(defn yllapitokohteen-tiedot-tietyoilmoituksella [{:keys [yllapitokohde-id
+                                                          alku
+                                                          loppu
+                                                          tr-numero
+                                                          tr-alkuosa
+                                                          tr-alkuetaisyys
+                                                          tr-loppuosa
+                                                          tr-loppuetaisyys
+                                                          geometria]
+                                                   :as data}]
+  {::t/yllapitokohde yllapitokohde-id
+   ::t/alku alku
+   ::t/loppu loppu
+   ::t/osoite {::tr/geometria geometria
+               ::tr/tie tr-numero
+               ::tr/aosa tr-alkuosa
+               ::tr/aet tr-alkuetaisyys
+               ::tr/losa tr-loppuosa
+               ::tr/let tr-loppuetaisyys}})
+
+(defn esitayta-tietyoilmoitus [{:keys [yllapitokohde-id
                                        urakka-id
                                        urakka-nimi
-                                       alku
-                                       loppu
                                        urakoitsija-nimi
                                        urakoitsijan-yhteyshenkilo
                                        tilaaja-nimi
                                        tilaajan-yhteyshenkilo
-                                       tr-numero
-                                       tr-alkuosa
-                                       tr-alkuetaisyys
-                                       tr-loppuosa
-                                       tr-loppuetaisyys
-                                       geometria]
+                                       kohteet]
                                 :as data}]
-  (let [kayttaja @istunto/kayttaja]
-    {::t/urakka-id urakka-id
-     ::t/urakan-nimi urakka-nimi
-     ::t/yllapitokohde id
-     ::t/alku alku
-     ::t/loppu loppu
-     ::t/urakoitsijan-nimi urakoitsija-nimi
-     ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
-                                   ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
-                                   ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-     ::t/tilaajan-nimi tilaaja-nimi
-     ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
-                               ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
-                               ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-     ::t/osoite {::tr/geometria geometria
-                 ::tr/tie tr-numero
-                 ::tr/aosa tr-alkuosa
-                 ::tr/aet tr-alkuetaisyys
-                 ::tr/losa tr-loppuosa
-                 ::tr/let tr-loppuetaisyys}
-     ::t/ilmoittaja {::t/etunimi (:etunimi kayttaja)
-                     ::t/sukunimi (:sukunimi kayttaja)
-                     ::t/sahkoposti (:sahkoposti kayttaja)
-                     ::t/matkapuhelin (:puhelin kayttaja)}}))
+  (let [kayttaja @istunto/kayttaja
+        tietyoilmoitus {::t/urakka-id urakka-id
+                        ::t/urakan-nimi urakka-nimi
+
+                        ::t/urakoitsijan-nimi urakoitsija-nimi
+                        ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
+                                                      ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
+                                                      ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+                        ::t/tilaajan-nimi tilaaja-nimi
+                        ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
+                                                  ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
+                                                  ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+                        ::t/ilmoittaja {::t/etunimi (:etunimi kayttaja)
+                                        ::t/sukunimi (:sukunimi kayttaja)
+                                        ::t/sahkoposti (:sahkoposti kayttaja)
+                                        ::t/matkapuhelin (:puhelin kayttaja)}
+                        :urakan-kohteet kohteet}]
+    (if yllapitokohde-id
+      (merge tietyoilmoitus (yllapitokohteen-tiedot-tietyoilmoituksella data))
+      tietyoilmoitus)))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -134,12 +144,16 @@
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTienPinnatGrid [tienpinnat avain])
 (defrecord PaivitaTyoajatGrid [tyoajat])
-(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus])
-(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus])
+(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
+(defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
+(defrecord UrakkaValittu [urakka-id])
+(defrecord UrakanTiedotHaettu [urakka])
+(defrecord ValitseYllapitokohde [yllapitokohde])
+(defrecord YllapitokohdeValittu [yllapitokohde])
 
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
@@ -191,6 +205,7 @@
   IlmoitustaMuokattu
   (process-event [ilmoitus app]
     #_(log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
+
     (assoc app :valittu-ilmoitus (:ilmoitus ilmoitus)))
 
   HaeKayttajanUrakat
@@ -228,14 +243,14 @@
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
   TallennaIlmoitus
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus} app]
-    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus)
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu sulje-ilmoitus avaa-pdf?)
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
           (let [vastaus (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet)
+                                     (dissoc ::t/tyovaiheet :kohdelista)
                                      (spec-apurit/poista-nil-avaimet)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
@@ -247,8 +262,12 @@
     (assoc app :tallennus-kaynnissa? true))
 
   IlmoitusTallennettu
-  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus :as kama} app]
+  (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
+    (log "avaa pdf tallennuksen jälkeen? " avaa-pdf?)
+    (when avaa-pdf?
+      (.open js/window (k/pdf-url :tietyoilmoitus
+                                  "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
     (assoc app
       :tallennus-kaynnissa? false
       :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus)))
@@ -278,7 +297,30 @@
 
   UusiTietyoilmoitus
   (process-event [{esitaytetyt-tiedot :esitaytetyt-tiedot} app]
-    (assoc app :valittu-ilmoitus esitaytetyt-tiedot)))
+    (assoc app :valittu-ilmoitus esitaytetyt-tiedot))
+
+  UrakkaValittu
+  (process-event [{urakka-id :urakka-id} app]
+    (let [tulos! (tuck/send-async! ->UrakanTiedotHaettu)]
+      (go
+        (tulos! (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))))
+    app)
+
+  UrakanTiedotHaettu
+  (process-event [{urakka :urakka} app]
+    (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka)))
+
+  ValitseYllapitokohde
+  (process-event [{yllapitokohde :yllapitokohde} app]
+    (let [tulos! (tuck/send-async! ->YllapitokohdeValittu)]
+      (go
+        (<! (async/timeout 1))
+        (tulos! (yllapitokohteen-tiedot-tietyoilmoituksella yllapitokohde))))
+    app)
+
+  YllapitokohdeValittu
+  (process-event [{yllapitokohde :yllapitokohde} app]
+    (assoc app :valittu-ilmoitus (merge yllapitokohde (:valittu-ilmoitus app)))))
 
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]

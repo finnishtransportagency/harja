@@ -167,7 +167,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
   ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
   ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
    [:button.nappi-ensisijainen
-    {:class (str (when disabled "disabled " luokka))
+    {:class (str (when disabled "disabled ") luokka)
      :disabled disabled
      :on-click #(do (.preventDefault %)
                     (toiminto-fn))}
