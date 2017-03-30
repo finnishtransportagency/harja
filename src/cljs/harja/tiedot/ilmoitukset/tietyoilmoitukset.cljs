@@ -280,56 +280,6 @@
   (process-event [{esitaytetyt-tiedot :esitaytetyt-tiedot} app]
     (assoc app :valittu-ilmoitus esitaytetyt-tiedot)))
 
-(def tyotyyppi-vaihtoehdot-tienrakennus
-  [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]
-   ["Kevyenliik. väylän rak." "Kevyenliikenteenväylän rakennus"]
-   ["Tienrakennus" "Tienrakennus"]])
-
-(def tyotyyppi-vaihtoehdot-huolto
-  [["Tienvarsilaitteiden huolto" "Tienvarsilaitteiden huolto"]
-   ["Vesakonraivaus/niittotyö" "Vesakonraivaus / niittotyö"]
-   ["Rakenteen parannus" "Rakenteen parannus"]
-   ["Tutkimus/mittaus" "Tutkimus / mittaus"]])
-
-(def tyotyyppi-vaihtoehdot-asennus
-  [
-   ["Jyrsintä-/stabilointityö" "Jyrsintä- / stabilointityö"]
-   ["Kaapelityö" "Kaapelityö"]
-   ["Kaidetyö" "Kaidetyö"]
-   ["Päällystystyö" "Päällystystyö"]
-   ["Räjäytystyö" "Räjäytystyö"]
-   ["Siltatyö" "Siltatyö"]
-   ["Tasoristeystyö" "Tasoristeystyö"]
-   ["Tiemerkintätyö" "Tiemerkintätyö"]
-   ["Valaistustyö" "Valaistustyö"]])
-
-(def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
-                                 ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
-                                 ["Viimeistely" "Viimeistely"]
-                                 ["Muu, mikä?" "Muu, mikä?"]])
-
-(def tyotyyppi-vaihtoehdot-map (into {} (concat
-                                          tyotyyppi-vaihtoehdot-tienrakennus
-                                          tyotyyppi-vaihtoehdot-huolto
-                                          tyotyyppi-vaihtoehdot-asennus
-                                          tyotyyppi-vaihtoehdot-muut)))
-
-(def kaistajarjestelyt-vaihtoehdot-map {"ajokaistaSuljettu" "Yksi ajokaista suljettu"
-                                        "ajorataSuljettu" "Yksi ajorata suljettu"
-                                        "tieSuljettu" "Tie suljettu"
-                                        "muu" "Muu, mikä"})
-
-(def vaikutussuunta-vaihtoehdot
-  [nil "molemmat" "tienumeronKasvusuuntaan" "vastenTienumeronKasvusuuntaa"])
-
-(def vaikutussuunta-vaihtoehdot-map
-  {"molemmat" "Haittaa molemmissa ajosuunnissa"
-   "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
-   "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
-
-(defn henkilo->nimi [henkilo]
-  (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))
-
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]
   (go

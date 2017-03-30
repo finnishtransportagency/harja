@@ -174,21 +174,21 @@
                 :aseta #(assoc %1 ::t/tyotyypit %2)
                 :tyyppi :checkbox-group
                 :vaihtoehdot (map first vaihtoehdot)
-                :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
+                :vaihtoehto-nayta t/tyotyyppi-vaihtoehdot-map
                 :disabloi? (constantly false)
                 :valittu-fn valittu-tyon-tyyppi?
                 :valitse-fn valitse-tyon-tyyppi})]
     (lomake/ryhma
-      "Työn tyyppi"
-      (osio :tyotyypit-a "Tienrakennustyöt" tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
-      (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" tiedot/tyotyyppi-vaihtoehdot-huolto)
-      (osio :tyotyypit-c "Asennustyöt" tiedot/tyotyyppi-vaihtoehdot-asennus)
-      (merge (osio :tyotyypit-d "Muut" tiedot/tyotyyppi-vaihtoehdot-muut)
-             {:muu-vaihtoehto "Muu, mikä?"
-              :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
-                           :hae #(tyotyypin-kuvaus % "Muu, mikä?")
-                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
-                           :placeholder "(Muu tyyppi?)"}}))))
+     "Työn tyyppi"
+     (osio :tyotyypit-a "Tienrakennustyöt" t/tyotyyppi-vaihtoehdot-tienrakennus)
+     (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" t/tyotyyppi-vaihtoehdot-huolto)
+     (osio :tyotyypit-c "Asennustyöt" t/tyotyyppi-vaihtoehdot-asennus)
+     (merge (osio :tyotyypit-d "Muut"  t/tyotyyppi-vaihtoehdot-muut)
+            {:muu-vaihtoehto "Muu, mikä?"
+             :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
+                          :hae #(tyotyypin-kuvaus % "Muu, mikä?")
+                          :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
+                          :placeholder "(Muu tyyppi?)"}}))))
 
 (defn yhteyshenkilo [otsikko avain & kentat-ennen]
   (apply
@@ -337,8 +337,8 @@
                     {:otsikko "Kaistajärjestelyt"
                      :tyyppi :checkbox-group
                      :nimi ::t/kaistajarjestelyt
-                     :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
-                     :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
+                     :vaihtoehdot (map first t/kaistajarjestelyt-vaihtoehdot-map)
+                     :vaihtoehto-nayta t/kaistajarjestelyt-vaihtoehdot-map
                      :muu-vaihtoehto "Muu"
                      :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
                     {:otsikko "Nopeusrajoitukset"
@@ -374,25 +374,18 @@
                      :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]
                      :vaihtoehto-nayta identity
                      :muu-vaihtoehto "Aikataulu:"
-                     :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}
-                     })
+                     :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}})
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
                      :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
-                     :valinnat tiedot/vaikutussuunta-vaihtoehdot
-                     :valinta-nayta #(or (tiedot/vaikutussuunta-vaihtoehdot-map %)
-                                         "- Valitse -")
-                     :validoi [[:ei-tyhja]]
-                     ;; muu?
-                     }
-
-                    )
+                     :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
+                     :valinta-nayta #(or (t/vaikutussuunta-vaihtoehdot-map %) "- Valitse -")
+                     :validoi [[:ei-tyhja]]})
       (lomake/ryhma "Lisätietoja"
                     {:otsikko ""
                      :nimi ::t/lisatietoja
                      :tyyppi :text
                      :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
-     ilmoitus]]
-   ])
+     ilmoitus]]])
