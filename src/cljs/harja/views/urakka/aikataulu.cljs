@@ -17,16 +17,14 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.paallystysilmoitus :as pot]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.urakka :as urakka]
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.views.urakka.valinnat :as u-valinnat]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.siirtymat :as siirtymat])
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -81,15 +79,6 @@
                  :tyyppi :pvm}]
                @valmis-tiemerkintaan-lomake]]))}
         "Aseta päivä\u00ADmäärä"]])))
-
-(defn- vuosivalinta
-  "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
-  [ur]
-  [valinnat/vuosi {}
-   (t/year (:alkupvm ur))
-   (t/year (:loppupvm ur))
-   urakka/valittu-urakan-vuosi
-   urakka/valitse-urakan-vuosi!])
 
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
@@ -155,9 +144,9 @@
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
         [:div.aikataulu
-         [vuosivalinta ur]
-         [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [u-valinnat/tienumero yllapito-tiedot/tienumero]
+         [valinnat/urakan-vuosi ur]
+         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)

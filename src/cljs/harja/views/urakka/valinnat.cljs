@@ -38,6 +38,17 @@
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
+(defn- urakan-vuosi
+  "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
+  ([ur]
+   (urakan-vuosi ur {}))
+  ([ur {:keys [kaikki-valinta?] :as optiot}]
+   [valinnat/vuosi optiot
+    (t/year (:alkupvm ur))
+    (t/year (:loppupvm ur))
+    u/valittu-urakan-vuosi
+    u/valitse-urakan-vuosi!]))
+
 (defn urakan-hoitokausi-ja-kuukausi [urakka]
   (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
     [valinnat/urakan-hoitokausi-ja-kuukausi
@@ -69,16 +80,16 @@
          :as valittu-aikavali-nyt] @valittu-aikavali
 
         alkuvalinta (or
-                     (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
-                     (and valittu-aikavali-alku
-                             valittu-aikavali-loppu
-                             (some (fn [[nimi aikavali-fn :as valinta]]
-                                     (when aikavali-fn
-                                       (let [[alku loppu] (aikavali-fn)]
-                                         (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
-                                                    (pvm/sama-pvm? loppu valittu-aikavali-loppu))
-                                           valinta)))) aikavali-valinnat))
-                     (last aikavali-valinnat))
+                      (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
+                      (and valittu-aikavali-alku
+                           valittu-aikavali-loppu
+                           (some (fn [[nimi aikavali-fn :as valinta]]
+                                   (when aikavali-fn
+                                     (let [[alku loppu] (aikavali-fn)]
+                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
+                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu))
+                                         valinta)))) aikavali-valinnat))
+                      (last aikavali-valinnat))
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
         vapaa-aikavali? (r/atom false)
@@ -94,9 +105,9 @@
                       (reset! vapaa-aikavali? true))))]
     (valitse urakka alkuvalinta)
     (komp/luo
-     (komp/kun-muuttuu
-      (fn [urakka _]
-        (valitse urakka @valinta)))
+      (komp/kun-muuttuu
+        (fn [urakka _]
+          (valitse urakka @valinta)))
 
       (fn [urakka valittu-aikavali]
         (if-not (u/urakka-kaynnissa? urakka)
@@ -104,8 +115,8 @@
           [:span.aikavali-nykypvm-taakse
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Aikaväli"]
-            [livi-pudotusvalikko {:valinta    @valinta
-                                  :format-fn  first
+            [livi-pudotusvalikko {:valinta @valinta
+                                  :format-fn first
                                   :valitse-fn (partial valitse urakka)}
              aikavali-valinnat]]
            (when @vapaa-aikavali?

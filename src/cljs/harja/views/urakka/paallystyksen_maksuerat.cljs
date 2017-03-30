@@ -8,7 +8,10 @@
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystyksen-maksuerat :as tiedot]
             [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -21,7 +24,11 @@
                                     (e! (tiedot/->PaivitaValinnat uusi))))
 
     (fn [e! tila]
-      [:div "Work in progress"])))
+      (let [valittu-urakka @nav/valittu-urakka]
+        [:div.paallystyksen-maksuerat
+         [valinnat/urakan-vuosi valittu-urakka]
+         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero]]))))
 
 (defn maksuerat []
   (komp/luo
