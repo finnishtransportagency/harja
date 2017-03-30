@@ -192,9 +192,6 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn yllapitokohteen-tarkka-tila [yllapitokohde]
-     (log/debug "[DEBUG] KÄSITELLÄÄN: " (:nimi yllapitokohde))
-     (log/debug "[DEBUG] NYT: " (pvm/nyt-suomessa))
-     (log/debug "[DEBUG] KOHDE ALKUVM: " (:kohde-alkupvm yllapitokohde))
      (cond
        (and (:kohde-valmispvm yllapitokohde)
             (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:kohde-valmispvm yllapitokohde)))
