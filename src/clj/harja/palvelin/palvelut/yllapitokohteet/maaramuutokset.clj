@@ -10,7 +10,7 @@
             [harja.kyselyt.paallystys :as q]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
@@ -46,7 +46,10 @@
 (defn hae-maaramuutokset
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  ;; käytetään myös integraatioista, jolloin user nil
+  (if user
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+    (oikeudet/ei-oikeustarkistusta!))
   (let [maaramuutokset (into []
                              (comp
                                (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
@@ -128,7 +131,7 @@
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
                               maaramuutokset)]
-      (yha/lukitse-urakan-yha-sidonta db urakka-id)
+      (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)
 
@@ -142,6 +145,13 @@
         {:maaramuutokset (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
                                                       :urakka-id urakka-id})
          :yllapitokohteet yllapitokohteet}))))
+
+(defn hae-ja-summaa-maaramuutokset
+  [db user {:keys [urakka-id yllapitokohde-id]}]
+  (let [maaramuutokset (hae-maaramuutokset
+                         db user {:yllapitokohde-id yllapitokohde-id
+                                  :urakka-id urakka-id})]
+    (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset)))
 
 (defrecord Maaramuutokset []
   component/Lifecycle
