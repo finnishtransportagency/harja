@@ -44,19 +44,19 @@
 
 
 (defonce tietyoilmoitukset
-  (local-storage-atom
-   :tietyoilmoitukset
-   {:ilmoitusnakymassa? false
-    :valittu-ilmoitus nil
-    :tallennus-kaynnissa? false
-    :haku-kaynnissa? false
-    :tietyoilmoitukset nil
-    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
-               :luotu-alkuaika (pvm/tuntia-sitten 24)
-               :luotu-loppuaika (pvm/nyt)
-               :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
-               :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-               :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
+         (local-storage-atom
+           :tietyoilmoitukset
+           {:ilmoitusnakymassa? false
+            :valittu-ilmoitus nil
+            :tallennus-kaynnissa? false
+            :haku-kaynnissa? false
+            :tietyoilmoitukset nil
+            :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+                       :luotu-alkuaika (pvm/tuntia-sitten 24)
+                       :luotu-loppuaika (pvm/nyt)
+                       :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+                       :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+                       :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
@@ -144,7 +144,7 @@
 (defrecord AloitaUusiTyovaiheilmoitus [tietyoilmoitus])
 (defrecord UusiTietyoilmoitus [esitaytetyt-tiedot])
 (defrecord UrakkaValittu [urakka-id])
-(defrecord UrakanTiedotHaettu [urakan-tiedot])
+(defrecord UrakanTiedotHaettu [urakka])
 
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
@@ -267,7 +267,7 @@
     (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta ei tallennettu"]
                    :danger)
     (assoc app
-           :tallennus-kaynnissa? false))
+      :tallennus-kaynnissa? false))
 
   AloitaUusiTietyoilmoitus
   (process-event [{urakka-id :urakka-id} app]
@@ -294,16 +294,14 @@
     (log "urakka" urakka-id " valittu -> käynnistetään hae-urakan-tiedot")
     (let [tulos! (tuck/send-async! ->UrakanTiedotHaettu)]
       (go
-        (tulos! {:urakka-id urakka-id
-                 :kohteet (:kohteet (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))})))
+        (tulos! (<! (hae-urakan-tiedot-tietyoilmoitukselle urakka-id)))))
     app)
 
-
   UrakanTiedotHaettu
-  (process-event [{urakan-tiedot :urakan-tiedot} app]
-    (log "saatiin urakan tiedot, kohteet:" (-> urakan-tiedot pr-str))
-    (assoc-in app [:valittu-ilmoitus :kohdelista] urakan-tiedot)))
-
+  (process-event [{urakka :urakka} app]
+    (log "---> saatiin urakan tiedot" (pr-str urakka))
+    (log "---> kohteet" (pr-str (:kohteet urakka)))
+    (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka))))
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
   [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]
