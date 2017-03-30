@@ -3,12 +3,13 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [tuck.core :as t])
+            [tuck.core :as t]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 ;; Tila
-(def muut-tyot (atom {:valinnat {:urakka nil
+(def tila (atom {:valinnat {:urakka nil
                                  :sopimus nil
                                  :vuosi nil
                                  :tienumero nil
@@ -19,13 +20,13 @@
   (reaction
     {:urakka (:id @nav/valittu-urakka)
      :sopimus (first @u/valittu-sopimusnumero)
-     :vuosi nil ;; TODO HAE NÄMÄ
-     :tienumero nil
-     :kohdenumero nil))
+     :vuosi @u/valittu-urakan-vuosi
+     :tienumero @yllapito-tiedot/tienumero
+     :kohdenumero @yllapito-tiedot/kohdenumero}))
 
 ;; Tapahtumat
 
-(defrecord YhdistaValinnat [valinnat])
+(defrecord PaivitaValinnat [valinnat])
 (defrecord MaksueratHaettu [tulokset])
 (defrecord MaksueratTallennettu [vastaus])
 
@@ -33,11 +34,6 @@
 
 (extend-protocol t/Event
 
-  YhdistaValinnat
+  PaivitaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
-    (hae-toteumat {:urakka (:urakka valinnat)
-                   :sopimus (:sopimus valinnat)
-                   :alkupvm (first (:sopimuskausi valinnat))
-                   :loppupvm (second (:sopimuskausi valinnat))})
-    (hae-laskentakohteet {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat)))

@@ -68,5 +68,5 @@
           "Maksuerät"
           :maksuerat
           (when true ;; TODO Käytä: (oikeudet/urakat-kohdeluettelo-maksuerat (:id ur))
-            [maksuerat/maksuerat ur])]]
+            [maksuerat/maksuerat])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))
