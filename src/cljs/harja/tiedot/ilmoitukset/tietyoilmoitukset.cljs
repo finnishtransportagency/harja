@@ -134,7 +134,7 @@
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTienPinnatGrid [tienpinnat avain])
 (defrecord PaivitaTyoajatGrid [tyoajat])
-(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus])
+(defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus])
 (defrecord IlmoitusEiTallennettu [virhe])
 (defrecord AloitaUusiTietyoilmoitus [urakka-id])

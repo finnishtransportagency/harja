@@ -221,24 +221,17 @@
               :tyyppi :string}])))
 
 (defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
-  [:span
-   [napit/tallenna
-    "Tallenna ilmoitus"
-    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
-    {:disabled (or tallennus-kaynnissa?
-                   (not (lomake/voi-tallentaa? ilmoitus)))
-     :tallennus-kaynnissa? tallennus-kaynnissa?
-     :ikoni (ikonit/tallenna)}]]
-  [:form {:target "_blank"
-          :method "POST"
-          :action (k/pdf-url :tietyoilmoitus)}
-   [:input {:type "hidden" :name "parametrit"
-            :value (transit/clj->transit {:id (when (::t/id ilmoitus) (js/parseInt (::t/id ilmoitus)))})}]
-   [:button.nappi-ensisijainen
-    {:type "submit" :on-click #(do
-                                 (.stopPropagation %)
-                                 (e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) false)))}
-    (ikonit/print) " Tallenna ja tulosta PDF"]])
+  (r/with-let [avaa-pdf? (r/atom false)]
+    [:span
+     [napit/tallenna
+      "Tallenna ilmoitus"
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+      {:disabled (or tallennus-kaynnissa?
+                     (not (lomake/voi-tallentaa? ilmoitus)))
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :ikoni (ikonit/tallenna)}]
+
+     [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
