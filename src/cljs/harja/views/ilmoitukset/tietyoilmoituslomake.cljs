@@ -246,35 +246,34 @@
          :muokattava? (constantly true)}
         )
       (lomake/ryhma
-       "Urakka"
-       {:nimi ::t/urakka-id
-        :otsikko "Liittyy urakkaan"
-        :tyyppi :valinta
-        :valinnat (urakka-valinnat kayttajan-urakat)
-        :valinta-nayta second
-        :valinta-arvo first
-        :aseta (fn [rivi arvo]
+        "Urakka"
+        {:nimi ::t/urakka-id
+         :otsikko "Liittyy urakkaan"
+         :tyyppi :valinta
+         :valinnat (urakka-valinnat kayttajan-urakat)
+         :valinta-nayta second
+         :valinta-arvo first
+         :aseta (fn [rivi arvo]
                   (if (= (::t/urakka-id rivi) arvo)
                     rivi
                     (do (e! (tiedot/->UrakkaValittu arvo))
                         (assoc rivi ::t/urakka-id arvo))))
          :muokattava? (constantly true)}
-       (if (::t/urakka-id ilmoitus)
-         (assoc tyhja-kentta :nimi :blank-1)
-         ;; else
-         {:nimi ::t/urakan-nimi
-          :uusi-rivi? true
-          :otsikko "Projektin tai urakan nimi"
-          :tyyppi :string
-          :muokattava? (constantly true)})
-       (if  (or (empty? (::t/urakan-nimi ilmoitus))
+        (if (::t/urakka-id ilmoitus)
+          (assoc tyhja-kentta :nimi :blank-1)
+          ;; else
+          {:nimi ::t/urakan-nimi
+           :uusi-rivi? true
+           :otsikko "Projektin tai urakan nimi"
+           :tyyppi :string
+           :muokattava? (constantly true)})
+        (if (or (empty? (::t/urakan-nimi ilmoitus))
                 (empty? (:urakan-kohteet ilmoitus)))
-         (assoc tyhja-kentta :nimi :blank-2)
-
-         {:otsikko "Kohde urakassa"
-          :nimi ::t/yllapitokohde
-          :tyyppi :valinta
-          :valinnat (concat [{:nimi "Ei kohdetta" :yllapitokohde-id nil}] (:urakan-kohteetilmoitus)):valinta-nayta :nimi
+          (assoc tyhja-kentta :nimi :blank-2)
+          {:otsikko "Kohde urakassa"
+           :nimi ::t/yllapitokohde
+           :tyyppi :valinta
+           :valinnat (concat [{:nimi "Ei kohdetta" :yllapitokohde-id nil}] (:urakan-kohteet ilmoitus)) :valinta-nayta :nimi
            :valinta-arvo :yllapitokohde-id
            :aseta (fn [rivi arvo]
                     (if (= (::t/yllapitokohde rivi) arvo)
@@ -394,5 +393,4 @@
                      :tyyppi :text
                      :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
-     ilmoitus]]
-   ])
+     ilmoitus]]])
