@@ -218,7 +218,7 @@
               },
               "paksuus": {
                 "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/paksuus",
-                "type": "number"
+                "type": "integer"
               },
               "verkkotyyppi": {
                 "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/verkkotyyppi",
