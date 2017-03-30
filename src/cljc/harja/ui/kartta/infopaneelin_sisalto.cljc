@@ -453,7 +453,7 @@
                                           ::t-domain/tienpinnat
                                           t-domain/tienpinnat->str)}
             {:otsikko "Kiertotien pituus" :nimi ::t-domain/kiertotien-pituus}
-            {:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
+            #_{:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
             {:otsikko "Kiertotien pinnat" :hae (hakufunktio
                                                  ::t-domain/kiertotienpinnat
                                                  t-domain/kiertotienpinnat->str)}
