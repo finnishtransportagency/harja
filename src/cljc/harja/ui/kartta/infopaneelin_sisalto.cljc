@@ -396,14 +396,13 @@
                                   ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
                                   ;; tarvita erityistä validointia.
                                   (constantly true)
-                                  (constantly (str maara " " yksikko)))})
+                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
 
-                        (for [materiaalitoteuma (:materiaalit toteuma)]
-                          {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
+                        (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
+                          {:otsikko nimi
                            :hae (hakufunktio
                                   (constantly true)
-                                  #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                                        (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko])))})
+                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
                         (when (:lisatieto toteuma)
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
