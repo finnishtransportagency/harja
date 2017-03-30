@@ -144,6 +144,13 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                FROM yllapitokohde
                                                                WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN'));
 
+
+INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), null, 'TUNNUS1');
+INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), null, 'TUNNUS2');
+
+
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
 -- oikeaa id:n (ei voi hakea id:tä nimellä, koska ilmoitustiedot ovat JSON-muodossa)
 INSERT INTO yllapitokohdeosa (id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
