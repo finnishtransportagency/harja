@@ -76,28 +76,27 @@
              #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  (if (some? nr-tiedot)
-    [muokkaus-grid {:otsikko ""
-                    :voi-muokata? (constantly true)
-                    :voi-poistaa? (constantly true)
-                    :piilota-toiminnot? false
-                    :tyhja "Ei nopeusrajoituksia"
-                    :jarjesta :jarjestysnro
-                    :tunniste :jarjestysnro}
-     [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
-       :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
-                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]
-       :leveys 1}
-      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
-       :leveys 1}]
-     (r/wrap
-       (into {}
-             (map-indexed (fn [i na]
-                            [i na]))
-             nr-tiedot)
-       #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
-    ;; else
-    (log "nopeusrajoitukset-komponentti sai nil")))
+  [muokkaus-grid {:otsikko ""
+                  :voi-muokata? (constantly true)
+                  :voi-poistaa? (constantly true)
+                  :piilota-toiminnot? false
+                  :tyhja "Ei nopeusrajoituksia"
+                  :jarjesta :jarjestysnro
+                  :tunniste :jarjestysnro}
+   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
+     :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
+                  "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]
+     :leveys 1}
+    {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
+     :leveys 1}]
+   (r/wrap
+    (into {}
+          (map-indexed (fn [i na]
+                         [i na]))
+          nr-tiedot)
+    #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
+
+  )
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
@@ -340,7 +339,7 @@
                      :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
                      :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
                      :muu-vaihtoehto "Muu"
-                     :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
+                     :muu-kentta {:otsikko "" :nimi :muu :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
                     {:otsikko "Nopeusrajoitukset"
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
@@ -361,20 +360,34 @@
                      :nimi ::t/kiertotienpinnat
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/kiertotienpinnat (tienpinnat-komponentti-grid e! ::t/kiertotienpinnat))}
-                    {:otsikko "Kiertotie"
-                     :tyyppi :checkbox-group
-                     :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
-                     :valinnat ["Loivat mutkat", "Jyrkät mutkat (erkanee yli 45° kulmassa)" "Päällystetty" "Murske" "Kantavuus rajoittaa", "___ tonnia"]
-                     ;; ___ metriä
-                     ;; __ tonnia
+                    {:otsikko "Kiertotien mutkaisuus"
+                     :tyyppi :valinta
+                     :uusi-rivi? true
+                     :nimi ::t/kiertotien-mutkaisuus
+                     ;; :valinnat ["Loivat mutkat", "Jyrkät mutkat (erkanee yli 45° kulmassa)" "Päällystetty" "Murske" "Kantavuus rajoittaa", "___ tonnia"]
+                     :valinnat [nil "loivatMutkat" "jyrkatMutkat"]
+                     ;; q: rautalangan kantavuus ___ tonnia
+                     :valinta-nayta {nil "(Ei valintaa)"
+                                     "loivatMutkat" "Loivat mutkat"
+                                     "jyrkatMutkat" "Jyrkät mutkat (erkanee yli 45° kulmassa)"}
                      }
-                    {:otsikko "Kulkurajoituksia"
-                     :tyyppi :checkbox-group
-                     :nimi :liikenteenohjaus
-                     :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]
-                     :vaihtoehto-nayta identity
-                     :muu-vaihtoehto "Aikataulu:"
-                     :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}
+
+                    {:otsikko "Liikenteen ohjaaja"
+                     :tyyppi :valinta
+                     :uusi-rivi? true
+                     :nimi ::t/liikenteenohjaaja
+                     :valinnat [nil "liikennevalot" "liikenteenohjaaja"]
+                     :valinta-nayta {nil "(Ei valintaa)"
+                                     "liikennevalot" "Liikennevalot"
+                                     "liikenteenohjaaja" "Liikenteen ohjaaja"}
+                     }
+                    {:otsikko "Liikenteenohjaus"
+                     :tyyppi :valinta
+                     :nimi ::t/liikenteenohjaus
+                     :valinnat [nil "ohjataanVuorotellen" "ohjataanKaksisuuntaisena"]
+                     :valinta-nayta {nil "(Ei valintaa)"
+                                     "ohjataanVuorotellen" "Ohjataan vuorotellen"
+                                     "ohjataanKaksisuuntaisena" "Ohjataan kaksisuuntaisena"}
                      })
       (lomake/ryhma "Vaikutussuunta"
                     {:otsikko ""
