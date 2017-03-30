@@ -33,9 +33,6 @@
         (map (juxt :id :nimi))
         urakat))
 
-(defn- yllapitokohteet-valinnat [urakka-id]
-  nil)
-
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
@@ -106,8 +103,7 @@
                   :voi-lisata? false
                   :voi-kumota? false
                   :piilota-toiminnot? true}
-   [
-    {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
+   [{:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
      :tyyppi :positiivinen-numero}
     {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
      :tyyppi :positiivinen-numero}
@@ -117,8 +113,8 @@
      :tyyppi :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
            #(e!
-             (tiedot/->IlmoitustaMuokattu
-              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+              (tiedot/->IlmoitustaMuokattu
+                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -137,8 +133,7 @@
     {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
      :leveys 1}
     {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
-     :leveys 1}
-    ]
+     :leveys 1}]
    (r/wrap (into {}
                  (map-indexed (fn [i ta]
                                 [i (update ta ::t/paivat
@@ -238,10 +233,7 @@
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
-                    :muokkaa! #(do
-
-                                 #_(log "muokkaa" (pr-str %))
-                                 (e! (tiedot/->IlmoitustaMuokattu %)))
+                    :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
                     :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)}
      [(lomake/ryhma
         "Ilmoitus koskee"
@@ -254,30 +246,45 @@
          :muokattava? (constantly true)}
         )
       (lomake/ryhma
-        "Urakka"
-        {:nimi ::t/urakka-id
-         :otsikko "Liittyy urakkaan"
-         :tyyppi :valinta
-         :valinnat (urakka-valinnat kayttajan-urakat)
-         :valinta-nayta second
-         :valinta-arvo first
+       "Urakka"
+       {:nimi ::t/urakka-id
+        :otsikko "Liittyy urakkaan"
+        :tyyppi :valinta
+        :valinnat (urakka-valinnat kayttajan-urakat)
+        :valinta-nayta second
+        :valinta-arvo first
+        :aseta (fn [rivi arvo]
+                  (if (= (::t/urakka-id rivi) arvo)
+                    rivi
+                    (do (e! (tiedot/->UrakkaValittu arvo))
+                        (assoc rivi ::t/urakka-id arvo))))
          :muokattava? (constantly true)}
-        (if (:urakan-nimi-valinta ilmoitus)
-          (assoc tyhja-kentta :nimi :blank-1)
-          ;; else
-          {:nimi ::t/urakan-nimi
-           :uusi-rivi? true
-           :otsikko "Projektin tai urakan nimi"
-           :tyyppi :string
-           :muokattava? (constantly true)})
-        (assoc tyhja-kentta :nimi :blank-2)
-        #_(if (:urakan-nimi-valinta ilmoitus)
-            (assoc tyhja-kentta :nimi :blank-2)
-            ;; else
-            {:otsikko "Kohde urakassa"
-             :nimi ::t/yllapitokohde
-             :tyyppi :valinta
-             :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
+       (if (::t/urakka-id ilmoitus)
+         (assoc tyhja-kentta :nimi :blank-1)
+         ;; else
+         {:nimi ::t/urakan-nimi
+          :uusi-rivi? true
+          :otsikko "Projektin tai urakan nimi"
+          :tyyppi :string
+          :muokattava? (constantly true)})
+       (if  (or (empty? (::t/urakan-nimiilmoitus))
+                (empty? (:urakan-kohteet ilmoitus)))
+         (assoc tyhja-kentta :nimi :blank-2)
+
+         {:otsikko "Kohde urakassa"
+          :nimi ::t/yllapitokohde
+          :tyyppi :valinta
+          :valinnat (concat [{:nimi "Ei kohdetta" :yllapitokohde-id nil}] (:urakan-kohteetilmoitus)):valinta-nayta :nimi
+           :valinta-arvo :yllapitokohde-id
+           :aseta (fn [rivi arvo]
+                    (if (= (::t/yllapitokohde rivi) arvo)
+                      rivi
+                      (do
+                        (e! (tiedot/->ValitseYllapitokohde
+                              (first
+                                (filter #(= arvo (:yllapitokohde-id %)) (:urakan-kohteet ilmoitus)))))
+                        (assoc rivi ::t/yllapitokohde arvo))))
+           :muokattava? (constantly true)}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi
