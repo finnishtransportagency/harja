@@ -18,7 +18,8 @@
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.paneeliapurit :as paneeli])
+            [harja.paneeliapurit :as paneeli]
+            [clj-time.coerce :as c])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -128,6 +129,64 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila kuusamontien-testi)) :ei-aloitettu))
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulaisten-ohitusramppi)) :ei-aloitettu))
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
+
+(deftest yllapitokohteen-tila-paatellaan-oikein
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila {})
+           :ei-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))})
+           :ei-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))})
+           :kohde-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))})
+           :kohde-aloitettu)))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))})
+         :paallystys-aloitettu))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
+         :paallystys-valmis))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))})
+         :ei-aloitettu))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+            :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
+         :kohde-valmis))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
+            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
+            :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 6))})
+         :kohde-valmis))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
+            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
+            :kohde-valmispvm nil})
+         :tiemerkinta-valmis))
+  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
+            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
+            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))
+            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 4))
+            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 5))
+            :kohde-valmispvm nil})
+         :ei-aloitettu)))
 
 (deftest paallystyskohteiden-tila-paatellaan-oikein-kun-kesa-tulossa
   (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 0 1)] ;; 1.1.2017
@@ -492,12 +551,12 @@
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :tallenna-yllapitokohteiden-aikataulu
-                                    +kayttaja-jvh+
-                                    {:urakka-id urakka-id
-                                     :sopimus-id sopimus-id
-                                     :vuosi vuosi
-                                     :kohteet kohteet})]
+                              :tallenna-yllapitokohteiden-aikataulu
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :sopimus-id sopimus-id
+                               :vuosi vuosi
+                               :kohteet kohteet})]
         ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
         (<!! (timeout 2000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
