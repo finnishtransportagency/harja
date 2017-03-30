@@ -132,7 +132,6 @@
     (let [yllapitokohteet (into []
                                 (comp
                                   (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                                  (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                                   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
@@ -147,7 +146,6 @@
                                                (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
                                (mapv #(assoc % :yllapitokohteen-voi-poistaa?
                                                (yllapitokohteen-voi-poistaa? db (:id %)))))]
-      (log/debug "[DEBUG] VASTAUS ON " (pr-str yllapitokohteet))
       yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]

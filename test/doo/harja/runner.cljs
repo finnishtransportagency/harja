@@ -16,7 +16,7 @@
             [harja.ui.historia-test]
             [harja.ui.kentat-test]
             [harja.ui.grid-test]
-            [harja.ui.edistymispalkki-testi]
+            [harja.ui.edistymispalkki-test]
             [harja.fmt-test]
             [harja.tiedot.urakka.siirtymat-test]
             [harja.tiedot.tierekisteri.varusteet-test]
@@ -30,6 +30,7 @@
             [harja.views.ilmoitukset.tietyoilmoituslomake-test]
             [harja.views.kartta.tasot-test]
             [harja.tiedot.urakka.yllapitokohteet-test]
+            [harja.ui.kartta.esitettavat-asiat-test]
             ;; uusi testi tähän
             ))
 
@@ -47,7 +48,7 @@
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
-           'harja.ui.edistymispalkki-testi
+           'harja.ui.edistymispalkki-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.valitavoitteet-test
            'harja.fmt-test
@@ -63,5 +64,6 @@
            'harja.views.ilmoitukset.tietyoilmoituslomake-test
            'harja.views.kartta.tasot-test
            'harja.tiedot.urakka.yllapitokohteet-test
+           'harja.ui.kartta.esitettavat-asiat-test
            ;; uusi testi tähän
            )
