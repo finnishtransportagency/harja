@@ -320,7 +320,7 @@
 
   YllapitokohdeValittu
   (process-event [{yllapitokohde :yllapitokohde} app]
-    (assoc app :valittu-ilmoitus (merge yllapitokohde (:valittu-ilmoitus app)))))
+    (assoc app :valittu-ilmoitus (merge (:valittu-ilmoitus app) yllapitokohde))))
 
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]
