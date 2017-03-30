@@ -315,9 +315,6 @@
       {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
        :tyyppi :string}
       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
-      {:otsikko "Työn pituus" :nimi :tyon-pituus
-       :tyyppi :positiivinen-numero
-       :placeholder "(Tyon pituus metreinä)"}
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
