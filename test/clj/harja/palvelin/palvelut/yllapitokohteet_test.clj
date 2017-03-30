@@ -617,3 +617,16 @@
     (is (> yllapitokohteet 1))
     (is (> aikataulut 1))
     (is (= yllapitokohteet aikataulut) "Testidatassa tulisi olla jokaisella ylläpitokohteella aikataulu")))
+
+
+(deftest sakkojen-maara-oikein-paallystysurakan-kohteille
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
+    (let [kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :urakan-yllapitokohteet
+                                           +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id
+                                                           :vuosi 2017})
+          bonukset-ja-sakot-maara (reduce + 0 (keep :bonukset-ja-sakot kohteet-kannassa))]
+      (is (not (nil? kohteet-kannassa)))
+      (is (= -1000M bonukset-ja-sakot-maara)))))
