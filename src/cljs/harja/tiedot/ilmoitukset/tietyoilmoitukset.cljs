@@ -319,9 +319,13 @@
                                         "tieSuljettu" "Tie suljettu"
                                         "muu" "Muu, mikä"})
 
-(def vaikutussuunta-vaihtoehdot-map {"molemmat" "Haittaa molemmissa ajosuunnissa"
-                                     "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
-                                     "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
+(def vaikutussuunta-vaihtoehdot
+  [nil "molemmat" "tienumeronKasvusuuntaan" "vastenTienumeronKasvusuuntaa"])
+
+(def vaikutussuunta-vaihtoehdot-map
+  {"molemmat" "Haittaa molemmissa ajosuunnissa"
+   "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
+   "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
 
 (defn henkilo->nimi [henkilo]
   (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))
