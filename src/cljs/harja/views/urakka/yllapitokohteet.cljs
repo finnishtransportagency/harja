@@ -110,10 +110,11 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
+            :fmt :nimi
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Ajorata -"
-                                                      "")))
+                             (if arvo (:nimi arvo) (if muokattava?
+                                                     "- Ajorata -"
+                                                     "")))
             :valinnat pot/+ajoradat+
             :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
@@ -122,10 +123,11 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
+            :fmt :nimi
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Kaista -"
-                                                      "")))
+                             (if arvo (:nimi arvo) (if muokattava?
+                                                     "- Kaista -"
+                                                     "")))
             :valinnat pot/+kaistat+
             :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
@@ -253,19 +255,19 @@
                                          tr-loppuosa tr-loppuetaisyys] :as kohde}]
   (when osan-pituudet-teille
     (let [osan-pituudet (osan-pituudet-teille tr-numero)]
-     (or
-       (cond
-         (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
-         (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
+      (or
+        (cond
+          (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
 
-         (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
-         (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
+          (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
 
-       (when (= kentta :tr-alkuetaisyys)
-         (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+        (when (= kentta :tr-alkuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
 
-       (when (= kentta :tr-loppuetaisyys)
-         (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
+        (when (= kentta :tr-loppuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 (defn yllapitokohdeosat
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
@@ -675,7 +677,7 @@
                                                      (:sakot-ja-bonukset rivi)
                                                      (:bitumi-indeksi rivi)
                                                      (:kaasuindeksi rivi)))])}]))
-          (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
@@ -683,7 +685,7 @@
         (reaction
           (let [kohteet @kohteet-atom
                 sopimuksen-mukaiset-tyot-yhteensa
-                     (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
                 maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)

@@ -181,7 +181,7 @@ SELECT
   ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
   ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis                     AS "kohde-valmispvm",
-  sum(s.maara)                          AS "sakot-ja-bonukset",
+  sum(-s.maara)                          AS "sakot-ja-bonukset", -- käännetään toisin päin jotta kohdeluettelon summaus toimii suoraan oikein
   o.nimi                                AS "urakoitsija",
   u.nimi                                AS "urakka",
   u.id                                  AS "urakka-id"
@@ -191,7 +191,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
@@ -724,27 +724,3 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
-
--- name: hae-yllapitokohteen-tiedot-tietyoilmoitukselle
-SELECT
-  ypk.id,
-  ypk.tr_numero        AS "tr-numero",
-  ypk.tr_alkuosa       AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa      AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
-  ypkat.kohde_alku     AS alku,
-  ypkat.kohde_valmis   AS loppu,
-  u.id                 AS "urakka-id",
-  u.nimi               AS "urakka-nimi",
-  u.sampoid            AS "urakka-sampo-id",
-  urk.id               AS "urakoitsija-id",
-  urk.nimi             AS "urakoitsija-nimi",
-  ely.id               AS "tilaaja-id",
-  ely.nimi             AS "tilaaja-nimi"
-FROM yllapitokohde ypk
-  JOIN yllapitokohteen_aikataulu ypkat ON ypk.id = ypkat.yllapitokohde
-  JOIN urakka u ON ypk.urakka = u.id
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
-  JOIN organisaatio ely ON u.hallintayksikko = ely.id
-WHERE ypk.id = :kohdeid;

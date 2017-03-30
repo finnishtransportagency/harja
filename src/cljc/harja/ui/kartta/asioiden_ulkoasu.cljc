@@ -236,20 +236,15 @@
    :tyyppi :merkki
    :img (:yllapito ikonien-varit)})
 
-(defn yllapidon-viiva [valittu? avoin? tila tyyppi]
+(defn yllapidon-viiva [valittu? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
         leveydet (range (cond
-                          (and valittu? avoin?) (+ 2 +valitun-leveys+)
-                          avoin? (+ 2 +normaali-leveys+)
                           valittu? +valitun-leveys+
-                          :else +normaali-leveys+) 0 -2)
-        tila (if (keyword? tila)
-               tila
-               (keyword (str/lower-case (or tila "muu"))))]
+                          :else +normaali-leveys+) 0 -2)]
     [{:color (:yllapito-pohja viivojen-varit)
       :width (nth leveydet 0)}
      {:color (case tila
-               :aloitettu (:yllapito-aloitettu viivojen-varit)
+               :kesken (:yllapito-aloitettu viivojen-varit)
                :valmis (:yllapito-valmis viivojen-varit)
                (:yllapito-muu viivojen-varit))
       :width (nth leveydet 1)}

@@ -6,7 +6,7 @@
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset]
+    [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -49,11 +49,11 @@
 
 
 (def paallystysilmoitukset-suodatettu
-  (reaction (let [tienumero @yllapito-tiedot/tienumero]
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
+                  kohdenumero @yllapito-tiedot/kohdenumero]
               (when @paallystysilmoitukset
-                (filterv #(or (nil? tienumero)
-                              (= (:tr-numero %) tienumero))
-                         @paallystysilmoitukset)))))
+                (yllapitokohteet/suodata-yllapitokohteet @paallystysilmoitukset {:tienumero tienumero
+                                                                                 :kohdenumero kohdenumero})))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))
 
@@ -71,24 +71,28 @@
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
+                  kohdenumero @yllapito-tiedot/kohdenumero
                   kohteet (when yllapitokohteet
-                            (yllapitokohteet/suodata-yllapitokohteet-tienumerolla yllapitokohteet tienumero))]
+                            (yllapitokohteet/suodata-yllapitokohteet yllapitokohteet {:tienumero tienumero
+                                                                                      :kohdenumero kohdenumero}))]
               kohteet)))
 
 (def yhan-paallystyskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
-                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-                                     kohteet true :paallystys))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
-                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-                                     kohteet false :paikkaus))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet
@@ -113,13 +117,11 @@
    :nimi :paallystetyyppi
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse päällyste -"
-                        "")))
-   :valinnat paallystys-ja-paikkaus/+paallystetyypit+})
+                      (:nimi rivi)))
+   :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+})
 
 (def raekoko-grid-skeema
   {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
@@ -131,10 +133,8 @@
    :nimi :tyomenetelma
    :tyyppi :valinta
    :valinta-arvo :koodi
-   :valinta-nayta (fn [rivi muokattava?]
-                    (if rivi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
                       (str (:lyhenne rivi) " - " (:nimi rivi))
-                      (if muokattava?
-                        "- Valitse menetelmä -"
-                        "")))
-   :valinnat pot/+tyomenetelmat+})
+                      (:nimi rivi)))
+   :valinnat pot/+tyomenetelmat-ja-nil+})

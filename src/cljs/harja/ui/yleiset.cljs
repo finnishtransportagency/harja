@@ -260,10 +260,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          13 ;; enter
                                          (reset! auki? false)))))
 
-                                 (do
+                                 (do ;; Valitaan inputtia vastaava vaihtoehto
                                    (reset! term (char kc))
                                    (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                     (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
+                                                                     (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
                                                                                   (.toLowerCase @term)) 0))
                                                                    vaihtoehdot))]
                                      (valitse-fn itemi)

@@ -6,7 +6,7 @@
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-view]
+            [harja.views.urakka.paallystys-muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [vihje-elementti]]
             [harja.pvm :as pvm]
@@ -65,6 +65,7 @@
          (t/year (:loppupvm ur))
          urakka/valittu-urakan-vuosi
          urakka/valitse-urakan-vuosi!]
+        [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
         [u-valinnat/tienumero yllapito-tiedot/tienumero]
 
         [yllapitokohteet-view/yllapitokohteet

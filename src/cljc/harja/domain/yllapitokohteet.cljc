@@ -1,12 +1,21 @@
 (ns harja.domain.yllapitokohteet
   "Ylläpitokohteiden yhteisiä apureita"
   #?(:clj
-     (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-               [clojure.spec :as s]
-       #?@(:clj [
-               [clojure.future :refer :all]])))
+     (:require
+       [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+       [harja.domain.tierekisteri :as tr-domain]
+       [clojure.string :as str]
+       [clojure.spec :as s]
+       [clojure.future :refer :all]
+       [harja.pvm :as pvm]
+       [clj-time.core :as t]
+       [taoensso.timbre :as log]
+       [clj-time.coerce :as c]))
   #?(:cljs
-     (:require [cljs.spec :as s])))
+     (:require
+       [cljs.spec :as s]
+       [clojure.string :as str]
+       [harja.domain.tierekisteri :as tr-domain])))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
@@ -181,80 +190,83 @@ yllapitoluokkanimi->numero
               (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
 
-(defn yllapitokohteen-tarkka-tila [yllapitokohde]
-  ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
-  (cond (:kohde-valmispvm yllapitokohde)
-        :kohde-valmis
+#?(:clj
+   (defn yllapitokohteen-tarkka-tila [yllapitokohde]
+     (cond
+       (and (:kohde-valmispvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:kohde-valmispvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :kohde-valmis
 
-        (:tiemerkinta-loppupvm yllapitokohde)
-        :tiemerkinta-valmis
+       (and (:tiemerkinta-loppupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:tiemerkinta-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :tiemerkinta-valmis
 
-        (:tiemerkinta-alkupvm yllapitokohde)
-        :tiemerkinta-aloitettu
+       (and (:tiemerkinta-alkupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:tiemerkinta-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :tiemerkinta-aloitettu
 
-        (:paallystys-loppupvm yllapitokohde)
-        :paallystys-valmis
+       (and (:paallystys-loppupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :paallystys-valmis
 
-        (:paallystys-alkupvm yllapitokohde)
-        :paallystys-aloitettu
+       (and (:paallystys-alkupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :paallystys-aloitettu
 
-        (:paikkaus-loppupvm yllapitokohde)
-        :paikkaus-valmis
+       (and (:paikkaus-loppupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-loppupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :paikkaus-valmis
 
-        (:paikkaus-alkupvm yllapitokohde)
-        :paikkaus-aloitettu
+       (and (:paikkaus-alkupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :paikkaus-aloitettu
 
-        (:kohde-alkupvm yllapitokohde)
-        :kohde-aloitettu
+       (and (:kohde-alkupvm yllapitokohde)
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:kohde-alkupvm yllapitokohde)))
+                                 (pvm/nyt-suomessa)))
+       :kohde-aloitettu
 
-        :default
-        :ei-aloitettu))
+       :default
+       :ei-aloitettu)))
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila
+    :ei-aloitettu "Ei aloitettu"
     :kohde-aloitettu "Kohde aloitettu"
     :paallystys-aloitettu "Päällystys aloitettu"
     :paallystys-valmis "Päällystys valmis"
+    :paikkaus-aloitettu "Paikkaus aloitettu"
+    :paikkaus-valmis "Paikkaus valmis"
     :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
     :tiemerkinta-valmis "Tiemerkintä valmis"
     :kohde-valmis "Kohde valmis"
-    :ei-aloitettu "Ei aloitettu"
     "Ei tiedossa"))
 
-(defn yllapitokohteen-tila-kartalla [yllapitokohde]
-  ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
-  (cond (:kohde-valmispvm yllapitokohde)
-        :valmis
-
-        (:tiemerkinta-loppupvm yllapitokohde)
-        :valmis
-
-        (:tiemerkinta-alkupvm yllapitokohde)
-        :valmis
-
-        (:paallystys-loppupvm yllapitokohde)
-        :valmis
-
-        (:paallystys-alkupvm yllapitokohde)
-        :aloitettu
-
-        (:paikkaus-loppupvm yllapitokohde)
-        :aloitettu
-
-        (:paikkaus-alkupvm yllapitokohde)
-        :aloitettu
-
-        (:kohde-alkupvm yllapitokohde)
-        :aloitettu
-
-        :default
-        nil))
+(defn yllapitokohteen-tila-kartalla [tarkka-tila]
+  (case tarkka-tila
+    :ei-aloitettu :ei-aloitettu
+    :kohde-aloitettu :kesken
+    :paallystys-aloitettu :kesken
+    :paallystys-valmis :kesken
+    :paikkaus-aloitettu :kesken
+    :paikkaus-valmis :kesken
+    :tiemerkinta-aloitettu :kesken
+    :tiemerkinta-valmis :kesken
+    :kohde-valmis :valmis))
 
 (defn kuvaile-kohteen-tila-kartalla [tila]
   (case tila
     :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
+    :kesken "Kesken"
+    :ei-aloitettu "Ei aloitettu"
+    "Ei tiedossa"))
 
 (def yllapitokohde-kartalle-xf
   ;; Ylläpitokohde näytetään kartalla 'kohdeosina'.
@@ -266,7 +278,24 @@ yllapitoluokkanimi->numero
               (keep (fn [kohdeosa]
                       (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
                                       :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
-                                      :tila-kartalla (:tila-kartalla kohde)
+                                      :tila (:tila kohde)
                                       :yllapitokohde-id (:id kohde)))
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
+
+(defn- yllapitokohteen-jarjestys
+  [kohde]
+  ((juxt :kohdenumero
+         :tie :tr-numero :tienumero
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn- jarjesta-yllapitokohteet*
+  [kohteet]
+  (sort-by yllapitokohteen-jarjestys kohteet))
+
+(defn jarjesta-yllapitokohteet [yllapitokohteet]
+  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
+        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
+    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
+                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))

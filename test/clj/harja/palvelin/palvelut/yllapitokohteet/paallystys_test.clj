@@ -148,6 +148,62 @@
                      " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
+(deftest skeemavalidointi-toimii-ilman-kaikkia-avaimia
+  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
+    (is (not (nil? paallystyskohde-id)))
+
+    (let [urakka-id @muhoksen-paallystysurakan-id
+          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
+                                 (assoc :ilmoitustiedot
+                                        {:osoitteet [{;; Alikohteen tiedot
+                                                      :nimi "Tie 666"
+                                                      :tunnus "T"
+                                                      :tr-numero 666
+                                                      :tr-alkuosa 2
+                                                      :tr-alkuetaisyys 3
+                                                      :tr-loppuosa 4
+                                                      :tr-loppuetaisyys 5
+                                                      :tr-ajorata 1
+                                                      :tr-kaista 1
+                                                      :paallystetyyppi 1
+                                                      :raekoko 1
+                                                      :tyomenetelma 12
+                                                      :massamaara 2
+                                                      :toimenpide "Wut"
+                                                      ;; Päällystetoimenpiteen tiedot
+                                                      :toimenpide-paallystetyyppi 1
+                                                      :toimenpide-raekoko 1
+                                                      :kokonaismassamaara 2
+                                                      :rc% 3
+                                                      :toimenpide-tyomenetelma 12
+                                                      :leveys 5
+                                                      :massamenekki 7
+                                                      :pinta-ala 8
+                                                      ;; Kiviaines- ja sideainetiedot
+                                                      :esiintyma "asd"
+                                                      :km-arvo "asd"
+                                                      :muotoarvo "asd"
+                                                      :sideainetyyppi nil ;; Sideainetyyppi on annettu, mutta arvo nil (ei sideainetta)
+                                                      :pitoisuus 54
+                                                      :lisaaineet "asd"}]
+
+                                         :alustatoimet [{:tr-alkuosa 2
+                                                         :tr-alkuetaisyys 3
+                                                         :tr-loppuosa 4
+                                                         :tr-loppuetaisyys 5
+                                                         :kasittelymenetelma 1
+                                                         :paksuus 1234
+                                                         :tekninen-toimenpide 1
+                                                         ;; Verkkoon liittyvät avaimet puuttuu kokonaan, arvoja ei siis annettu
+                                                         }]}))]
+
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-paallystysilmoitus
+                      +kayttaja-jvh+ {:urakka-id urakka-id
+                                      :sopimus-id sopimus-id
+                                      :paallystysilmoitus paallystysilmoitus}))))
+
 (deftest testidata-on-validia
   ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
   (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]

@@ -12,9 +12,19 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero [tienumero-atom]
-  [tee-otsikollinen-kentta "Tienumero"
-   {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
-   tienumero-atom])
+  [tee-otsikollinen-kentta
+   {:otsikko "Tienumero"
+    :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
+    :arvo-atom tienumero-atom
+    :luokka "label-ja-kentta-puolikas"}
+   "Tienumero"])
+
+(defn yllapitokohteen-kohdenumero [kohdenumero-atom]
+  [tee-otsikollinen-kentta
+   {:otsikko "Kohdenumero"
+    :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla"}
+    :arvo-atom kohdenumero-atom
+    :luokka "label-ja-kentta-puolikas"}])
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
