@@ -161,7 +161,7 @@ WHERE tti.paatietyoilmoitus = :paatietyoilmoitus;
 
 -- name: hae-yllapitokohteen-tiedot-tietyoilmoitukselle
 SELECT
-  ypk.id,
+  ypk.id                 AS "yllapitokohde-id",
   ypk.tr_numero          AS "tr-numero",
   ypk.tr_alkuosa         AS "tr-alkuosa",
   ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",

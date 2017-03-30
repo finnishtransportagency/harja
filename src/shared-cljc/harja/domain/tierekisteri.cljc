@@ -115,7 +115,8 @@
 (defn normalisoi
   "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
   [osoite]
-  (let [ks (fn [& avaimet]
+  (let [osoite (or osoite {})
+        ks (fn [& avaimet]
              (some osoite avaimet))]
     {::tie (ks ::tie :numero :tr-numero :tie)
      ::aosa (ks ::aosa :alkuosa :tr-alkuosa :aosa)

@@ -38,37 +38,6 @@
     {:type "submit" :on-click #(.stopPropagation %)}
     (ikonit/print) " PDF"]])
 
-(defn tyotyypit [tyypit]
-  (str/join ", " (map (fn [t]
-                        (str (::t/tyyppi t)
-                             (when-let [kuvaus (::t/kuvaus t)]
-                               (str " (Selite: " kuvaus ")"))))
-                      tyypit)))
-
-(defn nopeusrajoitukset [nopeusrajoitukset]
-  (str/join ", " (map (fn [n]
-                        (str (:nopeusrajoitus n) " km/h "
-                             (when (:matka n)
-                               (str " (" (:matka n) " metriä)"))))
-                      nopeusrajoitukset)))
-
-(defn tienpinnat [tienpinnat]
-  (str/join ", " (map (fn [n]
-                        (str (:materiaali n)
-                             (when (:matka n)
-                               (str " (" (:matka n) " metriä)"))))
-                      tienpinnat)))
-
-(defn henkilo [henkilo]
-  (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))
-
-(defn yhteyshenkilo [{::t/keys [etunimi sukunimi matkapuhelin sahkoposti]}]
-  (str
-    etunimi " "
-    sukunimi ", "
-    matkapuhelin ", "
-    sahkoposti))
-
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
   (let [urakkavalinnat (into [{:id nil :nimi "Kaikki urakat"}]
                              kayttajan-urakat)]
@@ -129,10 +98,10 @@
     :fmt pvm/pvm-aika-opt
     :leveys 2}
    {:otsikko "Työn tyyppi" :nimi ::t/tyotyypit
-    :fmt tyotyypit
+    :hae t/tyotyypit->str
     :leveys 4}
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
-    :hae (comp henkilo ::t/ilmoittaja)
+    :hae t/ilmoittaja->str
     :leveys 7}
    {:otsikko " "
     :leveys 2
@@ -151,15 +120,15 @@
                 {:otsikko "Nopeusrajoitukset"
                  :nimi :nopeusrajoitukset
                  :muokattava? (constantly false)
-                 :hae #(nopeusrajoitukset (:nopeusrajoitukset %))}
+                 :hae t/nopeusrajoitukset->str}
                 {:otsikko "Tienpinta työmaalla"
                  :nimi :tienpinnat
                  :muokattava? (constantly false)
-                 :hae #(tienpinnat (:tienpinnat %))}
+                 :hae t/tienpinnat->str}
                 {:otsikko (str "Kiertotie")
                  :nimi :kiertotie
                  :muokattava? (constantly false)
-                 :hae #(tienpinnat (:kiertotienpinnat %))}))
+                 :hae t/kiertotienpinnat->str}))
 
 (defn tietyoilmoituksen-vetolaatikko [e!
                                       {ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as app}
@@ -178,14 +147,14 @@
       :muokattava? (constantly false)}
      {:otsikko "Urakoitsijan yhteyshenkilo"
       :nimi :urakoitsijan_yhteyshenkilo
-      :hae (comp yhteyshenkilo ::t/urakoitsijayhteyshenkilo)
+      :hae t/urakoitsijayhteyshenkilo->str
       :muokattava? (constantly false)}
      {:otsikko "Tilaaja"
       :nimi ::t/tilaajan-nimi
       :muokattava? (constantly false)}
      {:otsikko "Tilaajan yhteyshenkilo"
       :nimi :tilaajan_yhteyshenkilo
-      :hae (comp yhteyshenkilo ::t/tilaajayhteyshenkilo)
+      :hae t/tilaajayhteyshenkilo->str
       :muokattava? (constantly false)}
      {:otsikko "Tie"
       :nimi ::t/osoite
@@ -210,7 +179,7 @@
       :muokattava? (constantly false)}
      {:otsikko "Työtyypit"
       :nimi ::t/tyotyypit
-      :fmt tyotyypit
+      :hae t/tyotyypit->str
       :muokattava? (constantly false)}
      (vaikutukset-liikenteelle)]
     tietyoilmoitus]

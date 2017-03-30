@@ -33,9 +33,6 @@
         (map (juxt :id :nimi))
         urakat))
 
-(defn- yllapitokohteet-valinnat [urakka-id]
-  nil)
-
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
@@ -105,8 +102,7 @@
                   :voi-lisata? false
                   :voi-kumota? false
                   :piilota-toiminnot? true}
-   [
-    {:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
+   [{:otsikko "Maks. korkeus (m)" :nimi ::t/max-korkeus
      :tyyppi :positiivinen-numero}
     {:otsikko "Maks. leveys (m)" :nimi ::t/max-leveys
      :tyyppi :positiivinen-numero}
@@ -116,8 +112,8 @@
      :tyyppi :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
            #(e!
-             (tiedot/->IlmoitustaMuokattu
-              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+              (tiedot/->IlmoitustaMuokattu
+                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
@@ -136,8 +132,7 @@
     {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
      :leveys 1}
     {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
-     :leveys 1}
-    ]
+     :leveys 1}]
    (r/wrap (into {}
                  (map-indexed (fn [i ta]
                                 [i (update ta ::t/paivat
@@ -173,21 +168,21 @@
                 :aseta #(assoc %1 ::t/tyotyypit %2)
                 :tyyppi :checkbox-group
                 :vaihtoehdot (map first vaihtoehdot)
-                :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
+                :vaihtoehto-nayta t/tyotyyppi-vaihtoehdot-map
                 :disabloi? (constantly false)
                 :valittu-fn valittu-tyon-tyyppi?
                 :valitse-fn valitse-tyon-tyyppi})]
     (lomake/ryhma
-      "Työn tyyppi"
-      (osio :tyotyypit-a "Tienrakennustyöt" tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
-      (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" tiedot/tyotyyppi-vaihtoehdot-huolto)
-      (osio :tyotyypit-c "Asennustyöt" tiedot/tyotyyppi-vaihtoehdot-asennus)
-      (merge (osio :tyotyypit-d "Muut" tiedot/tyotyyppi-vaihtoehdot-muut)
-             {:muu-vaihtoehto "Muu, mikä?"
-              :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
-                           :hae #(tyotyypin-kuvaus % "Muu, mikä?")
-                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
-                           :placeholder "(Muu tyyppi?)"}}))))
+     "Työn tyyppi"
+     (osio :tyotyypit-a "Tienrakennustyöt" t/tyotyyppi-vaihtoehdot-tienrakennus)
+     (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" t/tyotyyppi-vaihtoehdot-huolto)
+     (osio :tyotyypit-c "Asennustyöt" t/tyotyyppi-vaihtoehdot-asennus)
+     (merge (osio :tyotyypit-d "Muut"  t/tyotyyppi-vaihtoehdot-muut)
+            {:muu-vaihtoehto "Muu, mikä?"
+             :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
+                          :hae #(tyotyypin-kuvaus % "Muu, mikä?")
+                          :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
+                          :placeholder "(Muu tyyppi?)"}}))))
 
 (defn yhteyshenkilo [otsikko avain & kentat-ennen]
   (apply
@@ -220,34 +215,24 @@
               :tyyppi :string}])))
 
 (defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
-  [:span
-   [napit/tallenna
-    "Tallenna ilmoitus"
-    #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true))
-    {:disabled (or tallennus-kaynnissa?
-                   (not (lomake/voi-tallentaa? ilmoitus)))
-     :tallennus-kaynnissa? tallennus-kaynnissa?
-     :ikoni (ikonit/tallenna)}]]
-  [:form {:target "_blank"
-          :method "POST"
-          :action (k/pdf-url :tietyoilmoitus)}
-   [:input {:type "hidden" :name "parametrit"
-            :value (transit/clj->transit {:id (when (::t/id ilmoitus) (js/parseInt (::t/id ilmoitus)))})}]
-   [:button.nappi-ensisijainen
-    {:type "submit" :on-click #(do
-                                 (.stopPropagation %)
-                                 (e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) false)))}
-    (ikonit/print) " Tallenna ja tulosta PDF"]])
+  (r/with-let [avaa-pdf? (r/atom false)]
+    [:span
+     [napit/tallenna
+      "Tallenna ilmoitus"
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+      {:disabled (or tallennus-kaynnissa?
+                     (not (lomake/voi-tallentaa? ilmoitus)))
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :ikoni (ikonit/tallenna)}]
+
+     [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
-                    :muokkaa! #(do
-
-                                 #_(log "muokkaa" (pr-str %))
-                                 (e! (tiedot/->IlmoitustaMuokattu %)))
+                    :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
                     :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)}
      [(lomake/ryhma
         "Ilmoitus koskee"
@@ -267,8 +252,13 @@
          :valinnat (urakka-valinnat kayttajan-urakat)
          :valinta-nayta second
          :valinta-arvo first
+         :aseta (fn [rivi arvo]
+                  (if (= (::t/urakka-id rivi) arvo)
+                    rivi
+                    (do (e! (tiedot/->UrakkaValittu arvo))
+                        (assoc rivi ::t/urakka-id arvo))))
          :muokattava? (constantly true)}
-        (if (:urakan-nimi-valinta ilmoitus)
+        (if (::t/urakka-id ilmoitus)
           (assoc tyhja-kentta :nimi :blank-1)
           ;; else
           {:nimi ::t/urakan-nimi
@@ -276,14 +266,23 @@
            :otsikko "Projektin tai urakan nimi"
            :tyyppi :string
            :muokattava? (constantly true)})
-        (assoc tyhja-kentta :nimi :blank-2)
-        #_(if (:urakan-nimi-valinta ilmoitus)
-            (assoc tyhja-kentta :nimi :blank-2)
-            ;; else
-            {:otsikko "Kohde urakassa"
-             :nimi ::t/yllapitokohde
-             :tyyppi :valinta
-             :valinnat (yllapitokohteet-valinnat (:urakka-id ilmoitus))}))
+        (if (or (empty? (::t/urakan-nimi ilmoitus))
+                (empty? (:urakan-kohteet ilmoitus)))
+          (assoc tyhja-kentta :nimi :blank-2)
+          {:otsikko "Kohde urakassa"
+           :nimi ::t/yllapitokohde
+           :tyyppi :valinta
+           :valinnat (concat [{:nimi "Ei kohdetta" :yllapitokohde-id nil}] (:urakan-kohteet ilmoitus)) :valinta-nayta :nimi
+           :valinta-arvo :yllapitokohde-id
+           :aseta (fn [rivi arvo]
+                    (if (= (::t/yllapitokohde rivi) arvo)
+                      rivi
+                      (do
+                        (e! (tiedot/->ValitseYllapitokohde
+                              (first
+                                (filter #(= arvo (:yllapitokohde-id %)) (:urakan-kohteet ilmoitus)))))
+                        (assoc rivi ::t/yllapitokohde arvo))))
+           :muokattava? (constantly true)}))
 
       (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
                      {:nimi ::t/urakoitsijan-nimi
@@ -336,8 +335,8 @@
                     {:otsikko "Kaistajärjestelyt"
                      :tyyppi :checkbox-group
                      :nimi ::t/kaistajarjestelyt
-                     :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
-                     :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
+                     :vaihtoehdot (map first t/kaistajarjestelyt-vaihtoehdot-map)
+                     :vaihtoehto-nayta t/kaistajarjestelyt-vaihtoehdot-map
                      :muu-vaihtoehto "Muu"
                      :muu-kentta {:otsikko "" :nimi :muu :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
                     {:otsikko "Nopeusrajoitukset"
@@ -371,7 +370,6 @@
                                      "loivatMutkat" "Loivat mutkat"
                                      "jyrkatMutkat" "Jyrkät mutkat (erkanee yli 45° kulmassa)"}
                      }
-
                     {:otsikko "Liikenteen ohjaaja"
                      :tyyppi :valinta
                      :uusi-rivi? true
@@ -393,19 +391,13 @@
                     {:otsikko ""
                      :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
-                     :valinnat tiedot/vaikutussuunta-vaihtoehdot
-                     :valinta-nayta #(or (tiedot/vaikutussuunta-vaihtoehdot-map %)
-                                         "- Valitse -")
-                     :validoi [[:ei-tyhja]]
-                     ;; muu?
-                     }
-
-                    )
+                     :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
+                     :valinta-nayta #(or (t/vaikutussuunta-vaihtoehdot-map %) "- Valitse -")
+                     :validoi [[:ei-tyhja]]})
       (lomake/ryhma "Lisätietoja"
                     {:otsikko ""
                      :nimi ::t/lisatietoja
                      :tyyppi :text
                      :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
-     ilmoitus]]
-   ])
+     ilmoitus]]])
