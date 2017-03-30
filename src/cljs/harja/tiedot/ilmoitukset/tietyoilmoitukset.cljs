@@ -250,7 +250,7 @@
         (try
           (let [vastaus (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :kohdelista)
+                                     (dissoc ::t/tyovaiheet :urakan-kohteet)
                                      (spec-apurit/poista-nil-avaimet)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
