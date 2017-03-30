@@ -40,6 +40,7 @@
                                           tyotyyppi-vaihtoehdot-asennus
                                           tyotyyppi-vaihtoehdot-muut)))
 
+(def kaistajarjestelyt-vaihtoehdot ["ajokaistaSuljettu" "ajorataSuljettu" "tieSuljettu" "muu"])
 (def kaistajarjestelyt-vaihtoehdot-map {"ajokaistaSuljettu" "Yksi ajokaista suljettu"
                                         "ajorataSuljettu" "Yksi ajorata suljettu"
                                         "tieSuljettu" "Tie suljettu"
