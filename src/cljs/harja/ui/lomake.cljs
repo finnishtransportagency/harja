@@ -337,7 +337,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
-             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia") )}
+             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
+                          luokka)}
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall
