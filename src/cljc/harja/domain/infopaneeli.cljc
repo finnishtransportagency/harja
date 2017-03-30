@@ -1,7 +1,8 @@
 (ns harja.domain.infopaneeli
   "Infopaneelin tuloksien spec määrittelyt"
   (:require [clojure.spec :as s]
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.domain.tietyoilmoitukset :as t]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -67,6 +68,9 @@
 (defmethod infopaneeli-skeema :tietyomaa [_]
   (s/keys :req-un [::yllapitokohteen-nimi ::yllapitokohteen-numero ::aika
                    ::kaistat ::ajoradat ::nopeusrajoitus]))
+
+(defmethod infopaneeli-skeema :tietyoilmoitus [_]
+  (s/keys :req [::t/alku ::t/ilmoittaja]))
 
 ;; Infopaneelin tuloksen spec päätetään :tyyppi-kartalla avaimen perusteella
 (s/def ::tulos (s/multi-spec infopaneeli-skeema :tyyppi-kartalla))
