@@ -516,6 +516,10 @@ SELECT
   tpk.yksikko        AS tehtava_yksikko,
   tt.toteuma         AS tehtava_id,
   tpk.nimi AS toimenpide,
+  mk.nimi AS materiaalitoteuma_materiaali_nimi,
+  mk.yksikko AS materiaalitoteuma_materiaali_yksikko,
+  tm.maara AS materiaalitoteuma_maara,
+  tm.id AS materiaalitoteuma_id,
   -- tarvitaanko viela kun interpolointi hakee myos?
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
@@ -527,6 +531,8 @@ FROM toteuma_tehtava tt
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
