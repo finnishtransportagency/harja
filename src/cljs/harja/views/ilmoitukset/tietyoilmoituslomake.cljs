@@ -267,7 +267,7 @@
           :otsikko "Projektin tai urakan nimi"
           :tyyppi :string
           :muokattava? (constantly true)})
-       (if  (or (empty? (::t/urakan-nimiilmoitus))
+       (if  (or (empty? (::t/urakan-nimi ilmoitus))
                 (empty? (:urakan-kohteet ilmoitus)))
          (assoc tyhja-kentta :nimi :blank-2)
 
