@@ -2,7 +2,8 @@
   "Päällystysurakan maksuerät"
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [tuck.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -22,6 +23,21 @@
      :tienumero nil
      :kohdenumero nil))
 
+;; Tapahtumat
+
 (defrecord YhdistaValinnat [valinnat])
 (defrecord MaksueratHaettu [tulokset])
 (defrecord MaksueratTallennettu [vastaus])
+
+;; Tapahtumien käsittely
+
+(extend-protocol t/Event
+
+  YhdistaValinnat
+  (process-event [{:keys [valinnat] :as e} tila]
+    (hae-toteumat {:urakka (:urakka valinnat)
+                   :sopimus (:sopimus valinnat)
+                   :alkupvm (first (:sopimuskausi valinnat))
+                   :loppupvm (second (:sopimuskausi valinnat))})
+    (hae-laskentakohteet {:urakka (:urakka valinnat)})
+    (update-in tila [:valinnat] merge valinnat)))
