@@ -60,7 +60,7 @@
     ", "
     (map
       (fn [n]
-        (str (::nopeusrajoitus n) "km/h "
+        (str (::rajoitus n) "km/h "
              (when (::matka n)
                (str " (" (::matka n) " metriä)"))))
       (::nopeusrajoitukset t))))
