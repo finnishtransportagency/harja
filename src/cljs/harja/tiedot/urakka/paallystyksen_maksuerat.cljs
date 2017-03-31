@@ -38,13 +38,21 @@
 
 ;; Tapahtumien käsittely
 
-(defn hae-maksuerat [{:keys [urakka sopimus vuosi] :as hakuparametrit}]
+(defn- maksuerarivi-grid-muotoon [maksuerarivi]
+  (let [assoc-params (apply concat (map-indexed
+                                     (fn [index teksti]
+                                       [(keyword (str "maksuera" (inc index))) teksti])
+                                     (:maksuerat maksuerarivi)))]
+    (apply assoc maksuerarivi assoc-params)))
+
+(defn- hae-maksuerat [{:keys [urakka sopimus vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
     (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {:urakka-id urakka
                                                                    :sopimus-id sopimus
-                                                                   :vuosi vuosi}))]
+                                                                   :vuosi vuosi}))
+              maksuerat-grid-muodossa (mapv maksuerarivi-grid-muotoon maksuerat)]
           (when-not (k/virhe? maksuerat)
-            (tulos! maksuerat))))))
+            (tulos! maksuerat-grid-muodossa))))))
 
 (extend-protocol t/Event
 
