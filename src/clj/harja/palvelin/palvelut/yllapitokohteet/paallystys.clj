@@ -65,8 +65,8 @@
                                   :maksuerat (konv/seq->array (:maksuerat maksuerarivi))
                                   :maksueratunnus (:maksueratunnus maksuerarivi)})
         (q/luo-maksuera<! db {:yllapitokohde (:yllapitokohde-id maksuerarivi)
-                              :maksuerat (:maksuerat maksuerarivi)
-                              :maksueratunnus (konv/seq->array (:maksuerat maksuerarivi))})))
+                              :maksuerat (konv/seq->array (:maksuerat maksuerarivi))
+                              :maksueratunnus (:maksueratunnus maksuerarivi)})))
 
     (hae-urakan-maksuerat db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
