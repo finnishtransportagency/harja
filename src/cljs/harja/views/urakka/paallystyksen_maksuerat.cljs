@@ -41,21 +41,19 @@
                     [y/ajax-loader "Haetaan maksueriä..."]
                     "Ei maksueriä")
            :tallenna (if voi-muokata?
-                       (log "Painoit nappia")
-                       #_(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
-                               (if (k/virhe? vastaus)
-                                 (viesti/nayta! "Tallentaminen epäonnistui"
-                                                :warning viesti/viestin-nayttoaika-lyhyt)
-                                 (reset! kaikki-valitavoitteet-atom vastaus))))
+                       #(e! (tiedot/->TallennaMaksuerat (merge valinnat {:maksuerat %})))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
            ;:tallennus-ei-mahdollinen-tooltip
            #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
-          [{:otsikko "Kohdenumero" :leveys 5 :nimi :kohdenumero :tyyppi :string}
-           {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi :tyyppi :string}
-           {:otsikko "Kokonaishinta" :leveys 5 :nimi :kokonaishinta :tyyppi :numero :fmt fmt/euro-opt}
+          [{:otsikko "Kohdenumero" :leveys 5 :nimi :kohdenumero
+            :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi
+            :tyyppi :string :muokattava? (constantly false)}
+           {:otsikko "Kokonaishinta" :leveys 5 :nimi :kokonaishinta
+           :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
            ;; TODO Hae kokonaishinta, yhdistä frontin ja API:n kokonaishinnan lasku yhdeksi funktioksi,
            ;; jolla voidaan laskea kokonaishinta helposti (palvelu voi laskea valmiiksi, koska readonly
            ;; eikä muutu tässä näkymässä)
