@@ -43,7 +43,8 @@
 
 (defn maksuerarivi-grid-muotoon
   "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta vectorina.
-   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta.
+   Palauttaa mapin, jossa jokainen yksittäinen maksuerä
+   löytyy omasta avaimesta (:maksuera1, :maksuera2 ...)
    Säilyttää mapin muut avaimet."
   [maksuerarivi]
   (if (empty? (:maksuerat maksuerarivi))
@@ -57,8 +58,8 @@
              assoc-params))))
 
 (defn maksuerarivi-tallennusmuotoon
-  "Ottaa mapin, jossa yksittäinen maksuerä on oman avaimen takana.
-   Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta
+  "Ottaa mapin, jossa yksittäinen maksuerä on oman avaimen takana (:maksuera1, :maksuera2 ...).
+   Palauttaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta vectorina.
    Säilyttää mapin muut avaimet."
   [maksuerarivi]
   (let [maksueranumerot (filter #(some? (maksuerarivi (keyword (str "maksuera" %))))
