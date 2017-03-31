@@ -27,7 +27,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-(defn voi-kirjoittaa? [urakka-id]
+(defn- voi-kirjoittaa? [urakka-id]
   (oikeudet/voi-kirjoittaa?
     oikeudet/urakat-toteutus-muutkustannukset
     urakka-id))
@@ -76,7 +76,6 @@
                                              :loppupvm sopimuskauden-loppupvm
                                              :uusi-laskentakohde uusi-laskentakohde}
                                             laskentakohteet))]
-    (log "TILA:" (pr-str tila))
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
       #(e! (tiedot/->ValitseToteuma nil))]

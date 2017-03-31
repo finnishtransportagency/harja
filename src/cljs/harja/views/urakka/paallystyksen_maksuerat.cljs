@@ -30,7 +30,9 @@
 
     (fn [e! {:keys [maksuerat valinnat] :as tila}]
       (let [valittu-urakka @nav/valittu-urakka
-            voi-muokata? true] ;; TODO OIKEUSTARKISTUS
+            ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+            voi-muokata? true ; Käytä (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat (:id valittu-urakka)
+            ]
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
