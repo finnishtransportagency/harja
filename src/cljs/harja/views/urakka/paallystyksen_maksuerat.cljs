@@ -41,7 +41,9 @@
                     [y/ajax-loader "Haetaan maksueriä..."]
                     "Ei maksueriä")
            :tallenna (if voi-muokata?
-                       #(e! (tiedot/->TallennaMaksuerat (merge valinnat {:maksuerat %})))
+                       #(e! (tiedot/->TallennaMaksuerat
+                       (merge valinnat
+                       {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck

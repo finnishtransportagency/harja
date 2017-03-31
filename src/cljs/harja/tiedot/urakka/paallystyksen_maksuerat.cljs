@@ -49,6 +49,11 @@
            (dissoc maksuerarivi :maksuerat)
            assoc-params)))
 
+(defn maksuerarivi-tallennusmuotoon [maksuerarivi]
+  (let [maksueranumerot (take-while #(some? (maksuerarivi (keyword (str "maksuera" %))))
+                                    (map inc (range)))]
+    (mapv #(maksuerarivi (keyword (str "maksuera" %))) maksueranumerot)))
+
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
     (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {:urakka-id urakka-id
