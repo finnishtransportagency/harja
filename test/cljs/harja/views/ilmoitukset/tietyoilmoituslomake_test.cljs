@@ -41,7 +41,7 @@
    :harja.domain.tietyoilmoitukset/tilaajan-nimi "Pohjois-Pohjanmaa",
    :harja.domain.tietyoilmoitukset/vaikutussuunta "molemmat",
    :harja.domain.tietyoilmoitukset/huomautukset ["avotuli"],
-   :harja.domain.tietyoilmoitukset/ajoittaiset-pysatykset true,
+   :harja.domain.tietyoilmoitukset/ajoittaiset-pysaytykset true,
    :harja.domain.tietyoilmoitukset/tyoajat
    [{:harja.domain.tietyoilmoitukset/alkuaika
      {:tunnit 8 :minuutit 0}
