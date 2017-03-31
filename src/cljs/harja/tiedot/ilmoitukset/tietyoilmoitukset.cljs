@@ -308,7 +308,7 @@
 
   UrakanTiedotHaettu
   (process-event [{urakka :urakka} app]
-    (assoc app :valittu-ilmoitus (esitayta-tietyoilmoitus urakka)))
+    (update app :valittu-ilmoitus merge (esitayta-tietyoilmoitus urakka)))
 
   ValitseYllapitokohde
   (process-event [{yllapitokohde :yllapitokohde} app]
