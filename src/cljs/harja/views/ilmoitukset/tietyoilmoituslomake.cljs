@@ -407,6 +407,14 @@
                      :teksti "Tie ajoittain suljettu"}
                     {:tyyppi :checkbox
                      :nimi ::t/ajoittaiset-pysaytykset
+                     :aseta #(do (log "pysaytysten asetus")
+                                 (if %2
+                                   (assoc %1 ::t/ajoittaiset-pysaytykset %2)
+                                   ;; else
+                                   (assoc %1
+                                          ::t/ajoittaiset-pysaytykset %2
+                                          ::t/pysaytysten-alku nil
+                                          ::t/pysaytysten-loppu nil)))
                      :teksti "Pysäytyksiä ajoittain (aikataulu, jos kesto yli 5 min)"}
                     (if (-> ilmoitus ::t/ajoittaiset-pysaytykset)
                       {:otsikko ""
