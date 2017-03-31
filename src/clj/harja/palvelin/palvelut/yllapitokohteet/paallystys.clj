@@ -35,7 +35,10 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
-(defn hae-urakan-maksuerat [db user {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-maksuerat
+  "Hakee hakuparametreihin osuvien ylläpitokohteiden maksuerät.
+   Palauttaa myös sellaiset ylläpitokohteet, joilla ei ole maksuerää."
+  [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS
   (let [vastaus (into []
