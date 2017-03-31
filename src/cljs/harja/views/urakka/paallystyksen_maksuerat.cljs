@@ -57,7 +57,7 @@
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
            ;:tallennus-ei-mahdollinen-tooltip
-           #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
+           #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
 
           [{:otsikko "Kohdenumero" :leveys 5 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
