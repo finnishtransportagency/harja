@@ -14,7 +14,9 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.fmt :as fmt]
             [harja.ui.yleiset :as y]
-            [harja.ui.grid :as grid])
+            [harja.ui.grid :as grid]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -26,7 +28,7 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
 
-    (fn [e! {:keys [maksuerat] :as tila}]
+    (fn [e! {:keys [maksuerat valinnat] :as tila}]
       (let [valittu-urakka @nav/valittu-urakka
             voi-muokata? true] ;; TODO OIKEUSTARKISTUS
         [:div.paallystyksen-maksuerat
@@ -41,10 +43,10 @@
            :tallenna (if voi-muokata?
                        (log "Painoit nappia")
                        #_(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
-                              (if (k/virhe? vastaus)
-                                (viesti/nayta! "Tallentaminen epäonnistui"
-                                               :warning viesti/viestin-nayttoaika-lyhyt)
-                                (reset! kaikki-valitavoitteet-atom vastaus))))
+                               (if (k/virhe? vastaus)
+                                 (viesti/nayta! "Tallentaminen epäonnistui"
+                                                :warning viesti/viestin-nayttoaika-lyhyt)
+                                 (reset! kaikki-valitavoitteet-atom vastaus))))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
@@ -64,7 +66,10 @@
            {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512}
            {:otsikko "Laskutuksen maksuerätunnus" :leveys 10 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512}]
-          maksuerat]]))))
+          (-> maksuerat
+              (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
+                                                        :kohdenumero (:kohdenumero valinnat)})
+              (yllapitokohteet-domain/jarjesta-yllapitokohteet))]]))))
 
 (defn maksuerat []
   (komp/luo

@@ -268,6 +268,7 @@ SELECT
   ypk.id as "yllapitokohde-id",
   ypk.kohdenumero,
   ypk.nimi,
+  ypk.tr_numero as "tr-numero",
   maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
