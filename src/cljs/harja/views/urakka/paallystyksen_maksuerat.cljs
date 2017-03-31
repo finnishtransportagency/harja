@@ -16,7 +16,8 @@
             [harja.ui.yleiset :as y]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -30,8 +31,11 @@
 
     (fn [e! {:keys [maksuerat valinnat] :as tila}]
       (let [valittu-urakka @nav/valittu-urakka
+            urakka-id (:id valittu-urakka)
             ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-            voi-muokata? true ; Käytä (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat (:id valittu-urakka)
+            voi-muokata? true ; Käytä (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat urakka-id
+            voi-tayttaa-maksuerat? true ; Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
+            voi-tayttaa-maksueratunnuksen? true ; Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
             ]
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka]
@@ -64,13 +68,18 @@
            ;; TODO Hae kokonaishinta, yhdistä frontin ja API:n kokonaishinnan lasku yhdeksi funktioksi,
            ;; jolla voidaan laskea kokonaishinta helposti (palvelu voi laskea valmiiksi, koska readonly
            ;; eikä muutu tässä näkymässä)
-           {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512}
-           {:otsikko "2. maksuerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512}
-           {:otsikko "3. maksuerä" :leveys 10 :nimi :maksuera3 :tyyppi :string :pituus-max 512}
-           {:otsikko "4. maksuerä" :leveys 10 :nimi :maksuera4 :tyyppi :string :pituus-max 512}
-           {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512}
+           {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
+            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+           {:otsikko "2. maksuerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512
+            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+           {:otsikko "3. maksuerä" :leveys 10 :nimi :maksuera3 :tyyppi :string :pituus-max 512
+            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+           {:otsikko "4. maksuerä" :leveys 10 :nimi :maksuera4 :tyyppi :string :pituus-max 512
+            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+           {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
+            :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "Laskutuksen maksuerätunnus" :leveys 10 :nimi :maksueratunnus
-            :tyyppi :string :pituus-max 512}]
+            :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat
               (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
                                                         :kohdenumero (:kohdenumero valinnat)})
