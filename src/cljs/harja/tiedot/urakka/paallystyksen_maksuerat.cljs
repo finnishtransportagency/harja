@@ -40,7 +40,10 @@
 
 ;; Tapahtumien käsittely
 
-(defn maksuerarivi-grid-muotoon [maksuerarivi]
+(defn maksuerarivi-grid-muotoon
+  "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta
+   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta"
+  [maksuerarivi]
   (let [assoc-params (apply concat (map-indexed
                                      (fn [index teksti]
                                        [(keyword (str "maksuera" (inc index))) teksti])
@@ -49,10 +52,15 @@
            (dissoc maksuerarivi :maksuerat)
            assoc-params)))
 
-(defn maksuerarivi-tallennusmuotoon [maksuerarivi]
+(defn maksuerarivi-tallennusmuotoon
+  "Ottaa mapin, jossa yksittäinen maksuerä on oman avaimen takana.
+   Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta"
+  [maksuerarivi]
   (let [maksueranumerot (take-while #(some? (maksuerarivi (keyword (str "maksuera" %))))
                                     (map inc (range)))]
-    (mapv #(maksuerarivi (keyword (str "maksuera" %))) maksueranumerot)))
+    (assoc maksuerarivi
+      :maksuerat
+      (mapv #(maksuerarivi (keyword (str "maksuera" %))) maksueranumerot))))
 
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
