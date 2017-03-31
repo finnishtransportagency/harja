@@ -43,7 +43,9 @@
                                      (fn [index teksti]
                                        [(keyword (str "maksuera" (inc index))) teksti])
                                      (:maksuerat maksuerarivi)))]
-    (apply assoc maksuerarivi assoc-params)))
+    (apply assoc
+           (dissoc maksuerarivi :maksuerat)
+           assoc-params)))
 
 (defn- hae-maksuerat [{:keys [urakka sopimus vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
