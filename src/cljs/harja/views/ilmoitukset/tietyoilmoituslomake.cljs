@@ -107,8 +107,25 @@
      :tyyppi :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
            #(e!
-              (tiedot/->IlmoitustaMuokattu
-                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+             (tiedot/->IlmoitustaMuokattu
+              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+
+(defn pysaytys-ajat-komponentti [e! ilmoitus]
+  [muokkaus-grid {:otsikko ""
+                  :voi-muokata? true
+                  :voi-poistaa? false
+                  :voi-lisata? false
+                  :voi-kumota? false
+                  :piilota-toiminnot? true}
+   [{:otsikko "Alkaa" :nimi ::t/pysaytysten-alku
+     :tyyppi :pvm-aika}
+    {:otsikko "Päättyy" :nimi ::t/pysaytysten-loppu
+     :tyyppi :pvm-aika}]
+   (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
+           #(e!
+             (tiedot/->IlmoitustaMuokattu
+              (merge ilmoitus
+                     (select-keys (get % 0) [::t/pysaytysten-alku ::t/pysaytysten-loppu])))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 (def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
@@ -139,17 +156,6 @@
                                            #(into #{} %))]))
                  tyoajat)
            #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
-
-(defn liikenteenohjausajat-komponentti-grid [e! ilmoitus]
-  [muokkaus-grid
-   (assoc aikataulu-grid-optiot :tyhja "Ei ohjausaikoja")
-   aikataulu-grid-kentat
-   (r/wrap (into {}
-                 (map-indexed (fn [i ta]
-                                [i (update ta ::t/paivat
-                                           #(into #{} %))]))
-                 (:liikenteenohjaus-aikataulu ilmoitus))
-           #(e! (tiedot/->IlmoitustaMuokattu (assoc ilmoitus :liikenteenohjaus-aikataulu (vals %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
@@ -393,17 +399,22 @@
                                      "ohjataanVuorotellen" "Ohjataan vuorotellen"
                                      "ohjataanKaksisuuntaisena" "Ohjataan kaksisuuntaisena"}
                      }
-                    {:otsikko "Liikenteenohjauksen ajat"
+                    {:otsikko "Ajoittaiset pysäytykset"
+                     :tyyppi :checkbox
+                     :nimi ::t/ajoittaiset-pysaytykset
+                     :teksti "Pysäytetään ajoittain"}
+                    {:otsikko "Ajoittaiset tien sulkemiset"
                      :tyyppi :valinta
-                     :nimi :liikenteenohjaus-ajat
-                     :valinnat [nil "aikataulu"]
-                     :valinta-nayta {nil "Satunnaisia"
-                                      "aikataulu" "Aikataulu (kesto yli 5 min)"}}
-                    (if (-> ilmoitus :liikenteenohjaus-ajat (= "aikataulu"))
-                      {:otsikko "Aikataulu"
+                     :uusi-rivi? true
+                     :nimi ::t/ajoittain-suljettu-tie
+                     :valinnat [false true]
+                     :valinta-nayta {false "Ei suljeta"
+                                     true "Suljetaan (Aikataulu, jos kesto yli 5 min)"}}
+                    (if (-> ilmoitus ::t/ajoittain-suljettu-tie)
+                      {:otsikko ""
                        :nimi :liikenteenohjaus-aikataulu
                        :tyyppi :komponentti
-                       :komponentti #(liikenteenohjausajat-komponentti-grid e! ilmoitus)}
+                       :komponentti #(pysaytys-ajat-komponentti e! ilmoitus)}
                       ;; else
                       (assoc tyhja-kentta :nimi :aikataulu-blank))
                     {:otsikko "Vaikutussuunta"
