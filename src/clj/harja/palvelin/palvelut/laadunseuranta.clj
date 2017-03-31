@@ -92,17 +92,20 @@
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu]}]
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
 
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
-  (into []
-        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-              (map konv/alaviiva->rakenne)
-              (map #(konv/decimal->double % :summa))
-              (map #(assoc % :laji (keyword (:laji %)))))
-        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+  (log/debug "Hae sanktiot (" urakka-id alku loppu vain-yllapitokohteettomat?")")
+  (let [sanktiot (into []
+                       (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
+                             (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
+                             (map konv/alaviiva->rakenne)
+                             (map #(konv/decimal->double % :summa))
+                             (map #(assoc % :laji (keyword (:laji %)))))
+                       (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)))]
+    (if vain-yllapitokohteettomat?
+      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
+      sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id]

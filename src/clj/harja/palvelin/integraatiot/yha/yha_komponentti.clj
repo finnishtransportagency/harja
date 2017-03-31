@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -108,7 +109,13 @@
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
-    (let [paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
+    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                   db
+                                   nil
+                                   {:urakka-id (:urakka kohde)
+                                    :yllapitokohde-id kohde-id}))
+          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
+          paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
       {:kohde kohde
        :alikohteet alikohteet
