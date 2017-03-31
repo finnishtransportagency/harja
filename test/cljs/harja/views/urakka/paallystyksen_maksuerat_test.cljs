@@ -22,6 +22,10 @@
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            {:maksuera3 "Ylimääräinen" :maksuera1 "Eka puolikas" :maksuera2 "Toka puolikas"})
          {:maksuerat ["Eka puolikas" "Toka puolikas" "Ylimääräinen"]}))
+  (is (= (maksuerat/maksuerarivi-tallennusmuotoon
+           ;; Käyttäjä syöttää kolmannen maksuerän, ei muita
+           {:maksuera3 "Ylimääräinen"})
+         {:maksuerat ["Ylimääräinen"]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon {})
          {:maksuerat []})))
 
