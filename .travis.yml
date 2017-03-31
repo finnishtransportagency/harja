@@ -25,3 +25,5 @@ deploy:
   bucket: "harjatravis"
   acl: public_read
   local_dir: target
+  on:
+    all_branches: true
