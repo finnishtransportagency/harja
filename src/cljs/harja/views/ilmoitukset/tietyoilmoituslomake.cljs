@@ -117,9 +117,9 @@
                   :voi-lisata? false
                   :voi-kumota? false
                   :piilota-toiminnot? true}
-   [{:otsikko "Alkaa" :nimi ::t/pysaytysten-alku
+   [{:otsikko "Pysäytykset alkavat" :nimi ::t/pysaytysten-alku
      :tyyppi :pvm-aika}
-    {:otsikko "Päättyy" :nimi ::t/pysaytysten-loppu
+    {:otsikko "Pysäytykset päättyvät" :nimi ::t/pysaytysten-loppu
      :tyyppi :pvm-aika}]
    (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
            #(e!
@@ -330,9 +330,11 @@
        :palstoja 2}
       (lomake/ryhma "Vaikutukset liikenteelle"
                     {:otsikko "Arvioitu viivytys normaalissa liikenteessä (min)"
+                     :leveys 1
                      :nimi ::t/viivastys-normaali-liikenteessa
                      :tyyppi :positiivinen-numero}
                     {:otsikko "Arvioitu viivytys ruuhka-aikana (min)"
+                     :leveys 1
                      :nimi ::t/viivastys-ruuhka-aikana
                      :tyyppi :positiivinen-numero
                      }
@@ -399,18 +401,14 @@
                                      "ohjataanVuorotellen" "Ohjataan vuorotellen"
                                      "ohjataanKaksisuuntaisena" "Ohjataan kaksisuuntaisena"}
                      }
-                    {:otsikko "Ajoittaiset pysäytykset"
+                    {:otsikko "Pysäytykset ja sulkemiset"
                      :tyyppi :checkbox
-                     :nimi ::t/ajoittaiset-pysaytykset
-                     :teksti "Pysäytetään ajoittain"}
-                    {:otsikko "Ajoittaiset tien sulkemiset"
-                     :tyyppi :valinta
-                     :uusi-rivi? true
                      :nimi ::t/ajoittain-suljettu-tie
-                     :valinnat [false true]
-                     :valinta-nayta {false "Ei suljeta"
-                                     true "Suljetaan (Aikataulu, jos kesto yli 5 min)"}}
-                    (if (-> ilmoitus ::t/ajoittain-suljettu-tie)
+                     :teksti "Tie ajoittain suljettu"}
+                    {:tyyppi :checkbox
+                     :nimi ::t/ajoittaiset-pysaytykset
+                     :teksti "Pysäytyksiä ajoittain (aikataulu, jos kesto yli 5 min)"}
+                    (if (-> ilmoitus ::t/ajoittaiset-pysaytykset)
                       {:otsikko ""
                        :nimi :liikenteenohjaus-aikataulu
                        :tyyppi :komponentti
