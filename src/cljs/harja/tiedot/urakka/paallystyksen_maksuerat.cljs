@@ -62,23 +62,22 @@
    Palauttaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta vectorina.
    Säilyttää mapin muut avaimet."
   [maksuerarivi]
-  (let [maksuerien-sisallot (map #(maksuerarivi (keyword (str "maksuera" %)))
-                                 ; Tarkistetaan sopiva määrä mahdollisesti syötettyjä maksueränumeroita
-                                 (map inc (range 100)))
+  (let [maksuera-avaimet (map #(keyword (str "maksuera" %))
+                              ; Luodaan sopiva määrä mahdollisesti syötettyjä maksueräavaimia
+                              ; jotka tullaan tarkistamaan ja liittämään tallennukseen
+                              (map inc (range 100)))
+        maksuerien-sisallot (map maksuerarivi maksuera-avaimet)
         viimeinen-ei-tyhja-maksuera (some identity (reverse maksuerien-sisallot))
         viimeinen-ei-tyhja-maksuera-index (- (count maksuerien-sisallot)
                                              (.indexOf (reverse maksuerien-sisallot)
                                                        viimeinen-ei-tyhja-maksuera)
                                              1)
         ;; Täytetyt maksuerät on vector ensimmäisestä viimeiseen täytettyyn maksuerään
-        taytetyt-maksuera (first (partition (inc viimeinen-ei-tyhja-maksuera-index)
-                                            maksuerien-sisallot))
-        maksuera-avaimet (map #(keyword (str "maksuera" %))
-                              (map inc (range (count taytetyt-maksuera))))]
+        taytetyt-maksuerat (vec (first (partition (inc viimeinen-ei-tyhja-maksuera-index)
+                                              maksuerien-sisallot)))]
     (assoc
       (apply dissoc maksuerarivi maksuera-avaimet)
-      :maksuerat
-      (mapv maksuerarivi maksuera-avaimet))))
+      :maksuerat taytetyt-maksuerat)))
 
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
