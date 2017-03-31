@@ -40,8 +40,8 @@
 
 (defn hae-maksuerat [{:keys [urakka sopimus vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
-    (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {:urakka urakka
-                                                                   :sopimus sopimus
+    (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {:urakka-id urakka
+                                                                   :sopimus-id sopimus
                                                                    :vuosi vuosi}))]
           (when-not (k/virhe? maksuerat)
             (tulos! maksuerat))))))
