@@ -42,8 +42,8 @@
                     "Ei maksueriä")
            :tallenna (if voi-muokata?
                        #(e! (tiedot/->TallennaMaksuerat
-                       (merge valinnat
-                       {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
+                              (merge valinnat
+                                     {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
@@ -55,7 +55,7 @@
            {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kokonaishinta" :leveys 5 :nimi :kokonaishinta
-           :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
+            :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
            ;; TODO Hae kokonaishinta, yhdistä frontin ja API:n kokonaishinnan lasku yhdeksi funktioksi,
            ;; jolla voidaan laskea kokonaishinta helposti (palvelu voi laskea valmiiksi, koska readonly
            ;; eikä muutu tässä näkymässä)
