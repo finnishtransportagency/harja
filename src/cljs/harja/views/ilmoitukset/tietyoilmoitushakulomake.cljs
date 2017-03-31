@@ -188,7 +188,7 @@
    [grid
     {:otsikko "Työvaiheet"
      :tunniste ::t/id
-     :tyhja "Ei löytyneitä tietoja"
+     :tyhja "Ei työvaiheita"
      :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
      :piilota-toiminnot true
      :max-rivimaara 500
