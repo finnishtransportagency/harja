@@ -23,7 +23,5 @@
            {:maksuera3 "Ylimääräinen" :maksuera1 "Eka puolikas" :maksuera2 "Toka puolikas"})
          {:maksuerat ["Eka puolikas" "Toka puolikas" "Ylimääräinen"]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon {})
-         {:maksuerat []}))
-  (is (= (maksuerat/maksuerarivi-tallennusmuotoon nil)
          {:maksuerat []})))
 
