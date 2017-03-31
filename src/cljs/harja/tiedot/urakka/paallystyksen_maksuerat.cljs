@@ -74,7 +74,6 @@
             (tulos! maksuerat-grid-muodossa))))))
 
 (defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi maksuerat]}]
-  (log "TÄSTÄ SE LÄHTEE!")
   (let [tulos! (t/send-async! ->MaksueratTallennettu)]
     (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {:urakka-id urakka-id
                                                                       :sopimus-id sopimus-id

@@ -60,12 +60,13 @@
       (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:yllapitokohde-id maksuerarivi)))
 
     (doseq [maksuerarivi maksuerat]
-      (let [kysely-params {:yllapitokohde (:yllapitokohde-id maksuerarivi)
-                           :maksuerat (:maksuerat maksuerarivi)
-                           :maksueratunnus (:maksueratunnus maksuerarivi)}]
-        (if (:maksuera-id maksuerarivi)
-          (q/paivita-maksuera<! db (dissoc kysely-params :yllapitokohde))
-          (q/luo-maksuera<! db kysely-params))))
+      (if (:maksuera-id maksuerarivi)
+        (q/paivita-maksuera<! db {:id (:maksuera-id maksuerarivi)
+                                  :maksuerat (konv/seq->array (:maksuerat maksuerarivi))
+                                  :maksueratunnus (:maksueratunnus maksuerarivi)})
+        (q/luo-maksuera<! db {:yllapitokohde (:yllapitokohde-id maksuerarivi)
+                              :maksuerat (:maksuerat maksuerarivi)
+                              :maksueratunnus (konv/seq->array (:maksuerat maksuerarivi))})))
 
     (hae-urakan-maksuerat db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id

@@ -281,10 +281,10 @@ WHERE ypk.urakka = :urakka
 
 -- name: luo-maksuera<!
 INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
-VALUES (:yllapitokohde, :maksuerat, :maksueratunnus);
+VALUES (:yllapitokohde, :maksuerat::varchar[512], :maksueratunnus);
 
 -- name: paivita-maksuera<!
 UPDATE yllapitokohteen_maksuerat SET
-maksuerat = :maksuerat,
+maksuerat = :maksuerat::varchar[512],
 maksueratunnus = :maksueratunnus
 WHERE id = :id;

@@ -40,10 +40,13 @@
            :tyhja (if (nil? maksuerat)
                     [y/ajax-loader "Haetaan maksueriä..."]
                     "Ei maksueriä")
+           :voi-lisata? false
+           :voi-poistaa? (constantly false)
            :tallenna (if voi-muokata?
-                       #(e! (tiedot/->TallennaMaksuerat
-                              (merge valinnat
-                                     {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
+                       #(go (e! (tiedot/->TallennaMaksuerat
+                                  ;; FIXME Nollaa gridin muokkaustiedot heti, koska asynkronisuus tapahtuu tuck-eventissä :/
+                                  (merge valinnat
+                                         {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)}))))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
