@@ -19,3 +19,10 @@ before_script:
   - echo 'Europe/Helsinki' | sudo tee /etc/timezone
   - sudo dpkg-reconfigure --frontend noninteractive tzdata
 script: lein testit
+deploy:
+  provider: s3
+  skip_cleanup: true
+  bucket: "harjatravis"
+  acl: public_read
+  local_dir: target
+  package_glob: *.jar
