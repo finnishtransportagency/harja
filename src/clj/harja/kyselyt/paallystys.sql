@@ -270,9 +270,8 @@ SELECT
   maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
-WHERE ypk.id IN (SELECT id
-                           FROM yllapitokohde
-                           WHERE urakka = :urakka AND sopimus = :sopimus)
+WHERE ypk.urakka = :urakka
+      AND ypk.sopimus = :sopimus
       AND ypk.poistettu IS NOT TRUE
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
