@@ -313,22 +313,26 @@
    ["8 Muuta" #'muuta]
    ["9 Ilmoittaja" #'ilmoittaja]])
 
-(defonce ilm (atom nil))
 
 (defn tietyoilmoitus-pdf [tietyoilmoitus]
-  (reset! ilm tietyoilmoitus)
-  (xsl-fo/dokumentti
-   {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
-             :body "0mm"}}
+  (with-meta
+    (xsl-fo/dokumentti
+     {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
+               :body "0mm"}}
 
-   [:fo:wrapper {:font-size 8}
-    (taulukko
-     [:fo:block {:text-align "center"}
-      [:fo:block {:font-weight "bold"}
-       [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
-       [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
-      [:fo:block
-       "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
-       " urakoitsijan linjalle 0200 21200"]]
-     (for [[osio sisalto-fn] osiot]
-       [osio (sisalto-fn tietyoilmoitus)]))]))
+     [:fo:wrapper {:font-size 8}
+      (taulukko
+       [:fo:block {:text-align "center"}
+        [:fo:block {:font-weight "bold"}
+         [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
+         [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
+        [:fo:block
+         "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
+         " urakoitsijan linjalle 0200 21200"]]
+       (for [[osio sisalto-fn] osiot]
+         [osio (sisalto-fn tietyoilmoitus)]))])
+    {:tiedostonimi (str "Tietyöilmoitus-"
+                        (pvm/pvm-opt (::t/alku tietyoilmoitus)) "-"
+                        (pvm/pvm-opt (::t/loppu tietyoilmoitus)) "-"
+                        (::t/tien-nimi tietyoilmoitus)
+                        ".pdf")}))
