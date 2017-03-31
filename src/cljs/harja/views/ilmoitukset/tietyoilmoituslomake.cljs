@@ -46,7 +46,6 @@
                      ["jyrsitty" "Jyrsitty"]
                      ["murske" "Murske"]]]
 
-    (log "tienpinnat-komponentti: tiedot" (pr-str tienpinnat-tiedot))
     [muokkaus-grid {:otsikko ""
                     :voi-muokata? (constantly true)
                     :voi-poistaa? (constantly true)
@@ -407,8 +406,7 @@
                      :teksti "Tie ajoittain suljettu"}
                     {:tyyppi :checkbox
                      :nimi ::t/ajoittaiset-pysaytykset
-                     :aseta #(do (log "pysaytysten asetus")
-                                 (if %2
+                     :aseta #(do (if %2
                                    (assoc %1 ::t/ajoittaiset-pysaytykset %2)
                                    ;; else
                                    (assoc %1
