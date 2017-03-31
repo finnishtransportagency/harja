@@ -7,7 +7,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord Ryhma [otsikko optiot skeemat])
@@ -369,7 +370,44 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (footer-fn validoitu-data)
+                                 (footer-fn (assoc validoitu-data
+                                                   ::skeema skeema))
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))
+
+(defn numero
+  "Näyttää numeron tekstinä, yli kymmenen numeroina alle kymmenen sanoina."
+  [n]
+  (if (> n 10)
+    (str n)
+    (case n
+      0 "nolla"
+      1 "yksi"
+      2 "kaksi"
+      3 "kolme"
+      4 "neljä"
+      5 "viisi"
+      6 "kuusi"
+      7 "seitsemän"
+      8 "kahdeksan"
+      9 "yhdeksän"
+      10 "kymmenen")))
+
+(defn nayta-puuttuvat-pakolliset-kentat [{skeema ::skeema puuttuvat ::puuttuvat-pakolliset-kentat}]
+  (let [lkm (count puuttuvat)]
+    (if (zero? lkm)
+      [:span]
+      [:span.puuttuvat-pakolliset-kentat
+       (str/capitalize (numero lkm))
+       (if (= 1 lkm)
+         " pakollinen kenttä "
+         " pakollista kenttää ")
+       "puuttuu: "
+
+       (str/join ", "
+                 (let [skeema (pura-ryhmat skeema)]
+                   (for [puuttuva-nimi puuttuvat
+                         :let [{:keys [otsikko] :as s}
+                               (first (filter #(= puuttuva-nimi (:nimi %)) skeema))]]
+                     otsikko)))])))
