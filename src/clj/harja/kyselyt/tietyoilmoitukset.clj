@@ -9,6 +9,9 @@
             [harja.kyselyt.specql :refer [db]]
             [harja.domain.muokkaustiedot :as m]))
 
+
+(defqueries "harja/kyselyt/tietyoilmoitukset.sql")
+
 (define-tables db
   ["tietyon_henkilo" ::t/henkilo]
   ["tietyon_ajoneuvorajoitukset" ::t/ajoneuvorajoitukset*]
