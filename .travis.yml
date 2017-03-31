@@ -18,12 +18,15 @@ before_install:
 before_script:
   - echo 'Europe/Helsinki' | sudo tee /etc/timezone
   - sudo dpkg-reconfigure --frontend noninteractive tzdata
+before_deploy:
+  - mkdir s3-deploy
+  - ln target/*-standalone.jar s3-deploy/
 script: lein testit
 deploy:
   provider: s3
   skip_cleanup: true
   bucket: "harjatravis"
   acl: public_read
-  local_dir: target
+  local_dir: s3-deploy
   on:
     all_branches: true
