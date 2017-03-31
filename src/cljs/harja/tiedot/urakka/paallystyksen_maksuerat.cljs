@@ -34,7 +34,7 @@
 
 (defrecord PaivitaValinnat [valinnat])
 (defrecord HaeMaksuerat [valinnat])
-(defrecord MaksueratHaettu [tulokset])
+(defrecord MaksueratHaettu [vastaus])
 (defrecord MaksueratTallennettu [vastaus])
 (defrecord TallennaMaksuerat [parametrit])
 
@@ -80,9 +80,8 @@
                                                                       :vuosi vuosi
                                                                       :maksuerat maksuerat}))]
           (if (k/virhe? vastaus)
-            (viesti/nayta! "Tallentaminen epäonnistui"
-                           :warning viesti/viestin-nayttoaika-lyhyt)
-            (tulos! vastaus))))))
+            (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+            (tulos! (mapv maksuerarivi-grid-muotoon vastaus)))))))
 
 (extend-protocol t/Event
 
@@ -100,8 +99,8 @@
     tila)
 
   MaksueratHaettu
-  (process-event [{:keys [tulokset] :as e} tila]
-    (assoc-in tila [:maksuerat] tulokset))
+  (process-event [{:keys [vastaus] :as e} tila]
+    (assoc-in tila [:maksuerat] vastaus))
 
   TallennaMaksuerat
   (process-event [{:keys [parametrit] :as e} tila]
@@ -112,5 +111,5 @@
     tila)
 
   MaksueratTallennettu
-  (process-event [{:keys [tulokset] :as e} tila]
-    (assoc-in tila [:maksuerat] tulokset)))
+  (process-event [{:keys [vastaus] :as e} tila]
+    (assoc-in tila [:maksuerat] vastaus)))
