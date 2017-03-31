@@ -146,9 +146,9 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
 
 
 INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), null, 'TUNNUS1');
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), '{Puolet, Puolet}'::varchar[512], 'TUNNUS1');
 INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), null, 'TUNNUS2');
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), '{1/3, 1/3, 1/3}'::varchar[512], 'TUNNUS2');
 
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
