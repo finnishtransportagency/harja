@@ -10,10 +10,20 @@
 (deftest maksuerien-muunto-grid-muotoon-toimi
   (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:maksuerat ["Eka erä" "Toka erä" "Kolmas erä"]})
-         {:maksuera1 "Eka erä" :maksuera2 "Toka erä" :maksuera3 "Kolmas erä"})))
+         {:maksuera1 "Eka erä" :maksuera2 "Toka erä" :maksuera3 "Kolmas erä"}))
+  (is (= (maksuerat/maksuerarivi-grid-muotoon
+           {:maksuerat []})
+         {}))
+  (is (= (maksuerat/maksuerarivi-grid-muotoon
+           {:maksuerat nil})
+         {})))
 
 (deftest maksuerien-muunto-tallennusmuotoon-toimi
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            {:maksuera3 "Ylimääräinen" :maksuera1 "Eka puolikas" :maksuera2 "Toka puolikas"})
-         {:maksuerat ["Eka puolikas" "Toka puolikas" "Ylimääräinen"]})))
+         {:maksuerat ["Eka puolikas" "Toka puolikas" "Ylimääräinen"]}))
+  (is (= (maksuerat/maksuerarivi-tallennusmuotoon {})
+         {:maksuerat []}))
+  (is (= (maksuerat/maksuerarivi-tallennusmuotoon nil)
+         {:maksuerat []})))
 
