@@ -45,20 +45,25 @@
   "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta
    Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta."
   [maksuerarivi]
-  (let [assoc-params (apply concat (map-indexed
-                                     (fn [index teksti]
-                                       [(keyword (str "maksuera" (inc index))) teksti])
-                                     (:maksuerat maksuerarivi)))]
-    (apply assoc
-           (dissoc maksuerarivi :maksuerat)
-           assoc-params)))
+  (if (empty? (:maksuerat maksuerarivi))
+    {}
+    (let [assoc-params (apply concat (map-indexed
+                                       (fn [index teksti]
+                                         [(keyword (str "maksuera" (inc index))) teksti])
+                                       (:maksuerat maksuerarivi)))]
+      (apply assoc
+             (dissoc maksuerarivi :maksuerat)
+             assoc-params))))
 
 (defn maksuerarivi-tallennusmuotoon
   "Ottaa mapin, jossa yksittäinen maksuerä on oman avaimen takana.
    Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta"
   [maksuerarivi]
-  (let [maksueranumerot (take-while #(some? (maksuerarivi (keyword (str "maksuera" %))))
-                                    (map inc (range)))
+  (let [maksueranumerot (filter #(some? (maksuerarivi (keyword (str "maksuera" %))))
+                                ;; Tässä olisi toiminut take-while, mutta käyttäjä saattaa syöttää
+                                ;; maksuerät mielivaltaisessa järjestyksessä ja jättää osan syöttämättä.
+                                ;; Tarkistetaan sopiva määrä mahdollisesti syötettyjä maksueränumeroita
+                                (map inc (range 100)))
         maksuera-avaimet (map #(keyword (str "maksuera" %)) maksueranumerot)]
     (assoc
       (apply dissoc maksuerarivi maksuera-avaimet)
