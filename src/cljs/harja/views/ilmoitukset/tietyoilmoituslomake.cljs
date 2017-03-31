@@ -232,16 +232,26 @@
 
 (defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
   (r/with-let [avaa-pdf? (r/atom false)]
-    [:span
-     [napit/tallenna
-      "Tallenna ilmoitus"
-      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
-      {:disabled (or tallennus-kaynnissa?
-                     (not (lomake/voi-tallentaa? ilmoitus)))
-       :tallennus-kaynnissa? tallennus-kaynnissa?
-       :ikoni (ikonit/tallenna)}]
+    [:table
+     [:tbody
+      [:tr
+       [:td
+        [napit/tallenna
+         "Tallenna ilmoitus"
+         #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+         {:disabled (or tallennus-kaynnissa?
+                        (not (lomake/voi-tallentaa? ilmoitus)))
+          :tallennus-kaynnissa? tallennus-kaynnissa?
+          :ikoni (ikonit/tallenna)}]]
 
-     [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]]))
+       [:td
+        [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]]]
+
+      [:tr
+       [:td {:colSpan 2}
+        [lomake/nayta-puuttuvat-pakolliset-kentat ilmoitus]]]
+
+       ]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -311,15 +321,15 @@
         :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
                           #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
        {:otsikko "Tien nimi" :nimi ::t/tien-nimi
-        :tyyppi :string :uusi-rivi? true}
+        :tyyppi :string :uusi-rivi? true :pakollinen? true}
        {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
         :tyyppi :string}
        {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
         :tyyppi :string}
        {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
         :tyyppi :string}
-       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
-       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm})
+       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true}
+       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true})
 
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
