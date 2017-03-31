@@ -278,3 +278,13 @@ WHERE ypk.urakka = :urakka
       AND ypk.poistettu IS NOT TRUE
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
+
+-- name: luo-maksuera<!
+INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+VALUES (:yllapitokohde, :maksuerat, :maksueratunnus);
+
+-- name: paivita-maksuera<!
+UPDATE yllapitokohteen_maksuerat SET
+maksuerat = :maksuerat,
+maksueratunnus = :maksueratunnus
+WHERE id = :id;

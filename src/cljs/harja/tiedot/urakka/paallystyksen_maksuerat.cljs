@@ -42,7 +42,7 @@
 
 (defn maksuerarivi-grid-muotoon
   "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta
-   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta"
+   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta."
   [maksuerarivi]
   (let [assoc-params (apply concat (map-indexed
                                      (fn [index teksti]
@@ -74,11 +74,12 @@
             (tulos! maksuerat-grid-muodossa))))))
 
 (defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi maksuerat]}]
+  (log "TÄSTÄ SE LÄHTEE!")
   (let [tulos! (t/send-async! ->MaksueratTallennettu)]
-    (go (let [vastaus (<! (k/post! :hae-paallystyksen-maksuerat {:urakka-id urakka-id
-                                                                 :sopimus-id sopimus-id
-                                                                 :vuosi vuosi
-                                                                 :maksuerat maksuerat}))]
+    (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {:urakka-id urakka-id
+                                                                      :sopimus-id sopimus-id
+                                                                      :vuosi vuosi
+                                                                      :maksuerat maksuerat}))]
           (if (k/virhe? vastaus)
             (viesti/nayta! "Tallentaminen epäonnistui"
                            :warning viesti/viestin-nayttoaika-lyhyt)
