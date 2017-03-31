@@ -231,7 +231,6 @@
 
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
-    (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
     (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] nopeusrajoitukset))
 
   PaivitaTienPinnatGrid
@@ -266,8 +265,7 @@
     (viesti/nayta! "Ilmoitus tallennettu!")
     (log "avaa pdf tallennuksen jälkeen? " avaa-pdf?)
     (when avaa-pdf?
-      (.open js/window (k/pdf-url :tietyoilmoitus
-                                  "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
+      (set! (.-location js/window) (k/pdf-url :tietyoilmoitus "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
     (assoc app
       :tallennus-kaynnissa? false
       :valittu-ilmoitus (if sulje-ilmoitus nil ilmoitus)))
