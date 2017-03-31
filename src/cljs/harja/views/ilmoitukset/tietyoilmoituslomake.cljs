@@ -111,29 +111,45 @@
                 (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
+(def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
+(def aikataulu-grid-kentat [{:otsikko "Viikonpäivät" :nimi ::t/paivat :tyyppi :checkbox-group
+                             :tasaa :keskita
+                             :vaihtoehdot viikonpaivat
+                             :vaihtoehto-nayta paiva-lyhyt
+                             :nayta-rivina? true
+                             :leveys 5}
+                            {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
+                             :leveys 1}
+                            {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
+                             :leveys 1}])
+
+(def aikataulu-grid-optiot {:otsikko ""
+                            :voi-muokata? (constantly true)
+                            :voi-poistaa? (constantly true)
+                            :piilota-toiminnot? false
+                            :tyhja "Ei työaikoja"})
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
-  [muokkaus-grid {:otsikko ""
-                  :voi-muokata? (constantly true)
-                  :voi-poistaa? (constantly true)
-                  :piilota-toiminnot? false
-                  :tyhja "Ei työaikoja"}
-   [{:otsikko "Viikonpäivät" :nimi ::t/paivat :tyyppi :checkbox-group
-     :tasaa :keskita
-     :vaihtoehdot ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"]
-     :vaihtoehto-nayta paiva-lyhyt
-     :nayta-rivina? true
-     :leveys 5}
-    {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
-     :leveys 1}
-    {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
-     :leveys 1}]
+  [muokkaus-grid
+   aikataulu-grid-optiot
+   aikataulu-grid-kentat
    (r/wrap (into {}
                  (map-indexed (fn [i ta]
                                 [i (update ta ::t/paivat
                                            #(into #{} %))]))
                  tyoajat)
            #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
+
+(defn liikenteenohjausajat-komponentti-grid [e! ilmoitus]
+  [muokkaus-grid
+   (assoc aikataulu-grid-optiot :tyhja "Ei ohjausaikoja")
+   aikataulu-grid-kentat
+   (r/wrap (into {}
+                 (map-indexed (fn [i ta]
+                                [i (update ta ::t/paivat
+                                           #(into #{} %))]))
+                 (:liikenteenohjaus-aikataulu ilmoitus))
+           #(e! (tiedot/->IlmoitustaMuokattu (assoc ilmoitus :liikenteenohjaus-aikataulu (vals %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
@@ -377,6 +393,19 @@
                                      "ohjataanVuorotellen" "Ohjataan vuorotellen"
                                      "ohjataanKaksisuuntaisena" "Ohjataan kaksisuuntaisena"}
                      }
+                    {:otsikko "Liikenteenohjauksen ajat"
+                     :tyyppi :valinta
+                     :nimi :liikenteenohjaus-ajat
+                     :valinnat [nil "aikataulu"]
+                     :valinta-nayta {nil "Satunnaisia"
+                                      "aikataulu" "Aikataulu (kesto yli 5 min)"}}
+                    (if (-> ilmoitus :liikenteenohjaus-ajat (= "aikataulu"))
+                      {:otsikko "Aikataulu"
+                       :nimi :liikenteenohjaus-aikataulu
+                       :tyyppi :komponentti
+                       :komponentti #(liikenteenohjausajat-komponentti-grid e! ilmoitus)}
+                      ;; else
+                      (assoc tyhja-kentta :nimi :aikataulu-blank))
                     {:otsikko "Vaikutussuunta"
                      :tyyppi :valinta
                      :nimi ::t/vaikutussuunta
