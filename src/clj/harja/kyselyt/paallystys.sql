@@ -270,7 +270,7 @@ SELECT
   maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
-WHERE ym.yllapitokohde IN (SELECT id
+WHERE ypk.id IN (SELECT id
                            FROM yllapitokohde
                            WHERE urakka = :urakka AND sopimus = :sopimus)
       AND ypk.poistettu IS NOT TRUE
