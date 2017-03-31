@@ -57,10 +57,12 @@
    Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta"
   [maksuerarivi]
   (let [maksueranumerot (take-while #(some? (maksuerarivi (keyword (str "maksuera" %))))
-                                    (map inc (range)))]
-    (assoc maksuerarivi
+                                    (map inc (range)))
+        maksuera-avaimet (map #(keyword (str "maksuera" %)) maksueranumerot)]
+    (assoc
+      (apply dissoc maksuerarivi maksuera-avaimet)
       :maksuerat
-      (mapv #(maksuerarivi (keyword (str "maksuera" %))) maksueranumerot))))
+      (mapv maksuerarivi maksuera-avaimet))))
 
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
