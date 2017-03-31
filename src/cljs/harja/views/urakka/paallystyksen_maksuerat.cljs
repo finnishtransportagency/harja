@@ -50,12 +50,16 @@
            :voi-poistaa? (constantly false)
            :tallenna (if voi-muokata?
                        #(go (e! (tiedot/->TallennaMaksuerat
-                                  ;; FIXME Nollaa gridin muokkaustiedot heti, koska asynkronisuus tapahtuu tuck-eventissä :/
+                                  ;; FIXME Nollaa gridin muokkaustiedot heti,
+                                  ;; koska asynkronisuus tapahtuu tuck-eventissä :/
+                                  ;; Ratkaisuehdotus:
+                                  ;; kutsut go lohkossa eventin laukaisun jälkeen (<! (tapahtumat/odota! :mun-juttu-tallennettu))
+                                  ;; ja process-eventissä laukaiset tapahtumat {:aihe :mun-juttu-tallennettu}
                                   (merge valinnat
                                          {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)}))))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
-           ;; TODO Oikeuscheck
+           ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
            ;:tallennus-ei-mahdollinen-tooltip
            #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
 
