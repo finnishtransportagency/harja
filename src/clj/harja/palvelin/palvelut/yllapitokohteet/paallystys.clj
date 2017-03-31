@@ -42,6 +42,8 @@
   (log/debug "Haetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS
   (let [vastaus (into []
+                      (comp
+                        (map #(konv/array->vec % :maksuerat)))
                       (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))]
     vastaus))
 
