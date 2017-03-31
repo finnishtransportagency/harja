@@ -107,7 +107,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
@@ -157,7 +157,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu

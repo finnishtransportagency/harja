@@ -88,8 +88,8 @@
 (defn huomautukset->str [t]
   (str (::huomautukset t)))
 
-(defn ajoittaiset-pysatykset->str [t]
-  (str (::ajoittaiset-pysatykset t)))
+(defn ajoittaiset-pysaytykset->str [t]
+  (str (::ajoittaiset-pysaytykset t)))
 
 (defn ajoittain-suljettu-tie->str [t]
   (str (::ajoittain-suljettu-tie t)))
