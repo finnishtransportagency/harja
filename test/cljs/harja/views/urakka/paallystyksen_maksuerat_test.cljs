@@ -12,6 +12,9 @@
            {:maksuerat ["Eka erä" "Toka erä" "Kolmas erä"]})
          {:maksuera1 "Eka erä" :maksuera2 "Toka erä" :maksuera3 "Kolmas erä"}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
+           {:maksuerat ["Eka erä" nil "Kolmas erä"]})
+         {:maksuera1 "Eka erä" :maksuera2 nil :maksuera3 "Kolmas erä"}))
+  (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:yllapitokohde-id 1 :maksuerat []})
          {:yllapitokohde-id 1}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
@@ -25,7 +28,11 @@
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            ;; Käyttäjä syöttää kolmannen maksuerän, ei muita
            {:maksuera3 "Ylimääräinen"})
-         {:maksuerat ["Ylimääräinen"]}))
+         {:maksuerat [nil nil "Ylimääräinen"]}))
+  (is (= (maksuerat/maksuerarivi-tallennusmuotoon
+           ;; Käyttäjä syöttää ensimmäisen ja kolmannen maksuerän, ei muita
+           {:maksuera3 "Ylimääräinen" :maksuera1 "Joku maksuerä"})
+         {:maksuerat ["Joku maksuerä" nil "Ylimääräinen"]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon {:yllapitokohde-id 1})
          {:yllapitokohde-id 1 :maksuerat []})))
 

@@ -50,8 +50,8 @@
   (if (empty? (:maksuerat maksuerarivi))
     (dissoc maksuerarivi :maksuerat)
     (let [assoc-params (apply concat (map-indexed
-                                       (fn [index teksti]
-                                         [(keyword (str "maksuera" (inc index))) teksti])
+                                       (fn [index maksuera]
+                                         [(keyword (str "maksuera" (inc index))) maksuera])
                                        (:maksuerat maksuerarivi)))]
       (apply assoc
              (dissoc maksuerarivi :maksuerat)
@@ -62,12 +62,19 @@
    Palauttaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta vectorina.
    Säilyttää mapin muut avaimet."
   [maksuerarivi]
-  (let [maksueranumerot (filter #(some? (maksuerarivi (keyword (str "maksuera" %))))
-                                ;; Tässä olisi toiminut take-while, mutta käyttäjä saattaa syöttää
-                                ;; maksuerät mielivaltaisessa järjestyksessä ja jättää osan syöttämättä.
-                                ;; Tarkistetaan sopiva määrä mahdollisesti syötettyjä maksueränumeroita
-                                (map inc (range 100)))
-        maksuera-avaimet (map #(keyword (str "maksuera" %)) maksueranumerot)]
+  (let [maksuerien-sisallot (map #(maksuerarivi (keyword (str "maksuera" %)))
+                                 ; Tarkistetaan sopiva määrä mahdollisesti syötettyjä maksueränumeroita
+                                 (map inc (range 100)))
+        viimeinen-ei-tyhja-maksuera (some identity (reverse maksuerien-sisallot))
+        viimeinen-ei-tyhja-maksuera-index (- (count maksuerien-sisallot)
+                                             (.indexOf (reverse maksuerien-sisallot)
+                                                       viimeinen-ei-tyhja-maksuera)
+                                             1)
+        ;; Täytetyt maksuerät on vector ensimmäisestä viimeiseen täytettyyn maksuerään
+        taytetyt-maksuera (first (partition (inc viimeinen-ei-tyhja-maksuera-index)
+                                            maksuerien-sisallot))
+        maksuera-avaimet (map #(keyword (str "maksuera" %))
+                              (map inc (range (count taytetyt-maksuera))))]
     (assoc
       (apply dissoc maksuerarivi maksuera-avaimet)
       :maksuerat
