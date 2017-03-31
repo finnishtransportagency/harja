@@ -265,6 +265,8 @@ WHERE paallystyskohde = :yllapitokohde_id
 -- name: hae-urakan-maksuerat
 SELECT
   ym.id,
+  ypk.kohdenumero,
+  ypk.nimi,
   maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
