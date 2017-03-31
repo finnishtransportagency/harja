@@ -64,7 +64,7 @@
   [maksuerarivi]
   (let [maksuera-avaimet (map #(keyword (str "maksuera" %))
                               ; Luodaan sopiva määrä mahdollisesti syötettyjä maksueräavaimia
-                              ; jotka tullaan tarkistamaan ja liittämään tallennukseen
+                              ; jotka tullaan tarkistamaan ja joiden sisältö tullaan tallentamaan
                               (map inc (range 100)))
         maksuerien-sisallot (map maksuerarivi maksuera-avaimet)
         viimeinen-ei-tyhja-maksuera (some identity (reverse maksuerien-sisallot))
