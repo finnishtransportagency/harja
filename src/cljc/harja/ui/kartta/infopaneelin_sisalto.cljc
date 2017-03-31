@@ -468,8 +468,8 @@
                                               ::t-domain/huomautukset
                                               t-domain/huomautukset->str)}
             #_{:otsikko "Ajoittaiset pysäytykset" :hae (hakufunktio
-                                                         ::t-domain/ajoittaiset-pysatykset
-                                                         t-domain/ajoittaiset-pysatykset->str)}
+                                                         ::t-domain/ajoittaiset-pysaytykset
+                                                         t-domain/ajoittaiset-pysaytykset->str)}
             #_{:otsikko "Ajoittain suljettu tie" :hae (hakufunktio
                                                         ::t-domain/ajoittain-suljettu-tie
                                                         t-domain/ajoittain-suljettu-tie->str)}

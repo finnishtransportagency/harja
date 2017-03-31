@@ -76,7 +76,7 @@
                 ::t/kaistajarjestelyt ::t/nopeusrajoitukset ::t/tienpinnat ::t/kiertotien-pituus
                 ::t/kiertotien-mutkaisuus ::t/kiertotienpinnat ::t/liikenteenohjaus
                 ::t/liikenteenohjaaja ::t/viivastys-normaali-liikenteessa ::t/viivastys-ruuhka-aikana
-                ::t/ajoneuvorajoitukset ::t/huomautukset ::t/ajoittaiset-pysatykset
+                ::t/ajoneuvorajoitukset ::t/huomautukset ::t/ajoittaiset-pysaytykset
                 ::t/ajoittain-suljettu-tie ::t/pysaytysten-alku ::t/pysaytysten-loppu
                 ::t/lisatietoja ::t/urakoitsijan-nimi]))
 
