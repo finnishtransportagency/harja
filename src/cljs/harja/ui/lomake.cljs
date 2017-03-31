@@ -77,7 +77,8 @@ ja kaikki pakolliset kentät on täytetty"
           ::huomautukset
           ::puuttuvat-pakolliset-kentat
           ::ensimmainen-muokkaus
-          ::viimeisin-muokkaus))
+          ::viimeisin-muokkaus
+          ::skeema))
 
 (defn lomake-lukittu-huomautus
   [nykyinen-lukko]
