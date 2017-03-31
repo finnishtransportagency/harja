@@ -17,7 +17,8 @@
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -50,13 +51,9 @@
            :voi-poistaa? (constantly false)
            :tallenna (if voi-muokata?
                        #(go (e! (tiedot/->TallennaMaksuerat
-                                  ;; FIXME Nollaa gridin muokkaustiedot heti,
-                                  ;; koska asynkronisuus tapahtuu tuck-eventissä :/
-                                  ;; Ratkaisuehdotus:
-                                  ;; kutsut go lohkossa eventin laukaisun jälkeen (<! (tapahtumat/odota! :mun-juttu-tallennettu))
-                                  ;; ja process-eventissä laukaiset tapahtumat {:aihe :mun-juttu-tallennettu}
                                   (merge valinnat
-                                         {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)}))))
+                                         {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
+                            (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
            ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN

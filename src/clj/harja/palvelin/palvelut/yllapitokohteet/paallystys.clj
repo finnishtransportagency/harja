@@ -59,8 +59,8 @@
     (doseq [maksuerarivi maksuerat]
       (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:yllapitokohde-id maksuerarivi)))
 
-    (let [voi-tayttaa-maksuerat? true ; Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-          voi-tayttaa-maksueratunnuksen? true ; Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+    (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+          voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
           ]
       (doseq [maksuerarivi maksuerat]
         (if (:maksuera-id maksuerarivi)

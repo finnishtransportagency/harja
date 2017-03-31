@@ -8,7 +8,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -112,4 +113,5 @@
 
   MaksueratTallennettu
   (process-event [{:keys [vastaus] :as e} tila]
+    (tapahtumat/julkaise! {:aihe :paallystyksen-maksuerat-tallennettu})
     (assoc-in tila [:maksuerat] vastaus)))
