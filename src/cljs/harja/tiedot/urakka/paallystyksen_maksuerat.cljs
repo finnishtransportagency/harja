@@ -42,7 +42,7 @@
 ;; Tapahtumien käsittely
 
 (defn maksuerarivi-grid-muotoon
-  "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta
+  "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta vectorina.
    Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta.
    Säilyttää mapin muut avaimet."
   [maksuerarivi]
