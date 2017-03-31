@@ -264,7 +264,8 @@ WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: hae-urakan-maksuerat
 SELECT
-  ym.id,
+  ym.id as "maksuera-id",
+  ypk.id as "yllapitokohde-id",
   ypk.kohdenumero,
   ypk.nimi,
   maksueratunnus

@@ -46,6 +46,7 @@
                                                :warning viesti/viestin-nayttoaika-lyhyt)
                                 (reset! kaikki-valitavoitteet-atom vastaus))))
                        :ei-mahdollinen)
+           :tunniste :yllapitokohde-id
            ;; TODO Oikeuscheck
            ;:tallennus-ei-mahdollinen-tooltip
            #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
