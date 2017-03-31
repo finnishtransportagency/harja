@@ -43,10 +43,11 @@
 
 (defn maksuerarivi-grid-muotoon
   "Ottaa mapin, jossa yksittäiset maksuerät löytyvät :maksuerat avaimesta
-   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta."
+   Palauttaa mapin, jossa jokainen yksittäinen maksuerä löytyy omasta avaimesta.
+   Säilyttää mapin muut avaimet."
   [maksuerarivi]
   (if (empty? (:maksuerat maksuerarivi))
-    {}
+    (dissoc maksuerarivi :maksuerat)
     (let [assoc-params (apply concat (map-indexed
                                        (fn [index teksti]
                                          [(keyword (str "maksuera" (inc index))) teksti])
@@ -57,7 +58,8 @@
 
 (defn maksuerarivi-tallennusmuotoon
   "Ottaa mapin, jossa yksittäinen maksuerä on oman avaimen takana.
-   Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta"
+   Palauttaa mapin, jossa yksittäiset maksuerät löytyvät mapissa :maksuerat avaimesta
+   Säilyttää mapin muut avaimet."
   [maksuerarivi]
   (let [maksueranumerot (filter #(some? (maksuerarivi (keyword (str "maksuera" %))))
                                 ;; Tässä olisi toiminut take-while, mutta käyttäjä saattaa syöttää
