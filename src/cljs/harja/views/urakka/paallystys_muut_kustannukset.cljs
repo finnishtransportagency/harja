@@ -1,10 +1,10 @@
-(ns harja.views.urakka.yllapitokohteet.muut-kustannukset
+(ns harja.views.urakka.paallystys-muut-kustannukset
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as tiedot]
+            [harja.tiedot.urakka.paallystys-muut-kustannukset :as tiedot]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.validointi :as validointi]
             [cljs-time.core :as t]
@@ -17,8 +17,6 @@
 (def kustannus-selite-leveys 5)
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
-
-
 
 (defn- rivi-poistettavissa? [m]
   (log "rivi-poistettavissa? " (pr-str m))

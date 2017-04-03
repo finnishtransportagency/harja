@@ -26,7 +26,10 @@
       "paikkaus"
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
       "tiemerkinta"
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+
+      ;; muille urakkatyypeille ei tarkisteta
+      nil)))
 
 (defn tarkista-urakkatyypin-mukainen-lukuoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
@@ -36,7 +39,10 @@
       "paikkaus"
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
       "tiemerkinta"
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+
+      ;; muille urakkatyypeille ei tarkisteta
+      nil)))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
@@ -126,7 +132,6 @@
     (let [yllapitokohteet (into []
                                 (comp
                                   (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                                  (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                                   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
@@ -141,7 +146,6 @@
                                                (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
                                (mapv #(assoc % :yllapitokohteen-voi-poistaa?
                                                (yllapitokohteen-voi-poistaa? db (:id %)))))]
-      (log/debug "[DEBUG] VASTAUS ON " (pr-str yllapitokohteet))
       yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]

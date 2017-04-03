@@ -106,30 +106,30 @@ INSERT INTO yllapitokohteen_aikataulu
 VALUES
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Leppäjärven ramppi'), '2017-05-19 06:00:00+02',
-                                        '2017-05-19 06:00:00+02', '2017-05-21 16:00:00+02', '2017-05-22 16:00:00+02',
-                                        '2017-05-23 16:00:00+02',
-                                        '2017-05-24 16:00:00+02', (SELECT id
+    WHERE nimi = 'Leppäjärven ramppi'), '2017-05-19',
+                                        '2017-05-19 06:00:00+02', '2017-05-21 16:00:00+02', '2017-05-22',
+                                        '2017-05-23',
+                                        '2017-05-24', (SELECT id
                                                                    FROM kayttaja
                                                                    WHERE kayttajanimi = 'jvh'), NOW(),
-                                        '2017-05-21 16:00:00+02', '2017-06-04 16:00:00+02'),
+                                        '2017-05-21', '2017-06-04'),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulun ohitusramppi'), '2017-05-21 06:00:00+02',
+    WHERE nimi = 'Oulun ohitusramppi'), '2017-05-21',
                                         '2017-05-21 06:00:00+02', NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja
                                                WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulaisten ohitusramppi'), '2017-05-26 06:00:00+02',
+    WHERE nimi = 'Oulaisten ohitusramppi'), '2017-05-26',
                                             NULL, NULL, NULL, NULL,
                                             NULL, (SELECT id
                                                    FROM kayttaja
                                                    WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Kuusamontien testi'), '2017-06-02 06:00:00+02',
+    WHERE nimi = 'Kuusamontien testi'), '2017-06-02',
                                         NULL, NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja

@@ -15,7 +15,8 @@
 (defn poista-nil-avaimet [mappi]
   (clojure.walk/postwalk
     (fn [elementti]
-      (if (map? elementti)
+      (if (and (map? elementti)
+               (not (record? elementti)))
         (let [m (into {} (remove (comp nil? second) elementti))]
           (when (seq m)
             m))

@@ -110,10 +110,11 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
+            :fmt :nimi
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Ajorata -"
-                                                      "")))
+                             (if arvo (:nimi arvo) (if muokattava?
+                                                     "- Ajorata -"
+                                                     "")))
             :valinnat pot/+ajoradat+
             :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
@@ -122,10 +123,11 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
+            :fmt :nimi
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Kaista -"
-                                                      "")))
+                             (if arvo (:nimi arvo) (if muokattava?
+                                                     "- Kaista -"
+                                                     "")))
             :valinnat pot/+kaistat+
             :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
@@ -253,19 +255,19 @@
                                          tr-loppuosa tr-loppuetaisyys] :as kohde}]
   (when osan-pituudet-teille
     (let [osan-pituudet (osan-pituudet-teille tr-numero)]
-     (or
-       (cond
-         (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
-         (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
+      (or
+        (cond
+          (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
 
-         (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
-         (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
+          (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+          (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
 
-       (when (= kentta :tr-alkuetaisyys)
-         (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+        (when (= kentta :tr-alkuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
 
-       (when (= kentta :tr-loppuetaisyys)
-         (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
+        (when (= kentta :tr-loppuetaisyys)
+          (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 (defn yllapitokohdeosat
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
@@ -653,7 +655,7 @@
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
-                   {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
+                   {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
                     :muokattava? (constantly false)}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
@@ -673,7 +675,7 @@
                                                      (:maaramuutokset rivi)
                                                      (:toteutunut-hinta rivi)
                                                      (:arvonvahennykset rivi)
-                                                     (:bonukset-ja-sakot rivi)
+                                                     (:sakot-ja-bonukset rivi)
                                                      (:bitumi-indeksi rivi)
                                                      (:kaasuindeksi rivi)))])}]))
           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
@@ -684,11 +686,11 @@
         (reaction
           (let [kohteet @kohteet-atom
                 sopimuksen-mukaiset-tyot-yhteensa
-                     (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
                 maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                bonukset-ja-sakot-yhteensa (laske-sarakkeen-summa :bonukset-ja-sakot kohteet)
+                sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
                 muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
@@ -696,7 +698,7 @@
                                  toteutunut-hinta-yhteensa
                                  maaramuutokset-yhteensa
                                  arvonvahennykset-yhteensa
-                                 bonukset-ja-sakot-yhteensa
+                                 sakot-ja-bonukset-yhteensa
                                  bitumi-indeksi-yhteensa
                                  kaasuindeksi-yhteensa
                                  muut-yhteensa)]
@@ -705,7 +707,7 @@
               :maaramuutokset maaramuutokset-yhteensa
               :toteutunut-hinta toteutunut-hinta-yhteensa
               :arvonvahennykset arvonvahennykset-yhteensa
-              :bonukset-ja-sakot bonukset-ja-sakot-yhteensa
+              :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
               :muut-hinta muut-yhteensa
@@ -743,7 +745,7 @@
        :leveys muut-leveys :tasaa :oikea}
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
        :leveys arvonvahennykset-leveys :tasaa :oikea}
-      {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
+      {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
        :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
        :muokattava? (constantly false)}
       {:otsikko "Bitumi-indeksi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero

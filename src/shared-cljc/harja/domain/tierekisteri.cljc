@@ -114,6 +114,24 @@
                  (recur (+ pituus osan-pituus)
                         (inc osa)))))))))))
 
+(defn normalisoi
+  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
+  [osoite]
+  (let [osoite (or osoite {})
+        ks (fn [& avaimet]
+             (some osoite avaimet))]
+    {::tie (ks ::tie :numero :tr-numero :tie)
+     ::aosa (ks ::aosa :alkuosa :tr-alkuosa :aosa)
+     ::aet (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
+     ::losa (ks ::losa :loppuosa :tr-loppuosa :losa)
+     ::let (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)}))
+
+(defn validi-osoite? [osoite]
+  (let [osoite (normalisoi osoite)]
+    (and (some? (::tie osoite))
+         (some? (::aosa osoite))
+         (some? (::aet osoite)))))
+
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään

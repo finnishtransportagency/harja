@@ -65,7 +65,7 @@
    ::t/tilaajan-nimi "Pohjois-Pohjanmaa",
    ::t/vaikutussuunta "molemmat",
    ::t/huomautukset ["avotuli"],
-   ::t/ajoittaiset-pysatykset true,
+   ::t/ajoittaiset-pysaytykset true,
    ::t/tyoajat [{::t/alkuaika
                  (java.time.LocalTime/of 8 0)
                  ::t/loppuaika

@@ -14,7 +14,7 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.tyokalut.functor :refer [fmap]]
@@ -74,7 +74,6 @@
   (let [vastaus (into []
                       yllapitokohteet-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
-    (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
 (defn- hae-urakkatyyppi [db urakka-id]
@@ -317,7 +316,7 @@
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
@@ -387,7 +386,7 @@
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
 
     (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
                                                            {:urakka-id urakka-id
