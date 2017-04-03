@@ -145,15 +145,15 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN'));
 
 
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, maksuera, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 1, 'Puolet', 'TUNNUS1');
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, maksuera, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 2, 'Puolet', 'TUNNUS1');
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, maksuera, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 1, '1/3', 'TUNNUS2');
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, maksuera, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 2, '1/3', 'TUNNUS2');
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, maksuera, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 3, '1/3', 'TUNNUS2');
 
 

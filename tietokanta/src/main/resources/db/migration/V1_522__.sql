@@ -3,7 +3,7 @@ CREATE TABLE yllapitokohteen_maksuera (
   id SERIAL PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   maksueranumero INT NOT NULL,
-  maksuera VARCHAR(512), -- Maksuerän tiedot, tekstikenttä
+  sisalto VARCHAR(512), -- Maksuerän tiedot, tekstikenttä
   maksueratunnus VARCHAR (512)
 );
 

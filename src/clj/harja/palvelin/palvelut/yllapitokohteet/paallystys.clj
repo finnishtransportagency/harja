@@ -24,7 +24,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -45,8 +46,12 @@
   #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/array->vec % :maksuerat)))
-                      (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))]
+                        (map konversio/alaviiva->rakenne))
+                      (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
+        vastaus (konv/sarakkeet-vektoriin
+                  vastaus
+                  {:maksuera :maksuerat}
+                  :yllapitokohde-id)]
     vastaus))
 
 (defn tallenna-urakan-maksuerat
