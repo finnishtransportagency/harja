@@ -225,7 +225,7 @@
            :footer [:div
                     [napit/palvelinkutsu-nappi
                      "Tallenna turvallisuuspoikkeama"
-                     #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
+                     #(tiedot/tallenna-turvallisuuspoikkeama (lomake/ilman-lomaketietoja @turvallisuuspoikkeama))
                      {:luokka "nappi-ensisijainen"
                       :ikoni (ikonit/tallenna)
                       :kun-onnistuu #(do
