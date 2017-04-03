@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.yllapitokohteet.muut-kustannukset
-  "Päällystyskohteiden Muut kustannukset-taulukon tiedot.
+(ns harja.tiedot.urakka.paallystys-muut-kustannukset
+  "Päällystysurakan Muut kustannukset -taulukon tiedot.
 
   Tässä taulukossa näytetään sanktiot jotka eivät liity mihinkään ylläpitokohteeseen,
   sekä käsin syötetyt vapaamuotoiset muut kustannukset. Sanktioita ei voi muokata tai lisätä.
@@ -44,9 +44,10 @@
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
-                (pipe (tiedot-sanktiot/hae-urakan-sanktiot
-                        valittu-urakka-id (pvm/vuoden-aikavali vuosi))
-                      (chan 1 (filter #(-> % :yllapitokohde :id nil?)))))))
+                (tiedot-sanktiot/hae-urakan-sanktiot {:urakka-id valittu-urakka-id
+                                                      :alku (first (pvm/vuoden-aikavali vuosi))
+                                                      :loppu (second (pvm/vuoden-aikavali vuosi))
+                                                      :vain-yllapitokohteettomat? true}))))
 
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))

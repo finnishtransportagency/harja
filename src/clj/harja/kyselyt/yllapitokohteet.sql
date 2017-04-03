@@ -181,7 +181,7 @@ SELECT
   ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
   ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis                     AS "kohde-valmispvm",
-  sum(s.maara)                          AS "bonukset-ja-sakot",
+  sum(-s.maara)                          AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   o.nimi                                AS "urakoitsija",
   u.nimi                                AS "urakka",
   u.id                                  AS "urakka-id"
@@ -191,7 +191,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
@@ -607,6 +607,7 @@ WHERE id = :id;
 -- name: hae-yllapitokohde
 SELECT
   ypk.id,
+  ypk.urakka,
   sopimus,
   kohdenumero,
   nimi,

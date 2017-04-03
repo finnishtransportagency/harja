@@ -15,7 +15,7 @@
             [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.domain.skeema :as skeema]
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
@@ -149,6 +149,7 @@
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
+                                                          :sakot-ja-bonukset
                                                           :kaasuindeksi]))
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
@@ -158,10 +159,10 @@
                                        kommentti
                                        (dissoc kommentti :liite)))))
                         (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))
-        maaramuutokset (let [maaramuutokset (maaramuutokset/hae-maaramuutokset
-                                              db user {:yllapitokohde-id paallystyskohde-id
-                                                       :urakka-id urakka-id})]
-                         (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
+        maaramuutokset (maaramuutokset/hae-ja-summaa-maaramuutokset
+                         db user
+                         {:urakka-id urakka-id
+                          :yllapitokohde-id paallystyskohde-id})
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
                              :maaramuutokset (:tulos maaramuutokset)
@@ -329,7 +330,7 @@
 
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                  db user {:urakka-id urakka-id :sopimus-id sopimus-id

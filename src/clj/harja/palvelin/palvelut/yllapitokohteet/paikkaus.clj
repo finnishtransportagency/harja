@@ -9,7 +9,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as paallystys-q]
             [cheshire.core :as cheshire]
@@ -155,7 +155,7 @@
   (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella
                                       c user {:urakka-id urakka-id
                                               :sopimus-id sopimus-id

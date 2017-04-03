@@ -132,14 +132,40 @@
 (defn- yllapitokohde-skeema
   "Ottaa ylläpitokohdeosan, jolla on lisäksi tietoa sen 'pääkohteesta' :yllapitokohde avaimen takana."
   [yllapitokohdeosa]
-  (let [aloitus :kohde-alkupvm
+  (let [kohde-aloitus :kohde-alkupvm
+        paallystys-aloitus :paallystys-alkupvm
         paallystys-valmis :paallystys-loppupvm
+        paikkaus-aloitus :paikkaus-alkupvm
         paikkaus-valmis :paikkaus-loppupvm
         tiemerkinta-aloitus :tiemerkinta-alkupvm
         tiemerkinta-valmis :tiemerkinta-loppupvm
-        kohde-valmis :kohde-valmispvm]
+        kohde-valmis :kohde-valmispvm
+        aikataulu-teksti (fn [pvm otsikko pvm-tyyppi]
+                           (if (and pvm (pvm/sama-tai-ennen? pvm (pvm/nyt)))
+                             (str otsikko " " (case pvm-tyyppi
+                                                    :aloitus "aloitettu"
+                                                    :valmistuminen "valmistunut"))
+                             (str otsikko " " (case pvm-tyyppi
+                                                    :aloitus "aloitetaan"
+                                                    :valmistuminen "valmistuu"))))
+        kohde-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
+                                               "Kohde" :aloitus)
+        paallystys-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
+                                                    "Päällystys" :aloitus)
+        paallystys-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
+                                                   "Päällystys" :valmistuminen)
+        paikkaus-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
+                                                  "Paikkaus" :aloitus)
+        paikkaus-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
+                                                 "Paikkaus" :valmistuminen)
+        tiemerkinta-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
+                                                     "Tiemerkintä" :aloitus)
+        tiemerkinta-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
+                                                    "Tiemerkintä" :valmistuminen)
+        kohde-valmis-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
+                                              "Kohde" :valmistuminen)]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-     :jarjesta-fn (let [fn #(get-in % [:yllapitokohde aloitus])]
+     :jarjesta-fn (let [fn #(get-in % [:yllapitokohde kohde-aloitus])]
                     (if (fn yllapitokohdeosa)
                       fn
                       ;; Ylläpitokohteella ei ole välttämättä alkupäivämäärää.
@@ -178,36 +204,52 @@
                :hae (hakufunktio
                       #{[:yllapitokohde :tila]}
                       #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila])))}
-              (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
-                {:otsikko "Kohde aloitettu" :tyyppi :pvm-aika
+              ;; Aikataulutiedot
+              (when (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
+                {:otsikko kohde-aloitus-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        #{[:yllapitokohde aloitus]}
-                        #(get-in % [:yllapitokohde aloitus]))})
+                        #{[:yllapitokohde kohde-aloitus]}
+                        #(get-in % [:yllapitokohde kohde-aloitus]))})
+
+              (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
+                {:otsikko paallystys-aloitus-teksti :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde paallystys-aloitus]}
+                        #(get-in % [:yllapitokohde paallystys-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
-                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika
+                {:otsikko paallystys-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde paallystys-valmis]}
                         #(get-in % [:yllapitokohde paallystys-valmis]))})
+
+              (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
+                {:otsikko paikkaus-aloitus-teksti :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde paikkaus-aloitus]}
+                        #(get-in % [:yllapitokohde paikkaus-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
-                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika
+                {:otsikko paikkaus-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
+
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
-                {:otsikko "Tiemerkintä aloitettu" :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-aloitus-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-aloitus]}
                         #(get-in % [:yllapitokohde tiemerkinta-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
-                {:otsikko "Tiemerkintä valmistunut" :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-valmis]}
                         #(get-in % [:yllapitokohde tiemerkinta-valmis]))})
+
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
-                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
+                {:otsikko kohde-valmis-teksti :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde kohde-valmis]}
                         #(get-in % [:yllapitokohde kohde-valmis]))})
+              ;; Muut
               {:otsikko "Urakka" :tyyppi :string :hae (hakufunktio
                                                         #{[:yllapitokohde :urakka]}
                                                         #(get-in % [:yllapitokohde :urakka]))}
@@ -371,8 +413,71 @@
    :jarjesta-fn ::t-domain/alku
    :otsikko "Tietyöilmoitus"
    :tiedot [{:otsikko "Ilmoittaja" :hae (hakufunktio
-                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]}
-                                          #(str (get-in % [::t-domain/ilmoittaja ::t-domain/etunimi])))}]
+                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]
+                                            [::t-domain/ilmoittaja ::t-domain/sukunimi]}
+                                          t-domain/ilmoittaja->str)}
+            {:otsikko "Urakka" :nimi ::t-domain/urakan-nimi}
+            {:otsikko "Urakoitsija" :nimi ::t-domain/urakoitsijan-nimi}
+            {:otsikko "Urakoitsijan yhteyshenkilo" :hae (hakufunktio
+                                                          #{[::t-domain/urakoitsijayhteyshenkilo ::t-domain/etunimi]
+                                                            [::t-domain/urakoitsijayhteyshenkilo ::t-domain/sukunimi]}
+                                                          t-domain/urakoitsijayhteyshenkilo->str)}
+            {:otsikko "Tilaaja" :nimi ::t-domain/tilaajan-nimi}
+            {:otsikko "Tilaajan yhteyshenkilö" :hae (hakufunktio
+                                                      #{[::t-domain/tilaajayhteyshenkilo ::t-domain/etunimi]
+                                                        [::t-domain/tilaajayhteyshenkilo ::t-domain/sukunimi]}
+                                                      t-domain/tilaajayhteyshenkilo->str)}
+            {:otsikko "Kunnat" :nimi ::t-domain/kunnat}
+            {:otsikko "Osoite" :hae (hakufunktio
+                                      #{[::t-domain/osoite ::tr-domain/aet] [::t-domain/osoite ::tr-domain/tie] [::t-domain/osoite ::tr-domain/let]}
+                                      #(tr-domain/tierekisteriosoite-tekstina (::t-domain/osoite %) {:teksti-tie? false}))}
+            {:otsikko "Tien nimi" :nimi ::t-domain/tien-nimi}
+            {:otsikko "Alkusijainnin kuvaus" :nimi ::t-domain/alkusijainnin-kuvaus}
+            {:otsikko "Loppusijainnin kuvaus" :nimi ::t-domain/loppusijainnin-kuvaus}
+            {:otsikko "Alku" :nimi ::t-domain/alku :tyyppi :pvm-aika}
+            {:otsikko "Loppu" :nimi ::t-domain/loppu :tyyppi :pvm-aika}
+            {:otsikko "Työtyypit" :hae (hakufunktio
+                                         ::t-domain/tyotyypit
+                                         t-domain/tyotyypit->str)}
+            #_{:otsikko "Työajat" :hae (hakufunktio
+                                         ::t-domain/tyoajat
+                                         t-domain/tyoajat->str)}
+            #_{:otsikko "Vaikutussuunta" :nimi ::t-domain/vaikutussuunta}
+            {:otsikko "Kaistajärjestelyt" :hae (hakufunktio
+                                                 ::t-domain/kaistajarjestelyt
+                                                 t-domain/kaistajarjestelyt->str)}
+            {:otsikko "Nopeusrajoitukset" :hae (hakufunktio
+                                                 ::t-domain/nopeusrajoitukset
+                                                 t-domain/nopeusrajoitukset->str)}
+            {:otsikko "Tienpinnat" :hae (hakufunktio
+                                          ::t-domain/tienpinnat
+                                          t-domain/tienpinnat->str)}
+            {:otsikko "Kiertotien pituus" :nimi ::t-domain/kiertotien-pituus}
+            #_{:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
+            {:otsikko "Kiertotien pinnat" :hae (hakufunktio
+                                                 ::t-domain/kiertotienpinnat
+                                                 t-domain/kiertotienpinnat->str)}
+            #_{:otsikko "Liikenteenohjaus" :nimi ::t-domain/liikenteenohjaus}
+            #_{:otsikko "Liikenteenohjaaja" :nimi ::t-domain/liikenteenohjaaja}
+            #_{:otsikko "Viivästys normaalisti" :nimi ::t-domain/viivastys-normaali-liikenteessa}
+            #_{:otsikko "Viivästys ruuhkassa" :nimi ::t-domain/viivastys-ruuhka-aikana}
+            #_{:otsikko "Ajoneuvorajoitukset" :hae (hakufunktio
+                                                     ::t-domain/ajoneuvorajoitukset
+                                                     t-domain/ajoneuvorajoitukset->str)}
+            #_{:otsikko "Huomautukset" :hae (hakufunktio
+                                              ::t-domain/huomautukset
+                                              t-domain/huomautukset->str)}
+            #_{:otsikko "Ajoittaiset pysäytykset" :hae (hakufunktio
+                                                         ::t-domain/ajoittaiset-pysaytykset
+                                                         t-domain/ajoittaiset-pysaytykset->str)}
+            #_{:otsikko "Ajoittain suljettu tie" :hae (hakufunktio
+                                                        ::t-domain/ajoittain-suljettu-tie
+                                                        t-domain/ajoittain-suljettu-tie->str)}
+            #_{:otsikko "Pysäytysten alku" :nimi ::t-domain/pysaytysten-alku}
+            #_{:otsikko "Pysäytysten loppu" :nimi ::t-domain/pysaytysten-loppu}
+            {:otsikko "Lisätietoja" :nimi ::t-domain/lisatietoja}
+            #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}
+            ]
    :data tietyoilmoitus})
 
 (defmethod infopaneeli-skeema :silta [silta]

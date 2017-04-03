@@ -35,7 +35,7 @@
     .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
   }
   .puuttuva-arvo {
-    border-bottom: solid 1px @vaara;
+    border-bottom: solid 1px @vaara !important;
   }
   .viesti {
     display: inline-block;
@@ -200,4 +200,13 @@
 fieldset.lomake-osa {
   margin-top: 10px;
 
+}
+
+/* Tämä luokka lomakkeessa lisää ryhmien otsikkoihin väliä ja borderin */
+.ryhma-reuna {
+  .lomake-ryhman-otsikko {
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: solid 1px black;
+  }
 }

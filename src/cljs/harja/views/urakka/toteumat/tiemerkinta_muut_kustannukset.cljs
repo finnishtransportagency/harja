@@ -32,12 +32,18 @@
     oikeudet/urakat-toteutus-muutkustannukset
     urakka-id))
 
+(defn kustannustyyppi-fmt [tyyppi]
+  (case tyyppi
+    :indeksi "Indeksitarkistus"
+
+    (str/capitalize (name tyyppi))))
+
 (defn valinta-muun-kustannuksen-tyyppi
   [kustannustyypit valittu-kustannustyyppi-atom valitse-fn]
   [:div.label-ja-alasveto.muukustannustyyppi
    [:span.alasvedon-otsikko "Tyyppi"]
    [livi-pudotusvalikko {:valinta @valittu-kustannustyyppi-atom
-                         :format-fn #(if % (str/capitalize (name %)) "Kaikki")
+                         :format-fn #(if % (kustannustyyppi-fmt %) "Kaikki")
                          :valitse-fn valitse-fn}
     (cons nil kustannustyypit)]])
 
@@ -115,9 +121,9 @@
        {:otsikko "Tyyppi" :nimi :tyyppi
         :pakollinen? true
         :tyyppi :valinta
-        :valinta-nayta #(if (nil? %) "- Valitse tyyppi -" (str/capitalize (name %)))
+        :valinta-nayta #(if (nil? %) "- Valitse tyyppi -" (kustannustyyppi-fmt %))
         :valinnat tiedot/+kustannustyypit+
-        :fmt #(str/capitalize (name %))
+        :fmt #(kustannustyyppi-fmt %)
         :validoi [[:ei-tyhja "Anna kustannustyyppi"]]}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
@@ -144,9 +150,11 @@
 (defn- yhteenveto [toteumat valittu-kustannustyyppi]
   (let [toteumat-yhteensa (->> toteumat (map :hinta) (reduce +))]
     [yleiset/taulukkotietonakyma {}
-     (str "Toteumat"
-          (when-not (nil? valittu-kustannustyyppi)
-            (str " tyyppiä " (name valittu-kustannustyyppi))) " yhteensä: ")
+     (str
+       (if (nil? valittu-kustannustyyppi)
+         "Kaikki"
+         (kustannustyyppi-fmt valittu-kustannustyyppi))
+       " yhteensä: ")
      (fmt/euro-opt toteumat-yhteensa)]))
 
 (defn- muut-tyot-lista [e!
@@ -179,7 +187,7 @@
        :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
                                                  :urakka (:id valittu-urakka)}))}
       [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
-       {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(str/capitalize (name %))}
+       {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(kustannustyyppi-fmt %)}
        {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
        {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
        {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
