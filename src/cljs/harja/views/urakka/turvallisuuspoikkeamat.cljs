@@ -196,9 +196,7 @@
 (defn- voi-tallentaa? [tp toimenpiteet-virheet]
   (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
        (empty? toimenpiteet-virheet)
-       (if-not (:id tp)
-         (lomake/voi-tallentaa-ja-muokattu? tp)
-         (lomake/voi-tallentaa? tp))))
+       (lomake/voi-tallentaa-ja-muokattu? tp)))
 
 (defn turvallisuuspoikkeaman-tiedot []
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
@@ -222,18 +220,20 @@
                                                      %)]
                         (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-           :footer [:div
-                    [napit/palvelinkutsu-nappi
-                     "Tallenna turvallisuuspoikkeama"
-                     #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                       (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                       (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                      :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                      :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]
-                    [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]]}
+           :footer-fn (fn [tp]
+                        [:div
+                         [napit/palvelinkutsu-nappi
+                          "Tallenna turvallisuuspoikkeama"
+                          #(tiedot/tallenna-turvallisuuspoikkeama (lomake/ilman-lomaketietoja tp))
+                          {:luokka "nappi-ensisijainen"
+                           :ikoni (ikonit/tallenna)
+                           :kun-onnistuu #(do
+                                            (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                            (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                           :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
+                           :disabled (not (voi-tallentaa? tp @toimenpiteet-virheet))}]
+                         [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
+                         [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string

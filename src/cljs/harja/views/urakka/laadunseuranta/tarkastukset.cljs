@@ -318,7 +318,10 @@
                         [napit/palvelinkutsu-nappi
                          "Tallenna tarkastus"
                          (fn []
-                           (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
+                           (tarkastukset/tallenna-tarkastus
+                            (:id @nav/valittu-urakka)
+                            (lomake/ilman-lomaketietoja tarkastus)
+                            (:nakyma optiot)))
                          {:disabled (not (lomake/voi-tallentaa? tarkastus))
                           :kun-onnistuu (fn [tarkastus]
                                           (reset! tarkastukset/valittu-tarkastus nil)
