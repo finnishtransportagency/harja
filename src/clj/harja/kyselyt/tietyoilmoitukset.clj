@@ -7,7 +7,9 @@
             [specql.rel :as rel]
             [clojure.spec :as s]
             [harja.kyselyt.specql :refer [db]]
-            [harja.domain.muokkaustiedot :as m]))
+            [harja.domain.muokkaustiedot :as m]
+            [clojure.future :refer :all]))
+
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -60,6 +62,17 @@
 (s/def ::t/max-pituus number?)
 (s/def ::t/max-leveys number?)
 
+;; sallitaan käsin
+(s/def ::t/pysaytysten-alku (s/nilable inst?))
+(s/def ::t/pysaytysten-loppu (s/nilable inst?))
+(s/def ::t/sahkoposti (s/nilable string?))
+(s/def ::t/etunimi (s/nilable string?))
+(s/def ::t/sukunimi (s/nilable string?))
+(s/def ::t/matkapuhelin (s/nilable string?))
+(s/def ::t/tilaajan-nimi (s/nilable string?))
+(s/def ::t/urakoitsijan-nimi (s/nilable string?))
+(s/def ::t/urakan-nimi (s/nilable string?))
+(s/def ::t/urakka-id (s/nilable integer?))
 
 (def kaikki-ilmoituksen-kentat
   #{::t/id
@@ -98,6 +111,7 @@
     ::t/kaistajarjestelyt
     ::t/nopeusrajoitukset
     ::t/tienpinnat
+    ::t/kiertotien-pituus
     ::t/kiertotien-mutkaisuus
     ::t/kiertotienpinnat
     ::t/liikenteenohjaus
@@ -106,7 +120,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
@@ -156,7 +170,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
@@ -176,7 +190,8 @@
 
 (defn overlaps? [rivi-alku rivi-loppu alku loppu]
   (op/or {rivi-alku (op/between alku loppu)}
-         {rivi-loppu (op/between alku loppu)}))
+         {rivi-loppu (op/between alku loppu)}
+         {rivi-alku (op/<= alku) rivi-loppu (op/>= loppu)}))
 
 (defn interval? [start interval]
   (reify op/Op
@@ -226,6 +241,14 @@
            (when-not tilaaja?
              (when-not (empty? urakat)
                {::t/urakka-id (op/or op/null? (op/in urakat))})))))
+
+(defn hae-ilmoitukset-tienakymaan [db {:keys [alku
+                                              loppu
+                                              sijainti] :as tiedot}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
+         (op/and
+           (overlaps? ::t/alku ::t/loppu alku loppu)
+           {::t/osoite {::tr/geometria (intersects? 100 sijainti)}})))
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet

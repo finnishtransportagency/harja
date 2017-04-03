@@ -412,8 +412,71 @@
    :jarjesta-fn ::t-domain/alku
    :otsikko "Tietyöilmoitus"
    :tiedot [{:otsikko "Ilmoittaja" :hae (hakufunktio
-                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]}
-                                          #(str (get-in % [::t-domain/ilmoittaja ::t-domain/etunimi])))}]
+                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]
+                                            [::t-domain/ilmoittaja ::t-domain/sukunimi]}
+                                          t-domain/ilmoittaja->str)}
+            {:otsikko "Urakka" :nimi ::t-domain/urakan-nimi}
+            {:otsikko "Urakoitsija" :nimi ::t-domain/urakoitsijan-nimi}
+            {:otsikko "Urakoitsijan yhteyshenkilo" :hae (hakufunktio
+                                                          #{[::t-domain/urakoitsijayhteyshenkilo ::t-domain/etunimi]
+                                                            [::t-domain/urakoitsijayhteyshenkilo ::t-domain/sukunimi]}
+                                                          t-domain/urakoitsijayhteyshenkilo->str)}
+            {:otsikko "Tilaaja" :nimi ::t-domain/tilaajan-nimi}
+            {:otsikko "Tilaajan yhteyshenkilö" :hae (hakufunktio
+                                                      #{[::t-domain/tilaajayhteyshenkilo ::t-domain/etunimi]
+                                                        [::t-domain/tilaajayhteyshenkilo ::t-domain/sukunimi]}
+                                                      t-domain/tilaajayhteyshenkilo->str)}
+            {:otsikko "Kunnat" :nimi ::t-domain/kunnat}
+            {:otsikko "Osoite" :hae (hakufunktio
+                                      #{[::t-domain/osoite ::tr-domain/aet] [::t-domain/osoite ::tr-domain/tie] [::t-domain/osoite ::tr-domain/let]}
+                                      #(tr-domain/tierekisteriosoite-tekstina (::t-domain/osoite %) {:teksti-tie? false}))}
+            {:otsikko "Tien nimi" :nimi ::t-domain/tien-nimi}
+            {:otsikko "Alkusijainnin kuvaus" :nimi ::t-domain/alkusijainnin-kuvaus}
+            {:otsikko "Loppusijainnin kuvaus" :nimi ::t-domain/loppusijainnin-kuvaus}
+            {:otsikko "Alku" :nimi ::t-domain/alku :tyyppi :pvm-aika}
+            {:otsikko "Loppu" :nimi ::t-domain/loppu :tyyppi :pvm-aika}
+            {:otsikko "Työtyypit" :hae (hakufunktio
+                                         ::t-domain/tyotyypit
+                                         t-domain/tyotyypit->str)}
+            #_{:otsikko "Työajat" :hae (hakufunktio
+                                         ::t-domain/tyoajat
+                                         t-domain/tyoajat->str)}
+            #_{:otsikko "Vaikutussuunta" :nimi ::t-domain/vaikutussuunta}
+            {:otsikko "Kaistajärjestelyt" :hae (hakufunktio
+                                                 ::t-domain/kaistajarjestelyt
+                                                 t-domain/kaistajarjestelyt->str)}
+            {:otsikko "Nopeusrajoitukset" :hae (hakufunktio
+                                                 ::t-domain/nopeusrajoitukset
+                                                 t-domain/nopeusrajoitukset->str)}
+            {:otsikko "Tienpinnat" :hae (hakufunktio
+                                          ::t-domain/tienpinnat
+                                          t-domain/tienpinnat->str)}
+            {:otsikko "Kiertotien pituus" :nimi ::t-domain/kiertotien-pituus}
+            #_{:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
+            {:otsikko "Kiertotien pinnat" :hae (hakufunktio
+                                                 ::t-domain/kiertotienpinnat
+                                                 t-domain/kiertotienpinnat->str)}
+            #_{:otsikko "Liikenteenohjaus" :nimi ::t-domain/liikenteenohjaus}
+            #_{:otsikko "Liikenteenohjaaja" :nimi ::t-domain/liikenteenohjaaja}
+            #_{:otsikko "Viivästys normaalisti" :nimi ::t-domain/viivastys-normaali-liikenteessa}
+            #_{:otsikko "Viivästys ruuhkassa" :nimi ::t-domain/viivastys-ruuhka-aikana}
+            #_{:otsikko "Ajoneuvorajoitukset" :hae (hakufunktio
+                                                     ::t-domain/ajoneuvorajoitukset
+                                                     t-domain/ajoneuvorajoitukset->str)}
+            #_{:otsikko "Huomautukset" :hae (hakufunktio
+                                              ::t-domain/huomautukset
+                                              t-domain/huomautukset->str)}
+            #_{:otsikko "Ajoittaiset pysäytykset" :hae (hakufunktio
+                                                         ::t-domain/ajoittaiset-pysaytykset
+                                                         t-domain/ajoittaiset-pysaytykset->str)}
+            #_{:otsikko "Ajoittain suljettu tie" :hae (hakufunktio
+                                                        ::t-domain/ajoittain-suljettu-tie
+                                                        t-domain/ajoittain-suljettu-tie->str)}
+            #_{:otsikko "Pysäytysten alku" :nimi ::t-domain/pysaytysten-alku}
+            #_{:otsikko "Pysäytysten loppu" :nimi ::t-domain/pysaytysten-loppu}
+            {:otsikko "Lisätietoja" :nimi ::t-domain/lisatietoja}
+            #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}
+            ]
    :data tietyoilmoitus})
 
 (defmethod infopaneeli-skeema :silta [silta]
