@@ -855,7 +855,7 @@
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
-    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 7043.95))
+    (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 7043.95))
     (is (= (:maaramuutokset-ennustettu? paallystysilmoitus-kannassa) true))
     (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
     (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
@@ -921,7 +921,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (== (:kokonaishinta paallystysilmoitus-kannassa) 3968))
+        (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 3968))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
@@ -1156,9 +1156,9 @@
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        testidata (gen/sample (s/gen ::paallystyksen-maksuerat-domain/yllapitokohde-maksuerineen))]
+        testidata (gen/sample (s/gen ::paallystyksen-maksuerat-domain/tallennettava-yllapitokohde-maksuerineen))]
 
-    (doseq [yllapitokohde testidata]
+    (doseq [yllapitokohde [(first testidata)]]
       (u "DELETE FROM yllapitokohteen_maksuera WHERE yllapitokohde = " leppajarven-ramppi ";")
       (u "DELETE FROM yllapitokohteen_maksueratunnus WHERE yllapitokohde = " leppajarven-ramppi ";")
       (let [maksuerat (:maksuerat yllapitokohde)
@@ -1166,11 +1166,11 @@
             ;; Generointi generoi useita samoja maksueränumeroita, mutta palvelu tallentaa vain viimeisimmän.
             ;; Otetaan viimeiset talteen ja tarkistetaan, että tallennus menee oikein
             tallennettavat-maksuerat (if (empty? maksueranumerot)
+                                       []
                                        (map (fn [maksueranumero]
                                               (last (filter #(= (:maksueranumero %) maksueranumero) maksuerat)))
                                             (range (apply min maksueranumerot)
-                                                   (inc (apply max maksueranumerot))))
-                                       [])
+                                                   (inc (apply max maksueranumerot)))))
             payload {::urakka-domain/id urakka-id
                      ::sopimus-domain/id sopimus-id
                      ::urakka-domain/vuosi 2017
@@ -1218,4 +1218,5 @@
                :sisalto nil}
               {:id 7
                :maksueranumero 5
-               :sisalto "Uusi maksuerä"}])))))
+               :sisalto "Uusi maksuerä"}])
+          "Uudet maksuerät ilmestyivät kantaan, vanhat päivitettiin ja payloadissa olemattomiin ei koskettu"))))
