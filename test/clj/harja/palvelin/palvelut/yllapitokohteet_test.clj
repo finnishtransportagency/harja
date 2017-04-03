@@ -76,7 +76,7 @@
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
 
-(defn- kohde-nimella [kohteet nimi]
+(defn kohde-nimella [kohteet nimi]
   (first (filter #(= (:nimi %) nimi) kohteet)))
 
 (defn yllapitokohde-id-jolla-on-paallystysilmoitus []
