@@ -917,7 +917,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  (fn [tr-osoite-ch virheet osoite]
                    (hae-tr tr-osoite-ch virheet
                            (zipmap tr-osoite-raaka-avaimet
-                                   (map #(osoite %) avaimet))))
+                                   (map #(when osoite (osoite %)) avaimet))))
                  hae-tr)
 
         tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
