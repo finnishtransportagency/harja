@@ -1,15 +1,14 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
   (:require [harja.tyokalut.xml :as xml]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
 
-(defn laske-hinta-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset muutoshinta bitumi-indeksi
-                                         arvonvahennykset kaasuindeksi sakot-ja-bonukset] :as kohde}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot maaramuutokset muutoshinta bitumi-indeksi
-                            arvonvahennykset kaasuindeksi sakot-ja-bonukset])))
+(defn laske-hinta-kokonaishinta [kohde]
+  (yllapitokohteet-domain/yllapitokohteen-kokonaishinta kohde))
 
 (defn kasittele-kohteen-tyyppi [tyyppi]
   (case tyyppi
