@@ -264,13 +264,13 @@ WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: hae-urakan-maksuerat
 SELECT
-  ypk.id as "yllapitokohde-id",
+  ypk.id            AS "yllapitokohde-id",
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.tr_numero as "tr-numero",
-  ym.id as "maksuera_id",
-  ym.sisalto as "maksuera_sisalto",
-  ym.maksueranumero as "maksuera_maksueranumero"
+  ypk.tr_numero     AS "tr-numero",
+  ym.id             AS "maksuera_id",
+  ym.sisalto        AS "maksuera_sisalto",
+  ym.maksueranumero AS "maksuera_maksueranumero"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
@@ -279,17 +279,17 @@ WHERE ypk.urakka = :urakka
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []));
 
--- name: hae-urakan-maksuera
+-- name: hae-yllapitokohteen-maksuera
 SELECT
   ym.sisalto,
   ym.maksueranumero,
-  ypk.id as "yllapitokohde-id",
+  ypk.id AS "yllapitokohde-id",
   ypk.kohdenumero,
-  ypk.nimi,
-  ypk.tr_numero as "tr-numero",
+  ypk.nimi
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
-WHERE ym.id = :id
+WHERE yllapitokohde = :yllapitokohde
+      AND maksueranumero = :maksueranumero
       AND ypk.poistettu IS NOT TRUE;
 
 -- name: luo-maksuera<!
@@ -297,7 +297,9 @@ INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
 VALUES (:yllapitokohde, :maksueranumero, :sisalto);
 
 -- name: paivita-maksuera<!
-UPDATE yllapitokohteen_maksuera SET
-maksueranumero = :maksueranumero,
-sisalto = :sisalto
-WHERE id = :id;
+UPDATE yllapitokohteen_maksuera
+SET
+  sisalto        = :sisalto,
+  maksueranumero = :maksueranumero
+WHERE yllapitokohde = :yllapitokohde
+      AND maksueranumero = :maksueranumero;

@@ -71,27 +71,22 @@
                                 (map #(assoc % :yllapitokohde-id (:yllapitokohde-id yllapitokohde))
                                      kohteen-maksuerat)))
                             yllapitokohteet)]
-      (doseq [maksuera maksuerat]
-        (if (:maksuera-id maksuera)
-          (let [nykyinen-rivi-kannassa
-                (first (into []
-                             (comp
-                               (map #(konv/array->vec % :maksuerat)))
-                             (q/hae-urakan-maksuera db {:id (:maksuera-id maksuera)})))]
-            (q/paivita-maksuera<! db {:id (:maksuera-id maksuera)
-                                      :maksuerat (if voi-tayttaa-maksuerat?
-                                                   (konv/seq->array (:maksuerat maksuera))
-                                                   (:maksuerat nykyinen-rivi-kannassa))
-                                      :maksueratunnus (if voi-tayttaa-maksueratunnuksen?
-                                                        (:maksueratunnus maksuera)
-                                                        (:maksueratunnus nykyinen-rivi-kannassa))}))
 
-          (q/luo-maksuera<! db {:yllapitokohde (:yllapitokohde-id maksuera)
-                                :maksuerat (konv/seq->array (if voi-tayttaa-maksuerat?
-                                                              (:maksuerat maksuera)
-                                                              []))
-                                :maksueratunnus (when voi-tayttaa-maksueratunnuksen?
-                                                  (:maksueratunnus maksuera))}))))
+      ;; Tallennetaan maksuerät
+      (when voi-tayttaa-maksuerat?
+        (doseq [maksuera maksuerat]
+          (let [nykyinen-maksuera-kannassa (first (q/hae-yllapitokohteen-maksuera
+                                                    db
+                                                    {:yllapitokohde (:yllapitokohde-id maksuera)
+                                                     :maksueranumero (:maksueranumero maksuera)}))
+                maksuera-params {:sisalto (:sisalto maksuera)
+                                 :yllapitokohde (:yllapitokohde-id maksuera)
+                                 :maksueranumero (:maksueranumero maksuera)}]
+            (log/debug "Käsitellään maksuerä: " (pr-str maksuera))
+            (log/debug "Onko kannassa?" (boolean nykyinen-maksuera-kannassa))
+            (if nykyinen-maksuera-kannassa
+              (q/paivita-maksuera<! db maksuera-params)
+              (q/luo-maksuera<! db maksuera-params))))))
 
     (hae-urakan-maksuerat db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
