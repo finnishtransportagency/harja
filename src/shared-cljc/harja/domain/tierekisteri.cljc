@@ -93,8 +93,10 @@
 
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
-  ([osien-pituudet tie]
-   (when (on-alku-ja-loppu? tie)
+  ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
+   (when (and (on-alku-ja-loppu? tie)
+              (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
+                  (not (empty? osien-pituudet)))) ;; Tarvitaan osien pituudet laskuun
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa

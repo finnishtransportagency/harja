@@ -537,7 +537,7 @@
     (pituus metria)))
 
 (defn luku-indeksikorotus
-  "Formatoi luvun ilman yksikköä tai stringin Indeksi puuttuu, jos nil."
+  "Formatoi luvun ilman yksikköä tai stringin 'Indeksi puuttuu', jos nil."
   [summa]
   (if summa
     (euro false summa)
