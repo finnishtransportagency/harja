@@ -67,17 +67,13 @@
                               ; jotka tullaan tarkistamaan ja joiden sisältö tullaan tallentamaan
                               (map inc (range 100)))
         maksuerien-sisallot (map maksuerarivi maksuera-avaimet)
-        viimeinen-ei-tyhja-maksuera (some identity (reverse maksuerien-sisallot))
-        viimeinen-ei-tyhja-maksuera-index (- (count maksuerien-sisallot)
-                                             (.indexOf (reverse maksuerien-sisallot)
-                                                       viimeinen-ei-tyhja-maksuera)
-                                             1)
-        ;; Täytetyt maksuerät on vector ensimmäisestä viimeiseen täytettyyn maksuerään
-        taytetyt-maksuerat (vec (first (partition (inc viimeinen-ei-tyhja-maksuera-index)
-                                              maksuerien-sisallot)))]
+        muunnetut-maksuerat (map-indexed (fn [index sisalto]
+                                           {:maksueranumero (inc index) :sisalto sisalto})
+                                         maksuerien-sisallot)
+        muunnetut-maksuerat-ilman-tyhjia (filter :sisalto muunnetut-maksuerat)]
     (assoc
       (apply dissoc maksuerarivi maksuera-avaimet)
-      :maksuerat taytetyt-maksuerat)))
+      :maksuerat (vec muunnetut-maksuerat-ilman-tyhjia))))
 
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
