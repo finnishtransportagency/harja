@@ -20,7 +20,8 @@ before_script:
   - sudo dpkg-reconfigure --frontend noninteractive tzdata
 before_deploy:
   - mkdir s3-deploy
-  - ln -v $TRAVIS_BUILD_DIR/target/harja-0.0.1-SNAPSHOT-standalone.jar "$TRAVIS_BUILD_DIR/s3-deploy/harja-travis-${TRAVIS_BRANCH}.jar"
+  - ln target/harja-0.0.1-SNAPSHOT-standalone.jar "s3-deploy/harja-travis-${TRAVIS_BRANCH}.jar"
+  - pg_dump -U postgres -Z 1 harja > "s3-deploy/harja-travis-${TRAVIS_BRANCH}.pgdump.gz"
 script: lein do testit, uberjar
 deploy:
   provider: s3
