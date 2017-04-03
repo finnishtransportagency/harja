@@ -44,16 +44,25 @@
   (log/debug "Haetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
   #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
-  (let [vastaus (into []
-                      (comp
-                        (map konversio/alaviiva->rakenne))
-                      (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
-        vastaus (konv/sarakkeet-vektoriin
-                  vastaus
-                  {:maksuera :maksuerat}
-                  :yllapitokohde-id)]
-    (log/debug "Palautetaan maksuerät: " vastaus)
-    vastaus))
+  (let [yllapitokohteet (into []
+                              (comp
+                                (map konversio/alaviiva->rakenne))
+                              (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
+        yllapitokohteet (as-> yllapitokohteet ypk
+                              (konv/sarakkeet-vektoriin
+                                ypk
+                                {:maksuera :maksuerat}
+                                :yllapitokohde-id)
+                              (mapv
+                                #(assoc % :maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                                                    db user
+                                                                    {:urakka-id urakka-id
+                                                                     :yllapitokohde-id (:yllapitokohde-id %)})))
+                                ypk)
+                              (mapv
+                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))
+                                ypk))]
+    yllapitokohteet))
 
 (defn- tallenna-maksuerat [db yllapitokohteet]
   (let [maksuerat (mapcat (fn [yllapitokohde]
