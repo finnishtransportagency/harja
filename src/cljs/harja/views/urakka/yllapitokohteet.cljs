@@ -550,13 +550,14 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [urakka kohteet-atom rivi]
+(defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
   [:div
    [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
-   [maaramuutokset {:yllapitokohde-id (:id rivi)
-                    :urakka-id (:id urakka)
-                    :yllapitokohteet-atom kohteet-atom}]])
+   (when (= kohdetyyppi :paallystys)
+     [maaramuutokset {:yllapitokohde-id (:id rivi)
+                      :urakka-id (:id urakka)
+                      :yllapitokohteet-atom kohteet-atom}])])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
@@ -598,7 +599,7 @@
                  (map (juxt
                         :id
                         (fn [rivi]
-                          [kohteen-vetolaatikko urakka kohteet-atom rivi])))
+                          [kohteen-vetolaatikko urakka kohteet-atom rivi (:kohdetyyppi optiot)])))
                  @kohteet-atom)
            :tallenna @tallenna
            :muutos (fn [grid]
