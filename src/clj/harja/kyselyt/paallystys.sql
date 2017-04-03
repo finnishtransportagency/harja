@@ -269,7 +269,7 @@ SELECT
   ypk.nimi,
   ypk.tr_numero as "tr-numero",
   ym.id as "maksuera_id",
-  ym.maksuera as "maksuera_sisalto",
+  ym.sisalto as "maksuera_sisalto",
   ym.maksueranumero as "maksuera_maksueranumero",
   ym.maksueratunnus as "maksuera_maksueratunnus"
 FROM yllapitokohde ypk
