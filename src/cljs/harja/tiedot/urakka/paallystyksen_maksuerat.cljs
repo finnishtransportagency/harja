@@ -89,10 +89,6 @@
 
 (defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (let [tulos! (t/send-async! ->MaksueratTallennettu)]
-    (log "ABOUT TO SAVE: " (pr-str {::urakka-domain/id urakka-id
-                                    ::sopimus-domain/id sopimus-id
-                                    ::urakka-domain/vuosi vuosi
-                                    :yllapitokohteet yllapitokohteet}))
     (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {::urakka-domain/id urakka-id
                                                                       ::sopimus-domain/id sopimus-id
                                                                       ::urakka-domain/vuosi vuosi
