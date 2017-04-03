@@ -51,8 +51,8 @@
     (dissoc maksuerarivi :maksuerat)
     (let [assoc-params (apply concat (map-indexed
                                        (fn [index maksuera]
-                                         [(keyword (str "maksuera" (inc index))) maksuera])
-                                       (:maksuerat maksuerarivi)))]
+                                         [(keyword (str "maksuera" (inc index))) (:sisalto maksuera)])
+                                       (sort-by :maksueranumero (:maksuerat maksuerarivi))))]
       (apply assoc
              (dissoc maksuerarivi :maksuerat)
              assoc-params))))
