@@ -31,9 +31,9 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn laske-sarakkeen-summa [sarake kohderivit]
-  (reduce + (mapv
-              (fn [rivi] (sarake rivi))
-              kohderivit)))
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))
 
 (defn tr-virheilmoitus [tr-virheet]
   [:div.tr-virheet
@@ -678,8 +678,7 @@
   (let [yhteensa
         (reaction
           (let [kohteet @kohteet-atom
-                sopimuksen-mukaiset-tyot-yhteensa
-                (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
                 maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
@@ -687,13 +686,14 @@
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
                 muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
-                kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
-                                 toteutunut-hinta-yhteensa
-                                 maaramuutokset-yhteensa
-                                 arvonvahennykset-yhteensa
-                                 sakot-ja-bonukset-yhteensa
-                                 bitumi-indeksi-yhteensa
-                                 kaasuindeksi-yhteensa
+                kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
+                                   {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
+                                    :toteutunut-hinta toteutunut-hinta-yhteensa
+                                    :maaramuutokset maaramuutokset-yhteensa
+                                    :arvonvahennykset arvonvahennykset-yhteensa
+                                    :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
+                                    :bitumi-indeksi bitumi-indeksi-yhteensa
+                                    :kaasuindeksi kaasuindeksi-yhteensa})
                                  muut-yhteensa)]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
