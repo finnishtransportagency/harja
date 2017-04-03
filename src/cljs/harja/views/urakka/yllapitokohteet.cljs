@@ -670,13 +670,7 @@
                     :komponentti (fn [rivi]
                                    [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                     "grid-solu-ennustettu")}
-                                    (fmt/euro-opt (+ (:sopimuksen-mukaiset-tyot rivi)
-                                                     (:maaramuutokset rivi)
-                                                     (:toteutunut-hinta rivi)
-                                                     (:arvonvahennykset rivi)
-                                                     (:sakot-ja-bonukset rivi)
-                                                     (:bitumi-indeksi rivi)
-                                                     (:kaasuindeksi rivi)))])}]))
+                                    (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
