@@ -1206,7 +1206,7 @@
 
       (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
       (is (= (:maksueratunnus leppajarven-ramppi) "Uusi maksuerätunnus"))
-      (is (= (:maksuerat leppajarven-ramppi)
+      (is (= (sort-by :maksueranumero (:maksuerat leppajarven-ramppi))
              [{:id 1
                :maksueranumero 1
                :sisalto "Päivitetäänpäs tämä"}
