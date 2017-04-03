@@ -249,8 +249,7 @@
         (try
           (let [vastaus (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :urakan-kohteet)
-                                     (spec-apurit/poista-nil-avaimet)))]
+                                     (dissoc ::t/tyovaiheet :urakan-kohteet)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! (<! vastaus))))
