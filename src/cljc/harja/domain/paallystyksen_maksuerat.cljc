@@ -43,7 +43,12 @@
 
 ;; Tallennukset
 
-(s/def ::yllapitokohteet (s/coll-of ::yllapitokohde-maksuerineen))
+(s/def ::tallennettava-yllapitokohde-maksuerineen
+  (s/keys :req-un [::yllapitokohde/id
+                   ::maksuerat]
+          :opt-un [::maksueratunnus]))
+
+(s/def ::yllapitokohteet (s/coll-of ::tallennettava-yllapitokohde-maksuerineen))
 
 (s/def ::toteumat (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo))
 (s/def ::tallenna-paallystyksen-maksuerat-kysely
