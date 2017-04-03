@@ -247,12 +247,14 @@
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
-          (let [vastaus (k/post! :tallenna-tietyoilmoitus
+          (let [vastaus-kanava (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :urakan-kohteet)))]
+                                     (dissoc ::t/tyovaiheet :urakan-kohteet)))
+                vastaus (when vastaus-kanava
+                          (<! vastaus-kanava))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
-              (tulos! (<! vastaus))))
+              (tulos! vastaus)))
           (catch :default e
             (log "poikkeus lomakkeen tallennuksessa: " (pr-str e))
             (fail! nil)
