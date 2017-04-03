@@ -7,6 +7,8 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.tapahtumat :as tapahtumat])
@@ -78,9 +80,9 @@
 
 (defn- hae-maksuerat [{:keys [urakka-id sopimus-id vuosi] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->MaksueratHaettu)]
-    (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {:urakka-id urakka-id
-                                                                   :sopimus-id sopimus-id
-                                                                   :vuosi vuosi}))
+    (go (let [maksuerat (<! (k/post! :hae-paallystyksen-maksuerat {::urakka-domain/id urakka-id
+                                                                   ::sopimus-domain/id sopimus-id
+                                                                   ::urakka-domain/vuosi vuosi}))
               maksuerat-grid-muodossa (mapv maksuerarivi-grid-muotoon maksuerat)]
           (when-not (k/virhe? maksuerat)
             (tulos! maksuerat-grid-muodossa))))))

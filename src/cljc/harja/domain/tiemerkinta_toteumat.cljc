@@ -1,5 +1,5 @@
 (ns harja.domain.tiemerkinta-toteumat
-  "Tienäkymän tietojen spec-määritykset"
+  "Tiemerkinnän toteumien spec-määritykset"
   (:require
     [clojure.spec :as s]
     [harja.pvm :as pvm]

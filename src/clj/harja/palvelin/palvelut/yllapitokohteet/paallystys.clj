@@ -16,12 +16,13 @@
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.skeema :as skeema]
-            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
@@ -40,11 +41,14 @@
 (defn hae-urakan-maksuerat
   "Hakee hakuparametreihin osuvien ylläpitokohteiden maksuerät.
    Palauttaa myös sellaiset ylläpitokohteet, joilla ei ole maksuerää."
-  [db user {:keys [urakka-id sopimus-id vuosi]}]
+  [db user hakuparametrit]
   (log/debug "Haetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
   #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
-  (let [yllapitokohteet (into []
+  (let [urakka-id (::urakka-domain/id hakuparametrit)
+        sopimus-id (::sopimus-domain/id hakuparametrit)
+        vuosi (::urakka-domain/vuosi hakuparametrit)
+        yllapitokohteet (into []
                               (comp
                                 (map konversio/alaviiva->rakenne))
                               (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
@@ -112,9 +116,9 @@
       (when voi-tayttaa-maksueratunnuksen?
         (tallenna-maksueratunnus db yllapitokohteet)))
 
-    (hae-urakan-maksuerat db user {:urakka-id urakka-id
-                                   :sopimus-id sopimus-id
-                                   :vuosi vuosi})))
+    (hae-urakan-maksuerat db user {::urakka-domain/id urakka-id
+                                   ::sopimus-domain/id sopimus-id
+                                   ::urakka-domain/vuosi vuosi})))
 
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
   "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
@@ -459,7 +463,9 @@
                           (tallenna-paallystysilmoitus db user tiedot)))
       (julkaise-palvelu http :hae-paallystyksen-maksuerat
                         (fn [user tiedot]
-                          (hae-urakan-maksuerat db user tiedot)))
+                          (hae-urakan-maksuerat db user tiedot))
+                        {:kysely-spec ::paallystyksen-maksuerat/hae-paallystyksen-maksuerat-kysely
+                         :vastaus-spec ::paallystyksen-maksuerat/hae-paallystyksen-maksuerat-vastaus})
       (julkaise-palvelu http :tallenna-paallystyksen-maksuerat
                         (fn [user tiedot]
                           (tallenna-urakan-maksuerat db user tiedot)))
