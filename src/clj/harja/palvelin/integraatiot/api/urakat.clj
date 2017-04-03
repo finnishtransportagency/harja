@@ -46,7 +46,7 @@
     :materiaalit (hae-materiaalit db)
     :tehtavat (hae-tehtavat db)}})
 
-(defn muodosta-vastaus-organisaation-urakoiden-haulle [urakat]
+(defn muodosta-vastaus-urakoiden-haulle [urakat]
   {:urakat (mapv (fn [urakka] {:urakka {:tiedot (urakan-tiedot urakka)}}) urakat)})
 
 (defn hae-urakka-idlla [db {:keys [id]} kayttaja]
@@ -55,6 +55,12 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [urakka (some->> urakka-id (q-urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
+
+(defn hae-urakat [db kayttaja-id]
+  (log/debug (format "Haetaan käyttäjän: %s urajat" kayttaja-id))
+  (muodosta-vastaus-urakoiden-haulle
+    (konv/vector-mappien-alaviiva->rakenne
+      (q-urakat/hae-jarjestelmakayttajan-urakat db kayttaja-id))))
 
 (defn hae-urakka-ytunnuksella [db parametrit {:keys [kayttajanimi] :as kayttaja}]
   (parametrivalidointi/tarkista-parametrit parametrit {:ytunnus "Y-tunnus puuttuu"})
@@ -65,7 +71,7 @@
           erillisoikeus-urakat (filter (fn [eu] (not-any? (fn [ou] (= (:id ou) (:id eu))) organisaation-urakat))
                                        (q-urakat/hae-urakat-joihin-jarjestelmalla-erillisoikeus db kayttajanimi))
           urakat (konv/vector-mappien-alaviiva->rakenne (into organisaation-urakat erillisoikeus-urakat))]
-      (muodosta-vastaus-organisaation-urakoiden-haulle urakat))))
+      (muodosta-vastaus-urakoiden-haulle urakat))))
 
 (def hakutyypit
   [{:palvelu :hae-urakka
@@ -73,6 +79,11 @@
     :vastaus-skeema json-skeemat/urakan-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-urakka-idlla db parametrit kayttaja-id))}
+   {:palvelu :hae-urakat
+    :polku "/api/urakat/haku/"
+    :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
+    :kasittely-fn (fn [_ _ kayttaja-id db]
+                    (hae-urakat db kayttaja-id))}
    {:palvelu :hae-urakka-ytunnuksella
     :polku "/api/urakat/haku/:ytunnus"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
@@ -90,5 +101,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella)
+    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella :hae-urakat)
     this))

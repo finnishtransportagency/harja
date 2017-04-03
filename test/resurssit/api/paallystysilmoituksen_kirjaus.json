@@ -1,87 +1,94 @@
 {
   "otsikko": {
     "lahettaja": {
-      "jarjestelma": "Urakoitsijan järjestelmä",
       "organisaatio": {
-        "nimi": "Urakoitsija",
-        "ytunnus": "1234567-8"
-      }
+        "nimi": "Asfalttivasara Oy",
+        "ytunnus": "2771178-5"
+      },
+      "jarjestelma": "Lumecom ProRoad"
     },
     "viestintunniste": {
-      "id": 123
+      "id": 25
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2017-03-30T12:46:14+02:00"
   },
-
   "paallystysilmoitus": {
     "perustiedot": {
-      "takuupvm": "2015-02-15T12:00:00Z"
+      "takuupvm": "2019-07-26T00:00:00+02:00"
     },
     "yllapitokohde": {
       "sijainti": {
-        "aosa": 1,
-        "aet": 1,
-        "losa": 5,
-        "let": 16,
-        "ajr": 1,
-        "kaista": 1
+        "aosa": 9,
+        "aet": 1361,
+        "losa": 10,
+        "let": 10116
       },
       "alikohteet": [
         {
           "alikohde": {
-            "nimi": "1. testialikohde",
-            "tunnus": "A",
+            "nimi": "Testialikohde 1\/A",
+            "tunnus": "",
             "sijainti": {
-              "aosa": 1,
-              "aet": 1,
-              "losa": 5,
-              "let": 16,
-              "ajr": 1,
-              "kaista": 1
+              "aosa": 1361,
+              "aet": 9,
+              "losa": 5000,
+              "let": 9
             },
-            "paallystetyyppi": "avoin asfaltti",
-            "raekoko": 12,
-            "massamenekki": 22,
-            "rc-prosentti": 54,
-            "tyomenetelma": "Uraremix",
-            "leveys": 1.2,
-            "kokonaismassamaara": 12.3,
-            "pinta-ala": 2.2,
-            "kuulamylly": "N14",
+            "paallystetyyppi": "asfalttibetoni",
+            "raekoko": 16,
+            "massamenekki": 0,
+            "rc-prosentti": 50,
+            "tyomenetelma": "Massapintaus",
+            "leveys": 1675,
+            "kokonaismassamaara": 0,
+            "pinta-ala": 1862,
+            "kuulamylly": "N30",
             "kivi-ja-sideaineet": [
               {
                 "kivi-ja-sideaine": {
-                  "esiintyma": "testi",
-                  "km-arvo": "testi",
-                  "muotoarvo": "testi",
-                  "sideainetyyppi": "20/30",
-                  "pitoisuus": 1.2,
-                  "lisa-aineet": "lisäaineet"
+                  "km-arvo": "N30",
+                  "muotoarvo": "",
+                  "sideainetyyppi": "70\/100",
+                  "pitoisuus": 5,
+                  "lisa-aineet": "-"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "alikohde": {
+            "nimi": "Testialikohde 1\/B",
+            "tunnus": "",
+            "sijainti": {
+              "aosa": 5000,
+              "aet": 9,
+              "losa": 10116,
+              "let": 10
+            },
+            "paallystetyyppi": "asfalttibetoni",
+            "raekoko": 16,
+            "massamenekki": 0,
+            "rc-prosentti": 50,
+            "tyomenetelma": "Massapintaus",
+            "leveys": 2513,
+            "kokonaismassamaara": 0,
+            "pinta-ala": 419,
+            "kuulamylly": "N30",
+            "kivi-ja-sideaineet": [
+              {
+                "kivi-ja-sideaine": {
+                  "km-arvo": "N30",
+                  "muotoarvo": "",
+                  "sideainetyyppi": "70\/100",
+                  "pitoisuus": 5,
+                  "lisa-aineet": ""
                 }
               }
             ]
           }
         }
       ]
-    },
-    "alustatoimenpiteet": [
-      {
-        "alustatoimenpide": {
-          "sijainti": {
-            "aosa": 1,
-            "aet": 1,
-            "losa": 5,
-            "let": 15
-          },
-          "kasittelymenetelma": "Massanvaihto",
-          "paksuus": 1,
-          "verkkotyyppi": "Teräsverkko",
-          "verkon-tarkoitus": "Moniongelmaisen tukeminen",
-          "verkon-sijainti": "Päällysteessä",
-          "tekninen-toimenpide": "Rakentaminen"
-        }
-      }
-    ]
-  },
-  "valmis-kasiteltavaksi": __VALMIS__
+    }
+  }
 }
