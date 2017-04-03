@@ -52,17 +52,17 @@
                   vastaus
                   {:maksuera :maksuerat}
                   :yllapitokohde-id)]
+    (log/debug "Palautetaan maksuerät: " vastaus)
     vastaus))
 
 (defn tallenna-urakan-maksuerat
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (log/debug "Tallennetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-  ;; TODO Tarvinnee omat tarkistukset sille, mitä urakoitsija ja tilaaja saa tallentaa
   #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [maksuerarivi maksuerat]
-      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:yllapitokohde-id maksuerarivi)))
+    (doseq [yllapitokohde yllapitokohteet]
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:yllapitokohde-id yllapitokohde)))
 
     (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
           voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
@@ -72,26 +72,26 @@
                                      kohteen-maksuerat)))
                             yllapitokohteet)]
       (doseq [maksuera maksuerat]
-        (if (:maksuera-id maksuerarivi)
+        (if (:maksuera-id maksuera)
           (let [nykyinen-rivi-kannassa
                 (first (into []
                              (comp
                                (map #(konv/array->vec % :maksuerat)))
-                             (q/hae-urakan-maksuera db {:id (:maksuera-id maksuerarivi)})))]
-            (q/paivita-maksuera<! db {:id (:maksuera-id maksuerarivi)
+                             (q/hae-urakan-maksuera db {:id (:maksuera-id maksuera)})))]
+            (q/paivita-maksuera<! db {:id (:maksuera-id maksuera)
                                       :maksuerat (if voi-tayttaa-maksuerat?
-                                                   (konv/seq->array (:maksuerat maksuerarivi))
+                                                   (konv/seq->array (:maksuerat maksuera))
                                                    (:maksuerat nykyinen-rivi-kannassa))
                                       :maksueratunnus (if voi-tayttaa-maksueratunnuksen?
-                                                        (:maksueratunnus maksuerarivi)
+                                                        (:maksueratunnus maksuera)
                                                         (:maksueratunnus nykyinen-rivi-kannassa))}))
 
-          (q/luo-maksuera<! db {:yllapitokohde (:yllapitokohde-id maksuerarivi)
+          (q/luo-maksuera<! db {:yllapitokohde (:yllapitokohde-id maksuera)
                                 :maksuerat (konv/seq->array (if voi-tayttaa-maksuerat?
-                                                              (:maksuerat maksuerarivi)
+                                                              (:maksuerat maksuera)
                                                               []))
                                 :maksueratunnus (when voi-tayttaa-maksueratunnuksen?
-                                                  (:maksueratunnus maksuerarivi))}))))
+                                                  (:maksueratunnus maksuera))}))))
 
     (hae-urakan-maksuerat db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id

@@ -270,8 +270,7 @@ SELECT
   ypk.tr_numero as "tr-numero",
   ym.id as "maksuera_id",
   ym.sisalto as "maksuera_sisalto",
-  ym.maksueranumero as "maksuera_maksueranumero",
-  ym.maksueratunnus as "maksuera_maksueratunnus"
+  ym.maksueranumero as "maksuera_maksueranumero"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
@@ -282,13 +281,12 @@ WHERE ypk.urakka = :urakka
 
 -- name: hae-urakan-maksuera
 SELECT
-  ym.id as "maksuera-id",
+  ym.sisalto,
+  ym.maksueranumero,
   ypk.id as "yllapitokohde-id",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.tr_numero as "tr-numero",
-  ym.maksuerat,
-  maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
 WHERE ym.id = :id
