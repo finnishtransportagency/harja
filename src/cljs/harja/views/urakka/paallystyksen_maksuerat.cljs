@@ -79,7 +79,6 @@
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-            ;; TODO Maksuerätunnuksen tallennus puuttuu. Ei ole maksueräkohtainen, omaan tauluun?
            {:otsikko "Laskutuksen maksuerätunnus" :leveys 10 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat

@@ -149,6 +149,8 @@ INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 1, 'Puolet');
 INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 2, 'Puolet');
+INSERT INTO yllapitokohteen_maksueratunnus (yllapitokohde, maksueratunnus)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 'TUNNUS123');
 INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 1, '1/3');
 INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)

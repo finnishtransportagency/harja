@@ -270,9 +270,11 @@ SELECT
   ypk.tr_numero     AS "tr-numero",
   ym.id             AS "maksuera_id",
   ym.sisalto        AS "maksuera_sisalto",
-  ym.maksueranumero AS "maksuera_maksueranumero"
+  ym.maksueranumero AS "maksuera_maksueranumero",
+  ymt.maksueratunnus
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_maksueratunnus ymt ON ymt.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
       AND ypk.sopimus = :sopimus
       AND ypk.poistettu IS NOT TRUE
