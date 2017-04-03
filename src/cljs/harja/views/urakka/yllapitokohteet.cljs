@@ -694,7 +694,7 @@
                                     :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
                                     :bitumi-indeksi bitumi-indeksi-yhteensa
                                     :kaasuindeksi kaasuindeksi-yhteensa})
-                                 muut-yhteensa)]
+                                 (or muut-yhteensa 0))]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
