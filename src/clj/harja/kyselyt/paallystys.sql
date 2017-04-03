@@ -295,11 +295,11 @@ WHERE ym.id = :id
       AND ypk.poistettu IS NOT TRUE;
 
 -- name: luo-maksuera<!
-INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksuerat, maksueratunnus)
-VALUES (:yllapitokohde, :maksuerat::varchar[512], :maksueratunnus);
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES (:yllapitokohde, :maksueranumero, :sisalto);
 
 -- name: paivita-maksuera<!
 UPDATE yllapitokohteen_maksuera SET
-maksuerat = :maksuerat::varchar[512],
-maksueratunnus = :maksueratunnus
+maksueranumero = :maksueranumero,
+sisalto = :sisalto
 WHERE id = :id;

@@ -84,12 +84,12 @@
           (when-not (k/virhe? maksuerat)
             (tulos! maksuerat-grid-muodossa))))))
 
-(defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi maksuerat]}]
+(defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (let [tulos! (t/send-async! ->MaksueratTallennettu)]
     (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {:urakka-id urakka-id
                                                                       :sopimus-id sopimus-id
                                                                       :vuosi vuosi
-                                                                      :maksuerat maksuerat}))]
+                                                                      :yllapitokohteet yllapitokohteet}))]
           (if (k/virhe? vastaus)
             (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
             (tulos! (mapv maksuerarivi-grid-muotoon vastaus)))))))
@@ -118,7 +118,7 @@
     (tallenna-maksuerat {:urakka-id (:urakka-id parametrit)
                          :sopimus-id (:sopimus-id parametrit)
                          :vuosi (:vuosi parametrit)
-                         :maksuerat (:maksuerat parametrit)})
+                         :yllapitokohteet (:yllapitokohteet parametrit)})
     tila)
 
   MaksueratTallennettu

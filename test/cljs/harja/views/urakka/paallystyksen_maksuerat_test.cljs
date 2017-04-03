@@ -9,9 +9,9 @@
 
 (deftest maksuerien-muunto-grid-muotoon-toimi
   (is (= (maksuerat/maksuerarivi-grid-muotoon
-           {:maksuerat [{:sisalto "Kolmas erä" :maksueranumero 3}
-                        {:sisalto "Eka erä" :maksueranumero 1}
-                        {:sisalto "Toka erä" :maksueranumero 2}]})
+           {:maksuerat [{:id 1 :sisalto "Kolmas erä" :maksueranumero 3}
+                        {:id 2 :sisalto "Eka erä" :maksueranumero 1}
+                        {:id 3 :sisalto "Toka erä" :maksueranumero 2}]})
          {:maksuera1 "Eka erä" :maksuera2 "Toka erä" :maksuera3 "Kolmas erä"}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:maksuerat [{:sisalto "Kolmas erä" :maksueranumero 3}

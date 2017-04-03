@@ -3,8 +3,7 @@ CREATE TABLE yllapitokohteen_maksuera (
   id SERIAL PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   maksueranumero INT NOT NULL,
-  sisalto VARCHAR(512), -- Maksuerän tiedot, tekstikenttä
-  maksueratunnus VARCHAR (512)
+  sisalto VARCHAR(512) -- Maksuerän tiedot, tekstikenttä
 );
 
 ALTER TABLE yllapitokohteen_maksuera ADD CONSTRAINT uniikki_maksueranumero UNIQUE (yllapitokohde, maksueranumero);

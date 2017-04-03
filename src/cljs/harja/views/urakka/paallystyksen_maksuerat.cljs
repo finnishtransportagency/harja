@@ -52,7 +52,7 @@
            :tallenna (if voi-muokata?
                        #(go (e! (tiedot/->TallennaMaksuerat
                                   (merge valinnat
-                                         {:maksuerat (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
+                                         {:yllapitokohteet (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
                             (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
                        :ei-mahdollinen)
            :tunniste :yllapitokohde-id
@@ -70,15 +70,15 @@
            ;; jolla voidaan laskea kokonaishinta helposti (palvelu voi laskea valmiiksi, koska readonly
            ;; eikä muutu tässä näkymässä)
            {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
-            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+            :fmt :sisalto :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "2. maksuerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512
-            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+            :fmt :sisalto :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "3. maksuerä" :leveys 10 :nimi :maksuera3 :tyyppi :string :pituus-max 512
-            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+            :fmt :sisalto :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "4. maksuerä" :leveys 10 :nimi :maksuera4 :tyyppi :string :pituus-max 512
-            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+            :fmt :sisalto :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
-            :muokattava? (constantly voi-tayttaa-maksuerat?)}
+            :fmt :sisalto :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "Laskutuksen maksuerätunnus" :leveys 10 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat

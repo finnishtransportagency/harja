@@ -55,7 +55,7 @@
     vastaus))
 
 (defn tallenna-urakan-maksuerat
-  [db user {:keys [urakka-id sopimus-id vuosi maksuerat]}]
+  [db user {:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (log/debug "Tallennetaan päällystyksen maksuerät")
   ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
   ;; TODO Tarvinnee omat tarkistukset sille, mitä urakoitsija ja tilaaja saa tallentaa
@@ -66,8 +66,12 @@
 
     (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
           voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-          ]
-      (doseq [maksuerarivi maksuerat]
+          maksuerat (mapcat (fn [yllapitokohde]
+                              (let [kohteen-maksuerat (:maksuerat yllapitokohde)]
+                                (map #(assoc % :yllapitokohde-id (:yllapitokohde-id yllapitokohde))
+                                     kohteen-maksuerat)))
+                            yllapitokohteet)]
+      (doseq [maksuera maksuerat]
         (if (:maksuera-id maksuerarivi)
           (let [nykyinen-rivi-kannassa
                 (first (into []
