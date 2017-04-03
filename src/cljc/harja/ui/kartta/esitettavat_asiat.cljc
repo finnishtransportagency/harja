@@ -7,7 +7,7 @@
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.domain.ilmoitukset :as ilmoitukset]
+            [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
             [harja.pvm :as pvm]
