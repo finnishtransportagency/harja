@@ -983,7 +983,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
               kartta? @karttavalinta-kaynnissa
-              valinta-kaynnissa? @karttavalinta-kaynnissa]
+              valinta-kaynnissa? @karttavalinta-kaynnissa
+
+              normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+                           {numero-avain numero
+                            alkuosa-avain alkuosa
+                            alkuetaisyys-avain alkuetaisyys
+                            loppuosa-avain loppuosa
+                            loppuetaisyys-avain loppuetaisyys})]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
@@ -1015,9 +1022,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
                                                   (reset! karttavalinta-kaynnissa false))
-                                  :paivita #(swap! data merge %)
+                                  :paivita #(swap! data merge (normalisoi %))
                                   :kun-valmis #(do
-                                                 (reset! data %)
+                                                 (reset! data (normalisoi %))
                                                  (reset! karttavalinta-kaynnissa false)
                                                  (log "Saatiin tr-osoite! " (pr-str %))
                                                  (go (>! tr-osoite-ch %)))}])
