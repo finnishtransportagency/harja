@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Ylläpitokohteen maksuerät
 
 CREATE TABLE yllapitokohteen_maksuera (
@@ -17,7 +16,3 @@ CREATE TABLE yllapitokohteen_maksueratunnus (
   yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL UNIQUE,
   maksueratunnus VARCHAR(512)
 );
-
-=======
-ALTER TABLE tietyoilmoitus RENAME COLUMN "ajoittaiset-pysatykset" TO "ajoittaiset-pysaytykset";
->>>>>>> develop

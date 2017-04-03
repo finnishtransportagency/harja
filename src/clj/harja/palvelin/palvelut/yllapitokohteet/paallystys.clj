@@ -23,7 +23,9 @@
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -34,6 +36,76 @@
                       (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
+
+(defn hae-urakan-maksuerat
+  "Hakee hakuparametreihin osuvien ylläpitokohteiden maksuerät.
+   Palauttaa myös sellaiset ylläpitokohteet, joilla ei ole maksuerää."
+  [db user {:keys [urakka-id sopimus-id vuosi]}]
+  (log/debug "Haetaan päällystyksen maksuerät")
+  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+  #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
+  (let [vastaus (into []
+                      (comp
+                        (map konversio/alaviiva->rakenne))
+                      (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
+        vastaus (konv/sarakkeet-vektoriin
+                  vastaus
+                  {:maksuera :maksuerat}
+                  :yllapitokohde-id)]
+    (log/debug "Palautetaan maksuerät: " vastaus)
+    vastaus))
+
+(defn- tallenna-maksuerat [db yllapitokohteet]
+  (let [maksuerat (mapcat (fn [yllapitokohde]
+                            (let [kohteen-maksuerat (:maksuerat yllapitokohde)]
+                              (map #(assoc % :yllapitokohde-id (:yllapitokohde-id yllapitokohde))
+                                   kohteen-maksuerat)))
+                          yllapitokohteet)]
+    (doseq [maksuera maksuerat]
+      (let [nykyinen-maksuera-kannassa (first (q/hae-yllapitokohteen-maksuera
+                                                db
+                                                {:yllapitokohde (:yllapitokohde-id maksuera)
+                                                 :maksueranumero (:maksueranumero maksuera)}))
+            maksuera-params {:sisalto (:sisalto maksuera)
+                             :yllapitokohde (:yllapitokohde-id maksuera)
+                             :maksueranumero (:maksueranumero maksuera)}]
+        (if nykyinen-maksuera-kannassa
+          (q/paivita-maksuera<! db maksuera-params)
+          (q/luo-maksuera<! db maksuera-params))))))
+
+(defn- tallenna-maksueratunnus [db yllapitokohteet]
+  (doseq [yllapitokohde yllapitokohteet]
+    (let [nykyinen-maksueratunnus-kannassa (first (q/hae-yllapitokohteen-maksueratunnus
+                                                    db
+                                                    {:yllapitokohde (:yllapitokohde-id yllapitokohde)}))
+          maksueratunnus-params {:maksueratunnus (:maksueratunnus yllapitokohde)
+                                 :yllapitokohde (:yllapitokohde-id yllapitokohde)}]
+      (if nykyinen-maksueratunnus-kannassa
+        (q/paivita-maksueratunnus<! db maksueratunnus-params)
+        (q/luo-maksueratunnus<! db maksueratunnus-params)))))
+
+(defn tallenna-urakan-maksuerat
+  [db user {:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
+  (log/debug "Tallennetaan päällystyksen maksuerät")
+  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+  #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (doseq [yllapitokohde yllapitokohteet]
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:yllapitokohde-id yllapitokohde)))
+
+    (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+          voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+          ]
+
+      (when voi-tayttaa-maksuerat?
+        (tallenna-maksuerat db yllapitokohteet))
+
+      (when voi-tayttaa-maksueratunnuksen?
+        (tallenna-maksueratunnus db yllapitokohteet)))
+
+    (hae-urakan-maksuerat db user {:urakka-id urakka-id
+                                   :sopimus-id sopimus-id
+                                   :vuosi vuosi})))
 
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
   "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
@@ -361,8 +433,8 @@
         (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                                    :sopimus-id sopimus-id
                                                                                    :vuosi vuosi})
-              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
-                                                                          :sopimus-id sopimus-id})]
+              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
+                                                                           :sopimus-id sopimus-id})]
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
@@ -380,6 +452,12 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :hae-paallystyksen-maksuerat
+                        (fn [user tiedot]
+                          (hae-urakan-maksuerat db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystyksen-maksuerat
+                        (fn [user tiedot]
+                          (tallenna-urakan-maksuerat db user tiedot)))
       this))
 
   (stop [this]
