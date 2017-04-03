@@ -362,7 +362,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                   valitse-fn
                   (fn [data valinta valittu?]
                     (if valittu?
-                      (conj data valinta)
+                      (conj (or data #{}) valinta)
                       (disj data valinta))))]
     [:div.boolean-group
      (when tyhjenna-kaikki?
