@@ -145,9 +145,9 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN'));
 
 
-INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksuerat, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), '{Puolet, Puolet}'::varchar[512], 'TUNNUS1');
-INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksuerat, maksueratunnus)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), '{1/3, 1/3, 1/3}'::varchar[512], 'TUNNUS2');
 
 

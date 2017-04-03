@@ -272,7 +272,7 @@ SELECT
   ym.maksuerat,
   maksueratunnus
 FROM yllapitokohde ypk
-  LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
       AND ypk.sopimus = :sopimus
       AND ypk.poistettu IS NOT TRUE
@@ -289,16 +289,16 @@ SELECT
   ym.maksuerat,
   maksueratunnus
 FROM yllapitokohde ypk
-  LEFT JOIN yllapitokohteen_maksuerat ym ON ym.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
 WHERE ym.id = :id
       AND ypk.poistettu IS NOT TRUE;
 
 -- name: luo-maksuera<!
-INSERT INTO yllapitokohteen_maksuerat (yllapitokohde, maksuerat, maksueratunnus)
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksuerat, maksueratunnus)
 VALUES (:yllapitokohde, :maksuerat::varchar[512], :maksueratunnus);
 
 -- name: paivita-maksuera<!
-UPDATE yllapitokohteen_maksuerat SET
+UPDATE yllapitokohteen_maksuera SET
 maksuerat = :maksuerat::varchar[512],
 maksueratunnus = :maksueratunnus
 WHERE id = :id;

@@ -26,8 +26,8 @@ E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetukse
 
  Jokaisella ylläpitokohteella tulisi olla vastinpari tässä taulussa (edes tyhjä rivi ilman mitään aikataulutietoja), mikäli sen aikataulutietoja aiotaan käsitellä';
 
-COMMENT ON TABLE yllapitokohteen_maksuerat IS
-E'Yksi rivi tässä taulussa sisältää ylläpitokohteeseen kuuluvat maksuerät. Maksuerät esitetään maksuerat-sarakkeessa, joka on taulukko. Järjestyksellä on väliä, ensimmäinen item on ensimmäinen maksuerä, toinen toinen jne. Maksuerä kuvastaa urakoitsijan tekemää ehdotusta ylläpitokohteen maksueristä. Tilaaja täyttää maksuerätunnuksen.';
+COMMENT ON TABLE yllapitokohteen_maksuera IS
+E'Sisältää ylläpitokohteeseen kuuluvien maksuerien tiedot (yksi rivi = yksi maksuerä). Maksuerä kuvastaa urakoitsijan tekemää ehdotusta ylläpitokohteen maksueristä. Tilaaja täyttää maksuerätunnuksen.';
 
 -- Ylläpito (päällystys)
 
