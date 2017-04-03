@@ -5,6 +5,9 @@
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
+            [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [harja.pvm :as pvm]
@@ -556,3 +559,17 @@
                                    {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
                                     :paallystysilmoitus paallystysilmoitus}))))))
+
+(deftest yllapitokohteiden-maksuerien-haku-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-paallystyksen-maksuerat
+                                +kayttaja-jvh+
+                                {::urakka-domain/id urakka-id
+                                 ::sopimus-domain/id sopimus-id
+                                 ::urakka-domain/vuosi 2017})
+        leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
+    (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+    (is (== (:kokonaishinta leppajarven-ramppi) 7248.95))
+    (is (count (:maksuerat leppajarven-ramppi) 2))))
