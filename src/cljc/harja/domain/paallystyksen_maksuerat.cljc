@@ -22,13 +22,15 @@
                           :opt-un [::id ::sisalto]))
 (s/def ::maksuerat (s/coll-of ::maksuera))
 
+(s/def ::tr-numero ::tierekisteri/numero)
+
 (s/def ::yllapitokohde-maksuerineen
   (s/keys :req-un [::yllapitokohde/id
                    ::yllapitokohde/kohdenumero
                    ::yllapitokohde/nimi
                    ::yllapitokohde/kokonaishinta
                    ::maksuerat
-                   ::tierekisteri/numero]
+                   ::tr-numero]
           :opt-un [::maksueratunnus]))
 
 ;; Haut
