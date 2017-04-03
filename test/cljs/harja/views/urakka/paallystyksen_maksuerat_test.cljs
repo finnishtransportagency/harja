@@ -9,13 +9,13 @@
 
 (deftest maksuerien-muunto-grid-muotoon-toimi
   (is (= (maksuerat/maksuerarivi-grid-muotoon
-           {:maksuerat [{:maksuera "Kolmas erä" :maksueranumero 3}
-                        {:maksuera "Eka erä" :maksueranumero 1}
-                        {:maksuera "Toka erä" :maksueranumero 2}]})
+           {:maksuerat [{:sisalto "Kolmas erä" :maksueranumero 3}
+                        {:sisalto "Eka erä" :maksueranumero 1}
+                        {:sisalto "Toka erä" :maksueranumero 2}]})
          {:maksuera1 "Eka erä" :maksuera2 "Toka erä" :maksuera3 "Kolmas erä"}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
-           {:maksuerat [{:maksuera "Kolmas erä" :maksueranumero 3}
-                        {:maksuera "Toka erä" :maksueranumero 2}]})
+           {:maksuerat [{:sisalto "Kolmas erä" :maksueranumero 3}
+                        {:sisalto "Toka erä" :maksueranumero 2}]})
          {:maksuera1 "Eka erä" :maksuera3 "Kolmas erä"}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:yllapitokohde-id 1 :maksuerat []})
@@ -27,18 +27,18 @@
 (deftest maksuerien-muunto-tallennusmuotoon-toimi
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            {:maksuera3 "Ylimääräinen" :maksuera1 "Eka puolikas" :maksuera2 "Toka puolikas"})
-         {:maksuerat [{:maksuera "Eka puolikas" :maksueranumero 1}
-                      {:maksuera "Toka puolikas" :maksueranumero 2}
-                      {:maksuera "Ylimääräinen" :maksueranumero 3}]}))
+         {:maksuerat [{:sisalto "Eka puolikas" :maksueranumero 1}
+                      {:sisalto "Toka puolikas" :maksueranumero 2}
+                      {:sisalto "Ylimääräinen" :maksueranumero 3}]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            ;; Käyttäjä syöttää kolmannen maksuerän, ei muita
            {:maksuera3 "Ylimääräinen"})
-         {:maksuerat {:maksuera "Ylimääräinen" :maksueranumero 3}}))
+         {:maksuerat {:sisalto "Ylimääräinen" :maksueranumero 3}}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            ;; Käyttäjä syöttää ensimmäisen ja kolmannen maksuerän, ei muita
            {:maksuera3 "Ylimääräinen" :maksuera1 "Joku maksuerä"})
-         {:maksuerat [{:maksuera "Joku maksuerä" :maksueranumero 1}
-                      {:maksuera "Ylimääräinen" :maksueranumero 3}]}))
+         {:maksuerat [{:sisalto "Joku maksuerä" :maksueranumero 1}
+                      {:sisalto "Ylimääräinen" :maksueranumero 3}]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon {:yllapitokohde-id 1})
          {:yllapitokohde-id 1 :maksuerat []})))
 
