@@ -305,3 +305,19 @@ SET
   maksueranumero = :maksueranumero
 WHERE yllapitokohde = :yllapitokohde
       AND maksueranumero = :maksueranumero;
+
+-- name: hae-yllapitokohteen-maksueratunnus
+SELECT
+  maksueratunnus
+FROM yllapitokohteen_maksueratunnus
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: luo-maksueratunnus<!
+INSERT INTO yllapitokohteen_maksueratunnus (yllapitokohde, maksueratunnus)
+VALUES (:yllapitokohde, :maksueratunnus);
+
+-- name: paivita-maksueratunnus<!
+UPDATE yllapitokohteen_maksueratunnus
+SET
+  maksueratunnus = :maksueratunnus
+WHERE yllapitokohde = :yllapitokohde

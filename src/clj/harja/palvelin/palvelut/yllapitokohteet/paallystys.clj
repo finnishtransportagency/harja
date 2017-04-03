@@ -55,6 +55,35 @@
     (log/debug "Palautetaan maksuerät: " vastaus)
     vastaus))
 
+(defn- tallenna-maksuerat [db yllapitokohteet]
+  (let [maksuerat (mapcat (fn [yllapitokohde]
+                            (let [kohteen-maksuerat (:maksuerat yllapitokohde)]
+                              (map #(assoc % :yllapitokohde-id (:yllapitokohde-id yllapitokohde))
+                                   kohteen-maksuerat)))
+                          yllapitokohteet)]
+    (doseq [maksuera maksuerat]
+      (let [nykyinen-maksuera-kannassa (first (q/hae-yllapitokohteen-maksuera
+                                                db
+                                                {:yllapitokohde (:yllapitokohde-id maksuera)
+                                                 :maksueranumero (:maksueranumero maksuera)}))
+            maksuera-params {:sisalto (:sisalto maksuera)
+                             :yllapitokohde (:yllapitokohde-id maksuera)
+                             :maksueranumero (:maksueranumero maksuera)}]
+        (if nykyinen-maksuera-kannassa
+          (q/paivita-maksuera<! db maksuera-params)
+          (q/luo-maksuera<! db maksuera-params))))))
+
+(defn- tallenna-maksueratunnus [db yllapitokohteet]
+  (doseq [yllapitokohde yllapitokohteet]
+    (let [nykyinen-maksueratunnus-kannassa (first (q/hae-yllapitokohteen-maksueratunnus
+                                                    db
+                                                    {:yllapitokohde (:yllapitokohde-id yllapitokohde)}))
+          maksueratunnus-params {:maksueratunnus (:maksueratunnus yllapitokohde)
+                                 :yllapitokohde (:yllapitokohde-id yllapitokohde)}]
+      (if nykyinen-maksueratunnus-kannassa
+        (q/paivita-maksueratunnus<! db maksueratunnus-params)
+        (q/luo-maksueratunnus<! db maksueratunnus-params)))))
+
 (defn tallenna-urakan-maksuerat
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (log/debug "Tallennetaan päällystyksen maksuerät")
@@ -66,27 +95,13 @@
 
     (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
           voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-          maksuerat (mapcat (fn [yllapitokohde]
-                              (let [kohteen-maksuerat (:maksuerat yllapitokohde)]
-                                (map #(assoc % :yllapitokohde-id (:yllapitokohde-id yllapitokohde))
-                                     kohteen-maksuerat)))
-                            yllapitokohteet)]
+          ]
 
-      ;; Tallennetaan maksuerät
       (when voi-tayttaa-maksuerat?
-        (doseq [maksuera maksuerat]
-          (let [nykyinen-maksuera-kannassa (first (q/hae-yllapitokohteen-maksuera
-                                                    db
-                                                    {:yllapitokohde (:yllapitokohde-id maksuera)
-                                                     :maksueranumero (:maksueranumero maksuera)}))
-                maksuera-params {:sisalto (:sisalto maksuera)
-                                 :yllapitokohde (:yllapitokohde-id maksuera)
-                                 :maksueranumero (:maksueranumero maksuera)}]
-            (log/debug "Käsitellään maksuerä: " (pr-str maksuera))
-            (log/debug "Onko kannassa?" (boolean nykyinen-maksuera-kannassa))
-            (if nykyinen-maksuera-kannassa
-              (q/paivita-maksuera<! db maksuera-params)
-              (q/luo-maksuera<! db maksuera-params))))))
+        (tallenna-maksuerat db yllapitokohteet))
+
+      (when voi-tayttaa-maksueratunnuksen?
+        (tallenna-maksueratunnus db yllapitokohteet)))
 
     (hae-urakan-maksuerat db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
