@@ -274,7 +274,7 @@
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
-    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
+    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 7043.95))
     (is (= (:maaramuutokset-ennustettu? paallystysilmoitus-kannassa) true))
     (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
     (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
@@ -340,6 +340,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+        (is (== (:kokonaishinta paallystysilmoitus-kannassa) 3968))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234

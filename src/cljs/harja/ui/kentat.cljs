@@ -362,7 +362,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                   valitse-fn
                   (fn [data valinta valittu?]
                     (if valittu?
-                      (conj data valinta)
+                      (conj (or data #{}) valinta)
                       (disj data valinta))))]
     [:div.boolean-group
      (when tyhjenna-kaikki?
@@ -917,7 +917,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  (fn [tr-osoite-ch virheet osoite]
                    (hae-tr tr-osoite-ch virheet
                            (zipmap tr-osoite-raaka-avaimet
-                                   (map #(osoite %) avaimet))))
+                                   (map #(when osoite (osoite %)) avaimet))))
                  hae-tr)
 
         tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]

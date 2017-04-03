@@ -51,7 +51,7 @@
         tulos-jvh (group-by :id tulos-kaikki-jvh)
         tulos-tero (group-by :id (kutsu +kayttaja-tero+ parametrit))]
     (is (= tulos-jvh tulos-tero) "Kaikki tilaajan käyttäjät saavat saman tuloksen")
-    (is (= 5 (count tulos-jvh)))
+    (is (= 6 (count tulos-jvh)))
 
     (testing "Palautettu data on validia: infopaneelin tarvitsemat tiedot löytyvät"
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? tulos-kaikki-jvh)))))

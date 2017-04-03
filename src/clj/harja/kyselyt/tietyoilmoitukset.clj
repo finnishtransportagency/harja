@@ -9,6 +9,7 @@
             [harja.kyselyt.specql :refer [db]]
             [harja.domain.muokkaustiedot :as m]))
 
+
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
 (define-tables db
@@ -98,6 +99,7 @@
     ::t/kaistajarjestelyt
     ::t/nopeusrajoitukset
     ::t/tienpinnat
+    ::t/kiertotien-pituus
     ::t/kiertotien-mutkaisuus
     ::t/kiertotienpinnat
     ::t/liikenteenohjaus
@@ -106,7 +108,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
@@ -156,7 +158,7 @@
     ::t/viivastys-ruuhka-aikana
     ::t/ajoneuvorajoitukset
     ::t/huomautukset
-    ::t/ajoittaiset-pysatykset
+    ::t/ajoittaiset-pysaytykset
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
@@ -176,7 +178,8 @@
 
 (defn overlaps? [rivi-alku rivi-loppu alku loppu]
   (op/or {rivi-alku (op/between alku loppu)}
-         {rivi-loppu (op/between alku loppu)}))
+         {rivi-loppu (op/between alku loppu)}
+         {rivi-alku (op/<= alku) rivi-loppu (op/>= loppu)}))
 
 (defn interval? [start interval]
   (reify op/Op
@@ -226,6 +229,14 @@
            (when-not tilaaja?
              (when-not (empty? urakat)
                {::t/urakka-id (op/or op/null? (op/in urakat))})))))
+
+(defn hae-ilmoitukset-tienakymaan [db {:keys [alku
+                                              loppu
+                                              sijainti] :as tiedot}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
+         (op/and
+           (overlaps? ::t/alku ::t/loppu alku loppu)
+           {::t/osoite {::tr/geometria (intersects? 100 sijainti)}})))
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet

@@ -12,7 +12,8 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.domain.tierekisteri :as tr])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -92,7 +93,7 @@
 
 (defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
   (when
-    (and (:numero data) (:alkuosa data) (:alkuetaisyys data)
+    (and (tr/validi-osoite? data)
          (or (= 0 (:numero data)) (not (get-in taulukko reittipolku))))
     viesti))
 
@@ -217,9 +218,7 @@
                     skeema))))))))
 
 (defn tyhja-tr-osoite? [arvo]
-  (or (nil? (:numero arvo))
-      (nil? (:alkuosa arvo))
-      (nil? (:alkuetaisyys arvo))))
+  (not (tr/validi-osoite? arvo)))
 
 
 (defn tyhja-arvo? [arvo]
