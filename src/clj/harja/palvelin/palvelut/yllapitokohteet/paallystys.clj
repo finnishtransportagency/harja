@@ -218,11 +218,7 @@
                                  (assoc p :ilmoitustiedot
                                           (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
-        kokonaishinta-ilman-maaramuutoksia (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
-                                                                               :arvonvahennykset
-                                                                               :bitumi-indeksi
-                                                                               :sakot-ja-bonukset
-                                                                               :kaasuindeksi]))
+        kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
                               (map (fn [{:keys [liite] :as kommentti}]
