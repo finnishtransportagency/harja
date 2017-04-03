@@ -14,7 +14,7 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.valinnat :as valinnat]

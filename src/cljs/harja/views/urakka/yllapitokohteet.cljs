@@ -12,7 +12,7 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.paallystysilmoitus :as pot]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]

@@ -16,7 +16,7 @@
             [harja.ui.yleiset :as y]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -55,7 +55,6 @@
                                          {:yllapitokohteet (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
                             (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
                        :ei-mahdollinen)
-           :tunniste :yllapitokohde-id
            ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
            ;:tallennus-ei-mahdollinen-tooltip
            #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
@@ -66,9 +65,6 @@
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kokonaishinta" :leveys 5 :nimi :kokonaishinta
             :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
-           ;; TODO Hae kokonaishinta, yhdistä frontin ja API:n kokonaishinnan lasku yhdeksi funktioksi,
-           ;; jolla voidaan laskea kokonaishinta helposti (palvelu voi laskea valmiiksi, koska readonly
-           ;; eikä muutu tässä näkymässä)
            {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "2. maksuerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512
@@ -84,7 +80,7 @@
           (-> maksuerat
               (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
                                                         :kohdenumero (:kohdenumero valinnat)})
-              (yllapitokohteet-domain/jarjesta-yllapitokohteet))]]))))
+              (yllapitokohde-domain/jarjesta-yllapitokohteet))]]))))
 
 (defn maksuerat []
   (komp/luo

@@ -270,7 +270,7 @@ WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: hae-urakan-maksuerat
 SELECT
-  ypk.id            AS "yllapitokohde-id",
+  ypk.id,
   ypk.kohdenumero,
   ypk.nimi,
   ypk.tr_numero     AS "tr-numero",
@@ -299,7 +299,7 @@ GROUP BY ypk.id, ym.id, ymt.maksueratunnus;
 SELECT
   ym.sisalto,
   ym.maksueranumero,
-  ypk.id AS "yllapitokohde-id",
+  ypk.id,
   ypk.kohdenumero,
   ypk.nimi
 FROM yllapitokohde ypk

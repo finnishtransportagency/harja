@@ -89,9 +89,13 @@
 
 (defn- tallenna-maksuerat [{:keys [urakka-id sopimus-id vuosi yllapitokohteet]}]
   (let [tulos! (t/send-async! ->MaksueratTallennettu)]
-    (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {:urakka-id urakka-id
-                                                                      :sopimus-id sopimus-id
-                                                                      :vuosi vuosi
+    (log "ABOUT TO SAVE: " (pr-str {::urakka-domain/id urakka-id
+                                    ::sopimus-domain/id sopimus-id
+                                    ::urakka-domain/vuosi vuosi
+                                    :yllapitokohteet yllapitokohteet}))
+    (go (let [vastaus (<! (k/post! :tallenna-paallystyksen-maksuerat {::urakka-domain/id urakka-id
+                                                                      ::sopimus-domain/id sopimus-id
+                                                                      ::urakka-domain/vuosi vuosi
                                                                       :yllapitokohteet yllapitokohteet}))]
           (if (k/virhe? vastaus)
             (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)

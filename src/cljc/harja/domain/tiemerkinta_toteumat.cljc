@@ -4,7 +4,7 @@
     [clojure.spec :as s]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka]
-    [harja.domain.yllapitokohteet :as yllapitokohteet]
+    [harja.domain.yllapitokohde :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.tyokalut.spec-apurit :as apurit]
     #?@(:clj [[clojure.future :refer :all]])))

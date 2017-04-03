@@ -2,7 +2,7 @@
   (:require [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.loki :refer [log]]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (def testikohteet-kartalle
   [{:id 1

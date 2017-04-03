@@ -19,7 +19,7 @@
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]

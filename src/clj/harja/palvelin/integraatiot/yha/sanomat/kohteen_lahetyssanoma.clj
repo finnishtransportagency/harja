@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
   (:require [harja.tyokalut.xml :as xml]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))

@@ -11,7 +11,7 @@
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.yllapitokohteet :as kohteet]
+    [harja.domain.yllapitokohde :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 

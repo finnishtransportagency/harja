@@ -17,7 +17,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
             [clj-time.coerce :as c])
   (:use org.httpkit.fake))
