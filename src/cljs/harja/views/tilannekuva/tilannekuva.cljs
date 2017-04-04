@@ -356,8 +356,8 @@
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
                               {:toiminto (fn [yllapitokohdeosa]
-                                           (yllapito/yllapitokohteen-yhteyshenkilot-modal
-                                             (get-in yllapitokohdeosa [:yllapitokohde :yhteyshenkilot])))
+                                           (yllapito/nayta-yhteyshenkilot-modal!
+                                             (:yllapitokohde-id yllapitokohdeosa)))
                                :teksti "Näytä yhteyshenkilöt"}})
                            (tiedot/seuraa-alueita!))
                       #(do (kartta/aseta-paivitetaan-karttaa-tila! false)
