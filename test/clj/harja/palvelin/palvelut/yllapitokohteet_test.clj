@@ -17,7 +17,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
             [clj-time.coerce :as c])
   (:use org.httpkit.fake))
@@ -76,7 +76,7 @@
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
 
-(defn- kohde-nimella [kohteet nimi]
+(defn kohde-nimella [kohteet nimi]
   (first (filter #(= (:nimi %) nimi) kohteet)))
 
 (defn yllapitokohde-id-jolla-on-paallystysilmoitus []
