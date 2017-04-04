@@ -67,7 +67,6 @@
 
           "Maksuerät"
           :maksuerat
-          ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-          (when true ;; Käytä: (oikeudet/urakat-kohdeluettelo-maksuerat (:id ur))
+          (when (oikeudet/urakat-kohdeluettelo-maksuerat (:id ur))
             [maksuerat/maksuerat])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))

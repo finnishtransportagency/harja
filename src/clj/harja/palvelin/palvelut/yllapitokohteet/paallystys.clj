@@ -43,11 +43,10 @@
    Palauttaa myös sellaiset ylläpitokohteet, joilla ei ole maksuerää."
   [db user hakuparametrit]
   (log/debug "Haetaan päällystyksen maksuerät")
-  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-  #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
   (let [urakka-id (::urakka-domain/id hakuparametrit)
         sopimus-id (::sopimus-domain/id hakuparametrit)
         vuosi (::urakka-domain/vuosi hakuparametrit)
+        _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
         yllapitokohteet (into []
                               (comp
                                 (map konversio/alaviiva->rakenne))
@@ -103,18 +102,16 @@
 (defn tallenna-urakan-maksuerat
   [db user {:keys [yllapitokohteet] :as hakuparametrit}]
   (log/debug "Tallennetaan päällystyksen maksuerät")
-  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-  #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
   (let [urakka-id (::urakka-domain/id hakuparametrit)
         sopimus-id (::sopimus-domain/id hakuparametrit)
         vuosi (::urakka-domain/vuosi hakuparametrit)]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
     (jdbc/with-db-transaction [db db]
       (doseq [yllapitokohde yllapitokohteet]
         (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id yllapitokohde)))
 
-      (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-            voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksueratunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-            ]
+      (let [voi-tayttaa-maksuerat? (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+            voi-tayttaa-maksueratunnuksen? (oikeudet/on-muu-oikeus? "maksueratunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))]
 
         (when voi-tayttaa-maksuerat?
           (tallenna-maksuerat db yllapitokohteet))

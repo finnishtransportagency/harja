@@ -33,11 +33,9 @@
     (fn [e! {:keys [maksuerat valinnat] :as tila}]
       (let [valittu-urakka @nav/valittu-urakka
             urakka-id (:id valittu-urakka)
-            ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-            voi-muokata? true ; Käytä (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat urakka-id
-            voi-tayttaa-maksuerat? true ; Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
-            voi-tayttaa-maksueratunnuksen? true ; Käytä (oikeudet/on-muu-oikeus? "TM-takaraja" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
-            ]
+            voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
+            voi-tayttaa-maksuerat? (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
+            voi-tayttaa-maksueratunnuksen? (oikeudet/on-muu-oikeus? "maksueratunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)]
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
@@ -56,9 +54,8 @@
                                          {:yllapitokohteet (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
                             (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
                        :ei-mahdollinen)
-           ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
-           ;:tallennus-ei-mahdollinen-tooltip
-           #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
+           :tallennus-ei-mahdollinen-tooltip
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
 
           [{:otsikko "Kohde\u00ADnumero" :leveys 5 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
