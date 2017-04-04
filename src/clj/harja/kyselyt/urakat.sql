@@ -693,6 +693,7 @@ SELECT
   u.indeksi,
   u.takuu_loppupvm,
   u.urakkanro AS alueurakkanumero,
+  u.hanke     AS "hanke-id",
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus
 FROM urakka u
