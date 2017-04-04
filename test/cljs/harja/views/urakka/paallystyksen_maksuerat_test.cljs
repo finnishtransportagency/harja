@@ -27,18 +27,18 @@
 (deftest maksuerien-muunto-tallennusmuotoon-toimi
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            {:maksuera3 "Ylimääräinen" :maksuera1 "Eka puolikas" :maksuera2 "Toka puolikas"})
-         {:maksuerat [{:sisalto "Eka puolikas" :maksueranumero 1}
-                      {:sisalto "Toka puolikas" :maksueranumero 2}
-                      {:sisalto "Ylimääräinen" :maksueranumero 3}]}))
+         {:maksuerat [{:maksueranumero 1 :sisalto "Eka puolikas" }
+                      {:maksueranumero 2 :sisalto "Toka puolikas"}
+                      {:maksueranumero 3 :sisalto "Ylimääräinen"}]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            ;; Käyttäjä syöttää kolmannen maksuerän, ei muita
            {:maksuera3 "Ylimääräinen"})
-         {:maksuerat {:sisalto "Ylimääräinen" :maksueranumero 3}}))
+         {:maksuerat [{:maksueranumero 3 :sisalto "Ylimääräinen"}]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon
            ;; Käyttäjä syöttää ensimmäisen ja kolmannen maksuerän, ei muita
            {:maksuera3 "Ylimääräinen" :maksuera1 "Joku maksuerä"})
-         {:maksuerat [{:sisalto "Joku maksuerä" :maksueranumero 1}
-                      {:sisalto "Ylimääräinen" :maksueranumero 3}]}))
+         {:maksuerat [{:maksueranumero 1 :sisalto "Joku maksuerä"}
+                      {:maksueranumero 3 :sisalto "Ylimääräinen"}]}))
   (is (= (maksuerat/maksuerarivi-tallennusmuotoon {:yllapitokohde-id 1})
          {:yllapitokohde-id 1 :maksuerat []})))
 
