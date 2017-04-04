@@ -363,6 +363,36 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
 
+(deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkintapvm-vaarin
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_tiemerkintapvm_ilman_paallystyksen_loppua.json"))]
+
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."))))
+
+(deftest paallystyksen-viallisen-aikataulun-kirjaus-ei-onnistu-paallystyksen-valmispvm-vaarin
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus_viallinen_paallystys_valmis_ilman_paallystyksen_alkua.json"))]
+
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Päällystystä ei voi merkitä valmiiksi, aloitus puuttuu."))))
+
+(deftest tiemerkinnan-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkinnan-valmispvm-vaarin
+  (let [urakka (hae-oulun-tiemerkintaurakan-id)
+        kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus_viallinen_tiemerkinta_valmis_ilman_alkua.json"))]
+
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."))))
+
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
