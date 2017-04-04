@@ -6,7 +6,7 @@
     [harja.domain.urakka :as urakka]
     [harja.domain.sopimus :as sopimus]
     [harja.domain.tierekisteri :as tierekisteri]
-    [harja.domain.yllapitokohde :as yllapSitokohde]
+    [harja.domain.yllapitokohde :as yllapitokohde]
     [harja.tyokalut.spec-apurit :as spec-apurit]
     #?@(:clj [
     [clojure.future :refer :all]])))
