@@ -624,8 +624,8 @@
           payload {::urakka-domain/id urakka-id
                    ::sopimus-domain/id sopimus-id
                    ::urakka-domain/vuosi 2017
-                   :yllapitokohteet [{:id leppajarven-ramppi,
-                                      :maksuerat tallennettavat-maksuerat,
+                   :yllapitokohteet [{:id leppajarven-ramppi
+                                      :maksuerat tallennettavat-maksuerat
                                       :maksueratunnus "Uusi maksuerätunnus"}]}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-paallystyksen-maksuerat
