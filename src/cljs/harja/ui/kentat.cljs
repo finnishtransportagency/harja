@@ -1064,22 +1064,27 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
-      [:input {:class (when lomake? "form-control")
-               :placeholder placeholder
-               on-change* (fn [e]
-                            (let [v (-> e .-target .-value)
-                                  [v aika] (aseta-aika! v (juxt identity parsi-aika))]
-                              (when aika
-                                (if (:tunnit aika)
-                                  (swap! data
-                                         (fn [aika-nyt]
-                                           (pvm/map->Aika
-                                            (merge aika-nyt
-                                                   (assoc aika :keskenerainen v)))))
-                                  (swap! data assoc
-                                         :tunnit nil
-                                         :minuutit nil
-                                         :sekunnit nil
-                                         :keskenerainen v)))))
-               :on-focus on-focus
-               :value (or keskenerainen (fmt/aika aika))}]))
+    [:input {:class (str (when lomake? "form-control")
+                         (when (:keskenerainen @data) " puuttuva-arvo"))
+             :placeholder placeholder
+             on-change* (fn [e]
+                          (let [v (-> e .-target .-value)
+                                [v aika] (aseta-aika! v (juxt identity parsi-aika))]
+                            (when aika
+                              (if (:tunnit aika)
+                                (swap! data
+                                       (fn [aika-nyt]
+                                         (pvm/map->Aika
+                                          (merge aika-nyt
+                                                 (assoc aika :keskenerainen v)))))
+                                (swap! data assoc
+                                       :tunnit nil
+                                       :minuutit nil
+                                       :sekunnit nil
+                                       :keskenerainen v)))))
+             :on-focus on-focus
+             :on-blur #(when-let [t (:keskenerainen @data)]
+                         (when (and (re-matches #"\d+" t)
+                                    (<= 0 (js/parseInt t) 23))
+                           (reset! data (pvm/->Aika (js/parseInt t) 0 nil))))
+             :value (or keskenerainen (fmt/aika aika))}]))
