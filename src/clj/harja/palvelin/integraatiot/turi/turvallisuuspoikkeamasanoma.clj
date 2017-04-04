@@ -118,11 +118,6 @@
    :rautatie "Rautatie"
    :vesi "Vesiväylä"})
 
-(defn urakan-tyyppi [tyyppi]
-  (if (= tyyppi "hoito")
-    "hoito"
-    "ylläpito"))
-
 (defn rakenna-lahde [data]
   [:lahde
    [:lahdejarjestelma "Harja"]
@@ -143,7 +138,7 @@
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
-          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
+          [[:urakkatyyppi  (:urakka-tyyppi data)]]
           (when (:urakka-ely data) [[:elyalue (str (:urakka-ely data) " ELY")]])
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
