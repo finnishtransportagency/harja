@@ -681,3 +681,21 @@ FROM urakka u
   JOIN kayttaja k ON klu.kayttaja = k.id
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
+
+
+-- name: hae-urakka-lahetettavaksi-sahkeeseen
+-- Hakee urakan perustiedot id:llä APIa varten.
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm,
+  u.indeksi,
+  u.takuu_loppupvm,
+  u.urakkanro AS alueurakkanumero,
+  urk.nimi    AS urakoitsija_nimi,
+  urk.ytunnus AS urakoitsija_ytunnus
+FROM urakka u
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE u.id = :id;
