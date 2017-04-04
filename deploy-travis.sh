@@ -20,6 +20,7 @@ set -x
 ssh -t root@harja-dev$ENV_NUMBER.harjatest.solita.fi \
     "set -e; \
  systemctl stop harja; \
+ sudo -u postgres psql -c 'SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'harja' AND pid <> pg_backend_pid();'
  sudo -u postgres psql -c 'drop database harja;'; \
  sudo -u postgres psql -c 'create database harja;'; \
  mkdir -p s3-tmp;  \
