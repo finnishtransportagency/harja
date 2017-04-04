@@ -505,19 +505,20 @@
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
   [db user parametrit]
   (konv/sarakkeet-vektoriin
-   (into []
-         (comp
-          (map konv/alaviiva->rakenne)
-          (map #(assoc % :tyyppi-kartalla :toteuma))
-          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
-          (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
-         (q/hae-toteumien-asiat db
-                                (as-> parametrit p
-                                  (suodattimet-parametreista p)
-                                  (assoc p :urakat (luettavat-urakat user p))
-                                  (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                  (merge p (select-keys parametrit [:x :y])))))
-   {:tehtava :tehtavat}))
+    (into []
+          (comp
+            (map konv/alaviiva->rakenne)
+            (map #(assoc % :tyyppi-kartalla :toteuma))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+            (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
+          (q/hae-toteumien-asiat db
+                                 (as-> parametrit p
+                                       (suodattimet-parametreista p)
+                                       (assoc p :urakat (luettavat-urakat user p))
+                                       (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                                       (merge p (select-keys parametrit [:x :y])))))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]

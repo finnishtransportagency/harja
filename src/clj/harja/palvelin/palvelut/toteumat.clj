@@ -757,7 +757,8 @@
             db
             (merge {:x x :y y :tyyppi "kokonaishintainen"}
                    parametrit)))
-    {:tehtava :tehtavat}))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 
 (defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
   (let [{urakka-id :urakka-id :as p} parametrit
@@ -779,7 +780,8 @@
             (merge {:x x :y y :tyyppi "yksikkohintainen"
                     :toimenpidekoodi nil}
                    parametrit)))
-    {:tehtava :tehtavat}))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 
 (defn- siirry-kokonaishintainen-toteuma
   "Palauttaa frontin tarvitsemat tiedot, joilla kokonaishintaiseen toteumaan voidaan siirtyä"
