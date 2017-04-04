@@ -14,26 +14,21 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.tiemerkinta :as tm-domain]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.kyselyt.paikkaus :as paikkaus-q]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
+            [harja.domain.tierekisteri :as tr-domain])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -414,6 +409,15 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
+(defn hae-kohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
+  ;; TODO OIKEUSTARKISTUS!?
+  (jdbc/with-db-transaction [db db]
+    (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)]
+      (log/debug "HAETTU: " (pr-str yhteyshenkilot))
+      {:fim-kayttajat (vec yhteyshenkilot)
+       :yhteyshenkilot []})))
+
 (defrecord Yllapitokohteet []
   component/Lifecycle
   (start [this]
@@ -451,6 +455,9 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
+      (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
+                        (fn [user tiedot]
+                          (hae-kohteen-urakan-yhteyshenkilot db fim user tiedot)))
       this))
 
   (stop [this]

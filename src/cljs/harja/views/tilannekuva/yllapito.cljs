@@ -5,18 +5,21 @@
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.yleiset :refer [urakkaan-liitetyt-kayttajat]]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
 (def yhteyshenkilot (atom nil))
 
-(defn- yhteyshenkilot-view [tiedot]
-  (fn [tiedot]
+(defn- yhteyshenkilot-view [{:keys [fim-kayttajat yhteyshenkilot]}]
+  (fn [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot}]
+    (log "No renderöidään")
     (if tiedot
       [:div
-       [urakkaan-liitetyt-kayttajat nil]
+       [urakkaan-liitetyt-kayttajat fim-kayttajat]
        [grid/grid
         {:otsikko "Yhteyshenkilöt"
          :tyhja "Ei yhteyshenkilöitä."}
@@ -26,16 +29,16 @@
          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-        tiedot]]
+        yhteyshenkilot]]
       [ajax-loader "Haetaan yhteyshenkilöitä..."])))
 
-(defn- yhteyshenkilot-modal []
-  (go (<! (timeout 5000))
-      (log "NO NYT!") ;; TODO HAE PALVELIMELTA
-      (reset! yhteyshenkilot []))
-  [yhteyshenkilot-view @yhteyshenkilot])
+(defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
+  (go (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
+        (log "VASTAUS ON " (pr-str vastaus))
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
+          (reset! yhteyshenkilot vastaus))))
 
-(defn nayta-yhteyshenkilot-modal! [yhteyshenkilot]
   (modal/nayta!
     {:otsikko "Kohteen urakan yhteyshenkilöt"
      :footer [:span
@@ -43,4 +46,4 @@
                                            :on-click #(do (.preventDefault %)
                                                           (modal/piilota!))}
                "Sulje"]]}
-    [yhteyshenkilot-modal]))
+    [yhteyshenkilot-view @yhteyshenkilot]))

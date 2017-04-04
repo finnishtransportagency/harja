@@ -58,7 +58,7 @@
      (fn [user urakka-id]
        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
        (async
-        (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id)))
+        (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
 
      :hae-urakan-vastuuhenkilot
      (fn [user urakka-id]
@@ -81,7 +81,7 @@
                      :tallenna-urakan-vastuuhenkilot-roolille)
     this))
 
-(defn hae-urakan-kayttajat [db fim user urakka-id]
+(defn hae-urakan-kayttajat [db fim urakka-id]
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
