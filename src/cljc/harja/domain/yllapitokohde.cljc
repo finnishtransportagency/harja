@@ -18,7 +18,7 @@
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero string?)
 (s/def ::nimi string?)
-(s/def ::kokonaishinta (s/and nat-int?))
+(s/def ::kokonaishinta (s/and number?))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
