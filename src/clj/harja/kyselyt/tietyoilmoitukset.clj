@@ -62,18 +62,6 @@
 (s/def ::t/max-pituus number?)
 (s/def ::t/max-leveys number?)
 
-;; sallitaan käsin
-(s/def ::t/pysaytysten-alku (s/nilable inst?))
-(s/def ::t/pysaytysten-loppu (s/nilable inst?))
-(s/def ::t/sahkoposti (s/nilable string?))
-(s/def ::t/etunimi (s/nilable string?))
-(s/def ::t/sukunimi (s/nilable string?))
-(s/def ::t/matkapuhelin (s/nilable string?))
-(s/def ::t/tilaajan-nimi (s/nilable string?))
-(s/def ::t/urakoitsijan-nimi (s/nilable string?))
-(s/def ::t/urakan-nimi (s/nilable string?))
-(s/def ::t/urakka-id (s/nilable integer?))
-
 (def kaikki-ilmoituksen-kentat
   #{::t/id
     ::t/tloik-id
