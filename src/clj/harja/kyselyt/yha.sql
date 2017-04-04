@@ -136,7 +136,7 @@ UPDATE yhatiedot
 SET
   kohdeluettelo_paivitetty = NOW(),
   kohdeluettelo_paivittaja = :kayttaja
-WHERE urakka = :urakka AND poistettu IS FALSE;
+WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!
 INSERT INTO paallystysilmoitus

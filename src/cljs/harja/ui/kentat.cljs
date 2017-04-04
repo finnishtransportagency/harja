@@ -983,7 +983,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
               kartta? @karttavalinta-kaynnissa
-              valinta-kaynnissa? @karttavalinta-kaynnissa]
+              valinta-kaynnissa? @karttavalinta-kaynnissa
+
+              normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+                           {numero-avain numero
+                            alkuosa-avain alkuosa
+                            alkuetaisyys-avain alkuetaisyys
+                            loppuosa-avain loppuosa
+                            loppuetaisyys-avain loppuetaisyys})]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
@@ -1015,9 +1022,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
                                                   (reset! karttavalinta-kaynnissa false))
-                                  :paivita #(swap! data merge %)
+                                  :paivita #(swap! data merge (normalisoi %))
                                   :kun-valmis #(do
-                                                 (reset! data %)
+                                                 (reset! data (normalisoi %))
                                                  (reset! karttavalinta-kaynnissa false)
                                                  (log "Saatiin tr-osoite! " (pr-str %))
                                                  (go (>! tr-osoite-ch %)))}])
@@ -1057,22 +1064,27 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
-      [:input {:class (when lomake? "form-control")
-               :placeholder placeholder
-               on-change* (fn [e]
-                            (let [v (-> e .-target .-value)
-                                  [v aika] (aseta-aika! v (juxt identity parsi-aika))]
-                              (when aika
-                                (if (:tunnit aika)
-                                  (swap! data
-                                         (fn [aika-nyt]
-                                           (pvm/map->Aika
-                                            (merge aika-nyt
-                                                   (assoc aika :keskenerainen v)))))
-                                  (swap! data assoc
-                                         :tunnit nil
-                                         :minuutit nil
-                                         :sekunnit nil
-                                         :keskenerainen v)))))
-               :on-focus on-focus
-               :value (or keskenerainen (fmt/aika aika))}]))
+    [:input {:class (str (when lomake? "form-control")
+                         (when (:keskenerainen @data) " puuttuva-arvo"))
+             :placeholder placeholder
+             on-change* (fn [e]
+                          (let [v (-> e .-target .-value)
+                                [v aika] (aseta-aika! v (juxt identity parsi-aika))]
+                            (when aika
+                              (if (:tunnit aika)
+                                (swap! data
+                                       (fn [aika-nyt]
+                                         (pvm/map->Aika
+                                          (merge aika-nyt
+                                                 (assoc aika :keskenerainen v)))))
+                                (swap! data assoc
+                                       :tunnit nil
+                                       :minuutit nil
+                                       :sekunnit nil
+                                       :keskenerainen v)))))
+             :on-focus on-focus
+             :on-blur #(when-let [t (:keskenerainen @data)]
+                         (when (and (re-matches #"\d+" t)
+                                    (<= 0 (js/parseInt t) 23))
+                           (reset! data (pvm/->Aika (js/parseInt t) 0 nil))))
+             :value (or keskenerainen (fmt/aika aika))}]))

@@ -65,10 +65,10 @@
     VALUES (2007, 1, 999999, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
 
     ;; Ylläpitokohteet
-    (u "INSERT INTO yllapitokohde (urakka, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, yllapitokohdetyotyyppi)
-    VALUES (" urakka-id ", 'Nopea testikohde', 20, 1, 1, 'paallystys');")
-    (u "INSERT INTO yllapitokohde (urakka, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,  yllapitokohdetyotyyppi, poistettu)
-    VALUES (" urakka-id ", 'Nopea poistettu testikohde', 20, 1, 1, 'paallystys', true);")
+    (u "INSERT INTO yllapitokohde (urakka, sopimus, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, yllapitokohdetyotyyppi)
+    VALUES (" urakka-id "," sopimus-id ", 'Nopea testikohde', 20, 1, 1, 'paallystys');")
+    (u "INSERT INTO yllapitokohde (urakka, sopimus, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,  yllapitokohdetyotyyppi, poistettu)
+    VALUES (" urakka-id "," sopimus-id ", 'Nopea poistettu testikohde', 20, 1, 1, 'paallystys', true);")
 
     ;; Yks. hint. työt
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
