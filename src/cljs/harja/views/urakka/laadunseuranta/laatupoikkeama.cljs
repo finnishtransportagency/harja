@@ -379,7 +379,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :sijainti    (r/wrap (:sijainti @laatupoikkeama)
                                       #(swap! laatupoikkeama assoc :sijainti %))}
 
-                (when-not false #_(= :urakoitsija (:tekija @laatupoikkeama))
+                (when-not (= :urakoitsija (:tekija @laatupoikkeama))
                   {:nimi   :selvitys-pyydetty
                    :tyyppi :checkbox
                    :teksti "Urakoitsijan selvitystä pyydetään"})
