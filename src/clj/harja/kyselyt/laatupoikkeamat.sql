@@ -177,27 +177,28 @@ SELECT
   lp.kuvaus,
   lp.sijainti,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  lp.kasittelyaika                    AS paatos_kasittelyaika,
-  lp.paatos                           AS paatos_paatos,
-  lp.kasittelytapa                    AS paatos_kasittelytapa,
-  lp.perustelu                        AS paatos_perustelu,
-  lp.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  lp.selvitys_pyydetty                AS selvityspyydetty,
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.perustelu                       AS paatos_perustelu,
+  lp.muu_kasittelytapa               AS paatos_muukasittelytapa,
+  lp.selvitys_pyydetty               AS selvityspyydetty,
   lp.tr_numero,
   lp.tr_alkuosa,
   lp.tr_alkuetaisyys,
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
+  lp."sisaltaa-poikkeamaraportin?",
   tl.tarkastus                       AS tarkastusid,
-  t.nayta_urakoitsijalle AS "nayta-tarkastus-urakoitsijalle",
-  ypk.id               AS "yllapitokohde_id",
-  ypk.tr_numero        AS "yllapitokohde_tr-numero",
-  ypk.tr_alkuosa       AS "yllapitokohde_tr-alkuosa",
-  ypk.tr_alkuetaisyys  AS "yllapitokohde_tr-alkuetaisyys",
-  ypk.tr_loppuosa      AS "yllapitokohde_tr-loppuosa",
-  ypk.tr_loppuetaisyys AS "yllapitokohde_tr-loppuetaisyys",
-  ypk.kohdenumero      AS "yllapitokohde_numero",
-  ypk.nimi             AS "yllapitokohde_nimi"
+  t.nayta_urakoitsijalle             AS "nayta-tarkastus-urakoitsijalle",
+  ypk.id                             AS "yllapitokohde_id",
+  ypk.tr_numero                      AS "yllapitokohde_tr-numero",
+  ypk.tr_alkuosa                     AS "yllapitokohde_tr-alkuosa",
+  ypk.tr_alkuetaisyys                AS "yllapitokohde_tr-alkuetaisyys",
+  ypk.tr_loppuosa                    AS "yllapitokohde_tr-loppuosa",
+  ypk.tr_loppuetaisyys               AS "yllapitokohde_tr-loppuetaisyys",
+  ypk.kohdenumero                    AS "yllapitokohde_numero",
+  ypk.nimi                           AS "yllapitokohde_nimi"
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN tarkastus_laatupoikkeama tl on lp.id = tl.laatupoikkeama
@@ -298,7 +299,7 @@ INTO laatupoikkeama
  ulkoinen_id)
 VALUES (:lahde :: LAHDE, :urakka, :aika, :tekija :: OSAPUOLI, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
         :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
-        :tr_loppuetaisyys, :yllapitokohde, :sisaltaa_laatupoikkeamanm :ulkoinen_id);
+        :tr_loppuetaisyys, :yllapitokohde, :sisaltaa_laatupoikkeaman, :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.
