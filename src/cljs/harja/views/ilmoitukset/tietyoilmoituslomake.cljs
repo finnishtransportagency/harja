@@ -200,7 +200,7 @@
                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
                           :placeholder "(Muu tyyppi?)"}}))))
 
-(defn yhteyshenkilo [otsikko avain & kentat-ennen]
+(defn yhteyshenkilo [otsikko avain pakollinen? & kentat-ennen]
   (apply
     lomake/ryhma
     otsikko
@@ -208,6 +208,7 @@
     (concat kentat-ennen
             [{:nimi (keyword (name avain) "-etunimi")
               :otsikko "Yhteyshenkilön etunimi"
+              :pakollinen? pakollinen?
               :uusi-rivi? true
               :hae #(-> % avain ::t/etunimi)
               :aseta #(assoc-in %1 [avain ::t/etunimi] %2)
@@ -215,6 +216,7 @@
               :tyyppi :string}
              {:nimi (keyword (name avain) "-sukunimi")
               :otsikko "Yhteyshenkilön sukunimi"
+              :pakollinen? pakollinen?
               :hae #(-> % avain ::t/sukunimi)
               :aseta #(assoc-in %1 [avain ::t/sukunimi] %2)
               :muokattava? (constantly true)
@@ -223,6 +225,7 @@
               :otsikko "Yhteyshenkilön puhelinnumero"
               :hae #(-> % avain ::t/matkapuhelin)
               :aseta #(assoc-in %1 [avain ::t/matkapuhelin] %2)
+              :pakollinen? pakollinen?
               :tyyppi :puhelin}
              {:nimi (keyword (name avain) "-sahkoposti")
               :otsikko "Yhteyshenkilön sähköposti"
@@ -297,13 +300,13 @@
                         (assoc rivi ::t/yllapitokohde arvo))))
            :muokattava? (constantly true)}))
 
-      (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
+      (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo false
                      {:nimi ::t/urakoitsijan-nimi
                       :otsikko "Nimi"
                       :muokattava? (constantly true)
                       :tyyppi :string})
 
-      (yhteyshenkilo "Tilaaja" ::t/tilaajayhteyshenkilo
+      (yhteyshenkilo "Tilaaja" ::t/tilaajayhteyshenkilo false
                      {:nimi ::t/tilaajan-nimi
                       :otsikko "Tilaajan nimi"
                       :muokattava? (constantly true)
@@ -442,5 +445,5 @@
                      :nimi ::t/lisatietoja
                      :tyyppi :text
                      :koko [90 8]})
-      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)]
+      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)]
      ilmoitus]]])
