@@ -95,6 +95,10 @@
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
+(defn- tarkista-aikataulun-oikeellisuus [aikataulu]
+
+)
+
 
 (defn paivita-yllapitokohde [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
@@ -207,6 +211,7 @@
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (vaadi-urakka-oikeaa-tyyppia urakan-tyyppi endpoint-urakkatyyppi)
       (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+      (tarkista-aikataulun-oikeellisuus (:aikataulu data))
       (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakan-tyyppi kohde-id data)]
         (tee-kirjausvastauksen-body
           (merge {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")}
