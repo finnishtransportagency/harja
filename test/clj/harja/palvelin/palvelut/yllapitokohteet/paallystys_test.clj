@@ -9,6 +9,7 @@
             [cheshire.core :as cheshire]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.sopimus :as sopimus-domain]
+            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.pvm :as pvm]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
