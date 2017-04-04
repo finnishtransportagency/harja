@@ -49,6 +49,7 @@
                     "Ei maksueriä")
            :voi-lisata? false
            :voi-poistaa? (constantly false)
+           :piilota-toiminnot? true
            :tallenna (if voi-muokata?
                        #(go (e! (tiedot/->TallennaMaksuerat
                                   (merge valinnat
