@@ -1,2 +1,2 @@
 ALTER TABLE laatupoikkeama
-  ADD COLUMN "poikkeamaraportti-annettu?" BOOLEAN;
+  ADD COLUMN "sisaltaa-poikkeamaraportin?" BOOLEAN;
