@@ -7,6 +7,7 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
+            [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.pvm :as pvm]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.skeema :as skeema]))
