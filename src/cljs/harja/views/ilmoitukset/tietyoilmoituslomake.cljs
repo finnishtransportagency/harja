@@ -282,6 +282,7 @@
           {:nimi ::t/urakan-nimi
            :otsikko "Projektin tai urakan nimi"
            :tyyppi :string
+           :pakollinen? true
            :muokattava? (constantly true)})
         (when-not (or (empty? (::t/urakan-nimi ilmoitus))
                       (empty? (:urakan-kohteet ilmoitus)))
