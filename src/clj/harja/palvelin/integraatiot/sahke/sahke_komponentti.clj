@@ -31,7 +31,7 @@
 (defrecord Sahke [lahetysjono uudelleenlahetysaika]
   component/Lifecycle
   (start [this]
-    (log/info (format "Käynnistetään Sähke-komponentti. JMS-jono: %s. Uudelleenlähetykset: %s. "
+    (log/info (format "Käynnistetään Sähke-komponentti. JMS-jono: %s. Uudelleenlähetykset: %s."
                       lahetysjono
                       uudelleenlahetysaika))
     this)

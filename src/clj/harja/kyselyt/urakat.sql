@@ -704,3 +704,10 @@ WHERE u.id = :id;
 INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
 VALUES (:urakka, now(), :onnistunut);
 
+-- name: perustettu-harjassa?
+-- single?: true
+SELECT exists(SELECT ''
+              FROM urakka u
+                JOIN sahkelahetys sl ON u.id = sl.urakka
+              WHERE u.sampoid = :sampoid);
+
