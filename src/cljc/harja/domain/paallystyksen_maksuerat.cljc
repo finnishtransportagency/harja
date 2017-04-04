@@ -6,7 +6,7 @@
     [harja.domain.urakka :as urakka]
     [harja.domain.sopimus :as sopimus]
     [harja.domain.tierekisteri :as tierekisteri]
-    [harja.domain.yllapitokohde :as yllapitokohde]
+    [harja.domain.yllapitokohde :as yllapSitokohde]
     [harja.tyokalut.spec-apurit :as spec-apurit]
     #?@(:clj [
     [clojure.future :refer :all]])))
@@ -18,8 +18,8 @@
 (s/def ::maksueranumero (s/and nat-int? #(s/int-in-range? 1 6 %)))
 (s/def ::maksueratunnus (s/nilable string?))
 
-(s/def ::maksuera (s/keys :req-un [::maksueranumero]
-                          :opt-un [::id ::sisalto]))
+(s/def ::maksuera (s/keys :req-un [::maksueranumero ::sisalto]
+                          :opt-un [::id]))
 (s/def ::maksuerat (s/coll-of ::maksuera))
 
 (s/def ::tr-numero ::tierekisteri/numero)

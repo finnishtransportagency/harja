@@ -57,16 +57,19 @@
                                 ypk
                                 {:maksuera :maksuerat}
                                 :id)
-                              (mapv
+                              (map
                                 #(assoc % :maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
                                                                     db user
                                                                     {:urakka-id urakka-id
                                                                      :yllapitokohde-id (:id %)})))
                                 ypk)
-                              (mapv
+                              (map
                                 #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))
+                                ypk)
+                              (map
+                                #(assoc % :maksuerat (sort-by :maksueranumero (:maksuerat %)))
                                 ypk))]
-    yllapitokohteet))
+    (vec yllapitokohteet)))
 
 (defn- tallenna-maksuerat [db yllapitokohteet]
   (let [maksuerat (mapcat (fn [yllapitokohde]

@@ -1158,7 +1158,7 @@
         leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         testidata (gen/sample (s/gen ::paallystyksen-maksuerat-domain/tallennettava-yllapitokohde-maksuerineen))]
 
-    (doseq [yllapitokohde [(first testidata)]]
+    (doseq [yllapitokohde testidata]
       (u "DELETE FROM yllapitokohteen_maksuera WHERE yllapitokohde = " leppajarven-ramppi ";")
       (u "DELETE FROM yllapitokohteen_maksueratunnus WHERE yllapitokohde = " leppajarven-ramppi ";")
       (let [maksuerat (:maksuerat yllapitokohde)
@@ -1167,8 +1167,10 @@
             ;; Otetaan viimeiset talteen ja tarkistetaan, että tallennus menee oikein
             tallennettavat-maksuerat (if (empty? maksueranumerot)
                                        []
-                                       (map (fn [maksueranumero]
-                                              (last (filter #(= (:maksueranumero %) maksueranumero) maksuerat)))
+                                       (keep (fn [maksueranumero]
+                                              (-> (filter #(= (:maksueranumero %) maksueranumero) maksuerat)
+                                                  last
+                                                  (dissoc :id)))
                                             (range (apply min maksueranumerot)
                                                    (inc (apply max maksueranumerot)))))
             payload {::urakka-domain/id urakka-id
@@ -1182,7 +1184,8 @@
             leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
 
         (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
-        (is (= (:maksuerat leppajarven-ramppi) tallennettavat-maksuerat))))))
+        (is (= (map #(dissoc % :id) (:maksuerat leppajarven-ramppi))
+               tallennettavat-maksuerat))))))
 
 (deftest yllapitokohteen-maksuerien-paivitys-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -1206,7 +1209,7 @@
 
       (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
       (is (= (:maksueratunnus leppajarven-ramppi) "Uusi maksuerätunnus"))
-      (is (= (sort-by :maksueranumero (:maksuerat leppajarven-ramppi))
+      (is (= (:maksuerat leppajarven-ramppi)
              [{:id 1
                :maksueranumero 1
                :sisalto "Päivitetäänpäs tämä"}
