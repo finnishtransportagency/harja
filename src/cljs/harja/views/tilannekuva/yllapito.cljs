@@ -16,7 +16,7 @@
   (fn [tiedot]
     (if tiedot
       [:div
-       #_[urakkaan-liitetyt-kayttajat nil]
+       [urakkaan-liitetyt-kayttajat nil]
        [grid/grid
         {:otsikko "Yhteyshenkilöt"
          :tyhja "Ei yhteyshenkilöitä."}
