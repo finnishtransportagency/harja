@@ -14,27 +14,26 @@
 
 (def yhteyshenkilot (atom nil))
 
-(defn- yhteyshenkilot-view [{:keys [fim-kayttajat yhteyshenkilot]}]
-  (fn [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot}]
-    (log "No renderöidään")
-    (if tiedot
-      [:div
-       [urakkaan-liitetyt-kayttajat fim-kayttajat]
-       [grid/grid
-        {:otsikko "Yhteyshenkilöt"
-         :tyhja "Ei yhteyshenkilöitä."}
-        [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-         {:otsikko "Nimi" :nimi :nimi :tyyppi :string
-          :hae #(str (:etunimi %) " " (:sukunimi %))}
-         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
-         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
-         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-        yhteyshenkilot]]
-      [ajax-loader "Haetaan yhteyshenkilöitä..."])))
+(defn- yhteyshenkilot-view [yhteyshenkilot-atom]
+  (fn [yhteyshenkilot-atom]
+    (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
+      (if tiedot
+        [:div
+         [urakkaan-liitetyt-kayttajat fim-kayttajat]
+         [grid/grid
+          {:otsikko "Yhteyshenkilöt"
+           :tyhja "Ei yhteyshenkilöitä."}
+          [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
+           {:otsikko "Nimi" :nimi :nimi :tyyppi :string
+            :hae #(str (:etunimi %) " " (:sukunimi %))}
+           {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
+           {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
+           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
+          yhteyshenkilot]]
+        [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
 
 (defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
   (go (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
-        (log "VASTAUS ON " (pr-str vastaus))
         (if (k/virhe? vastaus)
           (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
           (reset! yhteyshenkilot vastaus))))
@@ -46,4 +45,4 @@
                                            :on-click #(do (.preventDefault %)
                                                           (modal/piilota!))}
                "Sulje"]]}
-    [yhteyshenkilot-view @yhteyshenkilot]))
+    [yhteyshenkilot-view yhteyshenkilot]))
