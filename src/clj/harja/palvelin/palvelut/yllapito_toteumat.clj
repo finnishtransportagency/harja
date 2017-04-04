@@ -14,7 +14,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.konversio :as konv]))
 
 (defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]

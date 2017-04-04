@@ -11,6 +11,8 @@
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
 
+(s/def ::vuosi (s/and nat-int? #(>= % 1900)))
+
 (s/def ::sampoid string?)
 
 (s/def ::tyyppi #{:hoito :paallystys :valaistus :tiemerkinta

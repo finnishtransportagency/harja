@@ -16,7 +16,7 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)

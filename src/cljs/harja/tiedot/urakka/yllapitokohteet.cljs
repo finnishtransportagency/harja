@@ -6,7 +6,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka :as urakka]
     [harja.tiedot.urakka :as u]
-    [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti]
