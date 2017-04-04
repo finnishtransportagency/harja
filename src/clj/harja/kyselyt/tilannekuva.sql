@@ -473,15 +473,12 @@ SELECT
   tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-                    AND t.alkanut >= :alku
-                    AND t.paattynyt <= :loppu
+                    AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
-  JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
-WHERE tt.poistettu IS NOT TRUE AND
-      tt.toimenpidekoodi IN (:toimenpidekoodit) AND
-      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
-      (t.alkanut BETWEEN :alku AND :loppu) AND
-      (t.paattynyt BETWEEN :alku AND :loppu) AND
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-toteumien-selitteet
@@ -493,14 +490,11 @@ SELECT
            WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-                    AND t.alkanut >= :alku
-                    AND t.paattynyt <= :loppu
+                    AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
-      (t.alkanut BETWEEN :alku AND :loppu) AND
-      (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tt.toimenpidekoodi;
 
