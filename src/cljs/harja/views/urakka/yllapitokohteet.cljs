@@ -430,8 +430,9 @@
            :muokkaa-footer (fn [g]
                              [:span#kohdeosien-pituus-yht
                               "Tierekisterikohteiden pituus yhteensä: "
-                              (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus)
-                                                            (vals @grid-data))))
+                              (if (not (empty? osan-pituus))
+                                (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus) (vals @grid-data))))
+                                "-")
                               (when (= kohdetyyppi :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
