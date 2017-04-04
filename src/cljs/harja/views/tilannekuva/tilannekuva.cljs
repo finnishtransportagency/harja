@@ -4,11 +4,10 @@
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.tilannekuva.tienakyma :as tienakyma]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
+            [harja.views.tilannekuva.yllapito :as yllapito]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.dom :as dom]
@@ -17,18 +16,11 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
-            [harja.ui.on-off-valinta :as on-off]
             [harja.domain.tilannekuva :as tk]
-            [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.tilannekuva :as domain]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
-            [harja.domain.roolit :as roolit]
-            [harja.ui.grid :as grid]
-            [clojure.string :as str])
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -333,26 +325,7 @@
 
    "Hallintapaneeli" :hallintapaneeli [suodattimet]])
 
-(defn- yllapitokohteen-yhteyshenkilot-modal [yhteyshenkilot]
-  (log "Näytetään yhteyshenkilöt modalissa: " (pr-str yhteyshenkilot))
-  (modal/nayta!
-    {:otsikko "Kohteen urakan yhteyshenkilöt"
-     :footer [:span
-              [:button.nappi-toissijainen {:type "button"
-                                           :on-click #(do (.preventDefault %)
-                                                          (modal/piilota!))}
-               "Sulje"]]}
-    [:div
-     [grid/grid
-      {:otsikko "Yhteyshenkilöt"
-       :tyhja "Ei yhteyshenkilöitä."}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-       {:otsikko "Nimi" :nimi :nimi :tyyppi :string
-        :hae #(str (:etunimi %) " " (:sukunimi %))}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-      yhteyshenkilot]]))
+
 
 (defn- nayta-vai-piilota? [tila]
   (case tila
@@ -383,7 +356,7 @@
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
                               {:toiminto (fn [yllapitokohdeosa]
-                                           (yllapitokohteen-yhteyshenkilot-modal
+                                           (yllapito/yllapitokohteen-yhteyshenkilot-modal
                                              (get-in yllapitokohdeosa [:yllapitokohde :yhteyshenkilot])))
                                :teksti "Näytä yhteyshenkilöt"}})
                            (tiedot/seuraa-alueita!))
