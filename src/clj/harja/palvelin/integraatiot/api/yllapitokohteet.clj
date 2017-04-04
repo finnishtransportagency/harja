@@ -96,8 +96,26 @@
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
+  (when (and (some? (:paallystys-valmis aikataulu))
+             (nil? (:paallystys-aloitettu aikataulu)))
+    (virheet/heita-poikkeus
+      virheet/+viallinen-kutsu+
+      {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
+       :viesti "Päällystystä ei voi merkitä valmiiksi, aloitus puuttuu."}))
 
-)
+  (when (and (some? (:tiemerkinta-valmis aikataulu))
+             (nil? (:tiemerkinta-aloitettu aikataulu)))
+    (virheet/heita-poikkeus
+      virheet/+viallinen-kutsu+
+      {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
+       :viesti "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."}))
+
+  (when (and (some? (:valmis-tiemerkintaan aikataulu))
+             (nil? (:paallystys-valmis aikataulu)))
+    (virheet/heita-poikkeus
+      virheet/+viallinen-kutsu+
+      {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
+       :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
 
 (defn paivita-yllapitokohde [db kayttaja {:keys [urakka-id kohde-id]} data]
