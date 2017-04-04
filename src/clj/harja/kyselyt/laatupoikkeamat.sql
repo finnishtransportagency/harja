@@ -254,21 +254,22 @@ ORDER BY l.luotu ASC;
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama
-SET aika            = :aika,
-  tekija            = :tekija :: osapuoli,
-  kohde             = :kohde,
-  selvitys_pyydetty = :selvitys,
-  muokkaaja         = :muokkaaja,
-  kuvaus            = :kuvaus,
-  sijainti = :sijainti,
-  tr_numero = :numero,
-  tr_alkuosa = :alkuosa,
-  tr_loppuosa = :loppuosa,
-  tr_alkuetaisyys = :alkuetaisyys,
-  tr_loppuetaisyys = :loppuetaisyys,
-  yllapitokohde = :yllapitokohde,
-  muokattu          = current_timestamp,
-  poistettu          = :poistettu
+SET aika                        = :aika,
+  tekija                        = :tekija :: OSAPUOLI,
+  kohde                         = :kohde,
+  selvitys_pyydetty             = :selvitys,
+  muokkaaja                     = :muokkaaja,
+  kuvaus                        = :kuvaus,
+  sijainti                      = :sijainti,
+  tr_numero                     = :numero,
+  tr_alkuosa                    = :alkuosa,
+  tr_loppuosa                   = :loppuosa,
+  tr_alkuetaisyys               = :alkuetaisyys,
+  tr_loppuetaisyys              = :loppuetaisyys,
+  yllapitokohde                 = :yllapitokohde,
+  muokattu                      = current_timestamp,
+  "sisaltaa-poikkeamaraportin?" = :sisaltaa_laatupoikkeaman,
+  poistettu                     = :poistettu
 WHERE id = :id
 AND urakka = :urakka;
 
@@ -293,10 +294,11 @@ INTO laatupoikkeama
  tr_alkuetaisyys,
  tr_loppuetaisyys,
  yllapitokohde,
+ "sisaltaa-poikkeamaraportin?",
  ulkoinen_id)
-VALUES (:lahde::lahde, :urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
-                 :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
-        :tr_loppuetaisyys, :yllapitokohde, :ulkoinen_id);
+VALUES (:lahde :: LAHDE, :urakka, :aika, :tekija :: OSAPUOLI, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
+        :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
+        :tr_loppuetaisyys, :yllapitokohde, :sisaltaa_laatupoikkeamanm :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.
