@@ -19,11 +19,10 @@
     (try
       (jms-lahettaja muodosta-xml viesti-id)
       (log/debug (format "Urakan (id: %s) lähetys Sähkeeseen onnistui." urakka-id))
-      ;; todo: merkitse urakalle lähetysaika
+      (q-urakat/kirjaa-sahke-lahetys! :db urakka-id true)
       (catch Exception e
         (log/error e (format "Urakan (id: %s) lähetys Sähkeeseen epäonnistui." urakka-id))
-        ;; todo: merkitse urakalle lähetysvirhe
-        ))))
+        (q-urakat/kirjaa-sahke-lahetys! :db urakka-id false)))))
 
 (defn tee-jms-lahettaja [sonja integraatioloki db lahetysjono]
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sahke" "urakan-lahetys")
