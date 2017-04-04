@@ -104,7 +104,6 @@
                (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi
                              :organisaatio_tyyppi :organisaatio_lyhenne)))
               tulokset)]
-    ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
 (defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]

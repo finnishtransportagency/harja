@@ -413,10 +413,10 @@
   ;; TODO OIKEUSTARKISTUS!?
   (jdbc/with-db-transaction [db db]
     (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)]
-      (log/debug "HAETTU: " (pr-str yhteyshenkilot))
-      {:fim-kayttajat (vec yhteyshenkilot)
-       :yhteyshenkilot []})))
+          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
+      {:fim-kayttajat (vec fim-kayttajat)
+       :yhteyshenkilot (vec yhteyshenkilot)})))
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

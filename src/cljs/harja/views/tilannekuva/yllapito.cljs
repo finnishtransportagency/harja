@@ -35,6 +35,7 @@
 (defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
   (go (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
         (if (k/virhe? vastaus)
+          ;; TODO Jos ei oikeutta, älä näytä herjaa vaan inline-teksti "Ei oikeutta" tjsp?
           (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
           (reset! yhteyshenkilot vastaus))))
 
