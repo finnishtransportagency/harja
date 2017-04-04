@@ -125,7 +125,7 @@
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
    (s/optional-key :sahke)                  {:lahetysjono       s/Str
-                                             :paivittainen-aika [s/Num]}
+                                             :uudelleenlahetysaika [s/Num]}
 
    })
 
