@@ -393,7 +393,8 @@ SET
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuetaisyys = :tr_loppuetaisyys,
   muokkaaja        = :muokkaaja,
-  muokattu         = current_timestamp
+  muokattu         = current_timestamp,
+  "sisaltaa-poikkeamaraportin?" = :sisaltaa_poikkeamaraportin
 WHERE ulkoinen_id = :ulkoinen_id AND
       luoja = :luoja;
 
