@@ -8,6 +8,7 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.views.urakka.paallystyskohteet :as paallystyskohteet]
             [harja.views.urakka.paallystysilmoitukset :as paallystysilmoitukset]
+            [harja.views.urakka.paallystyksen-maksuerat :as maksuerat]
 
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
@@ -62,5 +63,11 @@
           "Päällystysilmoitukset"
           :paallystysilmoitukset
           (when (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id ur))
-            [paallystysilmoitukset/paallystysilmoitukset ur])]]
+            [paallystysilmoitukset/paallystysilmoitukset ur])
+
+          "Maksuerät"
+          :maksuerat
+          ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+          (when true ;; Käytä: (oikeudet/urakat-kohdeluettelo-maksuerat (:id ur))
+            [maksuerat/maksuerat])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))

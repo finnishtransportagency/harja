@@ -100,7 +100,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
                                 {:urakka-id urakka-id})]
-    (is (= (count vastaus)) 3)))
+    (is (= (count vastaus) 3))))
 
 (deftest usean-tiemerkinnan-yks-hint-toteuman-tallennus-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)

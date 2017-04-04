@@ -16,14 +16,17 @@
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.skeema :as skeema]
-            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -34,6 +37,94 @@
                       (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
+
+(defn hae-urakan-maksuerat
+  "Hakee hakuparametreihin osuvien ylläpitokohteiden maksuerät.
+   Palauttaa myös sellaiset ylläpitokohteet, joilla ei ole maksuerää."
+  [db user hakuparametrit]
+  (log/debug "Haetaan päällystyksen maksuerät")
+  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+  #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
+  (let [urakka-id (::urakka-domain/id hakuparametrit)
+        sopimus-id (::sopimus-domain/id hakuparametrit)
+        vuosi (::urakka-domain/vuosi hakuparametrit)
+        yllapitokohteet (into []
+                              (comp
+                                (map konversio/alaviiva->rakenne))
+                              (q/hae-urakan-maksuerat db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi}))
+        yllapitokohteet (as-> yllapitokohteet ypk
+                              (konv/sarakkeet-vektoriin
+                                ypk
+                                {:maksuera :maksuerat}
+                                :id)
+                              (map
+                                #(assoc % :maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                                                    db user
+                                                                    {:urakka-id urakka-id
+                                                                     :yllapitokohde-id (:id %)})))
+                                ypk)
+                              (map
+                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))
+                                ypk)
+                              (map
+                                #(assoc % :maksuerat (sort-by :maksueranumero (:maksuerat %)))
+                                ypk))]
+    (vec yllapitokohteet)))
+
+(defn- tallenna-maksuerat [db yllapitokohteet]
+  (let [maksuerat (mapcat (fn [yllapitokohde]
+                            (let [kohteen-maksuerat (:maksuerat yllapitokohde)]
+                              (map #(assoc % :yllapitokohde-id (:id yllapitokohde))
+                                   kohteen-maksuerat)))
+                          yllapitokohteet)]
+    (doseq [maksuera maksuerat]
+      (let [nykyinen-maksuera-kannassa (first (q/hae-yllapitokohteen-maksuera
+                                                db
+                                                {:yllapitokohde (:yllapitokohde-id maksuera)
+                                                 :maksueranumero (:maksueranumero maksuera)}))
+            maksuera-params {:sisalto (:sisalto maksuera)
+                             :yllapitokohde (:yllapitokohde-id maksuera)
+                             :maksueranumero (:maksueranumero maksuera)}]
+        (if nykyinen-maksuera-kannassa
+          (q/paivita-maksuera<! db maksuera-params)
+          (q/luo-maksuera<! db maksuera-params))))))
+
+(defn- tallenna-maksueratunnus [db yllapitokohteet]
+  (doseq [yllapitokohde yllapitokohteet]
+    (let [nykyinen-maksueratunnus-kannassa (first (q/hae-yllapitokohteen-maksueratunnus
+                                                    db
+                                                    {:yllapitokohde (:id yllapitokohde)}))
+          maksueratunnus-params {:maksueratunnus (:maksueratunnus yllapitokohde)
+                                 :yllapitokohde (:id yllapitokohde)}]
+      (if nykyinen-maksueratunnus-kannassa
+        (q/paivita-maksueratunnus<! db maksueratunnus-params)
+        (q/luo-maksueratunnus<! db maksueratunnus-params)))))
+
+(defn tallenna-urakan-maksuerat
+  [db user {:keys [yllapitokohteet] :as hakuparametrit}]
+  (log/debug "Tallennetaan päällystyksen maksuerät")
+  ;; TODO OIKEUSTARKISTUS, ROOLIT EXCELIIN KUN TASKI VALMIS JA OTA TÄMÄ SITTEN KÄYTTÖÖN
+  #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-maksuerat user urakka-id)
+  (let [urakka-id (::urakka-domain/id hakuparametrit)
+        sopimus-id (::sopimus-domain/id hakuparametrit)
+        vuosi (::urakka-domain/vuosi hakuparametrit)]
+    (jdbc/with-db-transaction [db db]
+      (doseq [yllapitokohde yllapitokohteet]
+        (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id yllapitokohde)))
+
+      (let [voi-tayttaa-maksuerat? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+            voi-tayttaa-maksueratunnuksen? true ; TODO Käytä (oikeudet/on-muu-oikeus? "maksueratunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
+            ]
+
+        (when voi-tayttaa-maksuerat?
+          (tallenna-maksuerat db yllapitokohteet))
+
+        (when voi-tayttaa-maksueratunnuksen?
+          (tallenna-maksueratunnus db yllapitokohteet)))
+
+      (hae-urakan-maksuerat db user {::urakka-domain/id urakka-id
+                                     ::sopimus-domain/id sopimus-id
+                                     ::urakka-domain/vuosi vuosi}))))
 
 (defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
   "Ottaa päällystysilmoituksen, jolla on siihen liittyvän ylläpitokohteen kohdeosien tiedot.
@@ -146,11 +237,7 @@
                                  (assoc p :ilmoitustiedot
                                           (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
-        kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
-                                                          :arvonvahennykset
-                                                          :bitumi-indeksi
-                                                          :sakot-ja-bonukset
-                                                          :kaasuindeksi]))
+        kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
                               (map (fn [{:keys [liite] :as kommentti}]
@@ -164,7 +251,7 @@
                          {:urakka-id urakka-id
                           :yllapitokohde-id paallystyskohde-id})
         paallystysilmoitus (assoc paallystysilmoitus
-                             :kokonaishinta kokonaishinta
+                             :kokonaishinta-ilman-maaramuutoksia kokonaishinta-ilman-maaramuutoksia
                              :maaramuutokset (:tulos maaramuutokset)
                              :maaramuutokset-ennustettu? (:ennustettu? maaramuutokset)
                              :paallystyskohde-id paallystyskohde-id
@@ -361,8 +448,8 @@
         (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                                    :sopimus-id sopimus-id
                                                                                    :vuosi vuosi})
-              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
-                                                                          :sopimus-id sopimus-id})]
+              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
+                                                                           :sopimus-id sopimus-id})]
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
@@ -380,6 +467,16 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :hae-paallystyksen-maksuerat
+                        (fn [user tiedot]
+                          (hae-urakan-maksuerat db user tiedot))
+                        {:kysely-spec ::paallystyksen-maksuerat/hae-paallystyksen-maksuerat-kysely
+                         :vastaus-spec ::paallystyksen-maksuerat/hae-paallystyksen-maksuerat-vastaus})
+      (julkaise-palvelu http :tallenna-paallystyksen-maksuerat
+                        (fn [user tiedot]
+                          (tallenna-urakan-maksuerat db user tiedot))
+                        {:kysely-spec ::paallystyksen-maksuerat/tallenna-paallystyksen-maksuerat-kysely
+                         :vastaus-spec ::paallystyksen-maksuerat/tallenna-paallystyksen-maksuerat-vastaus})
       this))
 
   (stop [this]
