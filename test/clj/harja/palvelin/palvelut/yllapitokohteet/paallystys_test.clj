@@ -7,9 +7,15 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
+            [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
+            [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.pvm :as pvm]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.skeema :as skeema]))
+            [harja.domain.skeema :as skeema]
+            [clojure.spec :as s]
+            [clojure.spec.gen :as gen]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -274,7 +280,7 @@
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
-    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 7043.95))
+    (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 7043.95))
     (is (= (:maaramuutokset-ennustettu? paallystysilmoitus-kannassa) true))
     (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
     (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
@@ -340,7 +346,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (== (:kokonaishinta paallystysilmoitus-kannassa) 3968))
+        (is (== (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 3968))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
@@ -556,3 +562,90 @@
                                    {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
                                     :paallystysilmoitus paallystysilmoitus}))))))
+
+
+(deftest yllapitokohteiden-maksuerien-haku-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-paallystyksen-maksuerat
+                                +kayttaja-jvh+
+                                {::urakka-domain/id urakka-id
+                                 ::sopimus-domain/id sopimus-id
+                                 ::urakka-domain/vuosi 2017})
+        leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
+    (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+    (is (== (:kokonaishinta leppajarven-ramppi) 7248.95))
+    (is (= (count (:maksuerat leppajarven-ramppi)) 2))))
+
+(deftest yllapitokohteen-uusien-maksuerien-tallennus-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        testidata (gen/sample (s/gen ::paallystyksen-maksuerat-domain/tallennettava-yllapitokohde-maksuerineen))]
+
+    (doseq [yllapitokohde testidata]
+      (u "DELETE FROM yllapitokohteen_maksuera WHERE yllapitokohde = " leppajarven-ramppi ";")
+      (u "DELETE FROM yllapitokohteen_maksueratunnus WHERE yllapitokohde = " leppajarven-ramppi ";")
+      (let [maksuerat (:maksuerat yllapitokohde)
+            maksueranumerot (map :maksueranumero maksuerat)
+            ;; Generointi generoi useita samoja maksueränumeroita, mutta palvelu tallentaa vain viimeisimmän.
+            ;; Otetaan viimeiset talteen ja tarkistetaan, että tallennus menee oikein
+            tallennettavat-maksuerat (if (empty? maksueranumerot)
+                                       []
+                                       (keep (fn [maksueranumero]
+                                               (-> (filter #(= (:maksueranumero %) maksueranumero) maksuerat)
+                                                   last
+                                                   (dissoc :id)))
+                                             (range (apply min maksueranumerot)
+                                                    (inc (apply max maksueranumerot)))))
+            payload {::urakka-domain/id urakka-id
+                     ::sopimus-domain/id sopimus-id
+                     ::urakka-domain/vuosi 2017
+                     :yllapitokohteet [(assoc yllapitokohde :id leppajarven-ramppi)]}
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-paallystyksen-maksuerat
+                                    +kayttaja-jvh+
+                                    payload)
+            leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
+
+        (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+        (is (= (map #(dissoc % :id) (:maksuerat leppajarven-ramppi))
+               tallennettavat-maksuerat))))))
+
+(deftest yllapitokohteen-maksuerien-paivitys-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+
+    (let [tallennettavat-maksuerat [{:maksueranumero 1 :sisalto "Päivitetäänpäs tämä"}
+                                    {:maksueranumero 4 :sisalto nil}
+                                    {:maksueranumero 5 :sisalto "Uusi maksuerä"}]
+          payload {::urakka-domain/id urakka-id
+                   ::sopimus-domain/id sopimus-id
+                   ::urakka-domain/vuosi 2017
+                   :yllapitokohteet [{:id leppajarven-ramppi,
+                                      :maksuerat tallennettavat-maksuerat,
+                                      :maksueratunnus "Uusi maksuerätunnus"}]}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-paallystyksen-maksuerat
+                                  +kayttaja-jvh+
+                                  payload)
+          leppajarven-ramppi (yllapitokohteet-test/kohde-nimella vastaus "Leppäjärven ramppi")]
+
+      (is (= (count vastaus) 6) "Kaikki kohteet palautuu")
+      (is (= (:maksueratunnus leppajarven-ramppi) "Uusi maksuerätunnus"))
+      (is (= (:maksuerat leppajarven-ramppi)
+             [{:id 1
+               :maksueranumero 1
+               :sisalto "Päivitetäänpäs tämä"}
+              {:id 2
+               :maksueranumero 2
+               :sisalto "Puolet"}
+              {:id 6
+               :maksueranumero 4
+               :sisalto nil}
+              {:id 7
+               :maksueranumero 5
+               :sisalto "Uusi maksuerä"}])
+          "Uudet maksuerät ilmestyivät kantaan, vanhat päivitettiin ja payloadissa olemattomiin ei koskettu"))))

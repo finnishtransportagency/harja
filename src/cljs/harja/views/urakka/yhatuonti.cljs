@@ -97,24 +97,34 @@
 (defn- sidonta-kaynnissa []
   [ajax-loader "Sidonta käynnissä..."])
 
-(defn- tuontidialogi [urakka optiot]
-  (let [sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
-    [:div
-     (if (:sitomaton-urakka? optiot)
-       [:div
-        [:p (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan.
+(defn- tuontidialogi* [urakka sidonta-kaynnissa? optiot]
+  [:div
+   (if (:sitomaton-urakka? optiot)
+     [:div
+      [:p (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan.
        Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta.")]
-        [:p "Varmista, että YHA:an luotu kohdeluettelo on valmis ennen kuin teet sidonnan.
+      [:p "Varmista, että YHA:an luotu kohdeluettelo on valmis ennen kuin teet sidonnan.
        Harjaan kerran tuotuja kohteita ei päivitetä enää sidonnan jälkeen,
        mutta uusia YHA-kohteita voidaan tuoda sidottuun Harja-urakkaan.
        Kun sidonta on valmis, voi sidonnan vaihtaa niin kauan kuin urakan tietoja ei ole muokattu."]]
-       [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :yhatunnus]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet ja niiden ilmoitukset poistetaan.")])
-     [hakulomake urakka sidonta-kaynnissa?]
-     [hakutulokset urakka sidonta-kaynnissa?]
-     (when sidonta-kaynnissa?
-       [sidonta-kaynnissa])]))
+     [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :yhatunnus]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet ja niiden ilmoitukset poistetaan.")])
+   [hakulomake urakka sidonta-kaynnissa?]
+   [hakutulokset urakka sidonta-kaynnissa?]
+   (when sidonta-kaynnissa?
+     [sidonta-kaynnissa])])
+
+(defn- tuontidialogi [urakka optiot]
+  (let [urakkalla-sopimuksia? (not (empty? (:sopimukset urakka)))
+        sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
+    (if urakkalla-sopimuksia?
+      [tuontidialogi* urakka sidonta-kaynnissa? optiot]
+      [:div
+       [:p (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan.
+      Urakalla ei kuitenkaan ole yhtään sopimusta Harjassa, joten sidontaa ei voi tehdä.
+      Urakan sopimus pitää perustaa Sampoon.")]])))
 
 (defn nayta-tuontidialogi [urakka]
+  (log "NÄYTÄ DIALOGI: " (pr-str urakka))
   (modal/nayta!
     {:otsikko "Urakan sitominen YHA-urakkaan"
      :luokka "yha-tuonti"

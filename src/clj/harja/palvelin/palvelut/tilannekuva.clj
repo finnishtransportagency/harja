@@ -77,7 +77,7 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]

@@ -19,7 +19,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
