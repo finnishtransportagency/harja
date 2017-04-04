@@ -4,6 +4,7 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.views.urakka.yleiset :refer [urakkaan-liitetyt-kayttajat]]
             [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
@@ -11,11 +12,11 @@
 
 (def yhteyshenkilot (atom nil))
 
-(defn- yhteyshenkilot-view [yhteyshenkilot]
-  (fn [yhteyshenkilot]
-    (log "RENDER VIEW")
-    (if yhteyshenkilot
+(defn- yhteyshenkilot-view [tiedot]
+  (fn [tiedot]
+    (if tiedot
       [:div
+       #_[urakkaan-liitetyt-kayttajat nil]
        [grid/grid
         {:otsikko "Yhteyshenkilöt"
          :tyhja "Ei yhteyshenkilöitä."}
@@ -25,7 +26,7 @@
          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-        yhteyshenkilot]]
+        tiedot]]
       [ajax-loader "Haetaan yhteyshenkilöitä..."])))
 
 (defn- yhteyshenkilot-modal []
@@ -35,7 +36,6 @@
   [yhteyshenkilot-view @yhteyshenkilot])
 
 (defn nayta-yhteyshenkilot-modal! [yhteyshenkilot]
-  (log "Näytetään yhteyshenkilöt modalissa: " (pr-str yhteyshenkilot))
   (modal/nayta!
     {:otsikko "Kohteen urakan yhteyshenkilöt"
      :footer [:span
