@@ -63,7 +63,7 @@
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
-           {:otsikko "Kokonaishinta" :leveys 5 :nimi :kokonaishinta
+           {:otsikko "Kokonais\u00ADhinta" :leveys 5 :nimi :kokonaishinta
             :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
            {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
