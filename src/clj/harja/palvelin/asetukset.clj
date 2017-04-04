@@ -122,7 +122,12 @@
    (s/optional-key :sonja-jms-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
                                                  (s/optional-key :jono)                    s/Str}
 
-   (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}})
+   (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
+
+   (s/optional-key :sahke)                  {:lahetysjono       s/Str
+                                             :paivittainen-aika [s/Num]}
+
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
