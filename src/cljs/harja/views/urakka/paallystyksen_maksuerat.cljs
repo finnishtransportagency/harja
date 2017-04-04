@@ -59,23 +59,23 @@
            ;:tallennus-ei-mahdollinen-tooltip
            #_(oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
 
-          [{:otsikko "Kohdenumero" :leveys 5 :nimi :kohdenumero
+          [{:otsikko "Kohde\u00ADnumero" :leveys 5 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kokonais\u00ADhinta" :leveys 5 :nimi :kokonaishinta
             :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
-           {:otsikko "1. maksuerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
+           {:otsikko "1. maksu\u00ADerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "2. maksuerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512
+           {:otsikko "2. maksu\u00ADerä" :leveys 10 :nimi :maksuera2 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "3. maksuerä" :leveys 10 :nimi :maksuera3 :tyyppi :string :pituus-max 512
+           {:otsikko "3. maksu\u00ADerä" :leveys 10 :nimi :maksuera3 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "4. maksuerä" :leveys 10 :nimi :maksuera4 :tyyppi :string :pituus-max 512
+           {:otsikko "4. maksu\u00ADerä" :leveys 10 :nimi :maksuera4 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "5. maksuerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
+           {:otsikko "5. maksu\u00ADerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "Laskutuksen maksuerätunnus" :leveys 10 :nimi :maksueratunnus
+           {:otsikko "Lasku\u00ADtuksen maksuerä\u00ADtunnus" :leveys 10 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat
               (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
