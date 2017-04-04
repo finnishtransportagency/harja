@@ -18,7 +18,8 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -74,7 +75,8 @@
         :fmt tierekisteri/tierekisteriosoite-tekstina}
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
-       {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}] ;; Päätös
+       {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
+       {:otsikko "Poikkeamaraportti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
       poikkeamat]]))
 
 (defn paatos?
