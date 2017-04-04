@@ -38,8 +38,9 @@
                     :kaikki "Kaikki"
                     :kasitellyt "Käsitellyt (päätös tehty)"
                     :selvitys "Odottaa urakoitsijan selvitystä"
-                    :omat "Minun kirjaamat / kommentoimat")}
-      [:kaikki :selvitys :kasitellyt :omat]]
+                    :omat "Minun kirjaamat / kommentoimat"
+                    :poikkeamaraportilliset "Poikkeamaraportilliset")}
+      [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
 
      [urakka-valinnat/aikavali]
 

@@ -167,6 +167,48 @@ WHERE lp.urakka = :urakka
             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 
+-- name: hae-poikkeamaraportilliset-laatupoikkeamat
+-- Hakee listaukseen kaikki laatupoikkeamat, joilla on poikkeamaraportti
+SELECT
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
+  CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.kuvaus,
+  lp.tr_numero,
+  lp.tr_alkuosa,
+  lp.tr_alkuetaisyys,
+  lp.tr_loppuosa,
+  lp.tr_loppuetaisyys,
+  lp.sijainti,
+  ypk.tr_numero                      AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa                     AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys                AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa                    AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys               AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero                    AS yllapitokohde_numero,
+  ypk.nimi                           AS yllapitokohde_nimi
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
+      AND lp."sisaltaa-poikkeamaraportin?" IS TRUE
+      AND (aika >= :alku AND aika <= :loppu)
+      AND s.suorasanktio IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+           OR
+           lp.yllapitokohde IS NOT NULL AND
+           (SELECT poistettu
+            FROM yllapitokohde
+            WHERE id = lp.yllapitokohde) IS NOT TRUE);
+
 -- name: hae-laatupoikkeaman-tiedot
 -- Hakee laatupoikkeaman tiedot muokkausnäkymiin.
 SELECT
