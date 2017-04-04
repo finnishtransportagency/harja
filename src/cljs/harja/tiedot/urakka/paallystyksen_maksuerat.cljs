@@ -51,11 +51,11 @@
   [maksuerarivi]
   (if (empty? (:maksuerat maksuerarivi))
     (dissoc maksuerarivi :maksuerat)
-    (let [assoc-params (apply concat (map
-                                       (fn [maksuera]
-                                         [(keyword (str "maksuera" (:maksueranumero maksuera)))
-                                         (:sisalto maksuera)])
-                                       (sort-by :maksueranumero (:maksuerat maksuerarivi))))]
+    (let [assoc-params (mapcat
+                         (fn [maksuera]
+                           [(keyword (str "maksuera" (:maksueranumero maksuera)))
+                            (:sisalto maksuera)])
+                         (sort-by :maksueranumero (:maksuerat maksuerarivi)))]
       (apply assoc
              (dissoc maksuerarivi :maksuerat)
              assoc-params))))
