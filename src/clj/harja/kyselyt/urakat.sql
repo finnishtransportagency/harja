@@ -699,3 +699,9 @@ SELECT
 FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.id = :id;
+
+
+-- name: kirjaa-sahke-lahetys!
+INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
+VALUES (:urakka, now(), :onnistunut);
+
