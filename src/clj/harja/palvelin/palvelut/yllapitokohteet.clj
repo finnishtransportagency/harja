@@ -15,6 +15,7 @@
              :refer
              [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
+            [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
@@ -28,8 +29,10 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.tierekisteri :as tr-domain])
-  (:use org.httpkit.fake))
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.roolit :as roolit])
+  (:use org.httpkit.fake)
+  (:import (harja.domain.roolit EiOikeutta)))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -410,13 +413,17 @@
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 (defn hae-kohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
-  ;; TODO OIKEUSTARKISTUS!?
-  (jdbc/with-db-transaction [db db]
+  (try+
     (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id) ;; TODO ONKO TÄMÄ OIKEIN!?
+
           fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
           yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
       {:fim-kayttajat (vec fim-kayttajat)
-       :yhteyshenkilot (vec yhteyshenkilot)})))
+       :yhteyshenkilot (vec yhteyshenkilot)})
+    (catch EiOikeutta e
+      ;; Frontilla näytetään tieto siitä, ettei käyttäjällä ole oikeutta tarkastella yhteyshenkilöitä
+      :ei-oikeutta)))
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

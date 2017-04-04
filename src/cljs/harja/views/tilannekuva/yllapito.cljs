@@ -7,7 +7,8 @@
             [harja.views.urakka.yleiset :refer [urakkaan-liitetyt-kayttajat]]
             [harja.ui.modal :as modal]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -17,7 +18,9 @@
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]
     (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
-      (if tiedot
+      (case tiedot
+        nil [ajax-loader "Haetaan yhteyshenkilöitä..."]
+        :ei-oikeutta [:p "Ei käyttöoikeutta tarkastella yhteyshenkilöitä."]
         [:div
          [urakkaan-liitetyt-kayttajat fim-kayttajat]
          [grid/grid
@@ -29,13 +32,11 @@
            {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
            {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-          yhteyshenkilot]]
-        [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
+          yhteyshenkilot]]))))
 
 (defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
   (go (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
         (if (k/virhe? vastaus)
-          ;; TODO Jos ei oikeutta, älä näytä herjaa vaan inline-teksti "Ei oikeutta" tjsp?
           (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
           (reset! yhteyshenkilot vastaus))))
 
