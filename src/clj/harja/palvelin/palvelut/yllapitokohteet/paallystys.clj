@@ -110,8 +110,10 @@
       (doseq [yllapitokohde yllapitokohteet]
         (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id yllapitokohde)))
 
-      (let [voi-tayttaa-maksuerat? (oikeudet/on-muu-oikeus? "maksuerät" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)
-            voi-tayttaa-maksueratunnuksen? (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)]
+      (let [voi-tayttaa-maksuerat?
+            (oikeudet/on-muu-oikeus? "maksuerät" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)
+            voi-tayttaa-maksueratunnuksen?
+            (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)]
 
         (when voi-tayttaa-maksuerat?
           (tallenna-maksuerat db yllapitokohteet))
