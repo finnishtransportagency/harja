@@ -16,7 +16,7 @@
   (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:maksuerat [{:sisalto "Kolmas erä" :maksueranumero 3}
                         {:sisalto "Toka erä" :maksueranumero 2}]})
-         {:maksuera1 "Eka erä" :maksuera3 "Kolmas erä"}))
+         {:maksuera2 "Toka erä" :maksuera3 "Kolmas erä"}))
   (is (= (maksuerat/maksuerarivi-grid-muotoon
            {:yllapitokohde-id 1 :maksuerat []})
          {:yllapitokohde-id 1}))
