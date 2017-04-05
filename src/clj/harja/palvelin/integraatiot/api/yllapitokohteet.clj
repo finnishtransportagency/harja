@@ -164,7 +164,7 @@
            :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
-  (let [tiemerkintapvm-ennen-paivitysta (:valmis-tiemerkintaan
+  (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
                                           (first (yllapitokohteet-q/hae-yllapitokohteen-aikataulu
                                                    db {:id kohde-id})))
         kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
@@ -185,11 +185,12 @@
          :muokkaaja (:id kayttaja)
          :kohde_id kohde-id}))
 
-    (viestinta/valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
-      {:db db :fim fim :email email :kohde-id kohde-id
-       :vanha-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
-       :nykyinen-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
-       :kayttaja kayttaja})
+    (when (viestinta/valita-tieto-valmis-tiemerkintaan?
+            vanha-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu)))
+      (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+        {:db db :fim fim :email email :kohde-id kohde-id
+         :tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+         :kayttaja kayttaja}))
 
     (if kohteella-paallystysilmoitus?
       (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!

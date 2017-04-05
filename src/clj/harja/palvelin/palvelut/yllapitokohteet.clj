@@ -116,9 +116,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
-    (let [tiemerkintapvm-ennen-paivitysta (:valmis-tiemerkintaan
-                                            (first (q/hae-yllapitokohteen-aikataulu
-                                                     db {:id kohde-id})))]
+    (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
+                                 (first (q/hae-yllapitokohteen-aikataulu
+                                          db {:id kohde-id})))]
       (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
         db
         {:valmis_tiemerkintaan tiemerkintapvm
@@ -129,11 +129,11 @@
          :id kohde-id
          :urakka urakka-id})
 
-      (viestinta/valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
-        {:db db :fim fim :email email :kohde-id kohde-id
-         :vanha-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
-         :nykyinen-tiemerkintapvm tiemerkintapvm
-         :kayttaja user})
+      (when (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+        (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+          {:db db :fim fim :email email :kohde-id kohde-id
+           :tiemerkintapvm tiemerkintapvm
+           :kayttaja user}))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                      :sopimus-id sopimus-id

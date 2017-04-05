@@ -173,13 +173,6 @@
                                                      :ilmoittaja ilmoittaja
                                                      :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})})))
 
-(defn- valita-tieto-valmis-tiemerkintaan? [vanha-tiemerkintapvm nykyinen-tiemerkintapvm]
-  (boolean (or (and (nil? vanha-tiemerkintapvm)
-                    (some? nykyinen-tiemerkintapvm))
-               (and (some? vanha-tiemerkintapvm)
-                    (some? nykyinen-tiemerkintapvm)
-                    (not= vanha-tiemerkintapvm nykyinen-tiemerkintapvm)))))
-
 ;; Viestien lähetykset (julkinen rajapinta)
 
 (defn suodata-tiemerkityt-kohteet-viestintaan
@@ -202,10 +195,15 @@
                                          uudet-kohdetiedot)]
     nyt-valmistuneet-kohteet))
 
+(defn valita-tieto-valmis-tiemerkintaan? [vanha-tiemerkintapvm nykyinen-tiemerkintapvm]
+  (boolean (or (and (nil? vanha-tiemerkintapvm)
+                    (some? nykyinen-tiemerkintapvm))
+               (and (some? vanha-tiemerkintapvm)
+                    (some? nykyinen-tiemerkintapvm)
+                    (not= vanha-tiemerkintapvm nykyinen-tiemerkintapvm)))))
+
 (defn valita-tieto-tiemerkinnan-valmistumisesta
-  "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.
-   Olettaa, että valmistuneet kohteet ovat sellaisia, joiden tiemerkinnän valmistumispvm
-   on juuri annettu ensimmäistä kertaa tai päivitetty."
+  "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.."
   [{:keys [db kayttaja fim email valmistuneet-kohteet]}]
   (when (not (empty? valmistuneet-kohteet))
     (laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
@@ -215,12 +213,10 @@
                                                (map :aikataulu-tiemerkinta-loppu valmistuneet-kohteet))
                                        :ilmoittaja kayttaja})))
 
-(defn valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
-  "Välittää tiedon kohteen valmiudesta tiemerkintään, mikäli tiemerkintäpvm annettiin ensimmäist
-   kertaa tai päivitettiin."
-  [{:keys [db fim email kohde-id vanha-tiemerkintapvm nykyinen-tiemerkintapvm kayttaja]}]
-  (when (valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm nykyinen-tiemerkintapvm)
-    (laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
-                                            :kohde-id kohde-id
-                                            :tiemerkintapvm nykyinen-tiemerkintapvm
-                                            :ilmoittaja kayttaja})))
+(defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
+  "Välittää tiedon kohteen valmiudesta tiemerkintään."
+  [{:keys [db fim email kohde-id tiemerkintapvm kayttaja]}]
+  (laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                          :kohde-id kohde-id
+                                          :tiemerkintapvm tiemerkintapvm
+                                          :ilmoittaja kayttaja}))
