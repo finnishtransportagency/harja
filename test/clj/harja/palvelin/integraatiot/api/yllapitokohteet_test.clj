@@ -309,7 +309,7 @@
           (<!! (timeout 2000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
-(deftest aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
+(deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
@@ -336,6 +336,42 @@
 
           (<!! (timeout 2000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
+
+(deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       #".*api\/urakat.*" :allow]
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                                             kayttaja-paallystys portti
+                                             (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
+        (is (= 200 (:status vastaus)))
+
+        ;; Valmiiksi tiemerkintään annettiin ekaa kertaa tälle kohteelle -> pitäisi lähteä maili
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+
+(deftest tiemerkinnan-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       #".*api\/urakat.*" :allow]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            kohde-id (hae-yllapitokohde-nakkilan-ramppi)
+            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
+                                             kayttaja-tiemerkinta portti
+                                             (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
+        (is (= 200 (:status vastaus)))
+
+        ;; Tiemerkintä valmis oli annettu aiemmin, mutta nyt se päivittyi -> mailia menemään
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)
