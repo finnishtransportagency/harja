@@ -14,19 +14,18 @@
   (log/info (format "Lähetetään urakka: %s Sähkeeseen" urakka-id))
 
   (let [viesti-id (str (UUID/randomUUID))
-        urakka (q-urakat/hae-urakka-lahetettavaksi-sahkeeseen db urakka-id)
+        urakka (first (q-urakat/hae-urakka-lahetettavaksi-sahkeeseen db urakka-id))
         muodosta-xml #(urakkasanoma/muodosta urakka viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
       (log/debug (format "Urakan (id: %s) lähetys Sähkeeseen onnistui." urakka-id))
-      (q-urakat/kirjaa-sahke-lahetys! :db urakka-id true)
+      (q-urakat/kirjaa-sahke-lahetys! db urakka-id true)
       (catch Exception e
         (log/error e (format "Urakan (id: %s) lähetys Sähkeeseen epäonnistui." urakka-id))
-        (q-urakat/kirjaa-sahke-lahetys! :db urakka-id false)))))
+        (q-urakat/kirjaa-sahke-lahetys! db urakka-id false)))))
 
 (defn tee-jms-lahettaja [sonja integraatioloki db lahetysjono]
-  (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sahke" "urakan-lahetys")
-                     sonja lahetysjono))
+  (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sahke" "urakan-lahetys") sonja lahetysjono))
 
 (defrecord Sahke [lahetysjono uudelleenlahetysaika]
   component/Lifecycle
