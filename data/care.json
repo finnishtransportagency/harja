@@ -1,5 +1,11 @@
 [
   {
+    "date": "2017-04-05",
+    "title": "Tierekisterin varustenäkymät käyttöön Harjan testiympäristössä",
+    "short": "Harjan Tierekisterin varusteiden hallintaan tarkoitettu näkymät on otettu käyttöön testiympäristössä",
+    "body": "Näkymät löytyvät testiympäristössä (https://testiextranet.liikennevirasto.fi/harja/) urakoiden toteumien varusteosion alta. Tierekisterin varustenäkymät sekä rajapinta ovat yhä raskaasti kehityksen alla. Näin ollen ne eivät ole vielä tarkoitettu viralliseen käyttöön. Kuitenkin näkymät on haluttu ottaa käyttöön, jotta käyttäjät voivat nähdä miltä näkymät näyttävät. Näkymistä ei toimi vielä täysin mm. lisäys- ja muokkausoperaatiot testi-Tierekisteriin."
+  },
+  {
     "date": "2017-04-04",
     "title": "Mahdollisuus hakea järjestelmäkäyttäjätunnuksella urakat API:n kautta",
     "short": "Jatkossa Harjan API:n kautta voidaan hakea suoraan kaikki urakat, joihin järjestelmätunnuksella on oikeudet",
