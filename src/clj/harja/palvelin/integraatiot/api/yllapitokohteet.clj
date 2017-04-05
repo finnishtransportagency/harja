@@ -178,6 +178,7 @@
        :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})
+
     (when kohteella-paallystysilmoitus?
       (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
         db
@@ -231,12 +232,12 @@
     (paivita-paallystyksen-aikataulu {:db db :fim fim :email email
                                       :kayttaja kayttaja
                                       :kohde-id kohde-id
-                                      :aikataulu data})
+                                      :aikataulu (:aikataulu data)})
     :tiemerkinta
     (paivita-tiemerkinnan-aikataulu {:db db :fim fim :email email
                                      :kayttaja kayttaja
                                      :kohde-id kohde-id
-                                     :aikataulu data})
+                                     :aikataulu (:aikataulu data)})
     (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                             {:koodi virheet/+viallinen-kutsu+
                              :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
