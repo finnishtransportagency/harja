@@ -526,6 +526,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
 (def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
+(def +validi-aika-regex+ #"\d{1,2}:\d{2}")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -732,7 +733,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                    :pakota-suunta pakota-suunta}])]
              [:td
               [:input {:class       (str (when lomake? "form-control")
-                                         (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                         (when (and (not (re-matches +validi-aika-regex+
+                                                                     nykyinen-aika-teksti))
                                                     (pvm/->pvm nykyinen-pvm-teksti))
                                            " puuttuva-arvo"))
                        :placeholder "tt:mm"
