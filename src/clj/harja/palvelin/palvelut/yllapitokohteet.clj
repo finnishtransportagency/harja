@@ -182,7 +182,7 @@
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
 
   (jdbc/with-db-transaction [db db]
-    (let [valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan kohteet)]
+    (let [valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan db kohteet)]
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
