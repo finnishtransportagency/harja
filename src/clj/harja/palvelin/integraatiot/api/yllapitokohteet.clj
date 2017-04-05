@@ -59,10 +59,11 @@
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.palvelut.yllapitokohteet :as ypk]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as kasittely]
             [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat])
@@ -164,7 +165,7 @@
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
   (let [tiemerkintapvm-ennen-paivitysta (:valmis-tiemerkintaan
-                                          (first (q/hae-yllapitokohteen-aikataulu
+                                          (first (yllapitokohteet-q/hae-yllapitokohteen-aikataulu
                                                    db {:id kohde-id})))
         kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
@@ -184,9 +185,9 @@
          :muokkaaja (:id kayttaja)
          :kohde_id kohde-id}))
 
-    (ypk/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+    (viestinta/valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
       {:db db :fim fim :email email :kohde-id kohde-id
-       :aiempi-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
+       :vanha-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
        :nykyinen-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
        :kayttaja kayttaja})
 
@@ -199,15 +200,24 @@
           {})
       {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetty."})))
 
-(defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
-  (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
-    db
-    {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
-     :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-valmis aikataulu))
-     :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
-     :muokkaaja (:id kayttaja)
-     :id kohde-id})
-  {})
+(defn- paivita-tiemerkinnan-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
+  (let [yllapitokohde-viestintaan {:id kohde-id
+                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->java-sql-date
+                                                                  (:tiemerkinta-valmis aikataulu))}
+        valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan [yllapitokohde-viestintaan])]
+
+    (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
+      db
+      {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
+       :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-valmis aikataulu))
+       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
+       :muokkaaja (:id kayttaja)
+       :id kohde-id})
+
+    (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja kayttaja :fim fim
+                                                          :email email
+                                                          :valmistuneet-kohteet valmistuneet-kohteet})
+    {}))
 
 (defn- paivita-yllapitokohteen-aikataulu
   "Päivittää ylläpitokohteen aikataulutiedot.
@@ -221,7 +231,10 @@
                                       :kohde-id kohde-id
                                       :aikataulu data})
     :tiemerkinta
-    (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
+    (paivita-tiemerkinnan-aikataulu {:db db :fim fim :email email
+                                     :kayttaja kayttaja
+                                     :kohde-id kohde-id
+                                     :aikataulu data})
     (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                             {:koodi virheet/+viallinen-kutsu+
                              :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "

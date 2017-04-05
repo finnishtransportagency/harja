@@ -10,7 +10,8 @@
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
-            [harja.palvelin.komponentit.fim :as fim])
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn formatoi-ilmoittaja [{:keys [etunimi sukunimi puhelin organisaatio] :as merkitsija}]
@@ -120,9 +121,7 @@
                          :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
                          :ilmoittaja (:ilmoittaja eka-kohde)}))})))
 
-;; Viestien lähetykset (julkinen rajapinta)
-
-(defn laheta-sposti-tiemerkinta-valmis
+(defn- laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta.
 
@@ -141,7 +140,7 @@
            :yhden-paallystysurakan-kohde-idt (map :id kohteet)
            :ilmoittaja ilmoittaja :valmistumispvmt valmistumispvmt})))))
 
-(defn laheta-sposti-kohde-valmis-merkintaan
+(defn- laheta-sposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään.
 
@@ -173,3 +172,54 @@
                                                      :tiemerkintapvm tiemerkintapvm
                                                      :ilmoittaja ilmoittaja
                                                      :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})})))
+
+(defn- valita-tieto-valmis-tiemerkintaan? [vanha-tiemerkintapvm nykyinen-tiemerkintapvm]
+  (boolean (or (and (nil? vanha-tiemerkintapvm)
+                    (some? nykyinen-tiemerkintapvm))
+               (and (some? vanha-tiemerkintapvm)
+                    (some? nykyinen-tiemerkintapvm)
+                    (not= vanha-tiemerkintapvm nykyinen-tiemerkintapvm)))))
+
+;; Viestien lähetykset (julkinen rajapinta)
+
+(defn suodata-tiemerkityt-kohteet-viestintaan
+  "Ottaa ylläpitokohteiden viimeisimmät tiedot ja palauttaa ne kohteet, joiden tiemerkintä valmistuu
+   (valmistumispvm on kannassa null ja uusissa tiedoissa annettu TAI pvm on eri kuin kannassa).
+   HUOM! Täytyy suorittaa ennen kuin viimeisimmät tiedot on ajettu kantaan."
+  [{:keys [db kohde-idt uudet-kohdetiedot]}]
+  (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db {:idt kohde-idt}))
+        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
+                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
+                                                                               kohteet-kannassa))]
+                                             (or (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                      (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))
+                                                 (and (some? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                      (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde))
+                                                      (not= (:aikataulu-tiemerkinta-loppu tallennettava-kohde)
+                                                            (:aikataulu-tiemerkinta-loppu kohde-kannassa))))))
+                                         uudet-kohdetiedot)]
+    nyt-valmistuneet-kohteet))
+
+(defn valita-tieto-tiemerkinnan-valmistumisesta
+  "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.
+   Olettaa, että valmistuneet kohteet ovat sellaisia, joiden tiemerkinnän valmistumispvm
+   on juuri annettu ensimmäistä kertaa tai päivitetty."
+  [{:keys [db kayttaja fim email valmistuneet-kohteet]}]
+  (when (not (empty? valmistuneet-kohteet))
+    (laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
+                                                 :kohde-idt (mapv :id valmistuneet-kohteet)
+                                                 :valmistumispvmt
+                                                 (zipmap (map :id valmistuneet-kohteet)
+                                                         (map :aikataulu-tiemerkinta-loppu valmistuneet-kohteet))
+                                                 :ilmoittaja kayttaja})))
+
+(defn valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
+  "Välittää tiedon kohteen valmiudesta tiemerkintään, mikäli tiemerkintäpvm annettiin ensimmäist
+   kertaa tai päivitettiin."
+  [{:keys [db fim email kohde-id vanha-tiemerkintapvm nykyinen-tiemerkintapvm kayttaja]}]
+  (when (valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm nykyinen-tiemerkintapvm)
+    (laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                      :kohde-id kohde-id
+                                                      :tiemerkintapvm nykyinen-tiemerkintapvm
+                                                      :ilmoittaja kayttaja})))

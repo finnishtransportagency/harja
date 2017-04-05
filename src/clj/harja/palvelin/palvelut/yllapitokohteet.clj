@@ -106,16 +106,7 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
-(defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
-  "Välittää tiedon kohteen valmiudesta tiemerkintään, mikäli uusi tiemerkintäpvm
-   poikkeaa vanhasta (kannassa aiemmin olleesta)"
-  [{:keys [db fim email kohde-id aiempi-tiemerkintapvm nykyinen-tiemerkintapvm kayttaja]}]
-  (when (and nykyinen-tiemerkintapvm
-             (not= aiempi-tiemerkintapvm nykyinen-tiemerkintapvm))
-    (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
-                                                      :kohde-id kohde-id
-                                                      :tiemerkintapvm nykyinen-tiemerkintapvm
-                                                      :ilmoittaja kayttaja})))
+
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
@@ -138,9 +129,9 @@
          :id kohde-id
          :urakka urakka-id})
 
-      (valita-tieto-kohteen-valmiudesta-tiemerkintaan
+      (viestinta/valita-tarvittaessa-tieto-kohteen-valmiudesta-tiemerkintaan
         {:db db :fim fim :email email :kohde-id kohde-id
-         :aiempi-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
+         :vanha-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
          :nykyinen-tiemerkintapvm tiemerkintapvm
          :kayttaja user})
 
@@ -186,47 +177,30 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
-(defn valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db kayttaja fim email kohteet]}]
-  ;; Täytyy ajaa samassa transaktiossa tallennuksen kanssa
-  (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                    db {:idt (map :id kohteet)}))
-        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
-                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
-                                                                               kohteet-kannassa))]
-                                             (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
-                                                  (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
-                                         kohteet)]
-    (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
-                                                 :kohde-idt (mapv :id nyt-valmistuneet-kohteet)
-                                                 :valmistumispvmt
-                                                 (zipmap (map :id nyt-valmistuneet-kohteet)
-                                                         (map :aikataulu-tiemerkinta-loppu nyt-valmistuneet-kohteet))
-                                                 :ilmoittaja kayttaja})))
-
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
 
   (jdbc/with-db-transaction [db db]
-    ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
-    ;; että tuleeko valmistumispäivämäärä muuttumaan kannassa nillistä päivämääräksi
-    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja user :fim fim
-                                                :email email :kohteet kohteet})
-
-    (doseq [kohde kohteet]
-      (q/tallenna-tiemerkintakohteen-aikataulu!
-        db
-        {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
-         :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu kohde)
-         :aikataulu_muokkaaja (:id user)
-         :id (:id kohde)
-         :suorittava_tiemerkintaurakka tiemerkintaurakka-id})
-      (when voi-tallentaa-tiemerkinnan-takarajan?
-        (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
+    (let [valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan kohteet)]
+      (doseq [kohde kohteet]
+        (q/tallenna-tiemerkintakohteen-aikataulu!
           db
-          {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
+          {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
+           :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu kohde)
+           :aikataulu_muokkaaja (:id user)
            :id (:id kohde)
-           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))))
+           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})
+        (when voi-tallentaa-tiemerkinnan-takarajan?
+          (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
+            db
+            {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
+             :id (:id kohde)
+             :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
+
+      (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja user :fim fim
+                                                            :email email
+                                                            :valmistuneet-kohteet valmistuneet-kohteet}))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
