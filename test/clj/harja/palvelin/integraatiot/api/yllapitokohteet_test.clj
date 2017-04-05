@@ -310,7 +310,7 @@
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
