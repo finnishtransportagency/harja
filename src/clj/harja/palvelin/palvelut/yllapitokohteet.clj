@@ -106,14 +106,13 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
-
-
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
    {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
     (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan

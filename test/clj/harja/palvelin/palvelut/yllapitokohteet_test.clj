@@ -522,7 +522,6 @@
                                             :vuosi vuosi
                                             :kohteet kohteet})))))
 
-
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
@@ -620,11 +619,9 @@
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
             vuosi 2017
-            aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
-            aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
             kohteet [{:id nakkilan-ramppi-id
-                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+                      :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                      :aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-yllapitokohteiden-aikataulu
                               +kayttaja-jvh+
@@ -635,6 +632,23 @@
         ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
         (<!! (timeout 2000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        vuosi 2017
+        kohteet [{:id nakkilan-ramppi-id
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")}]]
+
+        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :tallenna-yllapitokohteiden-aikataulu
+                                               +kayttaja-jvh+
+                                               {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :vuosi vuosi
+                                                :kohteet kohteet})))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
   (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #())
