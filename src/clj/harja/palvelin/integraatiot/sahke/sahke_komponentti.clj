@@ -12,7 +12,6 @@
 
 (defn laheta-urakka [jms-lahettaja db urakka-id]
   (log/info (format "Lähetetään urakka: %s Sähkeeseen" urakka-id))
-
   (let [viesti-id (str (UUID/randomUUID))
         urakka (first (q-urakat/hae-urakka-lahetettavaksi-sahkeeseen db urakka-id))
         muodosta-xml #(urakkasanoma/muodosta urakka viesti-id)]
