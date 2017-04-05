@@ -369,6 +369,18 @@
                                       AND vuodet @> ARRAY[2015]::int[]")))]
       (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
+(deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        leppajarvi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteet +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi 2015
+                                            :kohteet [(assoc yllapitokohde-testidata :id leppajarvi-id)]})))))
+
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
@@ -487,6 +499,29 @@
     ;; Tiemerkinnän aikatauluun ei koskettu
     (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+
+(deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        vuosi 2017
+        leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+        leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "23.5.2017")
+        kohteet [{:id leppajarven-ramppi-id
+                  :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                  :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
+                 {:id nakkilan-ramppi-id
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteiden-aikataulu
+                                           +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi vuosi
+                                            :kohteet kohteet})))))
+
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
