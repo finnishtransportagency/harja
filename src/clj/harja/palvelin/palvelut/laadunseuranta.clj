@@ -51,7 +51,8 @@
              :omat laatupoikkeamat-q/hae-omat-laatupoikkeamat
              :kaikki laatupoikkeamat-q/hae-kaikki-laatupoikkeamat
              :selvitys laatupoikkeamat-q/hae-selvitysta-odottavat-laatupoikkeamat
-             :kasitellyt laatupoikkeamat-q/hae-kasitellyt-laatupoikkeamat)
+             :kasitellyt laatupoikkeamat-q/hae-kasitellyt-laatupoikkeamat
+             :poikkeamaraportilliset laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat)
             db
             {:urakka urakka-id
              :alku (konv/sql-timestamp alku)
