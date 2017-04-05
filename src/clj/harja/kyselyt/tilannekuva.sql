@@ -257,14 +257,21 @@ SELECT
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku                       AS "kohde-alkupvm",
-  ypka.paallystys_alku                  AS "paallystys-alkupvm",
-  ypka.paallystys_loppu                 AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis                     AS "kohde-valmispvm",
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi                                AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -272,9 +279,9 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija
-                               FROM urakka
-                               WHERE id = ypk.urakka) = o.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypka.kohde_valmis IS NULL OR
@@ -309,14 +316,21 @@ SELECT
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku                       AS "kohde-alkupvm",
-  ypka.paallystys_alku                  AS "paallystys-alkupvm",
-  ypka.paallystys_loppu                 AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis                     AS "kohde-valmispvm",
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi                                AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -324,9 +338,9 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija
-                               FROM urakka
-                               WHERE id = ypk.urakka) = o.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypka.kohde_alku < :loppu
@@ -361,21 +375,21 @@ SELECT
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku                       AS "kohde-alkupvm",
-  ypka.paallystys_alku                  AS "paallystys-alkupvm",
-  ypka.paallystys_loppu                 AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis                     AS "kohde-valmispvm",
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi                                AS "urakka",
-  yh.id                                 AS yhteyshenkilo_id,
-  yh.etunimi                            AS yhteyshenkilo_etunimi,
-  yh.sukunimi                           AS yhteyshenkilo_sukunimi,
-  yh.tyopuhelin                         AS yhteyshenkilo_tyopuhelin,
-  yh.matkapuhelin                       AS yhteyshenkilo_matkapuhelin,
-  yh.sahkoposti                         AS yhteyshenkilo_sahkoposti,
-  yh_u.rooli                            AS yhteyshenkilo_rooli
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -383,9 +397,7 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija
-                               FROM urakka
-                               WHERE id = ypk.urakka) = o.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
@@ -422,21 +434,21 @@ SELECT
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku                       AS "kohde-alkupvm",
-  ypka.paallystys_alku                  AS "paallystys-alkupvm",
-  ypka.paallystys_loppu                 AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis                     AS "kohde-valmispvm",
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi                                AS "urakka",
-  yh.id                                 AS yhteyshenkilo_id,
-  yh.etunimi                            AS yhteyshenkilo_etunimi,
-  yh.sukunimi                           AS yhteyshenkilo_sukunimi,
-  yh.tyopuhelin                         AS yhteyshenkilo_tyopuhelin,
-  yh.matkapuhelin                       AS yhteyshenkilo_matkapuhelin,
-  yh.sahkoposti                         AS yhteyshenkilo_sahkoposti,
-  yh_u.rooli                            AS yhteyshenkilo_rooli
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -444,9 +456,7 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija
-                               FROM urakka
-                               WHERE id = ypk.urakka) = o.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
