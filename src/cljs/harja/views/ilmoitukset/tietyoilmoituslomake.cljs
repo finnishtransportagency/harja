@@ -230,7 +230,7 @@
               :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
               :tyyppi :string}])))
 
-(defn- lomaketoiminnot [e! tallennus-kaynnissa? ilmoitus]
+(defn- lomaketoiminnot [e! kayttajan-urakat tallennus-kaynnissa? ilmoitus]
   (r/with-let [avaa-pdf? (r/atom false)]
     [:table
      [:tbody
@@ -240,7 +240,7 @@
          "Tallenna ilmoitus"
          #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
          {:disabled (or tallennus-kaynnissa?
-                        (not (t/voi-tallentaa? ilmoitus))
+                        (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
                         (not (lomake/voi-tallentaa? ilmoitus)))
           :tallennus-kaynnissa? tallennus-kaynnissa?
           :ikoni (ikonit/tallenna)}]]
@@ -260,7 +260,7 @@
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
     [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
                     :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
-                    :footer-fn (partial lomaketoiminnot e! tallennus-kaynnissa?)
+                    :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
                     :luokka "ryhma-reuna"}
      [(lomake/ryhma
         "Urakka"
