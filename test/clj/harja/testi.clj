@@ -1,20 +1,21 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-    [clojure.test :refer :all]
-    [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.http-palvelin :as http]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.liitteet :as liitteet]
-    [com.stuartsierra.component :as component]
-    [clj-time.core :as t]
-    [clj-time.coerce :as tc]
-    [clojure.core.async :as async]
-    [clojure.spec :as s])
+   [clojure.test :refer :all]
+   [taoensso.timbre :as log]
+   [harja.kyselyt.urakat :as urk-q]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.http-palvelin :as http]
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [com.stuartsierra.component :as component]
+   [clj-time.core :as t]
+   [clj-time.coerce :as tc]
+   [clojure.core.async :as async]
+   [clojure.spec :as s]
+   [clojure.string :as str])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -28,12 +29,16 @@
 (defn travis? []
   (= "true" (System/getenv "TRAVIS")))
 
+(defn circleci? []
+  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
 (log/set-config! [:appenders :standard-out :min-level]
                  (cond
                    (or (ollaanko-jenkinsissa?)
                        (travis?)
+                       (circleci?)
                        (= "true" (System/getenv "NOLOG")))
                    :fatal
 
