@@ -43,7 +43,6 @@
                        (Math/sqrt (+ (* xd xd) (* yd yd)))))
           lahin-piste (apply min-key etaisyys reittipisteet)
           [edellinen-piste seuraava-piste] (ymparoivat lahin-piste reittipisteet)
-          _ (println "pistvec" [edellinen-piste lahin-piste seuraava-piste])
           [rp1 rp2 rp3] (map (comp clj-piste->sql :sijainti) [edellinen-piste lahin-piste seuraava-piste])
           esi-naapurit-etaisyyksilla (tilannekuva-q/reittipisteiden-sijainnit-toteuman-reitilla
                                       db {:toteuma-id toteuma-id :reittipiste-idt (map :id [edellinen-piste seuraava-piste])})
