@@ -711,3 +711,8 @@ SELECT exists(SELECT ''
                 JOIN sahkelahetys sl ON u.id = sl.urakka
               WHERE u.sampoid = :sampoid);
 
+-- name: hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut
+SELECT urakka
+FROM sahkelahetys
+WHERE onnistunut IS FALSE;
+
