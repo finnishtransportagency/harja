@@ -12,7 +12,7 @@
             [clj-time.coerce :as c]
             [harja.domain.tilannekuva :as tk]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 
 (defn jarjestelma-fixture [testit]
