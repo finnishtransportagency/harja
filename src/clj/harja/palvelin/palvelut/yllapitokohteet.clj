@@ -412,19 +412,6 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
-(defn hae-kohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
-  (try+
-    (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id)
-
-          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
-      {:fim-kayttajat (vec fim-kayttajat)
-       :yhteyshenkilot (vec yhteyshenkilot)})
-    (catch EiOikeutta e
-      ;; Frontilla näytetään tieto siitä, ettei käyttäjällä ole oikeutta tarkastella yhteyshenkilöitä
-      :ei-oikeutta)))
-
 (defrecord Yllapitokohteet []
   component/Lifecycle
   (start [this]
@@ -462,9 +449,7 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-      (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
-                        (fn [user tiedot]
-                          (hae-kohteen-urakan-yhteyshenkilot db fim user tiedot)))
+
       this))
 
   (stop [this]

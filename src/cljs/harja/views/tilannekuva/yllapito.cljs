@@ -18,9 +18,7 @@
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]
     (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
-      (case tiedot
-        nil [ajax-loader "Haetaan yhteyshenkilöitä..."]
-        :ei-oikeutta [:p "Ei käyttöoikeutta tarkastella yhteyshenkilöitä."]
+      (if tiedot
         [:div
          [urakkaan-liitetyt-kayttajat fim-kayttajat]
          [grid/grid
@@ -32,7 +30,8 @@
            {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
            {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-          yhteyshenkilot]]))))
+          yhteyshenkilot]]
+        [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
 
 (defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
   (go (do

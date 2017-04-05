@@ -391,7 +391,8 @@
                      (tilannekuva/->Tilannekuva)
                      {:db :db-replica
                       :http-palvelin :http-palvelin
-                      :karttakuvat :karttakuvat})
+                      :karttakuvat :karttakuvat
+                      :fim :fim})
       :tienakyma (component/using
                   (tienakyma/->Tienakyma)
                   {:db :db-replica

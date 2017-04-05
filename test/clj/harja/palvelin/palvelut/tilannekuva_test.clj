@@ -7,12 +7,17 @@
             [harja.testi :refer :all]
             [harja.paneeliapurit :as paneeli]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.tilannekuva :as tk]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [clojure.java.io :as io]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.fim :as fim])
+  (:use org.httpkit.fake))
 
 
 (defn jarjestelma-fixture [testit]
@@ -25,6 +30,12 @@
           :karttakuvat (component/using
                         (karttakuvat/luo-karttakuvat)
                         [:http-palvelin :db])
+          :integraatioloki (component/using
+                             (integraatioloki/->Integraatioloki nil)
+                             [:db])
+          :fim (component/using
+                 (fim/->FIM +testi-fim+)
+                 [:db :integraatioloki])
           :toteumat (component/using
                      (->Tilannekuva)
                       [:http-palvelin :db :karttakuvat])))))
@@ -340,3 +351,81 @@
                     [429312 7208832] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tyokone tyokone))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
+
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :yllapitokohteen-urakan-yhteyshenkilot
+                                    +kayttaja-jvh+
+                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+
+        (is (= vastaus
+               {:fim-kayttajat [{:kayttajatunnus "A000001"
+                                 :sahkoposti "erkki.esimerkki@example.com"
+                                 :puhelin ""
+                                 :sukunimi "Esimerkki"
+                                 :roolit ["ELY urakanvalvoja"]
+                                 :roolinimet ["ELY_Urakanvalvoja"]
+                                 :poistettu false
+                                 :etunimi "Erkki"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}
+                                {:kayttajatunnus "A000002"
+                                 :sahkoposti "eero.esimerkki@example.com"
+                                 :puhelin "0400123456789"
+                                 :sukunimi "Esimerkki"
+                                 :roolit ["Urakan vastuuhenkilö"]
+                                 :roolinimet ["vastuuhenkilo"]
+                                 :poistettu false
+                                 :etunimi "Eero"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}
+                                {:kayttajatunnus "A000003"
+                                 :sahkoposti "eetvartti.esimerkki@example.com"
+                                 :puhelin "0400123456788"
+                                 :sukunimi "Esimerkki"
+                                 :roolit []
+                                 :roolinimet []
+                                 :poistettu false
+                                 :etunimi "Eetvartti"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}]
+                :yhteyshenkilot [{:kayttajatunnus "Blad1936"
+                                  :sahkoposti "VihtoriOllila@einrot.com"
+                                  :sukunimi "Ollila"
+                                  :rooli "Kunnossapitopäällikkö"
+                                  :id 89
+                                  :matkapuhelin "042 220 6892"
+                                  :etunimi "Vihtori"
+                                  :organisaatio {:tyyppi :urakoitsija
+                                                 :id 11
+                                                 :nimi "YIT Rakennus Oy"
+                                                 :lyhenne nil}
+                                  :tyopuhelin nil
+                                  :organisaatio_nimi "YIT Rakennus Oy"}
+                                 {:kayttajatunnus "Clorge69"
+                                  :sahkoposti "ReijoVanska@gustr.com"
+                                  :sukunimi "Vänskä"
+                                  :rooli "Tieliikennekeskus"
+                                  :id 90
+                                  :matkapuhelin "042 805 1911"
+                                  :etunimi "Reijo"
+                                  :organisaatio {:tyyppi :urakoitsija
+                                                 :id 11
+                                                 :nimi "YIT Rakennus Oy"
+                                                 :lyhenne nil}
+                                  :tyopuhelin nil
+                                  :organisaatio_nimi "YIT Rakennus Oy"}]}))))))
+
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku-ilman-oikeuksia
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :yllapitokohteen-urakan-yhteyshenkilot
+                                               +kayttaja-ulle+
+                                               {:yllapitokohde-id leppajarven-ramppi-id})))))))
