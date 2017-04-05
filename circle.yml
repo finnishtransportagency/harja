@@ -7,6 +7,9 @@ machine:
 dependencies:
   post:
     - sudo service postgresql stop
+    - sudo service mysql stop
+    - sudo service mongod stop
+    - sudo killall Xvfb
     - while sudo lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; done
     - cd tietokanta; sh devdb_up.sh
     - echo 'Europe/Helsinki' | sudo tee /etc/timezone
@@ -14,6 +17,6 @@ dependencies:
 
 test:
   override:
-    - lein test
-    - lein doo phantom test once
-    - lein phantom laadunseuranta-test once
+    - lein trampoline test
+    - lein trampoline doo phantom test once
+    - lein trampoline doo phantom laadunseuranta-test once
