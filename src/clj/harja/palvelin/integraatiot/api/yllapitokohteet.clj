@@ -86,17 +86,6 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
-(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id urakan-tyyppi kohde-id]
-  (let [urakan-kohteet (case urakan-tyyppi
-                         :paallystys
-                         (q-yllapitokohteet/hae-urakkaan-liittyvat-paallystyskohteet db {:urakka urakka-id})
-                         :tiemerkinta
-                         (q-yllapitokohteet/hae-urakkaan-liittyvat-tiemerkintakohteet db {:urakka urakka-id}))]
-    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (virheet/heita-poikkeus virheet/+viallinen-kutsu+
-                              {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                               :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
-
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
   (when (and (some? (:paallystys-valmis aikataulu))
              (nil? (:paallystys-aloitettu aikataulu)))
@@ -136,7 +125,7 @@
                               (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+    (validointi/tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan db urakka-id urakan-tyyppi kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
     (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
@@ -156,7 +145,7 @@
           kohde-id (Integer/parseInt kohde-id)
           urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+      (validointi/tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan db urakka-id urakan-tyyppi kohde-id)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
@@ -265,7 +254,7 @@
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (vaadi-urakka-oikeaa-tyyppia urakan-tyyppi endpoint-urakkatyyppi)
-      (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+      (validointi/tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan db urakka-id urakan-tyyppi kohde-id)
       (tarkista-aikataulun-oikeellisuus (:aikataulu data))
       (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu {:db db
                                                                  :kayttaja kayttaja
@@ -297,7 +286,7 @@
     (let [urakka-id (Integer/parseInt urakka-id)
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
 
       (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
             alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti tietyomaa))
@@ -345,7 +334,7 @@
                       :poistettu (aika-string->java-sql-timestamp (:aika tietyomaa))
                       :poistaja (:id kayttaja)}]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
       (validointi/tarkista-tietyomaa db id jarjestelma)
       (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
       (tee-kirjausvastauksen-body
@@ -362,7 +351,7 @@
           kohde-id (Integer/parseInt kohde-id)
           jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
       (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
                                                                                       :jarjestelma jarjestelma})
       (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara
@@ -393,7 +382,7 @@
     (let [urakka-id (Integer/parseInt urakka-id)
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
       (let [ilmoitukset (format "Tarkastus kirjattu onnistuneesti urakan: %s ylläpitokohteelle: %s." urakka-id kohde-id)
             varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset
