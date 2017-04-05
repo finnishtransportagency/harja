@@ -335,6 +335,11 @@
           (is (= 200 (:status vastaus)))
 
           (<!! (timeout 2000))
+          ;; TODO Tutki miksi failaa:
+          ;; [DEBUG] VALMIS TIEMERKINTÄÄN VANHA: #inst "2015-01-11T22:00:00.000000000-00:00"
+          ;; [DEBUG] VALMIS TIEMERKINTÄÄN UUSI: #inst "2015-01-11T22:00:00.000-00:00"
+          ;; [DEBUG] MAILIA SIIS!?: true
+
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan

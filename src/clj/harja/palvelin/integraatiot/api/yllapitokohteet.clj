@@ -175,6 +175,11 @@
          :muokkaaja (:id kayttaja)
          :kohde_id kohde-id}))
 
+    (log/debug "[DEBUG] VALMIS TIEMERKINTÄÄN VANHA:" vanha-tiemerkintapvm)
+    (log/debug "[DEBUG] VALMIS TIEMERKINTÄÄN UUSI:" (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu)))
+    (log/debug "[DEBUG] MAILIA SIIS!?:" (viestinta/valita-tieto-valmis-tiemerkintaan?
+                                          vanha-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))))
+
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
             vanha-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu)))
       (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
