@@ -22,23 +22,23 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-    (fn [_]
-      (component/start
-        (component/system-map
-          :db (tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :karttakuvat (component/using
-                        (karttakuvat/luo-karttakuvat)
-                        [:http-palvelin :db])
-          :integraatioloki (component/using
-                             (integraatioloki/->Integraatioloki nil)
-                             [:db])
-          :fim (component/using
-                 (fim/->FIM +testi-fim+)
-                 [:db :integraatioloki])
-          :toteumat (component/using
-                     (->Tilannekuva)
-                      [:http-palvelin :db :karttakuvat])))))
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :karttakuvat (component/using
+                                       (karttakuvat/luo-karttakuvat)
+                                       [:http-palvelin :db])
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :fim (component/using
+                               (fim/->FIM +testi-fim+)
+                               [:db :integraatioloki])
+                        :tilannekuva (component/using
+                                       (->Tilannekuva)
+                                       [:http-palvelin :db :karttakuvat :fim])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -126,18 +126,18 @@
    (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakat-tilannekuvaan kayttaja
                                 {:nykytilanne? (:nykytilanne? parametrit)
-                                 :alku         (:alku parametrit)
-                                 :loppu        (:loppu parametrit)
-                                 :urakoitsija  (:urakoitsija parametrit)
+                                 :alku (:alku parametrit)
+                                 :loppu (:loppu parametrit)
+                                 :urakoitsija (:urakoitsija parametrit)
                                  :urakkatyyppi (:urakkatyyppi parametrit)})
          urakat (into #{} (mapcat
-                           (fn [aluekokonaisuus]
-                             (map :id (:urakat aluekokonaisuus)))
-                           urakat))]
+                            (fn [aluekokonaisuus]
+                              (map :id (:urakat aluekokonaisuus)))
+                            urakat))]
      (kutsu-palvelua (:http-palvelin jarjestelma)
                      :hae-tilannekuvaan kayttaja
                      (tk/valitut-suodattimet (assoc parametrit
-                                                    :urakat urakat))))))
+                                               :urakat urakat))))))
 
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk parametrit-laaja-historia)]
@@ -188,9 +188,9 @@
 
 (deftest ala-hae-ilmoituksia
   (let [parametrit (assoc parametrit-laaja-historia :ilmoitukset {:tyypit {:toimenpidepyynto false
-                                                                           :kysely           false
-                                                                           :tiedoitus        false}
-                                                                  :tilat  #{:avoimet :suljetut}})
+                                                                           :kysely false
+                                                                           :tiedoitus false}
+                                                                  :tilat #{:avoimet :suljetut}})
         vastaus (hae-tk parametrit)]
     (is (= (count (:ilmoitukset vastaus)) 0))))
 
