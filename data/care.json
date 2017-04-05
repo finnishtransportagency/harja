@@ -1,5 +1,17 @@
 [
   {
+    "date": "2017-04-04",
+    "title": "Mahdollisuus hakea järjestelmäkäyttäjätunnuksella urakat API:n kautta",
+    "short": "Jatkossa Harjan API:n kautta voidaan hakea suoraan kaikki urakat, joihin järjestelmätunnuksella on oikeudet",
+    "body": "Uuden end-pointin osoite on /api/urakat/haku/. Requestille ei anneta erillisiä parametrejä, vaan käyttäjätunnus luetaan autentikointitiedoista."
+  },
+  {
+    "date": "2017-04-04",
+    "title": "Laadunseurannan muutoksia",
+    "short": "Laatupoikkeamille voi jatkossa kirjata eksplisiittisen tiedon, sisältääkö poikkeama poikkeamaraportin",
+    "body": "Harjaan on jatkossa mahdollista lisätä käyttöliittymän sekä API:n kautta laatupoikkeamille tieto, sisältääkö laatupoikkeama poikkeamaraportin. Tieto erillisen kentän kautta tarvitaan, sillä kirjaus käytännöissä on eri tapoja ja tilaajan täytyy pystyä hakemaan ne poikkeamat, joissa raportti on annettu."
+  },
+  {
     "date": "2017-02-14",
     "title": "Muutoksia ilmoituksissa: Uusi kuittaustyyppi \"väärä urakka\" sekä ihmisluettava tunniste.",
     "short": "",
