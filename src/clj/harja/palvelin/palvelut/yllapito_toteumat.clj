@@ -125,7 +125,7 @@
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
       (vaadi-toteuma-kuuluu-urakkaan db id urakka-id)
-      (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
+      (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 

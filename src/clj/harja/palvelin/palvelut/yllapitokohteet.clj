@@ -276,7 +276,6 @@
                                       yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
-  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id id)
   (if poistettu
     (when (yy/yllapitokohteen-voi-poistaa? db id)
       (log/debug "Poistetaan ylläpitokohde")
@@ -305,6 +304,9 @@
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
+  (doseq [kohde kohteet]
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
+
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))

@@ -47,37 +47,40 @@
 (defn vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-        kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-                                                           db
-                                                           {:id yllapitokohde-id})))]
-    (when (and (not= kohteen-urakka urakka-id)
-               (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " kohteen-urakka
-                                      ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                             db
+                                                             {:id yllapitokohde-id})))]
+      (when (and (not= kohteen-urakka urakka-id)
+                 (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka
+                                        ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka")))))))
 
 (defn vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde on osoitettu annetulle tiemerkintäurakka-id:lle suoritettavaksi.
    Jos ei ole, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-                                                           db
-                                                           {:id yllapitokohde-id})))]
-    (when (not= kohteen-suorittava-tiemerkintaurakka urakka-id)
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei ole urakan"
-                                      urakka-id " suoritettavana tiemerkintään, vaan urakan "
-                                      kohteen-suorittava-tiemerkintaurakka))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                             db
+                                                             {:id yllapitokohde-id})))]
+      (when (not= kohteen-suorittava-tiemerkintaurakka urakka-id)
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei ole urakan"
+                                        urakka-id " suoritettavana tiemerkintään, vaan urakan "
+                                        kohteen-suorittava-tiemerkintaurakka)))))))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan
   [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]
-    (when (not= kohteen-urakka urakka-id)
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " kohteen-urakka))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]
+      (when (not= kohteen-urakka urakka-id)
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka)))))))
 
 (defn laske-osien-pituudet
   "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
