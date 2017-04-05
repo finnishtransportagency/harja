@@ -35,10 +35,12 @@
           yhteyshenkilot]]))))
 
 (defn nayta-yhteyshenkilot-modal! [yllapitokohde-id]
-  (go (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
-          (reset! yhteyshenkilot vastaus))))
+  (go (do
+        (reset! yhteyshenkilot nil)
+        (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id}))]
+          (if (k/virhe? vastaus)
+            (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
+            (reset! yhteyshenkilot vastaus)))))
 
   (modal/nayta!
     {:otsikko "Kohteen urakan yhteyshenkilöt"
