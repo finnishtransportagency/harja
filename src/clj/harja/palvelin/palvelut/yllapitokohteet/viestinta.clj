@@ -13,6 +13,18 @@
             [harja.palvelin.komponentit.fim :as fim])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn formatoi-ilmoittaja [{:keys [etunimi sukunimi puhelin organisaatio] :as merkitsija}]
+  (cond (and etunimi sukunimi)
+        (str etunimi " " sukunimi
+             (when puhelin
+               (str " (puh. " puhelin ")"))
+             (when organisaatio
+               (str " (org. " (:nimi organisaatio) ")")))
+
+        organisaatio
+        (:nimi organisaatio)
+        :default ""))
+
 ;; Viestien muodostukset
 
 (defn- viesti-kohde-valmis-merkintaan [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
@@ -29,9 +41,7 @@
                                              {:teksti-tie? false})]
                               ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
                               ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
-                              ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
-                                                 (when-let [puhelin (:puhelin ilmoittaja)]
-                                                   (str " (" puhelin ")")))]
+                              ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
                               ["Merkitsijän urakka" paallystysurakka-nimi]])]))
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
@@ -47,9 +57,7 @@
                                              kohde-osoite
                                              {:teksti-tie? false})]
                               ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
-                                                 (when-let [puhelin (:puhelin ilmoittaja)]
-                                                   (str " (" puhelin ")")))]
+                              ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
                               ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
@@ -71,9 +79,7 @@
                                       ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
         [:br]])
      [:div
-      (html-tyokalut/taulukko [["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
-                                                  (when-let [puhelin (:puhelin ilmoittaja)]
-                                                    (str " (" puhelin ")")))]])
+      (html-tyokalut/taulukko [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]])
       [:br]]]))
 
 ;; Sisäinen käsittely
@@ -118,7 +124,9 @@
 
 (defn laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
-   ylläpitokohteen tiemerkinnän valmistumisesta."
+   ylläpitokohteen tiemerkinnän valmistumisesta.
+
+   Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
   [{:keys [db fim email kohde-idt ilmoittaja valmistumispvmt]}]
   (when-not (empty? kohde-idt)
     (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
@@ -135,7 +143,9 @@
 
 (defn laheta-sposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
-   ylläpitokohteen valmiudesta tiemerkintään."
+   ylläpitokohteen valmiudesta tiemerkintään.
+
+   Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
   [{:keys [db fim email kohde-id tiemerkintapvm ilmoittaja]}]
   (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-id tiemerkintapvm))
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
