@@ -21,7 +21,9 @@
             [specql.op :as op]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
-            [harja.palvelin.komponentit.fim :as fim]))
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.domain.roolit :as roolit]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -79,16 +81,20 @@
         ilmoitus (-> ilmoitus
                      (m/lisaa-muokkaustiedot ::t/id user)
                      (update-in [::t/osoite ::tr/geometria]
-                                #(when % (geo/geometry (geo/clj->pg %)))))]
-    (println "TALLENNA ILMOITUS " (::t/id ilmoitus) " URAKASSA " (::t/urakka ilmoitus) "; ORG: " org)
-    (println "ILMO: " (pr-str ilmoitus))
+                                #(when % (geo/geometry (geo/clj->pg %)))))
+        kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
+
+    ;; jos käyttäjä on urakoitsija, tarkistetaan että urakka on tyhjä tai oman organisaation urakoima
+    (when (t/voi-tallentaa? user ilmoitus)
+      (throw+ (roolit/->EiOikeutta (str "Ei oikeutta kirjata urakkaan"))))
+
     (upsert! db ::t/ilmoitus
              ilmoitus
              (op/or
                {::m/luoja-id (:id user)}
                {::t/urakoitsija-id org}
                {::t/tilaaja-id org}
-               {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
+               {::t/urakka-id (op/in kayttajan-urakat)}))))
 
 
 (defn tietyoilmoitus-pdf [db user params]

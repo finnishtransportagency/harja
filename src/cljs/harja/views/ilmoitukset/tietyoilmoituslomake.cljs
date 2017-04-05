@@ -240,6 +240,7 @@
          "Tallenna ilmoitus"
          #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
          {:disabled (or tallennus-kaynnissa?
+                        (not (t/voi-tallentaa? ilmoitus))
                         (not (lomake/voi-tallentaa? ilmoitus)))
           :tallennus-kaynnissa? tallennus-kaynnissa?
           :ikoni (ikonit/tallenna)}]]

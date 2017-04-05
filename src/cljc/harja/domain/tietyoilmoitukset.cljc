@@ -1,5 +1,6 @@
 (ns harja.domain.tietyoilmoitukset
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            #?(:cljs [harja.tiedot.istunto :as istunto])))
 
 (def kaistajarjestelyt
   {"ajokaistaSuljettu" "Ajokaista suljettu"
@@ -112,3 +113,10 @@
 
 (defn tilaajayhteyshenkilo->str [t]
   (yhteyshenkilo->str (::tilaajayhteyshenkilo t)))
+
+(defn voi-tallentaa?
+  #?(:cljs ([ilmoitus] (voi-tallentaa? @istunto/kayttaja ilmoitus)))
+  ([user ilmoitus]
+   (and (not (roolit/tilaajan-kayttaja? user))
+        (::t/urakka-id ilmoitus)
+        (not (kayttajan-urakat (::t/urakka-id ilmoitus))))))
