@@ -841,3 +841,14 @@
                                                  :lyhenne nil}
                                   :tyopuhelin nil
                                   :organisaatio_nimi "YIT Rakennus Oy"}]}))))))
+
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku-ilman-oikeuksikai
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :yllapitokohteen-urakan-yhteyshenkilot
+                                    +kayttaja-ulle+
+                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+        (is (= vastaus :ei-oikeutta))))))
