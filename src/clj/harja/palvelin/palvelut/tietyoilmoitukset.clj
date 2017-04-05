@@ -85,7 +85,7 @@
         kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
 
     ;; jos käyttäjä on urakoitsija, tarkistetaan että urakka on tyhjä tai oman organisaation urakoima
-    (when (t/voi-tallentaa? user kayttajan-urakat ilmoitus)
+    (when (not (t/voi-tallentaa? user kayttajan-urakat ilmoitus))
       (throw+ (roolit/->EiOikeutta (str "Ei oikeutta kirjata urakkaan"))))
 
     (upsert! db ::t/ilmoitus
