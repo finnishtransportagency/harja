@@ -35,9 +35,9 @@
             urakka-id (:id valittu-urakka)
             voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
             voi-tayttaa-maksuerat?
-            (oikeudet/on-muu-oikeus? "maksuerät" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)
+            (oikeudet/on-muu-oikeus? "maksuerät" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)
             voi-tayttaa-maksueratunnuksen?
-            (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)]
+            (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)]
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
