@@ -160,7 +160,7 @@
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+lukittu-yllapitokohde+ :viesti viesti}])))))
 
-(defn- tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan [db urakka-id urakan-tyyppi kohde-id]
+(defn tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan [db urakka-id urakan-tyyppi kohde-id]
   (let [urakan-kohteet (case urakan-tyyppi
                          :paallystys
                          (q-yllapitokohteet/hae-urakkaan-liittyvat-paallystyskohteet db {:urakka urakka-id})
