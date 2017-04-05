@@ -163,11 +163,11 @@
            :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
-  (log/debug "KAYTTAJA ON: " (pr-str kayttaja))
+  ;; TODO VAIN JOS MUUTTUU KANNASSA
   (ypk/valita-tieto-kohteen-valmiudesta-tiemerkintaan
     {:db db :fim fim :email email :kohde-id kohde-id
      :tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
-     :user kayttaja})
+     :kayttaja kayttaja})
 
   (let [kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
