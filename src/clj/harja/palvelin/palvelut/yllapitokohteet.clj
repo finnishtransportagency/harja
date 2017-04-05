@@ -141,6 +141,8 @@
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
+  (doseq [kohde kohteet]
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db paallystysurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
       (let [kayttajan-valitsema-suorittava-tiemerkintaurakka-id (:suorittava-tiemerkintaurakka kohde)
@@ -179,7 +181,8 @@
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
-
+  (doseq [kohde kohteet]
+    (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
     (let [valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan db kohteet)]
       (doseq [kohde kohteet]
@@ -204,9 +207,6 @@
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
-  (doseq [kohde kohteet]
-    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
-
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (let [voi-tallentaa-tiemerkinnan-takarajan?
         (oikeudet/on-muu-oikeus? "TM-valmis"
@@ -316,8 +316,8 @@
         (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
     (yy/paivita-yllapitourakan-geometria db urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                :sopimus-id sopimus-id
-                                                                :vuosi vuosi})]
+                                                                 :sopimus-id sopimus-id
+                                                                 :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
@@ -394,7 +394,7 @@
 
       (doseq [id poistuneet-osa-idt]
         (q/poista-yllapitokohdeosa! db {:urakka urakka-id
-                                       :id id}))
+                                        :id id}))
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
