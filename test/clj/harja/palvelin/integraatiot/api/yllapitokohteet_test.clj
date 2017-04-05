@@ -309,6 +309,34 @@
           (<!! (timeout 2000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
+(deftest aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       #".*api\/urakat.*" :allow]
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                                             kayttaja-paallystys portti
+                                             (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
+        (is (= 200 (:status vastaus)))
+
+        ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+
+        ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
+        (reset! sahkoposti-valitetty false)
+        (let [vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
+                                               kayttaja-paallystys portti
+                                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
+          (is (= 200 (:status vastaus)))
+
+          (<!! (timeout 2000))
+          (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
+
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)
