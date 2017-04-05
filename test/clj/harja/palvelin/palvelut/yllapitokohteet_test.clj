@@ -842,7 +842,7 @@
                                   :tyopuhelin nil
                                   :organisaatio_nimi "YIT Rakennus Oy"}]}))))))
 
-(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku-ilman-oikeuksikai
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku-ilman-oikeuksia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))]
     (with-fake-http
       [+testi-fim+ fim-vastaus]
