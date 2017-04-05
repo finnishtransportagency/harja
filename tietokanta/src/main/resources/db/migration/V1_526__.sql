@@ -3,3 +3,5 @@ CREATE TABLE sahkelahetys (
   urakka     INTEGER REFERENCES urakka (id) NOT NULL,
   lahetetty  TIMESTAMP DEFAULT current_timestamp,
   onnistunut BOOLEAN);
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('sahke', 'urakan-lahetys');
