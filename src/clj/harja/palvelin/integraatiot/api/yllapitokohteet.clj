@@ -59,8 +59,9 @@
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.palvelut.yllapitokohteet :as ypk]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as kasittely]
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
@@ -137,8 +138,8 @@
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
-    (yllapitokohteet/paivita-kohde db kohde-id kohteen-sijainti)
-    (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
+    (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
+    (kasittely/paivita-alikohteet db kohde alikohteet)
     (yy/paivita-yllapitourakan-geometria db urakka-id)
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
@@ -161,7 +162,13 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id (str id)})))))
 
-(defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
+(defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
+  (log/debug "KAYTTAJA ON: " (pr-str kayttaja))
+  (ypk/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+    {:db db :fim fim :email email :kohde-id kohde-id
+     :tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+     :user kayttaja})
+
   (let [kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
@@ -195,11 +202,14 @@
 (defn- paivita-yllapitokohteen-aikataulu
   "Päivittää ylläpitokohteen aikataulutiedot.
    Palauttaa mapin mahdollisista varoituksista"
-  [db kayttaja urakan-tyyppi kohde-id data]
+  [{:keys [db kayttaja urakan-tyyppi kohde-id data email fim]}]
   (log/debug "Kirjataan aikataulu urakalle: " urakan-tyyppi)
   (case urakan-tyyppi
     :paallystys
-    (paivita-paallystyksen-aikataulu db kayttaja kohde-id data)
+    (paivita-paallystyksen-aikataulu {:db db :fim fim :email email
+                                      :kayttaja kayttaja
+                                      :kohde-id kohde-id
+                                      :aikataulu data})
     :tiemerkinta
     (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
     (virheet/heita-poikkeus virheet/+viallinen-kutsu+
@@ -216,21 +226,28 @@
                              päällystyksen aikataulu voidaan kirjata vain päällystysurakalle."
                                              (name urakka-tyyppi) (name endpoint-urakkatyyppi))})))
 
-(defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data endpoint-urakkatyyppi]
+(defn kirjaa-aikataulu [{:keys [db fim email kayttaja parametrit data endpoint-urakkatyyppi]}]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
-                     urakka-id
-                     kohde-id
+                     (:urakka-id parametrit)
+                     (:kohde-id parametrit)
                      kayttaja))
   (jdbc/with-db-transaction
     [db db]
-    (let [urakka-id (Integer/parseInt urakka-id)
+    (let [{:keys [urakka-id kohde-id]} parametrit
+          urakka-id (Integer/parseInt urakka-id)
           urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (vaadi-urakka-oikeaa-tyyppia urakan-tyyppi endpoint-urakkatyyppi)
       (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
       (tarkista-aikataulun-oikeellisuus (:aikataulu data))
-      (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakan-tyyppi kohde-id data)]
+      (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu {:db db
+                                                                 :kayttaja kayttaja
+                                                                 :urakan-tyyppi urakan-tyyppi
+                                                                 :kohde-id kohde-id
+                                                                 :data data
+                                                                 :fim fim
+                                                                 :email email})]
         (tee-kirjausvastauksen-body
           (merge {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")}
                  paivitys-vastaus))))))
@@ -401,7 +418,7 @@
                         "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
       (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
 
-(defn palvelut [liitteiden-hallinta]
+(defn palvelut [fim email liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
@@ -428,14 +445,20 @@
     :kutsu-skeema json-skeemat/paallystyksen-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-aikataulu db kayttaja parametrit data :paallystys))}
+                    (kirjaa-aikataulu {:db db :kayttaja kayttaja
+                                       :fim fim :email email
+                                       :parametrit parametrit :data data
+                                       :endpoint-urakkatyyppi :paallystys}))}
    {:palvelu :kirjaa-tiemerkinnan-aikataulu
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-tiemerkinta"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tiemerkinnan-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-aikataulu db kayttaja parametrit data :tiemerkinta))}
+                    (kirjaa-aikataulu {:db db :kayttaja kayttaja
+                                       :fim fim :email email
+                                       :parametrit parametrit :data data
+                                       :endpoint-urakkatyyppi :tiemerkinta}))}
    {:palvelu :kirjaa-tietyomaa
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa"
     :tyyppi :POST
@@ -488,8 +511,13 @@
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki liitteiden-hallinta :liitteiden-hallinta :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut liitteiden-hallinta))
+  (start [{http :http-palvelin
+           db :db
+           integraatioloki :integraatioloki
+           fim :fim
+           email :sonja-sahkoposti
+           liitteiden-hallinta :liitteiden-hallinta :as this}]
+    (palvelut/julkaise http db integraatioloki (palvelut fim email liitteiden-hallinta))
     this)
   (stop [{http :http-palvelin :as this}]
     (palvelut/poista http (palvelut nil))

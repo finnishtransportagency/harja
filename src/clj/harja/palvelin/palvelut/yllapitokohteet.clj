@@ -106,7 +106,7 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
-(defn- valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
+(defn valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
   (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
                                                     :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
                                                     :ilmoittaja user}))
@@ -174,7 +174,7 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
-(defn- valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db user fim email kohteet]}]
+(defn valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db user fim email kohteet]}]
   ;; Täytyy ajaa samassa transaktiossa tallennuksen kanssa
   (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                     db {:idt (map :id kohteet)}))

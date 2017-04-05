@@ -8,10 +8,14 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.walk :as walk]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -19,8 +23,20 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-paallystys
+    :fim (component/using
+           (fim/->FIM +testi-fim+)
+           [:db :integraatioloki])
+    :sonja (feikki-sonja)
+    :sonja-sahkoposti (component/using
+                        (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                   {:sahkoposti-sisaan-jono "email-to-harja"
+                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                    :sahkoposti-ulos-jono "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                        [:sonja :db :integraatioloki])
     :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet)
-                                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
+                                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta
+                                           :fim :sonja-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 
