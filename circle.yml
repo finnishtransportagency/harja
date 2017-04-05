@@ -17,5 +17,3 @@ dependencies:
 test:
   override:
     - lein test
-    - lein trampoline doo phantom test once
-    - lein trampoline doo phantom laadunseuranta-test once
