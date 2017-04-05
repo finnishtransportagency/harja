@@ -163,13 +163,10 @@
            :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
-  ;; TODO VAIN JOS MUUTTUU KANNASSA
-  (ypk/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-    {:db db :fim fim :email email :kohde-id kohde-id
-     :tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
-     :kayttaja kayttaja})
-
-  (let [kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
+  (let [tiemerkintapvm-ennen-paivitysta (:valmis-tiemerkintaan
+                                          (first (q/hae-yllapitokohteen-aikataulu
+                                                   db {:id kohde-id})))
+        kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
       {:kohde_alku (json/aika-string->java-sql-date (:kohde-aloitettu aikataulu))
@@ -180,6 +177,19 @@
        :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})
+    (when kohteella-paallystysilmoitus?
+      (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
+        db
+        {:takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
+         :muokkaaja (:id kayttaja)
+         :kohde_id kohde-id}))
+
+    (ypk/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+      {:db db :fim fim :email email :kohde-id kohde-id
+       :aiempi-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
+       :nykyinen-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+       :kayttaja kayttaja})
+
     (if kohteella-paallystysilmoitus?
       (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
             db
@@ -187,7 +197,7 @@
              :muokkaaja (:id kayttaja)
              :kohde_id kohde-id})
           {})
-      {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetä."})))
+      {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetty."})))
 
 (defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!

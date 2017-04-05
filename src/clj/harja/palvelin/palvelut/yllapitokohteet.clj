@@ -107,10 +107,15 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
-  [{:keys [db fim email kohde-id tiemerkintapvm kayttaja]}]
-  (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
-                                                    :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
-                                                    :ilmoittaja kayttaja}))
+  "Välittää tiedon kohteen valmiudesta tiemerkintään, mikäli uusi tiemerkintäpvm
+   poikkeaa vanhasta (kannassa aiemmin olleesta)"
+  [{:keys [db fim email kohde-id aiempi-tiemerkintapvm nykyinen-tiemerkintapvm kayttaja]}]
+  (when (and nykyinen-tiemerkintapvm
+             (not= aiempi-tiemerkintapvm nykyinen-tiemerkintapvm))
+    (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                      :kohde-id kohde-id
+                                                      :tiemerkintapvm nykyinen-tiemerkintapvm
+                                                      :ilmoittaja kayttaja})))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
@@ -120,22 +125,28 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
-    (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
-      db
-      {:valmis_tiemerkintaan tiemerkintapvm
-       :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
-                                           (c/from-date)
-                                           tm-domain/tiemerkinta-oltava-valmis
-                                           (c/to-date))
-       :id kohde-id
-       :urakka urakka-id})
+    (let [tiemerkintapvm-ennen-paivitysta (:valmis-tiemerkintaan
+                                            (first (q/hae-yllapitokohteen-aikataulu
+                                                     db {:id kohde-id})))]
+      (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
+        db
+        {:valmis_tiemerkintaan tiemerkintapvm
+         :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
+                                             (c/from-date)
+                                             tm-domain/tiemerkinta-oltava-valmis
+                                             (c/to-date))
+         :id kohde-id
+         :urakka urakka-id})
 
-    (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
-                                                     :tiemerkintapvm tiemerkintapvm :kayttaja user})
+      (valita-tieto-kohteen-valmiudesta-tiemerkintaan
+        {:db db :fim fim :email email :kohde-id kohde-id
+         :aiempi-tiemerkintapvm tiemerkintapvm-ennen-paivitysta
+         :nykyinen-tiemerkintapvm tiemerkintapvm
+         :kayttaja user})
 
-    (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                   :sopimus-id sopimus-id
-                                   :vuosi vuosi})))
+      (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi}))))
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
