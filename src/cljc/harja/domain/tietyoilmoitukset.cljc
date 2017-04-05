@@ -122,8 +122,8 @@
 
     ;; Uuden luonti mahdollista, jos tilaaja tai urakka on oma (tai ei määritelty)
     (and (nil? (::id ilmoitus))
-         (or (roolit/tilaajan-kayttaja? user)
-             (not (::urakka-id ilmoitus))
+         (or (nil? (::urakka-id ilmoitus))
+             (roolit/tilaajan-kayttaja? user)
              (kayttajan-urakat (::urakka-id ilmoitus))))
 
     ;; Muokkaaminen mahdollista, jos ilmoitus on itse luoma tai oman organisaatio
