@@ -34,6 +34,7 @@ SELECT
   valmispvm_paikkaus AS "valmispvm-paikkaus",
   ypk.nimi as kohdenimi,
   ypk.kohdenumero,
+  ypk.toteutunut_hinta AS "toteutunut-hinta",
   ilmoitustiedot,
   paatos,
   perustelu,
@@ -122,3 +123,9 @@ WHERE urakka = :urakka AND id = :id;
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
               WHERE paikkauskohde = :yllapitokohde);
+
+-- name: paivita-paikkauskohteen-toteutunut-hinta!
+-- Päivittää paikkauskohteen toteutuneen hinnan yllapitokohde tauluun
+UPDATE yllapitokohde
+   SET toteutunut_hinta = :toteutunut_hinta
+ WHERE id = :id;
