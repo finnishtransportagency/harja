@@ -66,7 +66,7 @@
 
    "Vesiväyläurakoiden luonti"
    :vesivaylaurakoiden-luonti
-   (when (and (istunto/ominaisuus-kaytossa? :vesivaylat)
+   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
      ^{:key "vesivaylaurakat"}
      [vu/vesivaylaurakoiden-luonti])])

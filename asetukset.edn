@@ -138,5 +138,7 @@
  ;;                                                   tieto tästä SMS/email viestinä. Viesti sisältää linkin
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
- :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet :vesivaylat}
+ :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet
+                               :vesivayla
+                               }
  }
