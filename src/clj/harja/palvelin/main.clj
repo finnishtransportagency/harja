@@ -180,7 +180,7 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-             (if kehitysmoodi
+            (if (and kehitysmoodi (:tiedosto (:fim asetukset)))
                (fim/->FakeFIM (:tiedosto (:fim asetukset)))
                (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
