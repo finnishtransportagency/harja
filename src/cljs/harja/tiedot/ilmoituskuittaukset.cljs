@@ -1,6 +1,6 @@
 (ns harja.tiedot.ilmoituskuittaukset
   (:require [reagent.core :refer [atom]]
-            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]

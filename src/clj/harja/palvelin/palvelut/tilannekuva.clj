@@ -44,7 +44,7 @@
              [pvm :as pvm]
              [transit :as transit]]
             [harja.domain
-             [ilmoitukset :as ilmoitukset-domain]
+             [tieliikenneilmoitukset :as ilmoitukset-domain]
              [laadunseuranta :as laadunseuranta]
              [oikeudet :as oikeudet]
              [roolit :as roolit]

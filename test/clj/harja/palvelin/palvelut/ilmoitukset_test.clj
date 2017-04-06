@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
-            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.pvm :as pvm]
