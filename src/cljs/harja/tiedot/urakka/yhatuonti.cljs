@@ -159,13 +159,11 @@
                     (pvm/nyt))
                   tieosoiteerat)
         kanavat (async/merge kanavat)]
-
     (go (loop [acc []
                v (<! kanavat)]
           (if (nil? v)
             (vec acc)
             (let [{tieosoitteet "tieosoitteet"} v]
-              (log "saatiinpa progressia: " (pr-str tieosoitteet))
               (progress-fn (count tieosoitteet))
               (recur (into acc tieosoitteet) (<! kanavat))))))))
 
@@ -269,7 +267,8 @@
        (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
        (if (= (:status vastaus) :ok)
          (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
-         (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))))))
+         (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))
+       vastaus))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   (r/with-let [progress (r/atom {})]
