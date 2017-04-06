@@ -19,7 +19,9 @@
       http
       :hae-paattymattomat-vesivaylahankkeet
       (fn [user _]
-        (hae-paattymattomat-vesivaylahankkeet db user))))
+        (hae-paattymattomat-vesivaylahankkeet db user)))
+
+    this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
