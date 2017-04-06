@@ -151,21 +151,22 @@
                       :tr-alkuetaisyys tr-alkuetaisyys
                       :tr-loppuosa tr-loppuosa
                       :tr-loppuetaisyys tr-loppuetaisyys}]
-    (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
-    (viestinta/laheta-sposti-fim-kayttajarooleille
-      {:fim fim
-       :email email
-       :urakka-sampoid tiemerkintaurakka-sampo-id
-       :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
-       :viesti-otsikko (format "Kohteen '%s' tiemerkinnän voi aloittaa %s"
-                               (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                               (fmt/pvm tiemerkintapvm))
-       :viesti-body (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
-                                                     :kohde-nimi kohde-nimi
-                                                     :kohde-osoite kohde-osoite
-                                                     :tiemerkintapvm tiemerkintapvm
-                                                     :ilmoittaja ilmoittaja
-                                                     :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})})))
+    (when tiemerkintaurakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
+      (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
+      (viestinta/laheta-sposti-fim-kayttajarooleille
+        {:fim fim
+         :email email
+         :urakka-sampoid tiemerkintaurakka-sampo-id
+         :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
+         :viesti-otsikko (format "Kohteen '%s' tiemerkinnän voi aloittaa %s"
+                                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                                 (fmt/pvm tiemerkintapvm))
+         :viesti-body (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
+                                                       :kohde-nimi kohde-nimi
+                                                       :kohde-osoite kohde-osoite
+                                                       :tiemerkintapvm tiemerkintapvm
+                                                       :ilmoittaja ilmoittaja
+                                                       :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})}))))
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
@@ -202,10 +203,9 @@
 (defn valita-tieto-tiemerkinnan-valmistumisesta
   "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.."
   [{:keys [kayttaja fim email valmistuneet-kohteet]}]
-  (when (not (empty? valmistuneet-kohteet))
-    (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
-                                       :kohteiden-tiedot valmistuneet-kohteet
-                                       :ilmoittaja kayttaja})))
+  (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
+                                     :kohteiden-tiedot valmistuneet-kohteet
+                                     :ilmoittaja kayttaja}))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään."
