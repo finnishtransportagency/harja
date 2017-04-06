@@ -221,10 +221,14 @@
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
   (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
-    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id
-                                #(-> %
-                                     (assoc :yhatiedot (:yhatiedot vastaus))
-                                     (assoc-in [:yhatiedot :kohdeluettelo-paivitetty] (pvm/nyt)))))
+    (let [{:keys [etunimi sukunimi]} @istunto/kayttaja]
+      (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id
+                                  #(-> %
+                                       (assoc :yhatiedot (:yhatiedot vastaus))
+                                       (update :yhatiedot merge
+                                               {:kohdeluettelo-paivitetty (pvm/nyt)
+                                                :kohdeluettelo-paivittaja-etunimi etunimi
+                                                :kohdeluettelo-paivittaja-sukunimi sukunimi})))))
 
   ;; Näytä ilmoitus tarvittaessa
   (when (and (= (:status vastaus) :ok)
