@@ -58,7 +58,7 @@
 (defn- muodosta-palautettu-tila [app]
   ;; kutsutaan, kun atomin sisältö ladataan LocalStoragesta
   (let [valittu-ilmoitus (:valittu-ilmoitus app)
-        ok-namespacessa? #(if (-> % first namespace (= "harja.domain.tietyoilmoitukset"))
+        ok-namespacessa? #(if (-> % first namespace #{"harja.domain.tietyoilmoitukset" "harja.domain.muokkaustiedot"})
                             %)
         putsattu-ilmoitus (when valittu-ilmoitus
                             (into {} (keep ok-namespacessa? valittu-ilmoitus)))]
