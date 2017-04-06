@@ -696,11 +696,14 @@ SELECT
   u.hanke     AS "hanke-id",
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus,
-  y.id        AS "yhteyshenkilo-id"
+  y.id        AS "yhteyshenkilo-id",
+  o.ytunnus   AS "urakoitsija-y-tunnus",
+  o.nimi      AS "urakoitsijanimi"
 FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN yhteyshenkilo_urakka yu ON u.id = yu.urakka AND yu.rooli = 'Sampo yhteyshenkilö'
   LEFT JOIN yhteyshenkilo y ON yu.yhteyshenkilo = y.id
+  LEFT JOIN organisaatio o ON u.urakoitsija = o.i
 WHERE u.id = :id;
 
 -- name: kirjaa-sahke-lahetys!

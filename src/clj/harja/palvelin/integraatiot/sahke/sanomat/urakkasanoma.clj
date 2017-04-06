@@ -8,7 +8,9 @@
                              alueurakkanumero
                              nimi
                              hanke-id
-                             yhteyshenkilo-id]}
+                             yhteyshenkilo-id
+                             urakoitsija-y-tunnus
+                             urakoitsijanimi]}
                      viesti-id]
   [:Sampo2harja
    {:xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance"
@@ -16,11 +18,13 @@
    [:Project
     {:id (str "HAR-" id)
      :financialDepartmentHash "-"
+     :vv_corporate_id urakoitsija-y-tunnus
      :schedule_finish (xml/formatoi-aikaleima loppupvm)
      :name nimi
      :vv_alueurakkanro alueurakkanumero
      :resourceId (str "HAR-" yhteyshenkilo-id)
      :schedule_start (xml/formatoi-aikaleima alkupvm)
+     :company_name urakoitsijanimi
      :message_Id viesti-id
      :programId (str "HAR-" hanke-id)
      :vv_transferred_harja (xml/formatoi-aikaleima (pvm/nyt))}
