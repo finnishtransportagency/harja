@@ -28,7 +28,7 @@
                                            (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
-                                           (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+                                           (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword}
 
                                            (s/optional-key :email)   {:taso          s/Keyword
                                                                       :palvelin      s/Str
@@ -174,7 +174,7 @@
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
 
-  (when-let [hipchat (-> asetukset :log :slack)]
+  (when-let [slack (-> asetukset :log :slack)]
     (log/set-config! [:appenders :slack]
                      (slack/luo-slack-appender (:webhook-url slack) (:taso slack))))
 
