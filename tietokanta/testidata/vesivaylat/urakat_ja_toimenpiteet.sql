@@ -4,7 +4,7 @@
 -- URAKKA
 INSERT INTO urakka (sampoid, nimi, tyyppi, hallintayksikko, alkupvm, loppupvm, harjassa_luotu)
 VALUES
-  ('PR00008543', 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL', 'vesivayla', 2, '2016-08-01', '2017-07-30', true);
+  ('PR00008543', 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL', 'vesivayla-hoito', 2, '2016-08-01', '2017-07-30', true);
 
 -- SOPIMUS
 INSERT INTO sopimus (nimi, sampoid, urakka, paasopimus, alkupvm, loppupvm)
