@@ -11,13 +11,13 @@
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
-            [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.tiedot.istunto :as istunto]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -42,22 +42,38 @@
                     :urakkatyyppi (:arvo @nav/urakkatyyppi)
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
+(def tietyoilmoitus-app-sapluuna
+  {:ilmoitusnakymassa? false
+   :valittu-ilmoitus nil
+   :tallennus-kaynnissa? false
+   :haku-kaynnissa? false
+   :tietyoilmoitukset nil
+   :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+              :luotu-alkuaika (pvm/tuntia-sitten 24)
+              :luotu-loppuaika (pvm/nyt)
+              :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+              :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+              :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}})
 
+(defn- muodosta-palautettu-tila [app]
+  ;; kutsutaan, kun atomin sisältö ladataan LocalStoragesta
+  (let [valittu-ilmoitus (:valittu-ilmoitus app)
+        ok-namespacessa? #(if (-> % first namespace (= "harja.domain.tietyoilmoitukset"))
+                            %)
+        putsattu-ilmoitus (when valittu-ilmoitus
+                            (into {} (keep ok-namespacessa? valittu-ilmoitus)))]
+    (log "tti tvt: avainten lkmt" (count valittu-ilmoitus) (count putsattu-ilmoitus))
+
+    (merge tietyoilmoitus-app-sapluuna
+           {:valittu-ilmoitus putsattu-ilmoitus
+            :kayttajan-urakat (:kayttajan-urakat app)})))
 
 (defonce tietyoilmoitukset
-         (local-storage-atom
-           :tietyoilmoitukset
-           {:ilmoitusnakymassa? false
-            :valittu-ilmoitus nil
-            :tallennus-kaynnissa? false
-            :haku-kaynnissa? false
-            :tietyoilmoitukset nil
-            :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
-                       :luotu-alkuaika (pvm/tuntia-sitten 24)
-                       :luotu-loppuaika (pvm/nyt)
-                       :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
-                       :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-                       :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
+  (local-storage-atom
+   :tietyoilmoitukset
+   tietyoilmoitus-app-sapluuna
+   muodosta-palautettu-tila))
+
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
@@ -154,7 +170,6 @@
 (defrecord UrakanTiedotHaettu [urakka])
 (defrecord ValitseYllapitokohde [yllapitokohde])
 (defrecord YllapitokohdeValittu [yllapitokohde])
-
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
