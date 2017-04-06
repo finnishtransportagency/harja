@@ -44,7 +44,7 @@
       (log/debug "Ajastetaan urakoiden uudelleenlähetys Sähkeeseen tehtäväksi joka päivä kello: " uudelleenlahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         uudelleenlahetysaika
-        (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja db integraatioloki lahetysjono))))
+        (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja integraatioloki db lahetysjono))))
     (fn [])))
 
 (defrecord Sahke [lahetysjono uudelleenlahetysaika]
