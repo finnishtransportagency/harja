@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 CURRENT_BRANCH=`git branch|grep "*"|cut -c3-`
 BRANCH=${1:-$CURRENT_BRANCH}
-
+set -e
+set -u
 echo "Deployataan uusi AWS instanssi branchista $BRANCH"
 
 aws ec2 run-instances --image-id ami-2f805340 --key-name harja_upcloud_rsa --instance-type t2.medium > .deploy3
