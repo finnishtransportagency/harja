@@ -178,32 +178,31 @@
       (if (k/virhe? uudet-yha-kohteet)
         {:status :error :viesti "Kohteiden haku YHA:sta epäonnistui."
          :koodi :kohteiden-haku-yhasta-epaonnistui}
-        (do
-          (if (= (count uudet-yha-kohteet) 0)
-            {:status :ok :viesti "Uusia kohteita ei löytynyt." :koodi :ei-uusia-kohteita}
-            (let [_ (log "[YHA] Tehdään VKM-haku")
-                  tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
-                  _ (progress-fn {:progress 1 :max (inc (count tieosoitteet))
-                                  :viesti "Haetaan tierekisteriosoitteet"})
-                  tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                  vkm-kohteet (<! (hae-vkm-kohteet tieosoitteet tilanne-pvm progress-fn))]
-              (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
-              (if (k/virhe? vkm-kohteet)
-                {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
-                 :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
-                (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
-                      kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                      epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                      _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str kohteet))
-                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
-                  (if (k/virhe? yhatiedot)
-                    {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
-                     :koodi :kohteiden-tallentaminen-epaonnistui}
-                    (if (empty? epaonnistuneet-kohteet)
-                      {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
-                       :koodi :kohteet-tallennettu}
-                      {:status :error :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
-                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain})))))))))))
+        (if (= (count uudet-yha-kohteet) 0)
+          {:status :ok :viesti "Uusia kohteita ei löytynyt." :koodi :ei-uusia-kohteita}
+          (let [_ (log "[YHA] Tehdään VKM-haku")
+                tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+                _ (progress-fn {:progress 1 :max (inc (count tieosoitteet))
+                                :viesti "Haetaan tierekisteriosoitteet"})
+                tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+                vkm-kohteet (<! (hae-vkm-kohteet tieosoitteet tilanne-pvm progress-fn))]
+            (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
+            (if (k/virhe? vkm-kohteet)
+              {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
+               :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
+              (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
+                    kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                    epaonnistuneet-kohteet (vec (filter :virhe kohteet))
+                    _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str kohteet))
+                    yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                (if (k/virhe? yhatiedot)
+                  {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
+                   :koodi :kohteiden-tallentaminen-epaonnistui}
+                  (if (empty? epaonnistuneet-kohteet)
+                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
+                     :koodi :kohteet-tallennettu}
+                    {:status :error :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
+                     :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
