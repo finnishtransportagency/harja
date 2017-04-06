@@ -1,13 +1,14 @@
-(ns harja.palvelin.lokitus.hipchat
-  "Logger, joka lähettää HipChat kanavalle viestit"
+(ns harja.palvelin.lokitus.slack
+  "Logger, joka lähettää Slack kanavalle viestit"
   (:require [org.httpkit.client :as http]
             [clojure.string :as str]
-            [hiccup.core :refer [html]]))
+            [hiccup.core :refer [html]]
+            [cheshire.core :as cheshire]))
 
 (def kone (.getHostName (java.net.InetAddress/getLocalHost)))
 
-(defn luo-hipchat-appender [huone-id token taso]
-  {:doc "HipChat appender"
+(defn luo-slack-appender [webhook-url taso]
+  {:doc "Slack appender"
    :min-level taso
    :enabled? true
    :async? true
@@ -17,11 +18,7 @@
                msg (if (vector? html-arg)
                      (html html-arg)
                      message)]
-           (http/post (str "https://api.hipchat.com/v2/room/" huone-id "/notification")
-                      {:headers {"Content-Type" "application/x-www-form-urlencoded"
-                                 "Authorization" (str "Bearer " token)}
-                       :form-params {"notify" "true"
-                                     "from" kone
-                                     "message_format" "html"
-                                     "message"
-                                     (str  kone " [" (str/upper-case (name level)) "] " msg)}})))})
+           (http/post webhook-url
+                      {:headers {"Content-Type" "application/json"}
+                       :body {"username" kone
+                              "text" (str "[" (str/upper-case (name level)) "] " msg)}})))})

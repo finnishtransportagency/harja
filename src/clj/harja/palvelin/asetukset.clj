@@ -3,7 +3,7 @@
   (:require [schema.core :as s]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.hipchat :as hipchat]
+            [harja.palvelin.lokitus.slack :as slack]
             [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
 
 
@@ -174,9 +174,9 @@
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
 
-  (when-let [hipchat (-> asetukset :log :hipchat)]
-    (log/set-config! [:appenders :hipchat]
-                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat))))
+  (when-let [hipchat (-> asetukset :log :slack)]
+    (log/set-config! [:appenders :slack]
+                     (slack/luo-slack-appender (:webhook-url slack) (:taso slack))))
 
   (when-let [email (-> asetukset :log :email)]
     (log/set-config! [:appenders :postal]
