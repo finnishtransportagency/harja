@@ -384,6 +384,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                    :tyyppi :checkbox
                    :teksti "Urakoitsijan selvitystä pyydetään"})
 
+                {:nimi   :sisaltaa-poikkeamaraportin?
+                 :tyyppi :checkbox
+                 :teksti "Sisältää poikkeamaraportin"}
+
                 {:otsikko     "Kuvaus"
                  :uusi-rivi?  true
                  :nimi        :kuvaus
