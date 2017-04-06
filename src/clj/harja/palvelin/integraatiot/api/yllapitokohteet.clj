@@ -209,7 +209,6 @@
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 
-    (log/debug "[DEBUG] MAILATTAVAT KOHTEET: " (pr-str valmistuneet-kohteet))
     (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja kayttaja :fim fim
                                                           :email email
                                                           :valmistuneet-kohteet valmistuneet-kohteet})
