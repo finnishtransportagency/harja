@@ -1,1 +1,2 @@
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla';
+ALTER TABLE laatupoikkeama
+  ADD COLUMN "sisaltaa-poikkeamaraportin?" BOOLEAN;
