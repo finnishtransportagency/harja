@@ -305,7 +305,6 @@
                                                kayttaja-paallystys portti
                                                (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
           (is (= 200 (:status vastaus)))
-
           (<!! (timeout 2000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
@@ -343,7 +342,16 @@
 
         ;; Tiemerkintä valmis oli annettu aiemmin, mutta nyt se päivittyi -> mailia menemään
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+
+        ;; Lähetetään sama pyyntö uudelleen, pvm ei muutu, ei lennä mailit
+        (reset! sahkoposti-valitetty false)
+        (let [vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
+                                               kayttaja-tiemerkinta portti
+                                               (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
+          (is (= 200 (:status vastaus)))
+          (<!! (timeout 2000))
+          (is (false? @sahkoposti-valitetty) "Maili ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)

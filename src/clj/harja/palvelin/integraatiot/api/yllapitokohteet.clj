@@ -196,7 +196,7 @@
 
 (defn- paivita-tiemerkinnan-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
   (let [yllapitokohde-viestintaan {:id kohde-id
-                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->joda-date
+                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                                   (:tiemerkinta-valmis aikataulu))}
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                db [yllapitokohde-viestintaan])]
@@ -209,6 +209,7 @@
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 
+    (log/debug "[DEBUG] MAILATTAVAT KOHTEET: " (pr-str valmistuneet-kohteet))
     (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja kayttaja :fim fim
                                                           :email email
                                                           :valmistuneet-kohteet valmistuneet-kohteet})
