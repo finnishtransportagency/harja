@@ -281,7 +281,7 @@
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
 
-(deftest aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
+(deftest  paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-paivittyy
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
@@ -309,40 +309,7 @@
           (<!! (timeout 2000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
-(deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-tarvittaessa
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
-        sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
-    (with-fake-http
-      [+testi-fim+ fim-vastaus
-       #".*api\/urakat.*" :allow]
-      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-            kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-            vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
-                                             kayttaja-paallystys portti
-                                             (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
-        (is (= 200 (:status vastaus)))
-
-        ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
-
-        ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
-        (reset! sahkoposti-valitetty false)
-        (let [vastaus (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
-                                               kayttaja-paallystys portti
-                                               (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
-          (is (= 200 (:status vastaus)))
-
-          (<!! (timeout 2000))
-          ;; TODO Tutki miksi failaa:
-          ;; [DEBUG] VALMIS TIEMERKINTÄÄN VANHA: #inst "2015-01-11T22:00:00.000000000-00:00"
-          ;; [DEBUG] VALMIS TIEMERKINTÄÄN UUSI: #inst "2015-01-11T22:00:00.000-00:00"
-          ;; [DEBUG] MAILIA SIIS!?: true
-
-          (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
-
-(deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan
+(deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
