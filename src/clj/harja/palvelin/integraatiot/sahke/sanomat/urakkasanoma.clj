@@ -7,7 +7,8 @@
                              loppupvm
                              alueurakkanumero
                              nimi
-                             hanke-id]}
+                             hanke-id
+                             yhteyshenkilo-id]}
                      viesti-id]
   [:Sampo2harja
    {:xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance"
@@ -18,7 +19,7 @@
      :schedule_finish (xml/formatoi-aikaleima loppupvm)
      :name nimi
      :vv_alueurakkanro alueurakkanumero
-     :resourceId "-"
+     :resourceId (str "HAR-" yhteyshenkilo-id)
      :schedule_start (xml/formatoi-aikaleima alkupvm)
      :message_Id viesti-id
      :programId (str "HAR-" hanke-id)
