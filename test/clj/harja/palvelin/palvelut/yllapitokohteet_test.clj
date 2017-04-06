@@ -561,7 +561,7 @@
         ;; Odotetaan hetki varmistuaksemme siitä, ettei sähköpostia lähetetä tässä tilanteessa
         ;; Leppäjärven tiemerkintä on jo merkitty valmiiksi ja uusi pvm on sama kuin vanha.
         ;; Nakkilan rampille asetettiin vain aloituspvm, joten siitäkään ei mailia laiteta.
-        (<!! (timeout 2000))
+        (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
@@ -626,7 +626,7 @@
                                :vuosi vuosi
                                :kohteet kohteet})]
         ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
-        (<!! (timeout 2000))
+        (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaraan-urakkaan

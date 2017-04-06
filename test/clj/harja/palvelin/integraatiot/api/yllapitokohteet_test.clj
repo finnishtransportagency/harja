@@ -305,7 +305,7 @@
                                                kayttaja-paallystys portti
                                                (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
           (is (= 200 (:status vastaus)))
-          (<!! (timeout 2000))
+          (<!! (timeout 5000))
           (is (false? @sahkoposti-valitetty) "Sähköposti ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest paallystyksen-aikataulun-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis-tiemerkintaan-ekaa-kertaa
@@ -350,7 +350,7 @@
                                                kayttaja-tiemerkinta portti
                                                (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
           (is (= 200 (:status vastaus)))
-          (<!! (timeout 2000))
+          (<!! (timeout 5000))
           (is (false? @sahkoposti-valitetty) "Maili ei lähtenyt, eikä pitänytkään"))))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
