@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.hankkeet :as q]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]))
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
 (defn hae-paattymattomat-vesivaylahankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)

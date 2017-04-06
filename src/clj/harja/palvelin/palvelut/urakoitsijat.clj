@@ -8,7 +8,7 @@
             [harja.kyselyt.urakoitsijat :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
-(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat)
+(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat)
 
 
 (defrecord Urakoitsijat []
