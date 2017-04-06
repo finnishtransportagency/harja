@@ -177,13 +177,9 @@
 
 (defn suodata-tiemerkityt-kohteet-viestintaan
   "Ottaa ylläpitokohteiden viimeisimmät tiedot ja palauttaa ne kohteet, joiden tiemerkintä valmistuu
-   (valmistumispvm on kannassa null ja uusissa tiedoissa annettu TAI uusi pvm on eri kuin kannassa).
-   HUOM! Täytyy suorittaa ennen kuin viimeisimmät tiedot on ajettu kantaan."
-  [db uudet-kohdetiedot]
-  (let [kohde-idt (map :id uudet-kohdetiedot)
-        kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                    db {:idt kohde-idt}))
-        nyt-valmistuneet-kohteet
+   (valmistumispvm on kannassa null ja uusissa tiedoissa annettu TAI uusi pvm on eri kuin kannassa)."
+  [kohteet-kannassa uudet-kohdetiedot]
+  (let [nyt-valmistuneet-kohteet
         (filter
           (fn [tallennettava-kohde]
             (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %)) kohteet-kannassa))

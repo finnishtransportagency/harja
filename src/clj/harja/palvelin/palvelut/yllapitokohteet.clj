@@ -187,7 +187,9 @@
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan db kohteet)]
+    (let [kohteet-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                             db {:idt (map :id kohteet)})))
+          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan kohteet-kannassa kohteet)]
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db

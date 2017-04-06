@@ -200,8 +200,11 @@
   (let [yllapitokohde-viestintaan {:id kohde-id
                                    :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                                   (:tiemerkinta-valmis aikataulu))}
+        nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                  db {:idt [kohde-id]})))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
-                               db [yllapitokohde-viestintaan])]
+                               [nykyinen-kohde-kannassa]
+                               [yllapitokohde-viestintaan])]
 
     (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
       db
