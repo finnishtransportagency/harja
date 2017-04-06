@@ -4,7 +4,9 @@
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [clojure.string :as str]))
 
 (deftest tarkista-paallystysiloituksen-rakentaminen
   (let [paallystysilmoitus {:yllapitokohde
@@ -89,3 +91,15 @@
                                        :verkon-tarkoitus 2}]}]
     (is (= odotettu-data ilmoitusdata))
     (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitusdata))))
+
+(deftest paallystysilmoituksen-skeematarkistus
+  (let [json (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                 slurp
+                 (str/replace "__VALMIS__" "false")
+                 cheshire/parse-string
+                 (assoc-in ["paallystysilmoitus" "alustatoimenpiteet" 0 "alustatoimenpide" "sijainti" "aet"]
+                           ;; Asetetaan arvo nil, jonka ei pitäisi olla validi number
+                           "FOOBAR")
+                 cheshire/encode)]
+    (is (= :vaara
+           (json-skeemat/paallystysilmoituksen-kirjaus json)))))
