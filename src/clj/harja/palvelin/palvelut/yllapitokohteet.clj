@@ -20,7 +20,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]

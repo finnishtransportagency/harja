@@ -44,7 +44,7 @@
              [pvm :as pvm]
              [transit :as transit]]
             [harja.domain
-             [ilmoitukset :as ilmoitukset-domain]
+             [tieliikenneilmoitukset :as ilmoitukset-domain]
              [laadunseuranta :as laadunseuranta]
              [oikeudet :as oikeudet]
              [roolit :as roolit]
@@ -77,7 +77,7 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
@@ -505,19 +505,20 @@
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
   [db user parametrit]
   (konv/sarakkeet-vektoriin
-   (into []
-         (comp
-          (map konv/alaviiva->rakenne)
-          (map #(assoc % :tyyppi-kartalla :toteuma))
-          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
-          (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
-         (q/hae-toteumien-asiat db
-                                (as-> parametrit p
-                                  (suodattimet-parametreista p)
-                                  (assoc p :urakat (luettavat-urakat user p))
-                                  (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                  (merge p (select-keys parametrit [:x :y])))))
-   {:tehtava :tehtavat}))
+    (into []
+          (comp
+            (map konv/alaviiva->rakenne)
+            (map #(assoc % :tyyppi-kartalla :toteuma))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+            (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
+          (q/hae-toteumien-asiat db
+                                 (as-> parametrit p
+                                       (suodattimet-parametreista p)
+                                       (assoc p :urakat (luettavat-urakat user p))
+                                       (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                                       (merge p (select-keys parametrit [:x :y])))))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]
