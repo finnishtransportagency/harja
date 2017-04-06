@@ -187,9 +187,9 @@
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [kohteet-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                             db {:idt (map :id kohteet)})))
-          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan kohteet-kannassa kohteet)]
+    (let [nykyiset-kohteet-kannassa (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                               db {:idt (map :id kohteet)}))
+          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)]
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
@@ -205,9 +205,12 @@
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
 
-      (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja user :fim fim
-                                                            :email email
-                                                            :valmistuneet-kohteet valmistuneet-kohteet}))))
+      (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+        {:kayttaja user :fim fim
+         :email email
+         :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                          db
+                                          {:idt (map :id valmistuneet-kohteet)}))}))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")

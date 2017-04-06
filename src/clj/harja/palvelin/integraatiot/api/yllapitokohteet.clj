@@ -197,14 +197,14 @@
       {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetty."})))
 
 (defn- paivita-tiemerkinnan-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
-  (let [yllapitokohde-viestintaan {:id kohde-id
-                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
-                                                                  (:tiemerkinta-valmis aikataulu))}
+  (let [kohteen-uudet-tiedot {:id kohde-id
+                              :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
+                                                             (:tiemerkinta-valmis aikataulu))}
         nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                   db {:idt [kohde-id]})))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                [nykyinen-kohde-kannassa]
-                               [yllapitokohde-viestintaan])]
+                               [kohteen-uudet-tiedot])]
 
     (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
       db
@@ -214,9 +214,12 @@
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 
-    (viestinta/valita-tieto-tiemerkinnan-valmistumisesta {:db db :kayttaja kayttaja :fim fim
-                                                          :email email
-                                                          :valmistuneet-kohteet valmistuneet-kohteet})
+    (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+      {:kayttaja kayttaja :fim fim
+       :email email
+       :valmistuneet-kohteet (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                        db
+                                        {:idt (map :id valmistuneet-kohteet)}))})
     {}))
 
 (defn- paivita-yllapitokohteen-aikataulu
