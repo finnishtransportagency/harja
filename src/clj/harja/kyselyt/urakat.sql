@@ -703,7 +703,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN yhteyshenkilo_urakka yu ON u.id = yu.urakka AND yu.rooli = 'Sampo yhteyshenkilö'
   LEFT JOIN yhteyshenkilo y ON yu.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio o ON u.urakoitsija = o.i
+  LEFT JOIN organisaatio o ON u.urakoitsija = o.id
 WHERE u.id = :id;
 
 -- name: kirjaa-sahke-lahetys!
