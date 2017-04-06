@@ -67,7 +67,8 @@
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -178,7 +179,7 @@
 
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
             vanha-tiemerkintapvm
-            (:valmis-tiemerkintaan aikataulu))
+            (json/pvm-string->joda-date (:valmis-tiemerkintaan aikataulu)))
       (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
         {:db db :fim fim :email email :kohde-id kohde-id
          :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
