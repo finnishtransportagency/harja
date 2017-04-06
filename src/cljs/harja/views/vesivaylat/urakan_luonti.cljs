@@ -4,7 +4,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
@@ -40,22 +40,27 @@
     [{:otsikko "Nimi" :nimi :nimi :tyyppi :string}]
     valittu-urakka]])
 
-(defc urakkagrid [e! {:keys [haetut-urakat] :as app}]
-  [:div
-   [napit/uusi "Lisää urakka"
-    #(e! (tiedot/->UusiUrakka))
-    {:disabled (nil? haetut-urakat)}]
-   [grid
-    {:otsikko "Harjaan perustetut vesiväyläurakat"
-     :tunniste :id
-     :tyhja (if (nil? haetut-urakat)
-              [ajax-loader "Haetaan urakoita"]
-              "Urakoita ei löytynyt")
-     :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
-    [{:otsikko "Nimi" :nimi :nimi}]
-    haetut-urakat]])
+(defn urakkagrid [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tiedot/->HaeUrakat)))
+    (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
+      [:div
+      [napit/uusi "Lisää urakka"
+       #(e! (tiedot/->UusiUrakka))
+       {:disabled (nil? haetut-urakat)}]
+      [grid
+       {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
+                   [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
+                   "Harjaan perustetut vesiväyläurakat")
+        :tunniste :id
+        :tyhja (if (nil? haetut-urakat)
+                 [ajax-loader "Haetaan urakoita"]
+                 "Urakoita ei löytynyt")
+        :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
+       [{:otsikko "Nimi" :nimi :nimi}]
+       haetut-urakat]])))
 
-(defc vesivaylaurakoiden-luonti* [e! app]
+(defn vesivaylaurakoiden-luonti* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))

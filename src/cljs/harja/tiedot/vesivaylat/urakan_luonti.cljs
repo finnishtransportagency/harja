@@ -18,7 +18,8 @@
   (atom {:nakymassa? false
          :valittu-urakka nil
          :tallennus-kaynnissa? false
-         :haetut-urakat [{:nimi "Testiurakka 1" :id 1} {:nimi "Testiurakka 2" :id 2}]}))
+         :urakoiden-haku-kaynnissa? false
+         :haetut-urakat nil}))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -27,6 +28,9 @@
 (defrecord UrakkaTallennettu [urakka])
 (defrecord UrakkaEiTallennettu [virhe])
 (defrecord UrakkaaMuokattu [urakka])
+(defrecord HaeUrakat [])
+(defrecord UrakatHaettu [urakat])
+(defrecord UrakatEiHaettu [virhe])
 
 (extend-protocol tuck/Event
   ValitseUrakka
@@ -74,5 +78,30 @@
 
   UrakkaaMuokattu
   (process-event [{urakka :urakka} app]
-    (assoc app :valittu-urakka urakka)))
+    (assoc app :valittu-urakka urakka))
+
+  HaeUrakat
+  (process-event [_ app]
+    (let [tulos! (tuck/send-async! ->UrakatHaettu)
+          fail! (tuck/send-async! ->UrakatEiHaettu)]
+      (go
+        (try
+          (let [vastaus (async/<! (k/get! :hae-harjassa-luodut-urakat))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    (assoc app :urakoiden-haku-kaynnnissa? true))
+
+  UrakatHaettu
+  (process-event [{urakat :urakat} app]
+    (assoc app :haetut-urakat urakat
+               :urakoiden-haku-kaynnissa? false))
+
+  UrakatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! [:span "Virhe urakoiden haussa!"] :danger)
+    (assoc app :urakoiden-haku-kaynnissa? false)))
 
