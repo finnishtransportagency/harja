@@ -180,10 +180,12 @@
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
             vanha-tiemerkintapvm
             (json/pvm-string->joda-date (:valmis-tiemerkintaan aikataulu)))
-      (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-        {:db db :fim fim :email email :kohde-id kohde-id
-         :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
-         :kayttaja kayttaja}))
+      (let [kohteen-tiedot (first (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db {:idt [kohde-id]}))]
+        (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+          {:fim fim :email email :kohteen-tiedot kohteen-tiedot
+           :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
+           :kayttaja kayttaja})))
 
     (if kohteella-paallystysilmoitus?
       (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!

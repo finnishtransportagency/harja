@@ -148,19 +148,16 @@
    ylläpitokohteen valmiudesta tiemerkintään.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [db fim email kohde-id tiemerkintapvm ilmoittaja]}]
-  (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-id tiemerkintapvm))
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
-                tiemerkintaurakka-nimi]}
-        (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                 db
-                 {:idt [kohde-id]}))
+                tiemerkintaurakka-nimi]} kohteen-tiedot
         kohde-osoite {:tr-numero tr-numero
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
                       :tr-loppuosa tr-loppuosa
                       :tr-loppuetaisyys tr-loppuetaisyys}]
+    (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
@@ -225,8 +222,8 @@
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään."
-  [{:keys [db fim email kohde-id tiemerkintapvm kayttaja]}]
-  (laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
-                                          :kohde-id kohde-id
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kayttaja]}]
+  (laheta-sposti-kohde-valmis-merkintaan {:fim fim :email email
+                                          :kohteen-tiedot kohteen-tiedot
                                           :tiemerkintapvm tiemerkintapvm
                                           :ilmoittaja kayttaja}))

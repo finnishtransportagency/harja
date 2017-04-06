@@ -129,10 +129,12 @@
          :urakka urakka-id})
 
       (when (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
-        (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-          {:db db :fim fim :email email :kohde-id kohde-id
-           :tiemerkintapvm tiemerkintapvm
-           :kayttaja user}))
+        (let [kohteen-tiedot (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                      db {:idt [kohde-id]}))]
+          (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
+            {:fim fim :email email :kohteen-tiedot kohteen-tiedot
+             :tiemerkintapvm tiemerkintapvm
+             :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                      :sopimus-id sopimus-id
