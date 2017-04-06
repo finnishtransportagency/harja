@@ -642,13 +642,13 @@
                   :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")}]]
 
-        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tallenna-yllapitokohteiden-aikataulu
-                                               +kayttaja-jvh+
-                                               {:urakka-id urakka-id
-                                                :sopimus-id sopimus-id
-                                                :vuosi vuosi
-                                                :kohteet kohteet})))))
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteiden-aikataulu
+                                           +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi vuosi
+                                            :kohteet kohteet})))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
   (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #())
@@ -703,7 +703,7 @@
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
-            oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+            oulun-ohitusramppi-id (hae-yllapitokohde-oulun-ohitusramppi)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
             vuosi 2017
             aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
@@ -711,7 +711,7 @@
             kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
-                     {:id oulaisten-ohitusramppi-id
+                     {:id oulun-ohitusramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -724,6 +724,28 @@
         ;; Usea kohde merkitään valmiiksi, pitäisi lähteä maili
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaralla-urakalla
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+            vuosi 2017
+            kohteet [{:id oulaisten-ohitusramppi-id
+                      :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                      :aikataulu-tiemerkinta-loppu (pvm/->pvm "27.5.2017")}]]
+        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :tallenna-yllapitokohteiden-aikataulu
+                                               +kayttaja-jvh+
+                                               {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :vuosi vuosi
+                                                :kohteet kohteet}))
+            "Oulaisten ohitusramppi ei ole merkitty suoritettavaksi tähän urakkaan")))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

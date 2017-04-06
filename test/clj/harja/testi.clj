@@ -432,6 +432,11 @@
                    WHERE
                    nimi = 'Oulaisten ohitusramppi';"))))
 
+(defn hae-yllapitokohde-oulun-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulun ohitusramppi';"))))
+
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
