@@ -154,6 +154,10 @@
          (= (t/month eka) (t/month toka))
          (= (t/day eka) (t/day toka)))))
 
+#?(:clj
+   (defn sama-tyyppiriippumaton-pvm? [eka toka]
+     (sama-pvm? (joda-timeksi eka) (joda-timeksi toka))))
+
 
 #?(:cljs
    (defn ennen? [eka toka]

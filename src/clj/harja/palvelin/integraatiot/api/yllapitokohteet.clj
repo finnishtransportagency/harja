@@ -66,7 +66,8 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
-            [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat])
+            [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
+            [clj-time.coerce :as c])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -153,9 +154,9 @@
            :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
-  (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
-                                          (first (yllapitokohteet-q/hae-yllapitokohteen-aikataulu
-                                                   db {:id kohde-id})))
+  (let [vanha-tiemerkintapvm (c/from-sql-date (:valmis-tiemerkintaan
+                                                (first (yllapitokohteet-q/hae-yllapitokohteen-aikataulu
+                                                         db {:id kohde-id}))))
         kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
@@ -175,16 +176,12 @@
          :muokkaaja (:id kayttaja)
          :kohde_id kohde-id}))
 
-    (log/debug "[DEBUG] VALMIS TIEMERKINTÄÄN VANHA:" vanha-tiemerkintapvm)
-    (log/debug "[DEBUG] VALMIS TIEMERKINTÄÄN UUSI:" (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu)))
-    (log/debug "[DEBUG] MAILIA SIIS!?:" (viestinta/valita-tieto-valmis-tiemerkintaan?
-                                          vanha-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))))
-
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
-            vanha-tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu)))
+            vanha-tiemerkintapvm
+            (:valmis-tiemerkintaan aikataulu))
       (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
         {:db db :fim fim :email email :kohde-id kohde-id
-         :tiemerkintapvm (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+         :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
          :kayttaja kayttaja}))
 
     (if kohteella-paallystysilmoitus?
@@ -198,7 +195,7 @@
 
 (defn- paivita-tiemerkinnan-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
   (let [yllapitokohde-viestintaan {:id kohde-id
-                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->java-sql-date
+                                   :aikataulu-tiemerkinta-loppu (json/pvm-string->joda-date
                                                                   (:tiemerkinta-valmis aikataulu))}
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                db [yllapitokohde-viestintaan])]

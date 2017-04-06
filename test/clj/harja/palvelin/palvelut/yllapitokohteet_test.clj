@@ -503,16 +503,11 @@
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
-        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
         vuosi 2017
-        leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
-        leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "23.5.2017")
-        kohteet [{:id leppajarven-ramppi-id
-                  :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
-                  :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
-                 {:id nakkilan-ramppi-id
-                  :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]]
+        kohteet [{:id oulaisten-ohitusramppi-id
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "23.5.2017")}]]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-yllapitokohteiden-aikataulu
@@ -520,7 +515,8 @@
                                            {:urakka-id urakka-id
                                             :sopimus-id sopimus-id
                                             :vuosi vuosi
-                                            :kohteet kohteet})))))
+                                            :kohteet kohteet}))
+        "Oulaisten ohitusramppilla ei ole suorittavaa tiemerkintäurakkaa")))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))

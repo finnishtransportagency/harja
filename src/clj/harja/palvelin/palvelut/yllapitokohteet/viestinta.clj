@@ -11,8 +11,11 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c])
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (java.util Date)))
 
 (defn formatoi-ilmoittaja [{:keys [etunimi sukunimi puhelin organisaatio] :as merkitsija}]
   (cond (and etunimi sukunimi)
@@ -183,16 +186,23 @@
   (let [kohde-idt (map :id uudet-kohdetiedot)
         kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                     db {:idt kohde-idt}))
-        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
-                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
-                                                                               kohteet-kannassa))]
-                                             (or (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
-                                                      (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))
-                                                 (and (some? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
-                                                      (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde))
-                                                      (not= (:aikataulu-tiemerkinta-loppu tallennettava-kohde)
-                                                            (:aikataulu-tiemerkinta-loppu kohde-kannassa))))))
-                                         uudet-kohdetiedot)]
+        nyt-valmistuneet-kohteet
+        (filter
+          (fn [tallennettava-kohde]
+            (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %)) kohteet-kannassa))
+                  tiemerkinta-loppupvm-kannassa (:aikataulu-tiemerkinta-loppu kohde-kannassa)
+                  uusi-tiemerkinta-loppupvm (:aikataulu-tiemerkinta-loppu tallennettava-kohde)]
+              (or
+                ;; Tiemerkintäpvm annetaan ensimmäistä kertaa
+                (and (nil? tiemerkinta-loppupvm-kannassa)
+                     (some? uusi-tiemerkinta-loppupvm))
+                ;; Tiemerkintäpvm päivitetään
+                (and (some? tiemerkinta-loppupvm-kannassa)
+                     (some? uusi-tiemerkinta-loppupvm)
+                     (not (pvm/sama-tyyppiriippumaton-pvm?
+                            tiemerkinta-loppupvm-kannassa
+                            uusi-tiemerkinta-loppupvm))))))
+          uudet-kohdetiedot)]
     nyt-valmistuneet-kohteet))
 
 (defn valita-tieto-valmis-tiemerkintaan? [vanha-tiemerkintapvm nykyinen-tiemerkintapvm]
@@ -200,7 +210,7 @@
                     (some? nykyinen-tiemerkintapvm))
                (and (some? vanha-tiemerkintapvm)
                     (some? nykyinen-tiemerkintapvm)
-                    (not= vanha-tiemerkintapvm nykyinen-tiemerkintapvm)))))
+                    (not (pvm/sama-tyyppiriippumaton-pvm? vanha-tiemerkintapvm nykyinen-tiemerkintapvm))))))
 
 (defn valita-tieto-tiemerkinnan-valmistumisesta
   "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.."

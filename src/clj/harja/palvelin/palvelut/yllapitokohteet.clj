@@ -141,6 +141,7 @@
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
+
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db paallystysurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
