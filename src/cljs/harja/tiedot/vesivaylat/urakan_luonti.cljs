@@ -19,7 +19,10 @@
          :valittu-urakka nil
          :tallennus-kaynnissa? false
          :urakoiden-haku-kaynnissa? false
-         :haetut-urakat nil}))
+         :haetut-urakat nil
+         :hallintayksikot nil
+         :urakoitsijat nil
+         :hankkeet nil}))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -31,6 +34,10 @@
 (defrecord HaeUrakat [])
 (defrecord UrakatHaettu [urakat])
 (defrecord UrakatEiHaettu [virhe])
+(defrecord PaivitaSopimuksetGrid [sopimukset])
+(defrecord HaeLomakevaihtoehdot [])
+(defrecord LomakevaihtoehdotHaettu [tulos])
+(defrecord LomakevaihtoehdotEiHaettu [virhe])
 
 (extend-protocol tuck/Event
   ValitseUrakka
@@ -93,7 +100,7 @@
           (catch :default e
             (fail! nil)
             (throw e)))))
-    (assoc app :urakoiden-haku-kaynnnissa? true))
+    (assoc app :urakoiden-haku-kaynnissa? true))
 
   UrakatHaettu
   (process-event [{urakat :urakat} app]
@@ -103,5 +110,40 @@
   UrakatEiHaettu
   (process-event [_ app]
     (viesti/nayta! [:span "Virhe urakoiden haussa!"] :danger)
-    (assoc app :urakoiden-haku-kaynnissa? false)))
+    (assoc app :urakoiden-haku-kaynnissa? false))
+
+  PaivitaSopimuksetGrid
+  (process-event [{sopimukset :sopimukset} app]
+    (assoc-in app [:valittu-urakka :sopimukset] sopimukset))
+
+  HaeLomakevaihtoehdot
+  (process-event [_ app]
+    (let [tulos! (tuck/send-async! ->LomakevaihtoehdotHaettu)
+          fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
+      (go
+        (try
+          (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
+                hankkeet (async/<! (k/post! :hae-paattymattomat-vesivaylahankkeet {}))
+                urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
+                vastaus {:hallintayksikot hallintayksikot
+                         :hankkeet hankkeet
+                         :urakoitsijat urakoitsijat}]
+            (if (some k/virhe? (vals vastaus))
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    app)
+
+  LomakevaihtoehdotHaettu
+  (process-event [{tulos :tulos} app]
+    (assoc app :hallintayksikot (:hallintayksikot tulos)
+               :urakoitsijat (:urakoitsijat tulos)
+               :hankkeet (:hankkeet tulos)))
+
+  LomakevaihtoehdotEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! [:span "Hupsista, ongelmia Harjan kanssa juttelussa."] :danger)
+    app))
 
