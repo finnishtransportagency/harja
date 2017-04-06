@@ -2,6 +2,7 @@
 
 CURRENT_BRANCH=`git branch|grep "*"|cut -c3-`
 BRANCH=${1:-$CURRENT_BRANCH}
+export AWS_DEFAULT_REGION=eu-central-1
 set -e
 set -u
 echo "Deployataan uusi AWS instanssi branchista $BRANCH"
