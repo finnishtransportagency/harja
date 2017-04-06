@@ -12,7 +12,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -57,7 +59,12 @@
                  [ajax-loader "Haetaan urakoita"]
                  "Urakoita ei löytynyt")
         :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
-       [{:otsikko "Nimi" :nimi :nimi}]
+       [{:otsikko "Nimi" :nimi :nimi}
+        {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi :hae #(get-in % [:hallintayksikko :nimi])}
+        {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke :nimi])}
+        {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
+        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm}
+        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm}]
        haetut-urakat]])))
 
 (defn vesivaylaurakoiden-luonti* [e! app]
