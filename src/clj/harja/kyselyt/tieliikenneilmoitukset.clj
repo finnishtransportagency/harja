@@ -1,7 +1,7 @@
-(ns harja.kyselyt.ilmoitukset
+(ns harja.kyselyt.tieliikenneilmoitukset
   (:require [jeesql.core :refer [defqueries]]))
 
-(defqueries "harja/kyselyt/ilmoitukset.sql"
+(defqueries "harja/kyselyt/tieliikenneilmoitukset.sql"
             {:positional? true})
 
 (defn ilmoitukselle-olemassa-vastaanottokuittaus? [db ilmoitusid]

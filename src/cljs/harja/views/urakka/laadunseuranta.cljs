@@ -43,4 +43,3 @@
        "Mobiilityökalu" :mobiilityokalu
        ^{:key "mobiilityokalu"}
        [mobiilityokalu/mobiilityokalu]])))
-

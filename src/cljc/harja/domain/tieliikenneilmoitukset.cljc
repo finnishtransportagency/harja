@@ -1,5 +1,5 @@
-(ns harja.domain.ilmoitukset
-  "Selain- ja palvelinpuolen yhteisiä ilmoituksiin liittyviä asioita"
+(ns harja.domain.tieliikenneilmoitukset
+  "Selain- ja palvelinpuolen yhteisiä tieliikenneilmoituksiin liittyviä asioita"
   (:require
     #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.core :as t])
