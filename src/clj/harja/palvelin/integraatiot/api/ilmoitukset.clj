@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.ilmoitukset
-  "Ilmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
+  "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [compojure.core :refer [PUT GET]]
@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]

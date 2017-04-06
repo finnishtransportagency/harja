@@ -1,0 +1,19 @@
+machine:
+  java:
+    version: oraclejdk8
+  services:
+    - docker
+
+dependencies:
+  post:
+    - sudo service postgresql stop
+    - sudo service mysql stop
+    - sudo service mongod stop
+    - while sudo lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; done
+    - cd tietokanta; sh devdb_up.sh
+    - echo 'Europe/Helsinki' | sudo tee /etc/timezone
+    - sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+test:
+  override:
+    - lein test

@@ -278,6 +278,8 @@ jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja
 
 Harja käyttää Labyrintin SMS-gatewaytä SMS-viestien lähettämiseen. Labyrintin komponentista on olemassa kaksi eri versiota: Labyrintti ja FeikkiLabyrintti. FeikkiLabyrintti on käytössä vain lokaalissa kehitysympäristössä ja se ainoastaan logittaa viestit REPLiin.
 
+Jos haluat kehityskäytössä testata SMS-gatewayta, vaihda main.clj tiedostosta oikea Labyrinttikomponentti käyttöön feikin sijasta.
+
 Oikeiden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
 harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
 harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
