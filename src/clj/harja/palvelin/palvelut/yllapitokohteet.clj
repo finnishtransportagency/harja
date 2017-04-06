@@ -252,7 +252,8 @@
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                        yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
-                                       kaasuindeksi poistettu keskimaarainen-vuorokausiliikenne]}]
+                                       kaasuindeksi toteutunut-hinta
+                                       poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
     (let [kohde (q/luo-yllapitokohde<! db
@@ -275,6 +276,7 @@
                                         :arvonvahennykset arvonvahennykset
                                         :bitumi_indeksi bitumi-indeksi
                                         :kaasuindeksi kaasuindeksi
+                                        :toteutunut_hinta toteutunut-hinta
                                         :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
                                         :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
                                         :vuodet (konv/seq->array [vuosi])})
@@ -286,6 +288,7 @@
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                       yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
+                                      toteutunut-hinta
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
     (when (yy/yllapitokohteen-voi-poistaa? db id)
@@ -310,6 +313,7 @@
                                    :arvonvanhennykset arvonvahennykset
                                    :bitumi_indeksi bitumi-indeksi
                                    :kaasuindeksi kaasuindeksi
+                                   :toteutunut_hinta toteutunut-hinta
                                    :id id
                                    :urakka urakka-id}))))
 

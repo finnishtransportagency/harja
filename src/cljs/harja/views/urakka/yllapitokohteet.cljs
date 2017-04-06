@@ -651,7 +651,6 @@
                                       (fmt/euro-opt (:maaramuutokset rivi))])})
                    (when (= (:kohdetyyppi optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
-                      :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt

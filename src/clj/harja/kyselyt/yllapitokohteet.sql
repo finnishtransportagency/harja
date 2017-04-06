@@ -154,13 +154,13 @@ SELECT
   pi.tila                               AS "paallystysilmoitus-tila",
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
-  pai.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypk.kaasuindeksi,
+  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
@@ -278,7 +278,8 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, toteutunut_hinta,
+                           yllapitokohdetyyppi,
                            yllapitokohdetyotyyppi, vuodet)
 VALUES (:urakka,
   :sopimus,
@@ -297,6 +298,7 @@ VALUES (:urakka,
         :arvonvahennykset,
         :bitumi_indeksi,
         :kaasuindeksi,
+        :toteutunut_hinta,
         :yllapitokohdetyyppi :: yllapitokohdetyyppi,
         :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
         :vuodet :: INTEGER []);
@@ -319,7 +321,8 @@ SET
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi
+  kaasuindeksi                      = :kaasuindeksi,
+  toteutunut_hinta                  = :toteutunut_hinta
 WHERE id = :id
       AND urakka = :urakka;
 
