@@ -1,8 +1,10 @@
 (ns harja.palvelin.integraatiot.sahke.sanomat.urakkasanoma
   (:require [harja.tyokalut.xml :as xml]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]))
 
 (defn urakka-hiccup [{:keys [id
+                             tyyppi
                              alkupvm
                              loppupvm
                              alueurakkanumero
@@ -21,7 +23,7 @@
      :vv_corporate_id urakoitsija-y-tunnus
      :schedule_finish (xml/formatoi-aikaleima loppupvm)
      :name nimi
-     :vv_alueurakkanro alueurakkanumero
+     :vv_alueurakkanro (str (urakkatyyppi/rakenna-sampon-tyyppi tyyppi) "-" alueurakkanumero)
      :resourceId (str "HAR-" yhteyshenkilo-id)
      :schedule_start (xml/formatoi-aikaleima alkupvm)
      :company_name urakoitsijanimi
