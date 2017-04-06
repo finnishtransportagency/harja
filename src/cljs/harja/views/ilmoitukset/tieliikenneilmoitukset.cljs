@@ -1,10 +1,10 @@
-(ns harja.views.ilmoitukset
-  "Harjan ilmoituksien pääsivu."
+(ns harja.views.ilmoitukset.tieliikenneilmoitukset
+  "Tieliikenneilmoituksien pääsivu."
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :refer [capitalize]]
-            [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-tiedot]
-            [harja.domain.ilmoitukset :refer
+            [harja.domain.tieliikenneilmoitukset :refer
              [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
