@@ -444,7 +444,7 @@
                         "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
       (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
 
-(defn palvelut [fim email liitteiden-hallinta]
+(defn palvelut [{:keys [fim email liitteiden-hallinta]}]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
@@ -543,7 +543,8 @@
            fim :fim
            email :sonja-sahkoposti
            liitteiden-hallinta :liitteiden-hallinta :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut fim email liitteiden-hallinta))
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email
+                                                          :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]
     (palvelut/poista http (palvelut nil))
