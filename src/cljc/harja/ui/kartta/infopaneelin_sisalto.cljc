@@ -36,7 +36,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]
             [harja.fmt :as fmt]
@@ -396,14 +396,13 @@
                                   ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
                                   ;; tarvita erityistä validointia.
                                   (constantly true)
-                                  (constantly (str maara " " yksikko)))})
+                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
 
-                        (for [materiaalitoteuma (:materiaalit toteuma)]
-                          {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
+                        (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
+                          {:otsikko nimi
                            :hae (hakufunktio
                                   (constantly true)
-                                  #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                                        (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko])))})
+                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
                         (when (:lisatieto toteuma)
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})

@@ -6,8 +6,8 @@
                [taoensso.timbre :as log])
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.geo :as geo]
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
             [harja.pvm :as pvm]
