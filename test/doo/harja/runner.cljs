@@ -34,6 +34,8 @@
             [harja.views.urakka.paallystyksen-maksuerat-test]
             [harja.tiedot.vesivaylat.urakan-luonti-test]
             [harja.views.vesivaylat.urakan-luonti]
+            [harja.tiedot.vesivaylat.urakoitsijan-luonti-test]
+            [harja.tiedot.vesivaylat.hankkeen-luonti-test]
             ;; uusi testi tähän
             ))
 
@@ -71,5 +73,7 @@
            'harja.views.urakka.paallystyksen-maksuerat-test
            'harja.tiedot.vesivaylat.urakan-luonti-test
            'harja.views.vesivaylat.urakan-luonti
+           'harja.tiedot.vesivaylat.urakoitsijan-luonti-test
+           'harja.tiedot.vesivaylat.hankkeen-luonti-test
            ;; uusi testi tähän
            )
