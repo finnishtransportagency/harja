@@ -23,12 +23,15 @@
     (julkaise-palvelu (:http-palvelin this) :yllapidon-urakoitsijat
       (fn [user]
         (yllapidon-urakoitsijat (:db this) user)))
+    (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
+                      (fn [user]
+                        (vesivayla-urakoitsijat (:db this) user)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat )
-    (poista-palvelu (:http-palvelin this) :yllapidon-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :vesivayla-urakoitsijat)
     this))
 
 
@@ -53,3 +56,10 @@
   (->> (q/hae-yllapidon-urakoitsijat db)
       (map :id)
       (into #{})))
+
+(defn vesivayla-urakoitsijat [db user]
+  (oikeudet/ei-oikeustarkistusta!)
+  (log/debug "Haetaan ylläpidon urakoitsijat")
+  (->> (q/hae-vesivayla-urakoitsijat db)
+       (map :id)
+       (into #{})))
