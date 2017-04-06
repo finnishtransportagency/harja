@@ -708,7 +708,9 @@ WHERE u.id = :id;
 
 -- name: kirjaa-sahke-lahetys!
 INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
-VALUES (:urakka, now(), :onnistunut);
+VALUES (:urakka, now(), :onnistunut)
+on CONFLICT  (urakka) do
+update set lahetetty  = now(), onnistunut = :onnistunut;
 
 -- name: perustettu-harjassa?
 -- single?: true

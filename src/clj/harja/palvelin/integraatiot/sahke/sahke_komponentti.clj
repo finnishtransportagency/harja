@@ -33,10 +33,10 @@
   (lukko/yrita-ajaa-lukon-kanssa
     db
     "sahke-uudelleenlahetys"
-    (let [urakka-idt (q-urakat/hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut db)
-          jms-lahettaja (tee-jms-lahettaja sonja integraatioloki db lahetysjono)]
-      (doseq [urakka-id urakka-idt]
-        (laheta-urakka jms-lahettaja db urakka-id)))))
+    #(let [urakka-idt (mapv :urakka (q-urakat/hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut db))
+           jms-lahettaja (tee-jms-lahettaja sonja integraatioloki db lahetysjono)]
+       (doseq [urakka-id urakka-idt]
+         (laheta-urakka jms-lahettaja db urakka-id)))))
 
 (defn tee-uudelleenlahetys-tehtava [{:keys [sonja db integraatioloki]} uudelleenlahetysaika lahetysjono]
   (if uudelleenlahetysaika
