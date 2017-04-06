@@ -269,7 +269,7 @@
         (tallenna-urakka db user tiedot))
 
       :hae-harjassa-luodut-urakat
-      (fn [user]
+      (fn [user _]
         (hae-harjassa-luodut-urakat db user)))
     this)
 

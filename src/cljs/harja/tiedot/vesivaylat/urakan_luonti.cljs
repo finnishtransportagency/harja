@@ -86,7 +86,7 @@
           fail! (tuck/send-async! ->UrakatEiHaettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/get! :hae-harjassa-luodut-urakat))]
+          (let [vastaus (async/<! (k/post! :hae-harjassa-luodut-urakat {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
