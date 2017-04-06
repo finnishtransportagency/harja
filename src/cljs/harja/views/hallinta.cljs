@@ -14,7 +14,7 @@
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
-            [harja.views.vesivaylat.urakan-luonti :as vu]
+            [harja.views.vesivaylat.hallinta :as vu]
             [harja.ui.grid :as g]
             [harja.tiedot.istunto :as istunto]))
 
@@ -64,9 +64,9 @@
      ^{:key "jarjestelmatunnukset"}
      [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
 
-   "Vesiväyläurakoiden luonti"
-   :vesivaylaurakoiden-luonti
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+   "Vesiväyläurakat"
+   :vesivayla-hallinta
+   (when true #_(and (istunto/ominaisuus-kaytossa? :vesivayla)
               #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
      ^{:key "vesivaylaurakat"}
-     [vu/vesivaylaurakoiden-luonti])])
+     [vu/vesivayla-hallinta])])

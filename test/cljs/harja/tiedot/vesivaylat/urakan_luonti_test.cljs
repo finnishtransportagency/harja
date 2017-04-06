@@ -24,7 +24,9 @@
   (let [halutut #{u/->UrakkaTallennettu u/->UrakkaEiTallennettu}
         kutsutut (atom #{})]
     (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
+      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))
+       ;; Haetut on oletuksena tyhjä, mutta tallentamista ei voi tehdä jos näin on
+       tila {:haetut-urakat []}]
       (is (true? (:tallennus-kaynnissa? (e! u/->TallennaUrakka {:id 1}))))
       (is (= halutut @kutsutut)))))
 
