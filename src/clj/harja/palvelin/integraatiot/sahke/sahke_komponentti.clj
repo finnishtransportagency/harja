@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.urakat :as q-urakat]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukko])
   (:import (java.util UUID)))
 
 (defprotocol Valtuushallinta
@@ -29,10 +30,13 @@
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sahke" "urakan-lahetys") sonja lahetysjono))
 
 (defn laheta-epaonnistuneet-urakat-uudestaan [sonja integraatioloki db lahetysjono]
-  (let [urakka-idt (q-urakat/hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut db)
-        jms-lahettaja (tee-jms-lahettaja sonja integraatioloki db lahetysjono)]
-    (doseq [urakka-id urakka-idt]
-      (laheta-urakka jms-lahettaja db urakka-id))))
+  (lukko/yrita-ajaa-lukon-kanssa
+    db
+    "sahke-uudelleenlahetys"
+    (let [urakka-idt (q-urakat/hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut db)
+          jms-lahettaja (tee-jms-lahettaja sonja integraatioloki db lahetysjono)]
+      (doseq [urakka-id urakka-idt]
+        (laheta-urakka jms-lahettaja db urakka-id)))))
 
 (defn tee-uudelleenlahetys-tehtava [{:keys [sonja db integraatioloki]} uudelleenlahetysaika lahetysjono]
   (if uudelleenlahetysaika
