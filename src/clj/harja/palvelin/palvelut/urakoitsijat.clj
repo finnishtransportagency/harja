@@ -24,7 +24,7 @@
       (fn [user]
         (yllapidon-urakoitsijat (:db this) user)))
     (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
-                      (fn [user]
+                      (fn [user _]
                         (vesivayla-urakoitsijat (:db this) user)))
     this)
 
@@ -59,7 +59,4 @@
 
 (defn vesivayla-urakoitsijat [db user]
   (oikeudet/ei-oikeustarkistusta!)
-  (log/debug "Haetaan ylläpidon urakoitsijat")
-  (->> (q/hae-vesivayla-urakoitsijat db)
-       (map :id)
-       (into #{})))
+  (q/hae-vesivayla-urakoitsijat db))
