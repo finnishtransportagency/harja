@@ -1,3 +1,39 @@
+-- name: hae-harjassa-luodut-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.sampoid,
+  u.alue,
+  u.alkupvm,
+  u.loppupvm,
+  u.tyyppi,
+  u.sopimustyyppi,
+  u.takuu_loppupvm,
+  hal.id                                                        AS hallintayksikko_id,
+  hal.nimi                                                      AS hallintayksikko_nimi,
+  hal.lyhenne                                                   AS hallintayksikko_lyhenne,
+  urk.id                                                        AS urakoitsija_id,
+  urk.nimi                                                      AS urakoitsija_nimi,
+  urk.ytunnus                                                   AS urakoitsija_ytunnus,
+  s.nimi                                                        AS sopimus_nimi,
+  s.id                                                          AS sopimus_id,
+  s.sampoid                                                     AS sopimus_sampoid,
+  s.alkupvm                                                     AS sopimus_alkupvm,
+  s.loppupvm                                                    AS sopimus_loppupvm,
+  h.nimi                                                        AS hanke_nimi,
+  h.sampoid                                                     AS hanke_sampoid,
+  h.id                                                          AS hanke_id,
+  h.alkupvm                                                     AS hanke_alkupm,
+  h.loppupvm                                                    AS hanke_loppupvm,
+  ST_Simplify(au.alue, 50)                                      AS alueurakan_alue
+FROM urakka u
+  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
+  LEFT JOIN hanke h ON u.hanke = h.id
+  LEFT JOIN sopimus s ON u.id = s.urakka
+WHERE u.harjassa_luotu IS TRUE;
+
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT
   u.id,

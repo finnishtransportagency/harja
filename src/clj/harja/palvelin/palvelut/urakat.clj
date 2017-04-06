@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.konversio :as konv]
@@ -204,6 +205,23 @@
                                                                               {:urakka urakka-id})
     :ok))
 
+(defn tallenna-urakka [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylaurakoiden-luonti user)
+    (assert (= :vesivayla (:tyyppi tiedot)))
+
+    (jdbc/with-db-transaction [db db])))
+
+(defn hae-harjassa-luodut-urakat [db user]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    #_(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylaurakoiden-luonti user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+    (konv/sarakkeet-vektoriin
+      (into []
+           urakka-xf
+           (q/hae-harjassa-luodut-urakat db))
+      {:sopimus :sopimukset})))
+
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -244,7 +262,15 @@
 
       :poista-indeksi-kaytosta
       (fn [user tiedot]
-        (poista-indeksi-kaytosta db user tiedot)))
+        (poista-indeksi-kaytosta db user tiedot))
+
+      :tallenna-urakka
+      (fn [user tiedot]
+        (tallenna-urakka db user tiedot))
+
+      :hae-harjassa-luodut-urakat
+      (fn [user]
+        (hae-harjassa-luodut-urakat db user)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -255,6 +281,8 @@
                      :hae-organisaation-urakat
                      :tallenna-urakan-sopimustyyppi
                      :tallenna-urakan-tyyppi
-                     :aseta-takuun-loppupvm)
+                     :aseta-takuun-loppupvm
+                     :tallenna-urakka
+                     :hae-harjassa-luodut-urakat)
 
     this))
