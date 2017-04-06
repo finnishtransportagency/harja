@@ -301,8 +301,7 @@
           viesti]))]))
 
 (defn kohdeluettelo-paivitetty [urakka]
-  (if @yha-kohteiden-paivittaminen-kaynnissa?
-    [ajax-loader "Kohteiden päivitys käynnissä"]
+  (when-not @yha-kohteiden-paivittaminen-kaynnissa?
     (let [yhatiedot (:yhatiedot urakka)
           kohdeluettelo-paivitetty (:kohdeluettelo-paivitetty yhatiedot)
           paivittajan-etunimi (:kohdeluettelo-paivittaja-etunimi yhatiedot)
