@@ -334,7 +334,9 @@
        {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
         :tyyppi :string}
        {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true}
-       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true})
+       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true
+        :validoi [[:pvm-toisen-pvmn-jalkeen (::t/alku ilmoitus)
+                   "Lopetuksen pitää olla alun jälkeen"]]})
 
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
