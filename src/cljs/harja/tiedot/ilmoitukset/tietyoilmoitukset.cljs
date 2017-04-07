@@ -264,7 +264,8 @@
         (try
           (let [vastaus-kanava (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :urakan-kohteet)))
+                                     (dissoc ::t/tyovaiheet :urakan-kohteet
+                                             :komponentissa-virheita?)))
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
             (if (k/virhe? vastaus)
