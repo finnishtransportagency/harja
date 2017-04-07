@@ -27,5 +27,5 @@ SELECT
 FROM organisaatio urk
   LEFT JOIN urakka u ON urk.id = u.hallintayksikko
 WHERE urk.tyyppi = 'urakoitsija'
-      AND u.tyyppi IN ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')
-      OR urk.harjassa_luotu IS TRUE;
+      AND (u.tyyppi IN ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')
+      OR urk.harjassa_luotu IS TRUE);
