@@ -5,7 +5,8 @@
             [harja.views.vesivaylat.hankkeiden-luonti :as vhu]
             [harja.views.vesivaylat.urakoitsijoiden-luonti :as vuu]
             [harja.views.vesivaylat.sopimuksien-luonti :as vsu]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn vesivayla-hallinta
   []
