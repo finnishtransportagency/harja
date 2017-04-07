@@ -39,7 +39,7 @@
     (ikonit/print) " PDF"]])
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [{:id nil :nimi "Kaikki urakat"}]
+  (let [urakkavalinnat (into [{:id nil :nimi "Ei rajausta (haetaan myös urakattomat)"}]
                              kayttajan-urakat)]
     [lomake/lomake
      {:luokka :horizontal
