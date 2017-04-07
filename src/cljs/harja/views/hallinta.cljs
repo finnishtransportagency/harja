@@ -66,7 +66,7 @@
 
    "Vesiväyläurakat"
    :vesivayla-hallinta
-   (when true #_(and (istunto/ominaisuus-kaytossa? :vesivayla)
-              #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
+   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+              (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
      [vu/vesivayla-hallinta])])

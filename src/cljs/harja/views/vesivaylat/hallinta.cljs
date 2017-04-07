@@ -14,27 +14,27 @@
    "Urakoiden luonti"
    :vesivaylaurakoiden-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                     #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
+                     (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
      [vu/vesivaylaurakoiden-luonti])
 
    "Hankkeiden luonti"
    :vesivaylahankkeiden-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                     #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
+                     (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylahankkeet"}
      [vhu/vesivaylahankkeiden-luonti])
 
    "Urakoitsijoiden luonti"
    :vesivaylaurakoitsijoiden-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
+              (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakoitsijat"}
      [vuu/vesivaylaurakoitsijoiden-luonti])
 
    "Sopimuksien luonti"
    :vesivaylasopimuksien-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              #_(oikeudet/hallinta-vesivaylaurakoiden-luonti))
+              (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylasopimukset"}
      [vsu/vesivaylasopimuksien-luonti])])

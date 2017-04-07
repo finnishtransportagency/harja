@@ -207,15 +207,14 @@
 
 (defn tallenna-urakka [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylaurakoiden-luonti user)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
     (assert (= :vesivayla (:tyyppi tiedot)))
 
     (jdbc/with-db-transaction [db db])))
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
-    #_(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylaurakoiden-luonti user)
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (konv/sarakkeet-vektoriin
       (into []
            urakka-xf

@@ -7,8 +7,7 @@
 
 (defn hae-paattymattomat-vesivaylahankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
-    #_(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylaurakoiden-luonti user)
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (q/hae-paattymattomat-vesivaylahankkeet db)))
 
 (defrecord Hankkeet []

@@ -7,7 +7,8 @@
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn luontilomake [e! {:keys [valittu-urakoitsija tallennus-kaynnissa?] :as app}]
   [:div
@@ -20,7 +21,7 @@
                 "Muokkaa urakoitsijaa"
                 "Luo uusi urakoitsija")
      :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu (lomake/ilman-lomaketietoja %)))
-     :voi-muokata? (constantly true) #_(oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylaurakoiden-luonti)
+     :voi-muokata? #(oikeudet/hallinta-vesivaylat)
      :footer-fn (fn [hanke]
                   [napit/tallenna
                    "Tallenna urakoitsija"
