@@ -116,6 +116,8 @@
          :tyyppi :valinta
          :valinnat (:sopimukset valittu-urakka)
          :valinta-nayta #(if % (:nimi %) "Pääsopimusta ei määritelty")
+         :jos-tyhja "Urakalla ei sopimuksia"
+         #_#_:muokattava? #(> (count (:sopimukset %)) 0) ;; Valinta-kentässä tai lomakkeessa on bugi, ei toimi hyvin
          :aseta (fn [rivi arvo] (assoc rivi :sopimukset (mapv #(if (= (:id arvo) (:id %))
                                                                  (assoc % :paasopimus true)
                                                                  (assoc % :paasopimus false))
