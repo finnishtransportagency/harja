@@ -13,7 +13,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
@@ -131,7 +131,7 @@
   (jdbc/with-db-transaction [db db]
     (let [yllapitokohteet (into []
                                 (comp
-                                  (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                                  (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
                                   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))

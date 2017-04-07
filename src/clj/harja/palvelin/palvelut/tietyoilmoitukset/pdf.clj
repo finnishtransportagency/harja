@@ -202,7 +202,7 @@
                         "  "
                         [:fo:inline {:text-decoration "underline"}
                          (::t/max-paino raj)]
-                        " (tonnia)"]]]
+                        " (kg)"]]]
                      #{(not (nil? (::t/max-paino raj)))})
      (checkbox-lista [["Kuumennin käytössä (avotuli)" "avotuli"]
                       ["Työkoneita liikenteen seassa" "tyokoneitaLiikenteenSeassa"]]

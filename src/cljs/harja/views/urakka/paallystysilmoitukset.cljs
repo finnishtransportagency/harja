@@ -48,7 +48,7 @@
                    [harja.atom :refer [reaction<!]]))
 
 (defn laske-hinta [lomakedata-nyt]
-  (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta lomakedata-nyt)
+  (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta-ilman-maaramuutoksia lomakedata-nyt)
         muutokset-kokonaishintaan (:maaramuutokset lomakedata-nyt)
         toteuman-kokonaishinta (+ urakkasopimuksen-mukainen-kokonaishinta muutokset-kokonaishintaan)]
     {:urakkasopimuksen-mukainen-kokonaishinta urakkasopimuksen-mukainen-kokonaishinta

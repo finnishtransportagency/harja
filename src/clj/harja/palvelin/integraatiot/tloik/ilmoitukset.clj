@@ -11,7 +11,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]

@@ -115,7 +115,6 @@
 
 (def testipaallystysilmoitus
   {:tila "valmis",
-   :muutoshinta 234785M,
    :kohdenimi "Testikohde 1",
    :kohdeosa_tie 66,
    :kohdeosa_let 0,
@@ -204,8 +203,9 @@
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
-  (is (= 234785M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))
-      "Kokonaishinta laskettiin oikein testidataa vasten")
-  (is (= 234785M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta
-                    (assoc testipaallystysilmoitus :sopimuksen-mukaiset-tyot nil)))
+  (is (== 0 (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))
+      "Kokonaishinta laskettiin oikein, kun mitään laskettavaa ei ole")
+  (is (== 6 (kohteen-lahetyssanoma/laske-hinta-kokonaishinta
+             (assoc testipaallystysilmoitus :sopimuksen-mukaiset-tyot 1
+                                            :maaramuutokset 5)))
       "Kokonaishinta laskettiin oikein, kun joukossa on nil-arvoja"))

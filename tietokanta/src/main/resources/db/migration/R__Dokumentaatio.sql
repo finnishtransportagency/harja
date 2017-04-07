@@ -8,7 +8,7 @@ Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllo
 Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n\n
 
 Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-10, koodit menevät YHA:an.\n
-Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohteet.\n\n
+Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
 
 COMMENT ON TABLE yllapitokohdeosa IS
@@ -22,7 +22,12 @@ Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
 - toimenpide (sanallinen selitys).';
 
 COMMENT ON TABLE yllapitokohteen_aikataulu IS
-E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetuksesta ensisijaisen urakan näkökulmasta. Lisäksi päällystykselle ja tiemerkinnälle on omat aloitus- ja lopetusaikataulut.';
+E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetuksesta ensisijaisen urakan näkökulmasta. Lisäksi päällystykselle ja tiemerkinnälle on omat aloitus- ja lopetusaikataulut.
+
+ Jokaisella ylläpitokohteella tulisi olla vastinpari tässä taulussa (edes tyhjä rivi ilman mitään aikataulutietoja), mikäli sen aikataulutietoja aiotaan käsitellä';
+
+COMMENT ON TABLE yllapitokohteen_maksuera IS
+E'Sisältää ylläpitokohteeseen kuuluvien maksuerien tiedot (yksi rivi = yksi maksuerä). Maksuerä kuvastaa urakoitsijan tekemää ehdotusta ylläpitokohteen maksueristä. Tilaaja täyttää maksuerätunnuksen.';
 
 -- Ylläpito (päällystys)
 

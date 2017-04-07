@@ -19,7 +19,7 @@ FROM yllapitokohde ypk
                                      AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
+      AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
       AND ypk.poistettu IS NOT TRUE;
@@ -45,7 +45,8 @@ SELECT
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi           AS "bitumi-indeksi",
   ypk.kaasuindeksi,
-  sum(-s.maara)                 AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
+  sum(-s.maara)                AS "sakot-ja-bonukset",
+  -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa          AS "tekninen-osa_paatos",
@@ -109,7 +110,7 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Päivittää päällystysilmoituksen tiedot (ei käsittelyä tai asiatarkastusta, päivitetään erikseen)
 UPDATE paallystysilmoitus
 SET
-  tila           = :tila :: paallystystila,
+  tila           = :tila :: PAALLYSTYSTILA,
   ilmoitustiedot = :ilmoitustiedot :: JSONB,
   takuupvm       = :takuupvm,
   muokattu       = NOW(),
@@ -124,7 +125,7 @@ WHERE paallystyskohde = :id
 -- Päivittää päällystysilmoituksen käsittelytiedot
 UPDATE paallystysilmoitus
 SET
-  paatos_tekninen_osa        = :paatos_tekninen_osa :: paallystysilmoituksen_paatostyyppi,
+  paatos_tekninen_osa        = :paatos_tekninen_osa :: PAALLYSTYSILMOITUKSEN_PAATOSTYYPPI,
   perustelu_tekninen_osa     = :perustelu_tekninen_osa,
   kasittelyaika_tekninen_osa = :kasittelyaika_tekninen_osa,
   muokattu                   = NOW(),
@@ -153,7 +154,7 @@ WHERE paallystyskohde = :id
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
-        :tila :: paallystystila,
+        :tila :: PAALLYSTYSTILA,
         :ilmoitustiedot :: JSONB,
         :takuupvm,
         NOW(),
@@ -225,14 +226,14 @@ WHERE yllapitokohde = :id
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
                                          ennustettu_maara, toteutunut_maara,
                                          yksikkohinta, luoja, ulkoinen_id, jarjestelma)
-VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara,
+VALUES (:yllapitokohde, :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI, :tyo, :yksikko, :tilattu_maara,
                         :ennustettu_maara, :toteutunut_maara,
                         :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutos
 SET
-  tyon_tyyppi      = :tyon_tyyppi :: maaramuutos_tyon_tyyppi,
+  tyon_tyyppi      = :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI,
   tyo              = :tyo,
   yksikko          = :yksikko,
   tilattu_maara    = :tilattu_maara,
@@ -259,10 +260,77 @@ WHERE yllapitokohde = :yllapitokohdeid AND
 
 -- name: avaa-paallystysilmoituksen-lukko!
 UPDATE paallystysilmoitus
-SET tila = 'valmis' :: paallystystila
+SET tila = 'valmis' :: PAALLYSTYSTILA
 WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: lukitse-paallystysilmoitus!
 UPDATE paallystysilmoitus
-SET tila = 'lukittu' :: paallystystila
+SET tila = 'lukittu' :: PAALLYSTYSTILA
 WHERE paallystyskohde = :yllapitokohde_id
+
+-- name: hae-urakan-maksuerat
+SELECT
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.tr_numero     AS "tr-numero",
+  ym.id             AS "maksuera_id",
+  ym.sisalto        AS "maksuera_sisalto",
+  ym.maksueranumero AS "maksuera_maksueranumero",
+  ymt.maksueratunnus,
+  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  sum(-s.maara)                AS "sakot-ja-bonukset" -- Käännetään, jotta laskenta toimii suoraan oikein
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_maksueratunnus ymt ON ymt.yllapitokohde = ypk.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+WHERE ypk.urakka = :urakka
+      AND ypk.sopimus = :sopimus
+      AND ypk.poistettu IS NOT TRUE
+      AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                         OR vuodet @> ARRAY [:vuosi] :: INT []))
+GROUP BY ypk.id, ym.id, ymt.maksueratunnus;
+
+-- name: hae-yllapitokohteen-maksuera
+SELECT
+  ym.sisalto,
+  ym.maksueranumero,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
+WHERE yllapitokohde = :yllapitokohde
+      AND maksueranumero = :maksueranumero
+      AND ypk.poistettu IS NOT TRUE;
+
+-- name: luo-maksuera<!
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES (:yllapitokohde, :maksueranumero, :sisalto);
+
+-- name: paivita-maksuera<!
+UPDATE yllapitokohteen_maksuera
+SET
+  sisalto        = :sisalto,
+  maksueranumero = :maksueranumero
+WHERE yllapitokohde = :yllapitokohde
+      AND maksueranumero = :maksueranumero;
+
+-- name: hae-yllapitokohteen-maksueratunnus
+SELECT maksueratunnus
+FROM yllapitokohteen_maksueratunnus
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: luo-maksueratunnus<!
+INSERT INTO yllapitokohteen_maksueratunnus (yllapitokohde, maksueratunnus)
+VALUES (:yllapitokohde, :maksueratunnus);
+
+-- name: paivita-maksueratunnus<!
+UPDATE yllapitokohteen_maksueratunnus
+SET
+  maksueratunnus = :maksueratunnus
+WHERE yllapitokohde = :yllapitokohde

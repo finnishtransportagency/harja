@@ -5,21 +5,21 @@ SELECT
   u.tyyppi,
   u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
+  st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
-  LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
-  -- Urakka on käynnissä
-  (u.alkupvm <= now() AND
-   u.loppupvm > now())
-  OR
-  -- Urakka on käynnissä (loppua ei tiedossa)
-  (u.alkupvm <= now() AND
-   u.loppupvm IS NULL)
-  OR
-  -- Urakan takuuaika on voimassa
-  (u.alkupvm <= now() AND
-   u.takuu_loppupvm > now())
+-- Urakka on käynnissä
+(u.alkupvm <= now() AND
+u.loppupvm > now())
+OR
+-- Urakka on käynnissä (loppua ei tiedossa)
+(u.alkupvm <= now() AND
+u.loppupvm IS NULL)
+OR
+-- Urakan takuuaika on voimassa
+(u.alkupvm <= now() AND
+u.takuu_loppupvm > now())
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
@@ -112,7 +112,7 @@ SELECT
   WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND au.alue IS NOT NULL)
     THEN
       -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
-     hoidon_alueurakan_geometria(u.urakkanro)
+      hoidon_alueurakan_geometria(u.urakkanro)
   ELSE
     ST_Simplify(au.alue, 50)
   END                         AS alueurakan_alue
@@ -466,30 +466,30 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
       AND
       ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-       OR
-       (:urakkatyyppi = 'valaistus' AND
-        exists(SELECT id
-               FROM valaistusurakka vu
-               WHERE vu.valaistusurakkanro = u.urakkanro AND
-                     st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-        exists(SELECT id
-               FROM paallystyspalvelusopimus pps
-               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
-                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'tekniset-laitteet') AND
-        exists(SELECT id
-               FROM tekniset_laitteet_urakka tlu
-               WHERE tlu.urakkanro = u.urakkanro AND
-                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'siltakorjaus') AND
-        exists(SELECT id
-               FROM siltapalvelusopimus sps
-               WHERE sps.urakkanro = u.urakkanro AND
-                     st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
+      OR
+      (:urakkatyyppi = 'valaistus' AND
+       exists(SELECT id
+              FROM valaistusurakka vu
+              WHERE vu.valaistusurakkanro = u.urakkanro AND
+                    st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+exists(SELECT id
+FROM paallystyspalvelusopimus pps
+WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
+st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'tekniset-laitteet') AND
+exists(SELECT id
+FROM tekniset_laitteet_urakka tlu
+WHERE tlu.urakkanro = u.urakkanro AND
+st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'siltakorjaus') AND
+exists(SELECT id
+FROM siltapalvelusopimus sps
+WHERE sps.urakkanro = u.urakkanro AND
+st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -499,7 +499,7 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
-  elynumero = :elynumero
+elynumero = :elynumero
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: hae-alueurakka-numerolla
@@ -524,8 +524,8 @@ SELECT
   u.id                                      AS urakka_id,
   CASE
   WHEN (u.tyyppi = 'hoito'::urakkatyyppi AND alueurakka.alue IS NOT NULL)
-  THEN
-    hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
+    THEN
+      hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
   ELSE
     ST_Simplify(alueurakka.alue, :toleranssi)
   END AS alueurakka_alue
@@ -588,11 +588,11 @@ SELECT
   u.id,
   st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
-  u.alkupvm <= now() AND
-  u.loppupvm > now() AND
-  st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+u.alkupvm <= now() AND
+u.loppupvm > now() AND
+st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 

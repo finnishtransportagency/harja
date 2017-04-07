@@ -148,6 +148,8 @@
                                    [org.seleniumhq.selenium/selenium-java "3.0.1"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "3.0.1"]]}}
 
+  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
+
   :repositories [["harja-data" "http://185.26.50.104/mvn/"]
                  ["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
