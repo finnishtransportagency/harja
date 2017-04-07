@@ -217,8 +217,13 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (konv/sarakkeet-vektoriin
       (into []
-           urakka-xf
-           (q/hae-harjassa-luodut-urakat db))
+            (comp
+              urakka-xf
+              (map konv/alaviiva->rakenne)
+              (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
+              (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
+              (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+            (q/hae-harjassa-luodut-urakat db))
       {:sopimus :sopimukset})))
 
 (defrecord Urakat []

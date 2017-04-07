@@ -2,13 +2,11 @@
 SELECT
   u.id,
   u.nimi,
-  u.sampoid,
   u.alue,
   u.alkupvm,
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
-  u.takuu_loppupvm,
   hal.id                                                        AS hallintayksikko_id,
   hal.nimi                                                      AS hallintayksikko_nimi,
   hal.lyhenne                                                   AS hallintayksikko_lyhenne,
@@ -22,7 +20,7 @@ SELECT
   s.loppupvm                                                    AS sopimus_loppupvm,
   h.nimi                                                        AS hanke_nimi,
   h.id                                                          AS hanke_id,
-  h.alkupvm                                                     AS hanke_alkupm,
+  h.alkupvm                                                     AS hanke_alkupvm,
   h.loppupvm                                                    AS hanke_loppupvm,
   ST_Simplify(au.alue, 50)                                      AS alueurakan_alue
 FROM urakka u
