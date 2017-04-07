@@ -76,7 +76,8 @@
                          #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
        :palstoja 1
-       :tyhjennys-sallittu? true}
+       :tyhjennys-sallittu? true
+       :validoi [[:validi-tr "Tieosoite ei ole validi" [:sijainti]]]}
       {:nimi :vain-kayttajan-luomat
        :tyyppi :checkbox
        :teksti "Vain minun luomat"
