@@ -143,3 +143,8 @@ WHERE poistettu IS NOT TRUE AND
 SELECT t.urakka
 FROM yllapito_muu_toteuma t
 WHERE t.id = :toteuma;
+
+-- name: tiemerkinnan-yksikkohintaisen-toteuman-urakka
+SELECT t.urakka
+FROM tiemerkinnan_yksikkohintainen_toteuma t
+WHERE t.id = :toteuma;
