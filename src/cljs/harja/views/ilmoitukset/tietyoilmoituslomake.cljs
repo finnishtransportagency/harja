@@ -109,6 +109,12 @@
              (tiedot/->IlmoitustaMuokattu
               (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
+(defn- grid-virheita?
+  "Palauttaa true/false onko annetussa muokkaus-grid datassa virheitä"
+  [uusi-data]
+  (boolean (some (comp not empty? ::grid/virheet)
+                 (vals uusi-data))))
+
 (defn pysaytys-ajat-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko ""
                   :voi-muokata? true
@@ -124,34 +130,37 @@
      :validoi [[:pvm-kentan-jalkeen ::t/pysaytysten-alku "Lopun on oltava alun jälkeen" ]]}]
    (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
            #(do
-              (let [virheita? (some (comp not empty? ::grid/virheet)
-                                    (vals %))]
-                (e!
-                 (tiedot/->IlmoitustaMuokattu
-                  (-> ilmoitus
-                      (merge (select-keys (get % 0)
-                                          [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
-                      (assoc-in [:komponentissa-virheita? :pysaytysajat]
-                                (boolean virheita?))))))))])
+              (e!
+               (tiedot/->IlmoitustaMuokattu
+                (-> ilmoitus
+                    (merge (select-keys (get % 0)
+                                        [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
+                    (assoc-in [:komponentissa-virheita? :pysaytysajat]
+                              (grid-virheita? %)))))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 (def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
-(def aikataulu-grid-kentat [{:otsikko "Viikonpäivät" :nimi ::t/paivat :tyyppi :checkbox-group
-                             :tasaa :keskita
-                             :vaihtoehdot viikonpaivat
-                             :vaihtoehto-nayta paiva-lyhyt
-                             :nayta-rivina? true
-                             :leveys 5}
-                            {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
-                             :leveys 1}
-                            {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
-                             :leveys 1}])
+(def aikataulu-grid-kentat
+  [{:otsikko "Viikonpäivät" :nimi ::t/paivat :tyyppi :checkbox-group
+    :tasaa :keskita
+    :vaihtoehdot viikonpaivat
+    :vaihtoehto-nayta paiva-lyhyt
+    :nayta-rivina? true
+    :leveys 5}
+   {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00"
+    :nimi ::t/alkuaika
+    :leveys 1}
+   {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00"
+    :nimi ::t/loppuaika
+    :validoi [[:aika-jalkeen ::t/alkuaika "Loppuajan tulee olla alkuajan jälkeen"]]
+    :leveys 1}])
 
 (def aikataulu-grid-optiot {:otsikko ""
                             :voi-muokata? (constantly true)
                             :voi-poistaa? (constantly true)
                             :piilota-toiminnot? false
-                            :tyhja "Ei työaikoja"})
+                            :tyhja "Ei työaikoja"
+                            :virheet-dataan? true})
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
   [muokkaus-grid
@@ -162,7 +171,9 @@
                                 [i (update ta ::t/paivat
                                            #(into #{} %))]))
                  tyoajat)
-           #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
+           #(do
+              (e! (tiedot/->PaivitaTyoajatGrid (vals %)
+                                               (grid-virheita? %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
@@ -351,6 +362,8 @@
        :nimi ::t/tyoajat
        :tyyppi :komponentti
        :komponentti #(->> % :data ::t/tyoajat (tyoajat-komponentti-grid e!))
+       :validoi [#(when (get-in %2 [:komponentissa-virheita? :tyoajat])
+                    "virhe")]
        :palstoja 2}
       (lomake/ryhma "Vaikutukset liikenteelle"
                     {:otsikko "Arvioitu viivytys normaalissa liikenteessä (min)"
