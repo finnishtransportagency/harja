@@ -25,7 +25,11 @@
    [{:otsikko "Nimi" :nimi :nimi :tyyppi :string}
     {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm}
     {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm}
-    {:otsikko "Pääsopimus?" :nimi :paasopimus :tyyppi :checkbox}]
+    {:otsikko "Pääsopimus"
+     :nimi :paasopimus
+     :tyyppi :string
+     :fmt #(if % (ikonit/livicon-check) "")
+     :muokattava? (constantly false)}]
    (r/wrap
      (zipmap (range) (:sopimukset urakka))
      #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))])
@@ -106,7 +110,17 @@
         {:otsikko "Sopimukset"
          :nimi :sopimukset
          :tyyppi :komponentti
-         :komponentti (fn [{urakka :data}] [sopimukset-grid e! (lomake/ilman-lomaketietoja urakka)])}]
+         :komponentti (fn [{urakka :data}] [sopimukset-grid e! (lomake/ilman-lomaketietoja urakka)])}
+        {:otsikko "Pääsopimus"
+         :nimi :paasopimus
+         :tyyppi :valinta
+         :valinnat (:sopimukset valittu-urakka)
+         :valinta-nayta #(if % (:nimi %) "Pääsopimusta ei määritelty")
+         :aseta (fn [rivi arvo] (assoc rivi :sopimukset (mapv #(if (= (:id arvo) (:id %))
+                                                                 (assoc % :paasopimus true)
+                                                                 (assoc % :paasopimus false))
+                                                              (:sopimukset rivi))))
+         :hae (fn [rivi] (first (filter :paasopimus (:sopimukset rivi))))}]
        valittu-urakka]])))
 
 (defn urakkagrid [e! app]
