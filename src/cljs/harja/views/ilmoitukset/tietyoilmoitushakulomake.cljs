@@ -50,14 +50,16 @@
         valinnat-nyt
         {:valokioaikavali :luotu-vakioaikavali
          :alkuaika :luotu-alkuaika
-         :loppuaika :luotu-loppuaika})
+         :loppuaika :luotu-loppuaika}
+         true)
       (valinnat/aikavalivalitsin
         "Käynnissä välillä"
         tiedot/kaynnissa-aikavalit
         valinnat-nyt
         {:valokioaikavali :kaynnissa-vakioaikavali
          :alkuaika :kaynnissa-alkuaika
-         :loppuaika :kaynnissa-loppuaika})
+         :loppuaika :kaynnissa-loppuaika}
+         true)
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta
