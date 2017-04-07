@@ -83,7 +83,7 @@
           fail! (tuck/send-async! ->SopimuksetEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Kalle" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))] ;;FIXME toteuta palvelu
+          (let [vastaus [{:nimi "Joku sopimus" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))] ;;FIXME toteuta palvelu
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
