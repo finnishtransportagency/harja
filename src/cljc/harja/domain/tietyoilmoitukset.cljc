@@ -1,5 +1,6 @@
 (ns harja.domain.tietyoilmoitukset
   (:require [clojure.string :as str]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.roolit :as roolit]
             #?(:cljs [harja.tiedot.istunto :as istunto])))
 
@@ -129,7 +130,8 @@
     ;; Muokkaaminen mahdollista, jos ilmoitus on itse luoma tai oman organisaatio
     ;; tai omaan urakkaan kuuluva
     (and (::id ilmoitus)
-         (or (= (::luoja ilmoitus) (:id user))
+
+         (or (= (::muokkaustiedot/luoja-id ilmoitus) (:id user))
              (= (::urakoitsija-id ilmoitus) (get-in user [:organisaatio :id]))
              (= (::tilaaja-id ilmoitus) (get-in user [:organisaatio :id]))
              (kayttajan-urakat (::urakka-id ilmoitus)))))))
