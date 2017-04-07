@@ -64,6 +64,7 @@
                           :urakat (if urakka
                                     [urakka]
                                     kayttajan-urakat)
+                          :urakattomat? (nil? urakka)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara

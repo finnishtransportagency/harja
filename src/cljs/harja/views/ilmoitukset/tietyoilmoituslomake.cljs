@@ -8,7 +8,7 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.grid :refer [muokkaus-grid]]
+            [harja.ui.grid :refer [muokkaus-grid] :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
@@ -115,16 +115,24 @@
                   :voi-poistaa? false
                   :voi-lisata? false
                   :voi-kumota? false
-                  :piilota-toiminnot? true}
+                  :piilota-toiminnot? true
+                  :virheet-dataan? true}
    [{:otsikko "Pysäytykset alkavat" :nimi ::t/pysaytysten-alku
      :tyyppi :pvm-aika}
     {:otsikko "Pysäytykset päättyvät" :nimi ::t/pysaytysten-loppu
-     :tyyppi :pvm-aika}]
+     :tyyppi :pvm-aika
+     :validoi [[:pvm-kentan-jalkeen ::t/pysaytysten-alku "Lopun on oltava alun jälkeen" ]]}]
    (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
-           #(e!
-             (tiedot/->IlmoitustaMuokattu
-              (merge ilmoitus
-                     (select-keys (get % 0) [::t/pysaytysten-alku ::t/pysaytysten-loppu])))))])
+           #(do
+              (let [virheita? (some (comp not empty? ::grid/virheet)
+                                    (vals %))]
+                (e!
+                 (tiedot/->IlmoitustaMuokattu
+                  (-> ilmoitus
+                      (merge (select-keys (get % 0)
+                                          [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
+                      (assoc-in [:komponentissa-virheita? :pysaytysajat]
+                                (boolean virheita?))))))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 (def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
@@ -435,7 +443,9 @@
                       {:otsikko ""
                        :nimi :liikenteenohjaus-aikataulu
                        :tyyppi :komponentti
-                       :komponentti #(pysaytys-ajat-komponentti e! ilmoitus)}
+                       :komponentti #(pysaytys-ajat-komponentti e! ilmoitus)
+                       :validoi [#(when (get-in %2 [:komponentissa-virheita? :pysaytysajat])
+                                    "virhe")]}
                       ;; else
                       (assoc tyhja-kentta :nimi :aikataulu-blank))
                     {:otsikko "Vaikutussuunta"
