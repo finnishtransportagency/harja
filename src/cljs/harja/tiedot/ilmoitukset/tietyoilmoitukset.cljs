@@ -159,7 +159,7 @@
 (defrecord PaivitaIlmoituksenSijainti [sijainti])
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTienPinnatGrid [tienpinnat avain])
-(defrecord PaivitaTyoajatGrid [tyoajat])
+(defrecord PaivitaTyoajatGrid [tyoajat virheita?])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusEiTallennettu [virhe])
@@ -253,8 +253,10 @@
     (assoc-in app [:valittu-ilmoitus avain] tienpinnat))
 
   PaivitaTyoajatGrid
-  (process-event [{tyoajat :tyoajat} app]
-    (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
+  (process-event [{tyoajat :tyoajat virheita? :virheita?} app]
+    (-> app
+        (assoc-in [:valittu-ilmoitus ::t/tyoajat] tyoajat)
+        (assoc-in [:valittu-ilmoitus :komponentissa-virheita? :tyoajat] virheita?)))
 
   TallennaIlmoitus
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
