@@ -233,10 +233,6 @@ WHERE
 -- valmistuneet viikon sisällä.
 SELECT
   ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
@@ -266,10 +262,6 @@ SELECT
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
@@ -283,10 +275,6 @@ WHERE ypk.poistettu IS NOT TRUE
 -- annetulla aikavälillä
 SELECT
   ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
@@ -316,10 +304,6 @@ SELECT
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
@@ -333,10 +317,6 @@ WHERE ypk.poistettu IS NOT TRUE
 -- valmistuneet viikon sisällä.
 SELECT
   ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
@@ -366,10 +346,6 @@ SELECT
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
@@ -383,10 +359,6 @@ WHERE ypk.poistettu IS NOT TRUE
 -- annetulla aikavälillä
 SELECT
   ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
@@ -416,10 +388,6 @@ SELECT
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
