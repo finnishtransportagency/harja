@@ -32,10 +32,10 @@
             [harja.tiedot.urakka.yllapitokohteet-test]
             [harja.ui.kartta.esitettavat-asiat-test]
             [harja.views.urakka.paallystyksen-maksuerat-test]
-            [harja.tiedot.vesivaylat.urakan-luonti-test]
-            [harja.views.vesivaylat.urakan-luonti]
-            [harja.tiedot.vesivaylat.urakoitsijan-luonti-test]
-            [harja.tiedot.vesivaylat.hankkeen-luonti-test]
+            [harja.tiedot.vesivaylat.urakoiden-luonti-test]
+            [harja.views.vesivaylat.urakoiden-luonti]
+            [harja.tiedot.vesivaylat.urakoitsijoiden-luonti-test]
+            [harja.tiedot.vesivaylat.hankkeiden-luonti-test]
             ;; uusi testi tähän
             ))
 
@@ -71,9 +71,9 @@
            'harja.tiedot.urakka.yllapitokohteet-test
            'harja.ui.kartta.esitettavat-asiat-test
            'harja.views.urakka.paallystyksen-maksuerat-test
-           'harja.tiedot.vesivaylat.urakan-luonti-test
-           'harja.views.vesivaylat.urakan-luonti
-           'harja.tiedot.vesivaylat.urakoitsijan-luonti-test
-           'harja.tiedot.vesivaylat.hankkeen-luonti-test
+           'harja.tiedot.vesivaylat.urakoiden-luonti-test
+           'harja.views.vesivaylat.urakoiden-luonti
+           'harja.tiedot.vesivaylat.urakoitsijoiden-luonti-test
+           'harja.tiedot.vesivaylat.hankkeiden-luonti-test
            ;; uusi testi tähän
            )

@@ -1,6 +1,6 @@
-(ns harja.views.vesivaylat.urakan-luonti
+(ns harja.views.vesivaylat.urakoiden-luonti
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.vesivaylat.urakan-luonti :as tiedot]
+            [harja.tiedot.vesivaylat.urakoiden-luonti :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :refer [tee-kentta]]

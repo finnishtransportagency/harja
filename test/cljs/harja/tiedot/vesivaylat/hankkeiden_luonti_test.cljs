@@ -1,5 +1,5 @@
-(ns harja.tiedot.vesivaylat.hankkeen-luonti-test
-  (:require [harja.tiedot.vesivaylat.hankkeen-luonti :as h]
+(ns harja.tiedot.vesivaylat.hankkeiden-luonti-test
+  (:require [harja.tiedot.vesivaylat.hankkeiden-luonti :as h]
             [clojure.test :refer-macros [deftest is testing]]
             [tuck.core :as tuck]))
 
