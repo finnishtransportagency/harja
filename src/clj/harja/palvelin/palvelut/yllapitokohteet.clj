@@ -14,27 +14,25 @@
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
+            [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.tiemerkinta :as tm-domain]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.kyselyt.paikkaus :as paikkaus-q]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
-  (:use org.httpkit.fake))
+            [harja.domain.roolit :as roolit])
+  (:use org.httpkit.fake)
+  (:import (harja.domain.roolit EiOikeutta)))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -455,6 +453,7 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
+
       this))
 
   (stop [this]
