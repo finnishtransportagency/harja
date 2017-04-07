@@ -326,7 +326,7 @@
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
-;; Failaa Traviksella mutta ei koskaan lokaalisti, what is this?!
+;; FIXME Failaa Traviksella mutta ei koskaan lokaalisti, what is this?!
 #_(deftest tiemerkinnan-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
