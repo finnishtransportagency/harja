@@ -64,7 +64,7 @@
                    (map-indexed (fn [i ta]
                                   [i ta]))
                    tienpinnat-tiedot)
-             #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
+             #(e! (tiedot/->PaivitaTienPinnat (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
   [muokkaus-grid {:otsikko ""
@@ -78,7 +78,7 @@
      :tyyppi :valinta
      :valinnat t/nopeusrajoitukset
      :pakollinen? true
-     :validoi [[:ei-tyhja "Valitse rajoitus"]]
+     :validoi [[:ei-tyhja "Valitse tila"]]
      :leveys 1}
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
@@ -86,7 +86,7 @@
     (into {}
           (map-indexed (fn [i na] [i na]))
           nr-tiedot)
-    #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))])
+    #(e! (tiedot/->PaivitaNopeusrajoitukset (vals %))))])
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
@@ -171,8 +171,8 @@
                                            #(into #{} %))]))
                  tyoajat)
            #(do
-              (e! (tiedot/->PaivitaTyoajatGrid (vals %)
-                                               (grid-virheita? %)))))])
+              (e! (tiedot/->PaivitaTyoajat (vals %)
+                                           (grid-virheita? %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
