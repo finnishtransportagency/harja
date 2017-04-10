@@ -77,72 +77,72 @@ WHERE
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: yllapitokohteen-saa-poistaa
-SELECT NOT (((SELECT COUNT(yhaid)
-              FROM yllapitokohde
-              WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
-            ((SELECT COUNT(*)
-              FROM tiemerkinnan_yksikkohintainen_toteuma tyt
-              WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) > 0) OR
-            ((SELECT COUNT(*)
-              FROM sanktio s
-              WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
-                                              (SELECT id
-                                               FROM laatupoikkeama lp
-                                               WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) > 0) OR
-            ((SELECT COUNT(*)
-              FROM paallystysilmoitus pi
-              WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) > 0) OR
-            ((SELECT COUNT(*)
-              FROM paikkausilmoitus pai
-              WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) > 0) OR
-            ((SELECT COUNT(*)
-              FROM tietyomaa ttm
-              WHERE yllapitokohde = :id) > 0) OR
-            ((SELECT COUNT(*)
-              FROM laatupoikkeama lp
-              WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE) > 0) OR
-            ((SELECT COUNT(*)
-              FROM tarkastus t
-              WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE) > 0)) AS "saa-poistaa"
+SELECT NOT (EXISTS(SELECT *
+                   FROM yllapitokohde
+                   WHERE id = :id AND yhaid IS NOT NULL) OR
+            EXISTS(SELECT *
+                   FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+                   WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM sanktio s
+                   WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                   (SELECT id
+                                                    FROM laatupoikkeama lp
+                                                    WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) OR
+            EXISTS(SELECT *
+                   FROM paallystysilmoitus pi
+                   WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM paikkausilmoitus pai
+                   WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM tietyomaa ttm
+                   WHERE yllapitokohde = :id) OR
+            EXISTS(SELECT *
+                   FROM laatupoikkeama lp
+                   WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM tarkastus t
+                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE)) AS "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
 
 -- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
-SELECT (((SELECT COUNT(*)
-          FROM tiemerkinnan_yksikkohintainen_toteuma
-          WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
+SELECT ((EXISTS(SELECT *
+                FROM tiemerkinnan_yksikkohintainen_toteuma
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
         -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
-        ((SELECT COUNT(*)
-          FROM sanktio s
-          WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
-                                          (SELECT id
-                                           FROM laatupoikkeama lp
-                                           WHERE yllapitokohde = :yllapitokohde_id
-                                                 AND urakka = :urakka_id AND lp.poistettu IS NOT TRUE)) > 0) OR
-        ((SELECT COUNT(*)
-          FROM paallystysilmoitus
-          WHERE paallystyskohde = :yllapitokohde_id
-                AND (SELECT urakka
-                     FROM yllapitokohde
-                     WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
-        ((SELECT COUNT(*)
-          FROM paikkausilmoitus
-          WHERE paikkauskohde = :yllapitokohde_id
-                AND (SELECT urakka
-                     FROM yllapitokohde
-                     WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
-        ((SELECT COUNT(*)
-          FROM laatupoikkeama
-          WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
-        ((SELECT COUNT(*)
-          FROM tietyomaa
-          WHERE yllapitokohde = :yllapitokohde_id
-                AND (SELECT urakka
-                     FROM yllapitokohde
-                     WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
-        ((SELECT COUNT(*)
-          FROM tarkastus
-          WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0)) AS kirjauksia
+        (EXISTS(SELECT *
+                FROM sanktio s
+                WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                (SELECT id
+                                                 FROM laatupoikkeama lp
+                                                 WHERE yllapitokohde = :yllapitokohde_id
+                                                       AND urakka = :urakka_id AND lp.poistettu IS NOT TRUE))) OR
+        (EXISTS(SELECT *
+                FROM paallystysilmoitus
+                WHERE paallystyskohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM paikkausilmoitus
+                WHERE paikkauskohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM laatupoikkeama
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM tietyomaa
+                WHERE yllapitokohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM tarkastus
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id))) AS kirjauksia
 FROM yllapitokohde
 WHERE id = :yllapitokohde_id;
 
@@ -181,7 +181,8 @@ SELECT
   ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
   ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis                     AS "kohde-valmispvm",
-  sum(-s.maara)                          AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
+  sum(-s.maara)                         AS "sakot-ja-bonukset",
+  -- käännetään toisin päin jotta summaus toimii oikein
   o.nimi                                AS "urakoitsija",
   u.nimi                                AS "urakka",
   u.id                                  AS "urakka-id"
@@ -318,16 +319,16 @@ VALUES (:urakka,
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-        :keskimaarainen_vuorokausiliikenne,
-        :yllapitoluokka,
-        :sopimuksen_mukaiset_tyot,
-        :arvonvahennykset,
-        :bitumi_indeksi,
-        :kaasuindeksi,
-        :toteutunut_hinta,
-        :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-        :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-        :vuodet :: INTEGER []);
+  :keskimaarainen_vuorokausiliikenne,
+  :yllapitoluokka,
+  :sopimuksen_mukaiset_tyot,
+  :arvonvahennykset,
+  :bitumi_indeksi,
+  :kaasuindeksi,
+  :toteutunut_hinta,
+  :yllapitokohdetyyppi :: YLLAPITOKOHDETYYPPI,
+  :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI,
+  :vuodet :: INTEGER []);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -376,37 +377,37 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-  :paallystetyyppi,
-  :raekoko,
-  :tyomenetelma,
-  :massamaara,
-  :ulkoinen-id,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+        :paallystetyyppi,
+        :raekoko,
+        :tyomenetelma,
+        :massamaara,
+        :ulkoinen - id,
+        (SELECT tierekisteriosoitteelle_viiva AS geom
+         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                            CAST(:tr_alkuosa AS INTEGER),
+                                            CAST(:tr_alkuetaisyys AS INTEGER),
+                                            CAST(:tr_loppuosa AS INTEGER),
+                                            CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
-  :nimi,
-  :tunnus,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_alkuetaisyys,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :ulkoinen-id,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+        :nimi,
+        :tunnus,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :ulkoinen - id,
+        (SELECT tierekisteriosoitteelle_viiva AS geom
+         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                            CAST(:tr_alkuosa AS INTEGER),
+                                            CAST(:tr_alkuetaisyys AS INTEGER),
+                                            CAST(:tr_loppuosa AS INTEGER),
+                                            CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
@@ -533,7 +534,7 @@ SELECT
   hallintayksikko
 FROM urakka
 WHERE (loppupvm IS NULL OR loppupvm >= NOW())
-      AND tyyppi = 'tiemerkinta' :: urakkatyyppi;
+      AND tyyppi = 'tiemerkinta' :: URAKKATYYPPI;
 
 -- name: tallenna-paallystyskohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
@@ -750,7 +751,7 @@ FROM yllapitokohde
 WHERE id = :kohdeid;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
+SELECT PAIVITA_PAALLYSTYS_TAI_PAIKKAUSURAKAN_GEOMETRIA( :urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
