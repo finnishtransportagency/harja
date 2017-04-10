@@ -221,7 +221,10 @@
       aika]]))
 
 (defn- vaikutukset [{kaistajarj ::t/kaistajarjestelyt
-                     nopeusrajoitukset ::t/nopeusrajoitukset :as ilm}]
+                     nopeusrajoitukset ::t/nopeusrajoitukset
+                     kiertotien-mutkaisuus ::t/kiertotien-mutkaisuus
+                     kiertotien-pituus ::t/kiertotien-pituus
+                     :as ilm}]
   (let [jarj (into {}
                    (map (juxt ::t/jarjestely ::t/selite))
                    kaistajarj)
@@ -230,7 +233,10 @@
                      nopeusrajoitukset)
         pinta (into {}
                     (map (juxt ::t/materiaali ::t/matka))
-                    (::t/tienpinnat ilm))]
+                    (::t/tienpinnat ilm))
+        ktpinta (into {}
+                      (map (juxt ::t/materiaali ::t/matka))
+                      (::t/kiertotienpinnat ilm))]
     (tietotaulukko
      [;; Vasen puoli
       (tietotaulukko
@@ -261,7 +267,30 @@
                                (when-let [m (pinta "murske")]
                                  (str m " m")))
                           (contains? pinta "murske"))])]
-       [(tieto "Kiertotien pituus" "pitkä se on")])
+       [(tieto "Kiertotien pituus"
+               [:fo:block
+
+                (checkbox "Loivat mutkat"
+                          (= kiertotien-mutkaisuus "loivatMutkat"))
+                (checkbox "Jyrkät mutkat (erkanee yli 45\u00b0 kulmassa)"
+                          (= kiertotien-mutkaisuus "jyrkatMutkat"))
+
+
+                (checkbox (str "Päällystetty "
+                               (when-let [m (ktpinta "paallystetty")]
+                                 (str m " m")))
+                          (contains? pinta "paallystetty"))
+                (checkbox (str "Jyrsitty "
+                               (when-let [m (ktpinta "jyrsitty")]
+                                 (str m " m")))
+                          (contains? pinta "jyrsitty"))
+                (checkbox (str "Murske "
+                               (when-let [m (ktpinta "murske")]
+                                 (str m " m")))
+                          (contains? pinta "murske"))
+
+                ;"pitkä se on"
+                ])])
 
       ;; Oikea puoli
       (tietotaulukko
