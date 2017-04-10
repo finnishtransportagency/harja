@@ -87,7 +87,6 @@
     (q/paivita-paikkausilmoitus! db
                                  tila
                                  encoodattu-ilmoitustiedot
-                                 toteutunut-hinta
                                  (konv/sql-date aloituspvm)
                                  (konv/sql-date valmispvm-kohde)
                                  (konv/sql-date valmispvm-paikkaus)
@@ -99,24 +98,24 @@
   id)
 
 (defn- luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paikkaus paikkauskohde-id]}]
-  (log/debug "Luodaan uusi paikkausilmoitus.")
-  (log/debug "valmispvm-kohde: " (pr-str valmispvm-kohde))
-  (log/debug "valmispvm-paikkaus: " (pr-str valmispvm-paikkaus))
-  (let [tila (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu")
-        toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
-        encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-    (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
-    (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
-    (:id (q/luo-paikkausilmoitus<! db
-                                   paikkauskohde-id
-                                   tila
-                                   encoodattu-ilmoitustiedot
-                                   toteutunut-hinta
-                                   (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmispvm-kohde)
-                                   (konv/sql-date valmispvm-paikkaus)
-                                   (:id user)))))
+  (log/debug "Luodaan uusi paikkausilmoitus: " ilmoitustiedot)
+  (jdbc/with-db-transaction [db db]
+    (let [tila (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu")
+          toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
+          encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)
+          paikkauskohteen-id (:id (q/luo-paikkausilmoitus<! db
+                                                            paikkauskohde-id
+                                                            tila
+                                                            encoodattu-ilmoitustiedot
+                                                            (konv/sql-date aloituspvm)
+                                                            (konv/sql-date valmispvm-kohde)
+                                                            (konv/sql-date valmispvm-paikkaus)
+                                                            (:id user)))]
+      (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
+      (when paikkauskohteen-id
+        (q/paivita-paikkauskohteen-toteutunut-hinta! db {:toteutunut_hinta toteutunut-hinta
+                                                         :id paikkauskohde-id})
+        paikkauskohteen-id))))
 
 (defn- luo-tai-paivita-paikkausilmoitus [db user lomakedata paikkausilmoitus-kannassa]
   (if paikkausilmoitus-kannassa
