@@ -1,6 +1,5 @@
 (ns harja.kyselyt.yllapitokohteet
   (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
             [harja.geo :as geo]))
 
 (defqueries "harja/kyselyt/yllapitokohteet.sql")
