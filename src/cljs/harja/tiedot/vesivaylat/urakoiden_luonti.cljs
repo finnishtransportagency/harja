@@ -36,8 +36,10 @@
 (defn paasopimus? [sopimukset sopimus]
   (= (:id sopimus) (:id (paasopimus sopimukset))))
 
-(defn valitsemattomat-sopimukset [sopimukset urakka]
-  (remove (comp (into #{} (map :id (:sopimukset urakka))) :id) sopimukset))
+(defn vapaa-sopimus? [s] (nil? (:urakka s)))
+
+(defn vapaat-sopimukset [sopimukset]
+  (filter vapaa-sopimus? sopimukset))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -140,8 +142,7 @@
           (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
                 hankkeet (async/<! (k/post! :hae-paattymattomat-vesivaylahankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
-                sopimukset [{:nimi "Foobar" :id 33 :alkupvm (harja.pvm/nyt) :loppupvm (harja.pvm/nyt)}
-                            {:nimi "Sopimus" :id 43 :alkupvm (harja.pvm/nyt) :loppupvm (harja.pvm/nyt)}]
+                sopimukset (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))
                 vastaus {:hallintayksikot hallintayksikot
                          :hankkeet hankkeet
                          :urakoitsijat urakoitsijat

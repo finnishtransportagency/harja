@@ -152,9 +152,11 @@
            (u/aseta-paasopimus [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2}]
                                {:id 1 :paasopimus nil})))))
 
-(deftest valitsemattomat-sopimukset
-  (let [urakka {:sopimukset [{:id 1} {:id 2}]}
-        kaikki-sopimukset [{:id 1} {:id 2} {:id 3} {:id 4}]]
+(deftest urakan-sopimusvaihtoehdot
+  (let [kaikki-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil} {:id 4 :urakka nil}]]
     (is (= [{:id 3} {:id 4}]
-           (u/valitsemattomat-sopimukset kaikki-sopimukset urakka)))
-    (is (true? (empty? (u/valitsemattomat-sopimukset [{:id 1} {:id 2}] urakka))))))
+           (u/vapaat-sopimukset kaikki-sopimukset)))
+    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka 1} {:id 4 :urakka 1}])))))
+
+  (is (true? (u/vapaa-sopimus? {:urakka nil})))
+  (is (false? (u/vapaa-sopimus? {:urakka 1}))))
