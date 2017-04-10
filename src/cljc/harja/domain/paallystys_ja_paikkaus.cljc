@@ -68,11 +68,10 @@
    Palauttaa mapin, jossa laskun tulos sekä tieto siitä, sisältääkö lasku ennustettuja määriä."
   [tyot]
   {:tulos (if tyot
-            (reduce
-              +
-              0
+            (reduce + 0
               (map
                 (fn [tyo]
+
                   (let [tilattu-maara (:tilattu-maara tyo)
                         ennustettu-maara (:ennustettu-maara tyo)
                         toteutunut-maara (:toteutunut-maara tyo)

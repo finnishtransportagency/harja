@@ -17,5 +17,3 @@
         (let [kohteen-kohdeosat (filterv #(= (:yllapitokohde-id %) (kohde-id-avain kohde)) kohdeosat)]
           (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet)))
-
-
