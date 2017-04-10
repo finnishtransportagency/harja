@@ -267,7 +267,7 @@
                                (when-let [m (pinta "murske")]
                                  (str m " m")))
                           (contains? pinta "murske"))])]
-       [(tieto "Kiertotien pituus"
+       [(tieto (str "Kiertotien pituus " (::t/kiertotien-pituus ilm))
                [:fo:block
 
                 (checkbox "Loivat mutkat"
@@ -279,15 +279,15 @@
                 (checkbox (str "Päällystetty "
                                (when-let [m (ktpinta "paallystetty")]
                                  (str m " m")))
-                          (contains? pinta "paallystetty"))
+                          (contains? ktpinta "paallystetty"))
                 (checkbox (str "Jyrsitty "
                                (when-let [m (ktpinta "jyrsitty")]
                                  (str m " m")))
-                          (contains? pinta "jyrsitty"))
+                          (contains? ktpinta "jyrsitty"))
                 (checkbox (str "Murske "
                                (when-let [m (ktpinta "murske")]
                                  (str m " m")))
-                          (contains? pinta "murske"))
+                          (contains? ktpinta "murske"))
 
                 ;"pitkä se on"
                 ])])
