@@ -241,14 +241,16 @@
               :hae #(-> % avain ::t/etunimi)
               :aseta #(assoc-in %1 [avain ::t/etunimi] %2)
               :muokattava? (constantly true)
-              :tyyppi :string}
+              :tyyppi :string
+              :pituus-max 32}
              {:nimi (keyword (name avain) "-sukunimi")
               :otsikko "Yhteyshenkilön sukunimi"
               :pakollinen? pakollinen?
               :hae #(-> % avain ::t/sukunimi)
               :aseta #(assoc-in %1 [avain ::t/sukunimi] %2)
               :muokattava? (constantly true)
-              :tyyppi :string}
+              :tyyppi :string
+              :pituus-max 32}
              {:nimi (keyword (name avain) "-matkapuhelin")
               :otsikko "Yhteyshenkilön puhelinnumero"
               :hae #(-> % avain ::t/matkapuhelin)
@@ -259,7 +261,8 @@
               :otsikko "Yhteyshenkilön sähköposti"
               :hae #(-> % avain ::t/sahkoposti)
               :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
-              :tyyppi :string}])))
+              :tyyppi :string
+              :pituus-max 128}])))
 
 (defn- lomaketoiminnot [e! kayttajan-urakat tallennus-kaynnissa? ilmoitus]
   (r/with-let [avaa-pdf? (r/atom false)]
@@ -312,7 +315,8 @@
            :otsikko "Projektin tai urakan nimi"
            :tyyppi :string
            :pakollinen? true
-           :muokattava? (constantly true)})
+           :muokattava? (constantly true)
+           :pituux-max 256})
         (when-not (or (empty? (::t/urakan-nimi ilmoitus))
                       (empty? (:urakan-kohteet ilmoitus)))
           {:otsikko "Kohde urakassa"
@@ -334,13 +338,15 @@
                      {:nimi ::t/urakoitsijan-nimi
                       :otsikko "Nimi"
                       :muokattava? (constantly true)
-                      :tyyppi :string})
+                      :tyyppi :string
+                      :pituus-max 128})
 
       (yhteyshenkilo "Tilaaja" ::t/tilaajayhteyshenkilo false
                      {:nimi ::t/tilaajan-nimi
                       :otsikko "Tilaajan nimi"
                       :muokattava? (constantly true)
-                      :tyyppi :string})
+                      :tyyppi :string
+                      :pituus-max 128})
 
       (lomake/ryhma
        "Tiedot kohteesta"
@@ -354,7 +360,8 @@
         :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
                           #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
        {:otsikko "Tien nimi" :nimi ::t/tien-nimi
-        :tyyppi :string :uusi-rivi? true :pakollinen? true}
+        :tyyppi :string :uusi-rivi? true :pakollinen? true
+        :pituus-max 256}
        {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
         :tyyppi :string}
        {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
