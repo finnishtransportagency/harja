@@ -111,7 +111,6 @@ WHERE id = :id;
 SELECT ((EXISTS(SELECT *
                 FROM tiemerkinnan_yksikkohintainen_toteuma
                 WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
-        -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
         (EXISTS(SELECT *
                 FROM sanktio s
                 WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
