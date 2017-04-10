@@ -173,7 +173,7 @@
                                            db (map :id yllapitokohteet))]
     (mapv (fn [yllapitokohde]
             (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
-              (let [kohteen-maaramuutokset (first (filter #(= (:yllapitokohde-id %) yllapitokohde)
+              (let [kohteen-maaramuutokset (first (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
                                                           yllapitokohteiden-maaramuutokset))
                     summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
                     maaramuutokset (:tulos summatut-maaramuutokset)
