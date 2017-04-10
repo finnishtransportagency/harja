@@ -20,9 +20,24 @@
          :tallennus-kaynnissa? false
          :urakoiden-haku-kaynnissa? false
          :haetut-urakat nil
-         :hallintayksikot nil
-         :urakoitsijat nil
-         :hankkeet nil}))
+         :haetut-hallintayksikot nil
+         :haetut-urakoitsijat nil
+         :haetut-hankkeet nil
+         :haetut-sopimukset nil}))
+
+(defn paasopimus [sopimukset]
+  (first (filter (comp #{(some :paasopimus sopimukset)} :id) sopimukset)))
+
+(defn aseta-paasopimus [sopimukset sopimus]
+  (map
+    #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus)))
+    sopimukset))
+
+(defn paasopimus? [sopimukset sopimus]
+  (= (:id sopimus) (:id (paasopimus sopimukset))))
+
+(defn valitsemattomat-sopimukset [sopimukset urakka]
+  (remove (comp (into #{} (map :id (:sopimukset urakka))) :id) sopimukset))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -125,9 +140,12 @@
           (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
                 hankkeet (async/<! (k/post! :hae-paattymattomat-vesivaylahankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
+                sopimukset [{:nimi "Foobar" :id 33 :alkupvm (harja.pvm/nyt) :loppupvm (harja.pvm/nyt)}
+                            {:nimi "Sopimus" :id 43 :alkupvm (harja.pvm/nyt) :loppupvm (harja.pvm/nyt)}]
                 vastaus {:hallintayksikot hallintayksikot
                          :hankkeet hankkeet
-                         :urakoitsijat urakoitsijat}]
+                         :urakoitsijat urakoitsijat
+                         :sopimukset sopimukset}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)
               (tulos! vastaus)))
@@ -138,9 +156,10 @@
 
   LomakevaihtoehdotHaettu
   (process-event [{tulos :tulos} app]
-    (assoc app :hallintayksikot (:hallintayksikot tulos)
-               :urakoitsijat (:urakoitsijat tulos)
-               :hankkeet (:hankkeet tulos)))
+    (assoc app :haetut-hallintayksikot (:hallintayksikot tulos)
+               :haetut-urakoitsijat (:urakoitsijat tulos)
+               :haetut-hankkeet (:hankkeet tulos)
+               :haetut-sopimukset (:sopimukset tulos)))
 
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
