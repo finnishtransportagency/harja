@@ -205,7 +205,7 @@ WHERE ym.id = :id;
 -- name: hae-yllapitokohteen-maaramuutokset
 SELECT
   ym.id,
-  yllapitokohde,
+  yllapitokohde    AS "yllapitokohde-id",
   tyon_tyyppi      AS "tyyppi",
   tyo,
   yksikko,
