@@ -74,9 +74,10 @@
                   :tyhja "Ei nopeusrajoituksia"
                   :jarjesta :jarjestysnro
                   :tunniste :jarjestysnro}
-   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
-     :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
-                  "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]
+   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus 
+     :tyyppi :valinta
+     :valinnat t/nopeusrajoitukset
+     :pakollinen? true
      :leveys 1}
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
