@@ -12,10 +12,10 @@
                         (hae-urakan-yllapitokohteiden-yllapitokohdeosat
                           db {:idt (map id-avain kohteet)}))]
     (mapv
-      (fn [yllapitokohde]
+      (fn [kohde]
         (let [kohteen-kohdeosat (first (filter #(= (:yllapitokohde-id %) (id-avain kohteet))
                                                kohdeosat))]
-          (assoc yllapitokohde :kohdeosat kohteen-kohdeosat)))
+          (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet)))
 
 
