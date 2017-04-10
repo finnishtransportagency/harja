@@ -67,7 +67,6 @@
   "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen.
    Palauttaa mapin, jossa laskun tulos sekä tieto siitä, sisältääkö lasku ennustettuja määriä."
   [tyot]
-  (log/debug "SUMMATAAS NÄMÄ: " (pr-str tyot))
   {:tulos (if tyot
             (reduce
               +
