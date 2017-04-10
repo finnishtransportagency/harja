@@ -399,7 +399,7 @@ VALUES (:yllapitokohde,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
-        :ulkoinen - id,
+        :ulkoinen-id,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
