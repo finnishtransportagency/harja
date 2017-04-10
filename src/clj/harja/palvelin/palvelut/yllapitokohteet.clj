@@ -34,21 +34,10 @@
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
-(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id ] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
-  (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [hakualku (System/currentTimeMillis)
-          _ (log/debug "[DEBUG] ALOITA KOHTEIDEN HAKU")
-          yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                  :sopimus-id sopimus-id
-                                                                  :vuosi vuosi})
-          _ (log/debug "[DEBUG] HAETTU, LISÄÄ MÄÄRÄMUUTOKSET")
-          yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
-                            db user {:yllapitokohteet yllapitokohteet
-                                     :urakka-id urakka-id})]
-      _ (log/debug "[DEBUG] LISÄTTY! KESTI: " (- (System/currentTimeMillis) hakualku) "MS")
-      (vec yllapitokohteet))))
+    (yy/hae-urakan-yllapitokohteet db tiedot)))
 
 (defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
