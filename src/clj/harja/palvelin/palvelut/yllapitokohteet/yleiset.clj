@@ -142,30 +142,45 @@
    "jyrsinnat" :jyrsinnat
    "muut" :muut})
 
+(def maaramuutos-xf
+  (comp
+    (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
+    (map #(konv/string-polusta->keyword % [:tyyppi]))))
+
 (defn hae-yllapitokohteen-maaramuutokset
   [db {:keys [yllapitokohde-id urakka-id]}]
-  (log/debug "Aloitetaan määrämuutoksien haku")
+  (log/debug "Aloitetaan määrämuutoksien haku kohteelle " yllapitokohde-id)
   (let [maaramuutokset (into []
-                             (comp
-                               (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
-                               (map #(konv/string-polusta->keyword % [:tyyppi])))
+                             maaramuutos-xf
                              (paallystys-q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                                   :urakka urakka-id}))]
     maaramuutokset))
 
+(defn hae-yllapitokohteiden-maaramuutokset
+  [db yllapitokohde-idt]
+  (log/debug "Aloitetaan määrämuutoksien haku kohteille: " yllapitokohde-idt)
+  (let [maaramuutokset (into []
+                             maaramuutos-xf
+                             (paallystys-q/hae-yllapitokohteiden-maaramuutokset
+                             db {:idt yllapitokohde-idt}))]
+    maaramuutokset))
+
 (defn liita-yllapitokohteisiin-maaramuutokset
   "Liittää ylläpitokohteisiin määrämuutoksien kokonaissumman"
-  [db {:keys [yllapitokohteet urakka-id]}]
-  (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
-           (let [kohteen-maaramuutokset (hae-yllapitokohteen-maaramuutokset db {:yllapitokohde-id (:id %)
-                                                                                :urakka-id urakka-id})
-                 summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
-                 maaramuutokset (:tulos summatut-maaramuutokset)
-                 maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
-             (assoc % :maaramuutokset maaramuutokset
-                      :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
-           %)
-        yllapitokohteet))
+  [db yllapitokohteet]
+  (let [yllapitokohteiden-maaramuutokset (hae-yllapitokohteiden-maaramuutokset
+                                           db (map :id yllapitokohteet))]
+    (mapv (fn [yllapitokohde]
+            (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
+              (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) yllapitokohde)
+                                                   yllapitokohteiden-maaramuutokset)
+                    summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                    maaramuutokset (:tulos summatut-maaramuutokset)
+                    maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+                (assoc yllapitokohde :maaramuutokset maaramuutokset
+                                     :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
+              yllapitokohde))
+          yllapitokohteet)))
 
 (defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
   (let [yllapitokohteet (into []
@@ -196,9 +211,7 @@
                                                          :sopimus-id sopimus-id
                                                          :vuosi vuosi})
         _ (log/debug "[DEBUG] HAETTU, LISÄÄ MÄÄRÄMUUTOKSET")
-        yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset
-                          db {:yllapitokohteet yllapitokohteet
-                              :urakka-id urakka-id})]
+        yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)]
     _ (log/debug "[DEBUG] LISÄTTY! KESTI: " (- (System/currentTimeMillis) hakualku) "MS")
     (vec yllapitokohteet)))
 
