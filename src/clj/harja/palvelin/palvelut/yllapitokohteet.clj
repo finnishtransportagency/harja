@@ -378,10 +378,10 @@
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
 
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
+    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :yllapitokohde-id yllapitokohde-id})
@@ -394,15 +394,15 @@
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
       (doseq [id poistuneet-osa-idt]
-        (q/poista-yllapitokohdeosa! c {:urakka urakka-id
+        (q/poista-yllapitokohdeosa! db {:urakka urakka-id
                                        :id id}))
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
         (if (id-olemassa? (:id osa))
-          (paivita-yllapitokohdeosa c user urakka-id osa)
-          (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-      (yy/paivita-yllapitourakan-geometria c urakka-id)
+          (paivita-yllapitokohdeosa db user urakka-id osa)
+          (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
+      (yy/paivita-yllapitourakan-geometria db urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
