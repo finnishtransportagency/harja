@@ -292,7 +292,7 @@
   [:div
    [:span
     [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
-    [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
+    [lomake/lomake {:otsikko (if (::t/id ilmoitus) "Muokkaa ilmoitusta" "Uusi tietyöilmoitus")
                     :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
                     :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
                     :luokka "ryhma-reuna"}
