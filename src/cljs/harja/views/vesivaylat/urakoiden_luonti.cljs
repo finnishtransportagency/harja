@@ -16,7 +16,8 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
 
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.modal :as modal])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -147,6 +148,36 @@
            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
          valittu-urakka])])))
 
+(defn muokkaus-tiedot [urakka]
+  [:div
+   [:h1 "Tänne urakan muokkaamisen ja sähkelähetyksen metatiedot"]
+   [:div (pr-str urakka)]])
+
+(defn sahke-nappi [e! {lahetykset :sahke-lahetykset} urakka]
+  (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))]
+    [:button.nappi-toissijainen
+     {:disabled lahetys-kaynnissa?
+      :on-click #(do
+                   (.preventDefault %)
+                   (.stopPropagation %)
+                   (modal/nayta!
+                     {:otsikko "Urakan lähettäminen Sähkeeseen"
+                      :footer
+                      [:span
+                       [:button.nappi-toissijainen {:on-click (fn [e]
+                                                                (.preventDefault e)
+                                                                (modal/piilota!))}
+                        [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) "Sulje"]]
+                       [:button.nappi-kielteinen {:on-click (fn [e]
+                                                              (.preventDefault e)
+                                                              (e! (tiedot/->LahetaUrakkaSahkeeseen urakka))
+                                                              (modal/piilota!))}
+                        [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lähetä"]]]}
+                     [muokkaus-tiedot urakka]))}
+     (if lahetys-kaynnissa?
+       [ajax-loader-pieni "Odota"]
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lähetä"])]))
+
 (defn urakkagrid [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
@@ -169,7 +200,9 @@
         {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke :nimi])}
         {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
         {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm}
-        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm}]
+        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm}
+        {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
+         :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
        haetut-urakat]])))
 
 (defn vesivaylaurakoiden-luonti* [e! app]

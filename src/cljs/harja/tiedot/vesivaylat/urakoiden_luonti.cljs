@@ -23,7 +23,8 @@
          :haetut-hallintayksikot nil
          :haetut-urakoitsijat nil
          :haetut-hankkeet nil
-         :haetut-sopimukset nil}))
+         :haetut-sopimukset nil
+         :sahke-lahetykset #{}}))
 
 (defn paasopimus [sopimukset]
   (first (filter (comp #{(some :paasopimus sopimukset)} :id) sopimukset)))
@@ -55,6 +56,9 @@
 (defrecord HaeLomakevaihtoehdot [])
 (defrecord LomakevaihtoehdotHaettu [tulos])
 (defrecord LomakevaihtoehdotEiHaettu [virhe])
+(defrecord LahetaUrakkaSahkeeseen [urakka])
+(defrecord SahkeeseenLahetetty [tulos urakka])
+(defrecord SahkeeseenEiLahetetty [virhe urakka])
 
 (extend-protocol tuck/Event
   ValitseUrakka
@@ -76,7 +80,7 @@
           fail! (tuck/send-async! ->UrakkaEiTallennettu)]
       (go
         (try
-          (let [vastaus urakka]
+          (let [vastaus (async/<! (k/post! :tallenna-urakka urakka))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -165,5 +169,29 @@
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
     (viesti/nayta! [:span "Hupsista, ongelmia Harjan kanssa juttelussa."] :danger)
-    app))
+    app)
+
+  LahetaUrakkaSahkeeseen
+  (process-event [{urakka :urakka} app]
+    (let [tulos! (tuck/send-async! ->SahkeeseenLahetetty urakka)
+          fail! (tuck/send-async! ->SahkeeseenEiLahetetty urakka)]
+      (go
+        (try
+          (let [vastaus {:virhe 404}]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    (update app :sahke-lahetykset conj (:id urakka)))
+
+  SahkeeseenLahetetty
+  (process-event [{tulos :tulos urakka :urakka} app]
+    (update app :sahke-lahetykset disj (:id urakka)))
+
+  SahkeeseenEiLahetetty
+  (process-event [{virhe :virhe urakka :urakka} app]
+    (viesti/nayta! [:span "Urakan '" (:nimi urakka) "' lähetys epäonnistui."] :danger)
+    (update app :sahke-lahetykset disj (:id urakka))))
 
