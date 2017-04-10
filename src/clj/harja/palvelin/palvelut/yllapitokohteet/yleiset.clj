@@ -132,6 +132,8 @@
     (let [yllapitokohteet (into []
                                 (comp
                                   (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+                                  (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                                  (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
                                   (map #(q/liita-kohdeosat db % (:id %))))
