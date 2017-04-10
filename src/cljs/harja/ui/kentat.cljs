@@ -472,13 +472,17 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      valinnat]))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi hae]} data]
+                                        valinnat valinnat-fn rivi hae
+                                        jos-tyhja-fn jos-tyhja]} data]
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    [:span (or ((or valinta-nayta str false) valinta) valinta)]))
+    [:span (or ((or valinta-nayta str false) valinta) valinta)]
+    [:span (if (empty? valinnat)
+             ((or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja"))) valinta)
+             (or ((or valinta-nayta str false) valinta) valinta))]))
 
 
 
