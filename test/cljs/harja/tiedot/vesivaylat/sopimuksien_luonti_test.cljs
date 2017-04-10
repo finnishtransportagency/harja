@@ -9,6 +9,10 @@
   [event & payload]
   (tuck/process-event (apply event payload) tila))
 
+(defn e-tila!
+  [event tila & payload]
+  (tuck/process-event (apply event payload) tila))
+
 (deftest sopimuksen-valinta
   (let [sopimus {:foobar 1}]
     (is (= sopimus (:valittu-sopimus (e! s/->ValitseSopimus sopimus))))))
@@ -24,17 +28,15 @@
   (let [halutut #{s/->SopimusTallennettu s/->SopimusEiTallennettu}
         kutsutut (atom #{})]
     (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))
-       ;; Haetut on oletuksena tyhjä, mutta tallentamista ei voi tehdä jos näin on
-       tila {:haetut-sopimukset []}]
-      (is (true? (:tallennus-kaynnissa? (e! s/->TallennaSopimus {:id 1}))))
+      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
+      (is (true? (:tallennus-kaynnissa? (e-tila! s/->TallennaSopimus {:haetut-sopimukset []} {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden sopimuksen tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (with-redefs [tila {:haetut-sopimukset vanhat}] (e! s/->SopimusTallennettu uusi))]
+          tulos (e-tila! s/->SopimusTallennettu {:haetut-sopimukset vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-sopimus tulos)))
       (is (= (conj vanhat uusi) (:haetut-sopimukset tulos)))))
@@ -42,7 +44,7 @@
   (testing "Sopimuksen muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (with-redefs [tila {:haetut-sopimukset vanhat}] (e! s/->SopimusTallennettu uusi))]
+          tulos (e-tila! s/->SopimusTallennettu {:haetut-sopimukset vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-sopimus tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-sopimukset tulos))))))
