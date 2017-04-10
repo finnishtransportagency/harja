@@ -13,6 +13,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
+            [clojure.core.async :refer [go]]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
             [harja.kyselyt.paallystys :as paallystys-q]
@@ -220,4 +221,4 @@
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+  (go (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id})))

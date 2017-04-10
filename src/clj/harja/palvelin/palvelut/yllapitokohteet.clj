@@ -308,16 +308,16 @@
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (id-olemassa? (:id kohde))
-        (paivita-yllapitokohde c user urakka-id kohde)
-        (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
-    (yy/paivita-yllapitourakan-geometria c urakka-id)
-    (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
+        (paivita-yllapitokohde db user urakka-id kohde)
+        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
+    (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id
                                                                 :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
