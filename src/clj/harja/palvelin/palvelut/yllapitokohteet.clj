@@ -38,15 +38,17 @@
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+    (let [hakualku (System/currentTimeMillis)
+          _ (log/debug "[DEBUG] ALOITA KOHTEIDEN HAKU")
+          yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                   :sopimus-id sopimus-id
                                                                   :vuosi vuosi})
+          _ (log/debug "[DEBUG] HAETTU, LISÄÄ MÄÄRÄMUUTOKSET")
           yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
                             db user {:yllapitokohteet yllapitokohteet
                                      :urakka-id urakka-id})]
-      (into []
-            yllapitokohteet-domain/yllapitoluokka-xf
-            yllapitokohteet))))
+      _ (log/debug "[DEBUG] LISÄTTY! KESTI: " (- (System/currentTimeMillis) hakualku) "MS")
+      (vec yllapitokohteet))))
 
 (defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)

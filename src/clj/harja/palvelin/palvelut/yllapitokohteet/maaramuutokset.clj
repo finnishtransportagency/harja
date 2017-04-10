@@ -12,7 +12,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
   (assert urakka-id "Urakka pitää olla!")
@@ -43,7 +44,22 @@
    "jyrsinnat" :jyrsinnat
    "muut" :muut})
 
-(defn hae-maaramuutokset
+(defn hae-yllapitokohteen-maaramuutokset
+  [db user {:keys [yllapitokohde-id urakka-id]}]
+  (log/debug "Aloitetaan määrämuutoksien haku")
+  ;; käytetään myös integraatioista, jolloin user nil
+  (if user
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+    (oikeudet/ei-oikeustarkistusta!))
+  (let [maaramuutokset (into []
+                             (comp
+                               (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
+                               (map #(konv/string-polusta->keyword % [:tyyppi])))
+                             (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
+                                                                       :urakka urakka-id}))]
+    maaramuutokset))
+
+(defn hae-yllapitokohteiden-maaramuutokset
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
   ;; käytetään myös integraatioista, jolloin user nil
@@ -101,11 +117,11 @@
       (paivita-maaramuutos db user urakka-ja-yllapitokohde maaramuutos))))
 
 (defn liita-yllapitokohteisiin-maaramuutokset
-  "Laskee ja liittää päällystyskohteisiin määrämuutokset"
+  "Laskee ja liittää ylläpitokohteisiin määrämuutokset"
   [db user {:keys [yllapitokohteet urakka-id]}]
   (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
            (let [kohteen-maaramuutokset
-                 (hae-maaramuutokset db user {:yllapitokohde-id (:id %)
+                 (hae-yllapitokohteen-maaramuutokset db user {:yllapitokohde-id (:id %)
                                               :urakka-id urakka-id})
                  summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
                  maaramuutokset (:tulos summatut-maaramuutokset)
@@ -142,13 +158,13 @@
             yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset
                               db user {:yllapitokohteet yllapitokohteet
                                        :urakka-id urakka-id})]
-        {:maaramuutokset (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
-                                                      :urakka-id urakka-id})
+        {:maaramuutokset (hae-yllapitokohteen-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
+                                                                      :urakka-id urakka-id})
          :yllapitokohteet yllapitokohteet}))))
 
 (defn hae-ja-summaa-maaramuutokset
   [db user {:keys [urakka-id yllapitokohde-id]}]
-  (let [maaramuutokset (hae-maaramuutokset
+  (let [maaramuutokset (hae-yllapitokohteen-maaramuutokset
                          db user {:yllapitokohde-id yllapitokohde-id
                                   :urakka-id urakka-id})]
     (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset)))
@@ -160,7 +176,7 @@
           db (:db this)]
       (julkaise-palvelu http :hae-maaramuutokset
                         (fn [user tiedot]
-                          (hae-maaramuutokset db user tiedot)))
+                          (hae-yllapitokohteen-maaramuutokset db user tiedot)))
       (julkaise-palvelu http :tallenna-maaramuutokset
                         (fn [user tiedot]
                           (tallenna-maaramuutokset db user tiedot)))
