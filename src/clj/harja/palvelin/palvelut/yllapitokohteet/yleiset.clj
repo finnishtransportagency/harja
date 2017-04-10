@@ -142,11 +142,11 @@
                                                                              :vuosi vuosi}))
           osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
           yllapitokohteet (->> yllapitokohteet
-                               (mapv #(assoc % :pituus
-                                               (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
-                               (mapv #(assoc % :yllapitokohteen-voi-poistaa?
-                                               (yllapitokohteen-voi-poistaa? db (:id %)))))]
-      yllapitokohteet)))
+                               (map #(assoc % :pituus
+                                              (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
+                                              :yllapitokohteen-voi-poistaa?
+                                              (yllapitokohteen-voi-poistaa? db (:id %)))))]
+      (vec yllapitokohteet))))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
