@@ -53,6 +53,8 @@
                                      "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
                                      "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
 
+(def nopeusrajoitukset ["30" "40" "50" "60" "70" "80" "90" "100"])
+
 (defn kaistajarjestelyt->str [t]
   (->> t
       ::kaistajarjestelyt
