@@ -72,6 +72,7 @@
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
     [harja.palvelin.palvelut.debug :as debug]
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
+    [harja.palvelin.palvelut.sopimukset :as sopimukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -405,6 +406,10 @@
                    (hankkeet/->Hankkeet)
                    {:db :db-replica
                     :http-palvelin :http-palvelin})
+      :sopimukset (component/using
+                  (sopimukset/->Sopimukset)
+                  {:db :db-replica
+                   :http-palvelin :http-palvelin})
 
       :debug (component/using
               (debug/->Debug)

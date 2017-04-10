@@ -41,3 +41,14 @@ SELECT EXISTS(SELECT id
 SELECT id
 FROM sopimus
 WHERE urakka = :urakka AND paasopimus IS NULL;
+
+-- name: hae-harjassa-luodut-sopimukset
+SELECT
+  id,
+  nimi,
+  alkupvm,
+  loppupvm,
+  urakka,
+  paasopimus
+FROM sopimus
+WHERE harjassa_luotu IS TRUE;
