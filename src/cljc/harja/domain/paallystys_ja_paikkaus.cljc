@@ -1,7 +1,6 @@
 (ns harja.domain.paallystys-ja-paikkaus
   "Päällystys- ja paikkausurakoiden yhteisiä apureita"
-  (:require [schema.core :as s]
-            [taoensso.timbre :as log]))
+  (:require [schema.core :as s]))
 
 (def +paallystetyypit+
   "Kaikki päällystetyypit POT-lomake Excelistä"
