@@ -31,6 +31,7 @@
       :valinnat (tiedot/valitsemattomat-sopimukset haetut-sopimukset urakka)
       :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
       :hae identity
+      :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
       :aseta (fn [_ arvo] arvo)}
      {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
      {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
