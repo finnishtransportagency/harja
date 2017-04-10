@@ -928,10 +928,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :valiotsikot        mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
   :ulkoinen-validointi? jos true, grid ei tee validointia muokkauksen yhteydessä.
                         Käytä tätä, jos teet validoinnin muualla (esim jos grid data on wrap,
-                        jonka muutoksen yhteydessä validointi tehdään)."
+                        jonka muutoksen yhteydessä validointi tehdään).
+
+  :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
+                      avaimella :harja.ui.grid/virheet"
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
-           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi?] :as opts}
+           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -991,11 +994,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         muokkaa! (fn [muokatut virheet skeema id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
-                         uudet-tiedot (swap! muokatut
-                                             (fn [muokatut]
-                                               (update-in muokatut [id]
-                                                          (fn [rivi]
-                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))))]
+                         uudet-tiedot
+                         (swap! muokatut
+                                (fn [muokatut]
+                                  (update-in muokatut [id]
+                                             (fn [rivi]
+                                               (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
+                                                 (if virheet-dataan?
+                                                   (assoc uusi-rivi
+                                                          ::virheet (validointi/validoi-rivi
+                                                                        (assoc muokatut id uusi-rivi)
+                                                                        uusi-rivi
+                                                                        skeema))
+                                                   uusi-rivi))))))]
 
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])

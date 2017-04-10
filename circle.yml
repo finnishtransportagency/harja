@@ -16,6 +16,9 @@ dependencies:
 
 test:
   override:
-    - lein test
-    - lein doo phantom test once
-    - lein doo phantom laadunseuranta-test once
+    - lein test:
+        parallel: true
+    - lein doo phantom test once:
+        parallel: true
+    - lein doo phantom laadunseuranta-test once:
+        parallel: true

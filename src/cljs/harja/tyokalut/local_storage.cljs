@@ -8,7 +8,10 @@
 (swap! st/transit-write-handlers merge (:handlers t/write-optiot))
 (reset! st/storage-delay 500)
 
-(defn local-storage-atom [nimi alkuarvo]
-  (st/local-storage
-   (r/atom alkuarvo)
-   nimi))
+(defn local-storage-atom [nimi alkuarvo lataus-fn]
+  (let [ls-atom (st/local-storage
+                 (r/atom alkuarvo)
+                 nimi)]
+    (when lataus-fn
+      (swap! ls-atom lataus-fn))
+    ls-atom))
