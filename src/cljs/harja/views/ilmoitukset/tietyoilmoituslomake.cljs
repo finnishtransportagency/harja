@@ -52,11 +52,17 @@
                     :piilota-toiminnot? false
                     :tyhja "Ei tienpintatietoja"
                     :jarjesta :jarjestysnro
-                    :tunniste :jarjestysnro}
+                    :tunniste :jarjestysnro
+                    :uusi-rivi (fn [rivi]
+                                 (if (::t/materiaali rivi)
+                                   rivi
+                                   (assoc rivi ::t/materiaali (ffirst tp-valinnat))))}
      [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
        :valinnat tp-valinnat
        :valinta-arvo first
        :valinta-nayta second
+       :pakollinen? true
+       :validoi [[:ei-tyhja "Valitse materiaali"]]
        :leveys 1}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
        :leveys 1}]
@@ -64,7 +70,7 @@
                    (map-indexed (fn [i ta]
                                   [i ta]))
                    tienpinnat-tiedot)
-             #(e! (tiedot/->PaivitaTienPinnatGrid (vals %) avain)))]))
+             #(e! (tiedot/->PaivitaTienPinnat (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
   [muokkaus-grid {:otsikko ""
@@ -73,7 +79,11 @@
                   :piilota-toiminnot? false
                   :tyhja "Ei nopeusrajoituksia"
                   :jarjesta :jarjestysnro
-                  :tunniste :jarjestysnro}
+                  :tunniste :jarjestysnro
+                  :uusi-rivi (fn [rivi]
+                               (if (::t/rajoitus rivi)
+                                 rivi
+                                 (assoc rivi ::t/rajoitus (first t/nopeusrajoitukset))))}
    [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus
      :tyyppi :valinta
      :valinnat t/nopeusrajoitukset
@@ -83,10 +93,10 @@
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
    (r/wrap
-    (into {}
-          (map-indexed (fn [i na] [i na]))
-          nr-tiedot)
-    #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))])
+     (into {}
+           (map-indexed (fn [i na] [i na]))
+           nr-tiedot)
+     #(e! (tiedot/->PaivitaNopeusrajoitukset (vals %))))])
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
@@ -171,8 +181,8 @@
                                            #(into #{} %))]))
                  tyoajat)
            #(do
-              (e! (tiedot/->PaivitaTyoajatGrid (vals %)
-                                               (grid-virheita? %)))))])
+              (e! (tiedot/->PaivitaTyoajat (vals %)
+                                           (grid-virheita? %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
   (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
@@ -466,10 +476,14 @@
                      :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
                      :valinta-nayta #(or (t/vaikutussuunta-vaihtoehdot-map %) "- Valitse -")
                      :validoi [[:ei-tyhja]]})
-      (lomake/ryhma "Lisätietoja"
-                    {:otsikko ""
+      (lomake/ryhma "Muuta"
+                    {:otsikko "Lisätietoja"
                      :nimi ::t/lisatietoja
                      :tyyppi :text
-                     :koko [90 8]})
+                     :koko [90 8]}
+                    {:otsikko "Luvan diaarinumero"
+                     :nimi ::t/luvan-diaarinumero
+                     :tyyppi :string
+                     :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)]
      ilmoitus]]])

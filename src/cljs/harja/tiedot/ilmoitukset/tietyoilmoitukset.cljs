@@ -157,9 +157,9 @@
 (defrecord KayttajanUrakatHaettu [urakat])
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaIlmoituksenSijainti [sijainti])
-(defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
-(defrecord PaivitaTienPinnatGrid [tienpinnat avain])
-(defrecord PaivitaTyoajatGrid [tyoajat virheita?])
+(defrecord PaivitaNopeusrajoitukset [nopeusrajoitukset])
+(defrecord PaivitaTienPinnat [tienpinnat avain])
+(defrecord PaivitaTyoajat [tyoajat virheita?])
 (defrecord TallennaIlmoitus [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusTallennettu [ilmoitus sulje-ilmoitus avaa-pdf?])
 (defrecord IlmoitusEiTallennettu [virhe])
@@ -244,15 +244,15 @@
   (process-event [{sijainti :sijainti} app]
     (assoc-in app [:valittu-ilmoitus ::t/osoite ::tr/geometria] sijainti))
 
-  PaivitaNopeusrajoituksetGrid
+  PaivitaNopeusrajoitukset
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
     (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] nopeusrajoitukset))
 
-  PaivitaTienPinnatGrid
+  PaivitaTienPinnat
   (process-event [{:keys [tienpinnat avain] :as kamat} app]
     (assoc-in app [:valittu-ilmoitus avain] tienpinnat))
 
-  PaivitaTyoajatGrid
+  PaivitaTyoajat
   (process-event [{tyoajat :tyoajat virheita? :virheita?} app]
     (-> app
         (assoc-in [:valittu-ilmoitus ::t/tyoajat] tyoajat)
