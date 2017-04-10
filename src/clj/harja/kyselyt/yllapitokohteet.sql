@@ -376,17 +376,17 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-        :paallystetyyppi,
-        :raekoko,
-        :tyomenetelma,
-        :massamaara,
-        :ulkoinen - id,
-        (SELECT tierekisteriosoitteelle_viiva AS geom
-         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                            CAST(:tr_alkuosa AS INTEGER),
-                                            CAST(:tr_alkuetaisyys AS INTEGER),
-                                            CAST(:tr_loppuosa AS INTEGER),
-                                            CAST(:tr_loppuetaisyys AS INTEGER))));
+  :paallystetyyppi,
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
