@@ -59,21 +59,6 @@
                                                                        :urakka urakka-id}))]
     maaramuutokset))
 
-(defn hae-yllapitokohteiden-maaramuutokset
-  [db user {:keys [yllapitokohde-id urakka-id]}]
-  (log/debug "Aloitetaan määrämuutoksien haku")
-  ;; käytetään myös integraatioista, jolloin user nil
-  (if user
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-    (oikeudet/ei-oikeustarkistusta!))
-  (let [maaramuutokset (into []
-                             (comp
-                               (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
-                               (map #(konv/string-polusta->keyword % [:tyyppi])))
-                             (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
-                                                                       :urakka urakka-id}))]
-    maaramuutokset))
-
 (defn- luo-maaramuutos [db user yllapitokohde-id
                         {:keys [tyyppi tyo yksikko tilattu-maara
                                 toteutunut-maara yksikkohinta ennustettu-maara] :as maaramuutos}]
