@@ -426,6 +426,9 @@
                      :nimi ::t/kiertotienpinnat
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/kiertotienpinnat (tienpinnat-komponentti-grid e! ::t/kiertotienpinnat))}
+                    {:otsikko "Kiertotietien pituus (m)"
+                     :nimi ::t/kiertotien-pituus
+                     :tyyppi :positiivinen-numero}
                     {:otsikko "Kiertotien mutkaisuus"
                      :tyyppi :valinta
                      :uusi-rivi? true
