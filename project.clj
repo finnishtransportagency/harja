@@ -150,8 +150,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["harja-data" "http://185.26.50.104/mvn/"]
-                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"]
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
