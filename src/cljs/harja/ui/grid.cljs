@@ -719,7 +719,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                              (lisaa-rivi! ohjaus {}))}
                        [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
-
                     (when-not muokkaa-aina
                       [:button.nappi-myonteinen.grid-tallenna
                        {:disabled (or (not (empty? @virheet))
@@ -727,15 +726,22 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                       (not muokattu?))
                         :on-click #(when-not @tallennus-kaynnissa
                                      (let [kaikki-rivit (mapv second @muokatut)
+                                           ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                                           tallennettavat (filter (fn [rivi]
+                                                                    (not (and (neg-int? (:id rivi))
+                                                                              (:poistettu rivi))))
+                                                                  kaikki-rivit)
                                            tallennettavat
                                            (if tallenna-vain-muokatut
                                              (do (log "TALLENNA VAIN MUOKATUT")
-                                                 (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
-                                             kaikki-rivit)]
+                                                 (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                                             tallennettavat)]
                                        (do (.preventDefault %)
                                            (reset! tallennus-kaynnissa true)
-                                           (go (if (<! (tallenna tallennettavat)))
-                                               (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                           (go
+                                             (when-not (empty? tallennettavat)
+                                               (<! (tallenna tallennettavat)))
+                                             (nollaa-muokkaustiedot!)))))}
                        [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
                     (when-not muokkaa-aina
