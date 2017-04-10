@@ -74,21 +74,19 @@
                   :tyhja "Ei nopeusrajoituksia"
                   :jarjesta :jarjestysnro
                   :tunniste :jarjestysnro}
-   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus 
+   [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus
      :tyyppi :valinta
      :valinnat t/nopeusrajoitukset
      :pakollinen? true
+     :validoi [[:ei-tyhja "Valitse rajoitus"]]
      :leveys 1}
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
    (r/wrap
     (into {}
-          (map-indexed (fn [i na]
-                         [i na]))
+          (map-indexed (fn [i na] [i na]))
           nr-tiedot)
-    #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))]
-
-  )
+    #(e! (tiedot/->PaivitaNopeusrajoituksetGrid (vals %))))])
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
