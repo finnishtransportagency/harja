@@ -13,8 +13,7 @@
                           db {:idt (map id-avain kohteet)}))]
     (mapv
       (fn [kohde]
-        (let [kohteen-kohdeosat (filter #(= (:yllapitokohde-id %) (id-avain kohteet))
-                                        kohdeosat)]
+        (let [kohteen-kohdeosat (filterv #(= (:yllapitokohde-id %) (id-avain kohteet)) kohdeosat)]
           (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet)))
 
