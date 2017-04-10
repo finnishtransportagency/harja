@@ -476,10 +476,14 @@
                      :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
                      :valinta-nayta #(or (t/vaikutussuunta-vaihtoehdot-map %) "- Valitse -")
                      :validoi [[:ei-tyhja]]})
-      (lomake/ryhma "Lisätietoja"
-                    {:otsikko ""
+      (lomake/ryhma "Muuta"
+                    {:otsikko "Lisätietoja"
                      :nimi ::t/lisatietoja
                      :tyyppi :text
-                     :koko [90 8]})
+                     :koko [90 8]}
+                    {:otsikko "Luvan diaarinumero"
+                     :nimi ::t/luvan-diaarinumero
+                     :tyyppi :string
+                     :pituus-max 32})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)]
      ilmoitus]]])
