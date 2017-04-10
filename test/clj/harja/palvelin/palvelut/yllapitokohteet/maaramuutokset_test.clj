@@ -35,7 +35,7 @@
                                  :yllapitokohde-id yllapitokohde-id})
         maaramuutos (first vastaus)]
     (is (= (count vastaus) 4) "Määrämuutosten määrä täsmää")
-    (is (= (:yllapitokohde maaramuutos) yllapitokohde-id) "Ylläpitokohteen id täsmää")
+    (is (= (:yllapitokohde-id maaramuutos) yllapitokohde-id) "Ylläpitokohteen id täsmää")
     (is (= (:tyyppi maaramuutos) :ajoradan-paallyste) "Tyyppi täsmää")
     (is (= (:tyo maaramuutos) "Testityö") "Työn kuvaus täsmää")
     (is (= (:yksikko maaramuutos) "kg") "Työn yksikkö täsmää")
