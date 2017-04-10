@@ -1,6 +1,7 @@
 (ns harja.domain.paallystys-ja-paikkaus
   "Päällystys- ja paikkausurakoiden yhteisiä apureita"
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s]
+            [taoensso.timbre :as log]))
 
 (def +paallystetyypit+
   "Kaikki päällystetyypit POT-lomake Excelistä"
@@ -66,16 +67,20 @@
   "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen.
    Palauttaa mapin, jossa laskun tulos sekä tieto siitä, sisältääkö lasku ennustettuja määriä."
   [tyot]
-  {:tulos (reduce
-            +
-            (mapv
-              (fn [tyo]
-                (let [tilattu-maara (:tilattu-maara tyo)
-                      ennustettu-maara (:ennustettu-maara tyo)
-                      toteutunut-maara (:toteutunut-maara tyo)
-                      yksikkohinta (:yksikkohinta tyo)]
-                  (* (- (or toteutunut-maara ennustettu-maara)
-                        tilattu-maara)
-                     yksikkohinta)))
-              (filter #(not= true (:poistettu %)) tyot)))
+  (log/debug "SUMMATAAS NÄMÄ: " (pr-str tyot))
+  {:tulos (if tyot
+            (reduce
+              +
+              0
+              (map
+                (fn [tyo]
+                  (let [tilattu-maara (:tilattu-maara tyo)
+                        ennustettu-maara (:ennustettu-maara tyo)
+                        toteutunut-maara (:toteutunut-maara tyo)
+                        yksikkohinta (:yksikkohinta tyo)]
+                    (* (- (or toteutunut-maara ennustettu-maara)
+                          tilattu-maara)
+                       yksikkohinta)))
+                (filter #(not= true (:poistettu %)) tyot)))
+            0)
    :ennustettu? (maaramuutoksissa-ennustettuja-maaria? tyot)})

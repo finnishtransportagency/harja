@@ -25,4 +25,8 @@
     ;; Sekä ennustettu että toteutunut, ennustetta ei huomioida, tulos ei ennustettu
     (is (false? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot3))))
     ;; Vain ennuste, joten sitä käytetään laskussa. Ennuste on true.
-    (is (true? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4))))))
+    (is (true? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4))))
+
+    ;; -- Eipä kaaduta outoihin syötteisiin --
+    (is (= (paallystys-ja-paikkaus/summaa-maaramuutokset nil)
+    {:tulos 0 :ennustettu? false}))))
