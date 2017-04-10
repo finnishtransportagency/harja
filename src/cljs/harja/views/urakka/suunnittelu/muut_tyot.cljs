@@ -76,6 +76,7 @@
             :valinta-arvo  #(:nimi (nth % 3))
             :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
             :tyyppi        :valinta
+            :validoi       [[:ei-tyhja "Anna tehtävä"]]
             :valinnat-fn   #(sort-by (fn [rivi] (:nimi (nth rivi 3)))
                                      (filter (fn [t]
                                                (not ((disj @jo-valitut-tehtavat (:tehtava %))
