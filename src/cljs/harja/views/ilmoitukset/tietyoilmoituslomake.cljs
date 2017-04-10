@@ -52,7 +52,11 @@
                     :piilota-toiminnot? false
                     :tyhja "Ei tienpintatietoja"
                     :jarjesta :jarjestysnro
-                    :tunniste :jarjestysnro}
+                    :tunniste :jarjestysnro
+                    :uusi-rivi (fn [rivi]
+                                 (if (::t/materiaali rivi)
+                                   rivi
+                                   (assoc rivi ::t/materiaali (ffirst tp-valinnat))))}
      [{:otsikko "Materiaali" :nimi ::t/materiaali :tyyppi :valinta
        :valinnat tp-valinnat
        :valinta-arvo first
@@ -75,7 +79,11 @@
                   :piilota-toiminnot? false
                   :tyhja "Ei nopeusrajoituksia"
                   :jarjesta :jarjestysnro
-                  :tunniste :jarjestysnro}
+                  :tunniste :jarjestysnro
+                  :uusi-rivi (fn [rivi]
+                               (if (::t/rajoitus rivi)
+                                 rivi
+                                 (assoc rivi ::t/rajoitus (first t/nopeusrajoitukset))))}
    [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus
      :tyyppi :valinta
      :valinnat t/nopeusrajoitukset
@@ -85,10 +93,10 @@
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
    (r/wrap
-    (into {}
-          (map-indexed (fn [i na] [i na]))
-          nr-tiedot)
-    #(e! (tiedot/->PaivitaNopeusrajoitukset (vals %))))])
+     (into {}
+           (map-indexed (fn [i na] [i na]))
+           nr-tiedot)
+     #(e! (tiedot/->PaivitaNopeusrajoitukset (vals %))))])
 
 (defn kokorajoitukset-komponentti [e! ilmoitus]
   [muokkaus-grid {:otsikko "Ajoneuvon kokorajoitukset"
