@@ -49,7 +49,7 @@
   (let [tie1 (normalisoi tie1)
         tie2 (normalisoi tie2)])
   (when (samalla-tiella? tie1 tie2)
-    (or (< (::osa tie1) (::aosa tie2))
+    (or (< (::aosa tie1) (::aosa tie2))
         (and (= (::aosa tie1) (::aosa tie2))
              (< (::aet tie1) (::aet tie2))))))
 
@@ -69,7 +69,7 @@
   [tie1 tie2]
   (when (samalla-tiella? tie1 tie2)
     (or (> (:tr-loppuosa tie1) (:tr-loppuosa tie2))
-        (and (= (:tr-lopöpuosa tie1) (:tr-loppuosa tie2))
+        (and (= (:tr-loppuosa tie1) (:tr-loppuosa tie2))
              (> (:tr-loppuetaisyys tie1) (:tr-loppuetaisyys tie2))))))
 
 (defn nouseva-jarjestys
