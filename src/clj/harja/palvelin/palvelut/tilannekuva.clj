@@ -183,7 +183,7 @@
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
-            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus)
+            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id)
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus

@@ -194,7 +194,7 @@
                               (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                            :sopimus sopimus-id
                                                                            :vuosi vuosi}))
-        yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet)
+        yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet :id)
         osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
         yllapitokohteet (->> yllapitokohteet
                              (map #(assoc % :pituus
