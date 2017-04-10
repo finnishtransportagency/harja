@@ -57,6 +57,8 @@
        :valinnat tp-valinnat
        :valinta-arvo first
        :valinta-nayta second
+       :pakollinen? true
+       :validoi [[:ei-tyhja "Valitse materiaali"]]
        :leveys 1}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
        :leveys 1}]
@@ -78,7 +80,7 @@
      :tyyppi :valinta
      :valinnat t/nopeusrajoitukset
      :pakollinen? true
-     :validoi [[:ei-tyhja "Valitse tila"]]
+     :validoi [[:ei-tyhja "Valitse rajoitus"]]
      :leveys 1}
     {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero
      :leveys 1}]
