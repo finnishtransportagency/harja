@@ -6,7 +6,6 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.ui.grid :as grid]
@@ -19,8 +18,7 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.grid-yhteiset :as grid-yhteiset])
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -114,9 +112,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 (defn materiaalit-ja-maarat
   [materiaalit-atom virheet-atom jarjestelman-luoma?]
 
-  [muokkausgrid/muokkaus-grid
+  [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
-    :muutos (fn [g] (reset! virheet-atom (grid-yhteiset/hae-virheet g)))
+    :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
     :voi-muokata? (and (not jarjestelman-luoma?)
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
    [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta

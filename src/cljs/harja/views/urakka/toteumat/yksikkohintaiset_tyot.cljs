@@ -6,7 +6,6 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
-            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat :as toteumat]
@@ -30,8 +29,7 @@
             [reagent.core :as r]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.tierekisteri :as tierekisteri]
-            [harja.ui.grid-yhteiset :as grid-yhteiset])
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -128,10 +126,10 @@
   (let [nelostason-tehtavat (map nelostason-tehtava @u/urakan-toimenpiteet-ja-tehtavat)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
         voi-muokata? (not jarjestelman-lisaama-toteuma?)]
-    [muokkausgrid/muokkaus-grid
+    [grid/muokkaus-grid
      {:tyhja "Ei töitä."
       :voi-muokata? voi-muokata?
-      :muutos #(reset! tehtavat-virheet (grid-yhteiset/hae-virheet %))}
+      :muutos #(reset! tehtavat-virheet (grid/hae-virheet %))}
      [{:otsikko "Toimenpide"
        :nimi :toimenpideinstanssi
        :tyyppi :valinta

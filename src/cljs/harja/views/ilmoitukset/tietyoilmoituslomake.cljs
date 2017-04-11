@@ -8,8 +8,7 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.muokkausgrid :refer [muokkaus-grid]]
-            [harja.ui.grid-yhteiset :as grid-yhteiset]
+            [harja.ui.grid :refer [muokkaus-grid] :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
@@ -122,7 +121,7 @@
 (defn- grid-virheita?
   "Palauttaa true/false onko annetussa muokkaus-grid datassa virheitä"
   [uusi-data]
-  (boolean (some (comp not empty? ::grid-yhteiset/virheet)
+  (boolean (some (comp not empty? ::grid/virheet)
                  (vals uusi-data))))
 
 (defn pysaytys-ajat-komponentti [e! ilmoitus]

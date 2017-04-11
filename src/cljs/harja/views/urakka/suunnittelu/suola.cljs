@@ -9,7 +9,6 @@
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
-            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
@@ -188,7 +187,7 @@
              {:otsikko "Pohjavesialueiden käyttörajat"
               :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
               :komponentti (fn [_]
-                             [muokkausgrid/muokkaus-grid {:piilota-toiminnot? true
+                             [grid/muokkaus-grid {:piilota-toiminnot? true
                                                  :voi-poistaa? (constantly false)
                                                  :voi-lisata? false
                                                  :jos-tyhja "Urakan alueella ei pohjavesialueita"}

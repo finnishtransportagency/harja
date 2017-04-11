@@ -6,7 +6,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.tiedot.muokkauslukko :as lukko]
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
@@ -246,7 +245,7 @@
            [:fieldset.lomake-osa
             [:h3 "Ilmoitustiedot"]
 
-            [muokkausgrid/muokkaus-grid
+            [grid/muokkaus-grid
              {:otsikko "Paikatut tierekisteriosoitteet"
               :tunniste :tie
               :voi-muokata? grid-kirjoitusoikeus?
@@ -278,7 +277,7 @@
                                                                                                              (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen-leveys rivi))))}]
              toteutuneet-osoitteet]
 
-            [muokkausgrid/muokkaus-grid
+            [grid/muokkaus-grid
              {:otsikko "Toteutuneet suoritemäärät"
               :voi-muokata? grid-kirjoitusoikeus?
               :voi-lisata? false

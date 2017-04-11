@@ -2,7 +2,6 @@
   "Ylläpitokohteet"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
-            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje]]
             [harja.ui.komponentti :as komp]
@@ -27,8 +26,7 @@
             [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
-            [harja.ui.grid-yhteiset :as grid-yhteiset])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -186,25 +184,25 @@
 (defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
     ;; jos on tullut uusi TR osoite, haetaan sille sijainti
-    (doseq [[id rivi] (grid-yhteiset/hae-muokkaustila grid)]
+    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
       (if (:poistettu rivi)
         (swap! tr-virheet-atom dissoc id)
         (let [osoite (tr-osoite rivi)
-              virheet (grid-yhteiset/hae-virheet grid)]
+              virheet (grid/hae-virheet grid)]
           (when (and osoite (not (haetut osoite))
                      (empty? (get virheet id)))
             (go
               (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
               (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                (when (= (get (grid-yhteiset/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
+                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
                   (if-let [virhe (when-not (vkm/loytyi? sijainti)
                                    "Virheellinen TR-osoite")]
                     (do (swap! tr-virheet-atom assoc id virhe)
                         (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid-yhteiset/aseta-virhe! grid id kentta "Tarkista tie")))
+                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
                     (do (swap! tr-virheet-atom dissoc id)
                         (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid-yhteiset/poista-virhe! grid id kentta))
+                          (grid/poista-virhe! grid id kentta))
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
@@ -293,7 +291,7 @@
         [sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id urakka)
 
-        g (grid-yhteiset/grid-ohjaus)
+        g (grid/grid-ohjaus)
         toiminnot-komponentti
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
@@ -388,7 +386,7 @@
             virheet (:virheet opts)]
 
         [:div
-         [muokkausgrid/muokkaus-grid
+         [grid/muokkaus-grid
           {:ohjaus g
            :id "yllapitokohdeosat"
            :virheet virheet
@@ -564,7 +562,7 @@
                       :yllapitokohteet-atom kohteet-atom}])])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
-  (let [tiet (into #{} (map (comp :tr-numero second)) (grid-yhteiset/hae-muokkaustila grid))]
+  (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
     (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
       (go
         (let [pituudet (<! (vkm/tieosien-pituudet tie))]
