@@ -62,18 +62,6 @@
 (s/def ::t/max-pituus number?)
 (s/def ::t/max-leveys number?)
 
-;; sallitaan käsin
-(s/def ::t/pysaytysten-alku (s/nilable inst?))
-(s/def ::t/pysaytysten-loppu (s/nilable inst?))
-(s/def ::t/sahkoposti (s/nilable string?))
-(s/def ::t/etunimi (s/nilable string?))
-(s/def ::t/sukunimi (s/nilable string?))
-(s/def ::t/matkapuhelin (s/nilable string?))
-(s/def ::t/tilaajan-nimi (s/nilable string?))
-(s/def ::t/urakoitsijan-nimi (s/nilable string?))
-(s/def ::t/urakan-nimi (s/nilable string?))
-(s/def ::t/urakka-id (s/nilable integer?))
-
 (def kaikki-ilmoituksen-kentat
   #{::t/id
     ::t/tloik-id
@@ -185,7 +173,7 @@
 (defn intersects-envelope? [{:keys [xmin ymin xmax ymax]}]
   (reify op/Op
     (to-sql [this val]
-      [(str "ST_Intersects("val ", ST_MakeEnvelope(?,?,?,?))")
+      [(str "ST_Intersects(" val ", ST_MakeEnvelope(?,?,?,?))")
        [xmin ymin xmax ymax]])))
 
 (defn overlaps? [rivi-alku rivi-loppu alku loppu]
@@ -196,7 +184,7 @@
 (defn interval? [start interval]
   (reify op/Op
     (to-sql [this value]
-      [(str "(? - "value" < ?::INTERVAL)")
+      [(str "(? - " value " < ?::INTERVAL)")
        [start interval]])))
 
 (defn hae-ilmoitukset [db {:keys [luotu-alku
@@ -204,6 +192,7 @@
                                   kaynnissa-alku
                                   kaynnissa-loppu
                                   urakat
+                                  urakattomat?
                                   organisaatio
                                   kayttaja-id
                                   sijainti]}]
@@ -223,7 +212,10 @@
                                (if organisaatio
                                  {::t/urakoitsija-id organisaatio}
                                  {::t/id op/not-null?})
-                               {::t/urakka-id (op/or op/null? (op/in urakat))})))]
+                               {::t/urakka-id
+                                (if urakattomat?
+                                  (op/or op/null? (op/in urakat))
+                                  (op/in urakat))})))]
     ilmoitukset))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
@@ -235,8 +227,8 @@
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
            (if nykytilanne?
-               {::t/loppu (interval? loppu "7 days")}
-               (overlaps? ::t/alku ::t/loppu alku loppu))
+             {::t/loppu (interval? loppu "7 days")}
+             (overlaps? ::t/alku ::t/loppu alku loppu))
            {::t/osoite {::tr/geometria (intersects-envelope? alue)}}
            (when-not tilaaja?
              (when-not (empty? urakat)
@@ -252,4 +244,4 @@
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
-          {::t/id tietyoilmoitus-id})))
+                {::t/id tietyoilmoitus-id})))
