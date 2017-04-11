@@ -15,9 +15,10 @@
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [Grid vetolaatikko-auki? sulje-vetolaatikko!
+                                   muokkauksessa-olevat-gridit
                                    avaa-vetolaatikko! muokkaa-rivit! otsikko?
                                    lisaa-rivi! vetolaatikko-rivi vetolaatikon-tila
-                                   aseta-grid]]
+                                   aseta-grid +rivimaara-jonka-jalkeen-napit-alaskin+]]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -25,10 +26,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
-
-(def muokkauksessa-olevat-gridit (atom #{}))
-(def gridia-muokataan? (reaction (not (empty? @muokkauksessa-olevat-gridit)))) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
-(def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin."

@@ -14,6 +14,10 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
 
+(def muokkauksessa-olevat-gridit (atom #{}))
+(def gridia-muokataan? (reaction (not (empty? @muokkauksessa-olevat-gridit)))) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
+(def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
+
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
 
