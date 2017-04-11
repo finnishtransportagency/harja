@@ -110,10 +110,7 @@
 (defn hae-kohteen-tiedot [db kohde-id]
   (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
     (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
-                                   db
-                                   nil
-                                   {:urakka-id (:urakka kohde)
-                                    :yllapitokohde-id kohde-id}))
+                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
           paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
