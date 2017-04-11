@@ -57,6 +57,27 @@
                    true
                    rivit)))))))
 
+(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae s ohjaus rivi]}]
+  (when (and (= fokus fokus-id)
+             (tayta-alas arvo)
+
+             ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
+             (not (empty? tulevat-rivit))
+             (every? str/blank? (map hae tulevat-rivit)))
+
+    [:div {:class (if (= :oikea (:tasaa s))
+                    "pull-left"
+                    "pull-right")}
+     [:div {:style {:position "absolute" :display "inline-block"}}
+      [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
+                :title (:tayta-tooltip s)
+                :style {:position "absolute"
+                        :left (when (= :oikea (:tasaa s)) 0)
+                        :right (when-not (= :oikea (:tasaa s)) "100%")}
+                :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
+       (ikonit/livicon-arrow-down) " Täytä"]]]))
+
+
 ;; UI-komponentit
 ;; Itse gridin UI-komponentit
 
@@ -98,24 +119,10 @@
 
                    ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
                    (when-let [tayta-alas (:tayta-alas? s)]
-                     (when (and (= fokus fokus-id)
-                                (tayta-alas arvo)
-
-                                ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
-                                (not (empty? tulevat-rivit))
-                                (every? str/blank? (map hae tulevat-rivit)))
-
-                       [:div {:class (if (= :oikea (:tasaa s))
-                                       "pull-left"
-                                       "pull-right")}
-                        [:div {:style {:position "absolute" :display "inline-block"}}
-                         [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
-                                   :title (:tayta-tooltip s)
-                                   :style {:position "absolute"
-                                           :left (when (= :oikea (:tasaa s)) 0)
-                                           :right (when-not (= :oikea (:tasaa s)) "100%")}
-                                   :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
-                          (ikonit/livicon-arrow-down) " Täytä"]]]))
+                     (tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
+                                        :arvo arvo :tayta-alas tayta-alas
+                                        :tulevat-rivit tulevat-rivit :hae hae
+                                        :s s :ohjaus ohjaus :rivi rivi}))
 
                    (if (= tyyppi :komponentti)
                      (komponentti rivi {:index index
