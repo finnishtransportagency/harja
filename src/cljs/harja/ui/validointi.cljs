@@ -151,6 +151,19 @@
           (pvm/ennen? data vertailtava-pvm))
     viesti))
 
+(defmethod validoi-saanto :pvm-ennen [_ _ data rivi _ & [vertailtava-pvm viesti]]
+  (when (and data vertailtava-pvm
+             (not (pvm/ennen? data vertailtava-pvm)))
+    viesti))
+
+(defmethod validoi-saanto :aika-jalkeen [_ _ data rivi _ & [vertailtava-aika-tai-kentan-nimi viesti]]
+  (let [vertailtava-aika (if (keyword? vertailtava-aika-tai-kentan-nimi)
+                           (get rivi vertailtava-aika-tai-kentan-nimi)
+                           vertailtava-aika-tai-kentan-nimi)]
+    (when (and data vertailtava-aika
+               (not (pvm/aika-jalkeen? data vertailtava-aika)))
+      viesti)))
+
 (defmethod validoi-saanto :toinen-arvo-annettu-ensin [_ _ data rivi _ & [avain viesti]]
   (when (and
           data

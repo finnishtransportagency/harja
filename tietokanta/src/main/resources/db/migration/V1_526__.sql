@@ -1,9 +1,14 @@
-CREATE TABLE sahkelahetys (
-  id         SERIAL PRIMARY KEY,
-  urakka     INTEGER REFERENCES urakka (id)      NOT NULL,
-  lahetetty  TIMESTAMP DEFAULT current_timestamp NOT NULL,
-  onnistunut BOOLEAN,
-  UNIQUE (urakka)
-);
+ALTER TABLE yllapitokohde ADD COLUMN toteutunut_hinta NUMERIC,
+  ADD CONSTRAINT toteutunut_hinta_paikkauskohteella
+CHECK (toteutunut_hinta IS NULL AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
+       OR yllapitokohdetyotyyppi = 'paikkaus' :: yllapitokohdetyotyyppi);
 
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('sahke', 'urakan-lahetys');
+UPDATE yllapitokohde ypk
+SET toteutunut_hinta =
+(SELECT toteutunut_hinta
+ FROM paikkausilmoitus
+ WHERE paikkauskohde = ypk.id)
+WHERE ypk.yllapitokohdetyotyyppi = 'paikkaus' :: yllapitokohdetyotyyppi
+      AND ypk.poistettu IS NOT TRUE;
+
+ALTER TABLE paikkausilmoitus DROP COLUMN toteutunut_hinta;

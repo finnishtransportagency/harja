@@ -181,7 +181,7 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-             (if kehitysmoodi
+            (if (and kehitysmoodi (:tiedosto (:fim asetukset)))
                (fim/->FakeFIM (:tiedosto (:fim asetukset)))
                (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
@@ -392,7 +392,8 @@
                      (tilannekuva/->Tilannekuva)
                      {:db :db-replica
                       :http-palvelin :http-palvelin
-                      :karttakuvat :karttakuvat})
+                      :karttakuvat :karttakuvat
+                      :fim :fim})
       :tienakyma (component/using
                   (tienakyma/->Tienakyma)
                   {:db :db-replica

@@ -97,6 +97,7 @@
           nil?
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5)
+                       :pituus-max 30
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            (when tunnus {:otsikko "Tunnus" :nimi (:nimi tunnus) :tyyppi :string :pituus-max 1
                          :leveys 4 :muokattava? (or (:muokattava? tunnus) (constantly true))})
@@ -326,7 +327,7 @@
                            (concat
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
-                               [{:nimi :nimi}
+                               [{:nimi :nimi :pituus-max 30}
                                 {:nimi :tunnus}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
@@ -616,7 +617,7 @@
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
                     :tyyppi :string :leveys id-leveys}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
-                    :tyyppi :string :leveys kohde-leveys}]
+                    :tyyppi :string :leveys kohde-leveys :pituus-max 30}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
@@ -651,7 +652,6 @@
                                       (fmt/euro-opt (:maaramuutokset rivi))])})
                    (when (= (:kohdetyyppi optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
-                      :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
