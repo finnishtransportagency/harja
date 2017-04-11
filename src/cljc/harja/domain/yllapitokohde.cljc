@@ -1,21 +1,24 @@
-(ns harja.domain.yllapitokohteet
+(ns harja.domain.yllapitokohde
   "Ylläpitokohteiden yhteisiä apureita"
-  #?(:clj
-     (:require
-       [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-       [harja.domain.tierekisteri :as tr-domain]
-       [clojure.string :as str]
-       [clojure.spec :as s]
-       [clojure.future :refer :all]
-       [harja.pvm :as pvm]
-       [clj-time.core :as t]
-       [taoensso.timbre :as log]
-       [clj-time.coerce :as c]))
-  #?(:cljs
-     (:require
-       [cljs.spec :as s]
-       [clojure.string :as str]
-       [harja.domain.tierekisteri :as tr-domain])))
+  (:require
+    [harja.tyokalut.spec-apurit :as spec-apurit]
+    [clojure.string :as str]
+    [harja.domain.tierekisteri :as tr-domain]
+    #?@(:clj
+        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+        [clojure.spec :as s]
+        [clojure.future :refer :all]
+        [harja.pvm :as pvm]
+        [clj-time.core :as t]
+        [taoensso.timbre :as log]
+        [clj-time.coerce :as c]])
+    #?@(:cljs
+        [[cljs.spec :as s]])))
+
+(s/def ::id ::spec-apurit/postgres-serial)
+(s/def ::kohdenumero string?)
+(s/def ::nimi string?)
+(s/def ::kokonaishinta (s/and number?))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
@@ -299,3 +302,15 @@ yllapitoluokkanimi->numero
         kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
     (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
                  (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
+
+(defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
+                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+                            ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
+                            bitumi-indeksi
+                            kaasuindeksi
+                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            ])))

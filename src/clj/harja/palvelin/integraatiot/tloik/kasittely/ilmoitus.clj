@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.kasittely.ilmoitus
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]

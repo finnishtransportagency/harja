@@ -12,7 +12,7 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.paallystysilmoitus :as pot]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
@@ -31,9 +31,9 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn laske-sarakkeen-summa [sarake kohderivit]
-  (reduce + (mapv
-              (fn [rivi] (sarake rivi))
-              kohderivit)))
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))
 
 (defn tr-virheilmoitus [tr-virheet]
   [:div.tr-virheet
@@ -551,13 +551,14 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [urakka kohteet-atom rivi]
+(defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
   [:div
    [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
-   [maaramuutokset {:yllapitokohde-id (:id rivi)
-                    :urakka-id (:id urakka)
-                    :yllapitokohteet-atom kohteet-atom}]])
+   (when (= kohdetyyppi :paallystys)
+     [maaramuutokset {:yllapitokohde-id (:id rivi)
+                      :urakka-id (:id urakka)
+                      :yllapitokohteet-atom kohteet-atom}])])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
@@ -599,7 +600,7 @@
                  (map (juxt
                         :id
                         (fn [rivi]
-                          [kohteen-vetolaatikko urakka kohteet-atom rivi])))
+                          [kohteen-vetolaatikko urakka kohteet-atom rivi (:kohdetyyppi optiot)])))
                  @kohteet-atom)
            :tallenna @tallenna
            :muutos (fn [grid]
@@ -650,7 +651,6 @@
                                       (fmt/euro-opt (:maaramuutokset rivi))])})
                    (when (= (:kohdetyyppi optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
-                      :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
@@ -671,13 +671,7 @@
                     :komponentti (fn [rivi]
                                    [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                     "grid-solu-ennustettu")}
-                                    (fmt/euro-opt (+ (:sopimuksen-mukaiset-tyot rivi)
-                                                     (:maaramuutokset rivi)
-                                                     (:toteutunut-hinta rivi)
-                                                     (:arvonvahennykset rivi)
-                                                     (:sakot-ja-bonukset rivi)
-                                                     (:bitumi-indeksi rivi)
-                                                     (:kaasuindeksi rivi)))])}]))
+                                    (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
@@ -685,8 +679,7 @@
   (let [yhteensa
         (reaction
           (let [kohteet @kohteet-atom
-                sopimuksen-mukaiset-tyot-yhteensa
-                (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
                 maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
@@ -694,14 +687,15 @@
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
                 muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
-                kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
-                                 toteutunut-hinta-yhteensa
-                                 maaramuutokset-yhteensa
-                                 arvonvahennykset-yhteensa
-                                 sakot-ja-bonukset-yhteensa
-                                 bitumi-indeksi-yhteensa
-                                 kaasuindeksi-yhteensa
-                                 muut-yhteensa)]
+                kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
+                                   {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
+                                    :toteutunut-hinta toteutunut-hinta-yhteensa
+                                    :maaramuutokset maaramuutokset-yhteensa
+                                    :arvonvahennykset arvonvahennykset-yhteensa
+                                    :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
+                                    :bitumi-indeksi bitumi-indeksi-yhteensa
+                                    :kaasuindeksi kaasuindeksi-yhteensa})
+                                 (or muut-yhteensa 0))]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
