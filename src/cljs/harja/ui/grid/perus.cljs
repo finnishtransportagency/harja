@@ -501,7 +501,7 @@
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
                                   (into {}
                                         (keep (fn [rivi]
-                                                (if (::harja.ui.grid/poistettu rivi)
+                                                (if (:harja.ui.grid/poistettu rivi)
                                                   nil
                                                   (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
                                                     (if (empty? virheet)

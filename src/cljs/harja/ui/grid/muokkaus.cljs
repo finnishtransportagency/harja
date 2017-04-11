@@ -265,7 +265,7 @@
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
                                                  (if virheet-dataan?
                                                    (assoc uusi-rivi
-                                                     ::harja.ui.grid/virheet (validointi/validoi-rivi
+                                                     :harja.ui.grid/virheet (validointi/validoi-rivi
                                                                  (assoc muokatut id uusi-rivi)
                                                                  uusi-rivi
                                                                  skeema))
