@@ -224,4 +224,4 @@
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (go (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id})))
+  (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
