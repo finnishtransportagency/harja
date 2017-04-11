@@ -220,7 +220,77 @@
                   tallenna))
      [:th.toiminnot {:width "40px"} " "])])
 
+
 (def renderoi-rivia-kerralla 100)
+
+(defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
+                                tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
+                                muokkaa-aina virheet muokatut tallennus-kaynnissa
+                                tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
+                                peruuta otsikko]}]
+  [:div.panel-heading
+   (if-not muokataan
+     [:span.pull-right.muokkaustoiminnot
+      (when (and tallenna
+                 (not (nil? tiedot)))
+        (let [muokkaa-nappi [:button.nappi-ensisijainen
+                             {:disabled (or (= :ei-mahdollinen tallenna)
+                                            muuta-gridia-muokataan?)
+                              :on-click #(do (.preventDefault %)
+                                             (aloita-muokkaus! tiedot))}
+                             [:span.grid-muokkaa
+                              [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
+          (if (and (= :ei-mahdollinen tallenna)
+                   tallennus-ei-mahdollinen-tooltip)
+            [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
+            muokkaa-nappi)))]
+     [:span.pull-right.muokkaustoiminnot
+      [:button.nappi-toissijainen
+       {:disabled (not muokattu?)
+        :on-click #(do (.stopPropagation %)
+                       (.preventDefault %)
+                       (peru!))}
+       [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+
+      (when-not (= false voi-lisata?)
+        [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                               (lisaa-rivi! ohjaus {}))}
+         [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
+
+      (when-not muokkaa-aina
+        [:button.nappi-myonteinen.grid-tallenna
+         {:disabled (or (not (empty? @virheet))
+                        @tallennus-kaynnissa
+                        (not muokattu?))
+          :on-click #(when-not @tallennus-kaynnissa
+                       (let [kaikki-rivit (mapv second @muokatut)
+                             ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                             tallennettavat (filter (fn [rivi]
+                                                      (not (and (neg-int? (:id rivi))
+                                                                (:poistettu rivi))))
+                                                    kaikki-rivit)
+                             tallennettavat
+                             (if tallenna-vain-muokatut
+                               (do (log "TALLENNA VAIN MUOKATUT")
+                                   (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                               tallennettavat)]
+                         (do (.preventDefault %)
+                             (reset! tallennus-kaynnissa true)
+                             (go
+                               (when-not (empty? tallennettavat)
+                                 (<! (tallenna tallennettavat)))
+                               (nollaa-muokkaustiedot!)))))}
+         [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+
+      (when-not muokkaa-aina
+        [:button.nappi-kielteinen.grid-peru
+         {:on-click #(do
+                       (.preventDefault %)
+                       (nollaa-muokkaustiedot!)
+                       (when peruuta (peruuta))
+                       nil)}
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
+   (when nayta-otsikko? [:h6.panel-title otsikko])])
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -560,71 +630,6 @@
                           (take max-rivimaara alkup-tiedot)
                           alkup-tiedot)
                  muokattu? (not (empty? @historia))
-                 muokkauspaneeli
-                 (fn [nayta-otsikko?]
-                   [:div.panel-heading
-                    (if-not muokataan
-                      [:span.pull-right.muokkaustoiminnot
-                       (when (and tallenna
-                                  (not (nil? tiedot)))
-                         (let [muokkaa-nappi [:button.nappi-ensisijainen
-                                              {:disabled (or (= :ei-mahdollinen tallenna)
-                                                             muuta-gridia-muokataan?)
-                                               :on-click #(do (.preventDefault %)
-                                                              (aloita-muokkaus! tiedot))}
-                                              [:span.grid-muokkaa
-                                               [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
-                           (if (and (= :ei-mahdollinen tallenna)
-                                    tallennus-ei-mahdollinen-tooltip)
-                             [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
-                             muokkaa-nappi)))]
-                      [:span.pull-right.muokkaustoiminnot
-                       [:button.nappi-toissijainen
-                        {:disabled (not muokattu?)
-                         :on-click #(do (.stopPropagation %)
-                                        (.preventDefault %)
-                                        (peru!))}
-                        [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
-
-                       (when-not (= false voi-lisata?)
-                         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                                (lisaa-rivi! ohjaus {}))}
-                          [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
-
-                       (when-not muokkaa-aina
-                         [:button.nappi-myonteinen.grid-tallenna
-                          {:disabled (or (not (empty? @virheet))
-                                         @tallennus-kaynnissa
-                                         (not muokattu?))
-                           :on-click #(when-not @tallennus-kaynnissa
-                                        (let [kaikki-rivit (mapv second @muokatut)
-                                              ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
-                                              tallennettavat (filter (fn [rivi]
-                                                                       (not (and (neg-int? (:id rivi))
-                                                                                 (:poistettu rivi))))
-                                                                     kaikki-rivit)
-                                              tallennettavat
-                                              (if tallenna-vain-muokatut
-                                                (do (log "TALLENNA VAIN MUOKATUT")
-                                                    (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
-                                                tallennettavat)]
-                                          (do (.preventDefault %)
-                                              (reset! tallennus-kaynnissa true)
-                                              (go
-                                                (when-not (empty? tallennettavat)
-                                                  (<! (tallenna tallennettavat)))
-                                                (nollaa-muokkaustiedot!)))))}
-                          [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
-
-                       (when-not muokkaa-aina
-                         [:button.nappi-kielteinen.grid-peru
-                          {:on-click #(do
-                                        (.preventDefault %)
-                                        (nollaa-muokkaustiedot!)
-                                        (when peruuta (peruuta))
-                                        nil)}
-                          [ikonit/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
-                    (when nayta-otsikko? [:h6.panel-title otsikko])])
                  thead (fn []
                          [:thead
                           (when-let [rivi-ennen (:rivi-ennen opts)]
@@ -648,7 +653,16 @@
                              [:th.toiminnot {:width "40px"} " "])]])]
              [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                   :class (clojure.string/join " " luokat)}
-              (muokkauspaneeli true)
+              (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
+                                :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
+                                :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
+                                :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
+                                :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
+                                :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
+                                :tallenna-vain-muokatut tallenna-vain-muokatut
+                                :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
+                                :aloita-muokkaus! aloita-muokkaus! :peru! peru!
+                                :peruuta peruuta :otsikko otsikko})
               [:div.panel-body
                (when @kiinnita-otsikkorivi?
                  ^{:key "kiinnitettyotsikko"}
@@ -767,7 +781,16 @@
               (when (> (count (or @muokatut tiedot))
                        +rivimaara-jonka-jalkeen-napit-alaskin+)
                 [:span.gridin-napit-alhaalla
-                 (muokkauspaneeli false)])])))))
+                 (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
+                                   :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
+                                   :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
+                                   :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
+                                   :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
+                                   :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
+                                   :tallenna-vain-muokatut tallenna-vain-muokatut
+                                   :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
+                                   :aloita-muokkaus! aloita-muokkaus! :peru! peru!
+                                   :peruuta peruuta :otsikko otsikko})])])))))
 
 ; Apufunktiot
 
