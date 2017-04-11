@@ -2,28 +2,17 @@
   "Gridin ja muokkausgridin rajapinta."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
-            [harja.ui.validointi :as validointi]
             [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.grid-komponentti :as grid-komponentti]
-            [harja.ui.skeema :as skeema]
-            [goog.events :as events]
-            [goog.events.EventType :as EventType]
-
             [cljs.core.async :refer [<! put! chan]]
-            [clojure.string :as str]
             [schema.core :as s :include-macros true]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
-
 
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
