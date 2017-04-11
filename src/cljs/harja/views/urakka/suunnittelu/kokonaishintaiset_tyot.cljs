@@ -20,7 +20,8 @@
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -64,7 +65,7 @@
                         toimenpiteet-tasoittain))
         otsikon-mukaan (group-by otsikko tyorivit)]
     (mapcat (fn [[otsikko rivit]]
-              (concat [(grid/otsikko otsikko)] rivit))
+              (concat [(grid-yhteiset/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
 (defn hoidon-kustannusyhteenveto

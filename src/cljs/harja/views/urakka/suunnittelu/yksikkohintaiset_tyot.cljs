@@ -17,7 +17,8 @@
             [cljs.core.async :refer [<!]]
 
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -48,9 +49,9 @@
                     :ei-hintaa
                     :hinta))
         otsikon-mukaan (group-by otsikko tyorivit)]
-    (concat [(grid/otsikko "Hinnoiteltu urakassa")]
+    (concat [(grid-yhteiset/otsikko "Hinnoiteltu urakassa")]
             (get otsikon-mukaan :hinta)
-            [(grid/otsikko "Hinta merkitsemättä tai tehtävä ei kuulu urakkaan")]
+            [(grid-yhteiset/otsikko "Hinta merkitsemättä tai tehtävä ei kuulu urakkaan")]
             (get otsikon-mukaan :ei-hintaa))))
 
 (defn hoidon-sarakkeet []

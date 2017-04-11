@@ -6,6 +6,7 @@
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
+            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -20,7 +21,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -138,9 +140,9 @@
 
 (defn korjaavattoimenpiteet
   [toimenpiteet turvallisuuspoikkeama toimenpiteet-virheet-atom muokkaa-lomaketta-fn]
-  [grid/muokkaus-grid
+  [muokkausgrid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"
-    :muutos #(do (reset! toimenpiteet-virheet-atom (grid/hae-virheet %))
+    :muutos #(do (reset! toimenpiteet-virheet-atom (grid-yhteiset/hae-virheet %))
                  (muokkaa-lomaketta-fn @turvallisuuspoikkeama))}
    [{:otsikko "Otsikko"
      :nimi :otsikko

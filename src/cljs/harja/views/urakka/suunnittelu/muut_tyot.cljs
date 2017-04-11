@@ -15,7 +15,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -34,7 +35,7 @@
         res)))
 
 (defn muut-tyot [ur]
-  (let [g (grid/grid-ohjaus)
+  (let [g (grid-yhteiset/grid-ohjaus)
         jo-valitut-tehtavat (atom nil)]
     (fn [ur]
       (let [toimenpideinstanssit @u/urakan-toimenpideinstanssit
@@ -52,22 +53,22 @@
          [valinnat/urakan-sopimus ur]
          [valinnat/urakan-toimenpide+muut ur]
          [grid/grid
-          {:otsikko      "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
-           :luokat       ["col-md-10"]
-           :tyhja        (if (nil? @u/muutoshintaiset-tyot)
-                           [ajax-loader "Muutoshintaisia töitä haetaan..."]
-                           "Ei muutoshintaisia töitä")
-           :tallenna     (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka))
-                           #(tallenna-tyot
-                              % u/muutoshintaiset-tyot)
-                           :ei-mahdollinen)
+          {:otsikko "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
+           :luokat ["col-md-10"]
+           :tyhja (if (nil? @u/muutoshintaiset-tyot)
+                    [ajax-loader "Muutoshintaisia töitä haetaan..."]
+                    "Ei muutoshintaisia töitä")
+           :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka))
+                       #(tallenna-tyot
+                          % u/muutoshintaiset-tyot)
+                       :ei-mahdollinen)
            :tallennus-ei-mahdollinen-tooltip
            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                            oikeudet/urakat-suunnittelu-muutos-ja-lisatyot)
-           :ohjaus       g
-           :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
-                                                                       (:tehtava rivi))
-                                                                     (vals (grid/hae-muokkaustila %)))))
+           :ohjaus g
+           :muutos #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
+                                                                 (:tehtava rivi))
+                                                               (vals (grid-yhteiset/hae-muokkaustila %)))))
            :voi-poistaa? (constantly (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot
                                                                (:id @nav/valittu-urakka)))}
 

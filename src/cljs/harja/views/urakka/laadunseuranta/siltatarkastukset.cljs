@@ -7,6 +7,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.modal :as modal]
             [harja.ui.tierekisteri :refer [tieosoite]]
 
@@ -20,6 +21,7 @@
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.ui.grid-yhteiset :as grid-yhteiset]
             [harja.ui.napit :as napit]
             [harja.domain.siltatarkastus :as siltadomain]
             [harja.asiakas.kommunikaatio :as k]
@@ -36,10 +38,10 @@
 (def +ei-kirjattu+ "Ei kirjattu")
 
 (def siltatarkastuksen-valiotsikot
-  {1 (grid/otsikko "Alusrakenne")
-   4 (grid/otsikko "Päällysrakenne")
-   11 (grid/otsikko "Varusteet ja laitteet")
-   20 (grid/otsikko "Siltapaikan rakenteet")})
+  {1 (grid-yhteiset/otsikko "Alusrakenne")
+   4 (grid-yhteiset/otsikko "Päällysrakenne")
+   11 (grid-yhteiset/otsikko "Varusteet ja laitteet")
+   20 (grid-yhteiset/otsikko "Siltapaikan rakenteet")})
 
 (defn- uusi-tarkastus! [muut-tarkastukset]
   (let [kohteet
@@ -409,7 +411,7 @@
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
           tarkastus]
 
-         [grid/muokkaus-grid
+         [muokkausgrid/muokkaus-grid
           {:otsikko      otsikko
            :tunniste :kohdenro
            :piilota-toiminnot? true

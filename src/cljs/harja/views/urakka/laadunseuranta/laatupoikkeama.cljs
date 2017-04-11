@@ -7,6 +7,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.kommentit :as kommentit]
+            [harja.ui.muokkausgrid :as muokkausgrid]
+            [harja.ui.grid-yhteiset :as grid-yhteiset]
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
@@ -84,14 +86,14 @@
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
-  (let [g (grid/grid-ohjaus)
+  (let [g (grid-yhteiset/grid-ohjaus)
         yllapito? @tiedot-urakka/yllapidon-urakka?
         urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit
         mahdolliset-sanktiolajit (disj @tiedot-urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (if mahdolliset-sanktiolajit
         [:div.sanktiot
-         [grid/muokkaus-grid
+         [muokkausgrid/muokkaus-grid
           {:tyhja        "Ei kirjattuja sanktioita."
            :lisaa-rivi   " Lisää sanktio"
            :ohjaus       g

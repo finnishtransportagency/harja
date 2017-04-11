@@ -6,6 +6,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.ui.grid :as grid]
+            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.viesti :as viesti]
@@ -13,7 +14,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -26,15 +28,15 @@
 (defn yleiset-materiaalit-grid [{:keys [virheet voi-muokata?]}
                                 ur valittu-hk valittu-sop
                                 materiaalikoodit yleiset-materiaalit-muokattu]
-  (let [g (grid/grid-ohjaus)]
+  (let [g (grid-yhteiset/grid-ohjaus)]
     (komp/luo
      {:component-will-receive-props (fn [& _]
-                                      (grid/nollaa-historia! g))}
+                                      (grid-yhteiset/nollaa-historia! g))}
      (fn [{:keys [virheet voi-muokata?]}
           ur valittu-hk valittu-sop
           materiaalikoodit yleiset-materiaalit-muokattu]
        [:div.row
-        [grid/muokkaus-grid
+        [muokkausgrid/muokkaus-grid
          {:otsikko "Materiaalit"
           :luokat ["col-md-10"]
           :voi-muokata? voi-muokata?
@@ -44,7 +46,7 @@
           :tyhja "Ei kirjattuja materiaaleja."
           :uusi-rivi aseta-hoitokausi
           :muutos (when virheet
-                    #(reset! virheet (grid/hae-virheet %)))
+                    #(reset! virheet (grid-yhteiset/hae-virheet %)))
           :jarjesta (comp :nimi :materiaali)
           }
 

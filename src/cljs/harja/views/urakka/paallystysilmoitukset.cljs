@@ -9,6 +9,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.kommentit :as kommentit]
+            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.historia :as historia]
 
@@ -316,7 +317,7 @@
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
           @osan-pituus]
 
-         [grid/muokkaus-grid
+         [muokkausgrid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
            :id "paallystysilmoitus-paallystystoimenpiteet"
            :voi-lisata? false
@@ -350,7 +351,7 @@
             :leveys 30}]
           paallystystoimenpiteet]
 
-         [grid/muokkaus-grid
+         [muokkausgrid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
            :rivinumerot? true
            :voi-lisata? false
@@ -374,7 +375,7 @@
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
-           [:div [grid/muokkaus-grid
+           [:div [muokkausgrid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :voi-muokata? alustatoimet-voi-muokata?
                    :voi-kumota? false

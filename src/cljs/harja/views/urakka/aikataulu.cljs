@@ -24,7 +24,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -121,13 +122,13 @@
   "Lisää väliotsikot valmiille, keskeneräisille ja aloittamatta oleville kohteille."
   [{:keys [valmis kesken aloittamatta] :as luokitellut-rivit}]
   (concat (when-not (empty? valmis)
-            (into [(grid/otsikko "Valmiit kohteet")]
+            (into [(grid-yhteiset/otsikko "Valmiit kohteet")]
                   valmis))
           (when-not (empty? kesken)
-            (into [(grid/otsikko "Keskeneräiset kohteet")]
+            (into [(grid-yhteiset/otsikko "Keskeneräiset kohteet")]
                   kesken))
           (when-not (empty? aloittamatta)
-            (into [(grid/otsikko "Aloittamatta olevat kohteet")]
+            (into [(grid-yhteiset/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
 (defn aikataulu
