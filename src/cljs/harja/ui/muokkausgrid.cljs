@@ -17,8 +17,8 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.grid-yhteiset :refer [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
-                                            vetolaatikko-rivi vetolaatikon-tila]]
+            [harja.ui.grid :refer [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
+                                   vetolaatikko-rivi vetolaatikon-tila]]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
