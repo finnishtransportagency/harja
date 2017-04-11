@@ -74,10 +74,6 @@
                 :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
        (ikonit/livicon-arrow-down) " Täytä"]]]))
 
-
-;; UI-komponentit
-;; Itse gridin UI-komponentit
-
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                              esta-poistaminen-tooltip piilota-toiminnot?
                              fokus aseta-fokus! tulevat-rivit vetolaatikot
