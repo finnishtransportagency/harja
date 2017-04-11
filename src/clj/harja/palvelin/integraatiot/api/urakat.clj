@@ -56,8 +56,8 @@
     (let [urakka (some->> urakka-id (q-urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
-(defn hae-urakat [db kayttaja-id]
-  (log/debug (format "Haetaan käyttäjän: %s urajat" kayttaja-id))
+(defn hae-kayttajan-urakat [db kayttaja-id]
+  (log/debug (format "Haetaan käyttäjän: %s urakat" kayttaja-id))
   (muodosta-vastaus-urakoiden-haulle
     (konv/vector-mappien-alaviiva->rakenne
       (q-urakat/hae-jarjestelmakayttajan-urakat db kayttaja-id))))
@@ -79,11 +79,11 @@
     :vastaus-skeema json-skeemat/urakan-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-urakka-idlla db parametrit kayttaja-id))}
-   {:palvelu :hae-urakat
+   {:palvelu :hae-kayttajan-urakat
     :polku "/api/urakat/haku/"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn (fn [_ _ kayttaja-id db]
-                    (hae-urakat db kayttaja-id))}
+                    (hae-kayttajan-urakat db kayttaja-id))}
    {:palvelu :hae-urakka-ytunnuksella
     :polku "/api/urakat/haku/:ytunnus"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
@@ -101,5 +101,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella :hae-urakat)
+    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella :hae-kayttajan-urakat)
     this))
