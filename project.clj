@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.4.16"]
+                 [specql "0.4.20"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -150,8 +150,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["harja-data" "http://185.26.50.104/mvn/"]
-                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"]
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]

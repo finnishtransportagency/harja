@@ -17,6 +17,19 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.konversio :as konv]))
 
+
+(defn vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
+  (log/debug "Tarkistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (assert vaitetty-urakka-id "Urakka id puuttuu!")
+  (when toteuma-id
+    (let [toteuman-todellinen-urakka-id (:urakka (first
+                                                   (q/tiemerkinnan-yksikkohintaisen-toteuman-urakka
+                                                     db {:toteuma toteuma-id})))]
+      (when (and (some? toteuman-todellinen-urakka-id)
+                 (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
+        (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
+                                        " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
+
 (defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
   (log/debug "Tarkistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
   (assert vaitetty-urakka-id "Urakka id puuttuu!")
@@ -124,8 +137,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
-      (vaadi-toteuma-kuuluu-urakkaan db id urakka-id)
-      (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id))
+      (vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan db id urakka-id)
+      (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 

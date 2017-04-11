@@ -27,7 +27,16 @@
 
 
 #?(:cljs
-   (defrecord Aika [tunnit minuutit sekunnit]))
+   (do
+     (defrecord Aika [tunnit minuutit sekunnit])
+     (defn- vertailuaika [{:keys [tunnit minuutit sekunnit]}]
+       (+ (* 10000 (or tunnit 0))
+          (* 100 (or minuutit 0))
+          (or sekunnit 0)))
+     (defn aika-jalkeen? [eka toka]
+       (> (vertailuaika eka) (vertailuaika toka)))
+     (defn aika-ennen? [eka toka]
+       (< (vertailuaika eka) (vertailuaika toka)))))
 
 #?(:cljs
    ;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
