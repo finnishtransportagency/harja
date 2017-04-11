@@ -16,9 +16,5 @@ dependencies:
 
 test:
   override:
-    - lein test:
-        parallel: true
-    - lein doo phantom test once:
-        parallel: true
-    - lein doo phantom laadunseuranta-test once:
+    - case $CIRCLE_NODE_INDEX in 0) lein test ;; 1) lein doo phantom test once ;; 2) lein doo phantom laadunseuranta-test once;; esac:
         parallel: true

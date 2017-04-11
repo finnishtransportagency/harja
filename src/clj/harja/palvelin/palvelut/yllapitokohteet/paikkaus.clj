@@ -22,14 +22,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
-                        (map #(yllapitokohteet-q/liita-kohdeosat db % (:paikkauskohde-id %)))
-                        (map #(assoc % :kohdeosat
-                                       (into []
-                                             yllapitokohteet-q/kohdeosa-xf
-                                             (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db {:yllapitokohde (:paikkauskohde-id %)})))))
-                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
+                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]])))
+                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))
+        vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin
+                  db vastaus :paikkauskohde-id)]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
 
@@ -123,8 +119,8 @@
     (luo-paikkausilmoitus db user lomakedata)))
 
 (defn- tarkista-paikkausilmoituksen-tallentamisoikeudet [user urakka-id
-                                                           uusi-paikkausilmoitus
-                                                           paikkausilmoitus-kannassa]
+                                                         uusi-paikkausilmoitus
+                                                         paikkausilmoitus-kannassa]
   (let [kasittelytiedot-muuttuneet?
         (fn [uudet-tiedot tiedot-kannassa]
           (let [vertailtavat
@@ -184,7 +180,7 @@
             (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
 
         (hae-urakan-paikkausilmoitukset c user {:urakka-id urakka-id
-                                             :sopimus-id sopimus-id})))))
+                                                :sopimus-id sopimus-id})))))
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]
