@@ -3,9 +3,9 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan]]
 
-            [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.muokkausgrid :as muokkausgrid]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.viesti :as viesti]
@@ -45,7 +45,7 @@
         [:div.row
          [:span.lampotilat.col-md-6
           [valinnat/hoitokausi tiedot/hoitokaudet tiedot/valittu-hoitokausi tiedot/valitse-hoitokausi!]
-          [grid/muokkaus-grid
+          [muokkausgrid/muokkaus-grid
            {:otsikko           "Teiden hoitourakoiden sydäntalven keskilämpötilat"
             :voi-muokata?      voi-muokata?
             :voi-poistaa?      (constantly false)

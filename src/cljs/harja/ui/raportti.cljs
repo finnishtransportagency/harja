@@ -21,7 +21,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.grid-yhteiset :as grid-yhteiset]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -108,12 +109,12 @@
                                                      elementti))))}))))
                         sarakkeet))
      (if (empty? data)
-       [(grid/otsikko (or tyhja "Ei tietoja"))]
+       [(grid-yhteiset/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]
          (into []
                (map-indexed (fn [index rivi]
                               (if-let [otsikko (:otsikko rivi)]
-                                (grid/otsikko otsikko)
+                                (grid-yhteiset/otsikko otsikko)
                                 (let [[rivi optiot]
                                       (if (map? rivi)
                                         [(:rivi rivi) rivi]

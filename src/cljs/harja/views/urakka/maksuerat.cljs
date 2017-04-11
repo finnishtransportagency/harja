@@ -16,7 +16,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.grid-yhteiset :as grid-yhteiset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
@@ -55,7 +56,7 @@
                                                (:numero %))
                                              rivit))]
       (doall (mapcat (fn [[otsikko rivit]]
-                       (concat [(grid/otsikko otsikko)] rivit))
+                       (concat [(grid-yhteiset/otsikko otsikko)] rivit))
                      (seq otsikon-mukaan))))))
 
 (defn- rakenna-kuittausta-odottavat-maksuerat [maksuerat]
