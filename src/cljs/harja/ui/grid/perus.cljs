@@ -821,20 +821,3 @@
                                    :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                    :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                    :peruuta peruuta :otsikko otsikko})])])))))
-
-; Apufunktiot
-
-(defn filteroi-uudet-poistetut
-  "Ottaa datan muokkausgrid-muodossa (avaimet kokonaislukuja, jotka mappautuvat riveihin) ja palauttaa sellaiset
-  rivit, jotka eivät ole uusia ja poistettuja. Paluuarvo on vectori mappeja."
-  [rivit]
-  (filter
-    #(not (and (true? (:poistettu %))
-               (neg? (:id %)))) (vals rivit)))
-
-(defn poista-idt
-  "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
-  Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu id"
-  [lomake polku] (assoc-in lomake polku (mapv
-                                          (fn [rivi] (dissoc rivi :id))
-                                          (get-in lomake polku))))
