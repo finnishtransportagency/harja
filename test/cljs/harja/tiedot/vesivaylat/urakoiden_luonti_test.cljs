@@ -22,14 +22,14 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! tila u/->TallennaUrakka {:haetut-urakat []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakat []} u/->TallennaUrakka {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e! tila u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
+          tulos (e! {:haetut-urakat vanhat} u/->UrakkaTallennettu uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakat tulos)))))
@@ -37,7 +37,7 @@
   (testing "Urakan muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! tila u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
+          tulos (e! {:haetut-urakat vanhat} u/->UrakkaTallennettu uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakat tulos))))))
@@ -79,7 +79,7 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (= {:foo :bar} (e! tila u/->HaeLomakevaihtoehdot {:foo :bar} {:id 1})))
+      (is (= {:foo :bar} (e! {:foo :bar} u/->HaeLomakevaihtoehdot {:id 1})))
       (is (= halutut @kutsutut)))))
 
 (deftest lomakevaihtoehtojen-hakemisen-valmistuminen
@@ -98,7 +98,7 @@
     (is (= s (:haetut-sopimukset app)))))
 
 (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
-  (is (= {:foo :bar} (e! tila u/->LomakevaihtoehdotEiHaettu {:foo :bar} "virhe"))))
+  (is (= {:foo :bar} (e! {:foo :bar} u/->LomakevaihtoehdotEiHaettu "virhe"))))
 
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
