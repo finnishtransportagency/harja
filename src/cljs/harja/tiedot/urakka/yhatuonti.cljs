@@ -191,17 +191,17 @@
               {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
               (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
-                    kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                    epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                    _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str kohteet))
-                    yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
-                (if (k/virhe? yhatiedot)
-                  {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
+                    yhdistrtyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                    yhdistyksessa-epaonnistuneet-kohteet (vec (filter :virhe yhdistrtyt-kohteet))
+                    _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistrtyt-kohteet))
+                    vastaus (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistrtyt-kohteet))]
+                (if (k/virhe? vastaus)
+                  {:status :error :viesti "Kohteiden tallentaminen epäonnistui."
                    :koodi :kohteiden-tallentaminen-epaonnistui}
-                  (if (empty? epaonnistuneet-kohteet)
-                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
+                  (if (empty? yhdistyksessa-epaonnistuneet-kohteet)
+                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot (:yhatiedot vastaus)
                      :koodi :kohteet-tallennettu}
-                    {:status :error :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
+                    {:status :error :epaonnistuneet-kohteet yhdistyksessa-epaonnistuneet-kohteet :yhatiedot (:yhatiedot vastaus)
                      :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]

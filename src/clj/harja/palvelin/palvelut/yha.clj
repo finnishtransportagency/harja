@@ -16,7 +16,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
@@ -94,6 +95,51 @@
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
                                                             :kayttaja (:id user)}))
 
+(defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
+                                                          tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
+                                                          yllapitoluokka
+                                                          keskimaarainen_vuorokausiliikenne
+                                                          nykyinen-paallyste
+                                                          nimi] :as kohde}]
+  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+  (let [kohde (yha-q/luo-yllapitokohde<!
+                db
+                {:urakka urakka-id
+                 :tr_numero (:tienumero tierekisteriosoitevali)
+                 :tr_alkuosa (:aosa tierekisteriosoitevali)
+                 :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                 :tr_loppuosa (:losa tierekisteriosoitevali)
+                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                 :tr_ajorata (:ajorata tierekisteriosoitevali)
+                 :tr_kaista (:kaista tierekisteriosoitevali)
+                 :yhatunnus tunnus
+                 :yhaid yha-id
+                 :yllapitokohdetyyppi (name yllapitokohdetyyppi)
+                 :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
+                 :yllapitoluokka yllapitoluokka
+                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                 :nykyinen_paallyste nykyinen-paallyste
+                 :nimi nimi
+                 :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
+                 :yha_kohdenumero yha-kohdenumero
+                 :kohdenumero yha-kohdenumero})
+        _ (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
+    (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
+      (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
+      (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
+                            db
+                            {:yllapitokohde (:id kohde)
+                             :nimi nimi
+                             :tunnus tunnus
+                             :tr_numero (:tienumero tierekisteriosoitevali)
+                             :tr_alkuosa (:aosa tierekisteriosoitevali)
+                             :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                             :tr_loppuosa (:losa tierekisteriosoitevali)
+                             :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                             :tr_ajorata (:ajorata tierekisteriosoitevali)
+                             :tr_kaista (:kaista tierekisteriosoitevali)
+                             :yhaid yha-id})]))))
+
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
@@ -101,57 +147,27 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [tierekisteriosoitevali
-                    tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
-                    yllapitoluokka
-                    keskimaarainen_vuorokausiliikenne
-                    nykyinen-paallyste
-                    nimi] :as kohde} kohteet]
-      (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
-      (let [kohde (yha-q/luo-yllapitokohde<!
-                    db
-                    {:urakka urakka-id
-                     :tr_numero (:tienumero tierekisteriosoitevali)
-                     :tr_alkuosa (:aosa tierekisteriosoitevali)
-                     :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                     :tr_loppuosa (:losa tierekisteriosoitevali)
-                     :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                     :tr_ajorata (:ajorata tierekisteriosoitevali)
-                     :tr_kaista (:kaista tierekisteriosoitevali)
-                     :yhatunnus tunnus
-                     :yhaid yha-id
-                     :yllapitokohdetyyppi (name yllapitokohdetyyppi)
-                     :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
-                     :yllapitoluokka yllapitoluokka
-                     :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                     :nykyinen_paallyste nykyinen-paallyste
-                     :nimi nimi
-                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
-                     :yha_kohdenumero yha-kohdenumero
-                     :kohdenumero yha-kohdenumero})
-            _ (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
-        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
-          (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
-                                db
-                                {:yllapitokohde (:id kohde)
-                                 :nimi nimi
-                                 :tunnus tunnus
-                                 :tr_numero (:tienumero tierekisteriosoitevali)
-                                 :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                 :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                 :tr_loppuosa (:losa tierekisteriosoitevali)
-                                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                 :tr_ajorata (:ajorata tierekisteriosoitevali)
-                                 :tr_kaista (:kaista tierekisteriosoitevali)
-                                 :yhaid yha-id})]
-            (when-not (:sijainti uusi-kohdeosa)
-              (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
-    (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-    (yy/paivita-yllapitourakan-geometria db urakka-id)
-    (log/debug "Geometria päivitetty.")
-    (hae-urakan-yha-tiedot db urakka-id)))
+    (let [kohteet+geometria (map
+                              (fn [{:keys [tierekisteriosoitevali] :as kohde}]
+                                (let [geometria (tr-haku/hae-tr-viiva db {:numero (:tienumero tierekisteriosoitevali)
+                                                                          :alkuosa (:aosa tierekisteriosoitevali)
+                                                                          :alkuetaisyys (:aet tierekisteriosoitevali)
+                                                                          :loppuosa (:losa tierekisteriosoitevali)
+                                                                          :loppuetaisyys (:let tierekisteriosoitevali)})]
+                                  (assoc kohde :geometria geometria)))
+                              kohteet)
+          kohteet-geometrialla (filter :geometria kohteet+geometria)
+          kohteet-ilman-geometriaa (filter (comp not :geometria) kohteet+geometria)]
+      ;; Tallennetaan vain sellaiset YHA-kohteet, joille saatiin muodostettua geometria eli osoite oli
+      ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
+      (doseq [kohde kohteet-geometrialla]
+        (tallenna-kohde-ja-alikohteet db urakka-id kohde))
+      (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
+      (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
+      (yy/paivita-yllapitourakan-geometria db urakka-id)
+      (log/debug "Urakan geometria päivitetty.")
+      {:yhatiedot (hae-urakan-yha-tiedot db urakka-id)
+       :kohteet-ilman-geometriaa kohteet-ilman-geometriaa})))
 
 (defn- tarkista-lahetettavat-kohteet
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
