@@ -3,7 +3,7 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -83,7 +83,7 @@
           fail! (tuck/send-async! ->HankkeetEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Mock hanke" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))] ;;FIXME toteuta palvelu
+          (let [vastaus (<! (k/post! :hae-harjassa-luodut-hankkeet {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))

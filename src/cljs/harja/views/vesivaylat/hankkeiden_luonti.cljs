@@ -51,8 +51,8 @@
                   "Hankkeita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseHanke %))}
         [{:otsikko "Nimi" :nimi :nimi}
-         {:otsikko "Alku" :nimi :alkupvm}
-         {:otsikko "Loppu" :nimi :loppupvm}]
+         {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
+         {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}]
         haetut-hankkeet]])))
 
 (defn vesivaylahankkeiden-luonti* [e! app]

@@ -26,3 +26,11 @@ WHERE sampoid = :sampoid;
 SELECT *
 FROM hanke
 WHERE loppupvm > now();
+
+-- name: hae-harjassa-luodut-hankkeet
+SELECT
+    id,
+    nimi,
+    alkupvm,
+    loppupvm
+FROM hanke;

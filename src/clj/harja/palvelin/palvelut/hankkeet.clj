@@ -10,6 +10,11 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (q/hae-paattymattomat-vesivaylahankkeet db)))
 
+(defn hae-harjassa-luodut-hankkeet [db user]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (q/hae-harjassa-luodut-hankkeet db)))
+
 (defrecord Hankkeet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -18,7 +23,10 @@
       http
       :hae-paattymattomat-vesivaylahankkeet
       (fn [user _]
-        (hae-paattymattomat-vesivaylahankkeet db user)))
+        (hae-paattymattomat-vesivaylahankkeet db user))
+      :hae-harjassa-luodut-hankkeet
+      (fn [user _]
+        (hae-harjassa-luodut-hankkeet db user)))
 
     this)
 
