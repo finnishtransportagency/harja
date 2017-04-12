@@ -115,7 +115,8 @@
     (is (= nil (u/paasopimus [{:id 1 :paasopimus 2} {:id 3 :paasopimus 2}])))
     (is (= nil (u/paasopimus [{:id 1 :paasopimus nil} {:id 3 :paasopimus nil}])))
     (is (= nil (u/paasopimus [])))
-    (is (= nil (u/paasopimus [{:id 1 :paasopimus nil}]))))
+    (is (= nil (u/paasopimus [{:id 1 :paasopimus nil}])))
+    (is (= nil (u/paasopimus [{:id nil :paasopimus nil}]))))
 
   (testing "Sopimus tunnistetaan pääsopimukseksi"
     (is (true? (u/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}] {:id 1 :paasopimus nil})))
@@ -127,7 +128,8 @@
 
   (testing "Jos pääsopimusta ei ole, sopimusta ei tunnisteta pääsopimukseksi"
     (is (false? (u/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}] {:id 2 :paasopimus nil})))
-    (is (false? (u/paasopimus? [{:id 2 :paasopimus nil} {:id 1 :paasopimus nil}] {:id 1 :paasopimus nil}))))
+    (is (false? (u/paasopimus? [{:id 2 :paasopimus nil} {:id 1 :paasopimus nil}] {:id 1 :paasopimus nil})))
+    (is (false? (u/paasopimus? [{:id 2 :paasopimus nil} {:id 1 :paasopimus nil}] {:id nil :paasopimus nil}))))
 
   (testing "Uuden pääsopimuksen asettaminen"
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
@@ -146,10 +148,11 @@
                                {:id 1 :paasopimus nil})))))
 
 (deftest urakan-sopimusvaihtoehdot
-  (let [kaikki-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil} {:id 4 :urakka nil}]]
-    (is (= [{:id 3} {:id 4}]
-           (u/vapaat-sopimukset kaikki-sopimukset)))
-    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka 1} {:id 4 :urakka 1}])))))
+  (let [kaikki-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil} {:id 4 :urakka nil}]
+        urakan-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil}]]
+    (is (= [{:id 4 :urakka nil}] (u/vapaat-sopimukset kaikki-sopimukset urakan-sopimukset)))
+    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka 1} {:id 4 :urakka 1}] urakan-sopimukset))))
+    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka nil}] [{:id 1 :urakka nil}])))))
 
   (is (true? (u/vapaa-sopimus? {:urakka nil})))
   (is (false? (u/vapaa-sopimus? {:urakka 1}))))

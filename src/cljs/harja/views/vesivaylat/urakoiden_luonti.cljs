@@ -15,6 +15,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.id :refer [id-olemassa?]]
 
             [harja.ui.debug :as debug]
             [harja.ui.modal :as modal])
@@ -25,19 +26,23 @@
 (defn- sopimukset-grid [e! urakka haetut-sopimukset]
   (let [urakan-sopimukset (remove :poistettu (:sopimukset urakka))]
     [grid/muokkaus-grid
-    {:tyhja "Urakkaan ei ole liitetty sopimuksia"}
+    {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
+     :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
     [{:otsikko "Nimi"
       :nimi :sopimus
+      :leveys 3
       :tyyppi :valinta
-      :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset)
+      :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
+      :virheet-dataan? true
       :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
       :hae identity
       :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
       :aseta (fn [_ arvo] arvo)}
-     {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
-     {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+     {:otsikko "Alku" :leveys 2 :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+     {:otsikko "Loppu" :leveys 2 :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
      {:otsikko "Pääsopimus"
       :nimi :paasopimus
+      :leveys 1
       :tyyppi :string
       :fmt #(if (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check) (ikonit/unchecked))
       :muokattava? (constantly false)
@@ -45,6 +50,9 @@
     (r/wrap
       (zipmap (range) urakan-sopimukset)
       #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
+
+(defn voi-tallentaa? [urakka]
+  (and (> (count (filter (comp id-olemassa? :id) (:sopimukset urakka))) 0)))
 
 (defn luontilomake [e! app]
   (komp/luo
@@ -71,62 +79,74 @@
                         #(e! (tiedot/->TallennaUrakka (lomake/ilman-lomaketietoja urakka)))
                         {:ikoni (ikonit/tallenna)
                          :disabled (or tallennus-kaynnissa?
+                                       (not (voi-tallentaa? urakka))
                                        (not (lomake/voi-tallentaa? urakka)))
                          :tallennus-kaynnissa? tallennus-kaynnissa?
                          }])}
-         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string}
-          {:otsikko "Alkupäivämäärä" :nimi :alkupvm :tyyppi :pvm}
-          {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm}
-          (if haetut-hallintayksikot
-            {:otsikko "Hallintayksikkö"
-             :nimi :hallintayksikko
-             :tyyppi :valinta
-             :valinnat haetut-hallintayksikot
-             :valinta-nayta #(if % (:nimi %) "- Valitse hallintayksikkö -")
-             :aseta (fn [rivi arvo] (assoc rivi :hallintayksikko (dissoc arvo :alue :type)))}
-            {:otsikko "Hallintayksikkö"
-             :nimi :hallintayksikko
-             :tyyppi :komponentti
-             :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
-          (if haetut-hankkeet
+         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
+           :pakollinen? true}
+          (lomake/rivi
+            {:otsikko "Alkupäivämäärä" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
+            {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm :pakollinen? true})
+          (lomake/rivi
+            (if haetut-hallintayksikot
+              {:otsikko "Hallintayksikkö"
+               :nimi :hallintayksikko
+               :tyyppi :valinta
+               :pakollinen? true
+               :valinnat haetut-hallintayksikot
+               :valinta-nayta #(if % (:nimi %) "- Valitse hallintayksikkö -")
+               :aseta (fn [rivi arvo] (assoc rivi :hallintayksikko (dissoc arvo :alue :type)))}
+              {:otsikko "Hallintayksikkö"
+               :nimi :hallintayksikko
+               :tyyppi :komponentti
+               :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
+            (if haetut-urakoitsijat
+              {:otsikko "Urakoitsija"
+               :nimi :urakoitsija
+               :tyyppi :valinta
+               :pakollinen? true
+               :valinnat haetut-urakoitsijat
+               :valinta-nayta #(if % (:nimi %) "- Valitse urakoitsija -")
+               :aseta (fn [rivi arvo] (assoc rivi :urakoitsija arvo))}
+              {:otsikko "Urakoitsija"
+               :nimi :urakoitsija
+               :tyyppi :komponentti
+               :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
+          (lomake/ryhma
             {:otsikko "Hanke"
-             :nimi :hanke
-             :tyyppi :valinta
-             :valinnat haetut-hankkeet
-             :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
-             :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
-            {:otsikko "Hanke"
-             :nimi :hanke
-             :tyyppi :komponentti
-             :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
-          {:otsikko "Alkupvm"
-           :tyyppi :pvm
-           :fmt pvm/pvm-opt
-           :nimi :hankkeen-alkupvm
-           :hae (comp :alkupvm :hanke)
-           :muokattava? (constantly false)}
-          {:otsikko "Loppupvm"
-           :tyyppi :pvm
-           :fmt pvm/pvm-opt
-           :nimi :hankkeen-loppupvm
-           :hae (comp :loppupvm :hanke)
-           :muokattava? (constantly false)}
-          (if haetut-urakoitsijat
-            {:otsikko "Urakoitsijat"
-             :nimi :urakoitsija
-             :tyyppi :valinta
-             :valinnat haetut-urakoitsijat
-             :valinta-nayta #(if % (:nimi %) "- Valitse urakoitsija -")
-             :aseta (fn [rivi arvo] (assoc rivi :urakoitsija arvo))}
-            {:otsikko "Urakoitsijat"
-             :nimi :urakoitsija
-             :tyyppi :komponentti
-             :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])})
-          {:otsikko "Sopimukset"
-           :nimi :sopimukset
-           :tyyppi :komponentti
-           :komponentti (fn [{urakka :data}] [sopimukset-grid e!
-                                              (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])}
+             :rivi? true}
+            (if haetut-hankkeet
+             {:otsikko "Nimi"
+              :nimi :hanke
+              :tyyppi :valinta
+              :pakollinen? true
+              :valinnat haetut-hankkeet
+              :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
+              :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
+             {:otsikko "Nimi"
+              :nimi :hanke
+              :tyyppi :komponentti
+              :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
+            {:otsikko "Alkupvm"
+             :tyyppi :pvm
+             :fmt pvm/pvm-opt
+             :nimi :hankkeen-alkupvm
+             :hae (comp :alkupvm :hanke)
+             :muokattava? (constantly false)}
+            {:otsikko "Loppupvm"
+             :tyyppi :pvm
+             :fmt pvm/pvm-opt
+             :nimi :hankkeen-loppupvm
+             :hae (comp :loppupvm :hanke)
+             :muokattava? (constantly false)})
+          (lomake/rivi
+            {:otsikko "Sopimukset"
+            :nimi :sopimukset
+             :palstoja 2
+            :tyyppi :komponentti
+            :komponentti (fn [{urakka :data}] [sopimukset-grid e!
+                                               (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
           {:otsikko "Pääsopimus"
            :nimi :paasopimus
            :tyyppi :valinta

@@ -12,7 +12,8 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def uusi-urakka {})
+(def tyhja-sopimus {:nimi nil :alku nil :loppu nil :paasopimus nil :id nil})
+(def uusi-urakka {:sopimukset [tyhja-sopimus]})
 
 (defonce tila
   (atom {:nakymassa? false
@@ -27,7 +28,7 @@
          :sahke-lahetykset #{}}))
 
 (defn paasopimus [sopimukset]
-  (first (filter (comp #{(some :paasopimus sopimukset)} :id) sopimukset)))
+  (first (filter (comp some? #{(some :paasopimus sopimukset)} :id) sopimukset)))
 
 (defn aseta-paasopimus [sopimukset sopimus]
   (map
@@ -35,12 +36,12 @@
     sopimukset))
 
 (defn paasopimus? [sopimukset sopimus]
-  (= (:id sopimus) (:id (paasopimus sopimukset))))
+  (boolean (when-let [ps (paasopimus sopimukset)] (= (:id sopimus) (:id ps)))))
 
 (defn vapaa-sopimus? [s] (nil? (:urakka s)))
 
-(defn vapaat-sopimukset [sopimukset]
-  (filter vapaa-sopimus? sopimukset))
+(defn vapaat-sopimukset [sopimukset urakan-sopimukset]
+  (remove (comp (into #{} (keep :id urakan-sopimukset)) :id) (filter vapaa-sopimus? sopimukset)))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
