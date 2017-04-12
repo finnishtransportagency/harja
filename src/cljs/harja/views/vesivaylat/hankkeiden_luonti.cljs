@@ -11,27 +11,30 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn luontilomake [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
-      [:div
-       [napit/takaisin "Takaisin luetteloon"
-        #(e! (tiedot/->ValitseHanke nil))
-        {:disabled tallennus-kaynnissa?}]
-       [harja.ui.debug/debug valittu-hanke]
-       [lomake/lomake
-        {:otsikko (if (:id valittu-hanke)
-                    "Muokkaa hanketta"
-                    "Luo uusi hanke")
-         :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))
-         :voi-muokata? #(oikeudet/hallinta-vesivaylat)
-         :footer-fn (fn [hanke]
-                      [napit/tallenna
-                       "Tallenna hanke"
-                       #(e! (tiedot/->TallennaHanke (lomake/ilman-lomaketietoja hanke)))
-                       {:ikoni (ikonit/tallenna)
-                        :disabled (or tallennus-kaynnissa?
-                                      (not (lomake/voi-tallentaa? hanke)))
-                        :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-        [{:otsikko "Nimi" :nimi :nimi :tyyppi :string}]
-        valittu-hanke]])
+  [:div
+   [napit/takaisin "Takaisin luetteloon"
+    #(e! (tiedot/->ValitseHanke nil))
+    {:disabled tallennus-kaynnissa?}]
+   [harja.ui.debug/debug valittu-hanke]
+   [lomake/lomake
+    {:otsikko (if (:id valittu-hanke)
+                "Muokkaa hanketta"
+                "Luo uusi hanke")
+     :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))
+     :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+     :footer-fn (fn [hanke]
+                  [napit/tallenna
+                   "Tallenna hanke"
+                   #(e! (tiedot/->TallennaHanke (lomake/ilman-lomaketietoja hanke)))
+                   {:ikoni (ikonit/tallenna)
+                    :disabled (or tallennus-kaynnissa?
+                                  (not (lomake/voi-tallentaa? hanke)))
+                    :tallennus-kaynnissa? tallennus-kaynnissa?}])}
+    [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
+     (lomake/rivi
+       {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
+       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true})]
+    valittu-hanke]])
 
 (defn hankegrid [e! app]
   (komp/luo
@@ -66,4 +69,4 @@
         [hankegrid e! app]))))
 
 (defn vesivaylahankkeiden-luonti []
-      [tuck tiedot/tila vesivaylahankkeiden-luonti*])
+  [tuck tiedot/tila vesivaylahankkeiden-luonti*])
