@@ -19,10 +19,10 @@
 
 (defn pura-alueurakkanro [urakka-sampoid alueurakkanro]
   (let [tarkista-alueurakkanro #(if (merkkijono/kokonaisluku? %)
-                                 %
-                                 (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero.
+                                  %
+                                  (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero.
                                                     Alueurakkanumero täytyy korjata Sampoon."
-                                                    urakka-sampoid alueurakkanro)))
+                                                     urakka-sampoid alueurakkanro)))
         osat (str/split alueurakkanro #"-")]
     (if (= 2 (count osat))
       {:tyypit (first osat) :alueurakkanro (tarkista-alueurakkanro (second osat))}
@@ -96,31 +96,32 @@
                                    ely-hash alueurakkanro]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
-    (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
-          tyypit (:tyypit tyyppi-ja-alueurakkanro)
-          alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
-          urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
-          sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
-          ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
-          urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
-                                     sopimustyyppi ely-id)]
-      (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
-                         urakka-id
-                         urakkatyyppi
-                         alueurakkanro))
-      (urakat-q/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
-      (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
-      (paivita-sopimukset db sampo-id)
-      (paivita-toimenpiteet db sampo-id)
-      (maksuerat/perusta-maksuerat-hoidon-urakoille db)
-      (luo-yllapidon-toimenpiteet db {:urakka-id urakka-id
-                                      :urakkatyyppi urakkatyyppi
-                                      :alkupvm alkupvm
-                                      :loppupvm loppupvm})
-      (valitavoitteet/kasittele-urakan-valitavoitteet db sampo-id)
+    (when (not (urakat-q/perustettu-harjassa? db sampo-id))
+      (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
+            tyypit (:tyypit tyyppi-ja-alueurakkanro)
+            alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
+            urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
+            sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
+            ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
+            urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
+                                       sopimustyyppi ely-id)]
+        (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
+                           urakka-id
+                           urakkatyyppi
+                           alueurakkanro))
+        (urakat-q/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
+        (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
+        (paivita-sopimukset db sampo-id)
+        (paivita-toimenpiteet db sampo-id)
+        (maksuerat/perusta-maksuerat-hoidon-urakoille db)
+        (luo-yllapidon-toimenpiteet db {:urakka-id urakka-id
+                                        :urakkatyyppi urakkatyyppi
+                                        :alkupvm alkupvm
+                                        :loppupvm loppupvm})
+        (valitavoitteet/kasittele-urakan-valitavoitteet db sampo-id)
 
-      (log/debug "Urakka käsitelty onnistuneesti")
-      (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))
+        (log/debug "Urakka käsitelty onnistuneesti")
+        (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project")))
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa urakkaa Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error")]
