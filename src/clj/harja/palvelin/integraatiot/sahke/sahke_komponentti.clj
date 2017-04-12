@@ -12,7 +12,7 @@
 (defprotocol Valtuushallinta
   (laheta-urakka-sahkeeseen [this urakka-id]))
 
-(defn laheta-urakka [jms-lahettaja db urakka-id]
+(defn- laheta-urakka [jms-lahettaja db urakka-id]
   (log/info (format "Lähetetään urakka: %s Sähkeeseen" urakka-id))
   (let [viesti-id (str (UUID/randomUUID))
         urakka (first (q-urakat/hae-urakka-lahetettavaksi-sahkeeseen db urakka-id))
@@ -26,10 +26,10 @@
         (log/error e (format "Urakan (id: %s) lähetys Sähkeeseen epäonnistui." urakka-id))
         (q-urakat/kirjaa-sahke-lahetys! db urakka-id false)))))
 
-(defn tee-jms-lahettaja [sonja integraatioloki db lahetysjono]
+(defn- tee-jms-lahettaja [sonja integraatioloki db lahetysjono]
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sahke" "urakan-lahetys") sonja lahetysjono))
 
-(defn laheta-epaonnistuneet-urakat-uudestaan [sonja integraatioloki db lahetysjono]
+(defn- laheta-epaonnistuneet-urakat-uudestaan [sonja integraatioloki db lahetysjono]
   (lukko/yrita-ajaa-lukon-kanssa
     db
     "sahke-uudelleenlahetys"
@@ -38,7 +38,7 @@
        (doseq [urakka-id urakka-idt]
          (laheta-urakka jms-lahettaja db urakka-id)))))
 
-(defn tee-uudelleenlahetys-tehtava [{:keys [sonja db integraatioloki]} uudelleenlahetysaika lahetysjono]
+(defn- tee-uudelleenlahetys-tehtava [{:keys [sonja db integraatioloki]} uudelleenlahetysaika lahetysjono]
   (if uudelleenlahetysaika
     (do
       (log/debug "Ajastetaan urakoiden uudelleenlähetys Sähkeeseen tehtäväksi joka päivä kello: " uudelleenlahetysaika)
