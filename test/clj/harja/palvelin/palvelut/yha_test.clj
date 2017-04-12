@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.yllapitokohteet-test
+(ns harja.palvelin.palvelut.yha-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -16,7 +16,8 @@
             [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio])
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -26,11 +27,11 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil) [:db])
                         :yha-integraatio (component/using
                                            (yha-integraatio/->Yha {:url +yha-url+})
                                            [:db :integraatioloki])
-                        :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil) [:db])
                         :yha (component/using
                                (yha/->Yha)
                                [:http-palvelin :db :yha-integraatio])))))
@@ -134,47 +135,48 @@
     (is (integer? (:id yhatiedot-ennen-testia)) "Urakka on jo sidottu ennen testiä")
     (is (false? (:sidonta_lukittu yhatiedot-ennen-testia)) "Sidontaa ei ole lukittu ennen testiä")
 
-    (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                    {:urakka-id urakka-id
-                     :kohteet [{:alikohteet
-                                [{:yha-id 1
-                                  :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                           :ajorata 1
-                                                           :kaista 1
-                                                           :aosa 1
-                                                           :aet 1
-                                                           :losa 1
-                                                           :let 2
-                                                           :tienumero 20}
-                                  :tunnus nil
-                                  :paallystystoimenpide {:kokonaismassamaara 10
-                                                         :paallystetyomenetelma 21
-                                                         :kuulamylly nil
-                                                         :raekoko 16
-                                                         :rc-prosentti nil
-                                                         :uusi-paallyste 14}}]
-                                :yha-id 2
-                                :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                         :ajorata 1
-                                                         :kaista 1
-                                                         :aosa 1
-                                                         :aet 1
-                                                         :losa 1
-                                                         :let 2
-                                                         :tienumero 20}
-                                :yha-kohdenumero 1
-                                :yllapitokohdetyyppi "paallyste"
-                                :nykyinen-paallyste 14
-                                :nimi "YHA-kohde"
-                                :yllapitokohdetyotyyppi :paallystys
-                                :yllapitoluokka 8
-                                :keskimaarainen-vuorokausiliikenne 5000}]})
 
-
-    (let [yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :kohteet [{:alikohteet
+                                              [{:yha-id 1
+                                                :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                                         :ajorata 1
+                                                                         :kaista 1
+                                                                         :aosa 1
+                                                                         :aet 1
+                                                                         :losa 1
+                                                                         :let 2
+                                                                         :tienumero 20}
+                                                :tunnus nil
+                                                :paallystystoimenpide {:kokonaismassamaara 10
+                                                                       :paallystetyomenetelma 21
+                                                                       :kuulamylly nil
+                                                                       :raekoko 16
+                                                                       :rc-prosentti nil
+                                                                       :uusi-paallyste 14}}]
+                                              :yha-id 2
+                                              :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                                       :ajorata 1
+                                                                       :kaista 1
+                                                                       :aosa 1
+                                                                       :aet 1
+                                                                       :losa 1
+                                                                       :let 2
+                                                                       :tienumero 20}
+                                              :yha-kohdenumero 1
+                                              :yllapitokohdetyyppi "paallyste"
+                                              :nykyinen-paallyste 14
+                                              :nimi "YHA-kohde"
+                                              :yllapitokohdetyotyyppi :paallystys
+                                              :yllapitoluokka 8
+                                              :keskimaarainen-vuorokausiliikenne 5000}]})
+          yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
           kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
 
+      (is (some? (:yha-tiedot vastaus)))
+      (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (true? (:sidonta_lukittu yhatiedot-testin-jalkeen)) "Sidonta lukittiin")
       (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
