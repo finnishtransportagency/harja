@@ -205,7 +205,7 @@ WHERE ym.id = :id;
 -- name: hae-yllapitokohteen-maaramuutokset
 SELECT
   ym.id,
-  yllapitokohde,
+  yllapitokohde    AS "yllapitokohde-id",
   tyon_tyyppi      AS "tyyppi",
   tyo,
   yksikko,
@@ -221,6 +221,22 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :urakka
       AND ym.poistettu IS NOT TRUE;
+
+-- name: hae-yllapitokohteiden-maaramuutokset
+SELECT
+  ym.id,
+  yllapitokohde    AS "yllapitokohde-id",
+  tyon_tyyppi      AS "tyyppi",
+  tyo,
+  yksikko,
+  tilattu_maara    AS "tilattu-maara",
+  ennustettu_maara AS "ennustettu-maara",
+  toteutunut_maara AS "toteutunut-maara",
+  yksikkohinta,
+  k.jarjestelma    AS "jarjestelman-lisaama"
+FROM yllapitokohteen_maaramuutos ym
+  LEFT JOIN kayttaja k ON ym.luoja = k.id
+WHERE yllapitokohde IN (:idt);
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
@@ -256,7 +272,7 @@ SELECT EXISTS(SELECT id
 -- name: poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset!
 DELETE FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :yllapitokohdeid AND
-      jarjestelma = :jarjestelma
+      jarjestelma = :jarjestelma;
 
 -- name: avaa-paallystysilmoituksen-lukko!
 UPDATE paallystysilmoitus

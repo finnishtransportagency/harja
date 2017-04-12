@@ -34,19 +34,10 @@
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
-(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id ] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
-  (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                  :sopimus-id sopimus-id
-                                                                  :vuosi vuosi})
-          yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
-                            db user {:yllapitokohteet yllapitokohteet
-                                     :urakka-id urakka-id})]
-      (into []
-            yllapitokohteet-domain/yllapitoluokka-xf
-            yllapitokohteet))))
+    (yy/hae-urakan-yllapitokohteet db tiedot)))
 
 (defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -317,16 +308,16 @@
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (id-olemassa? (:id kohde))
-        (paivita-yllapitokohde c user urakka-id kohde)
-        (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
-    (yy/paivita-yllapitourakan-geometria c urakka-id)
-    (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
+        (paivita-yllapitokohde db user urakka-id kohde)
+        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
+    (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id
                                                                 :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
@@ -387,10 +378,10 @@
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
 
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
+    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :yllapitokohde-id yllapitokohde-id})
@@ -403,15 +394,15 @@
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
       (doseq [id poistuneet-osa-idt]
-        (q/poista-yllapitokohdeosa! c {:urakka urakka-id
+        (q/poista-yllapitokohdeosa! db {:urakka urakka-id
                                        :id id}))
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
         (if (id-olemassa? (:id osa))
-          (paivita-yllapitokohdeosa c user urakka-id osa)
-          (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-      (yy/paivita-yllapitourakan-geometria c urakka-id)
+          (paivita-yllapitokohdeosa db user urakka-id osa)
+          (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
+      (yy/paivita-yllapitourakan-geometria db urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))

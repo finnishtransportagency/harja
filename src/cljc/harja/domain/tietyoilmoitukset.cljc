@@ -1,7 +1,8 @@
 (ns harja.domain.tietyoilmoitukset
   (:require [clojure.string :as str]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.roolit :as roolit]
-            #?(:cljs [harja.tiedot.istunto :as istunto])))
+    #?(:cljs [harja.tiedot.istunto :as istunto])))
 
 (def kaistajarjestelyt
   {"ajokaistaSuljettu" "Ajokaista suljettu"
@@ -52,11 +53,13 @@
                                      "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
                                      "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
 
+(def nopeusrajoitukset ["30" "40" "50" "60" "70" "80" "90" "100"])
+
 (defn kaistajarjestelyt->str [t]
   (->> t
-      ::kaistajarjestelyt
-      ::jarjestely
-      kaistajarjestelyt))
+       ::kaistajarjestelyt
+       ::jarjestely
+       kaistajarjestelyt))
 
 (defn nopeusrajoitukset->str [t]
   (str/join
@@ -120,16 +123,16 @@
   ([user kayttajan-urakat ilmoitus]
    (or
 
-    ;; Uuden luonti mahdollista, jos tilaaja tai urakka on oma (tai ei määritelty)
-    (and (nil? (::id ilmoitus))
-         (or (nil? (::urakka-id ilmoitus))
-             (roolit/tilaajan-kayttaja? user)
-             (kayttajan-urakat (::urakka-id ilmoitus))))
+     ;; Uuden luonti mahdollista, jos tilaaja tai urakka on oma (tai ei määritelty)
+     (and (nil? (::id ilmoitus))
+          (or (nil? (::urakka-id ilmoitus))
+              (roolit/tilaajan-kayttaja? user)
+              (kayttajan-urakat (::urakka-id ilmoitus))))
 
-    ;; Muokkaaminen mahdollista, jos ilmoitus on itse luoma tai oman organisaatio
-    ;; tai omaan urakkaan kuuluva
-    (and (::id ilmoitus)
-         (or (= (::luoja ilmoitus) (:id user))
-             (= (::urakoitsija-id ilmoitus) (get-in user [:organisaatio :id]))
-             (= (::tilaaja-id ilmoitus) (get-in user [:organisaatio :id]))
-             (kayttajan-urakat (::urakka-id ilmoitus)))))))
+     ;; Muokkaaminen mahdollista, jos ilmoitus on itse luoma tai oman organisaatio
+     ;; tai omaan urakkaan kuuluva
+     (and (::id ilmoitus)
+          (or (= (::muokkaustiedot/luoja-id ilmoitus) (:id user))
+              (= (::urakoitsija-id ilmoitus) (get-in user [:organisaatio :id]))
+              (= (::tilaaja-id ilmoitus) (get-in user [:organisaatio :id]))
+              (kayttajan-urakat (::urakka-id ilmoitus)))))))
