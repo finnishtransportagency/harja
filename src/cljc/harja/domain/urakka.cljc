@@ -28,3 +28,8 @@
 ;; Tätä speciä on hyvä käyttää esim. palveluiden, jotka hakevat
 ;; urakan tietoja, kyselyspecinä.
 (s/def ::urakka-kysely (s/keys :req [::id]))
+
+(defn vesivayla-urakka? [urakka]
+  (#{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
+     :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus}
+    (:tyyppi :urakka)))
