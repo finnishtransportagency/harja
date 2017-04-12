@@ -453,8 +453,8 @@
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         vuosi 2017
         aikataulu-kohde-alku (pvm/->pvm "15.5.2017")
-        aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-        aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
+        aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017")
+        aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017")
         aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
