@@ -1,12 +1,5 @@
 -- Vesiväylien Kickoff-migraatio
 
--- Lisää urakkatyypit
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-hoito';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-ruoppaus';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-turvalaitteiden-korjaus';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-kanavien-hoito';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-kanavien-korjaus';
-
 -- harjassa_luotu
 ALTER TABLE hanke ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE hanke SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
