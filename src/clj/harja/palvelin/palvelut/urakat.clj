@@ -209,6 +209,7 @@
     :ok))
 
 (defn- paivita-urakkaa! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
+  (log/debug "Päivitetään urakkaa " (:nimi urakka))
   (q/paivita-harjassa-luotu-urakka!
     db
     {:id (:id urakka)
@@ -225,6 +226,7 @@
   urakka)
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
+  (log/debug "Luodaan uusi urakka " (:nimi urakka))
   (q/luo-harjassa-luotu-urakka<!
     db
     {:nimi (:nimi urakka)
@@ -241,11 +243,15 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
+      (log/debug "Tallennetaan urakka: " (pr-str urakka))
       (let [tallennettu (if (id-olemassa? (:id urakka))
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
-        (sopimukset-q/liita-sopimukset-urakkaan db {:urakka (:id tallennettu)
-                                                    :sopimukset (map :id (:sopimukset urakka))})
+        (log/debug "Tallennetaan urakalle " (:id tallennettu) (count (:sopimukset urakka)) " sopimusta.")
+        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (:id tallennettu)
+                                                      :sopimukset (map :id (:sopimukset urakka))})
+              lkm
+              (log/debug lkm " sopimusta liitetty onnistuneesti."))
         ;; Palautetaan tallennettu urakka
         tallennettu))))
 

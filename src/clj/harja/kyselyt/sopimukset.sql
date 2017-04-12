@@ -53,5 +53,5 @@ SELECT
 FROM sopimus
 WHERE harjassa_luotu IS TRUE;
 
--- name: liita-sopimukset-urakkaan
+-- name: liita-sopimukset-urakkaan!
 UPDATE sopimus SET urakka=:urakka WHERE id IN (:sopimukset);

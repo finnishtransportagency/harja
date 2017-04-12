@@ -139,6 +139,6 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet
-                               :vesivayla
+                               ;;:vesivayla
                                }
  }
