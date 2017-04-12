@@ -1,16 +1,19 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka ::as urakka-domain]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
+            [harja.id :refer [id-olemassa?]]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-            [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as c]))
 
@@ -205,12 +208,46 @@
                                                                               {:urakka urakka-id})
     :ok))
 
-(defn tallenna-urakka [db user tiedot]
+(defn- paivita-urakkaa! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
+  (q/paivita-harjassa-luotu-urakka!
+    db
+    {:id (:id urakka)
+     :nimi (:nimi urakka)
+     :alkupvm (:alkupvm urakka)
+     :loppupvm (:loppupvm urakka)
+     :alue (:alue urakka)
+     :hallintayksikko (:id hallintayksikko)
+     :urakoitsija (:id urakoitsija)
+     :hanke (:id hanke)
+     :kayttaja (:id user)})
+
+  ;; Palautetaan ulos urakka, kuten luonnissakin
+  urakka)
+
+(defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
+  (q/luo-harjassa-luotu-urakka<!
+    db
+    {:nimi (:nimi urakka)
+     :alkupvm (:alkupvm urakka)
+     :loppupvm (:loppupvm urakka)
+     :alue (:alue urakka)
+     :hallintayksikko (:id hallintayksikko)
+     :urakoitsija (:id urakoitsija)
+     :hanke (:id hanke)
+     :kayttaja (:id user)}))
+
+(defn tallenna-urakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (assert (= :vesivayla (:tyyppi tiedot)))
 
-    (jdbc/with-db-transaction [db db])))
+    (jdbc/with-db-transaction [db db]
+      (let [tallennettu (if (id-olemassa? (:id urakka))
+                          (paivita-urakkaa! db user urakka)
+                          (luo-uusi-urakka! db user urakka))]
+        (sopimukset-q/liita-sopimukset-urakkaan db {:urakka (:id tallennettu)
+                                                    :sopimukset (map :id (:sopimukset urakka))})
+        ;; Palautetaan tallennettu urakka
+        tallennettu))))
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)

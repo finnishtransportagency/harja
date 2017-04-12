@@ -350,14 +350,42 @@ INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hal
 VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
         :sopimustyyppi :: sopimustyyppi, :urakkanumero);
 
+-- name: luo-harjassa-luotu-urakka<!
+INSERT INTO urakka (nimi, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
+                    harjassa_luotu, luotu, luoja)
+    VALUES (:nimi, :alkupvm, :loppupvm,
+                   :alue, :hallintayksikko,
+                   :urakoitsija, :hanke, 'vesivayla-hoito', TRUE,
+                   NOW(), :kayttaja);
+
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
-SET nimi        = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid,
-  tyyppi        = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko,
-  sopimustyyppi = :sopimustyyppi :: sopimustyyppi,
-  urakkanro     = :urakkanro
+SET nimi          = :nimi,
+  alkupvm         = :alkupvm,
+  loppupvm        = :loppupvm,
+  hanke_sampoid   = :hanke_sampoid,
+
+  tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
+  hallintayksikko = :hallintayksikko,
+
+  sopimustyyppi   = :sopimustyyppi :: SOPIMUSTYYPPI,
+  urakkanro       = :urakkanro
 WHERE id = :id;
+
+-- name: paivita-harjassa-luotu-urakka!
+-- Päivittää Harjassa luotua (vesiväylä)urakkaa
+UPDATE urakka
+  SET nimi = :nimi,
+    alkupvm = :alkupvm,
+    loppupvm = :loppupvm,
+    alue = :alue,
+    hallintayksikko = :hallintayksikko,
+    urakoitsija = :urakoitsija,
+    hanke = :hanke,
+    muokattu = NOW(),
+    muokkaaja = :kayttaja
+WHERE id = :id AND harjassa_luotu IS TRUE;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille
