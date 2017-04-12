@@ -1,42 +1,35 @@
 (ns harja.tiedot.vesivaylat.hankkeiden-luonti-test
   (:require [harja.tiedot.vesivaylat.hankkeiden-luonti :as h]
             [clojure.test :refer-macros [deftest is testing]]
+            [harja.tuck-apurit :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @h/tila)
 
-(defn e!
-  [event & payload]
-  (tuck/process-event (apply event payload) tila))
-
-(defn e-tila!
-  [event tila & payload]
-  (tuck/process-event (apply event payload) tila))
-
 (deftest hankkeen-valinta
   (let [hanke {:foobar 1}]
-    (is (= hanke (:valittu-hanke (e! h/->ValitseHanke hanke))))))
+    (is (= hanke (:valittu-hanke (e! tila h/->ValitseHanke hanke))))))
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! h/->Nakymassa? true))))
-  (is (false? (:nakymassa? (e! h/->Nakymassa? false)))))
+  (is (true? (:nakymassa? (e! tila h/->Nakymassa? true))))
+  (is (false? (:nakymassa? (e! tila h/->Nakymassa? false)))))
 
 (deftest uuden-hankkeen-luonnin-aloitus
-  (is (= h/uusi-hanke (:valittu-hanke (e! h/->UusiHanke)))))
+  (is (= h/uusi-hanke (:valittu-hanke (e! tila h/->UusiHanke)))))
 
 (deftest tallentamisen-aloitus
   (let [halutut #{h/->HankeTallennettu h/->HankeEiTallennettu}
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e-tila! h/->TallennaHanke {:haetut-hankkeet []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! tila h/->TallennaHanke {:haetut-hankkeet []} {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden hankkeen tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e-tila! h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
+          tulos (e! tila h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-hanke tulos)))
       (is (= (conj vanhat uusi) (:haetut-hankkeet tulos)))))
@@ -44,16 +37,16 @@
   (testing "Hankkeen muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
+          tulos (e! tila h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-hanke tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-hankkeet tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! h/->HankeEiTallennettu "virhe")]
+  (let [tulos (e! tila h/->HankeEiTallennettu "virhe")]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-hanke tulos)))))
 
 (deftest hankkeen-muokkaaminen-lomakkeessa
   (let [hanke {:nimi :foobar}]
-    (is (= hanke (:valittu-hanke (e! h/->HankettaMuokattu hanke))))))
+    (is (= hanke (:valittu-hanke (e! tila h/->HankettaMuokattu hanke))))))

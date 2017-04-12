@@ -1,42 +1,35 @@
 (ns harja.tiedot.vesivaylat.urakoiden-luonti-test
   (:require [harja.tiedot.vesivaylat.urakoiden-luonti :as u]
             [clojure.test :refer-macros [deftest is testing]]
+            [harja.tuck-apurit :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @u/tila)
 
-(defn e!
-  [event & payload]
-  (tuck/process-event (apply event payload) tila))
-
-(defn e-tila!
-  [event tila & payload]
-  (tuck/process-event (apply event payload) tila))
-
 (deftest urakan-valinta
   (let [ur {:foobar 1}]
-    (is (= ur (:valittu-urakka (e! u/->ValitseUrakka ur))))))
+    (is (= ur (:valittu-urakka (e! tila u/->ValitseUrakka ur))))))
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! u/->Nakymassa? true))))
-  (is (false? (:nakymassa? (e! u/->Nakymassa? false)))))
+  (is (true? (:nakymassa? (e! tila u/->Nakymassa? true))))
+  (is (false? (:nakymassa? (e! tila u/->Nakymassa? false)))))
 
 (deftest uuden-urakan-luonnin-aloitus
-  (is (= u/uusi-urakka (:valittu-urakka (e! u/->UusiUrakka)))))
+  (is (= u/uusi-urakka (:valittu-urakka (e! tila u/->UusiUrakka)))))
 
 (deftest tallentamisen-aloitus
   (let [halutut #{u/->UrakkaTallennettu u/->UrakkaEiTallennettu}
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e-tila! u/->TallennaUrakka {:haetut-urakat []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! tila u/->TallennaUrakka {:haetut-urakat []} {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e-tila! u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
+          tulos (e! tila u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakat tulos)))))
@@ -44,40 +37,40 @@
   (testing "Urakan muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e-tila! u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
+          tulos (e! tila u/->UrakkaTallennettu {:haetut-urakat vanhat} uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! u/->UrakkaEiTallennettu "virhe")]
+  (let [tulos (e! tila u/->UrakkaEiTallennettu "virhe")]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-urakka tulos)))))
 
 (deftest urakan-muokkaaminen-lomakkeessa
   (let [ur {:nimi :foobar}]
-    (is (= ur (:valittu-urakka (e! u/->UrakkaaMuokattu ur))))))
+    (is (= ur (:valittu-urakka (e! tila u/->UrakkaaMuokattu ur))))))
 
 (deftest hakemisen-aloitus
   (let [halutut #{u/->UrakatHaettu u/->UrakatEiHaettu}
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:urakoiden-haku-kaynnissa? (e! u/->HaeUrakat {:id 1}))))
+      (is (true? (:urakoiden-haku-kaynnissa? (e! tila u/->HaeUrakat {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
-        tulos (e! u/->UrakatHaettu urakat)]
+        tulos (e! tila u/->UrakatHaettu urakat)]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1 :nimi :a} {:id 2 :nimi :b}] (:haetut-urakat tulos)))))
 
 (deftest hakemisen-epaonnistuminen
-  (let [tulos (e! u/->UrakatEiHaettu "virhe")]
+  (let [tulos (e! tila u/->UrakatEiHaettu "virhe")]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))))
 
 (deftest sopimuksen-paivittaminen
-  (is (= (-> (e! u/->PaivitaSopimuksetGrid [{:id 1} {:id 2}])
+  (is (= (-> (e! tila u/->PaivitaSopimuksetGrid [{:id 1} {:id 2}])
              (get-in [:valittu-urakka :sopimukset]))
          [{:id 1} {:id 2}])))
 
@@ -86,7 +79,7 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (= {:foo :bar} (e-tila! u/->HaeLomakevaihtoehdot {:foo :bar} {:id 1})))
+      (is (= {:foo :bar} (e! tila u/->HaeLomakevaihtoehdot {:foo :bar} {:id 1})))
       (is (= halutut @kutsutut)))))
 
 (deftest lomakevaihtoehtojen-hakemisen-valmistuminen
@@ -98,14 +91,14 @@
                  :urakoitsijat ur
                  :hankkeet h
                  :sopimukset s}
-        app (e! u/->LomakevaihtoehdotHaettu payload)]
+        app (e! tila u/->LomakevaihtoehdotHaettu payload)]
     (is (= hy (:haetut-hallintayksikot app)))
     (is (= ur (:haetut-urakoitsijat app)))
     (is (= h (:haetut-hankkeet app)))
     (is (= s (:haetut-sopimukset app)))))
 
 (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
-  (is (= {:foo :bar} (e-tila! u/->LomakevaihtoehdotEiHaettu {:foo :bar} "virhe"))))
+  (is (= {:foo :bar} (e! tila u/->LomakevaihtoehdotEiHaettu {:foo :bar} "virhe"))))
 
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
