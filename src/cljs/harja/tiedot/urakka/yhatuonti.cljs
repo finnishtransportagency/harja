@@ -258,7 +258,7 @@
            [epaonnistunut-kohde kohde])]])]))
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
-  ;; Päivitä YHA_tiedot
+  ;; Päivitä YHA-tiedot
   (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
     (let [{:keys [etunimi sukunimi]} @istunto/kayttaja]
       (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id
