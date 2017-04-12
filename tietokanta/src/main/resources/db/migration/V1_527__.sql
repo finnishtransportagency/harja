@@ -1,5 +1,3 @@
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-hoito';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-ruoppaus';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-turvalaitteiden-korjaus';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-kanavien-hoito';
-ALTER TYPE urakkatyyppi ADD VALUE 'vesivayla-kanavien-korjaus';
+-- Ylläpitokohdeosa uniikiksi vain ei-poistetuille
+ALTER TABLE yllapitokohdeosa DROP CONSTRAINT yllapitokohdeosa_uniikki_yhaid;
+CREATE UNIQUE INDEX yllapitokohdeosa_uniikki_yhaid ON yllapitokohdeosa (yhaid) WHERE poistettu = false;

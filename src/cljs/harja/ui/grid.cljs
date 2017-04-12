@@ -719,7 +719,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                              (lisaa-rivi! ohjaus {}))}
                        [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
-
                     (when-not muokkaa-aina
                       [:button.nappi-myonteinen.grid-tallenna
                        {:disabled (or (not (empty? @virheet))
@@ -727,15 +726,22 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                       (not muokattu?))
                         :on-click #(when-not @tallennus-kaynnissa
                                      (let [kaikki-rivit (mapv second @muokatut)
+                                           ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                                           tallennettavat (filter (fn [rivi]
+                                                                    (not (and (neg-int? (:id rivi))
+                                                                              (:poistettu rivi))))
+                                                                  kaikki-rivit)
                                            tallennettavat
                                            (if tallenna-vain-muokatut
                                              (do (log "TALLENNA VAIN MUOKATUT")
-                                                 (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
-                                             kaikki-rivit)]
+                                                 (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                                             tallennettavat)]
                                        (do (.preventDefault %)
                                            (reset! tallennus-kaynnissa true)
-                                           (go (if (<! (tallenna tallennettavat)))
-                                               (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                           (go
+                                             (when-not (empty? tallennettavat)
+                                               (<! (tallenna tallennettavat)))
+                                             (nollaa-muokkaustiedot!)))))}
                        [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
                     (when-not muokkaa-aina
@@ -922,10 +928,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :valiotsikot        mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
   :ulkoinen-validointi? jos true, grid ei tee validointia muokkauksen yhteydessä.
                         Käytä tätä, jos teet validoinnin muualla (esim jos grid data on wrap,
-                        jonka muutoksen yhteydessä validointi tehdään)."
+                        jonka muutoksen yhteydessä validointi tehdään).
+
+  :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
+                      avaimella :harja.ui.grid/virheet"
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
-           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi?] :as opts}
+           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -985,11 +994,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         muokkaa! (fn [muokatut virheet skeema id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
-                         uudet-tiedot (swap! muokatut
-                                             (fn [muokatut]
-                                               (update-in muokatut [id]
-                                                          (fn [rivi]
-                                                            (apply funktio (dissoc rivi :koskematon) argumentit)))))]
+                         uudet-tiedot
+                         (swap! muokatut
+                                (fn [muokatut]
+                                  (update-in muokatut [id]
+                                             (fn [rivi]
+                                               (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
+                                                 (if virheet-dataan?
+                                                   (assoc uusi-rivi
+                                                          ::virheet (validointi/validoi-rivi
+                                                                        (assoc muokatut id uusi-rivi)
+                                                                        uusi-rivi
+                                                                        skeema))
+                                                   uusi-rivi))))))]
 
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
