@@ -255,19 +255,19 @@ yllapitoluokkanimi->numero
 (defn yllapitokohteen-tila-kartalla [tarkka-tila]
   (case tarkka-tila
     :ei-aloitettu :ei-aloitettu
-    :kohde-aloitettu ::aloitettu
-    :paallystys-aloitettu ::aloitettu
-    :paallystys-valmis ::aloitettu
-    :paikkaus-aloitettu ::aloitettu
-    :paikkaus-valmis ::aloitettu
-    :tiemerkinta-aloitettu ::aloitettu
-    :tiemerkinta-valmis ::aloitettu
+    :kohde-aloitettu :aloitettu
+    :paallystys-aloitettu :aloitettu
+    :paallystys-valmis :aloitettu
+    :paikkaus-aloitettu :aloitettu
+    :paikkaus-valmis :aloitettu
+    :tiemerkinta-aloitettu :aloitettu
+    :tiemerkinta-valmis :aloitettu
     :kohde-valmis :valmis))
 
 (defn kuvaile-kohteen-tila-kartalla [tila]
   (case tila
     :valmis "Valmis"
-    ::aloitettu "Aloitettu"
+    :aloitettu "Aloitettu"
     :ei-aloitettu "Ei aloitettu"
     "Ei tiedossa"))
 
