@@ -98,11 +98,11 @@
                                     :hae-urakat-yhasta +kayttaja-jvh+
                                     {:urakka-id urakka-id})]
         (is (= vastaus
-               {:elyt ["POP"]
-                :vuodet [2016]
-                :yhatunnus "YHATUNNUS"
-                :sampotunnus "SAMPOTUNNUS"
-                :yhaid 3}))))))
+               [{:elyt ["POP"]
+                 :vuodet [2016]
+                 :yhatunnus "YHATUNNUS"
+                 :sampotunnus "SAMPOTUNNUS"
+                 :yhaid 3}]))))))
 
 (deftest hae-yha-urakan-kohteet
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))]
@@ -176,7 +176,8 @@
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
           kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
 
-      (is (some? (:yha-tiedot vastaus)))
+      (is (some? (:yhatiedot vastaus)))
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
-      (is (true? (:sidonta_lukittu yhatiedot-testin-jalkeen)) "Sidonta lukittiin")
+      (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
+          "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
       (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))

@@ -167,7 +167,7 @@
       (yy/paivita-yllapitourakan-geometria db urakka-id)
       (log/debug "Urakan geometria päivitetty.")
       {:yhatiedot (hae-urakan-yha-tiedot db urakka-id)
-       :tallentamatta-jaaneet-kohteet kohteet-ilman-geometriaa})))
+       :tallentamatta-jaaneet-kohteet (vec kohteet-ilman-geometriaa)})))
 
 (defn- tarkista-lahetettavat-kohteet
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
