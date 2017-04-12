@@ -18,6 +18,6 @@ ALTER TABLE hanke ADD COLUMN poistettu boolean default false;
 
 ALTER TABLE organisaatio ADD COLUMN luotu timestamp;
 ALTER TABLE organisaatio ADD COLUMN muokattu timestamp;
-ALTER TABLE organisaatio ADD COLUMN luoja integer REFERENCES kayttaja (id);
+-- ALTER TABLE organisaatio ADD COLUMN luoja integer REFERENCES kayttaja (id);
 ALTER TABLE organisaatio ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
 ALTER TABLE organisaatio ADD COLUMN poistettu boolean default false;
