@@ -143,4 +143,4 @@
  ;; :vesivayla
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet
                                :vesivayla}
- :sahke {:lahetysjono "urakat-sahkeeseen"}}
+ :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}}

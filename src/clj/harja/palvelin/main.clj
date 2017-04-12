@@ -265,7 +265,7 @@
                   [:http-palvelin :db])
       :urakat (component/using
                 (urakat/->Urakat)
-                [:http-palvelin :db])
+                [:http-palvelin :db :sahke])
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
                              [:http-palvelin :db])
