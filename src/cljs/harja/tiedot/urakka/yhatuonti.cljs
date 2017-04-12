@@ -154,9 +154,9 @@
   (let [tieosoiteerat (partition-all 10 tieosoitteet)
         kanavat (mapv
                   #(vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle
-                    {:tieosoitteet %}
-                    tilanne-pvm
-                    (pvm/nyt))
+                     {:tieosoitteet %}
+                     tilanne-pvm
+                     (pvm/nyt))
                   tieosoiteerat)
         kanavat (async/merge kanavat)]
     (go (loop [acc []
@@ -194,15 +194,40 @@
                     yhdistrtyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
                     yhdistyksessa-epaonnistuneet-kohteet (vec (filter :virhe yhdistrtyt-kohteet))
                     _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistrtyt-kohteet))
-                    vastaus (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistrtyt-kohteet))]
+                    {:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
+                    (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistrtyt-kohteet))]
                 (if (k/virhe? vastaus)
                   {:status :error :viesti "Kohteiden tallentaminen epäonnistui."
                    :koodi :kohteiden-tallentaminen-epaonnistui}
-                  (if (empty? yhdistyksessa-epaonnistuneet-kohteet)
-                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot (:yhatiedot vastaus)
-                     :koodi :kohteet-tallennettu}
-                    {:status :error :epaonnistuneet-kohteet yhdistyksessa-epaonnistuneet-kohteet :yhatiedot (:yhatiedot vastaus)
-                     :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
+                  (cond
+                    ;; VKM-muunnoksessa tuli ongelma, mutta muuten kohteet saatiin tallennettua
+                    (and (not (empty? yhdistyksessa-epaonnistuneet-kohteet))
+                         (empty? tallentamatta-jaaneet-kohteet))
+                    {:status :error
+                     :epaonnistuneet-vkm-muunnokset yhdistyksessa-epaonnistuneet-kohteet
+                     :yhatiedot yhatiedot
+                     :koodi :vkm-muunnos-epaonnistui-osittain}
+                    ;; VKM-muunnos oli OK, mutta kohteiden tallennuksessa tuli ongelma
+                    (and (empty? yhdistyksessa-epaonnistuneet-kohteet)
+                         (not (empty? tallentamatta-jaaneet-kohteet)))
+                    {:status :error
+                     :epaonnistuneet-tallennukset tallentamatta-jaaneet-kohteet
+                     :yhatiedot yhatiedot
+                     :koodi :kohteiden-tallentaminen-epaonnistui-osittain}
+                    ;; VKM-muunnoksessa oli ongelmia, kuin myös kohteiden tallennuksessa
+                    (and (not (empty? yhdistyksessa-epaonnistuneet-kohteet))
+                         (not (empty? tallentamatta-jaaneet-kohteet)))
+                    {:status :error
+                     :epaonnistuneet-vkm-muunnokset yhdistyksessa-epaonnistuneet-kohteet
+                     :epaonnistuneet-tallennukset tallentamatta-jaaneet-kohteet
+                     :yhatiedot yhatiedot
+                     :koodi :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain}
+                    ;; Kaikki kohteet saatiin muunnettua ja tallennettua onnistuneesti
+                    :default
+                    {:status :ok
+                     :uudet-kohteet (count uudet-yha-kohteet)
+                     :yhatiedot yhatiedot
+                     :koodi :kohteet-tallennettu}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
@@ -236,25 +261,23 @@
     (viesti/nayta! (:viesti vastaus) :success viesti/viestin-nayttoaika-lyhyt)))
 
 (defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus harja-urakka-id]
-  (when (and
-          (some? (:yhatiedot vastaus))
-          (= (:id @nav/valittu-urakka) harja-urakka-id))
+  (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
     (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot (:yhatiedot vastaus)))
 
   ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
   (when (and (= (:status vastaus) :error)
-             (= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
+             (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
     (modal/nayta!
       {:otsikko "Kaikkia kohteita ei voitu käsitellä"
        :footer [:button.nappi-toissijainen {:on-click (fn [e]
                                                         (.preventDefault e)
                                                         (modal/piilota!))}
                 "Sulje"]}
-      [vkm-yhdistamistulos-dialogi (:epaonnistuneet-kohteet vastaus)]))
+      [vkm-yhdistamistulos-dialogi (:epaonnistuneet-vkm-muunnokset vastaus)]))
 
   ;; Muut virheet käsitellään perus virheviestinä.
   (when (and (= (:status vastaus) :error)
-             (not= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
+             (not= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
     (viesti/nayta! (:viesti vastaus) :warning viesti/viestin-nayttoaika-keskipitka)))
 
 (defn paivita-yha-kohteet
@@ -288,8 +311,8 @@
                                   (swap! progress update :progress + p)))))
       {:luokka "nappi-ensisijainen"
        :disabled (or
-                  @yha-kohteiden-paivittaminen-kaynnissa?
-                  (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
+                   @yha-kohteiden-paivittaminen-kaynnissa?
+                   (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
        :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
        :kun-valmis (fn [_] (reset! progress {}))
        :kun-onnistuu (fn [_]
