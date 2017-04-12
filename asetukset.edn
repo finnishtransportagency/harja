@@ -141,4 +141,6 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
+
+ :sahke {:lahetysjono "urakat-sahkeeseen"}
  }
