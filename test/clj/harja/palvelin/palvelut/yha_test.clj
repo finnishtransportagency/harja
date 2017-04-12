@@ -62,7 +62,7 @@
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (integer? yhatiedot-ennen-testia) "Urakka on jo sidottu ennen testiä")
 
-    (q "UPDATE yhatiedot SET sidonta_lukittu = TRUE WHERE urakka = " urakka-id ";")
+    (u "UPDATE yhatiedot SET sidonta_lukittu = TRUE WHERE urakka = " urakka-id ";")
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :sido-yha-urakka-harja-urakkaan +kayttaja-jvh+
                                                    {:harja-urakka-id urakka-id
