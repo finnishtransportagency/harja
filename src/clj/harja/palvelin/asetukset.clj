@@ -1,9 +1,10 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.hipchat :as hipchat]
+            [harja.palvelin.lokitus.slack :as slack]
             [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
 
 
@@ -28,7 +29,7 @@
                                            (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
-                                           (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+                                           (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword}
 
                                            (s/optional-key :email)   {:taso          s/Keyword
                                                                       :palvelin      s/Str
@@ -161,7 +162,7 @@
 (defn crlf-filter [msg]
   (assoc msg :args (mapv (fn [s]
                            (if (string? s)
-                             (clojure.string/replace s #"[\n\r]" "")
+                             (str/replace s #"[\n\r]" "")
                              s))
                          (:args msg))))
 
@@ -174,9 +175,9 @@
   (when-let [gelf (-> asetukset :log :gelf)]
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
 
-  (when-let [hipchat (-> asetukset :log :hipchat)]
-    (log/set-config! [:appenders :hipchat]
-                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat))))
+  (when-let [slack (-> asetukset :log :slack)]
+    (log/set-config! [:appenders :slack]
+                     (slack/luo-slack-appender (str/trim (:webhook-url slack)) (:taso slack))))
 
   (when-let [email (-> asetukset :log :email)]
     (log/set-config! [:appenders :postal]
