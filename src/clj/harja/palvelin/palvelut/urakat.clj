@@ -267,7 +267,8 @@
               (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
               (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
             (q/hae-harjassa-luodut-urakat db))
-      {:sopimus :sopimukset})))
+      {:sopimus :sopimukset
+       :sahkelahetys :sahkelahetykset})))
 
 (defrecord Urakat []
   component/Lifecycle

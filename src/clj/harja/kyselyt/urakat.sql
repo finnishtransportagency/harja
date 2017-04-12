@@ -7,28 +7,40 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
-  hal.id                                                        AS hallintayksikko_id,
-  hal.nimi                                                      AS hallintayksikko_nimi,
-  hal.lyhenne                                                   AS hallintayksikko_lyhenne,
-  urk.id                                                        AS urakoitsija_id,
-  urk.nimi                                                      AS urakoitsija_nimi,
-  urk.ytunnus                                                   AS urakoitsija_ytunnus,
-  s.nimi                                                        AS sopimus_nimi,
-  s.id                                                          AS sopimus_id,
-  s.paasopimus                                                  AS sopimus_paasopimus,
-  s.alkupvm                                                     AS sopimus_alkupvm,
-  s.loppupvm                                                    AS sopimus_loppupvm,
-  h.nimi                                                        AS hanke_nimi,
-  h.id                                                          AS hanke_id,
-  h.alkupvm                                                     AS hanke_alkupvm,
-  h.loppupvm                                                    AS hanke_loppupvm,
-  ST_Simplify(au.alue, 50)                                      AS alueurakan_alue
+  u.muokattu,
+  u.luotu,
+  hal.id                   AS hallintayksikko_id,
+  hal.nimi                 AS hallintayksikko_nimi,
+  hal.lyhenne              AS hallintayksikko_lyhenne,
+  urk.id                   AS urakoitsija_id,
+  urk.nimi                 AS urakoitsija_nimi,
+  urk.ytunnus              AS urakoitsija_ytunnus,
+  urk.muokattu             AS urakoitsija_muokattu,
+  urk.luotu                AS urakoitsija_luotu,
+  s.nimi                   AS sopimus_nimi,
+  s.id                     AS sopimus_id,
+  s.paasopimus             AS sopimus_paasopimus,
+  s.alkupvm                AS sopimus_alkupvm,
+  s.loppupvm               AS sopimus_loppupvm,
+  s.muokattu               AS sopimus_muokattu,
+  s.luotu                  AS sopimus_luotu,
+  h.nimi                   AS hanke_nimi,
+  h.id                     AS hanke_id,
+  h.alkupvm                AS hanke_alkupvm,
+  h.loppupvm               AS hanke_loppupvm,
+  h.muokattu               AS hanke_muokattu,
+  h.luotu                  AS hanke_luotu,
+  sl.lahetetty AS sahkelahetys_lahetetty,
+  sl.id AS sahkelahetys_id,
+  sl.onnistunut AS sahkelahetys_onnistunut,
+  ST_Simplify(au.alue, 50) AS alueurakan_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
+  LEFT JOIN sahkelahetys sl ON sl.urakka = urakka.id
 WHERE u.harjassa_luotu IS TRUE;
 
 -- name: hae-lahimmat-urakat-aikavalilta
