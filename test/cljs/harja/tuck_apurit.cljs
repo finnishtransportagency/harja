@@ -6,5 +6,5 @@
 
 (defn e!
   "Prosessoi tuck-eventin annettuun tilaan käyttäen annettua payloadia"
-  [event tila & payload]
+  [tila event & payload]
   (tuck/process-event (apply event payload) tila))

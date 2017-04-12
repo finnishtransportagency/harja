@@ -23,14 +23,14 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! tila u/->TallennaUrakoitsija {:haetut-urakoitsijat []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakoitsijat []} u/->TallennaUrakoitsija  {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakoitsijan tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e! tila  u/->UrakoitsijaTallennettu {:haetut-urakoitsijat vanhat} uusi)]
+          tulos (e! {:haetut-urakoitsijat vanhat}  u/->UrakoitsijaTallennettu  uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakoitsija tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakoitsijat tulos)))))
@@ -38,13 +38,13 @@
   (testing "Urakoitsijan muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! tila  u/->UrakoitsijaTallennettu {:haetut-urakoitsijat vanhat} uusi)]
+          tulos (e! {:haetut-urakoitsijat vanhat} u/->UrakoitsijaTallennettu  uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakoitsija tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakoitsijat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! tila  u/->UrakoitsijaEiTallennettu "virhe")]
+  (let [tulos (e! tila u/->UrakoitsijaEiTallennettu "virhe")]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-urakoitsija tulos)))))
 

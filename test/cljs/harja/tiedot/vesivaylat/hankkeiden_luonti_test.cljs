@@ -22,14 +22,14 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! tila h/->TallennaHanke {:haetut-hankkeet []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! {:haetut-hankkeet []} h/->TallennaHanke {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden hankkeen tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e! tila h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
+          tulos (e! {:haetut-hankkeet vanhat} h/->HankeTallennettu uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-hanke tulos)))
       (is (= (conj vanhat uusi) (:haetut-hankkeet tulos)))))
@@ -37,7 +37,7 @@
   (testing "Hankkeen muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! tila h/->HankeTallennettu {:haetut-hankkeet vanhat} uusi)]
+          tulos (e! {:haetut-hankkeet vanhat} h/->HankeTallennettu  uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-hanke tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-hankkeet tulos))))))
