@@ -50,7 +50,9 @@
                   [ajax-loader "Haetaan hankkeita"]
                   "Hankkeita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseHanke %))}
-        [{:otsikko "Nimi" :nimi :nimi}]
+        [{:otsikko "Nimi" :nimi :nimi}
+         {:otsikko "Alku" :nimi :alkupvm}
+         {:otsikko "Loppu" :nimi :loppupvm}]
         haetut-hankkeet]])))
 
 (defn vesivaylahankkeiden-luonti* [e! app]
