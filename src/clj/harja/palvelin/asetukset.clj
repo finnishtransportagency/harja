@@ -1,6 +1,7 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.slack :as slack]
@@ -161,7 +162,7 @@
 (defn crlf-filter [msg]
   (assoc msg :args (mapv (fn [s]
                            (if (string? s)
-                             (clojure.string/replace s #"[\n\r]" "")
+                             (str/replace s #"[\n\r]" "")
                              s))
                          (:args msg))))
 
@@ -176,7 +177,7 @@
 
   (when-let [slack (-> asetukset :log :slack)]
     (log/set-config! [:appenders :slack]
-                     (slack/luo-slack-appender (:webhook-url slack) (:taso slack))))
+                     (slack/luo-slack-appender (str/trim (:webhook-url slack)) (:taso slack))))
 
   (when-let [email (-> asetukset :log :email)]
     (log/set-config! [:appenders :postal]
