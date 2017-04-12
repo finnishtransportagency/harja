@@ -80,7 +80,14 @@
           fail! (tuck/send-async! ->UrakkaEiTallennettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/post! :tallenna-urakka urakka))]
+          (let [vastaus (async/<! (k/post! :tallenna-urakka
+                                           (update urakka
+                                                   :sopimukset
+                                                   #(->> %
+                                                         ;; grid antaa uusille riveille negatiivisen id:n,
+                                                         ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
+                                                         ;; Rivillä on neg. id vain, jos sopimus jäi valitsematta.
+                                                         (remove (comp neg? :id))))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
