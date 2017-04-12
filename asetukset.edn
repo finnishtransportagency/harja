@@ -22,8 +22,8 @@
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
-       :slack {:taso :warn
-               :webhook-url #=(slurp "../.harja/slack-webhook-url")}
+       ;; :slack {:taso :warn
+       ;;         :webhook-url #=(-> "../.harja/slack-webhook-url" slurp trim)}
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
