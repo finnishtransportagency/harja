@@ -170,24 +170,38 @@
 
 (defn- muokkaus-otsikko [asia muokattu luotu]
   (if (pvm/jalkeen? (:muokattu asia) (:luotu asia))
-    [(str muokattu " muokattu:") (pvm/pvm-aika-opt (:muokattu asia))]
-    [(str luotu " luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
+    [(str muokattu " '" (:nimi asia) "' muokattu:") (pvm/pvm-aika-opt (:muokattu asia))]
+    [(str luotu " '" (:nimi asia) "' luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
 
-(defn muokkaus-tiedot [{:keys [hanke sopimus urakoitsija sahkelahetykset] :as urakka}]
+(defn muokkaus-tiedot [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
   [:div "TÄnne tulee metatietoja"]
-  (let [lahetykset (sort-by )]
+  (let [uusin (tiedot/uusin-lahetys sahkelahetykset)]
     [apply tietoja
-    {}
+    {:otsikot-omalla-rivilla? true}
     (concat
+      (if uusin
+        (if (:onnistui uusin)
+         ["Viimeisin lähetys" (pvm/pvm-aika-opt (:lahetetty uusin))]
+         ["Viimeisin yritys" (pvm/pvm-aika-opt (:lahetetty uusin))
+          "Viimeisin onnistunut lähetys" (pvm/pvm-aika-opt (tiedot/uusin-onnistunut-lahetys sahkelahetykset))])
+        ["Urakan tietoja ei ole vielä lähetetty!" ""])
       (muokkaus-otsikko urakka "Urakkaa" "Urakka")
       (muokkaus-otsikko hanke "Hanketta" "Hanke")
-      (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")
+      (apply
+        concat
+        (for [sopimus sopimukset]
+         (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
       (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
 
-(defn sahke-nappi [e! {lahetykset :sahke-lahetykset} urakka]
-  (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))]
-    [:button.nappi-toissijainen
+(defn sahke-nappi [e! {lahetykset :kaynnissa-olevat-sahkelahetykset} urakka]
+  (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))
+        tila (tiedot/urakan-sahke-tila urakka)]
+    [:button
      {:disabled lahetys-kaynnissa?
+      :class (case tila
+               :lahetetty "nappi-toissijainen"
+               :epaonnistunut "nappi-kielteinen"
+               :lahettamatta "nappi-ensisijainen")
       :on-click #(do
                    (.preventDefault %)
                    (.stopPropagation %)
@@ -207,7 +221,15 @@
                      [muokkaus-tiedot urakka]))}
      (if lahetys-kaynnissa?
        [ajax-loader-pieni "Odota"]
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lähetä"])]))
+       [ikonit/ikoni-ja-teksti
+        (case tila
+          :lahetetty (ikonit/livicon-check)
+          :epaonnistunut (ikonit/livicon-upload)
+          :lahettamatta (ikonit/livicon-upload))
+        (case tila
+          :lahetetty "Lähetetty"
+          :epaonnistunut "Yritä uudelleen"
+          :lahettamatta "Tietoja lähettämättä")])]))
 
 (defn urakkagrid [e! app]
   (komp/luo

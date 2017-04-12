@@ -8,7 +8,8 @@
             [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
-            [harja.tyokalut.local-storage :refer [local-storage-atom]])
+            [harja.tyokalut.local-storage :refer [local-storage-atom]]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -25,7 +26,7 @@
          :haetut-urakoitsijat nil
          :haetut-hankkeet nil
          :haetut-sopimukset nil
-         :sahke-lahetykset #{}}))
+         :kaynnissa-olevat-sahkelahetykset #{}}))
 
 (defn paasopimus [sopimukset]
   (first (filter (comp some? #{(some :paasopimus sopimukset)} :id) sopimukset)))
@@ -42,6 +43,44 @@
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
   (remove (comp (into #{} (keep :id urakan-sopimukset)) :id) (filter vapaa-sopimus? sopimukset)))
+
+(defn uusin-tieto [hanke sopimukset urakoitsija urakka]
+  (sort-by #(or (:muokattu %) (:luotu %))
+           pvm/jalkeen?
+           (conj sopimukset hanke urakoitsija urakka)))
+
+(defn- lahetykset-uusimmasta-vanhimpaan [lahetykset]
+  (sort-by :lahetetty pvm/jalkeen? lahetykset))
+
+(defn uusin-lahetys [lahetykset]
+  (first (lahetykset-uusimmasta-vanhimpaan lahetykset)))
+
+(defn uusin-onnistunut-lahetys [lahetykset]
+  (first (filter :onnistui (lahetykset-uusimmasta-vanhimpaan lahetykset))))
+
+(defn urakan-sahke-tila [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
+  (let [uusin-tieto (uusin-tieto hanke sopimukset urakoitsija urakka)
+        uusin-lahetys (uusin-lahetys sahkelahetykset)
+        uusin-onnistunut (uusin-onnistunut-lahetys sahkelahetykset)]
+    (cond
+      (nil? uusin-lahetys)
+      :lahettamatta
+
+      (nil? uusin-onnistunut)
+      :epaonnistunut
+
+      (pvm/jalkeen? uusin-onnistunut uusin-tieto)
+      :lahetetty
+
+      (and
+        (not (:onnistui uusin-lahetys))
+        (pvm/jalkeen? uusin-lahetys uusin-tieto))
+      :epaonnistunut
+
+      (pvm/jalkeen? uusin-tieto uusin-onnistunut)
+      :lahettamatta
+
+      :else :lahetetty)))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -192,14 +231,14 @@
           (catch :default e
             (fail! nil)
             (throw e)))))
-    (update app :sahke-lahetykset conj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset conj (:id urakka)))
 
   SahkeeseenLahetetty
   (process-event [{tulos :tulos urakka :urakka} app]
-    (update app :sahke-lahetykset disj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka)))
 
   SahkeeseenEiLahetetty
   (process-event [{virhe :virhe urakka :urakka} app]
     (viesti/nayta! [:span "Urakan '" (:nimi urakka) "' lähetys epäonnistui."] :danger)
-    (update app :sahke-lahetykset disj (:id urakka))))
+    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka))))
 
