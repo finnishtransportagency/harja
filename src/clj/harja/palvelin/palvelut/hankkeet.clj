@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.hankkeet :as q]
+            [harja.domain.hanke :as hanke]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
@@ -26,7 +27,8 @@
         (hae-paattymattomat-vesivaylahankkeet db user))
       :hae-harjassa-luodut-hankkeet
       (fn [user _]
-        (hae-harjassa-luodut-hankkeet db user)))
+        (hae-harjassa-luodut-hankkeet db user))
+      {:vastaus-spec ::hanke/hae-harjassa-luodut-hankkeet-vastaus})
 
     this)
 
