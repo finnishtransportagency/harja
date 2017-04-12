@@ -47,7 +47,7 @@
           fail! (tuck/send-async! ->HankeEiTallennettu)]
       (go
         (try
-          (let [vastaus hanke] ;;TODO lisää tallennus
+          (let [vastaus (<! (k/post! :tallenna-hanke {hanke}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -61,6 +61,7 @@
     (viesti/nayta! "Hanke tallennettu!")
     (let [vanhat (group-by :id (:haetut-hankkeet app))
           uusi {(:id hanke) [hanke]}]
+      ;; TODO Toimisiko tässä ihan vaan conj? Miksi tehdään vector -> map -> vector muunnos?
       ;; Yhdistetään tallennettu jo haettuihin.
       ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
       (assoc app :haetut-hankkeet (vec (apply concat (vals (merge vanhat uusi))))
