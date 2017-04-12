@@ -73,6 +73,7 @@
     [harja.palvelin.palvelut.debug :as debug]
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
+    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -416,6 +417,11 @@
               {:db :db-replica
                :http-palvelin :http-palvelin})
 
+      :sahke (component/using
+               (let [{:keys [lahetysjono uudelleenlahetysaika]} (:sahke asetukset)]
+                 (sahke/->Sahke lahetysjono uudelleenlahetysaika))
+               [:db :integraatioloki :sonja])
+               
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db])

@@ -140,7 +140,7 @@
  ;;                                                   tieto tästä SMS/email viestinä. Viesti sisältää linkin
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
+ ;; :vesivayla
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet
-                               ;;:vesivayla
-                               }
- }
+                               :vesivayla}
+ :sahke {:lahetysjono "urakat-sahkeeseen"}}
