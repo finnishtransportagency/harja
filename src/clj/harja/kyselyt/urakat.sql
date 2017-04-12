@@ -787,10 +787,9 @@ update set lahetetty  = now(), onnistunut = :onnistunut;
 
 -- name: perustettu-harjassa?
 -- single?: true
-SELECT exists(SELECT ''
-              FROM urakka u
-                JOIN sahkelahetys sl ON u.id = sl.urakka
-              WHERE u.sampoid = :sampoid);
+SELECT harjassa_luotu
+FROM urakka u
+WHERE u.sampoid = :sampoid;
 
 -- name: hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut
 SELECT urakka

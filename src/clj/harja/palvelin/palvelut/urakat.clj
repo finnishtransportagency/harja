@@ -15,7 +15,8 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -270,10 +271,17 @@
       {:sopimus :sopimukset
        :sahkelahetys :sahkelahetykset})))
 
+(defn laheta-urakka-sahkeeseen [sahke user urakka-id]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+    (sahke/laheta-urakka-sahkeeseen sahke urakka-id)))
+
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db :as this}]
+           db :db
+           sahke :sahke
+           :as this}]
     (julkaise-palvelut
       http
       :hallintayksikon-urakat
@@ -318,7 +326,11 @@
 
       :hae-harjassa-luodut-urakat
       (fn [user _]
-        (hae-harjassa-luodut-urakat db user)))
+        (hae-harjassa-luodut-urakat db user))
+
+      :laheta-urakka-sahkeeseen
+      (fn [user urakka-id]
+        (laheta-urakka-sahkeeseen sahke user urakka-id)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -331,6 +343,7 @@
                      :tallenna-urakan-tyyppi
                      :aseta-takuun-loppupvm
                      :tallenna-urakka
-                     :hae-harjassa-luodut-urakat)
+                     :hae-harjassa-luodut-urakat
+                     :laheta-urakka-sahkeeseen)
 
     this))

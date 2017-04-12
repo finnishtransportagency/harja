@@ -185,7 +185,7 @@
           fail! (tuck/send-async! ->SahkeeseenEiLahetetty urakka)]
       (go
         (try
-          (let [vastaus {:virhe 404}]
+          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (:id urakka)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))

@@ -22,14 +22,14 @@
         kutsutut (atom #{})]
     (with-redefs
       [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! tila s/->TallennaSopimus {:haetut-sopimukset []} {:id 1}))))
+      (is (true? (:tallennus-kaynnissa? (e! {:haetut-sopimukset []} s/->TallennaSopimus {:id 1}))))
       (is (= halutut @kutsutut)))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden sopimuksen tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e! tila s/->SopimusTallennettu {:haetut-sopimukset vanhat} uusi)]
+          tulos (e! {:haetut-sopimukset vanhat} s/->SopimusTallennettu uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-sopimus tulos)))
       (is (= (conj vanhat uusi) (:haetut-sopimukset tulos)))))
@@ -37,7 +37,7 @@
   (testing "Sopimuksen muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! tila s/->SopimusTallennettu {:haetut-sopimukset vanhat} uusi)]
+          tulos (e! {:haetut-sopimukset vanhat} s/->SopimusTallennettu uusi)]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-sopimus tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-sopimukset tulos))))))
