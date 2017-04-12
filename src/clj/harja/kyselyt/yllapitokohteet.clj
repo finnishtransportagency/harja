@@ -6,12 +6,13 @@
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
-(defn liita-kohdeosat [db map yllapitokohde-id]
-  (assoc map
-    :kohdeosat
-    (into []
-          kohdeosa-xf
-          (hae-urakan-yllapitokohteen-yllapitokohdeosat
-            db {:yllapitokohde yllapitokohde-id}))))
-
-
+(defn liita-kohdeosat-kohteisiin [db kohteet kohde-id-avain]
+  (let [kohdeosat (into []
+                        kohdeosa-xf
+                        (hae-urakan-yllapitokohteiden-yllapitokohdeosat
+                          db {:idt (map kohde-id-avain kohteet)}))]
+    (mapv
+      (fn [kohde]
+        (let [kohteen-kohdeosat (filterv #(= (:yllapitokohde-id %) (kohde-id-avain kohde)) kohdeosat)]
+          (assoc kohde :kohdeosat kohteen-kohdeosat)))
+      kohteet)))

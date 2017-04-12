@@ -58,7 +58,7 @@
                                 :id)
                               (map
                                 #(assoc % :maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
-                                                                    db user
+                                                                    db
                                                                     {:urakka-id urakka-id
                                                                      :yllapitokohde-id (:id %)})))
                                 ypk)
@@ -246,9 +246,7 @@
                                        (dissoc kommentti :liite)))))
                         (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))
         maaramuutokset (maaramuutokset/hae-ja-summaa-maaramuutokset
-                         db user
-                         {:urakka-id urakka-id
-                          :yllapitokohde-id paallystyskohde-id})
+                         db {:urakka-id urakka-id :yllapitokohde-id paallystyskohde-id})
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta-ilman-maaramuutoksia kokonaishinta-ilman-maaramuutoksia
                              :maaramuutokset (:tulos maaramuutokset)

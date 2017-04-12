@@ -171,8 +171,7 @@
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                            (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                           (if nykytilanne?
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
@@ -184,9 +183,7 @@
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
-            vastaus (konv/sarakkeet-vektoriin
-                      vastaus
-                      {:yhteyshenkilo :yhteyshenkilot})
+            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id)
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
