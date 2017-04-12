@@ -4,7 +4,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
@@ -56,6 +56,7 @@
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
         {:disabled tallennus-kaynnissa?}]
+       [debug/debug valittu-urakka]
        (let [ilman-poistettuja #(remove :poistettu %)
              urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
          [lomake/lomake
@@ -147,10 +148,21 @@
            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
          valittu-urakka])])))
 
-(defn muokkaus-tiedot [urakka]
-  [:div
-   [:h1 "Tänne urakan muokkaamisen ja sähkelähetyksen metatiedot"]
-   [:div (pr-str urakka)]])
+(defn- muokkaus-otsikko [asia muokattu luotu]
+  (if (pvm/jalkeen? (:muokattu asia) (:luotu asia))
+    [(str muokattu " muokattu:") (pvm/pvm-aika-opt (:muokattu asia))]
+    [(str luotu " luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
+
+(defn muokkaus-tiedot [{:keys [hanke sopimus urakoitsija sahkelahetykset] :as urakka}]
+  [:div "TÄnne tulee metatietoja"]
+  (let [lahetykset (sort-by )]
+    [apply tietoja
+    {}
+    (concat
+      (muokkaus-otsikko urakka "Urakkaa" "Urakka")
+      (muokkaus-otsikko hanke "Hanketta" "Hanke")
+      (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")
+      (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
 
 (defn sahke-nappi [e! {lahetykset :sahke-lahetykset} urakka]
   (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))]
