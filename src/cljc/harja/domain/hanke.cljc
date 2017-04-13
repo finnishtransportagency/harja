@@ -10,7 +10,8 @@
 (s/def ::loppupvm inst?)
 
 (s/def ::hanke
-  (s/keys :req-un [::id ::alkupvm ::loppupvm]))
+  (s/keys :req-un [::alkupvm ::loppupvm]
+          :opt-un [::id]))
 
 ;; Haut
 
@@ -22,4 +23,5 @@
 (s/def ::tallenna-hanke-kysely
   (s/keys :req-un [::hanke]))
 
-(s/def ::tallenna-hanke-vastaus ::hanke)
+(s/def ::tallenna-hanke-vastaus (s/and ::hanke
+                                       (s/keys :req-un [::id])))
