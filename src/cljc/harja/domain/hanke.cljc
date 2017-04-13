@@ -9,7 +9,6 @@
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
 
-
 (s/def ::hanke
   (s/keys :req-un [::id ::alkupvm ::loppupvm]))
 
@@ -23,4 +22,4 @@
 (s/def ::tallenna-hanke-kysely
   (s/keys :req-un [::hanke]))
 
-(s/def ::tallenna-hanke-vastaus ::hae-harjassa-luodut-hankkeet-vastaus)
+(s/def ::tallenna-hanke-vastaus ::hanke)
