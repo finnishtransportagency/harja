@@ -33,7 +33,8 @@ SELECT
     nimi,
     alkupvm,
     loppupvm
-FROM hanke;
+FROM hanke
+ORDER BY alkupvm, nimi;
 
 -- name: luo-hanke<!
 INSERT INTO hanke (nimi, alkupvm, loppupvm)
