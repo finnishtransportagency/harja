@@ -39,7 +39,7 @@
     (ikonit/print) " PDF"]])
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [{:id nil :nimi "Kaikki urakat"}]
+  (let [urakkavalinnat (into [{:id nil :nimi "Ei rajausta (haetaan myös urakattomat)"}]
                              kayttajan-urakat)]
     [lomake/lomake
      {:luokka :horizontal
@@ -50,14 +50,16 @@
         valinnat-nyt
         {:valokioaikavali :luotu-vakioaikavali
          :alkuaika :luotu-alkuaika
-         :loppuaika :luotu-loppuaika})
+         :loppuaika :luotu-loppuaika}
+         true)
       (valinnat/aikavalivalitsin
         "Käynnissä välillä"
         tiedot/kaynnissa-aikavalit
         valinnat-nyt
         {:valokioaikavali :kaynnissa-vakioaikavali
          :alkuaika :kaynnissa-alkuaika
-         :loppuaika :kaynnissa-loppuaika})
+         :loppuaika :kaynnissa-loppuaika}
+         true)
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta
@@ -74,10 +76,21 @@
                          #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
        :palstoja 1
-       :tyhjennys-sallittu? true}
+       :tyhjennys-sallittu? true
+       :validoi [(fn [osoite]
+                   (log "ttihl tr-validointi: osoite" (pr-str osoite))
+                   (cond
+                     (not (tr/validi-osoite? osoite))
+                     "Osoite ei ole validi"
+
+                     (not (tr/on-alku-ja-loppu? osoite))
+                     "Vaaditaan sekä alku- että loppuosa"
+
+                     :else
+                     nil))]}
       {:nimi :vain-kayttajan-luomat
        :tyyppi :checkbox
-       :teksti "Vain minun luomat"
+       :teksti "Vain minun luomani"
        :palstoja 1}]
      valinnat-nyt]))
 

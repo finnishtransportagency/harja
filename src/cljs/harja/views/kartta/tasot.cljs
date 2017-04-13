@@ -9,7 +9,7 @@
              :as tarkastukset]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla
              :as laatupoikkeamat]
-            [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as ilmoitukset]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat

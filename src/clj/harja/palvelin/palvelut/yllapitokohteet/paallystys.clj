@@ -58,7 +58,7 @@
                                 :id)
                               (map
                                 #(assoc % :maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
-                                                                    db user
+                                                                    db
                                                                     {:urakka-id urakka-id
                                                                      :yllapitokohde-id (:id %)})))
                                 ypk)
@@ -66,7 +66,7 @@
                                 #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))
                                 ypk)
                               (map
-                                #(assoc % :maksuerat (sort-by :maksueranumero (:maksuerat %)))
+                                #(assoc % :maksuerat (vec (sort-by :maksueranumero (:maksuerat %))))
                                 ypk))]
     (vec yllapitokohteet)))
 
@@ -110,8 +110,10 @@
       (doseq [yllapitokohde yllapitokohteet]
         (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id yllapitokohde)))
 
-      (let [voi-tayttaa-maksuerat? (oikeudet/on-muu-oikeus? "maksuerat" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))
-            voi-tayttaa-maksueratunnuksen? (oikeudet/on-muu-oikeus? "maksueratunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id (:id user))]
+      (let [voi-tayttaa-maksuerat?
+            (oikeudet/on-muu-oikeus? "maksuerät" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)
+            voi-tayttaa-maksueratunnuksen?
+            (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id user)]
 
         (when voi-tayttaa-maksuerat?
           (tallenna-maksuerat db yllapitokohteet))
@@ -244,9 +246,7 @@
                                        (dissoc kommentti :liite)))))
                         (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))
         maaramuutokset (maaramuutokset/hae-ja-summaa-maaramuutokset
-                         db user
-                         {:urakka-id urakka-id
-                          :yllapitokohde-id paallystyskohde-id})
+                         db {:urakka-id urakka-id :yllapitokohde-id paallystyskohde-id})
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta-ilman-maaramuutoksia kokonaishinta-ilman-maaramuutoksia
                              :maaramuutokset (:tulos maaramuutokset)

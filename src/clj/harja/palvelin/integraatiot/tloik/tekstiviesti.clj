@@ -3,15 +3,15 @@
   (:require [taoensso.timbre :as log]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
-            [harja.domain.ilmoitukset :as apurit]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.fmt :as fmt]
-            [harja.domain.ilmoitukset :as ilm]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset])
+            [harja.domain.tieliikenneilmoitukset :as ilm]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+

@@ -21,7 +21,9 @@
             [specql.op :as op]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
-            [harja.palvelin.komponentit.fim :as fim]))
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.domain.roolit :as roolit]
+            [slingshot.slingshot :refer [throw+]]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -62,6 +64,7 @@
                           :urakat (if urakka
                                     [urakka]
                                     kayttajan-urakat)
+                          :urakattomat? (nil? urakka)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara
@@ -74,21 +77,27 @@
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
-  (let [org (get-in user [:organisaatio :id])
-        ilmoitus (-> ilmoitus
-                     (m/lisaa-muokkaustiedot ::t/id user)
-                     (update-in [::t/osoite ::tr/geometria]
-                                #(when % (geo/geometry (geo/clj->pg %)))))]
-    (println "TALLENNA ILMOITUS " (::t/id ilmoitus) " URAKASSA " (::t/urakka ilmoitus) "; ORG: " org)
-    (println "ILMO: " (pr-str ilmoitus))
-    (upsert! db ::t/ilmoitus
-             ilmoitus
-             (op/or
-               {::m/luoja-id (:id user)}
-               {::t/urakoitsija-id org}
-               {::t/tilaaja-id org}
-               {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))))
+  (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
+    (when (::t/urakka-id ilmoitus)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus)))
+
+    ;; jos käyttäjä on urakoitsija, tarkistetaan että urakka on tyhjä tai oman organisaation urakoima
+    (when (not (t/voi-tallentaa? user kayttajan-urakat ilmoitus))
+      (throw+ (roolit/->EiOikeutta (str "Ei oikeutta kirjata urakkaan"))))
+
+    (let [org (get-in user [:organisaatio :id])
+          ilmoitus (-> ilmoitus
+                       (m/lisaa-muokkaustiedot ::t/id user)
+                       (update-in [::t/osoite ::tr/geometria]
+                                  #(when % (geo/geometry (geo/clj->pg %)))))]
+
+      (upsert! db ::t/ilmoitus
+               ilmoitus
+               (op/or
+                 {::m/luoja-id (:id user)}
+                 {::t/urakoitsija-id org}
+                 {::t/tilaaja-id org}
+                 {::t/urakka-id (op/in kayttajan-urakat)})))))
 
 
 (defn tietyoilmoitus-pdf [db user params]
