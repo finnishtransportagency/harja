@@ -128,13 +128,13 @@
         (concat
           (when-let [turi-id (:turi-id data)]
             [[:id turi-id]])
-          [[:sampohankenimi (:urakka-nimi data)]]
-          [[:sampohankeid (:urakka-sampoid data)]]
+          [[:sampohankenimi (:hanke-nimi data)]]
+          [[:sampohankeid (:hanke-sampoid data)]]
           [[:tilaajanvastuuhenkilokayttajatunnus (:tilaajanvastuuhenkilo-kayttajatunnus data)]]
           [[:tilaajanvastuuhenkiloetunimi (:tilaajanvastuuhenkilo-etunimi data)]]
           [[:tilaajanvastuuhenkilosukunimi (:tilaajanvastuuhenkilo-sukunimi data)]]
           [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
-          [[:sampourakkanimi (:hanke-nimi data)]]
+          [[:sampourakkanimi (:urakka-nimi  data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
