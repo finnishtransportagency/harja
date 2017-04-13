@@ -22,6 +22,8 @@
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
+       ;; :slack {:taso :warn
+       ;;        :webhook-url #=(slurp "../.harja/slack-webhook-url")}
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
@@ -139,4 +141,6 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
+
+ :sahke {:lahetysjono "urakat-sahkeeseen"}
  }
