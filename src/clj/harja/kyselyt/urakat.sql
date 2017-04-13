@@ -40,7 +40,7 @@ FROM urakka u
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
-  LEFT JOIN sahkelahetys sl ON sl.urakka = urakka.id
+  LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
 WHERE u.harjassa_luotu IS TRUE;
 
 -- name: hae-lahimmat-urakat-aikavalilta

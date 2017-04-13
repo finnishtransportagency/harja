@@ -3,7 +3,7 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -47,7 +47,7 @@
           fail! (tuck/send-async! ->HankeEiTallennettu)]
       (go
         (try
-          (let [vastaus hanke] ;;TODO lisää tallennus
+          (let [vastaus (<! (k/post! :tallenna-hanke {:hanke nil}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -61,6 +61,7 @@
     (viesti/nayta! "Hanke tallennettu!")
     (let [vanhat (group-by :id (:haetut-hankkeet app))
           uusi {(:id hanke) [hanke]}]
+      ;; TODO Toimisiko tässä ihan vaan conj? Miksi tehdään vector -> map -> vector muunnos?
       ;; Yhdistetään tallennettu jo haettuihin.
       ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
       (assoc app :haetut-hankkeet (vec (apply concat (vals (merge vanhat uusi))))
@@ -83,7 +84,7 @@
           fail! (tuck/send-async! ->HankkeetEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Mock hanke" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))] ;;FIXME toteuta palvelu
+          (let [vastaus (<! (k/post! :hae-harjassa-luodut-hankkeet {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
