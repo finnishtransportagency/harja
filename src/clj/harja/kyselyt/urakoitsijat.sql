@@ -23,9 +23,28 @@ SELECT y.id
 -- name: hae-vesivayla-urakoitsijat
 SELECT
   urk.id,
-  urk.nimi
+  urk.nimi,
+  urk.ytunnus,
+  urk.katuosoite,
+  urk.postinumero
 FROM organisaatio urk
   LEFT JOIN urakka u ON urk.id = u.hallintayksikko
 WHERE urk.tyyppi = 'urakoitsija'
+      AND urk.poistettu IS NOT TRUE
       AND (u.tyyppi IN ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')
       OR urk.harjassa_luotu IS TRUE);
+
+-- name: luo-urakoitsija<!
+INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, tyyppi, luoja, luotu, harjassa_luotu)
+    VALUES (:nimi, :ytunnus, :katuosoite, :postinumero,
+            'urakoitsija', :kayttaja, NOW(), TRUE);
+
+-- name: paivita-urakoitsija!
+UPDATE organisaatio SET
+  nimi = :nimi,
+  ytunnus = :ytunnus,
+  katuosoite = :katuosoite,
+  postinumero = :postinumero,
+  muokkaaja = :kayttaja,
+  muokattu = NOW()
+WHERE id = :id;
