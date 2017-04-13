@@ -520,6 +520,25 @@ WHERE
   AND ypk.poistettu IS NOT TRUE
 ORDER BY ypka.paallystys_alku;
 
+-- name: hae-yllapitokohteen-aikataulu
+-- Hakee päällystysurakan kohteiden aikataulutiedot
+SELECT
+  ypk.id,
+  ypka.kohde_alku                  AS "kohde-alku",
+  ypka.paallystys_alku             AS "paallystys-alku",
+  ypka.paallystys_loppu            AS "paallystys-loppu",
+  ypka.tiemerkinta_takaraja        AS "tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku            AS "tiemerkinta-alku",
+  ypka.tiemerkinta_loppu           AS "tiemerkinta-loppu",
+  ypka.kohde_valmis                AS "kohde-valmis",
+  ypka.muokattu                    AS "muokattu",
+  ypka.muokkaaja                   AS "muokkaaja",
+  ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan"
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+WHERE ypk.id = :id
+AND poistettu IS NOT TRUE;
+
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
 FROM urakka
@@ -605,7 +624,7 @@ SELECT
   tu.sampoid             AS "tiemerkintaurakka-sampo-id"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
-  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+  LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id IN (:idt);
 
