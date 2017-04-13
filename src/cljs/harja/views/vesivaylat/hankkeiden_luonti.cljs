@@ -8,7 +8,8 @@
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn luontilomake [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
   [:div
@@ -33,7 +34,7 @@
     [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
      (lomake/rivi
        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
+       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
         :validoi [[:pvm-toisen-pvmn-jalkeen (:alkupvm valittu-hanke)
                    "Loppu ei voi olla ennen alkua"]]})]
     valittu-hanke]])
@@ -43,9 +44,11 @@
     (komp/sisaan #(e! (tiedot/->HaeHankkeet)))
     (fn [e! {:keys [haetut-hankkeet hankkeiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää hanke" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
+       [napit/uusi "Lisää hanke"
         #(e! (tiedot/->UusiHanke))
-        {:disabled (nil? haetut-hankkeet)}]
+        {:disabled (or (nil? haetut-hankkeet)
+                       (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat
+                                                      (:id @nav/valittu-urakka))))}]
        [grid/grid
         {:otsikko (if (and (some? haetut-hankkeet) hankkeiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
