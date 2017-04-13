@@ -23,6 +23,8 @@ SELECT
   lpad(cast(elynumero as varchar), 2, '0') AS "elynumero"
 FROM organisaatio o
 WHERE elynumero IS NOT NULL
+-- Parametrisoidaan tämä kun aletaan tekemään vesiväylille raportteja.
+AND liikennemuoto = 'T'
 ORDER BY elynumero;
 
 
