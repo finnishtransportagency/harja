@@ -33,11 +33,11 @@
    "tl509" "Rummut"
    "tl515" "Aidat"
    "tl503" "Levähdysalueiden varusteet"
-   "tl510" "Viheralueet"
    "tl512" "Viemärit"
    "tl165" "Välikaistat"
    "tl516" "Hiekkalaatikot"
-   "tl511" "Viherkuviot"})
+   "tl323" "Viheralueet"
+   "tl524" "Viherkuviot"})
 
 (def tien-puolet
   [0

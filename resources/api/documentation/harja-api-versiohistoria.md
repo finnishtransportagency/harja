@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.20</b>  
-<b>Julkaistu: 4.4.2017</b>
+<b>Nykyinen versio: 1.0.21</b>  
+<b>Julkaistu: 13.4.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.21 Julkaistu: 13.4.2017:
+    - Viheralueiden ja -kuvioiden tietolajitunnisteet korvattu uusilla.
 - Versionumero: 1.0.20 Julkaistu: 4.4.2017:
     - Ylläpitokohteelle on jatkossa mahdollista raportoida tieto, sisältääkö se poikkeamaraportin.
 - Versionumero: 1.0.19 Julkaistu: 22.3.2017:
