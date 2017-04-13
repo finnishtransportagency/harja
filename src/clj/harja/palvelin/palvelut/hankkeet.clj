@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.hankkeet :as q]
+            [taoensso.timbre :as log]
             [harja.domain.hanke :as hanke]
             [harja.id :as id]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
@@ -25,32 +26,38 @@
       (let [tallennus-params {:nimi nimi
                               :alkupvm alkupvm
                               :loppupvm loppupvm}
-            tallennettu-hanke (if (id/id-olemassa? hanke)
-                                (q/paivita-hanke<! db (assoc tallennus-params :id (:id hanke)))
-                                (q/luo-hanke<! db tallennus-params))]
-        tallennettu-hanke))))
+            {:keys [id alkupvm loppupvm] :as tallennettu-hanke}
+            (if (id/id-olemassa? hanke)
+              (q/paivita-hanke<! db (assoc tallennus-params :id (:id hanke)))
+              (q/luo-hanke<! db tallennus-params))]
+        (log/debug "PALAUTETAAN: " (pr-str {:id id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm}))
+        {:id id
+         :alkupvm alkupvm
+         :loppupvm loppupvm}))))
 
 (defrecord Hankkeet []
   component/Lifecycle
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelu http
-      :hae-paattymattomat-vesivaylahankkeet
-      (fn [user _]
-        (hae-paattymattomat-vesivaylahankkeet db user)))
+                      :hae-paattymattomat-vesivaylahankkeet
+                      (fn [user _]
+                        (hae-paattymattomat-vesivaylahankkeet db user)))
 
     (julkaise-palvelu http
-      :hae-harjassa-luodut-hankkeet
-      (fn [user _]
-        (hae-harjassa-luodut-hankkeet db user))
-      {:vastaus-spec ::hanke/hae-harjassa-luodut-hankkeet-vastaus})
+                      :hae-harjassa-luodut-hankkeet
+                      (fn [user _]
+                        (hae-harjassa-luodut-hankkeet db user))
+                      {:vastaus-spec ::hanke/hae-harjassa-luodut-hankkeet-vastaus})
 
     (julkaise-palvelu http
-      :tallenna-hanke
-      (fn [user tiedot]
-        (tallenna-hanke db user tiedot))
-      {:kysely-spec ::hanke/tallenna-hanke-kysely
-       :vastaus-spec ::hanke/tallenna-hanke-vastaus})
+                      :tallenna-hanke
+                      (fn [user tiedot]
+                        (tallenna-hanke db user tiedot))
+                      {:kysely-spec ::hanke/tallenna-hanke-kysely
+                       :vastaus-spec ::hanke/tallenna-hanke-vastaus})
     this)
 
   (stop [{http :http-palvelin :as this}]
