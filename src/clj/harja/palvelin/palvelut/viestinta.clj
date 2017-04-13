@@ -64,7 +64,7 @@
       (if (empty? viestin-saajat)
         (log/warn (format "Urakalle %s ei löydy FIM:stä yhtään henkiöä, jolle lähettää tekstiviesti." urakka-sampoid))
         (doseq [henkilo viestin-saajat]
-          (try+
+          (try
             (sms/laheta sms (:puhelin henkilo) viesti)
             (catch Exception e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
