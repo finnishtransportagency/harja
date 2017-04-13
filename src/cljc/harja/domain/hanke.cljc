@@ -18,6 +18,9 @@
 (s/def ::hae-harjassa-luodut-hankkeet-vastaus
   (s/coll-of ::hanke))
 
-;; Talennus
+;; Tallennus
 
-;; TODO
+(s/def ::tallenna-hanke-kysely
+  (s/keys :req-un [::hanke]))
+
+(s/def ::tallenna-hanke-vastaus ::hae-harjassa-luodut-hankkeet-vastaus)

@@ -34,3 +34,14 @@ SELECT
     alkupvm,
     loppupvm
 FROM hanke;
+
+-- name: luo-hanke<!
+INSERT INTO hanke (nimi, alkupvm, loppupvm)
+    VALUES (:nimi, :alkupvm, :loppupvm);
+
+-- name: paivita-hanke<!
+UPDATE hanke SET
+    nimi = :nimi,
+    alkupvm = :alkupvm,
+    loppupvm = :loppupvm
+WHERE id = :id;
