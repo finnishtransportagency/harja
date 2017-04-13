@@ -63,7 +63,7 @@
       [:div
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
-        {:disabled tallennus-kaynnissa?}]
+        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
        [debug/debug valittu-urakka]
        (let [ilman-poistettuja #(remove :poistettu %)
              urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
@@ -79,6 +79,7 @@
                         #(e! (tiedot/->TallennaUrakka (lomake/ilman-lomaketietoja urakka)))
                         {:ikoni (ikonit/tallenna)
                          :disabled (or tallennus-kaynnissa?
+                                       (not (oikeudet/hallinta-vesivaylat))
                                        (not (voi-tallentaa? urakka))
                                        (not (lomake/voi-tallentaa? urakka)))
                          :tallennus-kaynnissa? tallennus-kaynnissa?
@@ -197,7 +198,7 @@
   (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))
         tila (tiedot/urakan-sahke-tila urakka)]
     [:button
-     {:disabled lahetys-kaynnissa?
+     {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
       :class (case tila
                :lahetetty "nappi-toissijainen"
                :epaonnistunut "nappi-kielteinen"
@@ -238,7 +239,7 @@
       [:div
       [napit/uusi "Lisää urakka" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
        #(e! (tiedot/->UusiUrakka))
-       {:disabled (nil? haetut-urakat)}]
+       {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]
       [grid/grid
        {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
                    [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
