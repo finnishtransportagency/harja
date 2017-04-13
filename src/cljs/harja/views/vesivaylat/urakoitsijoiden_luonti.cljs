@@ -38,7 +38,7 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakoitsijat)))
     (fn [e! {:keys [haetut-urakoitsijat urakoitsijoiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää urakoitsija"
+       [napit/uusi "Lisää urakoitsija" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
         #(e! (tiedot/->UusiUrakoitsija))
         {:disabled (nil? haetut-urakoitsijat)}]
        [grid/grid

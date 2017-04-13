@@ -236,7 +236,7 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
       [:div
-      [napit/uusi "Lisää urakka"
+      [napit/uusi "Lisää urakka" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
        #(e! (tiedot/->UusiUrakka))
        {:disabled (nil? haetut-urakat)}]
       [grid/grid

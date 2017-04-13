@@ -41,7 +41,7 @@
     (komp/sisaan #(e! (tiedot/->HaeHankkeet)))
     (fn [e! {:keys [haetut-hankkeet hankkeiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää hanke"
+       [napit/uusi "Lisää hanke" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
         #(e! (tiedot/->UusiHanke))
         {:disabled (nil? haetut-hankkeet)}]
        [grid/grid
