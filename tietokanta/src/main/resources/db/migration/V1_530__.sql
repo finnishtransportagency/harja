@@ -10,7 +10,7 @@ UPDATE organisaatio SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 ALTER TABLE urakka ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE urakka SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 
-ALTER TABLE sopimus ADD COLUMN harjassa_luotu BOOLEAN DEFAULT FALSE;
+ALTER TABLE sopimus ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE sopimus SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 
 -- Urakalta ja sopimukselta pois pakollinen sampoid (ei ole pakollinen vesiväyläurakoissa)
@@ -38,6 +38,10 @@ ALTER TABLE hanke ADD COLUMN poistettu boolean default false;
 
 ALTER TABLE organisaatio ADD COLUMN luotu timestamp;
 ALTER TABLE organisaatio ADD COLUMN muokattu timestamp;
--- ALTER TABLE organisaatio ADD COLUMN luoja integer REFERENCES kayttaja (id);
 ALTER TABLE organisaatio ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
 ALTER TABLE organisaatio ADD COLUMN poistettu boolean default false;
+
+-- NOT NULL constraintteja lisää
+ALTER TABLE hanke ALTER COLUMN nimi SET NOT NULL;
+ALTER TABLE hanke ALTER COLUMN alkupvm SET NOT NULL;
+ALTER TABLE hanke ALTER COLUMN loppupvm SET NOT NULL;
