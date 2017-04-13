@@ -19,13 +19,13 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (q/hae-harjassa-luodut-hankkeet db)))
 
-(defn tallenna-hanke [db user {:keys [nimi alkupvm loppupvm] :as hanke}]
+(defn tallenna-hanke [db user {:keys [hanke] :as tiedot}]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
     (jdbc/with-db-transaction [db db]
-      (let [tallennus-params {:nimi nimi
-                              :alkupvm alkupvm
-                              :loppupvm loppupvm}
+      (let [tallennus-params {:nimi (:nimi hanke)
+                              :alkupvm (:alkupvm hanke)
+                              :loppupvm (:loppupvm hanke)}
             {:keys [id alkupvm loppupvm] :as tallennettu-hanke}
             (if (id/id-olemassa? hanke)
               (q/paivita-hanke<! db (assoc tallennus-params :id (:id hanke)))
