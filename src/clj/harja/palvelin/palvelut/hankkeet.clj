@@ -34,19 +34,18 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db :as this}]
-    (julkaise-palvelu
-      http
+    (julkaise-palvelu http
       :hae-paattymattomat-vesivaylahankkeet
       (fn [user _]
         (hae-paattymattomat-vesivaylahankkeet db user)))
 
-    (julkaise-palvelu
+    (julkaise-palvelu http
       :hae-harjassa-luodut-hankkeet
       (fn [user _]
         (hae-harjassa-luodut-hankkeet db user))
       {:vastaus-spec ::hanke/hae-harjassa-luodut-hankkeet-vastaus})
 
-    (julkaise-palvelu
+    (julkaise-palvelu http
       :tallenna-hanke
       (fn [user tiedot]
         (tallenna-hanke db user tiedot))
