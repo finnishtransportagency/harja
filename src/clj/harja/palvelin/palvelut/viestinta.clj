@@ -59,7 +59,7 @@
    viesti                 Tekstiviestin sisältö"
   [{:keys [fim sms urakka-sampoid fim-kayttajaroolit viesti-otsikko viesti]}]
   (log/debug (format "Lähetetään tekstiviesti FIM-käyttäjille %s. Aihe: %s" fim-kayttajaroolit viesti-otsikko))
-  (try+
+  (try
     (let [viestin-saajat (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
       (if (empty? viestin-saajat)
         (log/warn (format "Urakalle %s ei löydy FIM:stä yhtään henkiöä, jolle lähettää tekstiviesti." urakka-sampoid))
