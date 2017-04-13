@@ -14,23 +14,26 @@
   [:div
    [napit/takaisin "Takaisin luetteloon"
     #(e! (tiedot/->ValitseUrakoitsija nil))
-    {:disabled tallennus-kaynnissa?}]
-   [harja.ui.debug/debug valittu-urakoitsija]
+    {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
    [lomake/lomake
     {:otsikko (if (:id valittu-urakoitsija)
                 "Muokkaa urakoitsijaa"
                 "Luo uusi urakoitsija")
      :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu (lomake/ilman-lomaketietoja %)))
      :voi-muokata? #(oikeudet/hallinta-vesivaylat)
-     :footer-fn (fn [hanke]
+     :footer-fn (fn [urakoitsija]
                   [napit/tallenna
                    "Tallenna urakoitsija"
-                   #(e! (tiedot/->TallennaUrakoitsija (lomake/ilman-lomaketietoja hanke)))
+                   #(e! (tiedot/->TallennaUrakoitsija (lomake/ilman-lomaketietoja urakoitsija)))
                    {:ikoni (ikonit/tallenna)
                     :disabled (or tallennus-kaynnissa?
-                                  (not (lomake/voi-tallentaa? hanke)))
+                                  (not (oikeudet/hallinta-vesivaylat))
+                                  (not (lomake/voi-tallentaa? urakoitsija)))
                     :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-    [{:otsikko "Nimi" :nimi :nimi :tyyppi :string}]
+    [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
+     {:otsikko "Y-tunnus" :nimi :ytunnus :tyyppi :string :pakollinen? true}
+     {:otsikko "Katuosoite" :nimi :katuosoite :tyyppi :string}
+     {:otsikko "Postinumero" :nimi :postinumero :tyyppi :string}]
     valittu-urakoitsija]])
 
 (defn urakoitsijagrid [e! app]
@@ -38,9 +41,10 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakoitsijat)))
     (fn [e! {:keys [haetut-urakoitsijat urakoitsijoiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää urakoitsija" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
+       [napit/uusi "Lisää urakoitsija"
         #(e! (tiedot/->UusiUrakoitsija))
-        {:disabled (nil? haetut-urakoitsijat)}]
+        {:disabled (or (not (oikeudet/hallinta-vesivaylat))
+                       (nil? haetut-urakoitsijat))}]
        [grid/grid
         {:otsikko (if (and (some? haetut-urakoitsijat) urakoitsijoiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
@@ -50,7 +54,10 @@
                   [ajax-loader "Haetaan urakoitsijoita"]
                   "Urakoitsijoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakoitsija %))}
-        [{:otsikko "Nimi" :nimi :nimi}]
+        [{:otsikko "Nimi" :nimi :nimi}
+         {:otsikko "Y-tunnus" :nimi :ytunnus}
+         {:otsikko "Katuosoite" :nimi :katuosoite}
+         {:otsikko "Postinumero" :nimi :postinumero}]
         haetut-urakoitsijat]])))
 
 (defn vesivaylaurakoitsijoiden-luonti* [e! app]

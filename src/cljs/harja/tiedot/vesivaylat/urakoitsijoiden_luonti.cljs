@@ -47,7 +47,7 @@
           fail! (tuck/send-async! ->UrakoitsijaEiTallennettu)]
       (go
         (try
-          (let [vastaus urakoitsija] ;;TODO lisää tallennus
+          (let [vastaus (async/<! (k/post! :tallenna-urakoitsija urakoitsija))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -83,7 +83,7 @@
           fail! (tuck/send-async! ->UrakoitsijatEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Kalle" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-urakoitsijat {}))] ;;FIXME toteuta palvelu
+          (let [vastaus (async/<! (k/post! :vesivayla-urakoitsijat {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
