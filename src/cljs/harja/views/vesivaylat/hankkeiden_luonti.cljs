@@ -13,8 +13,7 @@
 
 (defn luontilomake [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
   [:div
-   [napit/takaisin "Takaisin luetteloon"
-    #(e! (tiedot/->ValitseHanke nil))
+   [napit/takaisin "Takaisin luetteloon" #(e! (tiedot/->ValitseHanke nil))
     {:disabled tallennus-kaynnissa?}]
    [harja.ui.debug/debug valittu-hanke]
    [lomake/lomake
@@ -44,8 +43,7 @@
     (komp/sisaan #(e! (tiedot/->HaeHankkeet)))
     (fn [e! {:keys [haetut-hankkeet hankkeiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää hanke"
-        #(e! (tiedot/->UusiHanke))
+       [napit/uusi "Lisää hanke" #(e! (tiedot/->UusiHanke))
         {:disabled (or (nil? haetut-hankkeet)
                        (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat
                                                       (:id @nav/valittu-urakka))))}]
