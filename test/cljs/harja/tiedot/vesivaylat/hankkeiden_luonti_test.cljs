@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.hankkeiden-luonti-test
   (:require [harja.tiedot.vesivaylat.hankkeiden-luonti :as h]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer [e!]]
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @h/tila)
@@ -18,12 +18,10 @@
   (is (= h/uusi-hanke (:valittu-hanke (e! tila h/->UusiHanke)))))
 
 (deftest tallentamisen-aloitus
-  (let [halutut #{h/->HankeTallennettu h/->HankeEiTallennettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! {:haetut-hankkeet []} h/->TallennaHanke {:id 1}))))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{h/->HankeTallennettu h/->HankeEiTallennettu}
+
+    (is (true? (:tallennus-kaynnissa? (e! {:haetut-hankkeet []} h/->TallennaHanke {:id 1}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden hankkeen tallentaminen"

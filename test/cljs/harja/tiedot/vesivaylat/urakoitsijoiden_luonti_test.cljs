@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakoitsijoiden-luonti-test
   (:require [harja.tiedot.vesivaylat.urakoitsijoiden-luonti :as u]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer [e!]]
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @u/tila)
@@ -19,12 +19,10 @@
   (is (= u/uusi-urakoitsija (:valittu-urakoitsija (e! tila u/->UusiUrakoitsija)))))
 
 (deftest tallentamisen-aloitus
-  (let [halutut #{u/->UrakoitsijaTallennettu u/->UrakoitsijaEiTallennettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakoitsijat []} u/->TallennaUrakoitsija  {:id 1}))))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{u/->UrakoitsijaTallennettu u/->UrakoitsijaEiTallennettu}
+
+    (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakoitsijat []} u/->TallennaUrakoitsija  {:id 1}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakoitsijan tallentaminen"
@@ -51,4 +49,20 @@
 (deftest urakoitsijan-muokkaaminen-lomakkeessa
   (let [urakoitsija {:nimi :foobar}]
     (is (= urakoitsija (:valittu-urakoitsija (e! tila u/->UrakoitsijaaMuokattu urakoitsija))))))
+
+(deftest hakemisen-aloitus
+  (vaadi-async-kutsut
+    #{u/->UrakoitsijatHaettu u/->UrakoitsijatEiHaettu}
+
+    (is (true? (:urakoitsijoiden-haku-kaynnissa? (e! tila u/->HaeUrakoitsijat {:id 1}))))))
+
+(deftest hakemisen-valmistuminen
+  (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
+        tulos (e! tila u/->UrakoitsijatHaettu urakat)]
+    (is (false? (:urakoitsijoiden-haku-kaynnissa? tulos)))
+    (is (= [{:id 1 :nimi :a} {:id 2 :nimi :b}] (:haetut-urakoitsijat tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! tila u/->UrakoitsijatEiHaettu "virhe")]
+    (is (false? (:urakoitsijoiden-haku-kaynnissa? tulos)))))
 
