@@ -47,7 +47,7 @@
           fail! (tuck/send-async! ->HankeEiTallennettu)]
       (go
         (try
-          (let [vastaus (<! (k/post! :tallenna-hanke {hanke}))]
+          (let [vastaus (<! (k/post! :tallenna-hanke {:hanke nil}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
