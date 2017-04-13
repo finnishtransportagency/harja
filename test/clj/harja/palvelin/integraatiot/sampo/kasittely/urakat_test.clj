@@ -64,9 +64,9 @@
     (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu")))
 
 (deftest tarkista-harjassa-luodun-urakan-kasittely
+  (u "UPDATE urakka SET harjassa_luotu = true WHERE id = (select id from urakka where sampoid = '1242141-OULU2') ;")
   (let [alkuperainen-urakka (first (q "select * from urakka where sampoid = '1242141-OULU2'"))]
     (is alkuperainen-urakka "Lähtötilanteessa löytyy urakka Sampo id:llä")
-    (u "INSERT INTO sahkelahetys (urakka) VALUES ((SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'));")
     (tuo-urakka "1242141-OULU2")
     (let [urakka-lahetyksen-jalkeen (first (q "select * from urakka where sampoid = '1242141-OULU2'"))]
       (is (= alkuperainen-urakka urakka-lahetyksen-jalkeen)
