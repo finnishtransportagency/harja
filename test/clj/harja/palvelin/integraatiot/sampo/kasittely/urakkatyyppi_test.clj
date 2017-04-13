@@ -31,3 +31,13 @@
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi "")) "Liian lyhyt arvo päätellään hoito urakkatyypiksi.")
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi "1")) "Liian lyhyt arvo päätellään hoito urakkatyypiksi.")
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi nil)) "Nil arvo päätellään hoito urakkatyypiksi."))
+
+(deftest tarkista-sampon-urakkatyypin-rakentaminen
+  (is (= "TH" (urakkatyyppi/rakenna-sampon-tyyppi "hoito")))
+  (is (= "TYP" (urakkatyyppi/rakenna-sampon-tyyppi "paallystys")))
+  (is (= "TYT" (urakkatyyppi/rakenna-sampon-tyyppi "tiemerkinta")))
+  (is (= "TYV" (urakkatyyppi/rakenna-sampon-tyyppi "valaistus")))
+  (is (= "TYS" (urakkatyyppi/rakenna-sampon-tyyppi "siltakorjaus")))
+  (is (= "TYL" (urakkatyyppi/rakenna-sampon-tyyppi "tekniset-laitteet")))
+  (is (thrown-with-msg? RuntimeException #"Tuntematon urakkatyyppi: tuntematon"
+                        (urakkatyyppi/rakenna-sampon-tyyppi "tuntematon"))))

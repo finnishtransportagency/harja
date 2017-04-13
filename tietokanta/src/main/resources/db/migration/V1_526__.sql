@@ -12,4 +12,3 @@ WHERE ypk.yllapitokohdetyotyyppi = 'paikkaus' :: yllapitokohdetyotyyppi
       AND ypk.poistettu IS NOT TRUE;
 
 ALTER TABLE paikkausilmoitus DROP COLUMN toteutunut_hinta;
-
