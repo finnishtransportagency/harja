@@ -45,3 +45,4 @@ ALTER TABLE organisaatio ADD COLUMN poistettu boolean default false;
 ALTER TABLE hanke ALTER COLUMN nimi SET NOT NULL;
 ALTER TABLE hanke ALTER COLUMN alkupvm SET NOT NULL;
 ALTER TABLE hanke ALTER COLUMN loppupvm SET NOT NULL;
+ALTER TABLE hanke ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm)

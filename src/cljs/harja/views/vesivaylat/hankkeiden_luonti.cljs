@@ -33,7 +33,9 @@
     [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
      (lomake/rivi
        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true})]
+       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
+        :validoi [[:pvm-toisen-pvmn-jalkeen (:alkupvm valittu-hanke)
+                   "Loppu ei voi olla ennen alkua"]]})]
     valittu-hanke]])
 
 (defn hankegrid [e! app]
