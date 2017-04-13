@@ -27,24 +27,24 @@
    viesti-body            Sähköpostiviestin body"
   [{:keys [fim email urakka-sampoid fim-kayttajaroolit viesti-otsikko viesti-body]}]
   (log/debug (format "Lähetetään sähköposti FIM-käyttäjille %s. Aihe: %s" fim-kayttajaroolit viesti-otsikko))
-  (try+
+  (try
     (let [viestin-saajat (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
       (if (empty? viestin-saajat)
         (log/warn (format "Urakalle %s ei löydy FIM:stä yhtään henkiöä, jolle lähettää sähköposti." urakka-sampoid))
         (doseq [henkilo viestin-saajat]
-          (try+
+          (try
             (sahkoposti/laheta-viesti!
               email
               (sahkoposti/vastausosoite email)
               (:sahkoposti henkilo)
               (str "Harja: " viesti-otsikko)
               viesti-body)
-            (catch Throwable e
+            (catch Exception e
               (log/error (format "Sähköpostin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+    (catch Exception e
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (pr-str virheet))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
 
 (defn laheta-tekstiviesti-fim-kayttajarooleille
   "Yrittää lähettää tekstiviestin annetun urakan FIM-käyttäjille, jotka ovat
@@ -66,10 +66,10 @@
         (doseq [henkilo viestin-saajat]
           (try+
             (sms/laheta sms (:puhelin henkilo) viesti)
-            (catch Throwable e
+            (catch Exception e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+    (catch Exception e
       (log/error (format "Tekstiviestiä ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (pr-str virheet))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
 
