@@ -15,7 +15,7 @@
 
 ;; Haut
 
-(s/def :hae-harjassa-luodut-hankkeet-vastaus
+(s/def ::hae-harjassa-luodut-hankkeet-vastaus
   (s/coll-of ::hanke))
 
 ;; Talennus
