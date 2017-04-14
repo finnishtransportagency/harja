@@ -190,6 +190,18 @@
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
                 :notify-command ["./run-karma.sh"]}
+
+               {:id "testcards"
+                :figwheel true
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                               "test/cljs" "test/shared-cljs"]
+                :compiler {:output-to "resources/public/testcards/testcards.js"
+                           :output-dir "resources/public/testcards/out"
+                           :optimizations :none
+                           :pretty-print true
+                           :source-map true
+                           :libs ["src/js/kuvataso.js"]
+                           :closure-output-charset "US-ASCII"}}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
