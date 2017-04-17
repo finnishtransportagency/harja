@@ -133,7 +133,7 @@
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
-                 [devcards "0.2.2" :exclusions [cljsjs/react]]]
+                 [devcards "0.2.3" :exclusions [cljsjs/react]]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
@@ -192,7 +192,7 @@
                 :notify-command ["./run-karma.sh"]}
 
                {:id "testcards"
-                :figwheel true
+                :figwheel {:devcards true}
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
                                "test/cljs" "test/shared-cljs"]
                 :compiler {:output-to "resources/public/testcards/testcards.js"

@@ -1,10 +1,8 @@
 (ns harja.testcards
   (:require [reagent.core :as r]
-            [harja.ui.lomake-test :as lomake-test]))
-
-(defn testcards []
-  [:div "testikortteja"
-   [lomake-test/testilomake ]])
+            [devcards.core :refer [start-devcard-ui!]]
+            [harja.ui.lomake-test :as lomake-test])
+  (:require-macros [devcards.core :refer [defcard reagent]]))
 
 (defn ^:export main []
-  (r/render [#'testcards] (.getElementById js/document "app")))
+  (start-devcard-ui!))
