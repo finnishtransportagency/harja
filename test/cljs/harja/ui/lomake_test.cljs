@@ -26,8 +26,9 @@
 
 (def skeema [{:nimi ::nimi :otsikko "Nimi" :tyyppi :string}
              {:nimi ::luoja :otsikko "Luoja" :tyyppi :string}
-             {:nimi ::vuosi :otsikko "Vuosi" :tyyppi :positiivinen-numero}
-             {:nimi ::paradigma :otsikkoa "Paradigma"
+             {:nimi ::vuosi :otsikko "Vuosi" :tyyppi :positiivinen-numero
+              :pakollinen? true}
+             {:nimi ::paradigma :otsikko "Paradigma"
               :tyyppi :valinta :valinnat (vec paradigmat)}])
 
 (defn testilomake [data]
@@ -62,6 +63,11 @@ Tämä lomake käyttää speciä kenttien validointiin."
           (map str/trim)
           (str/split kentat-txt #","))))
 
+(defn pakollinen?
+  "Tarkistaa onko annetun nimisellä kentällä required luokka"
+  [nimi]
+  (= 1 (count (u/sel (str "div.required label[for='" nimi "']")))))
+
 (deftest lomake-testit
   (let [data (r/atom {::vuosi 1987})
         aseta! #(u/change (str "label[for='" %1 "'] + input") %2)]
@@ -71,6 +77,12 @@ Tämä lomake käyttää speciä kenttien validointiin."
      "Aluksi puuttuu kaksi pakollista kenttää"
      (is (= #{"Nimi" "Luoja"} (puuttuvat-pakolliset)))
      (is (= (::vuosi @data) 1987))
+
+     "Pakollinen tähti aluksi"
+     (is (pakollinen? "nimi"))
+     (is (pakollinen? "luoja"))
+     (is (pakollinen? "vuosi")
+         "Vuosi on asetettu :pakollinen? true, joten siinä on aina")
 
      "Muutetaan vuosi liian pieneksi"
      (aseta! "vuosi" "1745")
@@ -101,6 +113,11 @@ Tämä lomake käyttää speciä kenttien validointiin."
      (is (= (::luoja @data) "Foo Barsky"))
      (is (= (::nimi @data) "Somelanguage"))
      (is (= #{"Vuosi"} (puuttuvat-pakolliset)))
+
+     "Pakollinen tähti kun luoja ja nimi annettu"
+     (is (not (pakollinen? "nimi")))
+     (is (not (pakollinen? "luoja")))
+     (is (pakollinen? "vuosi"))
 
      "Asetetaan luoja ja nimi taas tyhjäksi"
      (aseta! "luoja" "")
