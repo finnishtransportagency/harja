@@ -32,6 +32,7 @@
             [harja.tiedot.urakka.yllapitokohteet-test]
             [harja.ui.kartta.esitettavat-asiat-test]
             [harja.views.urakka.paallystyksen-maksuerat-test]
+            [harja.ui.lomake-test]
             ;; uusi testi tähän
             ))
 
@@ -67,5 +68,6 @@
            'harja.tiedot.urakka.yllapitokohteet-test
            'harja.ui.kartta.esitettavat-asiat-test
            'harja.views.urakka.paallystyksen-maksuerat-test
+           'harja.ui.lomake-test
            ;; uusi testi tähän
            )
