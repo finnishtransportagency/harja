@@ -252,7 +252,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   "UI yhdelle riville"
   [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!
    muokatut virheet varoitukset huomautukset muokkaa]
-  (let [rivi? (-> skeemat meta :rivi?)
+  (let [puuttuvat-pakolliset-kentat (or (::puuttuvat-pakolliset-kentat data) #{})
+        rivi? (-> skeemat meta :rivi?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
     [:div.row.lomakerivi
@@ -263,9 +264,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                         (muokattava? data)))]]
          ^{:key nimi}
          [kentta (assoc s
-                   :col-luokka col-luokka
-                   :focus (= nimi nykyinen-fokus)
-                   :on-focus #(aseta-fokus! nimi))
+                        :pakollinen? (or (puuttuvat-pakolliset-kentat nimi)
+                                         (:pakollinen? s))
+                        :col-luokka col-luokka
+                        :focus (= nimi nykyinen-fokus)
+                        :on-focus #(aseta-fokus! nimi))
           data atom-fn muokattava? muokkaa
           (get muokatut nimi)
           (get virheet nimi)
