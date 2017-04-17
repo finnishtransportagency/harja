@@ -8,7 +8,8 @@
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
             [harja.pvm :as pvm]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.lomake.spec :as lomake-spec])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord Ryhma [otsikko optiot skeemat])
@@ -271,7 +272,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           (get varoitukset nimi)
           (get huomautukset nimi)]))]))
 
-(defn validoi [tiedot skeema]
+(defn- validoi [tiedot skeema spec]
   (let [kaikki-skeemat (pura-ryhmat skeema)
         kaikki-virheet (validointi/validoi-rivi nil tiedot kaikki-skeemat :validoi)
         kaikki-varoitukset (validointi/validoi-rivi nil tiedot kaikki-skeemat :varoita)
@@ -279,12 +280,16 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         puuttuvat-pakolliset-kentat (into #{}
                                           (map :nimi)
                                           (validointi/puuttuvat-pakolliset-kentat tiedot
-                                                                                  kaikki-skeemat))]
+                                                                                  kaikki-skeemat))
+        spec-validointi (when spec
+                          (lomake-spec/validoi-spec tiedot spec))]
     (assoc tiedot
-      ::virheet kaikki-virheet
-      ::varoitukset kaikki-varoitukset
-      ::huomautukset kaikki-huomautukset
-      ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))
+           ::virheet (merge kaikki-virheet (::virheet spec-validointi))
+           ::varoitukset kaikki-varoitukset
+           ::huomautukset kaikki-huomautukset
+           ::puuttuvat-pakolliset-kentat (into puuttuvat-pakolliset-kentat
+                                               (::puuttuvat-pakolliset-kentat spec-validointi)))))
+
 
 (defn- muokkausaika [{ensimmainen ::ensimmainen-muokkaus
                       viimeisin ::viimeisin-muokkaus :as tiedot}]
@@ -318,12 +323,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [_ _ _]
   (let [fokus (atom nil)]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata? ei-borderia?] :as opts} skeema
+                 voi-muokata? ei-borderia? spec] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
       (let [{virheet ::virheet
              varoitukset ::varoitukset
-             huomautukset ::huomautukset :as validoitu-data} (validoi data skeema)]
+             huomautukset ::huomautukset :as validoitu-data}
+            (validoi data skeema spec)]
         (kasittele-virhe
           (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?
@@ -333,7 +339,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                        (assert muokkaa! (str ":muokkaa! puuttuu, opts:" (pr-str opts)))
                                        (-> uudet-tiedot
                                            muokkausaika
-                                           (validoi skeema)
+                                           (validoi skeema spec)
                                            (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
                                                                        #{}) nimi))
                                            muokkaa!)))]
