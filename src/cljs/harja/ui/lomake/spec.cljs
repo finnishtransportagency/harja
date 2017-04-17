@@ -15,19 +15,6 @@
             [clojure.string :as str]))
 
 
-(defn- puuttuvat-spec-kentat
-  "Palauttaa spec problems listasta pakolliset puuttuvat kentät.
-  Pakollinen puuttuva kenttä päätellään predikaatista (contains? % :kentan/keyword)."
-  [problems]
-  (into #{}
-        (keep #(let [{:keys [path pred]} %]
-                 (when (and (= [] path)
-                            (list? pred)
-                            (= (first pred) 'contains?))
-                   (nth pred 2))))
-        problems))
-
-
 (defmulti pred-virhe
   "Palauttaa lomakkeessa näytettävän virheen spec validointivirheen predikaatin perusteella."
   (fn [{pred :pred}]
@@ -84,15 +71,9 @@
     :harja.ui.lomake/virheet {}}
    problems))
 
-(def viime-virheet (atom nil))
-
 (defn validoi-spec
   "Validoi lomakedata annettua speciä vasten. Palauttaa mäpin, jossa
   :harja.ui.lomake/puuttuvat-pakolliset-kentat ja :harja.ui.lomake/virheet."
   [data spec]
   (let [problems (::s/problems (s/explain-data spec data))]
-
-    (reset! viime-virheet problems)
-    (println "DATA: " data)
-    (println "virheet: " problems)
     (virheet problems)))
