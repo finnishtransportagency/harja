@@ -208,3 +208,99 @@
     (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Alkuosan pituus ei kelpaa"))))
+
+(deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosaa-ei-olemassa
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 2
+                                                            :aet 1
+                                                            :losa 3
+                                                            :let 1}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 2
+                                                            :aet 1
+                                                            :losa 3
+                                                            :let 1})})]
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
+    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Alkuosaa ei ole olemassa"))))
+
+(deftest tallenna-uudet-yha-kohteet-epaonnistuu-loppuosaa-ei-olemassa
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 1
+                                                            :losa 2
+                                                            :let 1}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 1
+                                                            :losa 2
+                                                            :let 1})})]
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
+    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Loppuosaa ei ole olemassa"))))
+
+(deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-alkuosa-liian-pitka
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 10
+                                                            :losa 2
+                                                            :let 1}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 99999999
+                                                            :losa 2
+                                                            :let 1})})]
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
+    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Alkuosan pituus ei kelpaa"))))
+
+(deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-ei-sisalla
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 1
+                                                            :aet 1
+                                                            :losa 2
+                                                            :let 1}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 20
+                                                            :aosa 3
+                                                            :aet 1
+                                                            :losa 4
+                                                            :let 1})})]
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
+    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Kohdeosa ei ole pääkohteen sisällä"))))
