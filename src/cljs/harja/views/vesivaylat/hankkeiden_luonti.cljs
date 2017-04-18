@@ -36,7 +36,9 @@
        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
         :validoi [[:pvm-toisen-pvmn-jalkeen (:alkupvm valittu-hanke)
                    "Loppu ei voi olla ennen alkua"]]})
-     {:otsikko "Urakka" :nimi :urakan-nimi :hae #(get-in % [:urakka :nimi])}]
+     (when (get-in valittu-hanke [:urakka :nimi])
+       {:otsikko "Urakka" :nimi :urakan-nimi :tyyppi :string :muokattava? (constantly false)
+        :hae #(get-in % [:urakka :nimi])})]
     valittu-hanke]])
 
 (defn hankegrid [e! app]
