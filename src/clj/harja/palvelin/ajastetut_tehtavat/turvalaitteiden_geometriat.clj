@@ -4,7 +4,9 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [cheshire.core :as cheshire]))
 
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
@@ -13,8 +15,22 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
+(defn kasittele-vastaus [vastaus]
+  (let [data (cheshire/decode vastaus)
+        turvalaitteet (get data "features")]
+        
+    (println "----> " (first turvalaitteet))))
+
 (defn paivita-turvalaitteet [integraatioloki db url]
   (log/debug "Päivitetään turvalaitteiden geometriat")
+  (integraatiotapahtuma/suorita-integraatio
+    db integraatioloki "ptj" "turvalaitteiden-haku"
+    (fn [konteksti]
+      (let [http-asetukset {:metodi :GET
+                            :url url}
+            {body :body headers :headers}
+            (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+        (kasittele-vastaus body))))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
