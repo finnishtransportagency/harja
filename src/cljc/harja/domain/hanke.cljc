@@ -8,10 +8,11 @@
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
+(s/def ::liitetty-urakkaan string?)
 
 (s/def ::hanke
   (s/keys :req-un [::alkupvm ::loppupvm]
-          :opt-un [::id]))
+          :opt-un [::id ::liitetty-urakkaan]))
 
 ;; Haut
 

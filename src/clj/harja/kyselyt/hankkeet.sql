@@ -29,22 +29,24 @@ WHERE loppupvm > now();
 
 -- name: hae-harjassa-luodut-hankkeet
 SELECT
-    id,
-    nimi,
-    alkupvm,
-    loppupvm
-FROM hanke
+  h.id,
+  h.nimi,
+  h.alkupvm,
+  h.loppupvm,
+  (SELECT nimi FROM urakka WHERE hanke = h.id LIMIT 1) AS "liitetty-urakkaan"
+FROM hanke h
 ORDER BY alkupvm, nimi;
 
 -- name: luo-harjassa-luotu-hanke<!
 INSERT INTO hanke (nimi, alkupvm, loppupvm, luoja, luotu, harjassa_luotu)
-    VALUES (:nimi, :alkupvm, :loppupvm, :kayttaja, NOW(), TRUE);
+VALUES (:nimi, :alkupvm, :loppupvm, :kayttaja, NOW(), TRUE);
 
 -- name: paivita-harjassa-luotu-hanke<!
-UPDATE hanke SET
-    nimi = :nimi,
-    alkupvm = :alkupvm,
-    loppupvm = :loppupvm,
-    muokkaaja = :kayttaja,
-    muokattu = NOW()
+UPDATE hanke
+SET
+  nimi      = :nimi,
+  alkupvm   = :alkupvm,
+  loppupvm  = :loppupvm,
+  muokkaaja = :kayttaja,
+  muokattu  = NOW()
 WHERE id = :id;

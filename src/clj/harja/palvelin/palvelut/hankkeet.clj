@@ -31,9 +31,6 @@
             (if (id/id-olemassa? hanke)
               (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (:id hanke)))
               (q/luo-harjassa-luotu-hanke<! db tallennus-params))]
-        (log/debug "PALAUTETAAN: " (pr-str {:id id
-                                            :alkupvm alkupvm
-                                            :loppupvm loppupvm}))
         {:id id
          :alkupvm alkupvm
          :loppupvm loppupvm}))))
