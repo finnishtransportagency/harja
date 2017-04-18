@@ -67,14 +67,12 @@
 
 (defn validoi-osa-olemassa
   "Tarkistaa, onko annettu osa olemassa Harjan tieverkolla (true / false)"
-  [osa]
-  ;; TODO
-  )
+  [osa osien-pituudet]
+  (number? (get osien-pituudet osa)))
 
-(defn validoi-osa-sopivan-mittainen [osa etaisyys]
+(defn validoi-osa-sopivan-mittainen [osa etaisyys osien-pituudet]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  ;; TODO
-  )
+  (<= etaisyys (get osien-pituudet osa)))
 
 (defn validoi-tr-osoite
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
@@ -82,22 +80,25 @@
   :syy      Selitys siitä, miksi ei ole validi (voi olla myös null)"
   [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
   (try
-    (clojure.core/let [tulos {:aosa-olemassa? (validoi-osa-olemassa aosa)
-                              :losa-olemassa? (validoi-osa-olemassa losa)
-                              :aosa-pituus-validi? (validoi-osa-sopivan-mittainen aosa aet)
-                              :losa-pituus-validi? (validoi-osa-sopivan-mittainen losa let)
-                              :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
-                                                                          :alkuosa aosa
-                                                                          :alkuetaisyys aet
-                                                                          :loppuosa losa
-                                                                          :loppuetaisyys let}))}
-                       kaikki-ok? (every? true? (vals tulos))]
+    (clojure.core/let
+      [osien-pituudet (hae-osien-pituudet db {:tie tienumero
+                                              :aosa aosa
+                                              :losa losa})
+       tulos {:aosa-olemassa? (validoi-osa-olemassa aosa osien-pituudet)
+              :losa-olemassa? (validoi-osa-olemassa losa osien-pituudet)
+              :aosa-pituus-validi? (validoi-osa-sopivan-mittainen aosa aet osien-pituudet)
+              :losa-pituus-validi? (validoi-osa-sopivan-mittainen losa let osien-pituudet)
+              :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
+                                                          :alkuosa aosa
+                                                          :alkuetaisyys aet
+                                                          :loppuosa losa
+                                                          :loppuetaisyys let}))}
+       kaikki-ok? (every? true? (vals tulos))]
       {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) "Alkuosaa ei ole olemassa"
                                   (not (:losa-olemassa? tulos)) "Loppuosaa ei ole olemassa"
                                   (not (:aosa-pituus-validi? tulos)) "Alkuosan pituus ei kelpaa"
                                   (not (:losa-pituus-validi? tulos)) "Loppuosan pituus ei kelpaa"
                                   (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
-
                                   :default "Osoite on validi")})
     (catch PSQLException e
       {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
