@@ -148,6 +148,11 @@
          (>= etaisyys 0))
     false))
 
+(defn validoi-kohdeosa-kohteen-sisalla [kohde kohdeosa]
+  (and (= (:tienumero kohdeosa) (:tienumero kohde) )
+       (>= (:aet kohdeosa) (:aet kohde))
+       (<= (:let kohdeosa) (:let kohde))))
+
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään

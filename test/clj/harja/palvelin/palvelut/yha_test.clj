@@ -205,8 +205,8 @@
                                                             :let 245})})]
 
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Alkuosan pituus 3060 ei kelpaa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosaa-ei-olemassa
@@ -229,8 +229,8 @@
                                                             :losa 3
                                                             :let 1})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Alkuosaa 2 ei ole olemassa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-loppuosaa-ei-olemassa
@@ -253,8 +253,8 @@
                                                             :losa 2
                                                             :let 1})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Loppuosaa 2 ei ole olemassa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-alkuosa-liian-pitka
@@ -277,10 +277,8 @@
                                                             :losa 3
                                                             :let 9999999})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (true? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (nil? (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (false? (:aliosoitteet-validit? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:alikohteet-epavalidit-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
            "Loppuosan pituus 9999999 ei kelpaa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-ei-sisalla
@@ -303,6 +301,6 @@
                                                             :losa 4
                                                             :let 1})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Kohdeosa ei ole pääkohteen sisällä"))))
+    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Kohdeosa ei ole kohteen sisällä"))))

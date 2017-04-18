@@ -17,7 +17,9 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]))
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [clojure.string :as str]
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
@@ -140,6 +142,26 @@
                              :tr_kaista (:kaista tierekisteriosoitevali)
                              :yhaid yha-id})]))))
 
+(defn- lisaa-kohteisiin-validointitiedot [db kohteet]
+  (map
+    (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
+      (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
+            kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla db (:tierekisteriosoitevali %))
+                                       alikohteet)
+            kohdeosat-kohteen-sisalla? (every? true?
+                                               (map (partial tr-domain/validoi-kohdeosa-kohteen-sisalla kohde)
+                                                    (map :tierekisteriosoitevali alikohteet)))]
+        (assoc kohde :kohde-validi? (and (:ok? kohteen-validointi)
+                                          (every? #(true? (:ok? %)) kohdeosien-validointi)
+                                          kohdeosat-kohteen-sisalla?)
+                     :kohde-epavalidi-syy (str/join ", "
+                                                     (remove nil?
+                                                             (concat [(:syy kohteen-validointi)]
+                                                                     (map :syy kohdeosien-validointi)
+                                                                     (when-not kohdeosat-kohteen-sisalla?
+                                                                       ["Kohdeosa ei ole kohteen sisällä"])))))))
+    kohteet))
+
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
@@ -147,23 +169,10 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [db db]
-    (let [kohteet+osoite-validi?
-          (map
-            (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
-              (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
-                    kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla
-                                                  db
-                                                  (:tierekisteriosoitevali %))
-                                               alikohteet)]
-                (assoc kohde :osoite-validi? (:ok? kohteen-validointi)
-                             :osoite-epavalidi-syy (:syy kohteen-validointi)
-                             :aliosoitteet-validit? (every? #(true? (:ok? %)) kohdeosien-validointi)
-                             :alikohteet-epavalidit-syy (:syy (first kohdeosien-validointi)))))
-            kohteet)
-          kohde-validi? #(and (:osoite-validi? %) (:aliosoitteet-validit? %))
-          validit-kohteet (filter kohde-validi? kohteet+osoite-validi?)
-          epavalidit-kohteet (filter (comp not kohde-validi?) kohteet+osoite-validi?)]
-      ;; Tallennetaan vain sellaiset YHA-kohteet, joille saatiin muodostettua geometria eli osoite oli
+    (let [kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db kohteet)
+          validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
+          epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)]
+      ;; Tallennetaan vain sellaiset YHA-kohteet, joiden osoite oli
       ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
       (doseq [kohde validit-kohteet]
         (tallenna-kohde-ja-alikohteet db urakka-id kohde))
