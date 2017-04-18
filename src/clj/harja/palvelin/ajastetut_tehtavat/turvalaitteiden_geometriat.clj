@@ -6,12 +6,16 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 
-(defn- paivitys-tarvitaan? [db paivitysvali-paivissa]
+(defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
                              (:viimeisin_paivitys
                                (first (q-geometriapaivitykset/hae-paivitys db "turvalaitteet"))))]
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
+
+(defn paivita-turvalaitteet [integraatioloki db url]
+  (log/debug "Päivitetään turvalaitteiden geometriat")
+  (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
   (log/debug (format "Ajastetaan turvalaitteiden geometrioiden haku tehtäväksi %s päivän välein osoitteesta: %s."
@@ -20,7 +24,9 @@
 
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-tarkistusaika
-    (fn [] (when (paivitys-tarvitaan? db paivitysvali-paivissa)))))
+    (fn []
+      (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+        (paivita-turvalaitteet integraatioloki db url)))))
 
 (defrecord TurvalaitteidenGeometriahaku [url tarkistus aika paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
