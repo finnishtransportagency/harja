@@ -110,11 +110,6 @@
 
 (deftest maaramuutosten-paivitystoimii
   (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        hae-maaramuutokset #(kutsu-palvelua
-                              (:http-palvelin jarjestelma)
-                              :hae-maaramuutokset +kayttaja-jvh+
-                              {:urakka-id @muhoksen-paallystysurakan-id
-                               :yllapitokohde-id yllapitokohde-id})
         uusi-maaramuutos {:yllapitokohde yllapitokohde-id
                           :tyyppi :ajoradan-paallyste
                           :tyo "Testissä luotu määrämuutos"
@@ -146,6 +141,11 @@
                                      :maaramuutokset maaramuutokset
                                      :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
                                      :vuosi 2017}))
+        hae-maaramuutokset #(kutsu-palvelua
+                              (:http-palvelin jarjestelma)
+                              :hae-maaramuutokset +kayttaja-jvh+
+                              {:urakka-id @muhoksen-paallystysurakan-id
+                               :yllapitokohde-id yllapitokohde-id})
         hae-tarkasteltava-maaramuutos (fn [maaramuutokset]
                                         (first (filter #(= "Testissä luotu määrämuutos" (:tyo %)) maaramuutokset)))
         maaramuutokset-ennen-testia (count (hae-maaramuutokset))]
