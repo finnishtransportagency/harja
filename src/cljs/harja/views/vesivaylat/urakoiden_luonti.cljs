@@ -64,7 +64,6 @@
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
         {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
-       [debug/debug valittu-urakka]
        (let [ilman-poistettuja #(remove :poistettu %)
              urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
          [lomake/lomake

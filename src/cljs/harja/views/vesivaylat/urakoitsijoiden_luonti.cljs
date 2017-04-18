@@ -25,7 +25,6 @@
     [napit/takaisin "Takaisin luetteloon"
      #(e! (tiedot/->ValitseUrakoitsija nil))
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
-    [harja.ui.debug/debug urakat]
     [lomake/lomake
      {:otsikko (if (:id valittu-urakoitsija)
                  "Muokkaa urakoitsijaa"

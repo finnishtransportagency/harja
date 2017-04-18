@@ -16,7 +16,6 @@
     [napit/takaisin "Takaisin luetteloon"
      #(e! (tiedot/->ValitseSopimus nil))
      {:disabled tallennus-kaynnissa?}]
-    [harja.ui.debug/debug valittu-sopimus]
     [lomake/lomake
      {:otsikko (if (:id valittu-sopimus)
                  "Muokkaa sopimusta"

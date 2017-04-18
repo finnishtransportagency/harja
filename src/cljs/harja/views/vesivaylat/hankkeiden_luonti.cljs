@@ -15,7 +15,6 @@
   [:div
    [napit/takaisin "Takaisin luetteloon" #(e! (tiedot/->ValitseHanke nil))
     {:disabled tallennus-kaynnissa?}]
-   [harja.ui.debug/debug valittu-hanke]
    [lomake/lomake
     {:otsikko (if (:id valittu-hanke)
                 "Muokkaa hanketta"
