@@ -87,7 +87,8 @@
            :pakollinen? true}
           (lomake/rivi
             {:otsikko "Alkupäivämäärä" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-            {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm :pakollinen? true})
+            {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
+             :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
           (lomake/rivi
             (if haetut-hallintayksikot
               {:otsikko "Hallintayksikkö"

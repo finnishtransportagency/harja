@@ -33,8 +33,7 @@
      (lomake/rivi
        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
-        :validoi [[:pvm-toisen-pvmn-jalkeen (:alkupvm valittu-hanke)
-                   "Loppu ei voi olla ennen alkua"]]})
+        :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
      (when (get-in valittu-hanke [:urakka :nimi])
        {:otsikko "Urakka" :nimi :urakan-nimi :tyyppi :string :muokattava? (constantly false)
         :hae #(get-in % [:urakka :nimi])})]
