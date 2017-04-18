@@ -72,12 +72,14 @@
 
 (defn validoi-osa-sopivan-mittainen [osa etaisyys osien-pituudet]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (<= etaisyys (get osien-pituudet osa)))
+  (if-let [osan-pituus (get osien-pituudet osa)]
+    (<= etaisyys osan-pituus)
+    false))
 
 (defn validoi-tr-osoite
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
   :ok?      Oliko TR-osoite validi (true / false)
-  :syy      Selitys siitä, miksi ei ole validi (voi olla myös null)"
+  :syy      Tekstimuotoinen selitys siitä, miksi ei ole validi (voi olla myös null)"
   [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
   (try
     (clojure.core/let
