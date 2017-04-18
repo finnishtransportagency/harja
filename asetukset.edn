@@ -143,4 +143,7 @@
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
 
  :sahke {:lahetysjono "urakat-sahkeeseen"}
+
+ :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
+                 :paivitysvali-paivissa 60}
  }

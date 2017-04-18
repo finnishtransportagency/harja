@@ -128,6 +128,9 @@
    (s/optional-key :sahke)                  {:lahetysjono       s/Str
                                              :uudelleenlahetysaika [s/Num]}
 
+   (s/optional-key :turvalaitteet)          {:geometria-url       s/Str
+                                             :paivitysvali-paivissa s/Num}
+
    })
 
 (def oletusasetukset
