@@ -291,15 +291,15 @@
                                                             :tienumero 20
                                                             :aosa 1
                                                             :aet 1
-                                                            :losa 2
+                                                            :losa 3
                                                             :let 1}
                                                            {:ajorata 1
                                                             :kaista 1
                                                             :tienumero 20
-                                                            :aosa 3
+                                                            :aosa 1
                                                             :aet 1
-                                                            :losa 4
-                                                            :let 1})})]
+                                                            :losa 3
+                                                            :let 2})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
     (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))

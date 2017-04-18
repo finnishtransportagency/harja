@@ -245,8 +245,7 @@
      (when (empty? (not epaonnistuneet-vkm-muunnokset))
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. "
-         "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]
+         "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
            [epaonnistunut-kohde kohde])]])
@@ -256,7 +255,9 @@
          "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
          (for [kohde epaonnistuneet-tallennukset]
-           [epaonnistunut-kohde kohde])]])]))
+           [epaonnistunut-kohde kohde])]])
+
+     [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Päivitä YHA-tiedot

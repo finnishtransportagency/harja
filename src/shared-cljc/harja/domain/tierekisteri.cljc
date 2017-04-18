@@ -150,7 +150,9 @@
 
 (defn validoi-kohdeosa-kohteen-sisalla [kohde kohdeosa]
   (and (= (:tienumero kohdeosa) (:tienumero kohde) )
+       (>= (:aosa kohdeosa) (:aosa kohde))
        (>= (:aet kohdeosa) (:aet kohde))
+       (<= (:losa kohdeosa) (:losa kohde))
        (<= (:let kohdeosa) (:let kohde))))
 
 (defn tierekisteriosoite-tekstina
