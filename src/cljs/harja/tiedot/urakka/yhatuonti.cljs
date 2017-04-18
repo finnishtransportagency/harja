@@ -236,9 +236,11 @@
   (let [epaonnistunut-kohde (fn [kohde]
                               (let [tr (:tierekisteriosoitevali kohde)]
                                 [:li
-                                 "Nimi: " (:nimi kohde)
-                                 ", YHA id: " (:yha-id kohde)
-                                 ", tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)]))]
+                                 "Nimi: " (:nimi kohde) ", "
+                                 "YHA id: " (:yha-id kohde) ", "
+                                 "tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr) ", "
+                                 (when-let [syy (:kohde-epavalidi-syy kohde)]
+                                   syy)]))]
     [:div
      (when (empty? (not epaonnistuneet-vkm-muunnokset))
        [:div
@@ -251,10 +253,9 @@
      (when (empty? (not epaonnistuneet-tallennukset))
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui, koska kohteiden osoitteille ei löytynyt geometriaa Harjan tieverkolla. "
-         "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]
+         "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
-         (for [kohde epaonnistuneet-vkm-muunnokset]
+         (for [kohde epaonnistuneet-tallennukset]
            [epaonnistunut-kohde kohde])]])]))
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
