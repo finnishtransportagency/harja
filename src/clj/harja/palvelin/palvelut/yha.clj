@@ -154,12 +154,11 @@
         (assoc kohde :kohde-validi? (and (:ok? kohteen-validointi)
                                           (every? #(true? (:ok? %)) kohdeosien-validointi)
                                           kohdeosat-kohteen-sisalla?)
-                     :kohde-epavalidi-syy (str/join ", "
-                                                     (remove nil?
-                                                             (concat [(:syy kohteen-validointi)]
-                                                                     (map :syy kohdeosien-validointi)
-                                                                     (when-not kohdeosat-kohteen-sisalla?
-                                                                       ["Kohdeosa ei ole kohteen sisällä"])))))))
+                     :kohde-epavalidi-syy (first (remove nil?
+                                                   (concat [(:syy kohteen-validointi)]
+                                                           (map :syy kohdeosien-validointi)
+                                                           (when-not kohdeosat-kohteen-sisalla?
+                                                             ["Kohdeosa ei ole kohteen sisällä"])))))))
     kohteet))
 
 (defn- tallenna-uudet-yha-kohteet
