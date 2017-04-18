@@ -44,14 +44,33 @@ WHERE urakka = :urakka AND paasopimus IS NULL;
 
 -- name: hae-harjassa-luodut-sopimukset
 SELECT
-  id,
-  nimi,
-  alkupvm,
-  loppupvm,
-  urakka,
-  paasopimus
-FROM sopimus
-WHERE harjassa_luotu IS TRUE;
+  s.id,
+  s.nimi,
+  s.alkupvm,
+  s.loppupvm,
+  s.paasopimus,
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id
+FROM sopimus s
+  LEFT JOIN urakka u ON s.urakka = u.id
+WHERE s.harjassa_luotu IS TRUE;
 
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus SET urakka=:urakka WHERE id IN (:sopimukset);
+
+-- name: luo-harjassa-luotu-sopimus<!
+-- Luo uuden sopimukset.
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, paasopimus, luoja, luotu, harjassa_luotu)
+VALUES (:nimi, :alkupvm, :loppupvm, :paasopimus, :kayttaja, now(), TRUE);
+
+-- name: paivita-harjassa-luotu-sopimus<!
+-- Paivittaa sopimukset.
+UPDATE sopimus
+SET nimi              = :nimi,
+  alkupvm             = :alkupvm,
+  loppupvm            = :loppupvm,
+  paasopimus = :paasopimus,
+  muokkaaja = :kayttaja,
+  muokattu = NOW()
+WHERE id = :id;
+

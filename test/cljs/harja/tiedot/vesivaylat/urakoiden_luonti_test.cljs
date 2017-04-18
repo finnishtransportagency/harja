@@ -146,11 +146,11 @@
                                {:id 1 :paasopimus nil})))))
 
 (deftest urakan-sopimusvaihtoehdot
-  (let [kaikki-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil} {:id 4 :urakka nil}]
-        urakan-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka nil}]]
+  (let [kaikki-sopimukset [{:id 1 :urakka {:id 1}} {:id 2 :urakka {:id 1}} {:id 3 :urakka nil} {:id 4 :urakka nil}]
+        urakan-sopimukset [{:id 1 :urakka {:id 1}} {:id 2 :urakka {:id 1}} {:id 3 :urakka nil}]]
     (is (= [{:id 4 :urakka nil}] (u/vapaat-sopimukset kaikki-sopimukset urakan-sopimukset)))
-    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka 1} {:id 2 :urakka 1} {:id 3 :urakka 1} {:id 4 :urakka 1}] urakan-sopimukset))))
+    (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka {:id 1}} {:id 2 :urakka {:id 1}} {:id 3 :urakka {:id 1}} {:id 4 :urakka {:id 1}}] urakan-sopimukset))))
     (is (true? (empty? (u/vapaat-sopimukset [{:id 1 :urakka nil}] [{:id 1 :urakka nil}])))))
 
   (is (true? (u/vapaa-sopimus? {:urakka nil})))
-  (is (false? (u/vapaa-sopimus? {:urakka 1}))))
+  (is (false? (u/vapaa-sopimus? {:urakka {:id 1}}))))
