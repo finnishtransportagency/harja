@@ -12,12 +12,12 @@
   []
   [bs/tabs {:style :tabs :classes "tabs-taso2"
             :active (nav/valittu-valilehti-atom :vesivayla-hallinta)}
-   "Urakoiden luonti"
-   :vesivaylaurakoiden-luonti
+   "Sopimuksien luonti"
+   :vesivaylasopimuksien-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                     (oikeudet/hallinta-vesivaylat))
-     ^{:key "vesivaylaurakat"}
-     [vu/vesivaylaurakoiden-luonti])
+              (oikeudet/hallinta-vesivaylat))
+     ^{:key "vesivaylasopimukset"}
+     [vsu/vesivaylasopimuksien-luonti])
 
    "Hankkeiden luonti"
    :vesivaylahankkeiden-luonti
@@ -33,9 +33,9 @@
      ^{:key "vesivaylaurakoitsijat"}
      [vuu/vesivaylaurakoitsijoiden-luonti])
 
-   "Sopimuksien luonti"
-   :vesivaylasopimuksien-luonti
+   "Urakoiden luonti"
+   :vesivaylaurakoiden-luonti
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-vesivaylat))
-     ^{:key "vesivaylasopimukset"}
-     [vsu/vesivaylasopimuksien-luonti])])
+     ^{:key "vesivaylaurakat"}
+     [vu/vesivaylaurakoiden-luonti])])
