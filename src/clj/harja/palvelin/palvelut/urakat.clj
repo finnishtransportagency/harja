@@ -239,7 +239,7 @@
      :hanke (:id hanke)
      :kayttaja (:id user)}))
 
-(defn tallenna-urakka [db user urakka]
+(defn tallenna-urakka [db user {:keys [sopimukset] :as urakka}]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
@@ -248,11 +248,15 @@
       (let [tallennettu (if (id-olemassa? (:id urakka))
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
-        (log/debug "Tallennetaan urakalle " (:id tallennettu) (count (:sopimukset urakka)) " sopimusta.")
+        (log/debug "Tallennetaan urakalle " (:id tallennettu) (count sopimukset) " sopimusta.")
         (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (:id tallennettu)
-                                                      :sopimukset (map :id (:sopimukset urakka))})
+                                                      :sopimukset (map :id sopimukset)})
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))
+        (sopimukset-q/aseta-sopimuksien-paasopimus! db
+                                                    {:sopimukset (map :id (filter :paasopimus sopimukset))
+                                                     :paasopimus (:id (first (remove :paasopimus sopimukset)))})
+
         ;; Palautetaan tallennettu urakka
         tallennettu))))
 

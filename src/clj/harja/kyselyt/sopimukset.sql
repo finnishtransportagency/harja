@@ -58,6 +58,9 @@ WHERE s.harjassa_luotu IS TRUE;
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus SET urakka=:urakka WHERE id IN (:sopimukset);
 
+-- name: aseta-sopimuksien-paasopimus!
+UPDATE sopimus SET paasopimus=:paasopimus WHERE id IN (:sopimukset);
+
 -- name: luo-harjassa-luotu-sopimus<!
 -- Luo uuden sopimukset.
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, paasopimus, luoja, luotu, harjassa_luotu)
