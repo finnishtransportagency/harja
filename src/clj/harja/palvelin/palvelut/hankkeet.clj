@@ -19,7 +19,9 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (q/hae-harjassa-luodut-hankkeet db)))
 
-(defn tallenna-hanke [db user {:keys [hanke] :as tiedot}]
+(defn tallenna-hanke
+  "Tallentaa yksittäisen hankkeen ja palauttaa sen tiedot"
+  [db user {:keys [hanke] :as tiedot}]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
     (jdbc/with-db-transaction [db db]
@@ -27,11 +29,12 @@
                               :alkupvm (:alkupvm hanke)
                               :loppupvm (:loppupvm hanke)
                               :kayttaja (:id user)}
-            {:keys [id alkupvm loppupvm] :as tallennettu-hanke}
+            {:keys [id nimi alkupvm loppupvm] :as tallennettu-hanke}
             (if (id/id-olemassa? hanke)
               (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (:id hanke)))
               (q/luo-harjassa-luotu-hanke<! db tallennus-params))]
         {:id id
+         :nimi nimi
          :alkupvm alkupvm
          :loppupvm loppupvm}))))
 
