@@ -468,7 +468,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])
