@@ -191,7 +191,7 @@
       (go
         (try
           (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
-                hankkeet (async/<! (k/post! :hae-paattymattomat-vesivaylahankkeet {}))
+                hankkeet (async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
                 sopimukset (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))
                 vastaus {:hallintayksikot hallintayksikot
@@ -210,7 +210,7 @@
   (process-event [{tulos :tulos} app]
     (assoc app :haetut-hallintayksikot (:hallintayksikot tulos)
                :haetut-urakoitsijat (:urakoitsijat tulos)
-               :haetut-hankkeet (:hankkeet tulos)
+               :haetut-hankkeet (remove #(pvm/jalkeen? (pvm/nyt) (:loppupvm %)) (:hankkeet tulos))
                :haetut-sopimukset (:sopimukset tulos)))
 
   LomakevaihtoehdotEiHaettu

@@ -10,11 +10,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]))
 
-(defn hae-paattymattomat-vesivaylahankkeet [db user]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (q/hae-paattymattomat-vesivaylahankkeet db)))
-
 (defn hae-harjassa-luodut-hankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
@@ -49,11 +44,6 @@
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelu http
-                      :hae-paattymattomat-vesivaylahankkeet
-                      (fn [user _]
-                        (hae-paattymattomat-vesivaylahankkeet db user)))
-
-    (julkaise-palvelu http
                       :hae-harjassa-luodut-hankkeet
                       (fn [user _]
                         (hae-harjassa-luodut-hankkeet db user))
@@ -69,7 +59,6 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hae-paattymattomat-vesivaylahankkeet
                      :hae-harjassa-luodut-hankkeet
                      :tallenna-hanke)
 

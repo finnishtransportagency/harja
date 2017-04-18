@@ -22,11 +22,6 @@ SELECT sampo_tyypit
 FROM hanke
 WHERE sampoid = :sampoid;
 
--- name: hae-paattymattomat-vesivaylahankkeet
-SELECT *
-FROM hanke
-WHERE loppupvm > now();
-
 -- name: hae-harjassa-luodut-hankkeet
 SELECT
   h.id,
