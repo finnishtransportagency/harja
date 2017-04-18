@@ -36,12 +36,11 @@
       {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
       {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true}
       {:otsikko "Pääsopimus"
+       :muokattava? (constantly false)
        :nimi :paasopimus
-       :tyyppi :valinta
-       :valinnat haetut-sopimukset
-       :valinta-nayta (fn [s] (if s
-                                (:nimi (first (filter #(= s (:id %)) haetut-sopimukset)))
-                                "Sopimus on pääsopimus"))}
+       :tyyppi :string
+       :hae (fn [s] (or (:name (first (filter #(= (:paasopimus s) (:id %)) haetut-sopimukset)))
+                        "Sopimus on pääsopimus"))}
       (if (:id valittu-sopimus)
         {:otsikko "Urakka"
          :muokattava? (constantly false)
