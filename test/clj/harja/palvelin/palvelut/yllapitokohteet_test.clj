@@ -369,6 +369,18 @@
                                       AND vuodet @> ARRAY[2015]::int[]")))]
       (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
+(deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        leppajarvi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteet +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi 2015
+                                            :kohteet [(assoc yllapitokohde-testidata :id leppajarvi-id)]})))))
+
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
@@ -382,7 +394,7 @@
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
-                                           (assoc kohde :poistettu true)
+                                            (assoc kohde :poistettu true)
                                            kohde))
                              kohteet-ennen-testia)]
 
@@ -398,7 +410,7 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= kohteet-testin-jalkeen kohteet-ennen-testia)))))
+      (is (= (sort-by :id kohteet-ennen-testia) (sort-by :id kohteet-testin-jalkeen))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
@@ -453,8 +465,8 @@
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         vuosi 2017
         aikataulu-kohde-alku (pvm/->pvm "15.5.2017")
-        aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-        aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
+        aikataulu-paallystys-alku (pvm/->pvm "19.5.2017")
+        aikataulu-paallystys-loppu (pvm/->pvm "20.5.2017")
         aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
@@ -488,8 +500,26 @@
     (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
 
-(deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+(deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+        vuosi 2017
+        kohteet [{:id oulaisten-ohitusramppi-id
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "23.5.2017")}]]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteiden-aikataulu
+                                           +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi vuosi
+                                            :kohteet kohteet}))
+        "Oulaisten ohitusramppilla ei ole suorittavaa tiemerkintäurakkaa")))
+
+(deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-ilman-etta-lahtee-maili
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
@@ -499,17 +529,17 @@
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
             vuosi 2017
-            aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
-            aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
+            leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+            leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "23.5.2017")
             maara-ennen-lisaysta (ffirst (q
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
             kohteet [{:id leppajarven-ramppi-id
-                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
+                      :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
                      {:id nakkilan-ramppi-id
-                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku}]
+                      :aikataulu-tiemerkinta-alku (pvm/->pvm "20.5.2017")}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
                                     +kayttaja-jvh+
@@ -525,15 +555,55 @@
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Muokatut kentät päivittyivät
-        (is (= aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
-        (is (= aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+        (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
+        (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Odotetaan hetki varmistuaksemme siitä, ettei sähköpostia lähetetä tässä tilanteessa
-        ;; Leppäjärvi on jo merkitty valmiiksi ja Nakkilan rampille asetettiin vain aloituspvm.
-        ;; Mailin on tarkoitus lentää vain silloin kun loppuaikataulu annetaan ensimmäisen kerran
-        ;; (muuttuu kannassa null -> pvm)
-        (<!! (timeout 2000))
+        ;; Leppäjärven tiemerkintä on jo merkitty valmiiksi ja uusi pvm on sama kuin vanha.
+        ;; Nakkilan rampille asetettiin vain aloituspvm, joten siitäkään ei mailia laiteta.
+        (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+
+(deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vuosi 2017
+            leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+            leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "25.5.2017")
+            maara-ennen-lisaysta (ffirst (q
+                                           (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE suorittava_tiemerkintaurakka = " urakka-id
+                                                " AND poistettu IS NOT TRUE;")))
+            kohteet [{:id leppajarven-ramppi-id
+                      :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteiden-aikataulu
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :kohteet kohteet})
+            maara-paivityksen-jalkeen (ffirst (q
+                                                (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE suorittava_tiemerkintaurakka = " urakka-id
+                                                     " AND poistettu IS NOT TRUE;")))
+            vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
+        ;; Kohteiden määrä ei muuttunut
+        (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
+        ;; Muokatut kentät päivittyivät
+        (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
+        (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+
+        ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
@@ -545,11 +615,9 @@
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
             vuosi 2017
-            aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
-            aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
             kohteet [{:id nakkilan-ramppi-id
-                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+                      :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                      :aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-yllapitokohteiden-aikataulu
                               +kayttaja-jvh+
@@ -558,8 +626,25 @@
                                :vuosi vuosi
                                :kohteet kohteet})]
         ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
-        (<!! (timeout 2000))
+        (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        vuosi 2017
+        kohteet [{:id nakkilan-ramppi-id
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")}]]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteiden-aikataulu
+                                           +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi vuosi
+                                            :kohteet kohteet})))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
   (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #())
@@ -581,7 +666,7 @@
                            :kohteet kohteet})]))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
@@ -602,19 +687,19 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet kohteet})]
-        ;; Nakkilan ramppi merkitään valmistuneeksi, pitäisi lähteä maili
+        ;; Nakkilan ramppi merkitään valmistuneeksi ensimmäisen kerran, pitäisi lähteä maili
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
 (deftest merkitse-tiemerkintaurakan-usea-kohde-valmiiksi
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
-            oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+            oulun-ohitusramppi-id (hae-yllapitokohde-oulun-ohitusramppi)
             nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
             vuosi 2017
             aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
@@ -622,7 +707,7 @@
             kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
-                     {:id oulaisten-ohitusramppi-id
+                     {:id oulun-ohitusramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -635,6 +720,28 @@
         ;; Usea kohde merkitään valmiiksi, pitäisi lähteä maili
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaralla-urakalla
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+            vuosi 2017
+            kohteet [{:id oulaisten-ohitusramppi-id
+                      :aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+                      :aikataulu-tiemerkinta-loppu (pvm/->pvm "27.5.2017")}]]
+        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :tallenna-yllapitokohteiden-aikataulu
+                                               +kayttaja-jvh+
+                                               {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :vuosi vuosi
+                                                :kohteet kohteet}))
+            "Oulaisten ohitusramppi ei ole merkitty suoritettavaksi tähän urakkaan")))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
