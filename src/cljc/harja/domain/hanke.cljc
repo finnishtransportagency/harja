@@ -8,7 +8,7 @@
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
-(s/def ::liitetty-urakkaan string?)
+(s/def ::liitetty-urakkaan (s/or :tyhja nil? :urakan-nimi string?))
 (s/def ::nimi string?)
 
 (s/def ::hanke
