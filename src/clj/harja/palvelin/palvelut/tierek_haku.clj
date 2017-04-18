@@ -5,7 +5,8 @@
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr-domain])
   (:import (org.postgresql.util PSQLException)))
 
 (def +threshold+ 250)
@@ -65,32 +66,18 @@
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
 
-(defn validoi-osa-olemassa
-  "Tarkistaa, onko annettu osa olemassa Harjan tieverkolla (true / false)"
-  [osa osien-pituudet]
-  (number? (get osien-pituudet osa)))
-
-(defn validoi-osa-sopivan-mittainen [osa etaisyys osien-pituudet]
-  "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (if-let [osan-pituus (get osien-pituudet osa)]
-    (and (<= etaisyys osan-pituus)
-         (>= etaisyys 0))
-    false))
 
 (defn validoi-tr-osoite
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
   :ok?      Oliko TR-osoite validi (true / false)
   :syy      Tekstimuotoinen selitys siitä, miksi ei ole validi (voi olla myös null)"
-  [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
+  [db {:keys [tienumero aosa aet losa let] :as tieosoite} osien-pituudet]
   (try
     (clojure.core/let
-      [osien-pituudet (hae-osien-pituudet db {:tie tienumero
-                                              :aosa aosa
-                                              :losa losa})
-       tulos {:aosa-olemassa? (validoi-osa-olemassa aosa osien-pituudet)
-              :losa-olemassa? (validoi-osa-olemassa losa osien-pituudet)
-              :aosa-pituus-validi? (validoi-osa-sopivan-mittainen aosa aet osien-pituudet)
-              :losa-pituus-validi? (validoi-osa-sopivan-mittainen losa let osien-pituudet)
+      [tulos {:aosa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla aosa osien-pituudet)
+              :losa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla losa osien-pituudet)
+              :aosa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla aosa aet osien-pituudet)
+              :losa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla losa let osien-pituudet)
               :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
                                                           :alkuosa aosa
                                                           :alkuetaisyys aet

@@ -136,6 +136,18 @@
          (some? (::aosa osoite))
          (some? (::aet osoite)))))
 
+(defn validoi-osa-olemassa-verkolla
+  "Tarkistaa, onko annettu osa olemassa Harjan tieverkolla (true / false)"
+  [osa osien-pituudet]
+  (number? (get osien-pituudet osa)))
+
+(defn validoi-osan-pituus-sopiva-verkolla [osa etaisyys osien-pituudet]
+  "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
+  (if-let [osan-pituus (get osien-pituudet osa)]
+    (and (<= etaisyys osan-pituus)
+         (>= etaisyys 0))
+    false))
+
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
