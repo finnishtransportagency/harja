@@ -35,7 +35,8 @@
        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
         :validoi [[:pvm-toisen-pvmn-jalkeen (:alkupvm valittu-hanke)
-                   "Loppu ei voi olla ennen alkua"]]})]
+                   "Loppu ei voi olla ennen alkua"]]})
+     {:otsikko "Urakka" :nimi :urakan-nimi :hae #(get-in % [:urakka :nimi])}]
     valittu-hanke]])
 
 (defn hankegrid [e! app]
@@ -45,8 +46,7 @@
       [:div
        [napit/uusi "Lisää hanke" #(e! (tiedot/->UusiHanke))
         {:disabled (or (nil? haetut-hankkeet)
-                       (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat
-                                                      (:id @nav/valittu-urakka))))}]
+                       (not (oikeudet/hallinta-vesivaylat)))}]
        [grid/grid
         {:otsikko (if (and (some? haetut-hankkeet) hankkeiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
@@ -59,7 +59,8 @@
         [{:otsikko "Nimi" :nimi :nimi}
          {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-         {:otsikko "Liitetty urakkaan" :nimi :liitetty-urakkaan :tyyppi :string}]
+         {:otsikko "Liitetty urakkaan" :nimi :liitetty-urakkaan :tyyppi :string
+          :hae #(get-in % [:urakka :nimi])}]
         haetut-hankkeet]])))
 
 (defn vesivaylahankkeiden-luonti* [e! app]

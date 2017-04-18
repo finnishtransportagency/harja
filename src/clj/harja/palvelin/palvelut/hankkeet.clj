@@ -7,7 +7,8 @@
             [harja.id :as id]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn hae-paattymattomat-vesivaylahankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -17,7 +18,12 @@
 (defn hae-harjassa-luodut-hankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (q/hae-harjassa-luodut-hankkeet db)))
+    ;; Tietomallin puolesta on mahdollista, että hankkeella on monta urakkaa
+    ;; mutta käytännössä näin ei ole. Jos hankkeella on monta urakkaa, palautetaan
+    ;; hanke duplikaattina, ja virhetilanne käsitellään frontilla.
+    (into []
+          (map konv/alaviiva->rakenne)
+          (q/hae-harjassa-luodut-hankkeet db))))
 
 (defn tallenna-hanke
   "Tallentaa yksittäisen hankkeen ja palauttaa sen tiedot"

@@ -1,6 +1,7 @@
 (ns harja.domain.hanke
   "Määrittelee hankkeeseen liittyvät speksit"
   (:require [clojure.spec :as s]
+            [harja.domain.urakka :as u]
             [harja.tyokalut.spec-apurit :as spec-apurit]
     #?@(:clj [
             [clojure.future :refer :all]])))
@@ -8,12 +9,11 @@
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
-(s/def ::liitetty-urakkaan (s/or :tyhja nil? :urakan-nimi string?))
 (s/def ::nimi string?)
 
 (s/def ::hanke
   (s/keys :req-un [::alkupvm ::loppupvm ::nimi]
-          :opt-un [::id ::liitetty-urakkaan]))
+          :opt-un [::id ::u/id ::u/nimi]))
 
 ;; Haut
 

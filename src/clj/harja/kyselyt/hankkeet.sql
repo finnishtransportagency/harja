@@ -33,8 +33,10 @@ SELECT
   h.nimi,
   h.alkupvm,
   h.loppupvm,
-  (SELECT nimi FROM urakka WHERE hanke = h.id LIMIT 1) AS "liitetty-urakkaan"
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id
 FROM hanke h
+  LEFT JOIN urakka u ON h.id = u.hanke
 ORDER BY alkupvm, nimi;
 
 -- name: luo-harjassa-luotu-hanke<!
