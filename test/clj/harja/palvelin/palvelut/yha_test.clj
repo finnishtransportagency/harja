@@ -43,7 +43,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest sido-yha-urakka-harja-urakkaan
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))
+  (let [urakka-id (hae-yha-paallystysurakan-id)
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -71,7 +71,7 @@
                                                                  :yhanimi "YHANIMI"}})))))
 
 (deftest ala-sido-vajailla-tiedoilla
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))
+  (let [urakka-id (hae-yha-paallystysurakan-id)
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -81,7 +81,7 @@
                                             :yha-tiedot {}})))))
 
 (deftest alla-anna-sitoa-ilman-oikeuksia
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'"))]
+  (let [urakka-id (hae-yha-paallystysurakan-id)]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :sido-yha-urakka-harja-urakkaan +kayttaja-ulle+
@@ -91,7 +91,7 @@
                                                          :yhanimi "YHANIMI"}})))))
 
 (deftest hae-yha-urakat
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))]
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
 
     (with-fake-http [urakoiden-haku-test/urakkahaku-url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -105,7 +105,7 @@
                  :yhaid 3}]))))))
 
 (deftest hae-yha-urakan-kohteet
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))]
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
 
     (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +onnistunut-urakan-kohdehakuvastaus+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -115,7 +115,7 @@
         (is (every? :yha-id vastaus))))))
 
 (deftest yha-kohteiden-haku-ei-palauta-harjassa-jo-olevia-kohteita
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
 
     (u "UPDATE yllapitokohde SET yhaid = 3 WHERE id = " leppajarven-ramppi-id ";")
@@ -127,7 +127,7 @@
         (is (= (count vastaus) 0))))))
 
 (deftest tallenna-uudet-yha-kohteet
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'"))
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         yhatiedot-ennen-testia (first (q-map "SELECT id, sidonta_lukittu
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
         kohteet-ennen-testia (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
