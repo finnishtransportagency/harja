@@ -5,11 +5,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.grid :as grid]
-            [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.oikeudet :as oikeudet]
-            [clojure.string :as str]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn urakan-nimi-ja-pvm [urakat]
   [apply

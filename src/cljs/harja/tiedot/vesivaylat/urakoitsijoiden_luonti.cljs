@@ -6,8 +6,7 @@
             [cljs.core.async :as async]
             [harja.pvm :as pvm]
             [clojure.string :as str])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def uusi-urakoitsija {})
 

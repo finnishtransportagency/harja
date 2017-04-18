@@ -8,8 +8,7 @@
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn luontilomake [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
   [:div

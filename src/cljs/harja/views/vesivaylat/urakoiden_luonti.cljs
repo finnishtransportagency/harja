@@ -13,11 +13,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-
-            [harja.ui.debug :as debug]
             [harja.ui.modal :as modal])
   (:require-macros
     [cljs.core.async.macros :refer [go]]

@@ -4,8 +4,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [cljs.core.async :as async])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def uusi-sopimus {})
 

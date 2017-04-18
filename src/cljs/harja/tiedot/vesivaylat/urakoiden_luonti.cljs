@@ -10,8 +10,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.pvm :as pvm])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tyhja-sopimus {:nimi nil :alku nil :loppu nil :paasopimus nil :id nil})
 (def uusi-urakka {:sopimukset [tyhja-sopimus]})
