@@ -118,13 +118,13 @@
             {:otsikko "Hanke"
              :rivi? true}
             (if haetut-hankkeet
-             {:otsikko "Nimi"
-              :nimi :hanke
-              :tyyppi :valinta
-              :pakollinen? true
-              :valinnat haetut-hankkeet
-              :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
-              :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
+              {:otsikko "Nimi"
+               :nimi :hanke
+               :tyyppi :valinta
+               :pakollinen? true
+               :valinnat (remove (comp :id :urakka) haetut-hankkeet)
+               :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
+               :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
              {:otsikko "Nimi"
               :nimi :hanke
               :tyyppi :komponentti
