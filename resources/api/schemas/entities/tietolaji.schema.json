@@ -60,15 +60,15 @@
               },
               "desimaalit": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/desimaalit",
-                "type": "integer"
+                  "type": ["integer", "null"]
               },
               "alaraja": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/alaraja",
-                "type": "integer"
+                  "type": ["integer","null"]
               },
               "ylaraja": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/ylaraja",
-                "type": "integer"
+                  "type": ["integer", "null"]
               },
               "muutospvm": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
@@ -87,14 +87,14 @@
                   },
                   "loppupvm": {
                     "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/voimassaolo/alkupvm",
-                    "type": "string",
+                      "type": ["string", "null"],
                     "format": "date-time"
                   }
                 }
               },
               "koodisto": {
                 "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto",
-                "type": "array",
+                  "type": ["array", "null"],
                 "items": {
                   "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0",
                   "type": "object",
