@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakoiden-luonti-test
   (:require [harja.tiedot.vesivaylat.urakoiden-luonti :as u]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer [e!]]
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @u/tila)
@@ -18,12 +18,10 @@
   (is (= u/uusi-urakka (:valittu-urakka (e! tila u/->UusiUrakka)))))
 
 (deftest tallentamisen-aloitus
-  (let [halutut #{u/->UrakkaTallennettu u/->UrakkaEiTallennettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakat []} u/->TallennaUrakka {:id 1}))))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{u/->UrakkaTallennettu u/->UrakkaEiTallennettu}
+
+    (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakat []} u/->TallennaUrakka {:id 1}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"

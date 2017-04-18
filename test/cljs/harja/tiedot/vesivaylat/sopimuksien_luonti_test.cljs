@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.sopimuksien-luonti-test
   (:require [harja.tiedot.vesivaylat.sopimuksien-luonti :as s]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer [e!]]
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [tuck.core :as tuck]))
 
 (def tila @s/tila)
@@ -18,12 +18,10 @@
   (is (= s/uusi-sopimus (:valittu-sopimus (e! tila s/->UusiSopimus)))))
 
 (deftest tallentamisen-aloitus
-  (let [halutut #{s/->SopimusTallennettu s/->SopimusEiTallennettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:tallennus-kaynnissa? (e! {:haetut-sopimukset []} s/->TallennaSopimus {:id 1}))))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{s/->SopimusTallennettu s/->SopimusEiTallennettu}
+
+    (is (true? (:tallennus-kaynnissa? (e! {:haetut-sopimukset []} s/->TallennaSopimus {:id 1}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden sopimuksen tallentaminen"
