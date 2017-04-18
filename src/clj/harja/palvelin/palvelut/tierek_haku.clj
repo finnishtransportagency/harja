@@ -73,7 +73,8 @@
 (defn validoi-osa-sopivan-mittainen [osa etaisyys osien-pituudet]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
   (if-let [osan-pituus (get osien-pituudet osa)]
-    (<= etaisyys osan-pituus)
+    (and (<= etaisyys osan-pituus)
+         (>= etaisyys 0))
     false))
 
 (defn validoi-tr-osoite
@@ -96,10 +97,10 @@
                                                           :loppuosa losa
                                                           :loppuetaisyys let}))}
        kaikki-ok? (every? true? (vals tulos))]
-      {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) "Alkuosaa ei ole olemassa"
-                                  (not (:losa-olemassa? tulos)) "Loppuosaa ei ole olemassa"
-                                  (not (:aosa-pituus-validi? tulos)) "Alkuosan pituus ei kelpaa"
-                                  (not (:losa-pituus-validi? tulos)) "Loppuosan pituus ei kelpaa"
+      {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) (str "Alkuosaa " aosa " ei ole olemassa")
+                                  (not (:losa-olemassa? tulos)) (str "Loppuosaa " losa " ei ole olemassa")
+                                  (not (:aosa-pituus-validi? tulos)) (str "Alkuosan pituus " aet " ei kelpaa")
+                                  (not (:losa-pituus-validi? tulos)) (str "Loppuosan pituus " let " ei kelpaa")
                                   (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
                                   :default "Osoite on validi")})
     (catch PSQLException e

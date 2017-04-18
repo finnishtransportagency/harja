@@ -147,13 +147,16 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [db db]
-    (let [kohteet+osoite-validi? (map
-                                   (fn [{:keys [tierekisteriosoitevali] :as kohde}]
-                                     (let [{:keys [ok? syy] :as validointi}
-                                           (tr-haku/validoi-tr-osoite db tierekisteriosoitevali)]
-                                       (assoc kohde :osoite-validi? ok?
-                                                    :osoite-epavalidi-syy syy)))
-                                   kohteet)
+    (let [kohteet+osoite-validi?
+          (map
+            (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
+              (let [{:keys [ok? syy] :as kohteen-validointi} (tr-haku/validoi-tr-osoite db tierekisteriosoitevali)
+                    kohdeosien-validointi (map (partial tr-haku/validoi-tr-osoite db) alikohteet)]
+                (assoc kohde :osoite-validi? ok?
+                             :osoite-epavalidi-syy syy
+                             :aliosoitteet-validit? (every? #(true? (:ok? %)) kohdeosien-validointi)
+                             :alikohteet-epavalidit-syy (:syy (first kohdeosien-validointi)))))
+            kohteet)
           validit-kohteet (filter :osoite-validi? kohteet+osoite-validi?)
           epavalidit-kohteet (filter (comp not :osoite-validi?) kohteet+osoite-validi?)]
       ;; Tallennetaan vain sellaiset YHA-kohteet, joille saatiin muodostettua geometria eli osoite oli
