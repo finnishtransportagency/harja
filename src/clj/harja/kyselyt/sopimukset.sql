@@ -53,7 +53,8 @@ SELECT
   u.id AS urakka_id
 FROM sopimus s
   LEFT JOIN urakka u ON s.urakka = u.id
-WHERE s.harjassa_luotu IS TRUE;
+WHERE s.harjassa_luotu IS TRUE
+ORDER BY s.alkupvm DESC, s.nimi;
 
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus SET urakka=:urakka WHERE id IN (:sopimukset);

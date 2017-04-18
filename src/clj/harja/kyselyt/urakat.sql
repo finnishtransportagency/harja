@@ -41,7 +41,8 @@ FROM urakka u
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
   LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
-WHERE u.harjassa_luotu IS TRUE;
+WHERE u.harjassa_luotu IS TRUE
+ORDER BY u.alkupvm DESC, u.nimi;
 
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT

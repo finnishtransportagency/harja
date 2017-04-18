@@ -36,7 +36,8 @@ FROM organisaatio urk
 WHERE urk.tyyppi = 'urakoitsija'
       AND urk.poistettu IS NOT TRUE
       AND (u.tyyppi IN ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')
-      OR urk.harjassa_luotu IS TRUE);
+      OR urk.harjassa_luotu IS TRUE)
+ORDER BY urk.nimi;
 
 -- name: luo-urakoitsija<!
 INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, tyyppi, luoja, luotu, harjassa_luotu)
