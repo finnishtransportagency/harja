@@ -161,16 +161,14 @@
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                   {:urakka-id urakka-id
-                                   :kohteet (luo-yha-kohteet {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                              :ajorata 1
+                                   :kohteet (luo-yha-kohteet {:ajorata 1
                                                               :kaista 1
                                                               :tienumero 20
                                                               :aosa 1
                                                               :aet 1
                                                               :losa 1
                                                               :let 2}
-                                                             {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                              :ajorata 1
+                                                             {:ajorata 1
                                                               :kaista 1
                                                               :tienumero 20
                                                               :aosa 1
@@ -186,3 +184,26 @@
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
       (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
+
+(deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
+
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :kohteet (luo-yha-kohteet {:ajorata 1
+                                                              :kaista 1
+                                                              :tienumero 9
+                                                              :aosa 328
+                                                              :aet 3060
+                                                              :losa 329
+                                                              :let 245}
+                                                             {:ajorata 1
+                                                              :kaista 1
+                                                              :tienumero 9
+                                                              :aosa 328
+                                                              :aet 3060
+                                                              :losa 329
+                                                              :let 245})})]
+      ;; Kohde oli epävalidi
+      (is (not (empty? (:tallentamatta-jaaneet-kohteet vastaus)))))))
