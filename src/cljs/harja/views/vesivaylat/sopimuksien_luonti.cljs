@@ -32,9 +32,10 @@
                                    (not (oikeudet/hallinta-vesivaylat)))
                      :tallennus-kaynnissa? tallennus-kaynnissa?}])}
      [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
-      {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-      {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
-       :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]}
+      (lomake/rivi
+        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
+        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
+         :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
       {:otsikko "Pääsopimus"
        :muokattava? (constantly false)
        :nimi :paasopimus
