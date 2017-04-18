@@ -147,27 +147,29 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [db db]
-    (let [kohteet+geometria (map
-                              (fn [{:keys [tierekisteriosoitevali] :as kohde}]
-                                (let [geometria (tr-haku/hae-tr-viiva db {:numero (:tienumero tierekisteriosoitevali)
-                                                                          :alkuosa (:aosa tierekisteriosoitevali)
-                                                                          :alkuetaisyys (:aet tierekisteriosoitevali)
-                                                                          :loppuosa (:losa tierekisteriosoitevali)
-                                                                          :loppuetaisyys (:let tierekisteriosoitevali)})]
-                                  (assoc kohde :geometria geometria)))
-                              kohteet)
-          kohteet-geometrialla (filter :geometria kohteet+geometria)
-          kohteet-ilman-geometriaa (filter (comp not :geometria) kohteet+geometria)]
+    (let [kohteet+osoite-validi? (map
+                                   (fn [{:keys [tierekisteriosoitevali] :as kohde}]
+                                     (let [{:keys [ok? syy] :as validointi}
+                                           (tr-haku/validoi-tr-osoite db {:numero (:tienumero tierekisteriosoitevali)
+                                                                                                           :alkuosa (:aosa tierekisteriosoitevali)
+                                                                                                           :alkuetaisyys (:aet tierekisteriosoitevali)
+                                                                                                           :loppuosa (:losa tierekisteriosoitevali)
+                                                                                                           :loppuetaisyys (:let tierekisteriosoitevali)})]
+                                       (assoc kohde :osoite-validi? ok?
+                                                    :osoite-epavalidi-syy syy)))
+                                   kohteet)
+          validit-kohteet (filter :osoite-validi? kohteet+osoite-validi?)
+          epavalidit-kohteet (filter (comp not :osoite-validi?) kohteet+osoite-validi?)]
       ;; Tallennetaan vain sellaiset YHA-kohteet, joille saatiin muodostettua geometria eli osoite oli
       ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
-      (doseq [kohde kohteet-geometrialla]
+      (doseq [kohde validit-kohteet]
         (tallenna-kohde-ja-alikohteet db urakka-id kohde))
       (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
       (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
       (yy/paivita-yllapitourakan-geometria db urakka-id)
       (log/debug "Urakan geometria päivitetty.")
       {:yhatiedot (hae-urakan-yha-tiedot db urakka-id)
-       :tallentamatta-jaaneet-kohteet (vec kohteet-ilman-geometriaa)})))
+       :tallentamatta-jaaneet-kohteet (vec epavalidit-kohteet)})))
 
 (defn- tarkista-lahetettavat-kohteet
   "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
