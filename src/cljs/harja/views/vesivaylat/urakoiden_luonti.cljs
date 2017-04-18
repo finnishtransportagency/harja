@@ -151,18 +151,21 @@
           {:otsikko "Pääsopimus"
            :nimi :paasopimus
            :tyyppi :valinta
-           :valinnat urakan-sopimukset
+           :valinnat (filter (comp id-olemassa? :id) urakan-sopimukset)
            :valinta-nayta #(cond
                              %
                              (:nimi %)
 
-                             (> (count urakan-sopimukset) 1)
+                             (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
                              "Määrittele pääsopimus"
 
-                             :else "Urakalla vain yksi sopimus")
+                             (= (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
+                             "Urakalla vain yksi sopimus"
+
+                             :else "Valitse urakalle sopimus")
            :jos-tyhja "Urakalla ei sopimuksia"
-           :muokattava? #(> (count urakan-sopimukset) 1)
-           :pakollinen? (> (count urakan-sopimukset) 1)
+           :muokattava? #(> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
+           :pakollinen? (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
            :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/aseta-paasopimus
                                                             (ilman-poistettuja (:sopimukset rivi))
                                                             arvo)))
