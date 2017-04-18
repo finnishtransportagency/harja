@@ -28,6 +28,14 @@
   (when paivamaara
     (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd") paivamaara))))
 
+(defn pvm-string->java-util-date [paivamaara]
+  (when paivamaara
+    (.parse (SimpleDateFormat. "yyyy-MM-dd") paivamaara)))
+
+(defn pvm-string->joda-date [paivamaara]
+  (when paivamaara
+    (c/from-date (.parse (SimpleDateFormat. "yyyy-MM-dd") paivamaara))))
+
 (defn json-pvm [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))
 

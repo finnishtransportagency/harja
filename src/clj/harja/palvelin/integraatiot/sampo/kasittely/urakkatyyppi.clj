@@ -37,6 +37,15 @@
         "V" "v"
         "t"))))
 
+(defn rakenna-sampon-tyyppi [urakkatyyppi]
+  (case urakkatyyppi "valaistus" "TYV"
+                     "paallystys" "TYP"
+                     "tiemerkinta" "TYT"
+                     "siltakorjaus" "TYS"
+                     "tekniset-laitteet" "TYL"
+                     "hoito" "TH"
+                     (throw (new RuntimeException (str "Tuntematon urakkatyyppi: " urakkatyyppi)))))
+
 
 
 
