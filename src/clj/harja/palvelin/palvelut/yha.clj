@@ -150,10 +150,12 @@
     (let [kohteet+osoite-validi?
           (map
             (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
-              (let [{:keys [ok? syy] :as kohteen-validointi} (tr-haku/validoi-tr-osoite db tierekisteriosoitevali)
-                    kohdeosien-validointi (map (partial tr-haku/validoi-tr-osoite db) alikohteet)]
-                (assoc kohde :osoite-validi? ok?
-                             :osoite-epavalidi-syy syy
+              (let [kohteen-validointi (tr-haku/validoi-tr-osoite db tierekisteriosoitevali)
+                    kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite
+                                                  db (:tierekisteriosoitevali %))
+                                               alikohteet)]
+                (assoc kohde :osoite-validi? (:ok? kohteen-validointi)
+                             :osoite-epavalidi-syy (:syy kohteen-validointi)
                              :aliosoitteet-validit? (every? #(true? (:ok? %)) kohdeosien-validointi)
                              :alikohteet-epavalidit-syy (:syy (first kohdeosien-validointi)))))
             kohteet)

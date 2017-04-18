@@ -129,7 +129,7 @@
 (defn- luo-yha-kohteet [kohteen-osoite alikohteen-osoite]
   [{:alikohteet [{:yha-id 1
                   :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
-                                                 kohteen-osoite)
+                                                 alikohteen-osoite)
                   :tunnus nil
                   :paallystystoimenpide {:kokonaismassamaara 10
                                          :paallystetyomenetelma 21
@@ -139,7 +139,7 @@
                                          :uusi-paallyste 14}}]
     :yha-id 2
     :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
-                                   alikohteen-osoite)
+                                   kohteen-osoite)
     :yha-kohdenumero 1
     :yllapitokohdetyyppi "paallyste"
     :nykyinen-paallyste 14
@@ -266,27 +266,21 @@
                                                             :kaista 1
                                                             :tienumero 20
                                                             :aosa 1
-                                                            :aet 10
-                                                            :losa 2
+                                                            :aet 1
+                                                            :losa 3
                                                             :let 1}
-                                                           [{:ajorata 1
-                                                             :kaista 1
-                                                             :tienumero 20
-                                                             :aosa 1
-                                                             :aet 10
-                                                             :losa 1
-                                                             :let 11}
-                                                            {:ajorata 1
+                                                           {:ajorata 1
                                                             :kaista 1
                                                             :tienumero 20
                                                             :aosa 1
-                                                            :aet 99999999
-                                                            :losa 2
-                                                            :let 1}])})]
+                                                            :aet 1
+                                                            :losa 3
+                                                            :let 9999999})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (true? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (false? (:aliosoitteet-validit? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Alkuosan pituus ei kelpaa"))))
+           "Loppusan pituus 9999999 ei kelpaa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-ei-sisalla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
