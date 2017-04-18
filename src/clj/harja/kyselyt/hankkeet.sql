@@ -32,6 +32,7 @@ SELECT
   u.id AS urakka_id
 FROM hanke h
   LEFT JOIN urakka u ON h.id = u.hanke
+  WHERE h.harjassa_luotu IS TRUE
 ORDER BY alkupvm, nimi;
 
 -- name: luo-harjassa-luotu-hanke<!
