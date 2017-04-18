@@ -8,6 +8,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
+            [harja.domain.hanke :as hanke]
             [taoensso.timbre :as log]
             [clojure.spec.gen :as gen]
             [clojure.spec :as s]
@@ -38,3 +39,14 @@
                                 :hae-harjassa-luodut-hankkeet +kayttaja-jvh+ {})]
 
     (is (>= (count vastaus) 10))))
+
+(deftest hankkeen-tallennus-ja-paivitys-toimii
+  (let [testihankkeet (map #(dissoc % :id) (gen/sample (s/gen ::hanke/hanke)))]
+
+    (doseq [hanke testihankkeet]
+      ;; Luo uusi hanke
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-hanke +kayttaja-jvh+
+                                    {:hanke hanke})]
+        ;; Uusi hanke löytyy vastaukset
+        (is (some? (filter #(= (:nimi %) (:nimi hanke)) vastaus)))))))

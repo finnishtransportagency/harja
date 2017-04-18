@@ -9,9 +9,10 @@
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
 (s/def ::liitetty-urakkaan string?)
+(s/def ::nimi string?)
 
 (s/def ::hanke
-  (s/keys :req-un [::alkupvm ::loppupvm]
+  (s/keys :req-un [::alkupvm ::loppupvm ::nimi]
           :opt-un [::id ::liitetty-urakkaan]))
 
 ;; Haut
