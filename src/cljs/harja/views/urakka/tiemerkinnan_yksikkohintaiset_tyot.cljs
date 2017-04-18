@@ -19,7 +19,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -108,10 +108,11 @@
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
                               "- valitse -")}
-           {:otsikko "Muutospvm"
-            :nimi :muutospvm :tyyppi :pvm :leveys 3
+           {:otsikko "Päivä\u00ADmäärä"
+            :nimi :paivamaara :tyyppi :pvm :leveys 3
+            :validoi [[:ei-tyhja "Anna päivämäärä"]]
             :fmt pvm/pvm-opt}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet @tiemerkinnan-toteumat-atom)]]))))
 
 (defn paallystysurakan-kohteet
   [urakka paallystysurakan-kohteet]
@@ -171,7 +172,7 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
+          (yllapitokohteet-domain/jarjesta-yllapitokohteet paallystysurakan-kohteet)]]))))
 
 (defn- yhteenveto [toteutuneet-tiemerkinnat]
   (let [suunniteltu-yhteensa (->> toteutuneet-tiemerkinnat
@@ -195,6 +196,6 @@
 
 (defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
   [:div.tiemerkinnan-yks-hint-tyot
-   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]
    [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
-   [yhteenveto @tiemerkinnan-toteumat-atom]])
+   [yhteenveto @tiemerkinnan-toteumat-atom]
+   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])

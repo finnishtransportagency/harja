@@ -13,9 +13,13 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [clojure.core.async :refer [go]]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
+            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
   (:use org.httpkit.fake))
 
 (defn tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -26,7 +30,10 @@
       "paikkaus"
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
       "tiemerkinta"
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+
+      ;; muille urakkatyypeille ei tarkisteta
+      nil)))
 
 (defn tarkista-urakkatyypin-mukainen-lukuoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
@@ -36,42 +43,48 @@
       "paikkaus"
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
       "tiemerkinta"
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+
+      ;; muille urakkatyypeille ei tarkisteta
+      nil)))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-        kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-                                                           db
-                                                           {:id yllapitokohde-id})))]
-    (when (and (not= kohteen-urakka urakka-id)
-               (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " kohteen-urakka
-                                      ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                             db
+                                                             {:id yllapitokohde-id})))]
+      (when (and (not= kohteen-urakka urakka-id)
+                 (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka
+                                        ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka")))))))
 
 (defn vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde on osoitettu annetulle tiemerkintäurakka-id:lle suoritettavaksi.
    Jos ei ole, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-                                                           db
-                                                           {:id yllapitokohde-id})))]
-    (when (not= kohteen-suorittava-tiemerkintaurakka urakka-id)
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei ole urakan"
-                                      urakka-id " suoritettavana tiemerkintään, vaan urakan "
-                                      kohteen-suorittava-tiemerkintaurakka))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                             db
+                                                             {:id yllapitokohde-id})))]
+      (when (not= kohteen-suorittava-tiemerkintaurakka urakka-id)
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei ole urakan "
+                                        urakka-id " suoritettavana tiemerkintään, vaan urakan "
+                                        kohteen-suorittava-tiemerkintaurakka)))))))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan
   [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
-  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]
-    (when (not= kohteen-urakka urakka-id)
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " kohteen-urakka))))))
+  (assert urakka-id "Urakka-id puuttuu")
+  (when yllapitokohde-id
+    (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]
+      (when (not= kohteen-urakka urakka-id)
+        (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka)))))))
 
 (defn laske-osien-pituudet
   "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
@@ -90,23 +103,14 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn- yllapitokohde-sisaltaa-kirjauksia?
-  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia
-  (laatupoikkeamia, tarkastuksia, toteumia...)"
-  [db yllapitokohde-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvien-kirjauksien-maara db {:id yllapitokohde-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
-
 (defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia annetussa
    urakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id urakka-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
-                            db {:yllapitokohde_id yllapitokohde-id
-                                :urakka_id urakka-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
+  (let [kirjauksia? (:kirjauksia (first (q/yllapitokohde-sisaltaa-kirjauksia-urakassa
+                                          db {:yllapitokohde_id yllapitokohde-id
+                                              :urakka_id urakka-id})))]
+    kirjauksia?))
 
 (defn- yllapitokohde-sisaltaa-tiemerkintaaikataulun?
   [db yllapitokohde-id]
@@ -118,7 +122,8 @@
 
 (defn yllapitokohteen-voi-poistaa?
   [db yllapitokohde-id]
-  (not (yllapitokohde-sisaltaa-kirjauksia? db yllapitokohde-id)))
+  (let [saa-poistaa? (:saa-poistaa (first (q/yllapitokohteen-saa-poistaa db {:id yllapitokohde-id})))]
+    saa-poistaa?))
 
 (defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
   [db yllapitokohde-id tiemerkintaurakka-id]
@@ -127,30 +132,88 @@
          (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id)))
     true))
 
-(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
-  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+(def maaramuutoksen-tyon-tyyppi->kantaenum
+  {:ajoradan-paallyste "ajoradan_paallyste"
+   :pienaluetyot "pienaluetyot"
+   :tasaukset "tasaukset"
+   :jyrsinnat "jyrsinnat"
+   :muut "muut"})
+
+(def maaramuutoksen-tyon-tyyppi->keyword
+  {"ajoradan_paallyste" :ajoradan-paallyste
+   "pienaluetyot" :pienaluetyot
+   "tasaukset" :tasaukset
+   "jyrsinnat" :jyrsinnat
+   "muut" :muut})
+
+(def maaramuutos-xf
+  (comp
+    (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
+    (map #(konv/string-polusta->keyword % [:tyyppi]))))
+
+(defn hae-yllapitokohteen-maaramuutokset
+  [db {:keys [yllapitokohde-id urakka-id]}]
+  (log/debug "Aloitetaan määrämuutoksien haku kohteelle " yllapitokohde-id)
+  (let [maaramuutokset (into []
+                             maaramuutos-xf
+                             (paallystys-q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
+                                                                                  :urakka urakka-id}))]
+    maaramuutokset))
+
+(defn hae-yllapitokohteiden-maaramuutokset
+  [db yllapitokohde-idt]
+  (log/debug "Aloitetaan määrämuutoksien haku kohteille: " yllapitokohde-idt)
+  (let [maaramuutokset (into []
+                             maaramuutos-xf
+                             (paallystys-q/hae-yllapitokohteiden-maaramuutokset
+                               db {:idt yllapitokohde-idt}))]
+    maaramuutokset))
+
+(defn liita-yllapitokohteisiin-maaramuutokset
+  "Liittää ylläpitokohteisiin määrämuutoksien kokonaissumman"
+  [db yllapitokohteet]
+  (let [yllapitokohteiden-maaramuutokset (hae-yllapitokohteiden-maaramuutokset
+                                           db (map :id yllapitokohteet))]
+    (mapv (fn [yllapitokohde]
+            (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
+              (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
+                                                   yllapitokohteiden-maaramuutokset)
+                    summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                    maaramuutokset (:tulos summatut-maaramuutokset)
+                    maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+                (assoc yllapitokohde :maaramuutokset maaramuutokset
+                                     :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
+              yllapitokohde))
+          yllapitokohteet)))
+
+(defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
+  (let [yllapitokohteet (into []
+                              (comp
+                                yllapitokohteet-domain/yllapitoluokka-xf
+                                (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+                                (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                                (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                                (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+                                (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
+                              (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
+                                                                           :sopimus sopimus-id
+                                                                           :vuosi vuosi}))
+        yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet :id)
+        osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
+        yllapitokohteet (->> yllapitokohteet
+                             (map #(assoc % :pituus
+                                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
+                                            :yllapitokohteen-voi-poistaa?
+                                            (yllapitokohteen-voi-poistaa? db (:id %)))))]
+    (vec yllapitokohteet)))
+
+(defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan ylläpitokohteet.")
-  (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (into []
-                                (comp
-                                  (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                                  (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
-                                  (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                                  (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-                                  (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                                  (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                                  (map #(q/liita-kohdeosat db % (:id %))))
-                                (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
-                                                                             :sopimus sopimus-id
-                                                                             :vuosi vuosi}))
-          osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
-          yllapitokohteet (->> yllapitokohteet
-                               (mapv #(assoc % :pituus
-                                               (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
-                               (mapv #(assoc % :yllapitokohteen-voi-poistaa?
-                                               (yllapitokohteen-voi-poistaa? db (:id %)))))]
-      (log/debug "[DEBUG] VASTAUS ON " (pr-str yllapitokohteet))
-      yllapitokohteet)))
+  (let [yllapitokohteet (hae-urakan-yllapitokohteet* db {:urakka-id urakka-id
+                                                         :sopimus-id sopimus-id
+                                                         :vuosi vuosi})
+        yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)]
+    (vec yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero

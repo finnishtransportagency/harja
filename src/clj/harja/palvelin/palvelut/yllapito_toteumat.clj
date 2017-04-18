@@ -14,18 +14,44 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.konversio :as konv]))
+
+
+(defn vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
+  (log/debug "Tarkistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (assert vaitetty-urakka-id "Urakka id puuttuu!")
+  (when toteuma-id
+    (let [toteuman-todellinen-urakka-id (:urakka (first
+                                                   (q/tiemerkinnan-yksikkohintaisen-toteuman-urakka
+                                                     db {:toteuma toteuma-id})))]
+      (when (and (some? toteuman-todellinen-urakka-id)
+                 (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
+        (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
+                                        " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
+
+(defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
+  (log/debug "Tarkistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (assert vaitetty-urakka-id "Urakka id puuttuu!")
+  (when toteuma-id
+    (let [toteuman-todellinen-urakka-id (:urakka (first
+                                                   (q/muun-toteuman-urakka
+                                                     db {:toteuma toteuma-id})))]
+      (when (and (some? toteuman-todellinen-urakka-id)
+                 (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
+        (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
+                                        " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
 
 (def muutyo-xf
   (comp
     yllapitokohteet-domain/yllapitoluokka-xf
+    (map #(konv/string->keyword % :tyyppi))
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
                                    (get-in % [:laskentakohde-nimi])]))
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka sopimus alkupvm loppupvm] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (into []
@@ -36,7 +62,7 @@
                                :loppupvm loppupvm}))))
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (first (into []
@@ -45,42 +71,51 @@
                                     :id id})))))
 
 (defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae laskentakohteet urakalle: " (pr-str urakka))
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
-(defn tallenna-yllapito-toteuma [db user {:keys [id urakka sopimus selite pvm hinta yllapitoluokka
-                                                 laskentakohde alkupvm loppupvm uusi-laskentakohde poistettu] :as toteuma}]
-  (log/debug "tallenna ylläpito_toteuma:" toteuma)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+(defn tallenna-yllapito-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toteumat]}]
+  (log/debug "Tallenna ylläpidon toteuma:" toteumat)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka-id)
+
   (jdbc/with-db-transaction [db db]
-    (let [uusi-tallennettava-laskentakohde {:nimi uusi-laskentakohde
-                                            :urakka urakka
-                                            :kayttaja (:id user)}
+    (doseq [{:keys [id] :as toteuma} toteumat]
+      (vaadi-toteuma-kuuluu-urakkaan db id urakka-id))
 
-          laskentakohde-id (if (first laskentakohde)
-                             (first laskentakohde)
-                             (when uusi-laskentakohde
-                               (:id (q/luo-uusi-urakan_laskentakohde<!
-                                      db
-                                      uusi-tallennettava-laskentakohde))))
-          muu-tyo {:id id
-                   :urakka urakka
-                   :sopimus sopimus
-                   :selite selite
-                   :pvm pvm
-                   :hinta hinta
-                   :yllapitoluokka (:numero yllapitoluokka)
-                   :laskentakohde laskentakohde-id
-                   :kayttaja (:id user)}]
+    (doseq [toteuma toteumat]
+      (let [{:keys [id selite pvm hinta tyyppi yllapitoluokka laskentakohde uusi-laskentakohde poistettu]} toteuma
+            uusi-tallennettava-laskentakohde {:nimi uusi-laskentakohde
+                                              :urakka urakka-id
+                                              :kayttaja (:id user)}
 
-      (if (:id toteuma)
-        (q/paivita-muu-tyo<! db (assoc muu-tyo :poistettu (boolean poistettu)))
-        (q/luo-uusi-muu-tyo<! db muu-tyo)))
-    (let [vastaus {:toteumat (hae-yllapito-toteumat db user {:urakka urakka :sopimus sopimus
+            laskentakohde-id (if (first laskentakohde)
+                               (first laskentakohde)
+                               (when uusi-laskentakohde
+                                 (:id (q/luo-uusi-urakan_laskentakohde<!
+                                        db
+                                        uusi-tallennettava-laskentakohde))))
+            muu-tyo {:id id
+                     :urakka urakka-id
+                     :sopimus sopimus-id
+                     :selite selite
+                     :pvm pvm
+                     :hinta hinta
+                     :tyyppi (if tyyppi
+                               (name tyyppi)
+                               "muu")
+                     :yllapitoluokka (:numero yllapitoluokka)
+                     :laskentakohde laskentakohde-id
+                     :poistettu (boolean poistettu)
+                     :kayttaja (:id user)}]
+
+        (if (id/id-olemassa? (:id toteuma))
+          (q/paivita-muu-tyo<! db (assoc muu-tyo :poistettu (boolean poistettu)))
+          (q/luo-uusi-muu-tyo<! db muu-tyo))))
+    (let [vastaus {:toteumat (hae-yllapito-toteumat db user {:urakka urakka-id :sopimus sopimus-id
                                                              :alkupvm alkupvm :loppupvm loppupvm})
-                   :laskentakohteet (hae-laskentakohteet db user {:urakka urakka})}]
+                   :laskentakohteet (hae-laskentakohteet db user {:urakka urakka-id})}]
       vastaus)))
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
@@ -101,22 +136,25 @@
   [db user {:keys [urakka-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [yllapitokohde-id ] :as kohde} toteumat]
+    (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
+      (vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan db id urakka-id)
       (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
-    (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id poistettu
+    (doseq [{:keys [hinta hintatyyppi paivamaara id yllapitokohde-id poistettu
                     selite tr-numero yllapitoluokka pituus hinta-kohteelle] :as kohde} toteumat]
       (let [sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                            :muutospvm muutospvm
+                            :paivamaara paivamaara
                             :hinta_kohteelle (when yllapitokohde-id hinta-kohteelle)
                             :selite selite
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
-                            :pituus (when-not yllapitokohde-id pituus)}]
+                            :pituus (when-not yllapitokohde-id pituus)
+                            :ulkoinen_id nil
+                            :luoja nil}]
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:id id :urakka urakka-id
@@ -139,9 +177,9 @@
       (julkaise-palvelu http :hae-laskentakohteet
                         (fn [user tiedot]
                           (hae-laskentakohteet db user tiedot)))
-      (julkaise-palvelu http :tallenna-yllapito-toteuma
+      (julkaise-palvelu http :tallenna-yllapito-toteumat
                         (fn [user tiedot]
-                          (tallenna-yllapito-toteuma db user tiedot)))
+                          (tallenna-yllapito-toteumat db user tiedot)))
       (julkaise-palvelu http :hae-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
                           (hae-tiemerkinnan-yksikkohintaiset-tyot db user tiedot))
@@ -160,7 +198,7 @@
       :hae-yllapito-toteumat
       :hae-yllapito-toteuma
       :hae-laskentakohteet
-      :tallenna-yllapito-toteuma
+      :tallenna-yllapito-toteumat
       :tallenna-tiemerkinnan-yksikkohintaiset-tyot
       :hae-tiemerkinnan-yksikkohintaiset-tyot)
     this))

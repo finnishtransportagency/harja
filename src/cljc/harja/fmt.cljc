@@ -537,7 +537,7 @@
     (pituus metria)))
 
 (defn luku-indeksikorotus
-  "Formatoi luvun ilman yksikköä tai stringin Indeksi puuttuu, jos nil."
+  "Formatoi luvun ilman yksikköä tai stringin 'Indeksi puuttuu', jos nil."
   [summa]
   (if summa
     (euro false summa)
@@ -562,9 +562,10 @@
          tulos)))))
 
 (defn left-pad
-  [minimi-pituus sisalto]
-  (let [merkkijono (str sisalto)]
-    (str (apply str (repeat (- minimi-pituus (count merkkijono)) " ")) merkkijono)))
+  ([minimi-pituus sisalto] (left-pad " " minimi-pituus sisalto))
+  ([merkki minimi-pituus sisalto]
+   (let [merkkijono (str sisalto)]
+     (str (apply str (repeat (- minimi-pituus (count merkkijono)) merkki)) merkkijono))))
 
 (defn kuvaile-paivien-maara
   "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
@@ -604,3 +605,10 @@
              (str vuodet (if (= vuodet 1)
                            (if lyhenna-yksikot? "v" " vuosi")
                            (if lyhenna-yksikot? "v" " vuotta"))))))))
+
+(defn aika [{:keys [tunnit minuutit sekunnit]}]
+  (let [p #(left-pad "0" 2 (str %))]
+    (str (p tunnit) ":"
+         (p minuutit)
+         (when sekunnit
+           (str ":" (p sekunnit))))))

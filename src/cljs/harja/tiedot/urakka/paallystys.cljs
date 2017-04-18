@@ -6,12 +6,15 @@
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-    [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset]
+    [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka]
-    [harja.domain.tierekisteri :as tr-domain])
+    [harja.domain.tierekisteri :as tr-domain]
+    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+    [harja.domain.paallystysilmoitus :as pot]
+    [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -44,7 +47,15 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+
+(def paallystysilmoitukset-suodatettu
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
+                  kohdenumero @yllapito-tiedot/kohdenumero]
+              (when @paallystysilmoitukset
+                (yllapitokohteet/suodata-yllapitokohteet @paallystysilmoitukset {:tienumero tienumero
+                                                                                 :kohdenumero kohdenumero})))))
+
+(defonce paallystysilmoitus-lomakedata (atom nil))
 
 (defonce karttataso-paallystyskohteet (atom false))
 
@@ -57,24 +68,31 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(def yllapitokohteet-suodatettu
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
+                  yllapitokohteet @yllapitokohteet
+                  kohdenumero @yllapito-tiedot/kohdenumero
+                  kohteet (when yllapitokohteet
+                            (yllapitokohteet/suodata-yllapitokohteet yllapitokohteet {:tienumero tienumero
+                                                                                      :kohdenumero kohdenumero}))]
+              kohteet)))
+
 (def yhan-paallystyskohteet
   (reaction-writable
-    (let [kohteet @yllapitokohteet
+    (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
-                                   (filter
-                                     #(and (yllapitokohteet/yha-kohde? %)
-                                           (= (:yllapitokohdetyotyyppi %) :paallystys))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
   (reaction-writable
-    (let [kohteet @yllapitokohteet
+    (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
-                                   (filter
-                                     #(and (not (yllapitokohteet/yha-kohde? %))
-                                           (= (:yllapitokohdetyotyyppi %) :paikkaus))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet
@@ -91,3 +109,32 @@
                   lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
+
+;; Yhteiset UI-asiat
+
+(def paallyste-grid-skeema
+  {:otsikko "Päällyste"
+   :nimi :paallystetyyppi
+   :tyyppi :valinta
+   :valinta-arvo :koodi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
+                      (str (:lyhenne rivi) " - " (:nimi rivi))
+                      (:nimi rivi)))
+   :valinnat paallystys-ja-paikkaus/+paallystetyypit-ja-nil+})
+
+(def raekoko-grid-skeema
+  {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
+   :tasaa :oikea
+   :validoi [[:rajattu-numero nil 0 99]]})
+
+(def tyomenetelma-grid-skeema
+  {:otsikko "Pääll. työ\u00ADmenetelmä"
+   :nimi :tyomenetelma
+   :tyyppi :valinta
+   :valinta-arvo :koodi
+   :valinta-nayta (fn [rivi]
+                    (if (:koodi rivi)
+                      (str (:lyhenne rivi) " - " (:nimi rivi))
+                      (:nimi rivi)))
+   :valinnat pot/+tyomenetelmat-ja-nil+})

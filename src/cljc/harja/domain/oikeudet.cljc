@@ -110,8 +110,6 @@
                               kaikki-urakkaroolit
                               kaikki-organisaatioroolit)]
 
-
-
     (or (if-not urakka-id
           ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
           (some oikeus-pred kaikki-roolit)

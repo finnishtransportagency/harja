@@ -37,7 +37,11 @@
             "ajr": 1,
             "kaista": 1
           },
-          "toimenpide": "testitoimenpide"
+          "toimenpide": "testitoimenpide",
+          "paallystetyyppi": "betoni",
+          "raekoko": 66,
+          "tyomenetelma": "ART-pintaus",
+          "massamaara": 6.6
         }
       },
       {
@@ -55,7 +59,11 @@
             "ajr": 1,
             "kaista": 1
           },
-          "toimenpide": "testitoimenpide"
+          "toimenpide": "testitoimenpide2",
+          "paallystetyyppi": "betoni",
+          "raekoko": 66,
+          "tyomenetelma": "ART-pintaus",
+          "massamaara": 6.6
         }
       }
     ]

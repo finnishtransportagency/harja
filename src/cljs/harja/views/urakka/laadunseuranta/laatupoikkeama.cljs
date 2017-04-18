@@ -43,7 +43,7 @@
   "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
   [laatupoikkeama nakyma]
-  (let [laatupoikkeama (as-> laatupoikkeama lp
+  (let [laatupoikkeama (as-> (lomake/ilman-lomaketietoja laatupoikkeama) lp
                              (assoc lp :sanktiot (sanktiotaulukon-rivit lp))
                              ;; Varmistetaan, että tietyssä näkymäkontekstissa tallennetaan vain näkymän
                              ;; sisältämät asiat (esim. on mahdollista vaihtaa koko valittu urakka päällystyksestä
@@ -383,6 +383,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   {:nimi   :selvitys-pyydetty
                    :tyyppi :checkbox
                    :teksti "Urakoitsijan selvitystä pyydetään"})
+
+                {:nimi   :sisaltaa-poikkeamaraportin?
+                 :tyyppi :checkbox
+                 :teksti "Sisältää poikkeamaraportin"}
 
                 {:otsikko     "Kuvaus"
                  :uusi-rivi?  true

@@ -21,7 +21,7 @@
                                :varoitukset (when-not (empty? varoitukset) varoitukset)}))
 
 (defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
-  (let [{:keys [tunniste kuvaus kohde aika]} data]
+  (let [{:keys [tunniste kuvaus kohde aika sisaltaa-poikkeamaraportin]} data]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) (:id kirjaaja))
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
@@ -35,6 +35,7 @@
              (:aet tr-osoite)
              (:let tr-osoite)
              (:id kirjaaja)
+             sisaltaa-poikkeamaraportin
              (:id tunniste)
              (:id kirjaaja)))
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
@@ -54,6 +55,7 @@
              (:aet tr-osoite)
              (:let tr-osoite)
              nil
+             sisaltaa-poikkeamaraportin
              (:id tunniste))))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]

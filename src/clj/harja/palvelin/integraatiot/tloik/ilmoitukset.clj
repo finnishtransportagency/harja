@@ -11,7 +11,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
@@ -84,7 +84,7 @@
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
-        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)
+        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)

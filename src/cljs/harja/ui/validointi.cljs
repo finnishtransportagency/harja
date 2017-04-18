@@ -12,7 +12,8 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.domain.tierekisteri :as tr])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -92,7 +93,7 @@
 
 (defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
   (when
-    (and (:numero data) (:alkuosa data) (:alkuetaisyys data)
+    (and (tr/validi-osoite? data)
          (or (= 0 (:numero data)) (not (get-in taulukko reittipolku))))
     viesti))
 
@@ -150,10 +151,29 @@
           (pvm/ennen? data vertailtava-pvm))
     viesti))
 
+(defmethod validoi-saanto :pvm-ennen [_ _ data rivi _ & [vertailtava-pvm viesti]]
+  (when (and data vertailtava-pvm
+             (not (pvm/ennen? data vertailtava-pvm)))
+    viesti))
+
+(defmethod validoi-saanto :aika-jalkeen [_ _ data rivi _ & [vertailtava-aika-tai-kentan-nimi viesti]]
+  (let [vertailtava-aika (if (keyword? vertailtava-aika-tai-kentan-nimi)
+                           (get rivi vertailtava-aika-tai-kentan-nimi)
+                           vertailtava-aika-tai-kentan-nimi)]
+    (when (and data vertailtava-aika
+               (not (pvm/aika-jalkeen? data vertailtava-aika)))
+      viesti)))
+
 (defmethod validoi-saanto :toinen-arvo-annettu-ensin [_ _ data rivi _ & [avain viesti]]
   (when (and
           data
           (nil? (avain rivi)))
+    viesti))
+
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-arvo-annettu [_ _ data rivi _ & [avain viesti]]
+  (when (and
+          (nil? data)
+          (some? (avain rivi)))
     viesti))
 
 (defmethod validoi-saanto :ainakin-toinen-annettu [_ _ data rivi _ & [[avain1 avain2] viesti]]
@@ -211,9 +231,7 @@
                     skeema))))))))
 
 (defn tyhja-tr-osoite? [arvo]
-  (or (nil? (:numero arvo))
-      (nil? (:alkuosa arvo))
-      (nil? (:alkuetaisyys arvo))))
+  (not (tr/validi-osoite? arvo)))
 
 
 (defn tyhja-arvo? [arvo]

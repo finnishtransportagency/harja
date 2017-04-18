@@ -10,9 +10,10 @@
             [harja.kyselyt.paallystys :as q]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
   (assert urakka-id "Urakka pitää olla!")
@@ -28,33 +29,6 @@
                                            (first (q/maaramuutos-jarjestelman-luoma db {:id maaramuutos-id})))]
       (when maaramuutos-jarjestelman-luoma
         (throw (SecurityException. "Määrämuutos on järjestelmän luoma, ei voi muokata!"))))))
-
-(def maaramuutoksen-tyon-tyyppi->kantaenum
-  {:ajoradan-paallyste "ajoradan_paallyste"
-   :pienaluetyot "pienaluetyot"
-   :tasaukset "tasaukset"
-   :jyrsinnat "jyrsinnat"
-   :muut "muut"})
-
-(def maaramuutoksen-tyon-tyyppi->keyword
-  {"ajoradan_paallyste" :ajoradan-paallyste
-   "pienaluetyot" :pienaluetyot
-   "tasaukset" :tasaukset
-   "jyrsinnat" :jyrsinnat
-   "muut" :muut})
-
-(defn hae-maaramuutokset
-  [db user {:keys [yllapitokohde-id urakka-id]}]
-  (log/debug "Aloitetaan määrämuutoksien haku")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (let [maaramuutokset (into []
-                             (comp
-                               (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
-                               (map #(konv/string-polusta->keyword % [:tyyppi])))
-                             (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
-                                                                       :urakka urakka-id}))]
-    (log/debug "Määrämuutokset saatu: " maaramuutokset)
-    maaramuutokset))
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
                         {:keys [tyyppi tyo yksikko tilattu-maara
@@ -98,26 +72,10 @@
       (luo-maaramuutos db user (:yllapitokohde-id urakka-ja-yllapitokohde) maaramuutos)
       (paivita-maaramuutos db user urakka-ja-yllapitokohde maaramuutos))))
 
-(defn liita-yllapitokohteisiin-maaramuutokset
-  "Laskee ja liittää päällystyskohteisiin määrämuutokset"
-  [db user {:keys [yllapitokohteet urakka-id]}]
-  (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
-           (let [kohteen-maaramuutokset
-                 (hae-maaramuutokset db user {:yllapitokohde-id (:id %)
-                                              :urakka-id urakka-id})
-                 summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
-                 maaramuutokset (:tulos summatut-maaramuutokset)
-                 maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
-             (assoc % :maaramuutokset maaramuutokset
-                      :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
-           %)
-        yllapitokohteet))
-
 (defn tallenna-maaramuutokset
   "Suorittaa annetuille määrämuutoksille lisäys-/päivitysoperaation.
    Palauttaa päivittyneet määrämuutokset sekä ylläpitokohteet."
-  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset
-                   sopimus-id vuosi]}]
+  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset sopimus-id vuosi]}]
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
@@ -127,22 +85,30 @@
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
-    (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
+    (let [maaramuutokset (map #(assoc % :tyyppi (yy/maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
                               maaramuutokset)]
-      (yha/lukitse-urakan-yha-sidonta db urakka-id)
+      (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)
 
       ;; Rakennetaan vastaus
-      (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                    :sopimus-id sopimus-id
-                                                                    :vuosi vuosi})
-            yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset
-                              db user {:yllapitokohteet yllapitokohteet
-                                       :urakka-id urakka-id})]
-        {:maaramuutokset (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
-                                                      :urakka-id urakka-id})
-         :yllapitokohteet yllapitokohteet}))))
+      {:maaramuutokset (yy/hae-yllapitokohteen-maaramuutokset db {:yllapitokohde-id yllapitokohde-id
+                                                                  :urakka-id urakka-id})
+       :yllapitokohteet (yy/hae-urakan-yllapitokohteet db {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id
+                                                           :vuosi vuosi})})))
+
+(defn hae-ja-summaa-maaramuutokset
+  [db {:keys [urakka-id yllapitokohde-id]}]
+  (let [maaramuutokset (yy/hae-yllapitokohteen-maaramuutokset
+                         db {:yllapitokohde-id yllapitokohde-id
+                             :urakka-id urakka-id})]
+    (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset)))
+
+(defn hae-yllapitokohteen-maaramuutokset
+  [db user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (yy/hae-yllapitokohteen-maaramuutokset db tiedot))
 
 (defrecord Maaramuutokset []
   component/Lifecycle
@@ -151,7 +117,7 @@
           db (:db this)]
       (julkaise-palvelu http :hae-maaramuutokset
                         (fn [user tiedot]
-                          (hae-maaramuutokset db user tiedot)))
+                          (hae-yllapitokohteen-maaramuutokset db user tiedot)))
       (julkaise-palvelu http :tallenna-maaramuutokset
                         (fn [user tiedot]
                           (tallenna-maaramuutokset db user tiedot)))

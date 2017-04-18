@@ -23,14 +23,14 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
-  ypk.aikataulu_kohde_alku              AS "kohde-alku",
-  ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
-  ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
-  ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
-  ypk.aikataulu_tiemerkinta_takaraja    AS "tiemerkinta-takaraja",
-  ypk.aikataulu_tiemerkinta_alku        AS "tiemerkinta-alku",
-  ypk.aikataulu_tiemerkinta_loppu       AS "tiemerkinta-loppu",
-  ypk.aikataulu_kohde_valmis            AS "kohde-valmis",
+  ypka.kohde_alku                       AS "kohde-alku",
+  ypka.paallystys_alku                  AS "paallystys-alku",
+  ypka.paallystys_loppu                 AS "paallystys-loppu",
+  ypka.valmis_tiemerkintaan             AS "valmis-tiemerkintaan",
+  ypka.tiemerkinta_takaraja             AS "tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku                 AS "tiemerkinta-alku",
+  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppu",
+  ypka.kohde_valmis                     AS "kohde-valmis",
   ypk.yhaid,
   ypko.id                               AS "kohdeosa_id",
   ypko.yllapitokohde                    AS "kohdeosa_yllapitokohde",
@@ -46,11 +46,16 @@ SELECT
   ypko.poistettu                        AS "kohdeosa_poistettu",
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
+  ypko.paallystetyyppi                  AS "kohdeosa_paallystetyyppi",
+  ypko.raekoko                          AS "kohdeosa_raekoko",
+  ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
+  ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
@@ -71,30 +76,72 @@ WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-yllapitokohteeseen-liittyvien-kirjauksien-maara
-SELECT
-  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "tarkastukset",
-  (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :id) as "laatupoikkeamat",
-  (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = :id) as "tiemerkinnan-toteumat",
-  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :id) as "paallystysilmoitukset",
-  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :id) as "paikkausilmoitukset",
-  (SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :id) as "tietyomaat"
+-- name: yllapitokohteen-saa-poistaa
+SELECT NOT (EXISTS(SELECT *
+                   FROM yllapitokohde
+                   WHERE id = :id AND yhaid IS NOT NULL) OR
+            EXISTS(SELECT *
+                   FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+                   WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM sanktio s
+                   WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                   (SELECT id
+                                                    FROM laatupoikkeama lp
+                                                    WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) OR
+            EXISTS(SELECT *
+                   FROM paallystysilmoitus pi
+                   WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM paikkausilmoitus pai
+                   WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM tietyomaa ttm
+                   WHERE yllapitokohde = :id) OR
+            EXISTS(SELECT *
+                   FROM laatupoikkeama lp
+                   WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE) OR
+            EXISTS(SELECT *
+                   FROM tarkastus t
+                   WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE)) AS "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
 
--- name: hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
-SELECT
-  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tarkastukset",
-  (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "laatupoikkeamat",
-  (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
-    WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tiemerkinnan-toteumat",
-    -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
-  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde_id
-  AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "paallystysilmoitukset",
-  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde_id
-   AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "paikkausilmoitukset",
-  (SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :yllapitokohde_id
-  AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "tietyomaat"
+-- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
+SELECT ((EXISTS(SELECT *
+                FROM tiemerkinnan_yksikkohintainen_toteuma
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM sanktio s
+                WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+                                                (SELECT id
+                                                 FROM laatupoikkeama lp
+                                                 WHERE yllapitokohde = :yllapitokohde_id
+                                                       AND urakka = :urakka_id AND lp.poistettu IS NOT TRUE))) OR
+        (EXISTS(SELECT *
+                FROM paallystysilmoitus
+                WHERE paallystyskohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM paikkausilmoitus
+                WHERE paikkauskohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM laatupoikkeama
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM tietyomaa
+                WHERE yllapitokohde = :yllapitokohde_id
+                      AND (SELECT urakka
+                           FROM yllapitokohde
+                           WHERE id = :yllapitokohde_id) = :urakka_id)) OR
+        (EXISTS(SELECT *
+                FROM tarkastus
+                WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id))) AS kirjauksia
 FROM yllapitokohde
 WHERE id = :yllapitokohde_id;
 
@@ -106,13 +153,13 @@ SELECT
   pi.tila                               AS "paallystysilmoitus-tila",
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
-  pai.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypk.kaasuindeksi,
+  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
@@ -127,31 +174,37 @@ SELECT
   ypk.yha_kohdenumero                   AS "yha-kohdenumero",
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
-  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
-  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
-  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
-  sum(s.maara)                               AS "bonukset-ja-sakot",
+  ypka.kohde_alku                       AS "kohde-alkupvm",
+  ypka.paallystys_alku                  AS "paallystys-alkupvm",
+  ypka.paallystys_loppu                 AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku                 AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu                AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis                     AS "kohde-valmispvm",
+  sum(-s.maara)                         AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi                                AS "urakka",
+  u.id                                  AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN laatupoikkeama lp  ON lp.yllapitokohde = ypk.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija
+                               FROM urakka
+                               WHERE id = ypk.urakka) = o.id
 WHERE
   ypk.urakka = :urakka
   AND sopimus = :sopimus
-  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
-       OR vuodet @> ARRAY[:vuosi]::int[]))
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                     OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi;
+GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id,
+  ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
+  ypka.kohde_valmis;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -159,15 +212,15 @@ SELECT
   ypk.id,
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.tr_numero                         AS "tr-numero",
-  ypk.tr_alkuosa                        AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                       AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypk.tr_ajorata                        AS "tr-ajorata",
-  ypk.tr_kaista                         AS "tr-kaista",
-  ypk.yhaid                             AS "yha-id",
-  ypk.yha_kohdenumero                   AS "yha-kohdenumero"
+  ypk.tr_numero        AS "tr-numero",
+  ypk.tr_alkuosa       AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa      AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypk.tr_ajorata       AS "tr-ajorata",
+  ypk.tr_kaista        AS "tr-kaista",
+  ypk.yhaid            AS "yha-id",
+  ypk.yha_kohdenumero  AS "yha-kohdenumero"
 FROM yllapitokohde ypk
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
@@ -206,6 +259,10 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
+  paallystetyyppi,
+  raekoko,
+  tyomenetelma,
+  massamaara            AS "massamaara",
   toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
@@ -214,13 +271,40 @@ FROM yllapitokohdeosa ypko
 WHERE yllapitokohde = :yllapitokohde
       AND ypko.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-yllapitokohteiden-yllapitokohdeosat
+-- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
+SELECT
+  ypko.id,
+  ypk.id                AS "yllapitokohde-id",
+  ypko.nimi,
+  ypko.tunnus,
+  ypko.tr_numero        AS "tr-numero",
+  ypko.tr_alkuosa       AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "tr-ajorata",
+  ypko.tr_kaista        AS "tr-kaista",
+  paallystetyyppi,
+  raekoko,
+  tyomenetelma,
+  massamaara            AS "massamaara",
+  toimenpide,
+  sijainti
+FROM yllapitokohdeosa ypko
+  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+                            AND ypk.poistettu IS NOT TRUE
+WHERE yllapitokohde IN (:idt)
+      AND ypko.poistettu IS NOT TRUE;
+
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, toteutunut_hinta,
+                           yllapitokohdetyyppi,
                            yllapitokohdetyotyyppi, vuodet)
 VALUES (:urakka,
   :sopimus,
@@ -239,9 +323,10 @@ VALUES (:urakka,
   :arvonvahennykset,
   :bitumi_indeksi,
   :kaasuindeksi,
-  :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :vuodet::integer[]);
+  :toteutunut_hinta,
+  :yllapitokohdetyyppi :: YLLAPITOKOHDETYYPPI,
+  :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI,
+  :vuodet :: INTEGER []);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -261,7 +346,8 @@ SET
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi
+  kaasuindeksi                      = :kaasuindeksi,
+  toteutunut_hinta                  = :toteutunut_hinta
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -275,7 +361,9 @@ WHERE id = :id
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
+                              paallystetyyppi, raekoko, tyomenetelma, massamaara,
+                              ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
   :nimi,
   :tunnus,
@@ -287,6 +375,30 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
+  :paallystetyyppi,
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+
+-- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
+-- Luo uuden yllapitokohdeosan
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+VALUES (:yllapitokohde,
+        :nimi,
+        :tunnus,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
         :ulkoinen-id,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
@@ -308,6 +420,10 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys,
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
+  paallystetyyppi  = :paallystetyyppi,
+  raekoko          = :raekoko,
+  tyomenetelma     = :tyomenetelma,
+  massamaara       = :massamaara,
   toimenpide       = :toimenpide,
   sijainti         = (SELECT tierekisteriosoitteelle_viiva AS geom
                       FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
@@ -332,69 +448,96 @@ WHERE id = :id
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
-  id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
-  aikataulu_kohde_alku           AS "aikataulu-kohde-alku",
-  aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
-  aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
-  aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
-  aikataulu_tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
-  aikataulu_tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
-  aikataulu_kohde_valmis         AS "aikataulu-kohde-valmis",
-  aikataulu_muokattu             AS "aikataulu-muokattu",
-  aikataulu_muokkaaja            AS "aikataulu-muokkaaja",
-  valmis_tiemerkintaan           AS "valmis-tiemerkintaan",
-  tr_numero                      AS "tr-numero",
-  tr_alkuosa                     AS "tr-alkuosa",
-  tr_alkuetaisyys                AS "tr-alkuetaisyys",
-  tr_loppuosa                    AS "tr-loppuosa",
-  tr_loppuetaisyys               AS "tr-loppuetaisyys",
-  tr_ajorata                     AS "tr-ajorata",
-  tr_kaista                      AS "tr-kaista",
-  yllapitoluokka,
-  suorittava_tiemerkintaurakka   AS "suorittava-tiemerkintaurakka"
-FROM yllapitokohde
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.urakka,
+  ypk.sopimus,
+  ypka.kohde_alku                  AS "aikataulu-kohde-alku",
+  ypka.paallystys_alku             AS "aikataulu-paallystys-alku",
+  ypka.paallystys_loppu            AS "aikataulu-paallystys-loppu",
+  ypka.tiemerkinta_takaraja        AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku            AS "aikataulu-tiemerkinta-alku",
+  ypka.tiemerkinta_loppu           AS "aikataulu-tiemerkinta-loppu",
+  ypka.kohde_valmis                AS "aikataulu-kohde-valmis",
+  ypka.muokattu                    AS "aikataulu-muokattu",
+  ypka.muokkaaja                   AS "aikataulu-muokkaaja",
+  ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan",
+  ypk.tr_numero                    AS "tr-numero",
+  ypk.tr_alkuosa                   AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                  AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys             AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                   AS "tr-ajorata",
+  ypk.tr_kaista                    AS "tr-kaista",
+  ypk.yllapitoluokka,
+  ypk.suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka",
+  tti.id                           AS "tietyoilmoitus-id"
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
-  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
-     OR vuodet @> ARRAY[:vuosi]::int[]))
-  AND poistettu IS NOT TRUE;
+  ypk.urakka = :urakka
+  AND ypk.sopimus = :sopimus
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                     OR ypk.vuodet @> ARRAY [:vuosi] :: INT []))
+  AND ypk.poistettu IS NOT TRUE
+ORDER BY ypka.kohde_alku;
 
 -- name: hae-tiemerkintaurakan-aikataulu
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
 SELECT
-  id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
-  aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
-  aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
-  aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
-  aikataulu_tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
-  aikataulu_tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
-  aikataulu_kohde_valmis         AS "aikataulu-kohde-valmis",
-  aikataulu_muokattu             AS "aikataulu-muokattu",
-  aikataulu_muokkaaja            AS "aikataulu-muokkaaja",
-  valmis_tiemerkintaan           AS "valmis-tiemerkintaan",
-  tr_numero                      AS "tr-numero",
-  tr_alkuosa                     AS "tr-alkuosa",
-  tr_alkuetaisyys                AS "tr-alkuetaisyys",
-  tr_loppuosa                    AS "tr-loppuosa",
-  tr_loppuetaisyys               AS "tr-loppuetaisyys",
-  tr_ajorata                     AS "tr-ajorata",
-  tr_kaista                      AS "tr-kaista",
-  yllapitoluokka
-FROM yllapitokohde
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.urakka,
+  ypk.sopimus,
+  ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
+  ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
+  ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
+  ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  ypka.kohde_valmis         AS "aikataulu-kohde-valmis",
+  ypka.muokattu             AS "aikataulu-muokattu",
+  ypka.muokkaaja            AS "aikataulu-muokkaaja",
+  ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan",
+  ypk.tr_numero             AS "tr-numero",
+  ypk.tr_alkuosa            AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys       AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa           AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
+  ypk.tr_ajorata            AS "tr-ajorata",
+  ypk.tr_kaista             AS "tr-kaista",
+  ypk.yllapitoluokka,
+  tti.id                    AS "tietyoilmoitus-id"
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
-  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
-     OR vuodet @> ARRAY[:vuosi]::int[]))
-  AND poistettu IS NOT TRUE;
+  ypk.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(ypk.vuodet) = 0
+                                     OR ypk.vuodet @> ARRAY [:vuosi] :: INT []))
+  AND ypk.poistettu IS NOT TRUE
+ORDER BY ypka.paallystys_alku;
+
+-- name: hae-yllapitokohteen-aikataulu
+-- Hakee päällystysurakan kohteiden aikataulutiedot
+SELECT
+  ypk.id,
+  ypka.kohde_alku                  AS "kohde-alku",
+  ypka.paallystys_alku             AS "paallystys-alku",
+  ypka.paallystys_loppu            AS "paallystys-loppu",
+  ypka.tiemerkinta_takaraja        AS "tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku            AS "tiemerkinta-alku",
+  ypka.tiemerkinta_loppu           AS "tiemerkinta-loppu",
+  ypka.kohde_valmis                AS "kohde-valmis",
+  ypka.muokattu                    AS "muokattu",
+  ypka.muokkaaja                   AS "muokkaaja",
+  ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan"
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+WHERE ypk.id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
@@ -408,97 +551,95 @@ SELECT
   hallintayksikko
 FROM urakka
 WHERE (loppupvm IS NULL OR loppupvm >= NOW())
-      AND tyyppi = 'tiemerkinta' :: urakkatyyppi;
+      AND tyyppi = 'tiemerkinta' :: URAKKATYYPPI;
 
 -- name: tallenna-paallystyskohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
+UPDATE yllapitokohteen_aikataulu
+SET
+  kohde_alku       = :aikataulu_kohde_alku,
+  paallystys_alku  = :aikataulu_paallystys_alku,
+  paallystys_loppu = :aikataulu_paallystys_loppu,
+  kohde_valmis     = :aikataulu_kohde_valmis,
+  muokattu         = NOW(),
+  muokkaaja        = :aikataulu_muokkaaja
+WHERE yllapitokohde = :id
+      AND (SELECT urakka
+           FROM yllapitokohde
+           WHERE id = :id) = :urakka;
+
+-- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
+-- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
-  aikataulu_kohde_alku         = :aikataulu_kohde_alku,
-  aikataulu_paallystys_alku    = :aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu   = :aikataulu_paallystys_loppu,
-  aikataulu_kohde_valmis       = :aikataulu_kohde_valmis,
-  aikataulu_muokattu           = NOW(),
-  aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id
       AND urakka = :urakka;
 
 -- name: tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
-WHERE id = :id
-      AND urakka = :urakka;
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+WHERE yllapitokohde = :id
+      AND (SELECT urakka
+           FROM yllapitokohde
+           WHERE id = :id) = :urakka;
 
 -- name: tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
-WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+WHERE yllapitokohde = :id
+      AND (SELECT suorittava_tiemerkintaurakka
+           FROM yllapitokohde
+           WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  valmis_tiemerkintaan           = :valmis_tiemerkintaan,
-  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
-WHERE id = :id
-      AND urakka = :urakka;
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+WHERE yllapitokohde = :id
+      AND (SELECT urakka
+           FROM yllapitokohde
+           WHERE id = :id) = :urakka;
 
 -- name: hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
 SELECT
-  ypk.id as id,
-  ypk.nimi as "kohde-nimi",
-  ypk.tr_numero as "tr-numero",
-  ypk.tr_alkuosa as "tr-alkuosa",
-  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
-  ypk.tr_loppuosa as "tr-loppuosa",
-  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
-  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
-  pu.id as "paallystysurakka-id",
-  pu.nimi as "paallystysurakka-nimi",
-  pu.sampoid as "paallystysurakka-sampo-id",
-  tu.id as "tiemerkintaurakka-id",
-  tu.nimi as "tiemerkintaurakka-nimi",
-  tu.sampoid as "tiemerkintaurakka-sampo-id"
+  ypk.id                 AS id,
+  ypk.nimi               AS "kohde-nimi",
+  ypk.tr_numero          AS "tr-numero",
+  ypk.tr_alkuosa         AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa        AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
+  ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
+  pu.id                  AS "paallystysurakka-id",
+  pu.nimi                AS "paallystysurakka-nimi",
+  pu.sampoid             AS "paallystysurakka-sampo-id",
+  tu.id                  AS "tiemerkintaurakka-id",
+  tu.nimi                AS "tiemerkintaurakka-nimi",
+  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
-  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+  LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id IN (:idt);
-
--- name: hae-kohteen-tiedot-sahkopostilahetykseen
-SELECT
-  ypk.nimi as "kohde-nimi",
-  ypk.tr_numero as "tr-numero",
-  ypk.tr_alkuosa as "tr-alkuosa",
-  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
-  ypk.tr_loppuosa as "tr-loppuosa",
-  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
-  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
-  pu.id as "paallystysurakka-id",
-  pu.nimi as "paallystysurakka-nimi",
-  pu.sampoid as "paallystysurakka-sampo-id",
-  tu.id as "tiemerkintaurakka-id",
-  tu.nimi as "tiemerkintaurakka-nimi",
-  tu.sampoid as "tiemerkintaurakka-sampo-id"
-FROM yllapitokohde ypk
-  JOIN urakka pu ON ypk.urakka = pu.id
-  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
-WHERE ypk.id = :id;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  aikataulu_tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
-  aikataulu_muokattu          = NOW(),
-  aikataulu_muokkaaja         = :aikataulu_muokkaaja
-WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
+  tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
+  tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
+  muokattu          = NOW(),
+  muokkaaja         = :aikataulu_muokkaaja
+WHERE yllapitokohde = :id
+      AND (SELECT suorittava_tiemerkintaurakka
+           FROM yllapitokohde
+           WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
@@ -512,7 +653,8 @@ WHERE id = :id;
 
 -- name: hae-yllapitokohde
 SELECT
-  id,
+  ypk.id,
+  ypk.urakka,
   sopimus,
   kohdenumero,
   nimi,
@@ -521,15 +663,15 @@ SELECT
   bitumi_indeksi,
   kaasuindeksi,
   poistettu,
-  aikataulu_kohde_alku,
-  aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis,
-  aikataulu_muokattu,
-  aikataulu_muokkaaja,
-  valmis_tiemerkintaan,
+  ypka.kohde_alku            AS "aikataulu_kohde_alku",
+  ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
+  ypka.paallystys_loppu      AS "aikataulu_paallystys_loppu",
+  ypka.tiemerkinta_alku      AS "aikataulu_tiemerkinta_alku",
+  ypka.tiemerkinta_loppu     AS "aikataulu_tiemerkinta_loppu",
+  ypka.kohde_valmis          AS "aikataulu_kohde_valmis",
+  ypka.muokattu              AS "aikataulu_muokattu",
+  ypka.muokkaaja             AS "aikataulu_muokkaaja",
+  ypka.valmis_tiemerkintaan,
   tr_numero                  AS "tr-numero",
   tr_alkuosa                 AS "tr-alkuosa",
   tr_alkuetaisyys            AS "tr-alkuetaisyys",
@@ -550,40 +692,17 @@ SELECT
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
-FROM yllapitokohde
-WHERE id = :id;
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu
 SELECT
-aikataulu_tiemerkinta_alku as "tiemerkinta-alku",
-aikataulu_tiemerkinta_loppu as "tiemerkinta-loppu",
-aikataulu_tiemerkinta_takaraja as "tiemerkinta-takaraja"
-FROM yllapitokohde
-WHERE id = :id;
-
--- name: hae-yllapitokohteen-kohdeosat
-SELECT
-  id,
-  yllapitokohde,
-  nimi,
-  tunnus,
-  tr_numero                  AS "tr-numero",
-  tr_alkuosa                 AS "tr-alkuosa",
-  tr_alkuetaisyys            AS "tr-alkuetaisyys",
-  tr_loppuosa                AS "tr-loppuosa",
-  tr_loppuetaisyys           AS "tr-loppuetaisyys",
-  tr_ajorata                 AS "tr-ajorata",
-  tr_kaista                  AS "tr-kaista",
-  poistettu,
-  sijainti,
-  yhaid,
-  toimenpide,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
-FROM yllapitokohdeosa
-WHERE yllapitokohde = :yllapitokohde AND
-      poistettu IS NOT TRUE;
+  tiemerkinta_alku     AS "tiemerkinta-alku",
+  tiemerkinta_loppu    AS "tiemerkinta-loppu",
+  tiemerkinta_takaraja AS "tiemerkinta-takaraja"
+FROM yllapitokohteen_aikataulu
+WHERE yllapitokohde = :id;
 
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
@@ -608,17 +727,17 @@ WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallystysaikataulu!
 -- Päivittää ylläpitokohteen aikataulutiedot
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  aikataulu_kohde_alku           = :kohde_alku,
-  aikataulu_paallystys_alku      = :paallystys_alku,
-  aikataulu_paallystys_loppu     = :paallystys_loppu,
-  aikataulu_kohde_valmis         = :kohde_valmis,
-  valmis_tiemerkintaan           = :valmis_tiemerkintaan,
-  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
-  aikataulu_muokattu             = NOW(),
-  aikataulu_muokkaaja            = :muokkaaja
-WHERE id = :id;
+  kohde_alku           = :kohde_alku,
+  paallystys_alku      = :paallystys_alku,
+  paallystys_loppu     = :paallystys_loppu,
+  kohde_valmis         = :kohde_valmis,
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja
+WHERE yllapitokohde = :id;
 
 -- name: paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
 -- Päivittää päällystysilmoituksen aikataulutiedot
@@ -626,25 +745,30 @@ UPDATE paallystysilmoitus
 SET
   takuupvm = :takuupvm
 WHERE paallystyskohde = :kohde_id
-AND poistettu IS NOT TRUE;
+      AND poistettu IS NOT TRUE;
 
 -- name: paivita-yllapitokohteen-tiemerkintaaikataulu!
 -- Päivittää ylläpitokohteen aikataulutiedot
-UPDATE yllapitokohde
+UPDATE yllapitokohteen_aikataulu
 SET
-  aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
-  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
-  aikataulu_muokattu = NOW(),
-  aikataulu_muokkaaja = :muokkaaja
-WHERE id = :id;
+  tiemerkinta_alku     = :tiemerkinta_alku,
+  tiemerkinta_loppu    = :tiemerkinta_loppu,
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja
+WHERE yllapitokohde = :id;
 
 -- name: poista-yllapitokohteen-kohdeosat!
 DELETE FROM yllapitokohdeosa
 WHERE yllapitokohde = :id;
 
 -- name: hae-kohteen-tienumero
-SELECT tr_numero FROM yllapitokohde WHERE id = :kohdeid;
+SELECT tr_numero
+FROM yllapitokohde
+WHERE id = :kohdeid;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
 SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
+
+-- name: luo-yllapitokohteelle-tyhja-aikataulu<!
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);

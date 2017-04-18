@@ -126,15 +126,20 @@
 
         [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
-        [tee-otsikollinen-kentta "Tyyppi"
-         {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-         tarkastukset/tarkastustyyppi]
+        [tee-otsikollinen-kentta
+         {:otsikko "Tyyppi"
+          :kentta-params {:tyyppi :valinta
+                          :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+          :arvo-atom tarkastukset/tarkastustyyppi}]
 
-        [tee-otsikollinen-kentta "Näytä"
-         {:tyyppi :valinta :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
-          :valinta-nayta second}
-         tarkastukset/naytettavat-tarkastukset]
+        [tee-otsikollinen-kentta
+         {:otsikko "Näytä"
+          :kentta-params {:tyyppi :valinta
+                          :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+                          :valinta-nayta second}
+          :arvo-atom tarkastukset/naytettavat-tarkastukset}]
+
         [valinnat/tienumero tarkastukset/tienumero]
 
         (let [oikeus? (oikeudet/voi-kirjoittaa?
@@ -313,7 +318,10 @@
                         [napit/palvelinkutsu-nappi
                          "Tallenna tarkastus"
                          (fn []
-                           (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
+                           (tarkastukset/tallenna-tarkastus
+                            (:id @nav/valittu-urakka)
+                            (lomake/ilman-lomaketietoja tarkastus)
+                            (:nakyma optiot)))
                          {:disabled (not (lomake/voi-tallentaa? tarkastus))
                           :kun-onnistuu (fn [tarkastus]
                                           (reset! tarkastukset/valittu-tarkastus nil)

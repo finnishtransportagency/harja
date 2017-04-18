@@ -6,12 +6,28 @@ E'Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (p�
 Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllopitokohdetyotyyppi-sarakkeesta. Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä. Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä, millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne).\n\n
 
 Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n\n
+
 Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-10, koodit menevät YHA:an.\n
-Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohteet.\n\n
+Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
 
 COMMENT ON TABLE yllapitokohdeosa IS
-E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohde) kuvaa tienosaa ylläpitokohteen sisällä. Kohdeosien avulla voidaan tarkemmin määrittää, miten ylläpitokohde jakaantuu osiin ja mitä toimenpiteitä eri osilla suoritetaan. Ylläpitokohdeosien tulisi kattaa ylläpitokohteen tieosoite kokonaan alusta loppuun niin, ettei väliin jää "tyhjää aluetta".';
+E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohde) kuvaa tienosaa ylläpitokohteen sisällä. Kohdeosien avulla voidaan tarkemmin määrittää, miten ylläpitokohde jakaantuu osiin ja mitä toimenpiteitä eri osilla suoritetaan.\n\n
+
+Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
+- paallystetyyppi\n
+- raekoko\n
+- tyomenetelma\n
+- massamaara\n
+- toimenpide (sanallinen selitys).';
+
+COMMENT ON TABLE yllapitokohteen_aikataulu IS
+E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetuksesta ensisijaisen urakan näkökulmasta. Lisäksi päällystykselle ja tiemerkinnälle on omat aloitus- ja lopetusaikataulut.
+
+ Jokaisella ylläpitokohteella tulisi olla vastinpari tässä taulussa (edes tyhjä rivi ilman mitään aikataulutietoja), mikäli sen aikataulutietoja aiotaan käsitellä';
+
+COMMENT ON TABLE yllapitokohteen_maksuera IS
+E'Sisältää ylläpitokohteeseen kuuluvien maksuerien tiedot (yksi rivi = yksi maksuerä). Maksuerä kuvastaa urakoitsijan tekemää ehdotusta ylläpitokohteen maksueristä. Tilaaja täyttää maksuerätunnuksen.';
 
 -- Ylläpito (päällystys)
 
@@ -31,13 +47,12 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
   -- Ylläpito (tiemerkintä)
 
 COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
-E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus.\n\n
+E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus. Jos linkittyy poistettuun ylläpitokohteeseen, tulkitaan myös itse toteuman olevan poistettu, vaikkei olisikaan eksplisiittisesti merkitty poistetuksi.\n\n
 
 hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettiin. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
 
--- FIXME ENABLOI TÄMÄ KUN HAR-4284 on tehty
--- COMMENT ON TABLE yllapito_muu_toteuma IS
--- E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (tiemerkintäurakan muut toteumat ja päällystysurakan muut kustannukset)';
+COMMENT ON TABLE yllapito_muu_toteuma IS
+E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (tiemerkintäurakan muut toteumat ja päällystysurakan muut kustannukset)';
 
 -- Mobiili laadunseuranta
 
@@ -91,15 +106,27 @@ E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava näkymä/asia (
  - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';
 
+ -- Toteumat
+
+COMMENT ON TABLE toteuma_tehtava IS
+E'- Toteuman tehtävä linkittyy aina toteumaan. Jos toteuma on poistettu, tulkitaan myös tehtävän olevan poistettu, vaikkei itse tehtävää olisikaan eksplisiittisesti merkitty poistetuksi.';
+
+ -- Laadunseuranta
+
+COMMENT ON TABLE tarkastus IS
+E'- Tarkastus voi linkittyä ylläpitokohteeseen. Jos ylläpitokohde on poistettu, tulkitaan myös tarkastuksen olevan poistettu, vaikkei itse tarkastusta olisikaan eksplisiittisesti merkitty poistetuksi.';
+
+COMMENT ON TABLE laatupoikkeama IS
+E'- Laatupoikkeama voi linkittyä ylläpitokohteeseen. Jos ylläpitokohde on poistettu, tulkitaan myös laatupoikkeaman olevan poistettu, vaikkei itse laatupoikkeamaa olisikaan eksplisiittisesti merkitty poistetuksi.';
+
 COMMENT ON TABLE sanktio IS
 E'Sanktio-tauluun kirjataan urakassa sanktio tai bonus.\n
  - Sanktion tyyppi määräytyy tarkemmin taulun sanktiotyyppi ja enumit sanktiolaji kautta\n
  - Sanktio tyypillisesti määrätään laadun alituksesta tai toistuvasta huolimattomuudesta\n
  - Bonus tyypillisesti myönnetään odotukset ylittävästä toiminnallisesta laadusta\n
  - Tietomallissa Sanktioon liittyy aina laatupoikkeama, vaikka sanktio olisikin ns. suorasanktio\n
- -- Suorasanktiot ovat sanktioita, jotka on luotu laatupoikkeamat/sanktiot näkymässä\n
- - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty)';
-
+ - Suorasanktiot ovat sanktioita, jotka on luotu laatupoikkeamat/sanktiot näkymässä\n
+ - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty). Jos sanktio liittyy poistettuun laatupoikkeamaan tai ylläpitokohteeseen, sen katsotaan olevan poistettu, vaikkei itse sanktiota olisikaan eksplisiittisesti merkitty poistetuksi.';
 
 COMMENT ON TABLE sanktiotyyppi IS
 E'Sanktiotyyppi-taulussa kerrotaan eri urakkatyyppien kannalta olennaiset sanktiotyypit.\n

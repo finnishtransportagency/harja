@@ -1,7 +1,23 @@
-<b>Nykyinen versio: 1.0.12</b>  
-<b>Julkaistu: 23.2.2017</b>
+<b>Nykyinen versio: 1.0.21</b>  
+<b>Julkaistu: 13.4.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.21 Julkaistu: 13.4.2017:
+    - Viheralueiden ja -kuvioiden tietolajitunnisteet korvattu uusilla.
+- Versionumero: 1.0.20 Julkaistu: 4.4.2017:
+    - Ylläpitokohteelle on jatkossa mahdollista raportoida tieto, sisältääkö se poikkeamaraportin.
+- Versionumero: 1.0.19 Julkaistu: 22.3.2017:
+    - Urakan ylläpitokohteen päivityksessä alikohteen kokonaismassa-kenttä on nyt nimeltään massamaara.
+- Versionumero: 1.0.18 Julkaistu: 20.3.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu kenttä edellinen-paallyste.
+- Versionumero: 1.0.17 Julkaistu: 16.3.2017:
+    - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
+- Versionumero: 1.0.16 Julkaistu: 9.3.2017:
+    - Lisätty ylläpitokohteen päivitykseen uudet alikohteen kentät: paallystetyyppi, raekoko, tyomenetelma & kokonaismassamaara.
+- Versionumero: 1.0.15 Julkaistu: 7.3.2017:
+    - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.14 Julkaistu: 7.3.2017:
+    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle ja poistamiselle
 - Versionumero: 1.0.13 Julkaistu: 23.2.2017:
     - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
 - Versionumero: 1.0.12 Julkaistu: 9.2.2017:

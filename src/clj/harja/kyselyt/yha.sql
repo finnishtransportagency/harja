@@ -9,14 +9,6 @@ INSERT INTO yhatiedot
 (urakka, yhatunnus, yhaid, yhanimi, elyt, vuodet, kohdeluettelo_paivitetty, luotu, linkittaja, muokattu)
 VALUES (:urakka, :yhatunnus, :yhaid, :yhanimi, :elyt :: TEXT [], :vuodet :: INTEGER [], NULL, NOW(), :kayttaja, NOW());
 
--- name: paivita-yhatietojen-kohdeluettelon-paivitysaika<!
--- Päivittää urakan YHA-tietoihin kohdeluettelon uudeksi päivitysajaksi nykyhetken
-UPDATE yhatiedot
-SET
-  kohdeluettelo_paivitetty = NOW(),
-  muokattu                 = NOW()
-WHERE urakka = :urakka;
-
 -- name: hae-urakan-yhatiedot
 SELECT
   yhatunnus,
@@ -25,33 +17,49 @@ SELECT
   elyt,
   vuodet,
   kohdeluettelo_paivitetty AS "kohdeluettelo-paivitetty",
+  kohdeluettelo_paivittaja AS "kohdeluettelo-paivittaja",
+  k.etunimi                AS "kohdeluettelo-paivittaja-etunimi",
+  k.sukunimi               AS "kohdeluettelo-paivittaja-sukunimi",
   sidonta_lukittu          AS "sidonta-lukittu"
-FROM yhatiedot
+FROM yhatiedot yt
+  LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
-DELETE FROM yllapitokohde
+UPDATE yllapitokohde
+SET poistettu = TRUE
 WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohdeosat!
-DELETE FROM yllapitokohdeosa
-WHERE yllapitokohde IN
-      (SELECT id
-       FROM yllapitokohde
-       WHERE urakka = :urakka);
+UPDATE yllapitokohdeosa
+SET poistettu = TRUE
+WHERE yllapitokohde IN (SELECT id
+                        FROM yllapitokohde
+                        WHERE urakka = :urakka);
 
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT
   id,
-  tr_numero        AS "tr-numero",
-  tr_alkuosa       AS "tr-alkuosa",
-  tr_alkuetaisyys  AS "tr-alkuetaisyys",
-  tr_loppuosa      AS "tr-loppuosa",
-  tr_loppuetaisyys AS "tr-loppuetaisyys",
-  tr_ajorata       AS "tr-ajorata",
-  tr_kaista        AS "tr-kaista"
+  yllapitokohde,
+  nimi,
+  tunnus,
+  tr_numero                  AS "tr-numero",
+  tr_alkuosa                 AS "tr-alkuosa",
+  tr_alkuetaisyys            AS "tr-alkuetaisyys",
+  tr_loppuosa                AS "tr-loppuosa",
+  tr_loppuetaisyys           AS "tr-loppuetaisyys",
+  tr_ajorata                 AS "tr-ajorata",
+  tr_kaista                  AS "tr-kaista",
+  poistettu,
+  sijainti,
+  yhaid,
+  toimenpide,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
-WHERE yllapitokohde = :id;
+WHERE yllapitokohde = :yllapitokohde AND
+      poistettu IS NOT TRUE;
 
 -- name: hae-urakoiden-sidontatiedot
 SELECT
@@ -65,7 +73,7 @@ WHERE yt.yhaid IN (:yhaidt);
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tr_ajorata, tr_kaista,
- yhatunnus, yhaid, yha_kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
+ yhatunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
  nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi, vuodet)
 VALUES (
   :urakka,
@@ -82,6 +90,7 @@ VALUES (
   :yhatunnus,
   :yhaid,
   :yha_kohdenumero,
+  :kohdenumero,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
   :yllapitoluokka,
@@ -92,7 +101,7 @@ VALUES (
   0,
   0,
   :nimi,
-  :vuodet::integer[]);
+  :vuodet :: INTEGER []);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
@@ -118,12 +127,6 @@ VALUES (
                                       CAST(:tr_loppuetaisyys AS INTEGER))),
   :yhaid);
 
--- name: hae-yllapitokohde-idlla
--- single?: true
-SELECT *
-FROM yllapitokohde
-WHERE yhatunnus = :yhatunnus;
-
 -- name: hae-urakan-yha-id
 -- single?: true
 SELECT yhaid
@@ -133,12 +136,13 @@ WHERE urakka = :urakkaid;
 -- name: hae-urakan-kohteiden-yha-idt
 SELECT yhaid
 FROM yllapitokohde
-WHERE urakka = :urakkaid;
+WHERE urakka = :urakkaid AND poistettu IS FALSE;
 
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
 UPDATE yhatiedot
 SET
-  kohdeluettelo_paivitetty = NOW()
+  kohdeluettelo_paivitetty = NOW(),
+  kohdeluettelo_paivittaja = :kayttaja
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!

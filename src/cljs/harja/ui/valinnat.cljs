@@ -10,7 +10,8 @@
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.ui.lomake :as lomake]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -282,3 +283,36 @@
 
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
+
+(defn aikavalivalitsin
+  ([otsikko aikavalit valinnat-nyt] (aikavalivalitsin otsikko aikavalit valinnat-nyt nil))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet false))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm]
+   (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:valokioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
+         alkuaika (:alkuaika valinnat-nyt)
+         vakio-aikavalikentta {:nimi (or (:valokioaikavali kenttien-nimet) :vakioaikavali)
+                               :otsikko otsikko
+                               :fmt :nimi
+                               :tyyppi :valinta
+                               :valinnat aikavalit
+                               :valinta-nayta :nimi
+                               :alasveto-luokka "aikavalinta"}
+         alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
+                         :otsikko "Alku"
+                         :tyyppi (if vain-pvm :pvm :pvm-aika)
+                         :validoi [[:ei-tyhja "Anna alkuaika"]]}
+         loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
+                          :otsikko "Loppu"
+                          :tyyppi (if vain-pvm :pvm :pvm-aika)
+                          :validoi [[:ei-tyhja "Anna loppuaika"]
+                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
+
+     (if vapaa-aikavali?
+       (lomake/ryhma
+         {:rivi? true}
+         vakio-aikavalikentta
+         alkuaikakentta
+         loppuaikakentta)
+       (lomake/ryhma
+         {:rivi? true}
+         vakio-aikavalikentta)))))

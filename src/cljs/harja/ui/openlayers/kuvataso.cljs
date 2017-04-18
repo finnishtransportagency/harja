@@ -31,7 +31,8 @@
   (aseta-z-index [this z-index]
     (assoc this :z-index z-index))
   (extent [this]
-    extent)
+    nil)
+  (aktiivinen? [this] true)
   (opacity [this] 1)
   (selitteet [this]
     selitteet)

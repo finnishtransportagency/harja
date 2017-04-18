@@ -11,7 +11,7 @@
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.yllapitokohteet :as kohteet]
+    [harja.domain.yllapitokohde :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -88,7 +88,7 @@
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
 
-(defn tarkista-urakan-kohde [db urakka-id kohde-id]
+(defn tarkista-urakan-yllapitokohde-olemassa [db urakka-id kohde-id]
   (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
   (when (not (q-yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
     (do
@@ -97,7 +97,6 @@
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
-
 
 (defn sijainneissa-virheita? [db tienumero sijainnit]
   (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
@@ -160,3 +159,14 @@
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+lukittu-yllapitokohde+ :viesti viesti}])))))
+
+(defn tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan [db urakka-id urakan-tyyppi kohde-id]
+  (let [urakan-kohteet (case urakan-tyyppi
+                         :paallystys
+                         (q-yllapitokohteet/hae-urakkaan-liittyvat-paallystyskohteet db {:urakka urakka-id})
+                         :tiemerkinta
+                         (q-yllapitokohteet/hae-urakkaan-liittyvat-tiemerkintakohteet db {:urakka urakka-id}))]
+    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
+      (virheet/heita-poikkeus virheet/+viallinen-kutsu+
+                              {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
+                               :viesti "Ylläpitokohde ei kuulu urakkaan."}))))

@@ -1,20 +1,18 @@
 (ns harja.domain.tiemerkinta-toteumat
-  "Tienäkymän tietojen spec-määritykset"
+  "Tiemerkinnän toteumien spec-määritykset"
   (:require
     [clojure.spec :as s]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka]
-    [harja.domain.yllapitokohteet :as yllapitokohteet]
+    [harja.domain.yllapitokohde :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.tyokalut.spec-apurit :as apurit]
-    #?@(:clj [
-    [clojure.future :refer :all]])))
+    #?@(:clj [[clojure.future :refer :all]])))
 
 ;; Toteuma
 
 (s/def ::selite string?)
-(s/def ::muutospvm #?(:clj  inst?
-                      :cljs inst?))
+(s/def ::paivamaara inst?)
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
 (s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka)) ;; nil = ei ylläpitoluokkaa
 (s/def ::id (s/nilable int?))
@@ -31,7 +29,7 @@
                    ;; tai sitten on kohteeseen kuulumaton toteuma
                    (or (and ::yllapitokohde-id ::hinta-kohteelle)
                        (and ::tr-numero ::pituus))]
-          :opt-un [::poistettu ::muutospvm ::yllapitoluokka]))
+          :opt-un [::poistettu ::paivamaara ::yllapitoluokka]))
 
 ;; Haut
 
@@ -51,3 +49,11 @@
 
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus)
+
+(defn maarittele-hinnan-kohde
+  "Palauttaa stringin, jossa on ylläpitokohteen tieosoitteen tiedot. Käytetään tunnistamaan tilanne,
+   jossa ylläpitokohteeseen liittyvä hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
+  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
+  ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / " tr-loppuosa " / " tr-loppuetaisyys))

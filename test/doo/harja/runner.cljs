@@ -2,7 +2,7 @@
   (:require [doo.runner :refer-macros [doo-tests]]
             [harja.pvm-test]
             [harja.ui.dom-test]
-            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot-test]
+            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test]
             [harja.tiedot.urakka.suunnittelu-test]
             [harja.tiedot.urakka.yhatuonti-test]
             [harja.tiedot.muokkauslukko-test]
@@ -16,7 +16,7 @@
             [harja.ui.historia-test]
             [harja.ui.kentat-test]
             [harja.ui.grid-test]
-            [harja.ui.edistymispalkki-testi]
+            [harja.ui.edistymispalkki-test]
             [harja.fmt-test]
             [harja.tiedot.urakka.siirtymat-test]
             [harja.tiedot.tierekisteri.varusteet-test]
@@ -26,12 +26,18 @@
             [harja.views.kartta-test]
             [harja.tiedot.tilannekuva.tilannekuva-test]
             [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test]
+            [harja.views.ilmoitukset.tietyoilmoitushakulomake-test]
+            [harja.views.ilmoitukset.tietyoilmoituslomake-test]
+            [harja.views.kartta.tasot-test]
+            [harja.tiedot.urakka.yllapitokohteet-test]
+            [harja.ui.kartta.esitettavat-asiat-test]
+            [harja.views.urakka.paallystyksen-maksuerat-test]
             ;; uusi testi tähän
             ))
 
 (doo-tests 'harja.pvm-test
            'harja.ui.dom-test
-           'harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot-test
+           'harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test
            'harja.tiedot.urakka.suunnittelu-test
            'harja.tiedot.urakka.yhatuonti-test
            'harja.tiedot.muokkauslukko-test
@@ -43,7 +49,7 @@
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
-           'harja.ui.edistymispalkki-testi
+           'harja.ui.edistymispalkki-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.valitavoitteet-test
            'harja.fmt-test
@@ -55,5 +61,11 @@
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
            'harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test
+           'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
+           'harja.views.ilmoitukset.tietyoilmoituslomake-test
+           'harja.views.kartta.tasot-test
+           'harja.tiedot.urakka.yllapitokohteet-test
+           'harja.ui.kartta.esitettavat-asiat-test
+           'harja.views.urakka.paallystyksen-maksuerat-test
            ;; uusi testi tähän
            )

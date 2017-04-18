@@ -22,6 +22,8 @@
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
+       ;; :slack {:taso :warn
+       ;;        :webhook-url #=(slurp "../.harja/slack-webhook-url")}
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
@@ -131,4 +133,14 @@
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
  :reittitarkistus  {:paivittainen-aika [00 30 00]}
+
+ ;; Seuraavat ominaisuudet on mahdollista kytkeä pois päältä eri ympäristöissä lisäämällä avaimen settiin:
+ ;; :laatupoikkeaman-selvityspyynnosta-lahtee-viesti  Kun laatupoikkeamasta pyydetään selvitystä urakoitsijalta,
+ ;;                                                   lähetetään laatupoikkeaman urakan vastuuhenkilöille
+ ;;                                                   tieto tästä SMS/email viestinä. Viesti sisältää linkin
+ ;;                                                   tuotantoharjaan.
+ ;; :tierekisterin-varusteet
+ :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
+
+ :sahke {:lahetysjono "urakat-sahkeeseen"}
  }

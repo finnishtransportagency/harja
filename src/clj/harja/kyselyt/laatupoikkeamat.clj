@@ -16,45 +16,46 @@
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
   [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus
-                   sijainti tr yllapitokohde poistettu]}]
+                   sijainti tr yllapitokohde poistettu sisaltaa-poikkeamaraportin?]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
-    (when yllapitokohde
-      (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka yllapitokohde))
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka yllapitokohde)
     (if id
       (do
-       (paivita-laatupoikkeaman-perustiedot<! db
-                                                (konv/sql-timestamp aika)
-                                                (when tekija (name tekija))
-                                                kohde
-                                                (boolean selvitys-pyydetty)
-                                                (:id user)
-                                                kuvaus
-                                                (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                                                numero
-                                                alkuosa
-                                                loppuosa
-                                                alkuetaisyys
-                                                loppuetaisyys
-                                                yllapitokohde
-                                                (boolean poistettu)
-                                                id
-                                                urakka)
+        (paivita-laatupoikkeaman-perustiedot<! db
+                                               (konv/sql-timestamp aika)
+                                               (when tekija (name tekija))
+                                               kohde
+                                               (boolean selvitys-pyydetty)
+                                               (:id user)
+                                               kuvaus
+                                               (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+                                               numero
+                                               alkuosa
+                                               loppuosa
+                                               alkuetaisyys
+                                               loppuetaisyys
+                                               yllapitokohde
+                                               sisaltaa-poikkeamaraportin?
+                                               (boolean poistettu)
+                                               id
+                                               urakka)
          id)
 
      (:id (luo-laatupoikkeama<! db
-                                 "harja-ui"
-                                 urakka
-                                 (konv/sql-timestamp aika)
-                                 (when tekija (name tekija))
-                                 kohde
-                                 (boolean selvitys-pyydetty)
-                                 (:id user)
-                                 kuvaus
-                                 (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                                 numero
-                                 alkuosa
-                                 loppuosa
-                                 alkuetaisyys
-                                 loppuetaisyys
-                                 yllapitokohde
-                                 nil)))))
+                                "harja-ui"
+                                urakka
+                                (konv/sql-timestamp aika)
+                                (when tekija (name tekija))
+                                kohde
+                                (boolean selvitys-pyydetty)
+                                (:id user)
+                                kuvaus
+                                (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+                                numero
+                                alkuosa
+                                loppuosa
+                                alkuetaisyys
+                                loppuetaisyys
+                                yllapitokohde
+                                sisaltaa-poikkeamaraportin?
+                                nil)))))

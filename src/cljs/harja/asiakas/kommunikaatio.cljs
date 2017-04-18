@@ -97,7 +97,9 @@
         (do
           (log "Haetaan testivastaus palvelulle: " palvelu)
           (if-let [testivastaus-ch (testipalvelu palvelu parametrit)]
-            (>! chan (<! testivastaus-ch))
+            (if-let [testivastaus (<! testivastaus-ch)]
+              (>! chan testivastaus)
+              (close! chan))
             (close! chan)))
         (ajax-request {:uri             (str (polku) (name palvelu))
                        :method          metodi
@@ -240,6 +242,13 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn- kasittele-istunto-vanhentunut []
   (reset! istunto-vanhentunut? true))
+
+(defn kysy-pois-kytketyt-ominaisuudet! [pk-atomi]
+  (when-not @pk-atomi
+    (go
+      (let [pko (<! (post! :pois-kytketyt-ominaisuudet {}))]
+        (reset! pk-atomi pko)
+        (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
   (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))

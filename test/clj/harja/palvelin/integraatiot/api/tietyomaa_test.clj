@@ -12,7 +12,7 @@
     kayttaja
     :api-yllapitokohteet (component/using
                            (api-yllapitokohteet/->Yllapitokohteet)
-                           [:http-palvelin :db :integraatioloki])))
+                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :once jarjestelma-fixture)
 

@@ -13,6 +13,12 @@
 ;; Yleiset apufunktiot
 
 (defn poista-nil-avaimet [mappi]
-  (let [arvottomat-avaimet (into #{} (filter #(nil? (% mappi)) (keys mappi)))
-        mappi-ilman-nil-avaimia (apply dissoc mappi arvottomat-avaimet)]
-    mappi-ilman-nil-avaimia))
+  (clojure.walk/postwalk
+    (fn [elementti]
+      (if (and (map? elementti)
+               (not (record? elementti)))
+        (let [m (into {} (remove (comp nil? second) elementti))]
+          (when (seq m)
+            m))
+        elementti))
+    mappi))

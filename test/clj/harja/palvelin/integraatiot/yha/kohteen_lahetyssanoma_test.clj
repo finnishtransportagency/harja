@@ -48,7 +48,6 @@
 (def testialikohteet
   [{:kohdeosa-id 59,
     :yllapitokohde 49,
-    :edellinen-paallystetyyppi 1,
     :lisaaineet "lölöklö",
     :leveys 11,
     :sijainti nil,
@@ -82,7 +81,6 @@
     :yhaid 254915666}
    {:kohdeosa-id 60,
     :yllapitokohde 49,
-    :edellinen-paallystetyyppi 1,
     :lisaaineet "asd",
     :leveys 2,
     :sijainti nil,
@@ -117,7 +115,6 @@
 
 (def testipaallystysilmoitus
   {:tila "valmis",
-   :muutoshinta 234785M,
    :kohdenimi "Testikohde 1",
    :kohdeosa_tie 66,
    :kohdeosa_let 0,
@@ -140,7 +137,6 @@
    :kasittelyaika-tekninen-osa nil,
    :takuupvm (tee-pvm),
    :ilmoitustiedot {:osoitteet [{:kohdeosa-id 59,
-                                 :edellinen-paallystetyyppi 1,
                                  :lisaaineet "lölöklö",
                                  :leveys 11,
                                  :massa 1,
@@ -158,7 +154,6 @@
                                  :paallystetyyppi 21,
                                  :km-arvo "klaösdkföa"}
                                 {:kohdeosa-id 60,
-                                 :edellinen-paallystetyyppi 1,
                                  :lisaaineet "asd",
                                  :leveys 2,
                                  :massa 22,
@@ -192,7 +187,7 @@
 (def testikohteet
   [{:kohde testikohde,
     :alikohteet testialikohteet,
-    :paallystys-ilmoitus testipaallystysilmoitus}])
+    :paallystysilmoitus testipaallystysilmoitus}])
 
 (def testiurakka
   {:yhatunnus "YHA34434",
@@ -208,8 +203,9 @@
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
-  (is (= 234785M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))
-      "Kokonaishinta laskettiin oikein testidataa vasten")
-  (is (= 234785M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta
-                    (assoc testipaallystysilmoitus :sopimuksen-mukaiset-tyot nil)))
+  (is (== 0 (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))
+      "Kokonaishinta laskettiin oikein, kun mitään laskettavaa ei ole")
+  (is (== 6 (kohteen-lahetyssanoma/laske-hinta-kokonaishinta
+             (assoc testipaallystysilmoitus :sopimuksen-mukaiset-tyot 1
+                                            :maaramuutokset 5)))
       "Kokonaishinta laskettiin oikein, kun joukossa on nil-arvoja"))

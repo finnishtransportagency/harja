@@ -5,11 +5,11 @@
              [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
               pylvaat-kuukausittain ei-osumia-aikavalilla-teksti]]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
+            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [harja.pvm :as pvm]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [clojure.string :as str]))
 
 (defn hae-ilmoitukset-raportille

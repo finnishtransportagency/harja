@@ -1,20 +1,21 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-    [clojure.test :refer :all]
-    [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.http-palvelin :as http]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.liitteet :as liitteet]
-    [com.stuartsierra.component :as component]
-    [clj-time.core :as t]
-    [clj-time.coerce :as tc]
-    [clojure.core.async :as async]
-    [clojure.spec :as s])
+   [clojure.test :refer :all]
+   [taoensso.timbre :as log]
+   [harja.kyselyt.urakat :as urk-q]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.http-palvelin :as http]
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [com.stuartsierra.component :as component]
+   [clj-time.core :as t]
+   [clj-time.coerce :as tc]
+   [clojure.core.async :as async]
+   [clojure.spec :as s]
+   [clojure.string :as str])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -28,12 +29,16 @@
 (defn travis? []
   (= "true" (System/getenv "TRAVIS")))
 
+(defn circleci? []
+  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
 (log/set-config! [:appenders :standard-out :min-level]
                  (cond
                    (or (ollaanko-jenkinsissa?)
                        (travis?)
+                       (circleci?)
                        (= "true" (System/getenv "NOLOG")))
                    :fatal
 
@@ -58,10 +63,10 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
-  (loop [max-ts (+ max-aika (System/currentTimeMillis))]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
+  (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
-      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
+      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika-ms "ms kuluessa"))
       (when-not (ehto-fn)
         (recur max-ts)))))
 
@@ -360,20 +365,15 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
 
-(defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
-  (ffirst (q (str "SELECT id
-                   FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
-
 (defn hae-lapin-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
 
-(defn hae-lapin-tiemerkintaurakan-paasopimuksen-id []
+(defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
 
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
@@ -426,6 +426,21 @@
                    WHERE
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-nakkilan-ramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Nakkilan ramppi';"))))
+
+(defn hae-yllapitokohde-oulaisten-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulaisten ohitusramppi';"))))
+
+(defn hae-yllapitokohde-oulun-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulun ohitusramppi';"))))
 
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -700,6 +715,11 @@
   ([eka toka marginaali]
    (< (Math/abs (double (- eka toka))) marginaali)))
 
+(defn- =ts [d1 d2]
+  (let [ts1 (and d1 (.getTime d1))
+        ts2 (and d2 (.getTime d2))]
+    (= ts1 ts2)))
+
 (defn tarkista-map-arvot
   "Tarkistaa, että mäpissä on oikeat arvot. Numeroita vertaillaan =marginaalissa? avulla, muita
   = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
@@ -708,17 +728,28 @@
   (doseq [k (keys odotetut)
           :let [odotettu-arvo (get odotetut k)
                 saatu-arvo (get saadut k ::ei-olemassa)]]
-    (if (= saatu-arvo ::ei-olemassa)
+    (cond
+      (= saatu-arvo ::ei-olemassa)
       (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
                      ", odotettiin arvoa: " odotettu-arvo))
 
-      (if (and (number? odotettu-arvo) (number? saatu-arvo))
-        (is (=marginaalissa? odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
-                 odotettu-arvo ", saatu: " saatu-arvo))
-        (is (= odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
-                 ", saatu: " saatu-arvo))))))
+      (and (number? odotettu-arvo) (number? saatu-arvo))
+      (is (=marginaalissa? odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+               odotettu-arvo  " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      (instance? java.util.Date odotettu-arvo)
+      (is (=ts odotettu-arvo saatu-arvo)
+          (str "Odotettu date arvo avaimelle " k " ei ole millisekunteina sama, odotettu: "
+               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      :default
+      (is (= odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+               " (" (type odotettu-arvo)
+               "), saatu: " saatu-arvo " (" (type odotettu-arvo) ")")))))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 
