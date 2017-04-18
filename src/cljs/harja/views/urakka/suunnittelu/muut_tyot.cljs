@@ -55,19 +55,19 @@
           {:otsikko      "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
            :luokat       ["col-md-10"]
            :tyhja        (if (nil? @u/muutoshintaiset-tyot)
-                           [ajax-loader "Muutoshintaisia töitä haetaan..."]
-                           "Ei muutoshintaisia töitä")
+                    [ajax-loader "Muutoshintaisia töitä haetaan..."]
+                    "Ei muutoshintaisia töitä")
            :tallenna     (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot (:id @nav/valittu-urakka))
-                           #(tallenna-tyot
-                              % u/muutoshintaiset-tyot)
-                           :ei-mahdollinen)
+                       #(tallenna-tyot
+                          % u/muutoshintaiset-tyot)
+                       :ei-mahdollinen)
            :tallennus-ei-mahdollinen-tooltip
            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                            oikeudet/urakat-suunnittelu-muutos-ja-lisatyot)
            :ohjaus       g
            :muutos       #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
-                                                                       (:tehtava rivi))
-                                                                     (vals (grid/hae-muokkaustila %)))))
+                                                                 (:tehtava rivi))
+                                                               (vals (grid/hae-muokkaustila %)))))
            :voi-poistaa? (constantly (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-muutos-ja-lisatyot
                                                                (:id @nav/valittu-urakka)))}
 
