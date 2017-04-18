@@ -26,9 +26,13 @@ SELECT
   urk.nimi,
   urk.ytunnus,
   urk.katuosoite,
-  urk.postinumero
+  urk.postinumero,
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id,
+  u.alkupvm AS urakka_alkupvm,
+  u.loppupvm AS urakka_loppupvm
 FROM organisaatio urk
-  LEFT JOIN urakka u ON urk.id = u.hallintayksikko
+  LEFT JOIN urakka u ON urk.id = u.urakoitsija
 WHERE urk.tyyppi = 'urakoitsija'
       AND urk.poistettu IS NOT TRUE
       AND (u.tyyppi IN ('vesivayla-hoito', 'vesivayla-ruoppaus', 'vesivayla-turvalaitteiden-korjaus', 'vesivayla-kanavien-hoito', 'vesivayla-kanavien-korjaus')

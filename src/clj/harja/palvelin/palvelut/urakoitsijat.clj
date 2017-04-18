@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.urakoitsijat :as q]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]))
+            [harja.id :refer [id-olemassa?]]
+            [harja.kyselyt.konversio :as konv]))
 
 (declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat
          tallenna-urakoitsija!)
@@ -64,8 +65,12 @@
       (into #{})))
 
 (defn vesivayla-urakoitsijat [db user]
-  (oikeudet/ei-oikeustarkistusta!)
-  (q/hae-vesivayla-urakoitsijat db))
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (konv/sarakkeet-vektoriin
+    (into []
+         (map #(konv/alaviiva->rakenne %))
+         (q/hae-vesivayla-urakoitsijat db))
+    {:urakka :urakat}))
 
 (defn tallenna-urakoitsija! [db user {:keys [id nimi postinumero katuosoite ytunnus]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
