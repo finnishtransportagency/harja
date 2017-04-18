@@ -47,7 +47,7 @@
           fail! (tuck/send-async! ->SopimusEiTallennettu)]
       (go
         (try
-          (let [vastaus sopimus] ;;TODO lisää tallennus
+          (let [vastaus (async/<! (k/post! :tallenna-sopimus sopimus))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -83,7 +83,7 @@
           fail! (tuck/send-async! ->SopimuksetEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Joku sopimus" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))] ;;FIXME toteuta palvelu
+          (let [vastaus (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
