@@ -256,9 +256,8 @@
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     paallystysilmoitus))
 
-(defn- luo-paallystysilmoitus [db user urakka-id sopimus-id
-                               {:keys [paallystyskohde-id ilmoitustiedot
-                                       takuupvm]
+(defn- luo-paallystysilmoitus [db user urakka-id
+                               {:keys [paallystyskohde-id ilmoitustiedot takuupvm]
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
@@ -320,9 +319,8 @@
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
 (defn- paivita-paallystysilmoituksen-perustiedot
-  [db user urakka-id sopimus-id
-   {:keys [id paallystyskohde-id ilmoitustiedot
-           takuupvm tekninen-osa] :as paallystysilmoitus}]
+  [db user urakka-id
+   {:keys [id paallystyskohde-id ilmoitustiedot takuupvm] :as paallystysilmoitus}]
   (if (oikeudet/voi-kirjoittaa?
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
@@ -350,7 +348,7 @@
         id)
     (log/debug "Ei oikeutta päivittää perustietoja.")))
 
-(defn- paivita-paallystysilmoitus [db user urakka-id sopimus-id
+(defn- paivita-paallystysilmoitus [db user urakka-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
   ;; Ilmoituksen kaikki tiedot lähetetään aina tallennettavaksi, vaikka käyttäjällä olisi oikeus
   ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
@@ -360,7 +358,7 @@
   (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
   (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus)
   (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
-  (paivita-paallystysilmoituksen-perustiedot db user urakka-id sopimus-id uusi-paallystysilmoitus)
+  (paivita-paallystysilmoituksen-perustiedot db user urakka-id uusi-paallystysilmoitus)
   (log/debug "Päällystysilmoitus päivitetty!")
   (:id paallystysilmoitus-kannassa))
 
@@ -413,7 +411,9 @@
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
 
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
+    ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
@@ -436,9 +436,9 @@
                          {:paallystyskohde paallystyskohde-id})))]
       (let [paallystysilmoitus-id
             (if paallystysilmoitus-kannassa
-              (paivita-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus
+              (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
                                           paallystysilmoitus-kannassa)
-              (luo-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus))]
+              (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))]
 
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
 
