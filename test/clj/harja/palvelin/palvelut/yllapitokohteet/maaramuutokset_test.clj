@@ -107,3 +107,64 @@
                                       :maaramuutokset testipayload
                                       :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
                                       :vuosi 2017})))))
+
+(deftest maaramuutosten-paivitystoimii
+  (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        hae-maaramuutokset #(kutsu-palvelua
+                              (:http-palvelin jarjestelma)
+                              :hae-maaramuutokset +kayttaja-jvh+
+                              {:urakka-id @muhoksen-paallystysurakan-id
+                               :yllapitokohde-id yllapitokohde-id})
+        uusi-maaramuutos {:yllapitokohde yllapitokohde-id
+                          :tyyppi :ajoradan-paallyste
+                          :tyo "Testissä luotu määrämuutos"
+                          :yksikko "kg"
+                          :tilattu-maara 100
+                          :toteutunut-maara 120
+                          :yksikkohinta 3}
+        muokattu-maaramuutos {:yllapitokohde yllapitokohde-id
+                              :tyyppi :ajoradan-paallyste
+                              :tyo "Testissä luotu määrämuutos"
+                              :yksikko "kg"
+                              :tilattu-maara 123
+                              :toteutunut-maara 666
+                              :yksikkohinta 3}
+        poistettu-maaramuutos {:yllapitokohde yllapitokohde-id
+                               :tyyppi :ajoradan-paallyste
+                               :tyo "Testissä luotu määrämuutos"
+                               :yksikko "kg"
+                               :tilattu-maara 123
+                               :toteutunut-maara 666
+                               :yksikkohinta 3
+                               :poistettu true}
+        tallenna-maaramuutokset (fn [maaramuutokset]
+                                  (kutsu-palvelua
+                                    (:http-palvelin jarjestelma)
+                                    :tallenna-maaramuutokset +kayttaja-jvh+
+                                    {:urakka-id @muhoksen-paallystysurakan-id
+                                     :yllapitokohde-id yllapitokohde-id
+                                     :maaramuutokset maaramuutokset
+                                     :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                     :vuosi 2017}))
+        hae-tarkasteltava-maaramuutos (fn [maaramuutokset]
+                                        (first (filter #(= "Testissä luotu määrämuutos" (:tyo %)) maaramuutokset)))
+        maaramuutokset-ennen-testia (count (hae-maaramuutokset))]
+
+    (tallenna-maaramuutokset [uusi-maaramuutos])
+
+    (let [maaramuutokset (hae-maaramuutokset)
+          maaramuutos-id (:id (hae-tarkasteltava-maaramuutos maaramuutokset))]
+      (is (= (+ 1 maaramuutokset-ennen-testia) (count maaramuutokset)) "Kirjauksen jälkeen löytyi vain 1 uusi määrämuutos")
+      (is maaramuutos-id "Id on saatu haettua")
+
+      (tallenna-maaramuutokset [(assoc muokattu-maaramuutos :id maaramuutos-id)])
+      (let [maaramuutokset (hae-maaramuutokset)
+            maaramuutos (hae-tarkasteltava-maaramuutos maaramuutokset)]
+        (is (= (+ 1 maaramuutokset-ennen-testia) (count maaramuutokset)) "Muokkauksen jälkeen löytyi sama määrä määrämuutoksia")
+        (is (= 123M (:tilattu-maara maaramuutos)) "Tilattu määrä on päivitetty oikein")
+        (is (= 666M (:toteutunut-maara maaramuutos)) "Toteutunut määrä on päivitetty oikein"))
+
+      (tallenna-maaramuutokset [(assoc poistettu-maaramuutos :id maaramuutos-id)])
+      (is (= maaramuutokset-ennen-testia (count (hae-maaramuutokset)))))
+
+    (u "DELETE FROM yllapitokohteen_maaramuutos WHERE tyo = 'Testissä luotu määrämuutos';")))
