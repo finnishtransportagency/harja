@@ -126,6 +126,28 @@
                                     {:urakka-id urakka-id})]
         (is (= (count vastaus) 0))))))
 
+(defn- luo-yha-kohteet [kohteen-osoite alikohteen-osoite]
+  [{:alikohteet [{:yha-id 1
+                  :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
+                                                 kohteen-osoite)
+                  :tunnus nil
+                  :paallystystoimenpide {:kokonaismassamaara 10
+                                         :paallystetyomenetelma 21
+                                         :kuulamylly nil
+                                         :raekoko 16
+                                         :rc-prosentti nil
+                                         :uusi-paallyste 14}}]
+    :yha-id 2
+    :tierekisteriosoitevali (merge {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"}
+                                   alikohteen-osoite)
+    :yha-kohdenumero 1
+    :yllapitokohdetyyppi "paallyste"
+    :nykyinen-paallyste 14
+    :nimi "YHA-kohde"
+    :yllapitokohdetyotyyppi :paallystys
+    :yllapitoluokka 8
+    :keskimaarainen-vuorokausiliikenne 5000}])
+
 (deftest tallenna-uudet-yha-kohteet
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         yhatiedot-ennen-testia (first (q-map "SELECT id, sidonta_lukittu
@@ -139,39 +161,22 @@
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                   {:urakka-id urakka-id
-                                   :kohteet [{:alikohteet
-                                              [{:yha-id 1
-                                                :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                                         :ajorata 1
-                                                                         :kaista 1
-                                                                         :aosa 1
-                                                                         :aet 1
-                                                                         :losa 1
-                                                                         :let 2
-                                                                         :tienumero 20}
-                                                :tunnus nil
-                                                :paallystystoimenpide {:kokonaismassamaara 10
-                                                                       :paallystetyomenetelma 21
-                                                                       :kuulamylly nil
-                                                                       :raekoko 16
-                                                                       :rc-prosentti nil
-                                                                       :uusi-paallyste 14}}]
-                                              :yha-id 2
-                                              :tierekisteriosoitevali {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
-                                                                       :ajorata 1
-                                                                       :kaista 1
-                                                                       :aosa 1
-                                                                       :aet 1
-                                                                       :losa 1
-                                                                       :let 2
-                                                                       :tienumero 20}
-                                              :yha-kohdenumero 1
-                                              :yllapitokohdetyyppi "paallyste"
-                                              :nykyinen-paallyste 14
-                                              :nimi "YHA-kohde"
-                                              :yllapitokohdetyotyyppi :paallystys
-                                              :yllapitoluokka 8
-                                              :keskimaarainen-vuorokausiliikenne 5000}]})
+                                   :kohteet (luo-yha-kohteet {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                              :ajorata 1
+                                                              :kaista 1
+                                                              :tienumero 20
+                                                              :aosa 1
+                                                              :aet 1
+                                                              :losa 1
+                                                              :let 2}
+                                                             {:karttapaivamaara #inst "2017-01-01T22:00:00.000-00:00"
+                                                              :ajorata 1
+                                                              :kaista 1
+                                                              :tienumero 20
+                                                              :aosa 1
+                                                              :aet 1
+                                                              :losa 1
+                                                              :let 2})})
           yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
                                                FROM yhatiedot WHERE urakka = " urakka-id ";"))
           kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
