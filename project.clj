@@ -102,7 +102,7 @@
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [webjure/json-schema "0.7.3"]
+                 [webjure/json-schema "0.7.4"]
 
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]
