@@ -278,9 +278,10 @@
                                                             :let 9999999})})]
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
     (is (true? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (nil? (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (false? (:aliosoitteet-validit? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Loppusan pituus 9999999 ei kelpaa"))))
+    (is (= (:alikohteet-epavalidit-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Loppuosan pituus 9999999 ei kelpaa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-ei-sisalla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

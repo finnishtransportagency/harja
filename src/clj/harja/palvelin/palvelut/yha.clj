@@ -150,22 +150,19 @@
     (let [kohteet+osoite-validi?
           (map
             (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
-              (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie (:tienumero kohde)
-                                                                   :aosa (:aosa kohde)
-                                                                   :losa (:losa kohde)})
-                    kohteen-validointi (tr-haku/validoi-tr-osoite db tierekisteriosoitevali osien-pituudet)
-                    kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite
+              (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
+                    kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla
                                                   db
-                                                  (:tierekisteriosoitevali %)
-                                                  osien-pituudet)
+                                                  (:tierekisteriosoitevali %))
                                                alikohteet)]
                 (assoc kohde :osoite-validi? (:ok? kohteen-validointi)
                              :osoite-epavalidi-syy (:syy kohteen-validointi)
                              :aliosoitteet-validit? (every? #(true? (:ok? %)) kohdeosien-validointi)
                              :alikohteet-epavalidit-syy (:syy (first kohdeosien-validointi)))))
             kohteet)
-          validit-kohteet (filter :osoite-validi? kohteet+osoite-validi?)
-          epavalidit-kohteet (filter (comp not :osoite-validi?) kohteet+osoite-validi?)]
+          kohde-validi? #(and (:osoite-validi? %) (:aliosoitteet-validit? %))
+          validit-kohteet (filter kohde-validi? kohteet+osoite-validi?)
+          epavalidit-kohteet (filter (comp not kohde-validi?) kohteet+osoite-validi?)]
       ;; Tallennetaan vain sellaiset YHA-kohteet, joille saatiin muodostettua geometria eli osoite oli
       ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
       (doseq [kohde validit-kohteet]

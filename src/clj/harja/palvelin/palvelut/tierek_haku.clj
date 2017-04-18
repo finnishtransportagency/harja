@@ -66,15 +66,17 @@
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
 
-
-(defn validoi-tr-osoite
+(defn validoi-tr-osoite-tieverkolla
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
   :ok?      Oliko TR-osoite validi (true / false)
   :syy      Tekstimuotoinen selitys siitä, miksi ei ole validi (voi olla myös null)"
-  [db {:keys [tienumero aosa aet losa let] :as tieosoite} osien-pituudet]
+  [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
   (try
     (clojure.core/let
-      [tulos {:aosa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla aosa osien-pituudet)
+      [osien-pituudet (hae-osien-pituudet db {:tie tienumero
+                                              :aosa aosa
+                                              :losa losa})
+       tulos {:aosa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla aosa osien-pituudet)
               :losa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla losa osien-pituudet)
               :aosa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla aosa aet osien-pituudet)
               :losa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla losa let osien-pituudet)
@@ -89,7 +91,7 @@
                                   (not (:aosa-pituus-validi? tulos)) (str "Alkuosan pituus " aet " ei kelpaa")
                                   (not (:losa-pituus-validi? tulos)) (str "Loppuosan pituus " let " ei kelpaa")
                                   (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
-                                  :default "Osoite on validi")})
+                                  :default nil)})
     (catch PSQLException e
       {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
 
