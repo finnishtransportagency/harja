@@ -39,7 +39,7 @@
 (defn paasopimus? [sopimukset sopimus]
   (boolean (when-let [ps (paasopimus sopimukset)] (= (:id sopimus) (:id ps)))))
 
-(defn vapaa-sopimus? [s] (nil? (:urakka s)))
+(defn vapaa-sopimus? [s] (nil? (get-in s [:urakka :id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
   (remove (comp (into #{} (keep :id urakan-sopimukset)) :id) (filter vapaa-sopimus? sopimukset)))
