@@ -9,7 +9,9 @@
             [cheshire.core :as cheshire]
             [clojure.walk :as walk]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.turvalaitteet :as q-turvalaitteet]))
+            [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
+            [harja.geo :as geo]
+            [clojure.string :as string]))
 
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
@@ -18,30 +20,39 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-(defn tallenna-turvalaite [param1]
+(defn tallenna-turvalaite [db {:keys [id geometry properties] :as turvalaite}]
+  (println "---> turvalaite" turvalaite)
+  (let [geometria (geo/clj->pg (assoc geometry :type (keyword (string/lower-case (name (:type geometry))))))
+        {:keys [NIMIR SUBTYPE SIJAINTS VAYLAT TILA]} properties
+        sql-parametrit {:sijainti geometria
+                        :tunniste id
+                        :nimi NIMIR
+                        :alityyppi SUBTYPE
+                        :sijainnin_kuvaus SIJAINTS
+                        :vayla VAYLAT
+                        :tila TILA}]
+    (q-turvalaitteet/luo-turvalaite<! db sql-parametrit))
+  ;; Saatavilla olevat arvot: TUTKAHEIJ , SIJAINTIR , NAVL_TYYP , TLNUMERO , FASADIVALO , OMISTAJA , PATA_TYYP , NIMIR , SUBTYPE , TY_JNR , RAK_VUOSI , PAIV_PVM , SIJAINTIS , VAYLAT , PAKO_TYYP , MITT_PVM , VALAISTU , RAKT_TYYP , IRROTUS_PVM , NIMIS , TKLNUMERO , TILA , HUIPPUMERK , TOTI_TYYP , VAHV_PVM
   )
 
-(defn kasittele-vastaus [vastaus]
+(defn kasittele-vastaus [db vastaus]
   (let [data (cheshire/decode vastaus)
         turvalaitteet (get data "features")]
-    (doseq [turvalaite turvalaitteet]
-      (tallenna-turvalaite (walk/keywordize-keys turvalaite)))
-    (println "----> " (first turvalaitteet))))
+    (doseq [turvalaite (take 10 turvalaitteet)]
+      (tallenna-turvalaite db (walk/keywordize-keys turvalaite)))))
 
 (defn paivita-turvalaitteet [integraatioloki db url]
   (log/debug "Päivitetään turvalaitteiden geometriat")
 
-  (jdbc/with-db-transaction [db db]
-    (q-turvalaitteet/poista-turvalaitteet! db)
+  (jdbc/with-db-transaction [transaktio db]
+    (q-turvalaitteet/poista-turvalaitteet! transaktio)
 
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "ptj" "turvalaitteiden-haku"
-      (fn [konteksti]
-        (let [http-asetukset {:metodi :GET
-                              :url url}
-              {body :body headers :headers}
-              (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-vastaus body)))))
+    (let [hae-turvalaitteet (fn [konteksti]
+                              (let [http-asetukset {:metodi :GET :url url}
+                                    {vastaus :body}
+                                    (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                                (kasittele-vastaus transaktio vastaus)))]
+      (integraatiotapahtuma/suorita-integraatio db integraatioloki "ptj" "turvalaitteiden-haku" hae-turvalaitteet)))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]

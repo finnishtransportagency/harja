@@ -9,7 +9,7 @@ INSERT INTO turvalaite (sijainti,
                         sijainnin_kuvaus,
                         vayla,
                         tila)
-VALUES (:sijainti,
+VALUES (:sijainti :: GEOMETRY,
         :tunniste,
         :nimi,
         :alityyppi,

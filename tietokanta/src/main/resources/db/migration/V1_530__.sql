@@ -8,4 +8,4 @@ CREATE TABLE turvalaite (
   vayla            VARCHAR(32),
   tila             VARCHAR(32));
 
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'turvalaitteiden-haku')
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'turvalaitteiden-haku');
