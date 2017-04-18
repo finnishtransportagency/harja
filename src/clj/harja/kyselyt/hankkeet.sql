@@ -36,13 +36,15 @@ SELECT
 FROM hanke
 ORDER BY alkupvm, nimi;
 
--- name: luo-hanke<!
-INSERT INTO hanke (nimi, alkupvm, loppupvm)
-    VALUES (:nimi, :alkupvm, :loppupvm);
+-- name: luo-harjassa-luotu-hanke<!
+INSERT INTO hanke (nimi, alkupvm, loppupvm, luoja, luotu, harjassa_luotu)
+    VALUES (:nimi, :alkupvm, :loppupvm, :kayttaja, NOW(), TRUE);
 
--- name: paivita-hanke<!
+-- name: paivita-harjassa-luotu-hanke<!
 UPDATE hanke SET
     nimi = :nimi,
     alkupvm = :alkupvm,
-    loppupvm = :loppupvm
+    loppupvm = :loppupvm,
+    muokkaaja = :kayttaja,
+    muokattu = NOW()
 WHERE id = :id;
