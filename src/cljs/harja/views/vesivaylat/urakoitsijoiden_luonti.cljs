@@ -44,23 +44,27 @@
       {:otsikko "Y-tunnus" :nimi :ytunnus :tyyppi :string :pakollinen? true}
       {:otsikko "Katuosoite" :nimi :katuosoite :tyyppi :string}
       {:otsikko "Postinumero" :nimi :postinumero :tyyppi :string}
-      (lomake/ryhma
-        {:otsikko "Urakat"}
-        {:otsikko "Alkavat urakat"
-         :nimi :alkavat-urakat
-         :tyyppi :komponentti
-         :palstoja 2
-         :komponentti (fn [_] [urakan-nimi-ja-pvm (:alkava urakat)])}
-        {:otsikko "Käynnissä olevat urakat"
-         :nimi :kaynnissa-urakat
-         :tyyppi :komponentti
-         :palstoja 2
-         :komponentti (fn [_] [urakan-nimi-ja-pvm (:kaynnissa urakat)])}
-        {:otsikko "Päättyneet urakat"
-         :nimi :paattyneet-urakat
-         :tyyppi :komponentti
-         :palstoja 2
-         :komponentti (fn [_] [urakan-nimi-ja-pvm (:paattynyt urakat)])})]
+      (when (some not-empty (vals urakat))
+        (lomake/ryhma
+         {:otsikko "Urakat"}
+         (when (not-empty (:alkava urakat))
+           {:otsikko "Alkavat urakat"
+           :nimi :alkavat-urakat
+           :tyyppi :komponentti
+           :palstoja 2
+           :komponentti (fn [_] [urakan-nimi-ja-pvm (:alkava urakat)])})
+         (when (not-empty (:kaynnissa urakat))
+           {:otsikko "Käynnissä olevat urakat"
+           :nimi :kaynnissa-urakat
+           :tyyppi :komponentti
+           :palstoja 2
+           :komponentti (fn [_] [urakan-nimi-ja-pvm (:kaynnissa urakat)])})
+         (when (not-empty (:paattynyt urakat))
+           {:otsikko "Päättyneet urakat"
+           :nimi :paattyneet-urakat
+           :tyyppi :komponentti
+           :palstoja 2
+           :komponentti (fn [_] [urakan-nimi-ja-pvm (:paattynyt urakat)])})))]
      valittu-urakoitsija]]))
 
 (defn urakoitsijagrid [e! app]
