@@ -306,7 +306,7 @@
 
     (testing "paivita-eri-urakan-suorasanktiota"
       (is (thrown? Exception (palvelukutsu-tallenna-suorasanktio
-                               +kayttaja-jvh+ paallystys-sakko paallystys-sakko hk-alkupvm hk-loppupvm))))))
+                               +kayttaja-jvh+ paallystys-sakko laatupoikkeama-paallystys hk-alkupvm hk-loppupvm))))))
 
 (deftest suorasanktion-poistaminen-vs-laatupoikkeamaan-liitetyn-sanktion-poistaminen
   (let [perustelu "ABC lehmä lepäilee"

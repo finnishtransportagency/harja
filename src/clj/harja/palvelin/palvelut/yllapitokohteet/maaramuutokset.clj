@@ -75,8 +75,7 @@
 (defn tallenna-maaramuutokset
   "Suorittaa annetuille määrämuutoksille lisäys-/päivitysoperaation.
    Palauttaa päivittyneet määrämuutokset sekä ylläpitokohteet."
-  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset
-                   sopimus-id vuosi]}]
+  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset sopimus-id vuosi]}]
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
