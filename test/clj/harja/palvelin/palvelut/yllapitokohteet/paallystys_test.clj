@@ -392,6 +392,17 @@
                              :lisaaineet "asd"}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
+(deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
+  (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
+    (is (not (nil? paallystyskohde-id)))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+          sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)]
+      (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :paallystysilmoitus paallystysilmoitus}))))))
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
   (let [paallystyskohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
