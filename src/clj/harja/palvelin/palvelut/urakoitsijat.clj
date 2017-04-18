@@ -6,9 +6,12 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [harja.kyselyt.urakoitsijat :as q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
+            [harja.kyselyt.konversio :as konv]))
 
-(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat)
+(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat
+         tallenna-urakoitsija!)
 
 
 (defrecord Urakoitsijat []
@@ -26,12 +29,16 @@
     (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
                       (fn [user _]
                         (vesivayla-urakoitsijat (:db this) user)))
+    (julkaise-palvelu (:http-palvelin this) :tallenna-urakoitsija
+                      (fn [user tiedot]
+                        (tallenna-urakoitsija! (:db this) user tiedot)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat )
     (poista-palvelu (:http-palvelin this) :vesivayla-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :tallenna-urakoitsija)
     this))
 
 
@@ -58,5 +65,26 @@
       (into #{})))
 
 (defn vesivayla-urakoitsijat [db user]
-  (oikeudet/ei-oikeustarkistusta!)
-  (q/hae-vesivayla-urakoitsijat db))
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (konv/sarakkeet-vektoriin
+    (into []
+         (map #(konv/alaviiva->rakenne %))
+         (q/hae-vesivayla-urakoitsijat db))
+    {:urakka :urakat}))
+
+(defn tallenna-urakoitsija! [db user {:keys [id nimi postinumero katuosoite ytunnus]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (if (id-olemassa? id)
+    (q/paivita-urakoitsija! db
+                            {:id id
+                             :nimi nimi
+                             :ytunnus ytunnus
+                             :katuosoite katuosoite
+                             :postinumero postinumero
+                             :kayttaja (:id user)})
+    (q/luo-urakoitsija<! db
+                         {:nimi nimi
+                          :ytunnus ytunnus
+                          :katuosoite katuosoite
+                          :postinumero postinumero
+                          :kayttaja (:id user)})))

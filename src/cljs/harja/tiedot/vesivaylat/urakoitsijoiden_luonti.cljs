@@ -3,7 +3,9 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [cljs.core.async :as async]
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -15,6 +17,30 @@
          :tallennus-kaynnissa? false
          :urakoitsijoiden-haku-kaynnissa? false
          :haetut-urakoitsijat nil}))
+
+(defn- aloitus [nyt [alku loppu]]
+  (cond
+    (pvm/valissa? nyt alku loppu) :kaynnissa
+    (pvm/jalkeen? nyt loppu) :paattynyt
+    (pvm/ennen? nyt alku) :alkava
+    :else nil))
+
+(defn urakoitsijan-urakat [urakoitsija]
+  (let [urakat (:urakat urakoitsija)
+        aloitus (partial aloitus (pvm/nyt))]
+    (group-by (comp aloitus (juxt :alkupvm :loppupvm)) urakat)))
+
+(defn urakoitsijan-urakoiden-lukumaarat-str [urakoitsija]
+  (let [urakat (urakoitsijan-urakat urakoitsija)]
+    (str (count (:alkava urakat)) " / "
+         (count (:kaynnissa urakat)) " / "
+         (count (:paattynyt urakat)))))
+
+(defn urakan-aikavali-str [urakka]
+  (->> urakka
+       ((juxt :alkupvm :loppupvm))
+       (map pvm/pvm)
+       (str/join " - ")))
 
 (defrecord ValitseUrakoitsija [urakoitsija])
 (defrecord Nakymassa? [nakymassa?])
@@ -47,7 +73,7 @@
           fail! (tuck/send-async! ->UrakoitsijaEiTallennettu)]
       (go
         (try
-          (let [vastaus urakoitsija] ;;TODO lisää tallennus
+          (let [vastaus (async/<! (k/post! :tallenna-urakoitsija urakoitsija))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -83,7 +109,7 @@
           fail! (tuck/send-async! ->UrakoitsijatEiHaettu)]
       (go
         (try
-          (let [vastaus [{:nimi "Kalle" :id 1}] #_(async/<! (k/post! :hae-harjassa-luodut-urakoitsijat {}))] ;;FIXME toteuta palvelu
+          (let [vastaus (async/<! (k/post! :vesivayla-urakoitsijat {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))

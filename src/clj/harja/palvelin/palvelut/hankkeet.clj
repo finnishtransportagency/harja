@@ -25,11 +25,15 @@
     (jdbc/with-db-transaction [db db]
       (let [tallennus-params {:nimi (:nimi hanke)
                               :alkupvm (:alkupvm hanke)
-                              :loppupvm (:loppupvm hanke)}
+                              :loppupvm (:loppupvm hanke)
+                              :kayttaja (:id user)}
             {:keys [id alkupvm loppupvm] :as tallennettu-hanke}
             (if (id/id-olemassa? hanke)
-              (q/paivita-hanke<! db (assoc tallennus-params :id (:id hanke)))
-              (q/luo-hanke<! db tallennus-params))]
+              (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (:id hanke)))
+              (q/luo-harjassa-luotu-hanke<! db tallennus-params))]
+        (log/debug "PALAUTETAAN: " (pr-str {:id id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm}))
         {:id id
          :alkupvm alkupvm
          :loppupvm loppupvm}))))

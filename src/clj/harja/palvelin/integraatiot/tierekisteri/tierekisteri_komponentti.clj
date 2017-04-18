@@ -78,6 +78,8 @@
                          {:numero (:numero tr)
                           :aet (:alkuetaisyys tr)
                           :aosa (:alkuosa tr)
+                          :losa (:loppuosa tr)
+                          :let (:loppuetaisyys tr)
                           :ajr (:ajorata tr)
                           :puoli (:puoli tr)
                           :tilannepvm (formatoi-pvm luotu)}}
