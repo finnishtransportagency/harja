@@ -149,7 +149,7 @@
             kohdeosien-validointi (map #(tr-haku/validoi-tr-osoite-tieverkolla db (:tierekisteriosoitevali %))
                                        alikohteet)
             kohdeosat-kohteen-sisalla? (every? true?
-                                               (map (partial tr-domain/validoi-kohdeosa-kohteen-sisalla kohde)
+                                               (map (partial tr-domain/kohdeosa-kohteen-sisalla? tierekisteriosoitevali)
                                                     (map :tierekisteriosoitevali alikohteet)))]
         (assoc kohde :kohde-validi? (and (:ok? kohteen-validointi)
                                           (every? #(true? (:ok? %)) kohdeosien-validointi)

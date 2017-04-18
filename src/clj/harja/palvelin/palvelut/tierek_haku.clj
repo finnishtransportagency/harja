@@ -76,10 +76,10 @@
       [osien-pituudet (hae-osien-pituudet db {:tie tienumero
                                               :aosa aosa
                                               :losa losa})
-       tulos {:aosa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla aosa osien-pituudet)
-              :losa-olemassa? (tr-domain/validoi-osa-olemassa-verkolla losa osien-pituudet)
-              :aosa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla aosa aet osien-pituudet)
-              :losa-pituus-validi? (tr-domain/validoi-osan-pituus-sopiva-verkolla losa let osien-pituudet)
+       tulos {:aosa-olemassa? (tr-domain/osa-olemassa-verkolla? aosa osien-pituudet)
+              :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
+              :aosa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet)
+              :losa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet)
               :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
                                                           :alkuosa aosa
                                                           :alkuetaisyys aet
