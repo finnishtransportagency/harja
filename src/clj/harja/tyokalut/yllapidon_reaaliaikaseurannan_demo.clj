@@ -69,13 +69,13 @@
   (let [sijainti (hae-sijainti db)]
     (tee-tyokonehavainto db id tyyppi (:x sijainti) (:y sijainti) urakka-id tehtava (rand-int 360))))
 
-(defn aja []
+(defn aja [db]
   (let [tietokanta {:palvelin "localhost"
                     :tietokanta "harja"
-                    :portti 7771
+                    :portti 5432
                     :yhteyspoolin-koko 16
-                    :kayttaja "[KAYTTAJATUNNUS]"
-                    :salasana "[SALASANA]"}
+                    :kayttaja "harja"
+                    :salasana ""}
         urakka-id 5
         yllapitokohde-id 7
         alkux 429108.469M
@@ -83,7 +83,6 @@
         loppux 442231.469M
         loppuy 7223121.876M
 
-        db (:db harja.palvelin.main/harja-jarjestelma)
         _ (paivita db "DELETE FROM tietyomaa WHERE osuus_id = 123456789;")
         suljettutieosuus {:jarjestelma "Harja"
                           :osuusid osuusid
