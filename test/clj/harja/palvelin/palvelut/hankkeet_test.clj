@@ -6,7 +6,6 @@
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.domain.tiemerkinta-toteumat :as tt]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
