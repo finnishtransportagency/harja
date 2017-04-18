@@ -3,7 +3,9 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [cljs.core.async :as async]
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -15,6 +17,30 @@
          :tallennus-kaynnissa? false
          :urakoitsijoiden-haku-kaynnissa? false
          :haetut-urakoitsijat nil}))
+
+(defn- aloitus [nyt [alku loppu]]
+  (cond
+    (pvm/valissa? nyt alku loppu) :kaynnissa
+    (pvm/jalkeen? nyt loppu) :paattynyt
+    (pvm/ennen? nyt alku) :alkava
+    :else nil))
+
+(defn urakoitsijan-urakat [urakoitsija]
+  (let [urakat (:urakat urakoitsija)
+        aloitus (partial aloitus (pvm/nyt))]
+    (group-by (comp aloitus (juxt :alkupvm :loppupvm)) urakat)))
+
+(defn urakoitsijan-urakoiden-lukumaarat-str [urakoitsija]
+  (let [urakat (urakoitsijan-urakat urakoitsija)]
+    (str (count (:alkava urakat)) " / "
+         (count (:kaynnissa urakat)) " / "
+         (count (:paattynyt urakat)))))
+
+(defn urakan-aikavali-str [urakka]
+  (->> urakka
+       ((juxt :alkupvm :loppupvm))
+       (map pvm/pvm)
+       (str/join " - ")))
 
 (defrecord ValitseUrakoitsija [urakoitsija])
 (defrecord Nakymassa? [nakymassa?])
