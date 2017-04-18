@@ -394,7 +394,7 @@
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
-                                           (assoc kohde :poistettu true)
+                                            (assoc kohde :poistettu true)
                                            kohde))
                              kohteet-ennen-testia)]
 
@@ -410,7 +410,7 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= kohteet-testin-jalkeen kohteet-ennen-testia)))))
+      (is (= (sort-by :id kohteet-ennen-testia) (sort-by :id kohteet-testin-jalkeen))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
@@ -465,8 +465,8 @@
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         vuosi 2017
         aikataulu-kohde-alku (pvm/->pvm "15.5.2017")
-        aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-        aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
+        aikataulu-paallystys-alku (pvm/->pvm "19.5.2017")
+        aikataulu-paallystys-loppu (pvm/->pvm "20.5.2017")
         aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
