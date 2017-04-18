@@ -157,7 +157,6 @@
     (is (integer? (:id yhatiedot-ennen-testia)) "Urakka on jo sidottu ennen testiä")
     (is (false? (:sidonta_lukittu yhatiedot-ennen-testia)) "Sidontaa ei ole lukittu ennen testiä")
 
-
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                   {:urakka-id urakka-id
@@ -186,24 +185,26 @@
       (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 9
+                                                            :aosa 328
+                                                            :aet 3060
+                                                            :losa 329
+                                                            :let 245}
+                                                           {:ajorata 1
+                                                            :kaista 1
+                                                            :tienumero 9
+                                                            :aosa 328
+                                                            :aet 3060
+                                                            :losa 329
+                                                            :let 245})})]
 
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                  {:urakka-id urakka-id
-                                   :kohteet (luo-yha-kohteet {:ajorata 1
-                                                              :kaista 1
-                                                              :tienumero 9
-                                                              :aosa 328
-                                                              :aet 3060
-                                                              :losa 329
-                                                              :let 245}
-                                                             {:ajorata 1
-                                                              :kaista 1
-                                                              :tienumero 9
-                                                              :aosa 328
-                                                              :aet 3060
-                                                              :losa 329
-                                                              :let 245})})]
-      ;; Kohde oli epävalidi
-      (is (not (empty? (:tallentamatta-jaaneet-kohteet vastaus)))))))
+    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
+    (is (false? (:osoite-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
+    (is (= (:osoite-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
+           "Alkuosan pituus ei kelpaa"))))

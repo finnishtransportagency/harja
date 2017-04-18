@@ -92,24 +92,15 @@
                                                                           :loppuosa losa
                                                                           :loppuetaisyys let}))}
                        kaikki-ok? (every? true? (vals tulos))]
-      {:ok? kaikki-ok? :syy (cond (false? (:aosa-validi? tulos))
-                                  "Alkuosaa ei ole olemassa"
+      {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) "Alkuosaa ei ole olemassa"
+                                  (not (:losa-olemassa? tulos)) "Loppuosaa ei ole olemassa"
+                                  (not (:aosa-pituus-validi? tulos)) "Alkuosan pituus ei kelpaa"
+                                  (not (:losa-pituus-validi? tulos)) "Loppuosan pituus ei kelpaa"
+                                  (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
 
-                                  (false? (:losa-olemassa? tulos))
-                                  "Loppuosaa ei ole olemassa"
-
-                                  (false? (:aosa-pituus-validi? tulos))
-                                  "Alkuosan pituus ei kelpaa"
-
-                                  (false? (:losa-pituus-validi? tulos))
-                                  "Loppuosan pituus ei kelpaa"
-
-                                  (false? (:geometria-validi? tulos))
-                                  "Osoitteelle ei saada muodostettua geometriaa"
-
-                                  :default nil)})
+                                  :default "Osoite on validi")})
     (catch PSQLException e
-      {:ok? false :syy nil})))
+      {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
