@@ -127,7 +127,7 @@
                               (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
+    (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
     (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
@@ -147,7 +147,7 @@
           kohde-id (Integer/parseInt kohde-id)
           urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
+      (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id kohde-id)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body

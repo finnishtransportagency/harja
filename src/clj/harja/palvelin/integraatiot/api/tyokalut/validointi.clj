@@ -88,15 +88,7 @@
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
 
-(defn tarkista-urakan-yllapitokohde-olemassa [db urakka-id kohde-id]
-  (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
-  (when (not (q-yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
-    (do
-      (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
-        (log/warn viesti)
-        (virheet/heita-poikkeus
-          virheet/+viallinen-kutsu+
-          [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
+
 
 (defn sijainneissa-virheita? [db tienumero sijainnit]
   (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
@@ -174,11 +166,12 @@
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
-(defn tarkista-yllapitokohde-kuuluu-urakkaan
-  "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan suoraan."
-  [db urakka-id kohde-id]
-  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-kuuluvat-yllapitokohteet db {:urakka urakka-id})]
-    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (virheet/heita-poikkeus virheet/+viallinen-kutsu+
-                              {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                               :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
+(defn tarkista-urakan-yllapitokohde-olemassa [db urakka-id kohde-id]
+  (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
+  (when (not (q-yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
+    (do
+      (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
+        (log/warn viesti)
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))

@@ -654,7 +654,6 @@
       (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
 
-
 (deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
