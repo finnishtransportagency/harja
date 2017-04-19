@@ -24,6 +24,11 @@
       "type": "string",
       "format": "date-time"
     },
+    "tiemerkinta-takaraja": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
+      "type": "string",
+      "format": "date-time"
+    },
     "tiemerkinta-aloitettu": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-aloitettu",
       "type": "string",
