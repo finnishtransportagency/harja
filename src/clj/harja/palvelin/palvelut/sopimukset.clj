@@ -48,14 +48,15 @@
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelu http
-      :hae-harjassa-luodut-sopimukset
-      (fn [user _]
-        (hae-harjassa-luodut-sopimukset db user))
-      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+                      :hae-harjassa-luodut-sopimukset
+                      (fn [user _]
+                        (hae-harjassa-luodut-sopimukset db user))
+                      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
     (julkaise-palvelu http
-      :tallenna-sopimus
-      (fn [user tiedot]
-        (tallenna-sopimus db user tiedot)))
+                      :tallenna-sopimus
+                      (fn [user tiedot]
+                        (tallenna-sopimus db user tiedot))
+                      {:kysely-spec ::sopimus/tallenna-sopimus-kysely})
 
     this)
 

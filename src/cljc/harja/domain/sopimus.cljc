@@ -19,3 +19,8 @@
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus
   (s/coll-of ::sopimus))
+
+;; Tallennukset
+
+(s/def ::tallenna-sopimus-kysely (s/keys
+                                  :req-un [::sopimus]))
