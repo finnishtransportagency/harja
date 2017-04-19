@@ -145,7 +145,10 @@
     (viesti/nayta! "Urakka tallennettu!")
     (let [vanhat (group-by :id (:haetut-urakat app))
           uusi {(:id urakka) [urakka]}]
-      (assoc app :haetut-urakat (vec (apply concat (vals (merge vanhat uusi))))
+      ;; Yhdistetään tallennettu jo haettuihin.
+      ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
+      ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
+      (assoc app :haetut-urakat (sort-by :alkupvm pvm/jalkeen? (vec (apply concat (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-urakka nil)))
 
@@ -216,10 +219,10 @@
 
   LomakevaihtoehdotHaettu
   (process-event [{tulos :tulos} app]
-    (assoc app :haetut-hallintayksikot (:hallintayksikot tulos)
-               :haetut-urakoitsijat (:urakoitsijat tulos)
-               :haetut-hankkeet (remove #(pvm/jalkeen? (pvm/nyt) (:loppupvm %)) (:hankkeet tulos))
-               :haetut-sopimukset (:sopimukset tulos)))
+    (assoc app :haetut-hallintayksikot (sort-by :nimi (:hallintayksikot tulos))
+               :haetut-urakoitsijat (sort-by :nimi (:urakoitsijat tulos))
+               :haetut-hankkeet (sort-by :nimi (remove #(pvm/jalkeen? (pvm/nyt) (:loppupvm %)) (:hankkeet tulos)))
+               :haetut-sopimukset (sort-by :alkupvm pvm/jalkeen? (:sopimukset tulos))))
 
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]

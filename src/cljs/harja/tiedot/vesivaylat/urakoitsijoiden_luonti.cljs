@@ -87,8 +87,9 @@
     (let [vanhat (group-by :id (:haetut-urakoitsijat app))
           uusi {(:id urakoitsija) [urakoitsija]}]
       ;; Yhdistetään tallennettu jo haettuihin.
-      ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki urakoitsijat
-      (assoc app :haetut-urakoitsijat (vec (apply concat (vals (merge vanhat uusi))))
+      ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
+      ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
+      (assoc app :haetut-urakoitsijat (sort-by :nimi (vec (apply concat (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-urakoitsija nil)))
 

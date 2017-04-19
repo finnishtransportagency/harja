@@ -3,7 +3,8 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def uusi-hanke {})
@@ -62,7 +63,8 @@
           uusi {(:id hanke) [hanke]}]
       ;; Yhdistetään tallennettu jo haettuihin.
       ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
-      (assoc app :haetut-hankkeet (vec (apply concat (vals (merge vanhat uusi))))
+      ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
+      (assoc app :haetut-hankkeet (sort-by :alkupvm pvm/jalkeen? (vec (apply concat (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-hanke nil)))
 

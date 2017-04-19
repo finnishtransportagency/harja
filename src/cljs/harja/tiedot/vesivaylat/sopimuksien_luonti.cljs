@@ -3,7 +3,8 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [cljs.core.async :as async]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def uusi-sopimus {})
@@ -61,8 +62,9 @@
     (let [vanhat (group-by :id (:haetut-sopimukset app))
           uusi {(:id sopimus) [sopimus]}]
       ;; Yhdistetään tallennettu jo haettuihin.
-      ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki sopimukset
-      (assoc app :haetut-sopimukset (vec (apply concat (vals (merge vanhat uusi))))
+      ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
+      ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
+      (assoc app :haetut-sopimukset (sort-by :alkupvm pvm/jalkeen? (vec (apply concat (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-sopimus nil)))
 
