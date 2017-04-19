@@ -195,8 +195,10 @@
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
     (->> sopimukset
-      (map #(assoc % :paasopimus (:id (paasopimus (:sopimukset urakka)))))
-      (assoc-in app [:valittu-urakka :sopimukset])))
+         (map #(assoc % :paasopimus (:id (paasopimus (:sopimukset urakka)))))
+         ;; Jos sopimus on pääsopimus, :paasopimus asetetaan nilliksi
+         (map #(update % :paasopimus (fn [ps] (when-not (= ps (:id %)) ps))))
+         (assoc-in app [:valittu-urakka :sopimukset])))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]
