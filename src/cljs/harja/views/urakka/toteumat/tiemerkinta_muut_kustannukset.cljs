@@ -124,7 +124,9 @@
         :valinnat tiedot/+kustannustyypit+
         :fmt #(kustannustyyppi-fmt %)
         :validoi [[:ei-tyhja "Anna kustannustyyppi"]]}
-       {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
+       {:otsikko "Hinta" :nimi :hinta :tyyppi :numero :pakollinen? true
+        :validoi [[:ei-negatiivinen-jos-avaimen-arvo
+                   :tyyppi :muu "Valittu hintatyyppi ei voi olla negatiivinen"]]}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :fmt :nimi
@@ -140,7 +142,7 @@
         :lahde tiedot/laskentakohdehaku
         :sort-fn #(let [termi (str/lower-case (second %))]
                     (if (nil? (first %))
-                      "000"                                 ;; verrattava samaa tyyppiä, siksi nil castattu stringiksi joka sorttautuu ensimmäiseksi
+                      "000" ;; verrattava samaa tyyppiä, siksi nil castattu stringiksi joka sorttautuu ensimmäiseksi
                       termi))}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))

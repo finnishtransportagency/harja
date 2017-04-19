@@ -213,22 +213,22 @@ yllapitoluokkanimi->numero
        :tiemerkinta-aloitettu
 
        (and (:paallystys-loppupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-loppupvm yllapitokohde)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:paallystys-loppupvm yllapitokohde)))
                                  (pvm/nyt-suomessa)))
        :paallystys-valmis
 
        (and (:paallystys-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paallystys-alkupvm yllapitokohde)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:paallystys-alkupvm yllapitokohde)))
                                  (pvm/nyt-suomessa)))
        :paallystys-aloitettu
 
        (and (:paikkaus-loppupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-loppupvm yllapitokohde)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:paikkaus-loppupvm yllapitokohde)))
                                  (pvm/nyt-suomessa)))
        :paikkaus-valmis
 
        (and (:paikkaus-alkupvm yllapitokohde)
-            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paikkaus-alkupvm yllapitokohde)))
+            (pvm/sama-tai-ennen? (pvm/suomen-aikavyohykkeeseen (c/from-sql-date (:paikkaus-alkupvm yllapitokohde)))
                                  (pvm/nyt-suomessa)))
        :paikkaus-aloitettu
 

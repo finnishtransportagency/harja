@@ -107,7 +107,7 @@ VALUES
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Leppäjärven ramppi'), '2017-05-19',
-                                        '2017-05-19 06:00:00+02', '2017-05-21 16:00:00+02', '2017-05-22',
+                                        '2017-05-19', '2017-05-21', '2017-05-22',
                                         '2017-05-23',
                                         '2017-05-24', (SELECT id
                                                                    FROM kayttaja
@@ -116,7 +116,7 @@ VALUES
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Oulun ohitusramppi'), '2017-05-21',
-                                        '2017-05-21 06:00:00+02', NULL, NULL, NULL,
+                                        '2017-05-21', NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja
                                                WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
