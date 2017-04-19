@@ -107,23 +107,26 @@
                 (get-in kohde [:tierekisteriosoitevali avain]))))
 
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
-  (first (filter #(= hakutunnus (get % "tunniste")) (get vkm-kohteet "tieosoitteet"))))
+  (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
 (defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
-  (if virhe?
-    (assoc kohde :virhe true)
-    (-> kohde
-        (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
-        (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
-        (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
-        (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
-        (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
-        (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
+  (let [kohde (if (= (:yha-id kohde) 373015980)
+                (assoc kohde :losa 99999 :let 99999)
+                kohde)]
+    (if virhe?
+      (assoc kohde :virhe true)
+      (-> kohde
+          (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+          (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+          (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+          (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+          (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+          (paivita-osoitteen-osa loppuosanosoite :losa "osa")))))
 
 (defn vkm-virhe? [hakutunnus vkm-kohteet]
   (some #(and (= hakutunnus (get % "tunniste"))
               (not (= 1 (get % "palautusarvo"))))
-        (get vkm-kohteet "tieosoitteet")))
+        vkm-kohteet))
 
 (defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
   (mapv (fn [kohde]
@@ -192,10 +195,11 @@
                :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
               (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                     yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                    yhdistyksessa-epaonnistuneet-kohteet (vec (filter :virhe yhdistetyt-kohteet))
-                    _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistetyt-kohteet))
+                    yhdistyksessa-epaonnistuneet-kohteet (filterv :virhe yhdistetyt-kohteet)
+                    yhdistyksessa-onnistuneet-kohteet (filterv (comp not :virhe) yhdistetyt-kohteet)
+                    _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistyksessa-onnistuneet-kohteet))
                     {:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
-                    (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistetyt-kohteet))]
+                    (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistyksessa-onnistuneet-kohteet))]
                 (if (k/virhe? vastaus)
                   {:status :error :viesti "Kohteiden tallentaminen epäonnistui."
                    :koodi :kohteiden-tallentaminen-epaonnistui}
@@ -242,14 +246,14 @@
                                  (when-let [syy (:kohde-epavalidi-syy kohde)]
                                    syy)]))]
     [:div
-     (when (empty? (not epaonnistuneet-vkm-muunnokset))
+     (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
         [:p
          "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
            [epaonnistunut-kohde kohde])]])
-     (when (empty? (not epaonnistuneet-tallennukset))
+     (when-not (empty? epaonnistuneet-tallennukset)
        [:div
         [:p
          "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
