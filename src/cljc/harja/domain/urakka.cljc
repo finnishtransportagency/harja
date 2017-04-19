@@ -2,6 +2,7 @@
   "Määrittelee urakka nimiavaruuden specit, jotta urakan tietoja voi käyttää namespacetuilla
   keywordeilla, esim. {:urakka/id 12}"
   (:require [clojure.spec :as s]
+            [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             #?@(:clj [[clojure.future :refer :all]])))
 
@@ -14,6 +15,9 @@
 (s/def ::vuosi (s/and nat-int? #(>= % 1900)))
 
 (s/def ::sampoid string?)
+
+(s/def ::urakoitsija ::o/id)
+(s/def ::hallintayksikko ::o/id)
 
 (s/def ::tyyppi #{:hoito :paallystys :valaistus :tiemerkinta
                   :tekniset-laitteet :siltakorjaus :paikkaus})
