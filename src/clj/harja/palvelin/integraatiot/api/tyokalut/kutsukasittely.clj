@@ -11,7 +11,8 @@
             [harja.tyokalut.avaimet :as avaimet]
             [harja.kyselyt.kayttajat :as kayttajat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.spec-apurit :as spec-apurit])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)
@@ -125,7 +126,7 @@
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
    (if payload
-     (let [json (cheshire/encode payload)]
+     (let [json (cheshire/encode (spec-apurit/poista-nil-avaimet payload))]
        (if skeema
          (do
            (if (fn? skeema)
