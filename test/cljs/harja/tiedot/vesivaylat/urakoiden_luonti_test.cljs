@@ -131,19 +131,19 @@
 
   (testing "Uuden pääsopimuksen asettaminen"
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
-           (u/aseta-paasopimus [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil}]
-                               {:id 1 :paasopimus nil})))
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil}]
+                                         {:id 1 :paasopimus nil})))
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
-           (u/aseta-paasopimus [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}]
-                               {:id 1 :paasopimus nil}))))
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}]
+                                         {:id 1 :paasopimus nil}))))
 
   (testing "Pääsopimuksen muuttaminen"
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
-           (u/aseta-paasopimus [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil}]
-                               {:id 1 :paasopimus nil})))
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil}]
+                                         {:id 1 :paasopimus nil})))
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
-           (u/aseta-paasopimus [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2}]
-                               {:id 1 :paasopimus nil})))))
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2}]
+                                         {:id 1 :paasopimus nil})))))
 
 (deftest urakan-sopimusvaihtoehdot
   (let [kaikki-sopimukset [{:id 1 :urakka {:id 1}} {:id 2 :urakka {:id 1}} {:id 3 :urakka nil} {:id 4 :urakka nil}]

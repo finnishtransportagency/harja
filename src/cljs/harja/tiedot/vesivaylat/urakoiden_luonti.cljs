@@ -9,7 +9,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tyhja-sopimus {:nimi nil :alku nil :loppu nil :paasopimus nil :id nil})
@@ -27,21 +28,33 @@
          :haetut-sopimukset nil
          :kaynnissa-olevat-sahkelahetykset #{}}))
 
-(defn paasopimus [sopimukset]
-  (first (filter (comp some? #{(some :paasopimus sopimukset)} :id) sopimukset)))
+(defn vain-oikeat-sopimukset [sopimukset]
+  (filter (comp id-olemassa? :id) (remove :poistettu sopimukset)))
 
-(defn aseta-paasopimus [sopimukset sopimus]
-  (map
-    #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus)))
-    sopimukset))
+(defn paasopimus [sopimukset]
+  (as-> sopimukset s
+        (vain-oikeat-sopimukset s)
+        (filter (comp some? #{(some :paasopimus s)} :id) s)
+        (first s)))
+
+(defn sopimukset-paasopimuksella [sopimukset sopimus]
+  (->>
+    sopimukset
+    ;; Kun pääsopimus asetetaan, poistetaan gridistä "tyhjät" rivit
+    vain-oikeat-sopimukset
+    (map #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus))))))
 
 (defn paasopimus? [sopimukset sopimus]
-  (boolean (when-let [ps (paasopimus sopimukset)] (= (:id sopimus) (:id ps)))))
+  (boolean (when-let [ps (paasopimus (vain-oikeat-sopimukset sopimukset))]
+             (= (:id sopimus) (:id ps)))))
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [:urakka :id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
-  (remove (comp (into #{} (keep :id urakan-sopimukset)) :id) (filter vapaa-sopimus? sopimukset)))
+  (->> sopimukset
+       vain-oikeat-sopimukset
+       (filter vapaa-sopimus?)
+       (remove (comp (into #{} (keep :id urakan-sopimukset)) :id))))
 
 (defn uusin-tieto [hanke sopimukset urakoitsija urakka]
   (sort-by #(or (:muokattu %) (:luotu %))
@@ -126,7 +139,7 @@
                                                          ;; grid antaa uusille riveille negatiivisen id:n,
                                                          ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
                                                          ;; Rivillä on neg. id vain, jos sopimus jäi valitsematta.
-                                                         (remove (comp neg? :id))))))]
+                                                         (remove (comp id-olemassa? :id))))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -180,8 +193,10 @@
     (assoc app :urakoiden-haku-kaynnissa? false))
 
   PaivitaSopimuksetGrid
-  (process-event [{sopimukset :sopimukset} app]
-    (assoc-in app [:valittu-urakka :sopimukset] sopimukset))
+  (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
+    (->> sopimukset
+      (map #(assoc % :paasopimus (:id (paasopimus (:sopimukset urakka)))))
+      (assoc-in app [:valittu-urakka :sopimukset])))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]

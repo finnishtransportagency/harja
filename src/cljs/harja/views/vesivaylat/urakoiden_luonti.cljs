@@ -23,30 +23,32 @@
 (defn- sopimukset-grid [e! urakka haetut-sopimukset]
   (let [urakan-sopimukset (remove :poistettu (:sopimukset urakka))]
     [grid/muokkaus-grid
-    {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
-     :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
-    [{:otsikko "Nimi"
-      :nimi :sopimus
-      :leveys 3
-      :tyyppi :valinta
-      :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
-      :virheet-dataan? true
-      :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
-      :hae identity
-      :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
-      :aseta (fn [_ arvo] arvo)}
-     {:otsikko "Alku" :leveys 2 :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
-     {:otsikko "Loppu" :leveys 2 :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
-     {:otsikko "Pääsopimus"
-      :nimi :paasopimus
-      :leveys 1
-      :tyyppi :string
-      :fmt #(if (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check) (ikonit/unchecked))
-      :muokattava? (constantly false)
-      :hae identity}]
-    (r/wrap
-      (zipmap (range) urakan-sopimukset)
-      #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
+     {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
+      :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
+     [{:otsikko "Nimi"
+       :nimi :sopimus
+       :leveys 3
+       :tyyppi :valinta
+       :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
+       :virheet-dataan? true
+       :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
+       :hae identity
+       :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
+       :aseta (fn [_ arvo] arvo)}
+      {:otsikko "Alku" :leveys 2 :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Loppu" :leveys 2 :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Pääsopimus"
+       :nimi :paasopimus
+       :leveys 1
+       :tyyppi :string
+       :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
+                   (nil? (:paasopimus %)) (ikonit/livicon-question)
+                   :else (ikonit/unchecked))
+       :muokattava? (constantly false)
+       :hae identity}]
+     (r/wrap
+       (zipmap (range) urakan-sopimukset)
+       #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
 
 (defn voi-tallentaa? [urakka]
   (and (> (count (filter (comp id-olemassa? :id) (:sopimukset urakka))) 0)))
@@ -163,7 +165,7 @@
            :jos-tyhja "Urakalla ei sopimuksia"
            :muokattava? #(> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
            :pakollinen? (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-           :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/aseta-paasopimus
+           :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/sopimukset-paasopimuksella
                                                             (ilman-poistettuja (:sopimukset rivi))
                                                             arvo)))
            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
