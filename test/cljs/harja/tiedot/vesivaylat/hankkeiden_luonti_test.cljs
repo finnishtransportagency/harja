@@ -48,3 +48,18 @@
 (deftest hankkeen-muokkaaminen-lomakkeessa
   (let [hanke {:nimi :foobar}]
     (is (= hanke (:valittu-hanke (e! tila h/->HankettaMuokattu hanke))))))
+
+(deftest hakemisen-aloitus
+  (vaadi-async-kutsut
+    #{h/->HankkeetHaettu h/->HankkeetEiHaettu}
+
+    (is (true? (:hankkeiden-haku-kaynnissa? (e! tila h/->HaeHankkeet))))))
+
+(deftest hakemisen-valmistuminen
+  (let [tulos (e! {:haetut-hankkeet []} h/->HankkeetHaettu [{:id 1}])]
+    (is (false? (:hankkeiden-haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:haetut-hankkeet tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! tila h/->HankkeetEiHaettu "virhe")]
+    (is (false? (:hankkeiden-haku-kaynnissa? tulos)))))

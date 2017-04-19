@@ -49,4 +49,19 @@
   (let [sopimus {:nimi :foobar}]
     (is (= sopimus (:valittu-sopimus (e! tila s/->SopimustaMuokattu sopimus))))))
 
+(deftest hakemisen-aloitus
+  (vaadi-async-kutsut
+    #{s/->SopimuksetHaettu s/->SopimuksetEiHaettu}
+
+    (is (true? (:sopimuksien-haku-kaynnissa? (e! tila s/->HaeSopimukset))))))
+
+(deftest hakemisen-valmistuminen
+  (let [tulos (e! {:haetut-sopimukset []} s/->SopimuksetHaettu [{:id 1}])]
+    (is (false? (:sopimuksien-haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:haetut-sopimukset tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! tila s/->SopimuksetEiHaettu "virhe")]
+    (is (false? (:sopimuksien-haku-kaynnissa? tulos)))))
+
 
