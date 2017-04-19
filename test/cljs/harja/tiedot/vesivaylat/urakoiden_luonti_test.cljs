@@ -50,12 +50,9 @@
     (is (= ur (:valittu-urakka (e! tila u/->UrakkaaMuokattu ur))))))
 
 (deftest hakemisen-aloitus
-  (let [halutut #{u/->UrakatHaettu u/->UrakatEiHaettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (true? (:urakoiden-haku-kaynnissa? (e! tila u/->HaeUrakat {:id 1}))))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{u/->UrakatHaettu u/->UrakatEiHaettu}
+    (is (true? (:urakoiden-haku-kaynnissa? (e! tila u/->HaeUrakat {:id 1}))))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
@@ -68,17 +65,36 @@
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))))
 
 (deftest sopimuksen-paivittaminen
-  (is (= (-> (e! tila u/->PaivitaSopimuksetGrid [{:id 1} {:id 2}])
-             (get-in [:valittu-urakka :sopimukset]))
-         [{:id 1} {:id 2}])))
+  (let [testaa (fn [tila annettu haluttu]
+                 (= (-> (e! {:valittu-urakka {:sopimukset tila}} u/->PaivitaSopimuksetGrid annettu)
+                        (get-in [:valittu-urakka :sopimukset]))
+                    haluttu))]
+    (testing "Rivin lisääminen gridiin"
+      (is (testaa [{:id 1 :paasopimus nil}]
+                  [{:id 1 :paasopimus nil} {:id -2 :paasopimus nil}]
+                  [{:id 1 :paasopimus nil} {:id -2 :paasopimus nil}])))
+
+    (testing "Rivin asettaminen sopimukseksi gridiin"
+      (is (testaa [{:id 1 :paasopimus nil} {:id -2 :paasopimus nil}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil}])))
+
+    ;; Pääsopimus asetetaan muualla..
+
+    (testing "Sopimuksen lisääminen gridiin, kun pääsopimus on jo asetettu"
+      (is (testaa [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus nil}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}])))
+
+    (testing "Rivin poistaminen gridistä"
+      (is (testaa [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1 :poistettu true} {:id -3 :paasopimus nil :poistettu true}]
+                  [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1 :poistettu true} {:id -3 :paasopimus 1 :poistettu true}])))))
 
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
-  (let [halutut #{u/->LomakevaihtoehdotHaettu u/->LomakevaihtoehdotEiHaettu}
-        kutsutut (atom #{})]
-    (with-redefs
-      [tuck/send-async! (fn [r & _] (swap! kutsutut conj r))]
-      (is (= {:foo :bar} (e! {:foo :bar} u/->HaeLomakevaihtoehdot {:id 1})))
-      (is (= halutut @kutsutut)))))
+  (vaadi-async-kutsut
+    #{u/->LomakevaihtoehdotHaettu u/->LomakevaihtoehdotEiHaettu}
+    (is (= {:foo :bar} (e! {:foo :bar} u/->HaeLomakevaihtoehdot {:id 1})))))
 
 (deftest lomakevaihtoehtojen-hakemisen-valmistuminen
   (let [hy [{:id 1}]
@@ -98,6 +114,20 @@
 (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
   (is (= {:foo :bar} (e! {:foo :bar} u/->LomakevaihtoehdotEiHaettu "virhe"))))
 
+(deftest sahke-lahetyksen-aloitus
+  (vaadi-async-kutsut
+    #{u/->SahkeeseenLahetetty u/->SahkeeseenEiLahetetty}
+    (is (= {:kaynnissa-olevat-sahkelahetykset #{1}}
+           (e! {:kaynnissa-olevat-sahkelahetykset #{}} u/->LahetaUrakkaSahkeeseen {:id 1})))))
+
+(deftest sahke-lahetyksen-valmistuminen
+  (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
+         (e! {:kaynnissa-olevat-sahkelahetykset #{1}} u/->SahkeeseenLahetetty {} {:id 1}))))
+
+(deftest sahke-lahetyksen-epaonnistuminen
+  (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
+         (e! {:kaynnissa-olevat-sahkelahetykset #{1}} u/->SahkeeseenEiLahetetty "virhe" {:id 1}))))
+
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
     (is (false? (sequential? (u/paasopimus [{:id 1 :paasopimus nil}
@@ -115,6 +145,10 @@
     (is (= nil (u/paasopimus [])))
     (is (= nil (u/paasopimus [{:id 1 :paasopimus nil}])))
     (is (= nil (u/paasopimus [{:id nil :paasopimus nil}]))))
+
+  (testing "Pääsopimusta päätellessä ei välitetä poistetuista sopimuksista tai uusista riveistä"
+    (is (= nil (u/paasopimus [{:id 1 :paasopimus nil} {:id 3 :paasopimus 1 :poistettu true}])))
+    (is (= nil (u/paasopimus [{:id 1 :paasopimus nil} {:id- 3 :paasopimus 1}]))))
 
   (testing "Sopimus tunnistetaan pääsopimukseksi"
     (is (true? (u/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}] {:id 1 :paasopimus nil})))
@@ -154,3 +188,6 @@
 
   (is (true? (u/vapaa-sopimus? {:urakka nil})))
   (is (false? (u/vapaa-sopimus? {:urakka {:id 1}}))))
+
+(deftest vain-oikeat-sopimukset
+  (is (empty? (u/vain-oikeat-sopimukset [{:id 1 :poistettu true} {:id -1} {:id nil}]))))
