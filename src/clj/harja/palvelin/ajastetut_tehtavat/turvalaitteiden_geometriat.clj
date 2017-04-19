@@ -11,7 +11,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
             [harja.geo :as geo]
-            [clojure.string :as string]))
+            [clojure.string :as string])
+  (:import (org.postgis Point)))
 
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
@@ -21,12 +22,12 @@
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
 (defn tallenna-turvalaite [db {:keys [id geometry properties] :as turvalaite}]
-  (println "---> turvalaite" turvalaite)
-  (let [geometria (geo/clj->pg (assoc geometry :type (keyword (string/lower-case (name (:type geometry))))))
-        {:keys [NIMIR SUBTYPE SIJAINTS VAYLAT TILA]} properties
+  (let [koordinaatit (:coordinates geometry)
+        geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
+        {:keys [NIMIS SUBTYPE SIJAINTS VAYLAT TILA]} properties
         sql-parametrit {:sijainti geometria
                         :tunniste id
-                        :nimi NIMIR
+                        :nimi NIMIS
                         :alityyppi SUBTYPE
                         :sijainnin_kuvaus SIJAINTS
                         :vayla VAYLAT
@@ -38,7 +39,7 @@
 (defn kasittele-vastaus [db vastaus]
   (let [data (cheshire/decode vastaus)
         turvalaitteet (get data "features")]
-    (doseq [turvalaite (take 10 turvalaitteet)]
+    (doseq [turvalaite turvalaitteet]
       (tallenna-turvalaite db (walk/keywordize-keys turvalaite)))))
 
 (defn paivita-turvalaitteet [integraatioloki db url]
