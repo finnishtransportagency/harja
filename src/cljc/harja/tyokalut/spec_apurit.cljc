@@ -63,7 +63,7 @@
                      :inner {:tasks {:ns :our.domain.task}}}) ;; :tasks sisällölle muunnoslogiikka samalla tavalla
   {:our.domain.player/name \"player1\"
    :our.domain.player/hp 1
-   :our.domamain.player/tasks {:our.domain.task/id 666
+   :our.domain.player/tasks {:our.domain.task/id 666
                                :our.domain.task/time 5}
    :our.domain.point/points 7
    :foobar nil}"
