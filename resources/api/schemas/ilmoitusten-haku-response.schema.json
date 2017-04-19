@@ -50,14 +50,14 @@
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoittaja",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+                "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
                 "required": true
               },
               "lahettaja": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/lahettaja",
                 "type": "object",
                 "additionalProperties": false,
-                "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+                "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
                 "required": true
               },
               "selitteet": {
