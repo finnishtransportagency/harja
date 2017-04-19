@@ -47,7 +47,7 @@
    Optiot on map, joka määrittelee, millä logiikalla namespace lisätään:
    :ns        Avain, joka kertoo lisättävän namespacen nimen.
               Tämä namespace lisätään datan kaikille ykköstason avaimille (ks. poikkeukset alta).
-   :except    Setti avaimia, joiden nimiä ei määritellä uudelleen X:ssä.
+   :except    Setti avaimia, joiden nimiä ei määritellä uudelleen.
    :custom    Mappi avaimia datassa. Arvoilla määritellään eri namespace kuin mitä :ns määrittelee.
    :inner     Mappi avaimia datassa, joiden arvo on niin ikään map.
               Arvolla määritellään logiikka, jolla sisemmän mapin avainten nimet muunnetaan.
