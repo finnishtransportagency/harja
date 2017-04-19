@@ -10,8 +10,7 @@
             [clojure.walk :as walk]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
-            [harja.geo :as geo]
-            [clojure.string :as string])
+            [harja.geo :as geo])
   (:import (org.postgis Point)))
 
 (def geometriapaivitystunnus "turvalaitteet")
@@ -22,22 +21,13 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-(defn tallenna-turvalaite [db {:keys [id geometry properties] :as turvalaite}]
-  ;; Saatavilla turvalaitteelle saatavat arvot properties mapissa:
-  ;; TUTKAHEIJ, SIJAINTIR, NAVL_TYYP, TLNUMERO, FASADIVALO, OMISTAJA, PATA_TYYP, NIMIR, SUBTYPE, TY_JNR, RAK_VUOSI,
-  ;; PAIV_PVM, SIJAINTIS, VAYLAT, PAKO_TYYP, MITT_PVM, VALAISTU, RAKT_TYYP, IRROTUS_PVM, NIMIS, TKLNUMERO, TILA,
-  ;; HUIPPUMERK, TOTI_TYYP, VAHV_PVM
-
+(defn tallenna-turvalaite [db {:keys [id geometry properties]}]
   (let [koordinaatit (:coordinates geometry)
         geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
-        {:keys [NIMIS SUBTYPE SIJAINTS VAYLAT TILA]} properties
+        arvot (cheshire/encode properties)
         sql-parametrit {:sijainti geometria
                         :tunniste id
-                        :nimi NIMIS
-                        :alityyppi SUBTYPE
-                        :sijainnin_kuvaus SIJAINTS
-                        :vayla VAYLAT
-                        :tila TILA}]
+                        :arvot arvot}]
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
 (defn kasittele-vastaus [db vastaus]
@@ -54,10 +44,10 @@
 
     (let [hae-turvalaitteet (fn [konteksti]
                               (let [http-asetukset {:metodi :GET :url url}
-                                    {vastaus :body}
-                                    (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                                    {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
                                 (kasittele-vastaus transaktio vastaus)))]
       (integraatiotapahtuma/suorita-integraatio db integraatioloki "ptj" "turvalaitteiden-haku" hae-turvalaitteet)))
+
   (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
