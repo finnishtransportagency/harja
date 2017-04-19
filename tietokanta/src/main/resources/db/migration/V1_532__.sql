@@ -41,11 +41,11 @@ ALTER TABLE organisaatio ADD COLUMN muokattu timestamp;
 ALTER TABLE organisaatio ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
 ALTER TABLE organisaatio ADD COLUMN poistettu boolean default false;
 
--- NOT NULL constraintteja lisää
+-- Tiukkoja constraintteja lisää
 ALTER TABLE hanke ALTER COLUMN nimi SET NOT NULL;
 ALTER TABLE hanke ALTER COLUMN alkupvm SET NOT NULL;
 ALTER TABLE hanke ALTER COLUMN loppupvm SET NOT NULL;
 ALTER TABLE hanke ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
-
--- Harjassa luodulle urakalle on hanke uniikki
-CREATE UNIQUE INDEX uniikki_hanke ON urakka (hanke) WHERE harjassa_luotu IS TRUE;
+ALTER TABLE sopimus ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+CREATE UNIQUE INDEX uniikki_hanke ON urakka (hanke) WHERE harjassa_luotu IS TRUE; -- Harjassa luodulle urakalle on hanke uniikki
