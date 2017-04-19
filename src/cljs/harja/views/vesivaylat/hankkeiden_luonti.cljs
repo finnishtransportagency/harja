@@ -26,7 +26,8 @@
                    #(e! (tiedot/->TallennaHanke (lomake/ilman-lomaketietoja hanke)))
                    {:ikoni (ikonit/tallenna)
                     :disabled (or tallennus-kaynnissa?
-                                  (not (lomake/voi-tallentaa? hanke)))
+                                  (not (lomake/voi-tallentaa? hanke))
+                                  (not (oikeudet/hallinta-vesivaylat)))
                     :tallennus-kaynnissa? tallennus-kaynnissa?}])}
     [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
      (lomake/rivi

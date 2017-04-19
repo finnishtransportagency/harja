@@ -55,7 +55,7 @@
     (komp/sisaan #(e! (tiedot/->HaeSopimukset)))
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää sopimus" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
+       [napit/uusi "Lisää sopimus"
         #(e! (tiedot/->UusiSopimus))
         {:disabled (or (not (oikeudet/hallinta-vesivaylat))
                        (nil? haetut-sopimukset))}]

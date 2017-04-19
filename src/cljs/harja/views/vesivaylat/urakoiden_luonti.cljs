@@ -60,7 +60,7 @@
       [:div
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
-        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
+        {:disabled tallennus-kaynnissa?}]
        (let [ilman-poistettuja #(remove :poistettu %)
              urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
          [lomake/lomake
@@ -237,7 +237,7 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
       [:div
-      [napit/uusi "Lisää urakka" ;; TODO Oikeustarkistuksen mukaan disabloi tarvittaessa
+      [napit/uusi "Lisää urakka"
        #(e! (tiedot/->UusiUrakka))
        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]
       [grid/grid

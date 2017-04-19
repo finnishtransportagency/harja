@@ -22,7 +22,7 @@
     [:div
     [napit/takaisin "Takaisin luetteloon"
      #(e! (tiedot/->ValitseUrakoitsija nil))
-     {:disabled (or (not (oikeudet/hallinta-vesivaylat)) tallennus-kaynnissa?)}]
+     {:disabled tallennus-kaynnissa?}]
     [lomake/lomake
      {:otsikko (if (:id valittu-urakoitsija)
                  "Muokkaa urakoitsijaa"
