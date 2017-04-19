@@ -43,7 +43,7 @@
   Sen muunnos:
   (namespacefy data {:ns :our.domain.player ;; Määrittelee oletusnamespacen kaikille avaimille
                      :except [:foobar] ;; :foobar avaimeen ei kosketa
-                     :custom {:points :our.domain.point/points} ;; :point avaimelle määritellään poikkeava namespace
+                     :custom {:points :our.domain.point/points} ;; :points avaimelle määritellään poikkeava namespace
                      :inner {:tasks {:ns :our.domain.task}}}) ;; :tasks sisällölle muunnoslogiikka samalla tavalla
   {:our.domain.player/name \"player1\"
    :our.domain.player/hp 1
