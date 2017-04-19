@@ -22,6 +22,11 @@
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
 (defn tallenna-turvalaite [db {:keys [id geometry properties] :as turvalaite}]
+  ;; Saatavilla turvalaitteelle saatavat arvot properties mapissa:
+  ;; TUTKAHEIJ, SIJAINTIR, NAVL_TYYP, TLNUMERO, FASADIVALO, OMISTAJA, PATA_TYYP, NIMIR, SUBTYPE, TY_JNR, RAK_VUOSI,
+  ;; PAIV_PVM, SIJAINTIS, VAYLAT, PAKO_TYYP, MITT_PVM, VALAISTU, RAKT_TYYP, IRROTUS_PVM, NIMIS, TKLNUMERO, TILA,
+  ;; HUIPPUMERK, TOTI_TYYP, VAHV_PVM
+
   (let [koordinaatit (:coordinates geometry)
         geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
         {:keys [NIMIS SUBTYPE SIJAINTS VAYLAT TILA]} properties
@@ -32,9 +37,7 @@
                         :sijainnin_kuvaus SIJAINTS
                         :vayla VAYLAT
                         :tila TILA}]
-    (q-turvalaitteet/luo-turvalaite<! db sql-parametrit))
-  ;; Saatavilla olevat arvot: TUTKAHEIJ , SIJAINTIR , NAVL_TYYP , TLNUMERO , FASADIVALO , OMISTAJA , PATA_TYYP , NIMIR , SUBTYPE , TY_JNR , RAK_VUOSI , PAIV_PVM , SIJAINTIS , VAYLAT , PAKO_TYYP , MITT_PVM , VALAISTU , RAKT_TYYP , IRROTUS_PVM , NIMIS , TKLNUMERO , TILA , HUIPPUMERK , TOTI_TYYP , VAHV_PVM
-  )
+    (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
 (defn kasittele-vastaus [db vastaus]
   (let [data (cheshire/decode vastaus)
@@ -67,7 +70,7 @@
       (when (paivitys-tarvitaan? db paivitysvali-paivissa)
         (paivita-turvalaitteet integraatioloki db url)))))
 
-(defrecord TurvalaitteidenGeometriahaku [url tarkistus aika paivittainen-tarkistusaika paivitysvali-paivissa]
+(defrecord TurvalaitteidenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
   (start [{:keys [integraatioloki db] :as this}]
     (assoc this :turvalaitteiden-geometriahaku
