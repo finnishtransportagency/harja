@@ -14,10 +14,11 @@
             [clojure.string :as string])
   (:import (org.postgis Point)))
 
+(def geometriapaivitystunnus "turvalaitteet")
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
                              (:viimeisin_paivitys
-                               (first (q-geometriapaivitykset/hae-paivitys db "turvalaitteet"))))]
+                               (first (q-geometriapaivitykset/hae-paivitys db geometriapaivitystunnus))))]
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
@@ -57,6 +58,7 @@
                                     (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
                                 (kasittele-vastaus transaktio vastaus)))]
       (integraatiotapahtuma/suorita-integraatio db integraatioloki "ptj" "turvalaitteiden-haku" hae-turvalaitteet)))
+  (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
