@@ -6,17 +6,17 @@
   "properties": {
     "tiemerkinta-takaraja": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "tiemerkinta-aloitettu": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-aloitettu",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "tiemerkinta-valmis": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-valmis",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     }
   }
