@@ -59,6 +59,9 @@ ORDER BY s.alkupvm DESC, s.nimi;
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus SET urakka=:urakka WHERE id IN (:sopimukset);
 
+-- name: poista-sopimukset-urakasta!
+UPDATE sopimus SET urakka=NULL, paasopimus=NULL WHERE id IN (:sopimukset) AND urakka=:urakka;
+
 -- name: aseta-sopimuksien-paasopimus!
 UPDATE sopimus SET paasopimus=:paasopimus WHERE id IN (:sopimukset);
 

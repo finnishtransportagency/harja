@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka ::as urakka-domain]
+            [harja.domain.sopimus :as sopimus-domain]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
@@ -239,23 +239,43 @@
      :hanke (:id hanke)
      :kayttaja (:id user)}))
 
+(defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+
+    (log/debug "Päivitetään urakan " (:nimi urakka) " " (count sopimukset) " sopimusta.")
+
+    (let [lisattavat (map :id (remove :poistettu sopimukset))
+          poistettavat (map :id (filter :poistettu sopimukset))
+          paasopimus (sopimus-domain/paasopimus sopimukset)]
+      (when-not (empty? poistettavat)
+        (log/debug "Poistetaan urakasta " (:id urakka) (count poistettavat) " sopimusta.")
+        (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (:id urakka)
+                                                           :sopimukset poistettavat})
+              lkm
+              (log/debug lkm " sopimusta poistettu onnistuneesti.")))
+
+      (log/debug "Asetetaan pääsopimukseksi " (pr-str paasopimus))
+      (sopimukset-q/aseta-sopimuksien-paasopimus! db
+                                                  {:sopimukset lisattavat
+                                                   :paasopimus (:id paasopimus)})
+      (when-not (empty? lisattavat)
+        (log/debug "Tallennetaan urakalle " (:id urakka) ", " (count lisattavat) " sopimusta.")
+        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (:id urakka)
+                                                           :sopimukset lisattavat})
+              lkm
+              (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
+
 (defn tallenna-urakka [db user {:keys [sopimukset] :as urakka}]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
-      (log/debug "Tallennetaan urakka: " (pr-str urakka))
       (let [tallennettu (if (id-olemassa? (:id urakka))
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
-        (log/debug "Tallennetaan urakalle " (:id tallennettu) (count sopimukset) " sopimusta.")
-        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (:id tallennettu)
-                                                      :sopimukset (map :id sopimukset)})
-              lkm
-              (log/debug lkm " sopimusta liitetty onnistuneesti."))
-        (sopimukset-q/aseta-sopimuksien-paasopimus! db
-                                                    {:sopimukset (map :id (filter :paasopimus sopimukset))
-                                                     :paasopimus (:id (first (remove :paasopimus sopimukset)))})
+
+        (paivita-urakan-sopimukset! db user tallennettu sopimukset)
 
         ;; Palautetaan tallennettu urakka
         tallennettu))))
