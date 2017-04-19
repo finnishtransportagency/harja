@@ -127,7 +127,7 @@
                               (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan db urakka-id urakan-tyyppi kohde-id)
+    (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
     (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
@@ -147,7 +147,7 @@
           kohde-id (Integer/parseInt kohde-id)
           urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-yllapitokohde-kuuluu-urakkatyypin-mukaiseen-urakkaan db urakka-id urakan-tyyppi kohde-id)
+      (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
 
       (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
@@ -165,6 +165,7 @@
        :paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
        :paallystys_loppu (json/aika-string->java-sql-date (:paallystys-valmis aikataulu))
        :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
        :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})
@@ -209,6 +210,7 @@
       db
       {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
        :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-valmis aikataulu))
+       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 

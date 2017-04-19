@@ -417,6 +417,7 @@
       (is (some? (get aikataulutiedot 3)))
       (is (some? (get aikataulutiedot 4))))))
 
+
 (deftest aikataulun-kirjaaminen-paallystykseen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
@@ -491,6 +492,23 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+
+(deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
+    (is (= 400 (:status vastaus)))))
+
+(deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-tiemerkintakayttajana
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
 

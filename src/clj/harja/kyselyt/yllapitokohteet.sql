@@ -60,8 +60,7 @@ WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-urakkaan-liittyvat-paallystyskohteet
--- Hakee ylläpitokohteet, jotka ovat kyseisen urakan päällystyskohteita
+-- name: hae-urakkaan-kuuluvat-yllapitokohteet
 SELECT ypk.id
 FROM yllapitokohde ypk
 WHERE
