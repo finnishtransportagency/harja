@@ -13,9 +13,6 @@
 (defn hae-harjassa-luodut-sopimukset [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (log/debug "PALAUTA SOPPARIT:" (pr-str (into []
-                                        (map konv/alaviiva->rakenne)
-                                        (q/hae-harjassa-luodut-sopimukset db))))
     (into []
           (map konv/alaviiva->rakenne)
           (q/hae-harjassa-luodut-sopimukset db))))
