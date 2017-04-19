@@ -734,7 +734,6 @@ SET
   paallystys_loppu     = :paallystys_loppu,
   kohde_valmis         = :kohde_valmis,
   valmis_tiemerkintaan = :valmis_tiemerkintaan,
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   muokattu             = NOW(),
   muokkaaja            = :muokkaaja
 WHERE yllapitokohde = :id;
@@ -753,7 +752,6 @@ UPDATE yllapitokohteen_aikataulu
 SET
   tiemerkinta_alku     = :tiemerkinta_alku,
   tiemerkinta_loppu    = :tiemerkinta_loppu,
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   muokattu             = NOW(),
   muokkaaja            = :muokkaaja
 WHERE yllapitokohde = :id;
