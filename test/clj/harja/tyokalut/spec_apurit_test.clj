@@ -26,7 +26,11 @@
                                    :more-info {:description "Stupid task"
                                                :useless-keyword nil}}
                            :points 7
-                           :foobar nil}]
+                           :foobar nil}
+        map-jossa-vector-mappeja {:name "player1"
+                                  :tasks [{:id 666 :time 5 :more-info {:description "Stupid task"
+                                                                       :useless-keyword nil}}
+                                          {:id 667 :time 8}]}]
     (is (= (namespacefy yksitasoinen-map {:ns :our.domain.player})
            {:our.domain.player/name "player1"
             :our.domain.player/hp 1}))
@@ -63,4 +67,16 @@
                                       :our.domain.task/more-info {:our.domain.task/description "Stupid task"
                                                                   :useless-keyword nil}}
             :our.domain.point/points 7
-            :foobar nil}))))
+            :foobar nil}))
+
+    (is (= (namespacefy map-jossa-vector-mappeja {:ns :our.domain.player
+                                                  :inner {:tasks {:ns :our.domain.task
+                                                                  :inner {:more-info {:ns :our.domain.task
+                                                                                      :except #{:useless-keyword}}}}}})
+           {:our.domain.player/name "player1"
+            :our.domain.player/tasks [{:our.domain.task/id 666
+                                       :our.domain.task/time 5
+                                       :our.domain.task/more-info {:our.domain.task/description "Stupid task"
+                                                                   :useless-keyword nil}}
+                                      {:our.domain.task/id 667
+                                       :our.domain.task/time 8}]}))))

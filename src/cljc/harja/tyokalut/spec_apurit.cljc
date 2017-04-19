@@ -24,16 +24,32 @@
         elementti))
     mappi))
 
+(defn- namespacefy-map [map-x {:keys [ns except custom inner] :as options}]
+  (let [except (or except #{})
+        custom (or custom {})
+        inner (or inner {})
+        keys-to-be-modified (filter (comp not except) (keys map-x))
+        original-keyword->namespaced-keyword (apply merge (map
+                                                            #(-> {% (keyword (str (name ns) "/" (name %)))})
+                                                            keys-to-be-modified))
+        namespacefied-inner-maps (apply merge (map
+                                                #(-> {% (namespacefy (% map-x) (% inner))})
+                                                (keys inner)))
+        inner-keys-in-map-x (into #{} (filter #((into #{} (keys map-x)) %) (keys inner)))
+        map-x-with-modified-inner-maps (merge map-x (select-keys namespacefied-inner-maps inner-keys-in-map-x))
+        final-rename-logic (merge original-keyword->namespaced-keyword custom)]
+    (set/rename-keys map-x-with-modified-inner-maps final-rename-logic)))
 
 (defn namespacefy
-  "Lisää annetun mapin (X) keywordien nimien eteen namespacen.
+  "Jos data on map, lisää keywordien nimien eteen namespacen.
+   Jos vector, suorittaa saman operaation jokaiselle vectorin elementille erikseen.
 
    Optiot on map, joka määrittelee, millä logiikalla namespace lisätään:
    :ns        Avain, joka kertoo lisättävän namespacen nimen.
-              Tämä namespace lisätään X:n kaikille ykköstason avaimille (ks. poikkeukset alta).
+              Tämä namespace lisätään datan kaikille ykköstason avaimille (ks. poikkeukset alta).
    :except    Setti avaimia, joiden nimiä ei määritellä uudelleen X:ssä.
-   :custom    Mappi avaimia X:ssä. Arvoilla määritellään eri namespace kuin mitä :ns määrittelee.
-   :inner     Mappi avaimia X:ssä, joiden arvo on niin ikään map.
+   :custom    Mappi avaimia datassa. Arvoilla määritellään eri namespace kuin mitä :ns määrittelee.
+   :inner     Mappi avaimia datassa, joiden arvo on niin ikään map.
               Arvolla määritellään logiikka, jolla sisemmän mapin avainten nimet muunnetaan.
 
   Esimerkki:
@@ -51,17 +67,9 @@
                                :our.domain.task/time 5}
    :our.domain.point/points 7
    :foobar nil}"
-  [map-x {:keys [ns except custom inner] :as options}]
-  (let [except (or except #{})
-        custom (or custom {})
-        inner (or inner {})
-        keys-to-be-modified (filter (comp not except) (keys map-x))
-        original-keyword->namespaced-keyword (apply merge (map
-                                                            #(-> {% (keyword (str (name ns) "/" (name %)))})
-                                                            keys-to-be-modified))
-        namespacefied-inner-maps (apply merge (map
-                                                #(-> {% (namespacefy (% map-x) (% inner))})
-                                                (keys inner)))
-        map-x-with-modified-inner-maps (merge map-x namespacefied-inner-maps)
-        final-rename-logic (merge original-keyword->namespaced-keyword custom)]
-    (set/rename-keys map-x-with-modified-inner-maps final-rename-logic)))
+  [data options]
+  (cond (map? data)
+        (namespacefy-map data options)
+
+        (vector? data)
+        (mapv #(namespacefy-map % options) data)))
