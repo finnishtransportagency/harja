@@ -267,8 +267,7 @@
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))]
-    (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+    (is (= 400 (:status vastaus)))))
 
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -508,8 +507,7 @@
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
-    (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+    (is (= 400 (:status vastaus)))))
 
 (deftest avoimen-kohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
