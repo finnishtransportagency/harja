@@ -332,18 +332,18 @@
         viiva (ulkoasu/yllapidon-viiva valittu? tila-kartalla tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
-      :selite {:teksti (str teksti ", " tila-teksti)
+      :selite {:teksti (str teksti " (" tila-teksti ")")
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
                                 viiva))))
 
 (defmethod asia-kartalle :paallystys [pt valittu?]
-  (assoc (yllapitokohde :paallystys pt valittu? "Päällystys")
+  (assoc (yllapitokohde :paallystys pt valittu? "Päällystyskohde")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu?]
-  (assoc (yllapitokohde :paikkaus pt valittu? "Paikkaus")
+  (assoc (yllapitokohde :paikkaus pt valittu? "Paikkauskohde")
     :type :paikkaus))
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]

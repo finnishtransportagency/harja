@@ -247,7 +247,7 @@ VALUES (:yllapitokohde, :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI, :tyo, :yksikko,
                         :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
-UPDATE yllapitokohteen_maaramuutos
+UPDATE yllapitokohteen_maaramuutos ym
 SET
   tyon_tyyppi      = :tyon_tyyppi :: MAARAMUUTOS_TYON_TYYPPI,
   tyo              = :tyo,
@@ -262,7 +262,7 @@ SET
 WHERE id = :id
       AND (SELECT urakka
            FROM yllapitokohde
-           WHERE id = :id) = :urakka;
+           WHERE id = ym.yllapitokohde) = :urakka;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
