@@ -38,7 +38,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-hankkeet +kayttaja-jvh+ {})]
 
-    (is (>= (count vastaus) 10))))
+    (is (>= (count vastaus) 3))))
 
 (deftest hankkeen-tallennus-ja-paivitys-toimii
   (let [testihankkeet (map #(dissoc % :id) (gen/sample (s/gen ::hanke/hanke)))]
