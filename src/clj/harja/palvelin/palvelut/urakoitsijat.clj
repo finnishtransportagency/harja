@@ -66,7 +66,7 @@
       (into #{})))
 
 (defn vesivayla-urakoitsijat [db user]
-  (when (ominaisus-kaytossa? :vesivayla)
+  (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (konv/sarakkeet-vektoriin
       (into []
