@@ -32,7 +32,7 @@ VALUES
    '2013-08-01', '2016-07-30',
    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
-   (SELECT id FROM hanke WHERE nimi = 'Pohjanmeren hoitohanke'),
+   (SELECT id FROM hanke WHERE nimi = 'Saimaan kartoitus'),
    'vesivayla-hoito',
    true, NOW());
 
@@ -42,7 +42,7 @@ VALUES
    '2016-08-01', '2019-07-30',
    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
-   (SELECT id FROM hanke WHERE nimi = 'Pohjanmeren hoitohanke'),
+   (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
    'vesivayla-hoito',
    true, NOW());
 
