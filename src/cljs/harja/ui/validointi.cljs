@@ -107,6 +107,11 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ nimi data rivi _ & [avain arvo viesti]]
+  (when (and (= (avain rivi) arvo)
+             (< data 0))
+    viesti))
+
 (defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
   [_ nimi data rivi _ & [toinen-avain viesti]]
   (when (and (str/blank? data)
