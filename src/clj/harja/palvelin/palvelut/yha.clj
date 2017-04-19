@@ -166,13 +166,13 @@
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [db db]
     (let [kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db kohteet)
           validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
           epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)]
       ;; Tallennetaan vain sellaiset YHA-kohteet, joiden osoite oli
       ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
+      (log/debug "Tallennetaan " (count validit-kohteet) " yha-kohdetta")
       (doseq [kohde validit-kohteet]
         (tallenna-kohde-ja-alikohteet db urakka-id kohde))
       (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
