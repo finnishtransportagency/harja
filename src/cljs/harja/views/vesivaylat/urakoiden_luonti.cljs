@@ -166,7 +166,7 @@
            :muokattava? #(> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
            :pakollinen? (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
            :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/sopimukset-paasopimuksella
-                                                            (ilman-poistettuja (:sopimukset rivi))
+                                                            (:sopimukset rivi)
                                                             arvo)))
            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
          valittu-urakka])])))

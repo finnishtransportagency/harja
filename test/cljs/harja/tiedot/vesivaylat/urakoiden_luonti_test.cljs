@@ -169,6 +169,12 @@
                                          {:id 1 :paasopimus nil})))
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
            (u/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}]
+                                         {:id 1 :paasopimus nil})))
+    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}]
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id -3 :paasopimus nil}]
+                                         {:id 1 :paasopimus nil})))
+    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1 :poistettu true}]
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil :poistettu true}]
                                          {:id 1 :paasopimus nil}))))
 
   (testing "Pääsopimuksen muuttaminen"
@@ -177,6 +183,12 @@
                                          {:id 1 :paasopimus nil})))
     (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
            (u/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2}]
+                                         {:id 1 :paasopimus nil})))
+    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}]
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id -3 :paasopimus 2}]
+                                         {:id 1 :paasopimus nil})))
+    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1 :poistettu true}]
+           (u/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2 :poistettu true}]
                                          {:id 1 :paasopimus nil})))))
 
 (deftest urakan-sopimusvaihtoehdot
@@ -188,6 +200,3 @@
 
   (is (true? (u/vapaa-sopimus? {:urakka nil})))
   (is (false? (u/vapaa-sopimus? {:urakka {:id 1}}))))
-
-(deftest vain-oikeat-sopimukset
-  (is (empty? (u/vain-oikeat-sopimukset [{:id 1 :poistettu true} {:id -1} {:id nil}]))))

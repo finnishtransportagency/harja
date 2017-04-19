@@ -9,6 +9,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
+            [harja.domain.sopimus :as sopimus-domain]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -28,31 +29,22 @@
          :haetut-sopimukset nil
          :kaynnissa-olevat-sahkelahetykset #{}}))
 
-(defn vain-oikeat-sopimukset [sopimukset]
-  (filter (comp id-olemassa? :id) (remove :poistettu sopimukset)))
-
 (defn paasopimus [sopimukset]
-  (as-> sopimukset s
-        (vain-oikeat-sopimukset s)
-        (filter (comp some? #{(some :paasopimus s)} :id) s)
-        (first s)))
+  (sopimus-domain/paasopimus sopimukset))
 
 (defn sopimukset-paasopimuksella [sopimukset sopimus]
   (->>
     sopimukset
-    ;; Kun pääsopimus asetetaan, poistetaan gridistä "tyhjät" rivit
-    vain-oikeat-sopimukset
     (map #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus))))))
 
 (defn paasopimus? [sopimukset sopimus]
-  (boolean (when-let [ps (paasopimus (vain-oikeat-sopimukset sopimukset))]
+  (boolean (when-let [ps (paasopimus sopimukset)]
              (= (:id sopimus) (:id ps)))))
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [:urakka :id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
   (->> sopimukset
-       vain-oikeat-sopimukset
        (filter vapaa-sopimus?)
        (remove (comp (into #{} (keep :id urakan-sopimukset)) :id))))
 
@@ -139,7 +131,7 @@
                                                          ;; grid antaa uusille riveille negatiivisen id:n,
                                                          ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
                                                          ;; Rivillä on neg. id vain, jos sopimus jäi valitsematta.
-                                                         (remove (comp id-olemassa? :id))))))]
+                                                         (filter (comp id-olemassa? :id))))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
