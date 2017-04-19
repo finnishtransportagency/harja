@@ -58,7 +58,7 @@
 
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-tarkistusaika
-    (fn []
+    (fn [_]
       (when (paivitys-tarvitaan? db paivitysvali-paivissa)
         (paivita-turvalaitteet integraatioloki db url)))))
 

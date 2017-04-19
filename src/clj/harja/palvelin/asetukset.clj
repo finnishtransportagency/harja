@@ -129,6 +129,7 @@
                                              :uudelleenlahetysaika [s/Num]}
 
    (s/optional-key :turvalaitteet)          {:geometria-url       s/Str
+                                             :paivittainen-tarkistusaika [s/Num]
                                              :paivitysvali-paivissa s/Num}
 
    })
