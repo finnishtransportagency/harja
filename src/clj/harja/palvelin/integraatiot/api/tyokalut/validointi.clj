@@ -166,7 +166,7 @@
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
-(defn tarkista-urakan-yllapitokohde-olemassa [db urakka-id kohde-id]
+(defn tarkista-yllapitokohde-kuuluu-urakkaan [db urakka-id kohde-id]
   (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
   (when (not (q-yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
     (do
