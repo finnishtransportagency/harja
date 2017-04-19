@@ -111,7 +111,7 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :fmt :nimi
+            :fmt #(pot/arvo-koodilla pot/+ajoradat+ %)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Ajorata -"
@@ -124,7 +124,7 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :fmt :nimi
+            :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Kaista -"
