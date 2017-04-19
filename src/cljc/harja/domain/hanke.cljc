@@ -11,9 +11,10 @@
 (s/def ::loppupvm inst?)
 (s/def ::nimi string?)
 
+
 (s/def ::hanke
   (s/keys :req-un [::alkupvm ::loppupvm ::nimi]
-          :opt-un [::id ::u/id ::u/nimi]))
+          :opt-un [::id ::u/urakka]))
 
 ;; Haut
 
