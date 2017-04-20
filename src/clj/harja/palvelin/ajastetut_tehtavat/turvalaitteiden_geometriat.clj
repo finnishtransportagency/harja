@@ -30,25 +30,26 @@
                         :arvot arvot}]
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
-(defn kasittele-vastaus [db vastaus]
+(defn kasittele-turvalaitteet [db vastaus]
   (let [data (cheshire/decode vastaus)
         turvalaitteet (get data "features")]
-    (doseq [turvalaite turvalaitteet]
-      (tallenna-turvalaite db (walk/keywordize-keys turvalaite)))))
+    (jdbc/with-db-transaction [db db]
+      (q-turvalaitteet/poista-turvalaitteet! db)
+      (doseq [turvalaite turvalaitteet]
+        (tallenna-turvalaite db (walk/keywordize-keys turvalaite)))
+      (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt)))))
 
 (defn paivita-turvalaitteet [integraatioloki db url]
   (log/debug "Päivitetään turvalaitteiden geometriat")
-
-  (jdbc/with-db-transaction [transaktio db]
-    (q-turvalaitteet/poista-turvalaitteet! transaktio)
-
-    (let [hae-turvalaitteet (fn [konteksti]
-                              (let [http-asetukset {:metodi :GET :url url}
-                                    {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                                (kasittele-vastaus transaktio vastaus)))]
-      (integraatiotapahtuma/suorita-integraatio db integraatioloki "ptj" "turvalaitteiden-haku" hae-turvalaitteet)))
-
-  (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt))
+  (integraatiotapahtuma/suorita-integraatio
+    db
+    integraatioloki
+    "ptj"
+    "turvalaitteiden-haku"
+    (fn [konteksti]
+      (let [http-asetukset {:metodi :GET :url url}
+            {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+        (kasittele-turvalaitteet db vastaus))))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
