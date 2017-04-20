@@ -39,13 +39,9 @@
 
 (defn tarkista-toimenpide [db viesti-id sampo-urakka-id sampo-toimenpide-id sampo-toimenpidekoodi]
   (when (empty? sampo-toimenpidekoodi)
-    (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
-             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "No operation code provided.")
-             :virheet  [{:virhe "Toimenpiteelle ei ole annettu toimenpidekoodia (vv_operation)"}]}))
+    (log/warn "Samposta tuodussa toimenpiteessä ei ole toimenpidekoodia (vv_operation). Viesti-id: " viesti-id))
   (when (not (toimenpidekoodit/onko-olemassa? db sampo-toimenpidekoodi))
-    (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
-             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Unknown operation code provided.")
-             :virheet  [{:virhe "Tuntematon toimenpidekoodi (vv_operation)"}]}))
+    (log/warn "Samposta tuodussa toimenpiteessä on tuntematon toimenpidekoodi (vv_operation). Viesti-id: " viesti-id))
   (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
     (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus
