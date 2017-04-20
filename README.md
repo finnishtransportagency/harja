@@ -39,7 +39,8 @@ In order to load test data add "?test" parameter to address eg. http://localhost
 To add notice edit following files on data-folder:
 - care.json (hoitotiedotteet)
 - maintenance.json (ylläpitotiedotteet)
-- faq.json  (usein kysytyt kysymykset)
+- faq.json  (koulutusvideot)
+- waterways.json  (vesiväylät
 
 New notices can be added anywhere in the list, they will be arranged by date automatically.
 
@@ -96,9 +97,9 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 ```
 
 
-## Adding content
+## Adding content on the main category pages
 
-To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kysymykset" edit the "content.json" -file on data-folder
+To edit content on the main pages of "Teiden hoito", "Teiden ylläpito", "Vesiväylät" and "Koulutusvideot" edit the "content.json" -file on data-folder
 
 
 ## "Content" -file fields:
@@ -132,9 +133,16 @@ To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kys
 	},
 	{
 		"category": "faq",
-		"title": "Usein kysytyt kysymykset",
+		"title": "Koulutusvideot",
 		"short": "Lorem ipsum dolor sit amet",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		"images": []
+	},
+	{
+		"category": "waterways",
+		"title": "Vesiväylät",
+		"short": "",
+		"body": "Uutisia Harjan käytöstä vesiväylillä",
 		"images": []
 	}
 ]
