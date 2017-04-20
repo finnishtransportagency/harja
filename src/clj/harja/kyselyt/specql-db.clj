@@ -2,7 +2,6 @@
   "Määritellään yleisiä clojure.spec tyyppejä."
   (:require [specql.core :refer [define-tables]]
             [specql.data-types :as d]
-            [harja.kyselyt.specql-db :refer [db]]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.urakka :as urakka]
@@ -11,6 +10,9 @@
             [clojure.string :refer [trim]]
             [clojure.java.io :as io]))
 
+
+(def db (when (.canRead (io/file ".specql-db"))
+          {:connection-uri (trim (slurp ".specql-db"))}))
 
 (s/def ::d/geometry any?)
 

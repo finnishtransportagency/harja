@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakoitsijoiden-luonti :as tiedot]
             [harja.ui.napit :as napit]
+            [harja.domain.organisaatio :as o]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
