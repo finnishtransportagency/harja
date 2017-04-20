@@ -19,7 +19,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -48,11 +49,11 @@
                        :ei-mahdollinen)}
           [{:otsikko "Liittyy kohteeseen" :leveys 7 :nimi :yllapitokohde-id :tyyppi :valinta
             :valinnat (conj (map :id paallystysurakan-kohteet) nil)
-            :valinta-nayta #(if % (tr-domain/yllapitokohde-tekstina
+            :valinta-nayta #(if % (yllapitokohde-domain/yllapitokohde-tekstina
                                     (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %))
                                   "Ei liity kohteeseen")
             :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
-                    (tr-domain/yllapitokohde-tekstina kohde)
+                    (yllapitokohde-domain/yllapitokohde-tekstina kohde)
                     "Ei liity kohteeseen")}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512
             :validoi [[:ei-tyhja "Anna selite"]]}
