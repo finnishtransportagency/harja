@@ -18,5 +18,4 @@
 
 (define-tables db
   ["tr_osoite" ::tr/osoite]
-  ["urakkatyyppi" ::urakka/urakkatyyppi]
-  )
+  ["urakkatyyppi" ::urakka/urakkatyyppi])

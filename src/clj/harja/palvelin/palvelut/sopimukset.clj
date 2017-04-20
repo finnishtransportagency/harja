@@ -4,6 +4,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.sopimukset :as q]
             [harja.domain.sopimus :as sopimus]
+            [harja.tyokalut.spec-apurit :refer [namespacefy]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
@@ -13,35 +14,52 @@
 (defn hae-harjassa-luodut-sopimukset [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (into []
-          (map konv/alaviiva->rakenne)
-          (q/hae-harjassa-luodut-sopimukset db))))
+    (let [sopimukset (into []
+                           (map konv/alaviiva->rakenne)
+                           (q/hae-harjassa-luodut-sopimukset db))]
+      (namespacefy sopimukset {:ns :harja.domain.sopimus
+                               :inner {:urakka {:ns :harja.domain.urakka}}}))))
 
-(defn- paivita-sopimusta! [db user {:keys [id nimi alkupvm loppupvm paasopimus]}]
-  (log/debug "Päivitetään sopimusta " nimi)
-  (q/paivita-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
-                                          :id id
-                                          :nimi nimi
-                                          :alkupvm alkupvm
-                                          :loppupvm loppupvm
-                                          :paasopimus paasopimus}))
+(defn- paivita-sopimusta! [db user sopimus]
+  (let [id (::sopimus/id sopimus)
+        nimi (::sopimus/nimi sopimus)
+        alkupvm (::sopimus/alkupvm sopimus)
+        loppupvm (::sopimus/loppupvm sopimus)
+        paasopimus (::sopimus/paasopimus sopimus)]
+    (log/debug "Päivitetään sopimusta " nimi)
+    (q/paivita-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
+                                            :id id
+                                            :nimi nimi
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm
+                                            :paasopimus paasopimus})))
 
-(defn luo-uusi-sopimus! [db user {:keys [nimi alkupvm loppupvm paasopimus]}]
-  (log/debug "Luodaan uusi sopimus nimellä " nimi)
-  (q/luo-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
-                                      :nimi nimi
-                                      :alkupvm alkupvm
-                                      :loppupvm loppupvm
-                                      :paasopimus paasopimus}))
+(defn luo-uusi-sopimus! [db user sopimus]
+  (let [nimi (::sopimus/nimi sopimus)
+        alkupvm (::sopimus/alkupvm sopimus)
+        loppupvm (::sopimus/loppupvm sopimus)
+        paasopimus (::sopimus/paasopimus sopimus)]
+    (log/debug "Luodaan uusi sopimus nimellä " nimi)
+    (q/luo-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
+                                        :nimi nimi
+                                        :alkupvm alkupvm
+                                        :loppupvm loppupvm
+                                        :paasopimus paasopimus})))
 
 (defn tallenna-sopimus [db user sopimus]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
-      (if (id-olemassa? (:id sopimus))
-        (paivita-sopimusta! db user sopimus)
-        (luo-uusi-sopimus! db user sopimus)))))
+      (let [tallennettu-sopimus (if (id-olemassa? (:id sopimus))
+                                  (paivita-sopimusta! db user sopimus)
+                                  (luo-uusi-sopimus! db user sopimus))]
+
+        {::sopimus/id (:id tallennettu-sopimus)
+         ::sopimus/nimi (:nimi tallennettu-sopimus)
+         ::sopimus/alkupvm (:alkupvm tallennettu-sopimus)
+         ::sopimus/loppupvm (:loppupvm tallennettu-sopimus)
+         ::sopimus/paasopimus (:paasopimus tallennettu-sopimus)}))))
 
 (defrecord Sopimukset []
   component/Lifecycle

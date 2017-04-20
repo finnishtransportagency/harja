@@ -13,8 +13,8 @@
 (s/def ::paasopimus (s/nilable ::spec-apurit/postgres-serial))
 
 (s/def ::sopimus (s/keys
-                   :req-un [::nimi ::alkupvm ::loppupvm ::paasopimus]
-                   :opt-un [::id]))
+                   :req [::nimi ::alkupvm ::loppupvm]
+                   :opt [::id ::paasopimus]))
 
 ;; Haut
 
@@ -23,8 +23,7 @@
 
 ;; Tallennukset
 
-(s/def ::tallenna-sopimus-kysely (s/keys
-                                   :req-un [::sopimus]))
+(s/def ::tallenna-sopimus-kysely ::sopimus)
 
 (defn paasopimus [sopimukset]
   (let [ps (as-> sopimukset s
