@@ -1,33 +1,30 @@
 (ns harja.tiedot.vesivaylat.urakoiden-luonti-test
   (:require [harja.tiedot.vesivaylat.urakoiden-luonti :as u]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
-            [tuck.core :as tuck]))
-
-(def tila @u/tila)
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e! e-tila!]]))
 
 (deftest urakan-valinta
   (let [ur {:foobar 1}]
-    (is (= ur (:valittu-urakka (e! tila u/->ValitseUrakka ur))))))
+    (is (= ur (:valittu-urakka (e! u/->ValitseUrakka ur))))))
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! tila u/->Nakymassa? true))))
-  (is (false? (:nakymassa? (e! tila u/->Nakymassa? false)))))
+  (is (true? (:nakymassa? (e! u/->Nakymassa? true))))
+  (is (false? (:nakymassa? (e! u/->Nakymassa? false)))))
 
 (deftest uuden-urakan-luonnin-aloitus
-  (is (= u/uusi-urakka (:valittu-urakka (e! tila u/->UusiUrakka)))))
+  (is (= u/uusi-urakka (:valittu-urakka (e! u/->UusiUrakka)))))
 
 (deftest tallentamisen-aloitus
   (vaadi-async-kutsut
     #{u/->UrakkaTallennettu u/->UrakkaEiTallennettu}
 
-    (is (true? (:tallennus-kaynnissa? (e! {:haetut-urakat []} u/->TallennaUrakka {:id 1}))))))
+    (is (true? (:tallennus-kaynnissa? (e-tila! u/->TallennaUrakka {:id 1} {:haetut-urakat []}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e! {:haetut-urakat vanhat} u/->UrakkaTallennettu uusi)]
+          tulos (e-tila! u/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakat tulos)))))
@@ -35,38 +32,38 @@
   (testing "Urakan muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e! {:haetut-urakat vanhat} u/->UrakkaTallennettu uusi)]
+          tulos (e-tila! u/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! tila u/->UrakkaEiTallennettu "virhe")]
+  (let [tulos (e! u/->UrakkaEiTallennettu "virhe")]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-urakka tulos)))))
 
 (deftest urakan-muokkaaminen-lomakkeessa
   (let [ur {:nimi :foobar}]
-    (is (= ur (:valittu-urakka (e! tila u/->UrakkaaMuokattu ur))))))
+    (is (= ur (:valittu-urakka (e! u/->UrakkaaMuokattu ur))))))
 
 (deftest hakemisen-aloitus
   (vaadi-async-kutsut
     #{u/->UrakatHaettu u/->UrakatEiHaettu}
-    (is (true? (:urakoiden-haku-kaynnissa? (e! tila u/->HaeUrakat {:id 1}))))))
+    (is (true? (:urakoiden-haku-kaynnissa? (e! u/->HaeUrakat {:id 1}))))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
-        tulos (e! tila u/->UrakatHaettu urakat)]
+        tulos (e! u/->UrakatHaettu urakat)]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1 :nimi :a} {:id 2 :nimi :b}] (:haetut-urakat tulos)))))
 
 (deftest hakemisen-epaonnistuminen
-  (let [tulos (e! tila u/->UrakatEiHaettu "virhe")]
+  (let [tulos (e! u/->UrakatEiHaettu "virhe")]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))))
 
 (deftest sopimuksen-paivittaminen
   (let [testaa (fn [tila annettu haluttu]
-                 (= (-> (e! {:valittu-urakka {:sopimukset tila}} u/->PaivitaSopimuksetGrid annettu)
+                 (= (-> (e-tila! u/->PaivitaSopimuksetGrid annettu {:valittu-urakka {:sopimukset tila}})
                         (get-in [:valittu-urakka :sopimukset]))
                     haluttu))]
     (testing "Rivin lisääminen gridiin"
@@ -94,7 +91,7 @@
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
   (vaadi-async-kutsut
     #{u/->LomakevaihtoehdotHaettu u/->LomakevaihtoehdotEiHaettu}
-    (is (= {:foo :bar} (e! {:foo :bar} u/->HaeLomakevaihtoehdot {:id 1})))))
+    (is (= {:foo :bar} (e-tila! u/->HaeLomakevaihtoehdot {:id 1} {:foo :bar})))))
 
 (deftest lomakevaihtoehtojen-hakemisen-valmistuminen
   (let [hy [{:id 1}]
@@ -105,28 +102,28 @@
                  :urakoitsijat ur
                  :hankkeet h
                  :sopimukset s}
-        app (e! tila u/->LomakevaihtoehdotHaettu payload)]
+        app (e! u/->LomakevaihtoehdotHaettu payload)]
     (is (= hy (:haetut-hallintayksikot app)))
     (is (= ur (:haetut-urakoitsijat app)))
     (is (= h (:haetut-hankkeet app)))
     (is (= s (:haetut-sopimukset app)))))
 
 (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
-  (is (= {:foo :bar} (e! {:foo :bar} u/->LomakevaihtoehdotEiHaettu "virhe"))))
+  (is (= {:foo :bar} (e-tila! u/->LomakevaihtoehdotEiHaettu "virhe" {:foo :bar}))))
 
 (deftest sahke-lahetyksen-aloitus
   (vaadi-async-kutsut
     #{u/->SahkeeseenLahetetty u/->SahkeeseenEiLahetetty}
     (is (= {:kaynnissa-olevat-sahkelahetykset #{1}}
-           (e! {:kaynnissa-olevat-sahkelahetykset #{}} u/->LahetaUrakkaSahkeeseen {:id 1})))))
+           (e-tila! u/->LahetaUrakkaSahkeeseen {:id 1} {:kaynnissa-olevat-sahkelahetykset #{}})))))
 
 (deftest sahke-lahetyksen-valmistuminen
   (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-         (e! {:kaynnissa-olevat-sahkelahetykset #{1}} u/->SahkeeseenLahetetty {} {:id 1}))))
+         (e-tila! u/->SahkeeseenLahetetty {} {:id 1} {:kaynnissa-olevat-sahkelahetykset #{1}}))))
 
 (deftest sahke-lahetyksen-epaonnistuminen
   (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-         (e! {:kaynnissa-olevat-sahkelahetykset #{1}} u/->SahkeeseenEiLahetetty "virhe" {:id 1}))))
+         (e-tila! u/->SahkeeseenEiLahetetty "virhe" {:id 1} {:kaynnissa-olevat-sahkelahetykset #{1}}))))
 
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
