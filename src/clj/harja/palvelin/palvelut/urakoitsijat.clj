@@ -31,7 +31,7 @@
     (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
                       (fn [user _]
                         (vesivayla-urakoitsijat (:db this) user))
-                      {:kysely-spec ::o/vesivayla-urakoitsijat-vastaus})
+                      {:vastaus-spec ::o/vesivayla-urakoitsijat-vastaus})
     (julkaise-palvelu (:http-palvelin this) :tallenna-urakoitsija
                       (fn [user tiedot]
                         (tallenna-urakoitsija! (:db this) user tiedot)))
