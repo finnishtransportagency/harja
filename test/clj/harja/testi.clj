@@ -347,6 +347,9 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
+(defn hae-yha-paallystysurakan-id []
+  (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'")))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka

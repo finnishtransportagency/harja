@@ -31,7 +31,8 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.domain.hoitoluokat :as hoitoluokat])
+            [harja.domain.hoitoluokat :as hoitoluokat]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -178,8 +179,8 @@
                     (= :tiemerkinta (:nakyma optiot)))
             {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
              :hae (fn [rivi]
-                    (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                          :nimi (get-in rivi [:yllapitokohde :nimi])}))})
+                    (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                                  :nimi (get-in rivi [:yllapitokohde :nimi])}))})
           {:otsikko "TR-osoite"
            :nimi :tr
            :leveys 2
@@ -349,7 +350,7 @@
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
-                               (tierekisteri/yllapitokohde-tekstina
+                               (yllapitokohde-domain/yllapitokohde-tekstina
                                  arvo {:osoite {:tr-numero (:tr-numero arvo)
                                                 :tr-alkuosa (:tr-alkuosa arvo)
                                                 :tr-alkuetaisyys (:tr-alkuetaisyys arvo)

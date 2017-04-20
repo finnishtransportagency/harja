@@ -10,6 +10,10 @@ RUN sed -i "s/port = 5433/port = 5432/g" /etc/postgresql/9.5/main/postgresql.con
 RUN echo "local all all trust" > /etc/postgresql/9.5/main/pg_hba.conf
 RUN echo "host    all             all             0.0.0.0/0            trust" >> /etc/postgresql/9.5/main/pg_hba.conf
 
+# Konffataan fsync ja full page writes pois
+RUN sed -i "s/#fsync.*/fsync = off/g" /etc/postgresql/9.5/main/postgresql.conf
+RUN sed -i "s/#full_page_writes.*/full_page_writes = off/g" /etc/postgresql/9.5/main/postgresql.conf
+
 # Luodaan kanta
 RUN service postgresql restart && \
     sleep 5 && \
