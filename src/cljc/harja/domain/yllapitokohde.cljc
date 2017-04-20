@@ -5,13 +5,14 @@
     [clojure.string :as str]
     [harja.domain.tierekisteri :as tr-domain]
     #?@(:clj
-        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-        [clojure.spec :as s]
-        [clojure.future :refer :all]
-        [harja.pvm :as pvm]
-        [clj-time.core :as t]
-        [taoensso.timbre :as log]
-        [clj-time.coerce :as c]])
+        [
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [clojure.spec :as s]
+    [clojure.future :refer :all]
+    [harja.pvm :as pvm]
+    [clj-time.core :as t]
+    [taoensso.timbre :as log]
+    [clj-time.coerce :as c]])
     #?@(:cljs
         [[cljs.spec :as s]])))
 
@@ -314,3 +315,20 @@ yllapitoluokkanimi->numero
                             kaasuindeksi
                             toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
+
+(defn yllapitokohde-tekstina
+  "Näyttää ylläpitokohteen kohdenumeron ja nimen.
+
+  Optiot on map, jossa voi olla arvot:
+  osoite              Kohteen tierekisteriosoite.
+                      Näytetään sulkeissa kohteen tietojen perässä sulkeissa, jos löytyy."
+  ([kohde] (yllapitokohde-tekstina kohde {}))
+  ([kohde optiot]
+   (let [kohdenumero (or (:kohdenumero kohde) (:numero kohde) (:yllapitokohdenumero kohde))
+         nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
+         osoite (when-let [osoite (:osoite optiot)]
+                  (let [tr-osoite (tr-domain/tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
+                                                                                 :teksti-tie? false})]
+                    (when-not (empty? tr-osoite)
+                      (str " (" tr-osoite ")"))))]
+     (str kohdenumero " " nimi osoite))))

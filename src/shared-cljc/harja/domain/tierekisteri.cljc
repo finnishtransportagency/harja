@@ -136,6 +136,28 @@
          (some? (::aosa osoite))
          (some? (::aet osoite)))))
 
+(defn osa-olemassa-verkolla?
+  "Tarkistaa, onko annettu osa olemassa Harjan tieverkolla (true / false)"
+  [osa osien-pituudet]
+  (number? (get osien-pituudet osa)))
+
+(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet]
+  "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
+  (if-let [osan-pituus (get osien-pituudet osa)]
+    (and (<= etaisyys osan-pituus)
+         (>= etaisyys 0))
+    false))
+
+(defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
+  (and
+    (number? (:tienumero kohde))
+    (number? (:tienumero kohdeosa))
+    (= (:tienumero kohdeosa) (:tienumero kohde))
+       (>= (:aosa kohdeosa) (:aosa kohde))
+       (>= (:aet kohdeosa) (:aet kohde))
+       (<= (:losa kohdeosa) (:losa kohde))
+       (<= (:let kohdeosa) (:let kohde))))
+
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
@@ -167,24 +189,6 @@
                  (when (and alkuosa alkuetaisyys loppuosa loppuetaisyys)
                    (str " / " loppuosa " / " loppuetaisyys)))
             ei-tierekisteriosoitetta)))))
-
-
-(defn yllapitokohde-tekstina
-  "Näyttää ylläpitokohteen kohdenumeron ja nimen.
-
-  Optiot on map, jossa voi olla arvot:
-  osoite              Kohteen tierekisteriosoite.
-                      Näytetään sulkeissa kohteen tietojen perässä sulkeissa, jos löytyy."
-  ([kohde] (yllapitokohde-tekstina kohde {}))
-  ([kohde optiot]
-   (let [kohdenumero (or (:kohdenumero kohde) (:numero kohde) (:yllapitokohdenumero kohde))
-         nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
-         osoite (when-let [osoite (:osoite optiot)]
-                  (let [tr-osoite (tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
-                                                                       :teksti-tie? false})]
-                    (when-not (empty? tr-osoite)
-                      (str " (" tr-osoite ")"))))]
-     (str kohdenumero " " nimi osoite))))
 
 (defn- tieosoitteen-jarjestys
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."

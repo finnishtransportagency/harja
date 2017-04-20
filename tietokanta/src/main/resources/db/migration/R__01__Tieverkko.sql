@@ -101,6 +101,7 @@ BEGIN
     IF osa_ = losa THEN
       e2 := let;
     ELSE
+      e1 := LEAST(e1, osan_pituus);
       e2 := osan_pituus;
     END IF;
     RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
