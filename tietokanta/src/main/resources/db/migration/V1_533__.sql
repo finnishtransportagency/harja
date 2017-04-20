@@ -51,4 +51,5 @@ ALTER TABLE sopimus ALTER alkupvm SET NOT NULL;
 ALTER TABLE sopimus ALTER loppupvm SET NOT NULL;
 ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
 ALTER TABLE organisaatio ALTER COLUMN nimi SET NOT NULL;
+ALTER TABLE organisaatio ALTER COLUMN tyyppi SET NOT NULL;
 CREATE UNIQUE INDEX uniikki_hanke ON urakka (hanke) WHERE harjassa_luotu IS TRUE; -- Harjassa luodulle urakalle on hanke uniikki
