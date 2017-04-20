@@ -25,7 +25,9 @@
                     (java.text SimpleDateFormat)
                     (org.joda.time DateTimeZone))))
 
-
+(def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
+                  "Touko" "Kesä" "Heinä" "Elo"
+                  "Syys" "Loka" "Marras" "Joulu"])
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])
@@ -443,6 +445,11 @@
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
 
+(defn koko-kuukausi-ja-vuosi
+  "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
+  [pvm]
+  (str (nth +kuukaudet+ (dec (kuukausi pvm))) " " (vuosi pvm)))
+
 (defn paiva
   "Palauttaa annetun DateTime päivän."
   [pvm]
@@ -749,3 +756,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (-> tuntia t/hours t/ago)))
 
 (def kayttoonottto (t/local-date 2016 10 1))
+
+#?(:cljs
+   (defn paivat-valissa [alku loppu]
+     (if (jalkeen? alku loppu)
+       nil
+       (lazy-seq
+        (cons alku
+              (paivat-valissa (t/plus alku (t/days 1)) loppu))))))
