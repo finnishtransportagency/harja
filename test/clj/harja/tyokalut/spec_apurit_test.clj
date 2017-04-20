@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [deftest is use-fixtures]]
     [harja.testi :refer :all]
-    [harja.tyokalut.spec-apurit] :refer [namespacefy poista-nil-avaimet]))
+    [harja.tyokalut.spec-apurit :refer [namespacefy poista-nil-avaimet]]))
 
 (deftest nil-arvojen-poisto-mapista-toimii
   (is (= (poista-nil-avaimet {:a "1" :b nil}) {:a "1"}))
