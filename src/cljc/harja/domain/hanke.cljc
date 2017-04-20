@@ -26,4 +26,4 @@
   (s/keys :req-un [::hanke]))
 
 (s/def ::tallenna-hanke-vastaus (s/and ::hanke
-                                       (s/keys :req-un [::id])))
+                                       (s/keys :req [::id])))
