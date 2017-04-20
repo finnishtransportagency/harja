@@ -24,6 +24,8 @@
 ;; Tallennukset
 
 (s/def ::tallenna-sopimus-kysely ::sopimus)
+(s/def ::tallenna-sopimus-vastaus ::sopimus)
+
 
 (defn paasopimus [sopimukset]
   (let [ps (as-> sopimukset s

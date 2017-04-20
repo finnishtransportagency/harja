@@ -74,7 +74,8 @@
                       :tallenna-sopimus
                       (fn [user tiedot]
                         (tallenna-sopimus db user tiedot))
-                      {:kysely-spec ::sopimus/tallenna-sopimus-kysely})
+                      {:kysely-spec ::sopimus/tallenna-sopimus-kysely
+                       :vastaus-spec ::sopimus/tallenna-sopimus-kysely})
 
     this)
 
