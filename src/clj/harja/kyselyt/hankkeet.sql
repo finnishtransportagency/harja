@@ -33,7 +33,7 @@ SELECT
 FROM hanke h
   LEFT JOIN urakka u ON h.id = u.hanke
   WHERE h.harjassa_luotu IS TRUE
-ORDER BY alkupvm DESC, nimi;
+ORDER BY h.alkupvm DESC, h.nimi;
 
 -- name: luo-harjassa-luotu-hanke<!
 INSERT INTO hanke (nimi, alkupvm, loppupvm, luoja, luotu, harjassa_luotu)

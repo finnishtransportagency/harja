@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [harja.domain.hanke :as hanke]
             [harja.id :as id]
+            [harja.tyokalut.spec-apurit :refer [namespacefy]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
@@ -13,31 +14,31 @@
 (defn hae-harjassa-luodut-hankkeet [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    ;; Tietomallin puolesta on mahdollista, että hankkeella on monta urakkaa
-    ;; mutta käytännössä näin ei ole. Jos hankkeella on monta urakkaa, palautetaan
-    ;; hanke duplikaattina, ja virhetilanne käsitellään frontilla.
-    (into []
-          (map konv/alaviiva->rakenne)
-          (q/hae-harjassa-luodut-hankkeet db))))
+    (let [hankkeet (into []
+                         (map konv/alaviiva->rakenne)
+                         (q/hae-harjassa-luodut-hankkeet db))]
+      (namespacefy hankkeet {:ns :harja.domain.hanke
+                             :inner {:urakka {:ns :harja.domain.urakka}}}))))
 
 (defn tallenna-hanke
   "Tallentaa yksittäisen hankkeen ja palauttaa sen tiedot"
   [db user {:keys [hanke] :as tiedot}]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+    (log/debug "Tallennetaan hanke. Payload: " tiedot)
     (jdbc/with-db-transaction [db db]
-      (let [tallennus-params {:nimi (:nimi hanke)
-                              :alkupvm (:alkupvm hanke)
-                              :loppupvm (:loppupvm hanke)
+      (let [tallennus-params {:nimi (::hanke/nimi hanke)
+                              :alkupvm (::hanke/alkupvm hanke)
+                              :loppupvm (::hanke/loppupvm hanke)
                               :kayttaja (:id user)}
             {:keys [id nimi alkupvm loppupvm] :as tallennettu-hanke}
             (if (id/id-olemassa? hanke)
               (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (:id hanke)))
               (q/luo-harjassa-luotu-hanke<! db tallennus-params))]
-        {:id id
-         :nimi nimi
-         :alkupvm alkupvm
-         :loppupvm loppupvm}))))
+        {::hanke/id id
+         ::hanke/nimi nimi
+         ::hanke/alkupvm alkupvm
+         ::hanke/loppupvm loppupvm}))))
 
 (defrecord Hankkeet []
   component/Lifecycle
