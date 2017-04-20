@@ -5,3 +5,9 @@
             #?@(:clj [[clojure.future :refer :all]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
+
+
+;; Haut
+
+(s/def ::vesivayla-urakoitsijat-vastaus
+  (s/coll-of ::organisaatio))

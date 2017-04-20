@@ -6,6 +6,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [taoensso.timbre :as log]
+            [harja.domain.organisaatio :as o]
             [harja.kyselyt.urakoitsijat :as q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
@@ -29,7 +30,8 @@
         (yllapidon-urakoitsijat (:db this) user)))
     (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
                       (fn [user _]
-                        (vesivayla-urakoitsijat (:db this) user)))
+                        (vesivayla-urakoitsijat (:db this) user))
+                      {:kysely-spec ::o/vesivayla-urakoitsijat-vastaus})
     (julkaise-palvelu (:http-palvelin this) :tallenna-urakoitsija
                       (fn [user tiedot]
                         (tallenna-urakoitsija! (:db this) user tiedot)))
