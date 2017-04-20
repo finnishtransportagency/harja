@@ -26,6 +26,10 @@ export default React.createClass({
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
     ];
 
+    const feedbackAddress = "harja@solita.fi";
+    const feedbackSubject = "Tässä palautetta";
+    const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
+
     return (
       <nav>
         <div className="harja-header title-bar show-for-large">
@@ -34,6 +38,7 @@ export default React.createClass({
             <img className="harja-header-logo" src="images/harja_logo_text.png" alt="harja logo" srcSet="images/harja_logo_text.svg" />
           </div>
           <div className="top-bar-right">
+            <div className="harja-feedback"><a href={feedbackHref}>Palautetta!</a></div>
             <div className="title-bar-title">Liikenneviraston Harja-projekti</div>
           </div>
         </div>
@@ -63,6 +68,9 @@ export default React.createClass({
               </li>
               <li >
                 <a className="large button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
+              </li>
+              <li>
+                <a className="large button" href={feedbackHref}>Palautetta!</a>
               </li>
             </ul>
 
