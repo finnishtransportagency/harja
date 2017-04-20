@@ -110,18 +110,15 @@
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
 (defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
-  (let [kohde (if (= (:yha-id kohde) 373015980)
-                (assoc kohde :losa 99999 :let 99999)
-                kohde)]
-    (if virhe?
-      (assoc kohde :virhe true)
-      (-> kohde
-          (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
-          (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
-          (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
-          (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
-          (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
-          (paivita-osoitteen-osa loppuosanosoite :losa "osa")))))
+  (if virhe?
+    (assoc kohde :virhe true)
+    (-> kohde
+        (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+        (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+        (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+        (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+        (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+        (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
 
 (defn vkm-virhe? [hakutunnus vkm-kohteet]
   (some #(and (= hakutunnus (get % "tunniste"))
