@@ -27,7 +27,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain])
+            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -335,25 +336,25 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :palstoja    1}
 
                 (if yllapitokohdeurakka?
-                  {:otsikko       "Yllä\u00ADpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
-                   :palstoja      1
-                   :pakollinen?   true
-                   :muokattava?   (constantly muokattava?)
-                   :valinnat      yllapitokohteet
-                   :jos-tyhja     "Ei valittavia kohteita"
+                  {:otsikko "Yllä\u00ADpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
+                   :palstoja 1
+                   :pakollinen? true
+                   :muokattava? (constantly muokattava?)
+                   :valinnat yllapitokohteet
+                   :jos-tyhja "Ei valittavia kohteita"
                    :valinta-nayta (fn [arvo muokattava?]
                                     (if arvo
-                                      (tierekisteri/yllapitokohde-tekstina
+                                      (yllapitokohde-domain/yllapitokohde-tekstina
                                         arvo
-                                        {:osoite {:tr-numero        (:tr-numero arvo)
-                                                  :tr-alkuosa       (:tr-alkuosa arvo)
-                                                  :tr-alkuetaisyys  (:tr-alkuetaisyys arvo)
-                                                  :tr-loppuosa      (:tr-loppuosa arvo)
+                                        {:osoite {:tr-numero (:tr-numero arvo)
+                                                  :tr-alkuosa (:tr-alkuosa arvo)
+                                                  :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                                  :tr-loppuosa (:tr-loppuosa arvo)
                                                   :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
                                       (if muokattava?
                                         "- Valitse kohde -"
                                         "")))
-                   :validoi       [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+                   :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
                   {:otsikko     "Kohde" :tyyppi :string :nimi :kohde
                    :palstoja    1
                    :pakollinen? true

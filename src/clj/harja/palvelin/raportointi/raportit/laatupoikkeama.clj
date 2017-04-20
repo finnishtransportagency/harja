@@ -10,7 +10,8 @@
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]))
 
 (defn- hae-laatupoikkeamat-urakalle [db {:keys [urakka-id alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-urakan-laatupoikkeamat-liitteineen-raportille db
@@ -62,12 +63,13 @@
 (defn- kasittele-laatupoikkeaman-kohde [laatupoikkeama]
   (let [laatupoikkeama-paivitetylla-kohteella
         (if (get-in laatupoikkeama [:yllapitokohde :tie])
-          (assoc laatupoikkeama :kohde (tr-domain/yllapitokohde-tekstina (:yllapitokohde laatupoikkeama)
-                                                                         {:osoite {:tr-numero (get-in laatupoikkeama [:yllapitokohde :tie])
-                                                                                   :tr-alkuosa (get-in laatupoikkeama [:yllapitokohde :aosa])
-                                                                                   :tr-alkuetaisyys (get-in laatupoikkeama [:yllapitokohde :aet])
-                                                                                   :tr-loppuosa (get-in laatupoikkeama [:yllapitokohde :losa])
-                                                                                   :tr-loppuetaisyys (get-in laatupoikkeama [:yllapitokohde :let])}}))
+          (assoc laatupoikkeama :kohde (yllapitokohde-domain/yllapitokohde-tekstina
+                                         (:yllapitokohde laatupoikkeama)
+                                         {:osoite {:tr-numero (get-in laatupoikkeama [:yllapitokohde :tie])
+                                                   :tr-alkuosa (get-in laatupoikkeama [:yllapitokohde :aosa])
+                                                   :tr-alkuetaisyys (get-in laatupoikkeama [:yllapitokohde :aet])
+                                                   :tr-loppuosa (get-in laatupoikkeama [:yllapitokohde :losa])
+                                                   :tr-loppuetaisyys (get-in laatupoikkeama [:yllapitokohde :let])}}))
           laatupoikkeama)]
     (dissoc laatupoikkeama-paivitetylla-kohteella :yllapitokohde)))
 

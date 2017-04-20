@@ -48,12 +48,12 @@
     :yllapitoluokka 1}])
 
 (def vkm-data
-  {"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 2, "tie" 20, "tunniste" "kohde-1-alku"}
-                   {"ajorata" 0, "palautusarvo" 1, "osa" 3, "etaisyys" 4, "tie" 20, "tunniste" "kohde-1-loppu"}
-                   {"ajorata" 0, "palautusarvo" 1, "osa" 5, "etaisyys" 6, "tie" 20, "tunniste" "alikohde-1-12-alku"}
-                   {"ajorata" 0, "palautusarvo" 1, "osa" 7, "etaisyys" 8, "tie" 20, "tunniste" "alikohde-1-12-loppu"}
-                   {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-alku"}
-                   {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-loppu"}]})
+  [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 2, "tie" 20, "tunniste" "kohde-1-alku"}
+   {"ajorata" 0, "palautusarvo" 1, "osa" 3, "etaisyys" 4, "tie" 20, "tunniste" "kohde-1-loppu"}
+   {"ajorata" 0, "palautusarvo" 1, "osa" 5, "etaisyys" 6, "tie" 20, "tunniste" "alikohde-1-12-alku"}
+   {"ajorata" 0, "palautusarvo" 1, "osa" 7, "etaisyys" 8, "tie" 20, "tunniste" "alikohde-1-12-loppu"}
+   {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-alku"}
+   {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-loppu"}])
 
 (deftest tarkista-vkm-ja-yha-osoitteiden-yhdistaminen
   (let [yhdistetty-data (yha/yhdista-yha-ja-vkm-kohteet yha-data vkm-data)

@@ -19,7 +19,8 @@
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -36,24 +37,24 @@
       {:valinta @laatupoikkeamat/listaus
        :valitse-fn #(reset! laatupoikkeamat/listaus %)
        :format-fn #(case %
-                    :kaikki "Kaikki"
-                    :kasitellyt "Käsitellyt (päätös tehty)"
-                    :selvitys "Odottaa urakoitsijan selvitystä"
-                    :omat "Minun kirjaamat / kommentoimat"
-                    :poikkeamaraportilliset "Poikkeamaraportilliset")}
+                     :kaikki "Kaikki"
+                     :kasitellyt "Käsitellyt (päätös tehty)"
+                     :selvitys "Odottaa urakoitsijan selvitystä"
+                     :omat "Minun kirjaamat / kommentoimat"
+                     :poikkeamaraportilliset "Poikkeamaraportilliset")}
       [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
 
      [urakka-valinnat/aikavali]
 
      (let [oikeus? @laatupoikkeamat/voi-kirjata?]
        (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                         oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
-        [napit/uusi "Uusi laatupoikkeama"
-         #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-         {:disabled (not oikeus?)}]))
+         (not oikeus?)
+         [yleiset/tooltip {} :%
+          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                          oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+         [napit/uusi "Uusi laatupoikkeama"
+          #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+          {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
@@ -66,8 +67,8 @@
                (= :tiemerkinta (:nakyma optiot)))
          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
-                 (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                       :nimi (get-in rivi [:yllapitokohde :nimi])}))}
+                 (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                               :nimi (get-in rivi [:yllapitokohde :nimi])}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        {:otsikko "TR-osoite"
         :nimi :tr
@@ -93,13 +94,13 @@
     (komp/kuuntelija :laatupoikkeama-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %2)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (kartta-tiedot/kasittele-infopaneelin-linkit!
-                          {:laatupoikkeama {:toiminto (fn [lp]
-                                                        (reset! laatupoikkeamat/valittu-laatupoikkeama-id
-                                                                (:id (vastaava-laatupoikkeama lp))))
-                                            :teksti "Valitse laatupoikkeama"}})
-                        (nav/vaihda-kartan-koko! :M))
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:laatupoikkeama {:toiminto (fn [lp]
+                                                         (reset! laatupoikkeamat/valittu-laatupoikkeama-id
+                                                                 (:id (vastaava-laatupoikkeama lp))))
+                                             :teksti "Valitse laatupoikkeama"}})
+                         (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [optiot]
