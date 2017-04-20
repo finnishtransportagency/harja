@@ -53,7 +53,6 @@
     (is (= 200 (:status vastaus)))
     (is (= 6 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
-    (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
@@ -268,8 +267,7 @@
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))]
-    (is (= 400 (:status vastaus)))
-    (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+    (is (= 400 (:status vastaus)))))
 
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -381,13 +379,12 @@
 
     (let [aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
-                                                 tiemerkinta_loppu, tiemerkinta_takaraja FROM yllapitokohteen_aikataulu
+                                                 tiemerkinta_loppu FROM yllapitokohteen_aikataulu
                                                  WHERE yllapitokohde = " kohde)))]
       ;; Uudet päällystyksen pvm:t tallentuivat oikein
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
       (is (some? (get aikataulutiedot 2)))
-      (is (some? (get aikataulutiedot 5)))
       ;; Tiemerkinnän tiedot eivät päivity, koska kyseessä ei ole tiemerkintäurakka
       (is (= (get aikataulutiedot 3) (get vanhat-aikataulutiedot 3)))
       (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
@@ -417,6 +414,7 @@
       ;; Valittu tiemerkintäurakka on valittu suorittamaan kyseinen ylläpitokohde, joten pvm:t päivittyvät:
       (is (some? (get aikataulutiedot 3)))
       (is (some? (get aikataulutiedot 4))))))
+
 
 (deftest aikataulun-kirjaaminen-paallystykseen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -494,6 +492,22 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+
+(deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
+    (is (= 400 (:status vastaus)))))
+
+(deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-tiemerkintakayttajana
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
+    (is (= 400 (:status vastaus)))))
 
 (deftest avoimen-kohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -637,7 +651,6 @@
       (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
       (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
-
 
 (deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
