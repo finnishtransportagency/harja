@@ -32,7 +32,7 @@ export default React.createClass({
           <h4>{notice.title}</h4>
         </div>
         <div className="column row">
-          <div className="harja-date harja-icon-clock">{notice.date}</div>
+          <div className="harja-date harja-icon-clock">{notice.displayDate}</div>
         </div>
         <div className="column row">
           <h5>{notice.short}</h5>

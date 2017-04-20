@@ -4019,6 +4019,28 @@ a.harja-notice-link {
 .harja-noticelist-item {
   margin-bottom: 1em; }
 
+.harja-newslist {
+  border-left: 0;
+  border-right: 0;
+  padding: 0 1em 1em 1em; }
+  .harja-newslist ul {
+    margin-left: 0; }
+
+.harja-newslist-item {
+  color: white;
+  padding-bottom: 1em; }
+  .harja-newslist-item .harja-date {
+    height: 1.5em;
+    font-weight: bold;
+    padding-left: 0;
+    color: white;
+    float: right; }
+
+a.harja-news-link {
+  color: white;
+  float: left;
+  text-align: left; }
+
 .harja-care-noticelist {
   padding-top: 1em;
   border-top: 0.5em solid #9eb83d;
@@ -4068,6 +4090,9 @@ a.harja-notice-link {
   background-color: #3db7e4; }
 
 .harja-hero {
+  height: 100%; }
+
+.harja-hero-large {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
   background-position: center;
@@ -4076,15 +4101,22 @@ a.harja-notice-link {
   background-color: #c8c8c8;
   color: white;
   padding-bottom: 2em;
-  padding-top: 20%;
+  padding-top: 2em;
   height: 100%; }
-  .harja-hero p {
+  .harja-hero-large p {
     padding-bottom: 2em; }
-  .harja-hero .harja-more {
+  .harja-hero-large .harja-more {
     margin: auto;
     width: 50%; }
-    .harja-hero .harja-more a {
+    .harja-hero-large .harja-more a {
       width: 100%; }
+
+.harja-hero-small {
+  background-color: #4b4b4b;
+  color: white;
+  padding-bottom: 2em;
+  padding-top: 2em;
+  height: 100%; }
 
 .harja-devlinks {
   margin-left: 0;
