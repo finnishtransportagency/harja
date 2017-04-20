@@ -51,7 +51,7 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
-      (let [tallennettu-sopimus (if (id-olemassa? (:id sopimus))
+      (let [tallennettu-sopimus (if (id-olemassa? (::sopimus/id sopimus))
                                   (paivita-sopimusta! db user sopimus)
                                   (luo-uusi-sopimus! db user sopimus))]
 
