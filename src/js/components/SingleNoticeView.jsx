@@ -44,6 +44,11 @@ export default React.createClass({
           data: {action: Events.CATEGORY, category: Category.FAQ},
           buttonStyle: 'harja-breadcrumb'}
         break;
+      case Category.WATERWAYS:
+        categoryLink = {title: 'Vesiväylät',
+          data: {action: Events.CATEGORY, category: Category.WATERWAYS},
+          buttonStyle: 'harja-breadcrumb'}
+        break;
     }
 
     return (

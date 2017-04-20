@@ -14,6 +14,7 @@ export default React.createClass({
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}, buttonStyle: 'large button'},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}, buttonStyle: 'large button'},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
+      {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}, buttonStyle: 'large button'},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
     ];
 
@@ -21,6 +22,7 @@ export default React.createClass({
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
+      {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
     ];
 

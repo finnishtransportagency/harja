@@ -253,6 +253,12 @@ a.harja-notice-link {
   border-bottom: $harja-list-bottom-height solid $grey-light;
 }
 
+.harja-waterways-noticelist {
+  padding-top: 1em;
+  border-top: $harja-list-top-height solid $blue;
+  border-bottom: $harja-list-bottom-height solid $grey-light;
+}
+
 .harja-care {
   a {
     background-color: $green;
@@ -283,6 +289,16 @@ a.harja-notice-link {
   }
 }
 
+.harja-waterways {
+  a {
+    background-color: $blue;
+  }
+  a:hover,
+  a:focus {
+    background-color: $blue-light;
+  }
+}
+
 .harja-hero {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
@@ -292,7 +308,9 @@ a.harja-notice-link {
   background-color: $grey-light;
   color: white;
   padding-bottom: 2em;
-  padding-top:  2em;
+  padding-top:  20%;
+
+  height: 100%;
 
   p {
     padding-bottom: 2em;
@@ -308,7 +326,6 @@ a.harja-notice-link {
 }
 
 .harja-devlinks {
-  background-color: $blue-light;
   margin-left: 0;
   margin-right: 0;
   a {

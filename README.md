@@ -76,7 +76,7 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		"images": ["/images/Tripla.jpg"]
 	},
-  {
+	{
 		"date": "2016-02-30",
 		"title": "Tiedote #3",
 		"short": "Lorem ipsum dolor sit amet",

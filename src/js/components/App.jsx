@@ -14,6 +14,7 @@ export default React.createClass({
     initialState[Category.MAINTENANCE] = []
     initialState[Category.FAQ] = []
     initialState[Category.CONTENT] = []
+    initialState[Category.WATERWAYS] = []
     return initialState;
   },
 
@@ -25,18 +26,21 @@ export default React.createClass({
     const careUrl = test + 'care.json';
     const maintenanceUrl = test + 'maintenance.json';
     const faqUrl = test + 'faq.json';
+    const waterUrl = test + 'faq.json';
 
     if (param === 'test') {
       // Slow down fetching for development
       setTimeout(() => { this.getNotices(careUrl, Category.CARE); }, 500);
       setTimeout(() => { this.getNotices(maintenanceUrl, Category.MAINTENANCE); }, 3000);
       setTimeout(() => { this.getNotices(faqUrl, Category.FAQ); }, 5000);
+      setTimeout(() => { this.getNotices(waterUrl, Category.WATERWAYS); }, 5000);
       setTimeout(() => { this.getContent(); }, 5000);
     }
     else {
       this.getNotices(careUrl, Category.CARE);
       this.getNotices(maintenanceUrl, Category.MAINTENANCE);
       this.getNotices(faqUrl, Category.FAQ);
+      this.getNotices(waterUrl, Category.WATERWAYS);
       this.getContent();
     }
   },
@@ -49,6 +53,8 @@ export default React.createClass({
         return 'Ylläpitötiedote';
       case Category.FAQ:
         return 'Koulutusvideo';
+      case Category.WATERWAYS:
+        return 'Vesiväylät';
       default:
         return 'Tiedote';
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import NavButton from './NavButton.jsx'
+import DevLinks from './DevLinks.jsx';
 import {Events, Category} from '../enums.js';
 
 export default React.createClass({
@@ -26,6 +27,13 @@ export default React.createClass({
       </div>
     );
 
+    const linkWater = {title: "Vesiväylät", data: {action: Events.CATEGORY, category: Category.WATERWAYS}};
+    const moreWaterEl = (
+      <div className="harja-more harja-waterways">
+        <NavButton item={linkWater} />
+      </div>
+    );
+
     return (
       <section className="harja-hero show-for-large">
         <div className="row column align-middle text-center">
@@ -39,10 +47,11 @@ export default React.createClass({
               {moreMaintenanceEl}
             </div>
             <div className="large-4 column">
-              {moreFaqEl}
+              {moreWaterEl}
             </div>
           </div>
         </div>
+        <DevLinks />
       </section>
     );
   }

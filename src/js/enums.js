@@ -2,7 +2,8 @@ export const Category = {
   CARE: 'care',
   MAINTENANCE: 'maintenance',
   FAQ: 'faq',
-  CONTENT: 'content'
+  CONTENT: 'content',
+  WATERWAYS: 'waterways'
 };
 
 export const Events = {

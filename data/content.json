@@ -1,23 +1,30 @@
 [
-	{
-		"category": "care",
-		"title": "Teiden hoito",
+  {
+    "category": "care",
+    "title": "Teiden hoito",
     "short": "",
     "body": "HARJA on ollut käytössä teiden hoidon urakoissa 1.10.2016 lähtien. Uusia ominaisuuksia toteutetaan HARJAan tarpeen mukaan. Tietoa toteutusaikatauluista jaetaan tällä sivustolla.",
     "images": ["images/hoidon-aikataulu-2016.png"]
-	},
+  },
   {
-		"category": "maintenance",
-		"title": "Teiden ylläpito",
+    "category": "maintenance",
+    "title": "Teiden ylläpito",
     "short": "",
     "body": "Ylläpidon HARJA otetaan käyttöön huhtikuun 2017 aikana. ",
     "images": ["images/yllapidon_aikataulu.png"]
-	},
+  },
   {
     "category": "faq",
     "title": "Koulutusvideot",
     "short": "",
     "body": "Koulutusvideoita HARJA:n käyttöönoton tueksi.",
+    "images": []
+  },
+  {
+    "category": "waterways",
+    "title": "Vesiväylät",
+    "short": "",
+    "body": "Uutisia Harjan käytöstä vesiväylillä",
     "images": []
   }
 ]

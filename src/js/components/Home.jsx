@@ -78,8 +78,8 @@ export default React.createClass({
               </div>
             </div>
             <div className="small-12 medium-12 large-4  columns">
-              <div className="harja-noticelist harja-faq-noticelist">
-                <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+              <div className="harja-noticelist harja-waterways-noticelist">
+                <NoticeList notices={faq} category={Category.WATERWAYS} shorten={3}/>
               </div>
             </div>
           </div>
@@ -91,8 +91,6 @@ export default React.createClass({
       <div id="harja-home">
         <Nav />
         {heroEl}
-        {devEl}
-        {mainEl}
         {singleNoticeEl}
         {noticeTypeEl}
         <Footer />
