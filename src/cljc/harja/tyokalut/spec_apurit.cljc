@@ -24,6 +24,8 @@
         elementti))
     mappi))
 
+(declare namespacefy)
+
 (defn- namespacefy-map [map-x {:keys [ns except custom inner] :as options}]
   (let [except (or except #{})
         custom (or custom {})
