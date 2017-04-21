@@ -77,20 +77,24 @@
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]
   (fn [ilmoitukset]
-    (send! kanava
-           (aja-virhekasittelyn-kanssa
-             "laheta-ilmoitus"
-             nil
-             nil
-             (fn []
-               (let [data {:ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus
-                                                               (konversio/alaviiva->rakenne ilmoitus))) ilmoitukset)}
-                     vastaus (tee-vastaus json-skeemat/ilmoitusten-haku data)]
-                 (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
-                 (doseq [ilmoitus ilmoitukset]
-                   (notifikaatiot/ilmoita-lahetetysta-ilmoituksesta tapahtumat (:ilmoitusid ilmoitus) :api))
-                 vastaus)))
-           sulje-lahetyksen-jalkeen?)))
+    (send!
+     kanava
+     (aja-virhekasittelyn-kanssa
+      "laheta-ilmoitus"
+      nil
+      nil
+      (fn []
+        (let [data {:ilmoitukset (mapv (fn [ilmoitus]
+                                         (sanomat/rakenna-ilmoitus
+                                          (konversio/alaviiva->rakenne ilmoitus)))
+                                       ilmoitukset)}
+              vastaus (tee-vastaus json-skeemat/ilmoitusten-haku data)]
+          (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
+          (doseq [ilmoitus ilmoitukset]
+            (notifikaatiot/ilmoita-lahetetysta-ilmoituksesta tapahtumat
+                                                             (:ilmoitusid ilmoitus) :api))
+          vastaus)))
+     sulje-lahetyksen-jalkeen?)))
 
 (defn pura-ilmoitusten-kuuntelun-kutsuparametrit [request]
   (let [{urakka-id :id
@@ -153,7 +157,7 @@
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
-        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
+           (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
                          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
   (stop [{http :http-palvelin :as this}]
