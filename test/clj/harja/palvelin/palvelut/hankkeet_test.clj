@@ -40,7 +40,7 @@
     (is (>= (count vastaus) 3))))
 
 (deftest hankkeen-tallennus-ja-paivitys-toimii
-  (let [testihankkeet (map #(dissoc % :id) (gen/sample (s/gen ::hanke/hanke)))]
+  (let [testihankkeet (map #(dissoc % :id) (gen/sample (s/gen ::hanke/tallenna-hanke-kysely)))]
 
     (doseq [hanke testihankkeet]
       ;; Luo uusi hanke
@@ -55,7 +55,7 @@
                                             ::hanke/id (::hanke/id hanke-kannassa))
               paivitetty-hanke-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :tallenna-hanke +kayttaja-jvh+
-                                                        hanke)]
+                                                        paivitetty-hanke)]
 
           ;; Hanke päivittyi
           (is (= (::hanke/nimi paivitetty-hanke-kannassa (::hanke/nimi hanke)))))))))
