@@ -7,6 +7,7 @@
             [tuck.core :as tuck]
             [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
+            [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.domain.sopimus :as sopimus-domain]
@@ -235,21 +236,21 @@
           fail! (tuck/send-async! ->SahkeeseenEiLahetetty urakka)]
       (go
         (try
-          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (:id urakka)))]
+          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (::u/id urakka)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
           (catch :default e
             (fail! nil)
             (throw e)))))
-    (update app :kaynnissa-olevat-sahkelahetykset conj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset conj (::u/id urakka)))
 
   SahkeeseenLahetetty
   (process-event [{tulos :tulos urakka :urakka} app]
-    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka)))
 
   SahkeeseenEiLahetetty
   (process-event [{virhe :virhe urakka :urakka} app]
-    (viesti/nayta! [:span "Urakan '" (:nimi urakka) "' lähetys epäonnistui."] :danger)
-    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka))))
+    (viesti/nayta! [:span "Urakan '" (::u/nimi urakka) "' lähetys epäonnistui."] :danger)
+    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka))))
 
