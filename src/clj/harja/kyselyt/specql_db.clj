@@ -3,5 +3,5 @@
             [clojure.string :refer [trim]]
             [clojure.java.io :as io]))
 
-(def db (when (.canRead (io/file ".specql-db"))
+(defonce db (when (.canRead (io/file ".specql-db"))
           {:connection-uri (trim (slurp ".specql-db"))}))

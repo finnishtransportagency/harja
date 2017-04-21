@@ -90,13 +90,13 @@
           katuosoite (::o/katuosoite urakoitsija)
           ytunnus (::o/ytunnus urakoitsija)]
       (let [tallennettu-urakoitsija (if (id-olemassa? id)
-                                      (q/paivita-urakoitsija! db
-                                                              {:id id
-                                                               :nimi nimi
-                                                               :ytunnus ytunnus
-                                                               :katuosoite katuosoite
-                                                               :postinumero postinumero
-                                                               :kayttaja (:id user)})
+                                      (q/paivita-urakoitsija<! db
+                                                               {:id id
+                                                                :nimi nimi
+                                                                :ytunnus ytunnus
+                                                                :katuosoite katuosoite
+                                                                :postinumero postinumero
+                                                                :kayttaja (:id user)})
                                       (q/luo-urakoitsija<! db
                                                            {:nimi nimi
                                                             :ytunnus ytunnus
