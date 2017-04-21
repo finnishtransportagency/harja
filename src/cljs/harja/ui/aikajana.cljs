@@ -101,14 +101,15 @@
 (defn- kuukausiotsikot
   "Väliotsikot kuukausille"
   [paiva-x korkeus kuukaudet]
-  (for [{:keys [alku loppu otsikko]} kuukaudet
-        :let [x (paiva-x alku)]]
-    ^{:key otsikko}
-    [:g
-     [:text {:x (+ 5 x) :y 10} otsikko]
-     [:line {:x1 x :y1 0
-             :x2 x :y2 korkeus
-             :style {:stroke "gray"}}]]))
+  [:g.aikajana-kuukausiotsikot
+   (for [{:keys [alku loppu otsikko]} kuukaudet
+         :let [x (paiva-x alku)]]
+     ^{:key otsikko}
+     [:g
+      [:text {:x (+ 5 x) :y 10} otsikko]
+      [:line {:x1 x :y1 0
+              :x2 x :y2 korkeus
+              :style {:stroke "gray"}}]])])
 
 (defn- tooltip* [{:keys [x y text] :as tooltip}]
   (when tooltip
