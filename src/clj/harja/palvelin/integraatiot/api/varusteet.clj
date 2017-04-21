@@ -136,7 +136,7 @@
           muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
-        {}))))
+        {:varusteet []}))))
 
 (defn hae-varuste [tierekisteri parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
@@ -148,7 +148,7 @@
           muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
-        {}))))
+        {:varusteet []}))))
 
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
