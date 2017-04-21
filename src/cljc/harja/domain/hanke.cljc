@@ -1,16 +1,19 @@
 (ns harja.domain.hanke
-  "Määrittelee hankkeeseen liittyvät speksit"
-  (:require [clojure.spec :as s]
-            [harja.domain.urakka :as u]
-            [harja.tyokalut.spec-apurit :as spec-apurit]
-    #?@(:clj [
-            [clojure.future :refer :all]])))
+  "Määrittelee hankkeen specit"
+  #?@(:clj [(:require [clojure.spec :as s]
+                      [harja.kyselyt.specql-db :refer [db]]
+                      [specql.core :refer [define-tables]]
+                      [harja.domain.urakka :as u]
+                      [clojure.future :refer :all])]
+      :cljs [(:require [clojure.spec :as s]
+               [specql.impl.registry]
+               [harja.domain.urakka :as u]
+               [specql.data-types])
+             (:require-macros
+               [harja.kyselyt.specql-db :refer [db]]
+               [specql.core :refer [define-tables]])]))
 
-;; TODO Käytä define-tables
-(s/def ::id ::spec-apurit/postgres-serial)
-(s/def ::alkupvm inst?)
-(s/def ::loppupvm inst?)
-(s/def ::nimi string?)
+(define-tables db ["hanke" ::hanke])
 
 ;; Haut
 
