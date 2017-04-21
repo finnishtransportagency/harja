@@ -46,14 +46,14 @@
                              (gen/sample (s/gen ::harja.domain.sopimus/tallenna-sopimus-kysely)))]
 
     (doseq [sopimus testisopimukset]
-      ;; Luo uusi hanke
+      ;; Luo uusi sopimus
       (let [sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-sopimus +kayttaja-jvh+
                                              sopimus)]
         ;; Uusi sopimus löytyy vastauksesesta
         (is (= (::sopimus/nimi sopimus-kannassa (::sopimus/nimi sopimus))))
 
-        ;; Päivitetään hanke
+        ;; Päivitetään sopimus
         (let [paivitetty-sopimus (assoc sopimus ::sopimus/nimi (str (::sopimus/nimi sopimus) " päivitetty")
                                                 ::sopimus/id (::sopimus/id sopimus-kannassa)
                                                 ::sopimus/paasopimus nil)
@@ -61,5 +61,5 @@
                                                           :tallenna-sopimus +kayttaja-jvh+
                                                           paivitetty-sopimus)]
 
-          ;; sopimus päivittyi
+          ;; Sopimus päivittyi
           (is (= (::sopimus/nimi paivitetty-sopimus-kannassa (::sopimus/nimi sopimus)))))))))
