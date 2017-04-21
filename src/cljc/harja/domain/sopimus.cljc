@@ -6,25 +6,25 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             #?@(:clj [[clojure.future :refer :all]])))
 
+;; TODO KÄYTÄ define-tables!
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::nimi string?)
 (s/def ::alkupvm inst?)
 (s/def ::loppupvm inst?)
 (s/def ::paasopimus (s/nilable ::spec-apurit/postgres-serial))
 
-(s/def ::sopimus (s/keys
-                   :req [::nimi ::alkupvm ::loppupvm]
-                   :opt [::id ::paasopimus]))
-
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus
-  (s/coll-of ::sopimus))
+  (s/coll-of (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus])))
 
 ;; Tallennukset
 
-(s/def ::tallenna-sopimus-kysely ::sopimus)
-(s/def ::tallenna-sopimus-vastaus ::sopimus)
+(s/def ::tallenna-sopimus-kysely (s/keys
+                                   :req [::nimi ::alkupvm ::loppupvm]
+                                   :opt [::id ::paasopimus]))
+
+(s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus]))
 
 
 (defn paasopimus [sopimukset]
