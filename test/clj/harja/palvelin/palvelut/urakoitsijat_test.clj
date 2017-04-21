@@ -57,3 +57,8 @@
 
     (is (set? vastaus))
     (is (>= (count vastaus) 1))))
+
+(deftest vesivaylaurakoitsijoiden-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :vesivayla-urakoitsijat +kayttaja-jvh+ {})]
+    (is (>= (count vastaus) 2))))
