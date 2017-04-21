@@ -23,8 +23,8 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :sopimukset (component/using
-                                    (sopimukset/->Sopimukset)
-                                    [:db :http-palvelin])))))
+                                      (sopimukset/->Sopimukset)
+                                      [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -38,3 +38,28 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-sopimukset +kayttaja-jvh+ {})]
     (is (>= (count vastaus) 3))))
+
+(deftest sopimuksen-tallennus-ja-paivitys-toimii
+  (let [testisopimukset (map #(-> %
+                                  (assoc :paasopimus nil)
+                                  (dissoc  :id))
+                             (gen/sample (s/gen ::harja.domain.sopimus/tallenna-sopimus-kysely)))]
+
+    (doseq [sopimus testisopimukset]
+      ;; Luo uusi hanke
+      (let [sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-sopimus +kayttaja-jvh+
+                                             sopimus)]
+        ;; Uusi sopimus löytyy vastauksesesta
+        (is (= (::sopimus/nimi sopimus-kannassa (::sopimus/nimi sopimus))))
+
+        ;; Päivitetään hanke
+        (let [paivitetty-sopimus (assoc sopimus ::sopimus/nimi (str (::sopimus/nimi sopimus) " päivitetty")
+                                                ::sopimus/id (::sopimus/id sopimus-kannassa)
+                                                ::sopimus/paasopimus nil)
+              paivitetty-sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                          :tallenna-sopimus +kayttaja-jvh+
+                                                          paivitetty-sopimus)]
+
+          ;; sopimus päivittyi
+          (is (= (::sopimus/nimi paivitetty-sopimus-kannassa (::sopimus/nimi sopimus)))))))))
