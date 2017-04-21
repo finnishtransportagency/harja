@@ -17,6 +17,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
+            [harja.ui.debug :refer [debug]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
@@ -56,7 +57,7 @@
        #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
 
 (defn voi-tallentaa? [urakka]
-  (and (> (count (filter (comp id-olemassa? :id) (:sopimukset urakka))) 0)))
+  (and (> (count (filter (comp id-olemassa? ::u/id) (:sopimukset urakka))) 0)))
 
 (defn luontilomake [e! app]
   (komp/luo
@@ -65,13 +66,14 @@
                     haetut-hallintayksikot haetut-hankkeet haetut-urakoitsijat
                     haetut-sopimukset] :as app}]
       [:div
+       [debug app]
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
         {:disabled tallennus-kaynnissa?}]
        (let [ilman-poistettuja #(remove :poistettu %)
              urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
          [lomake/lomake
-         {:otsikko (if (:id valittu-urakka)
+         {:otsikko (if (::u/id valittu-urakka)
                      "Muokkaa urakkaa"
                      "Luo uusi urakka")
           :muokkaa! #(e! (tiedot/->UrakkaaMuokattu (lomake/ilman-lomaketietoja %)))
@@ -87,12 +89,12 @@
                                        (not (lomake/voi-tallentaa? urakka)))
                          :tallennus-kaynnissa? tallennus-kaynnissa?
                          }])}
-         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
+         [{:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string
            :pakollinen? true}
           (lomake/rivi
-            {:otsikko "Alkupäivämäärä" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-            {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
-             :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
+            {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true}
+            {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
+             :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
           (lomake/rivi
             (if haetut-hallintayksikot
               {:otsikko "Hallintayksikkö"
@@ -100,7 +102,7 @@
                :tyyppi :valinta
                :pakollinen? true
                :valinnat haetut-hallintayksikot
-               :valinta-nayta #(if % (:nimi %) "- Valitse hallintayksikkö -")
+               :valinta-nayta #(if % (::o/nimi %) "- Valitse hallintayksikkö -")
                :aseta (fn [rivi arvo] (assoc rivi :hallintayksikko (dissoc arvo :alue :type)))}
               {:otsikko "Hallintayksikkö"
                :nimi :hallintayksikko
@@ -112,7 +114,7 @@
                :tyyppi :valinta
                :pakollinen? true
                :valinnat haetut-urakoitsijat
-               :valinta-nayta #(if % (:nimi %) "- Valitse urakoitsija -")
+               :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
                :aseta (fn [rivi arvo] (assoc rivi :urakoitsija arvo))}
               {:otsikko "Urakoitsija"
                :nimi :urakoitsija

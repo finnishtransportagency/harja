@@ -9,6 +9,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
+            [harja.tyokalut.spec-apurit :refer [namespacefy]]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.domain.sopimus :as sopimus-domain]
             [harja.pvm :as pvm]
@@ -203,6 +204,7 @@
       (go
         (try
           (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
+                hallintayksikot-nimiavaruuksilla (namespacefy hallintayksikot {:ns :harja.domain.organisaatio})
                 hankkeet (async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
                 sopimukset (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))
@@ -212,7 +214,7 @@
                          :sopimukset sopimukset}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)
-              (tulos! vastaus)))
+              (tulos! (assoc vastaus :hallintayksikot hallintayksikot-nimiavaruuksilla))))
           (catch :default e
             (fail! nil)
             (throw e)))))
@@ -227,7 +229,7 @@
 
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
-    (viesti/nayta! [:span "Hupsista, ongelmia Harjan kanssa juttelussa."] :danger)
+    (viesti/nayta! "Hupsista, ongelmia Harjan kanssa juttelussa." :danger)
     app)
 
   LahetaUrakkaSahkeeseen
