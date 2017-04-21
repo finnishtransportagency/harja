@@ -94,7 +94,10 @@
            [:svg {:width leveys :height korkeus
                   :viewBox (str "0 0 " leveys " " korkeus)}
 
-
+            [:text {:x (- alku-x 10) :y (- alku-y 10)
+                    :text-anchor "end"
+                    :font-size 8}
+             "VIIKKO"]
             [:g.aikajana-paivaviivat
              (loop [acc (list)
                     viikko nil
