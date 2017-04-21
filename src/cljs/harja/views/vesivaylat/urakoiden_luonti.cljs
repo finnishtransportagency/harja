@@ -177,7 +177,7 @@
     [(str luotu " '" (:nimi asia) "' luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
 
 (defn muokkaus-tiedot [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
-  [:div "TÄnne tulee metatietoja"]
+  [:div "Tänne tulee metatietoja"]
   (let [uusin (tiedot/uusin-lahetys sahkelahetykset)]
     [apply tietoja
     {:otsikot-omalla-rivilla? true}
