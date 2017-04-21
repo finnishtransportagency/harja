@@ -63,6 +63,65 @@
    []
    paivat))
 
+(defn- paivat-ja-viikot
+  "Näyttää pystyviivan jokaisen päivän kohdalla ja viikon vaihtuessa maanantain
+  kohdalle viikonnumero teksti ylös."
+  [paiva-x alku-x alku-y korkeus paivat]
+  [:g.aikajana-paivaviivat
+
+   ;; Label "VIIKKO" viikonpäivien kohdalle
+   [:text {:x (- alku-x 10) :y (- alku-y 10)
+           :text-anchor "end"
+           :font-size 8}
+    "VIIKKO"]
+
+   (loop [acc (list)
+          viikko nil
+          [p & paivat] paivat]
+     (if-not p
+       acc
+       (let [x (paiva-x p)
+             viikko-nyt (.getWeekNumber p)
+             acc (conj acc
+                       ^{:key p}
+                       [:line {:x1 x :y1 (- alku-y 5)
+                               :x2 x :y2 korkeus
+                               :style {:stroke "lightGray"}}])]
+         (if (and (= 1 (.getWeekday p)) (not= viikko-nyt viikko))
+           ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
+           (recur (conj acc
+                        ^{:key viikko-nyt}
+                        [:text {:x x :y (- alku-y 10)
+                                :font-size 8}
+                         (str viikko-nyt)])
+                  viikko-nyt
+                  paivat)
+           (recur acc viikko paivat)))))])
+
+(defn- kuukausiotsikot
+  "Väliotsikot kuukausille"
+  [paiva-x korkeus kuukaudet]
+  (for [{:keys [alku loppu otsikko]} kuukaudet
+        :let [x (paiva-x alku)]]
+    ^{:key otsikko}
+    [:g
+     [:text {:x (+ 5 x) :y 10} otsikko]
+     [:line {:x1 x :y1 0
+             :x2 x :y2 korkeus
+             :style {:stroke "gray"}}]]))
+
+(defn- tooltip* [{:keys [x y text] :as tooltip}]
+  (when tooltip
+    [:g
+     [:rect {:x (- x 110) :y (- y 14) :width 220 :height 26
+             :rx 10 :ry 10
+             :style {:fill "black"}}]
+     [:text {:x x :y (+ y 4)
+             :font-size 10
+             :style {:fill "white"}
+             :text-anchor "middle"}
+      text]]))
+
 (defn+ aikajana
   "Aikajanakomponentti, joka näyttää gantt kaavion tyylisen aikajanan.
   Komponentti sovittaa alku/loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
@@ -93,34 +152,9 @@
            [:svg {:width leveys :height korkeus
                   :viewBox (str "0 0 " leveys " " korkeus)}
 
-            [:text {:x (- alku-x 10) :y (- alku-y 10)
-                    :text-anchor "end"
-                    :font-size 8}
-             "VIIKKO"]
-            [:g.aikajana-paivaviivat
-             (loop [acc (list)
-                    viikko nil
-                    [p & paivat] paivat]
-               (if-not p
-                 acc
-                 (let [x (paiva-x p)
-                       viikko-nyt (.getWeekNumber p)
-                       acc (conj acc
-                                 ^{:key p}
-                                 [:line {:x1 x :y1 (- alku-y 5)
-                                         :x2 x :y2 korkeus
-                                         :style {:stroke "lightGray"}}])]
-                   (if (and (= 1 (.getWeekday p)) (not= viikko-nyt viikko))
-                     ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
-                     (recur (conj acc
-                                  ^{:key viikko-nyt}
-                                  [:text {:x x :y (- alku-y 10)
-                                          :font-size 8}
-                                   (str viikko-nyt)])
-                            viikko-nyt
-                            paivat)
-                     (recur acc viikko paivat)))))]
+            [paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat]
 
+            ;; Renderöidään itse aikajanarivit
             (map-indexed
              (fn [i {::keys [ajat] :as rivi}]
                (let [y (rivin-y i)]
@@ -155,26 +189,7 @@
                    (::otsikko rivi)]]))
              rivit)
 
-            ;; Tehdään eri kuukausille väliotsikot
-            (for [{:keys [alku loppu otsikko]} kuukaudet
-                  :let [x (paiva-x alku)]]
-              ^{:key otsikko}
-              [:g
-               [:text {:x (+ 5 x) :y 10} otsikko]
-               [:line {:x1 x :y1 0
-                       :x2 x :y2 korkeus
-                       :style {:stroke "gray"}}]])
+            [kuukausiotsikot paiva-x korkeus kuukaudet]
 
             ;; tooltip, jos on
-            (when-let [tooltip @tooltip]
-              (let [{:keys [x y text]} tooltip]
-                [:g
-                 [:rect {:x (- x 110) :y (- y 14) :width 220 :height 26
-                         :rx 10 :ry 10
-                         :style {:fill "black"}}]
-                 [:text {:x x :y (+ y 4)
-                         :font-size 10
-                         :style {:fill "white"}
-                         :text-anchor "middle"}
-                  text]]))
-            ]])))))
+            [tooltip* @tooltip]]])))))
