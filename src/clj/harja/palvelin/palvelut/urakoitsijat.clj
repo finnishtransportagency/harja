@@ -78,11 +78,8 @@
                                (map #(konv/alaviiva->rakenne %))
                                (q/hae-vesivayla-urakoitsijat db))
                          {:urakka :urakat})]
-      (log/debug "SAADAAN: " (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
-                                                        :inner {:urakat {:ns :harja.domain.urakka}}}))
       (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
-                                 :inner {:urakat {:ns :harja.domain.urakka}}})
-      )))
+                                 :inner {:urakat {:ns :harja.domain.urakka}}}))))
 
 (defn tallenna-urakoitsija! [db user {:keys [id nimi postinumero katuosoite ytunnus]}]
   (when (ominaisuus-kaytossa? :vesivayla)
