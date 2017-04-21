@@ -71,7 +71,7 @@
                   [ajax-loader "Haetaan sopimuksia"]
                   "Sopimuksia ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseSopimus %))}
-        [{:otsikko "Nimi" :nimi ::sopimus/nimi}
+        [{:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string}
          {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Pääsopimus" :nimi ::sopimus/paasopimus

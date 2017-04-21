@@ -84,10 +84,10 @@
                   [ajax-loader "Haetaan urakoitsijoita"]
                   "Urakoitsijoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakoitsija %))}
-        [{:otsikko "Nimi" :nimi ::o/nimi}
-         {:otsikko "Y-tunnus" :nimi ::o/ytunnus :pituus-max 9}
-         {:otsikko "Katuosoite" :nimi ::o/katuosoite}
-         {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5}
+        [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string }
+         {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pituus-max 9}
+         {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
+         {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
          {:otsikko "Urakoita (Alk./Käyn./Päät.)" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
         haetut-urakoitsijat]])))
