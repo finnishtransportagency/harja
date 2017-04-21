@@ -22,18 +22,17 @@
 
 (defn tallenna-hanke
   "Tallentaa yksittäisen hankkeen ja palauttaa sen tiedot"
-  [db user {:keys [hanke] :as tiedot}]
+  [db user hanke]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (log/debug "Tallennetaan hanke. Payload: " tiedot)
     (jdbc/with-db-transaction [db db]
       (let [tallennus-params {:nimi (::hanke/nimi hanke)
                               :alkupvm (::hanke/alkupvm hanke)
                               :loppupvm (::hanke/loppupvm hanke)
                               :kayttaja (:id user)}
             {:keys [id nimi alkupvm loppupvm] :as tallennettu-hanke}
-            (if (id/id-olemassa? hanke)
-              (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (:id hanke)))
+            (if (id/id-olemassa? (::hanke/id hanke))
+              (q/paivita-harjassa-luotu-hanke<! db (assoc tallennus-params :id (::hanke/id hanke)))
               (q/luo-harjassa-luotu-hanke<! db tallennus-params))]
         {::hanke/id id
          ::hanke/nimi nimi
