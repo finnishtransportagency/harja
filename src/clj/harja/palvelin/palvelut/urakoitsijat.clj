@@ -81,20 +81,30 @@
       (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
                                  :inner {:urakat {:ns :harja.domain.urakka}}}))))
 
-(defn tallenna-urakoitsija! [db user {:keys [id nimi postinumero katuosoite ytunnus]}]
+(defn tallenna-urakoitsija! [db user urakoitsija]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (if (id-olemassa? id)
-      (q/paivita-urakoitsija! db
-                              {:id id
-                               :nimi nimi
-                               :ytunnus ytunnus
-                               :katuosoite katuosoite
-                               :postinumero postinumero
-                               :kayttaja (:id user)})
-      (q/luo-urakoitsija<! db
-                           {:nimi nimi
-                            :ytunnus ytunnus
-                            :katuosoite katuosoite
-                            :postinumero postinumero
-                            :kayttaja (:id user)}))))
+    (let [id (::o/id urakoitsija)
+          nimi (::o/nimi urakoitsija)
+          postinumero (::o/postinumero urakoitsija)
+          katuosoite (::o/katuosoite urakoitsija)
+          ytunnus (::o/ytunnus urakoitsija)]
+      (let [tallennettu-urakoitsija (if (id-olemassa? id)
+                                      (q/paivita-urakoitsija! db
+                                                              {:id id
+                                                               :nimi nimi
+                                                               :ytunnus ytunnus
+                                                               :katuosoite katuosoite
+                                                               :postinumero postinumero
+                                                               :kayttaja (:id user)})
+                                      (q/luo-urakoitsija<! db
+                                                           {:nimi nimi
+                                                            :ytunnus ytunnus
+                                                            :katuosoite katuosoite
+                                                            :postinumero postinumero
+                                                            :kayttaja (:id user)}))]
+        {::o/id (:id tallennettu-urakoitsija)
+         ::o/nimi (:nimi tallennettu-urakoitsija)
+         ::o/postinumero (:postinumero tallennettu-urakoitsija)
+         ::o/katuosoite (:katuosoite tallennettu-urakoitsija)
+         ::o/ytunnus (:ytunnus tallennettu-urakoitsija)}))))

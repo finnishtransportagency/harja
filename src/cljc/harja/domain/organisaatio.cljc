@@ -16,13 +16,13 @@
 ;; Haut
 
 (s/def ::vesivayla-urakoitsijat-vastaus
-  (s/coll-of (s/and ::organisaatio
-                    (s/keys :req [::id ::nimi ::ytunnus ::alkupvm ::loppupvm
-                                  ::katuosoite ::postinumero]))))
+  (s/coll-of (s/keys :req [::id ::nimi ::ytunnus ::katuosoite
+                           ::postinumero ::tyyppi])))
 
 ;; Tallennus
 
-(s/def ::tallenna-urakoitsija-kysely ::organisaatio-insert)
+(s/def ::tallenna-urakoitsija-kysely (s/keys :req [::nimi ::ytunnus ::katuosoite ::postinumero]
+                                             :opt [::id]))
 
-(s/def ::tallenna-urakoitsija-vastaus (s/and ::organisaatio
-                                             (s/keys :req [::id])))
+(s/def ::tallenna-urakoitsija-vastaus (s/keys :req [::id ::nimi ::ytunnus ::katuosoite
+                                                    ::postinumero ::tyyppi]))
