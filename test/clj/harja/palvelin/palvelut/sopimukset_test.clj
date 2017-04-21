@@ -55,8 +55,7 @@
 
         ;; Päivitetään sopimus
         (let [paivitetty-sopimus (assoc sopimus ::sopimus/nimi (str (::sopimus/nimi sopimus) " päivitetty")
-                                                ::sopimus/id (::sopimus/id sopimus-kannassa)
-                                                ::sopimus/paasopimus nil)
+                                                ::sopimus/id (::sopimus/id sopimus-kannassa))
               paivitetty-sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                           :tallenna-sopimus +kayttaja-jvh+
                                                           paivitetty-sopimus)]
