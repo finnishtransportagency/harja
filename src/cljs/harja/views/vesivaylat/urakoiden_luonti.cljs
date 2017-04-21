@@ -5,7 +5,12 @@
             [harja.ui.grid :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
+            [harja.tyokalut.spec-apurit :refer [unnamespacefy]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
+            [harja.domain.urakka :as u]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.hanke :as h]
+            [harja.domain.sopimus :as s]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
@@ -188,16 +193,16 @@
          ["Viimeisin yritys" (pvm/pvm-aika-opt (:lahetetty uusin))
           "Viimeisin onnistunut lähetys" (pvm/pvm-aika-opt (tiedot/uusin-onnistunut-lahetys sahkelahetykset))])
         ["Urakan tietoja ei ole vielä lähetetty!" ""])
-      (muokkaus-otsikko urakka "Urakkaa" "Urakka")
-      (muokkaus-otsikko hanke "Hanketta" "Hanke")
+      (muokkaus-otsikko (unnamespacefy urakka) "Urakkaa" "Urakka")
+      (muokkaus-otsikko (unnamespacefy hanke) "Hanketta" "Hanke")
       (apply
         concat
         (for [sopimus sopimukset]
-         (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
-      (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
+         (muokkaus-otsikko (unnamespacefy sopimus) "Sopimusta" "Sopimus")))
+      (muokkaus-otsikko (unnamespacefy urakoitsija) "Urakoitsijaa" "Urakoitsija"))]))
 
 (defn sahke-nappi [e! {lahetykset :kaynnissa-olevat-sahkelahetykset} urakka]
-  (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))
+  (let [lahetys-kaynnissa? (some? (lahetykset (::u/id urakka)))
         tila (tiedot/urakan-sahke-tila urakka)]
     [:button
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
@@ -246,17 +251,18 @@
        {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
                    [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
                    "Harjaan perustetut vesiväyläurakat")
-        :tunniste :id
+        :tunniste ::u/id
         :tyhja (if (nil? haetut-urakat)
                  [ajax-loader "Haetaan urakoita"]
                  "Urakoita ei löytynyt")
         :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
-       [{:otsikko "Nimi" :nimi :nimi}
-        {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi :hae #(get-in % [:hallintayksikko :nimi])}
-        {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke :nimi])}
+       [{:otsikko "Nimi" :nimi ::u/nimi}
+        {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
+         :hae #(get-in % [:hallintayksikko ::o/nimi])}
+        {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke ::h/nimi])}
         {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
-        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm}
-        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm}
+        {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
+        {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
         {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
          :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
        haetut-urakat]])))

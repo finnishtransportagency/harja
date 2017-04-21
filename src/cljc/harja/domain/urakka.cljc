@@ -4,7 +4,8 @@
   (:require [clojure.spec :as s]
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            #?@(:clj [[clojure.future :refer :all]])))
+    #?@(:clj [
+            [clojure.future :refer :all]])))
 
 ;; TODO Tämä on generoitu käyttäen macroa (define-tables db ["urakka" ::urakka]).
 ;; Jouduttiin expandoimaan käsin, koska figwheel / phantom ei osannut käsitellä makroa sellaisenaan.
@@ -309,10 +310,18 @@
     (clojure.spec/def :harja.domain.urakka/poistettu :specql.data-types/bool)
     (clojure.spec/def :harja.domain.urakka/luotu (clojure.spec/nilable :specql.data-types/timestamp))))
 
+;; Haut
+
+(s/def ::hae-harjassa-luodut-urakat
+  (s/coll-of (s/and ::urakka
+                    (s/keys :req [::hallintayksikko ::urakoitsija ::sopimukset ::hanke]))))
+
 ;; Urakkakohtainen kysely, joka vaatii vain urakan id:n.
 ;; Tätä speciä on hyvä käyttää esim. palveluiden, jotka hakevat
 ;; urakan tietoja, kyselyspecinä.
 (s/def ::urakka-kysely (s/keys :req [::id]))
+
+;; Muut
 
 (defn vesivayla-urakka? [urakka]
   (#{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus

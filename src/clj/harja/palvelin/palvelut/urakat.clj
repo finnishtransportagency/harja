@@ -8,6 +8,7 @@
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.spec-apurit :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
             [harja.id :refer [id-olemassa?]]
             [harja.geo :refer [muunna-pg-tulokset]]
@@ -77,10 +78,10 @@
 
         ;; Aseta alue, jos se löytyy
         (map #(if-let [alueurakka (:alueurakan_alue %)]
-               (-> %
-                   (dissoc :alueurakan_alue)
-                   (assoc :alue alueurakka))
-               (dissoc % :alueurakan_alue)))
+                (-> %
+                    (dissoc :alueurakan_alue)
+                    (assoc :alue alueurakka))
+                (dissoc % :alueurakan_alue)))
 
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
@@ -100,9 +101,9 @@
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
         (map #(assoc %
-               ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
-               :tyyppi (keyword (str/replace (:tyyppi %) " " "-"))
-               :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
+                ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
+                :tyyppi (keyword (str/replace (:tyyppi %) " " "-"))
+                :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
         ;; Käsitellään päällystysurakan tiedot
 
@@ -110,17 +111,17 @@
         (map #(konv/array->vec % :yha_vuodet))
 
         (map #(if (:yha_yhaid %)
-               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
-                                    :yhaid (:yha_yhaid %)
-                                    :yhanimi (:yha_yhanimi %)
-                                    :elyt (:yha_elyt %)
-                                    :vuodet (:yha_vuodet %)
-                                    :kohdeluettelo-paivitetty (:yha_kohdeluettelo_paivitetty %)
-                                    :kohdeluettelo-paivittaja (:yha_kohdeluettelo_paivittaja %)
-                                    :kohdeluettelo-paivittaja-etunimi (:yha_kohdeluettelo_paivittaja_etunimi %)
-                                    :kohdeluettelo-paivittaja-sukunimi (:yha_kohdeluettelo_paivittaja_sukunimi %)
-                                    :sidonta-lukittu? (:yha_sidonta_lukittu %)})
-               %))
+                (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
+                                     :yhaid (:yha_yhaid %)
+                                     :yhanimi (:yha_yhanimi %)
+                                     :elyt (:yha_elyt %)
+                                     :vuodet (:yha_vuodet %)
+                                     :kohdeluettelo-paivitetty (:yha_kohdeluettelo_paivitetty %)
+                                     :kohdeluettelo-paivittaja (:yha_kohdeluettelo_paivittaja %)
+                                     :kohdeluettelo-paivittaja-etunimi (:yha_kohdeluettelo_paivittaja_etunimi %)
+                                     :kohdeluettelo-paivittaja-sukunimi (:yha_kohdeluettelo_paivittaja_sukunimi %)
+                                     :sidonta-lukittu? (:yha_sidonta_lukittu %)})
+                %))
 
         ;; Poista käsitellyt avaimet
 
@@ -251,7 +252,7 @@
       (when-not (empty? poistettavat)
         (log/debug "Poistetaan urakasta " (:id urakka) (count poistettavat) " sopimusta.")
         (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (:id urakka)
-                                                           :sopimukset poistettavat})
+                                                            :sopimukset poistettavat})
               lkm
               (log/debug lkm " sopimusta poistettu onnistuneesti.")))
 
@@ -283,17 +284,25 @@
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (konv/sarakkeet-vektoriin
-      (into []
-            (comp
-              urakka-xf
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
-              (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-              (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
-            (q/hae-harjassa-luodut-urakat db))
-      {:sopimus :sopimukset
-       :sahkelahetys :sahkelahetykset})))
+    (let [urakat (konv/sarakkeet-vektoriin
+                   (into []
+                         (comp
+                           urakka-xf
+                           (map konv/alaviiva->rakenne)
+                           (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
+                           (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
+                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+                         (q/hae-harjassa-luodut-urakat db))
+                   {:sopimus :sopimukset
+                    :sahkelahetys :sahkelahetykset})]
+      (namespacefy urakat {:ns :harja.domain.urakka
+                           ;; Poikkeuksena muutama avain, jotka ovat speksissä viittaus-id (int),
+                           ;; mutta tässä kyselyssä sisältävät suoraan viitattujen asioiden tiedot
+                           :except #{:hallintayksikko :urakoitsija :sopimukset :hanke}
+                           :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
+                                   :urakoitsija {:ns :harja.domain.organisaatio}
+                                   :sopimukset {:ns :harja.domain.sopimus}
+                                   :hanke {:ns :harja.domain.hanke}}}))))
 
 (defn laheta-urakka-sahkeeseen [sahke user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
