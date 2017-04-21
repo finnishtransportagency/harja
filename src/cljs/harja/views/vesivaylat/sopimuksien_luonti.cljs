@@ -19,7 +19,7 @@
       #(e! (tiedot/->ValitseSopimus nil))
       {:disabled tallennus-kaynnissa?}]
      [lomake/lomake
-      {:otsikko (if (:id valittu-sopimus)
+      {:otsikko (if (::sopimus/id valittu-sopimus)
                   "Muokkaa sopimusta"
                   "Luo uusi sopimus")
        :muokkaa! #(e! (tiedot/->SopimustaMuokattu (lomake/ilman-lomaketietoja %)))
