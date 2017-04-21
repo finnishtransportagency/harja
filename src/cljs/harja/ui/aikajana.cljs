@@ -96,12 +96,28 @@
 
 
             [:g.aikajana-paivaviivat
-             (for [p paivat
-                   :let [x (paiva-x p)]]
-               ^{:key p}
-               [:line {:x1 x :y1 (- alku-y 5)
-                       :x2 x :y2 korkeus
-                       :style {:stroke "lightGray"}}])]
+             (loop [acc (list)
+                    viikko nil
+                    [p & paivat] paivat]
+               (if-not p
+                 acc
+                 (let [x (paiva-x p)
+                       viikko-nyt (.getWeekNumber p)
+                       acc (conj acc
+                                 ^{:key p}
+                                 [:line {:x1 x :y1 (- alku-y 5)
+                                         :x2 x :y2 korkeus
+                                         :style {:stroke "lightGray"}}])]
+                   (if (and (= 1 (.getWeekday p)) (not= viikko-nyt viikko))
+                     ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
+                     (recur (conj acc
+                                  ^{:key viikko-nyt}
+                                  [:text {:x x :y (- alku-y 10)
+                                          :font-size 8}
+                                   (str viikko-nyt)])
+                            viikko-nyt
+                            paivat)
+                     (recur acc viikko paivat)))))]
 
             (map-indexed
              (fn [i {::keys [ajat] :as rivi}]
