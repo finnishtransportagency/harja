@@ -20,8 +20,7 @@
 
 ;; Tallennus
 
-(s/def ::tallenna-urakoitsija-kysely (s/keys :req [::nimi ::ytunnus ::katuosoite ::postinumero]
-                                             :opt [::id]))
+(s/def ::tallenna-urakoitsija-kysely (s/keys :req [::nimi ::ytunnus]
+                                             :opt [::id ::katuosoite ::postinumero]))
 
-(s/def ::tallenna-urakoitsija-vastaus (s/keys :req [::id ::nimi ::ytunnus ::katuosoite
-                                                    ::postinumero ::tyyppi]))
+(s/def ::tallenna-urakoitsija-vastaus (s/keys :req [::id ::nimi ::ytunnus ::katuosoite ::postinumero]))

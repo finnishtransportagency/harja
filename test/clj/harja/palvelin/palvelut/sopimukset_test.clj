@@ -41,8 +41,8 @@
 
 (deftest sopimuksen-tallennus-ja-paivitys-toimii
   (let [testisopimukset (map #(-> %
-                                  (assoc :paasopimus nil)
-                                  (dissoc  :id))
+                                  (assoc ::sopimus/paasopimus nil)
+                                  (dissoc ::sopimus/id))
                              (gen/sample (s/gen ::harja.domain.sopimus/tallenna-sopimus-kysely)))]
 
     (doseq [sopimus testisopimukset]
