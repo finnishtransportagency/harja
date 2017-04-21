@@ -46,7 +46,7 @@
       ;; Luo uusi hanke
       (let [hanke-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hanke +kayttaja-jvh+
-                                           {:hanke hanke})]
+                                           hanke)]
         ;; Uusi hanke löytyy vastauksesesta
         (is (= (::hanke/nimi hanke-kannassa (::hanke/nimi hanke))))
 
@@ -55,7 +55,7 @@
                                             ::hanke/id (::hanke/id hanke-kannassa))
               paivitetty-hanke-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :tallenna-hanke +kayttaja-jvh+
-                                                        {:hanke paivitetty-hanke})]
+                                                        hanke)]
 
           ;; Hanke päivittyi
           (is (= (::hanke/nimi paivitetty-hanke-kannassa (::hanke/nimi hanke)))))))))
