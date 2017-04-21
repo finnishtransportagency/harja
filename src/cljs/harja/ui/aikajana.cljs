@@ -89,8 +89,7 @@
               rivin-y #(+ alku-y (* rivin-korkeus %))
               paiva-x #(+ alku-x (* (- leveys alku-x) (/ (pvm/paivia-valissa % min-aika) paivia)))
               kuukaudet (kuukaudet paivat)]
-          [:div
-           [debug/debug rivit]
+          [:div.aikajana
            [:svg {:width leveys :height korkeus
                   :viewBox (str "0 0 " leveys " " korkeus)}
 
