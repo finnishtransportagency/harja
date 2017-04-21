@@ -1,17 +1,19 @@
 (ns harja.domain.sopimus
-  "Määrittelee urakkaan liittyvien sopimuksien nimiavaruuden specit"
-  (:require [clojure.spec :as s]
-            [harja.domain.urakka :as u]
-            [harja.id :refer [id-olemassa?]]
-            [harja.tyokalut.spec-apurit :as spec-apurit]
-            #?@(:clj [[clojure.future :refer :all]])))
+  "Määrittelee sopimuksen specit"
+  #?@(:clj [(:require [clojure.spec :as s]
+                      [harja.id :refer [id-olemassa?]]
+                      [harja.kyselyt.specql-db :refer [db]]
+                      [specql.core :refer [define-tables]]
+                      [clojure.future :refer :all])]
+      :cljs [(:require [clojure.spec :as s]
+               [harja.id :refer [id-olemassa?]]
+               [specql.impl.registry]
+               [specql.data-types])
+             (:require-macros
+               [harja.kyselyt.specql-db :refer [db]]
+               [specql.core :refer [define-tables]])]))
 
-;; TODO KÄYTÄ define-tables!
-(s/def ::id ::spec-apurit/postgres-serial)
-(s/def ::nimi string?)
-(s/def ::alkupvm inst?)
-(s/def ::loppupvm inst?)
-(s/def ::paasopimus (s/nilable ::spec-apurit/postgres-serial))
+(define-tables db ["sopimus" ::sopimus])
 
 ;; Haut
 

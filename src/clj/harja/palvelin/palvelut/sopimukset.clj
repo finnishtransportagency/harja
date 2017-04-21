@@ -18,6 +18,7 @@
                            (map konv/alaviiva->rakenne)
                            (q/hae-harjassa-luodut-sopimukset db))]
       (namespacefy sopimukset {:ns :harja.domain.sopimus
+                               :except #{:urakka}
                                :inner {:urakka {:ns :harja.domain.urakka}}}))))
 
 (defn- paivita-sopimusta! [db user sopimus]
@@ -75,7 +76,7 @@
                       (fn [user tiedot]
                         (tallenna-sopimus db user tiedot))
                       {:kysely-spec ::sopimus/tallenna-sopimus-kysely
-                       :vastaus-spec ::sopimus/tallenna-sopimus-kysely})
+                       :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
 
     this)
 
