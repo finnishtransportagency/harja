@@ -275,3 +275,6 @@
 
     :default
     "aloitettu"))
+
+(defn arvo-koodilla [koodisto koodi]
+  (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))

@@ -4,11 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "tiemerkinta-takaraja": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
-      "type": ["string","null"],
-      "format": "date-time"
-    },
     "tiemerkinta-aloitettu": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-aloitettu",
       "type": ["string","null"],

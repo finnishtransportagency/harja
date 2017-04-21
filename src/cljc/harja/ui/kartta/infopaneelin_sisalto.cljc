@@ -206,46 +206,46 @@
                       #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila])))}
               ;; Aikataulutiedot
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
-                {:otsikko kohde-aloitus-teksti :tyyppi :pvm-aika
+                {:otsikko kohde-aloitus-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde kohde-aloitus]}
                         #(get-in % [:yllapitokohde kohde-aloitus]))})
 
               (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
-                {:otsikko paallystys-aloitus-teksti :tyyppi :pvm-aika
+                {:otsikko paallystys-aloitus-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde paallystys-aloitus]}
                         #(get-in % [:yllapitokohde paallystys-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
-                {:otsikko paallystys-valmis-teksti :tyyppi :pvm-aika
+                {:otsikko paallystys-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde paallystys-valmis]}
                         #(get-in % [:yllapitokohde paallystys-valmis]))})
 
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-aloitus])
-                {:otsikko paikkaus-aloitus-teksti :tyyppi :pvm-aika
+                {:otsikko paikkaus-aloitus-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-aloitus]}
                         #(get-in % [:yllapitokohde paikkaus-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
-                {:otsikko paikkaus-valmis-teksti :tyyppi :pvm-aika
+                {:otsikko paikkaus-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
 
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
-                {:otsikko tiemerkinta-aloitus-teksti :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-aloitus-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-aloitus]}
                         #(get-in % [:yllapitokohde tiemerkinta-aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
-                {:otsikko tiemerkinta-valmis-teksti :tyyppi :pvm-aika
+                {:otsikko tiemerkinta-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-valmis]}
                         #(get-in % [:yllapitokohde tiemerkinta-valmis]))})
 
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
-                {:otsikko kohde-valmis-teksti :tyyppi :pvm-aika
+                {:otsikko kohde-valmis-teksti :tyyppi :pvm
                  :hae (hakufunktio
                         #{[:yllapitokohde kohde-valmis]}
                         #(get-in % [:yllapitokohde kohde-valmis]))})

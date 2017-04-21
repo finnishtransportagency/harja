@@ -111,7 +111,7 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :fmt :nimi
+            :fmt #(pot/arvo-koodilla pot/+ajoradat+ %)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Ajorata -"
@@ -124,7 +124,7 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :fmt :nimi
+            :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Kaista -"
@@ -540,7 +540,7 @@
          {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
           :hae (fn [rivi] (fmt/desimaaliluku-opt (- (:toteutunut-maara rivi) (:tilattu-maara rivi))))}
          {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea :fmt fmt/euro-opt
-          :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Anna yksikköhinta"]]}
+          :tyyppi :positiivinen-numero :kokonaisosan-maara 6 :validoi [[:ei-tyhja "Anna yksikköhinta"]]}
          {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
           :muokattava? (constantly false) :tyyppi :komponentti
           :komponentti (fn [rivi]
