@@ -100,6 +100,11 @@
     (set/rename-keys map-x-with-modified-inner-maps original-keyword->unnamespaced-keyword)))
 
 (defn unnamespacefy
+  "Poistaa namespacetettujen avainten namespacet mapista tai vectorista mappeja.
+
+  Optiot:
+  except        Setti avaimia, joiden nimeen ei kosketa.
+  :recur?       Jos true, poistaa myös sisäkkäisten mappien ja vectorien nimiavaruudet."
   ([data] (unnamespacefy data {}))
   ([data options]
    (cond (map? data)
