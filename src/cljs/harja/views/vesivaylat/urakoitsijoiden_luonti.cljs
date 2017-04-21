@@ -85,9 +85,9 @@
                   "Urakoitsijoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakoitsija %))}
         [{:otsikko "Nimi" :nimi ::o/nimi}
-         {:otsikko "Y-tunnus" :nimi ::o/ytunnus}
+         {:otsikko "Y-tunnus" :nimi ::o/ytunnus :pituus-max 9}
          {:otsikko "Katuosoite" :nimi ::o/katuosoite}
-         {:otsikko "Postinumero" :nimi ::o/postinumero}
+         {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5}
          {:otsikko "Urakoita (Alk./Käyn./Päät.)" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
         haetut-urakoitsijat]])))

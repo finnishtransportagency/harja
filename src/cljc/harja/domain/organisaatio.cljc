@@ -16,8 +16,7 @@
 ;; Haut
 
 (s/def ::vesivayla-urakoitsijat-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::ytunnus ::katuosoite
-                           ::postinumero ::tyyppi])))
+  (s/coll-of (s/keys :req [::id ::nimi ::ytunnus ::katuosoite ::postinumero])))
 
 ;; Tallennus
 
