@@ -53,6 +53,9 @@ ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
 ALTER TABLE urakka ALTER COLUMN alkupvm SET NOT NULL;
 ALTER TABLE urakka ALTER COLUMN loppupvm SET NOT NULL;
 ALTER TABLE urakka ALTER COLUMN tyyppi SET NOT NULL;
+UPDATE urakka SET poistettu = FALSE WHERE poistettu IS NULL;
+ALTER TABLE urakka ALTER COLUMN poistettu SET NOT NULL;
+ALTER TABLE urakka ALTER COLUMN poistettu SET FALSE;
 ALTER TABLE organisaatio ALTER COLUMN nimi SET NOT NULL;
 ALTER TABLE organisaatio ALTER COLUMN tyyppi SET NOT NULL;
 CREATE UNIQUE INDEX uniikki_hanke ON urakka (hanke) WHERE harjassa_luotu IS TRUE; -- Harjassa luodulle urakalle on hanke uniikki
