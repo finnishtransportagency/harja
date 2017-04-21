@@ -107,8 +107,14 @@
   :recur?       Jos true, poistaa myös sisäkkäisten mappien ja vectorien nimiavaruudet."
   ([data] (unnamespacefy data {}))
   ([data options]
+   ;; TODO Vaarana on, että sama perusosa löytyy useammasta namespacetetusta keywordista.
+   ;; Pitäisi havaita tämä ja kieltäytyä muuntamasta ennemmin kuin muuntaa datan väärin.
    (cond (map? data)
          (unnamespacefy-map data options)
 
          (vector? data)
          (mapv #(unnamespacefy-map % options) data))))
+
+(defn get-un [map key]
+  ;; TODO Etsi eka mätsi
+  )

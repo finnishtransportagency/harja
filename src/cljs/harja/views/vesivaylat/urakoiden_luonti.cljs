@@ -128,8 +128,8 @@
                :nimi :hanke
                :tyyppi :valinta
                :pakollinen? true
-               :valinnat (remove (comp :id :urakka) haetut-hankkeet)
-               :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
+               :valinnat (remove (comp ::u/id ::h/urakka) haetut-hankkeet)
+               :valinta-nayta #(if % (::h/nimi %) "- Valitse hanke -")
                :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
              {:otsikko "Nimi"
               :nimi :hanke
@@ -139,13 +139,13 @@
              :tyyppi :pvm
              :fmt pvm/pvm-opt
              :nimi :hankkeen-alkupvm
-             :hae (comp :alkupvm :hanke)
+             :hae (comp ::h/alkupvm :hanke)
              :muokattava? (constantly false)}
             {:otsikko "Loppupvm"
              :tyyppi :pvm
              :fmt pvm/pvm-opt
              :nimi :hankkeen-loppupvm
-             :hae (comp :loppupvm :hanke)
+             :hae (comp ::h/loppupvm :hanke)
              :muokattava? (constantly false)})
           (lomake/rivi
             {:otsikko "Sopimukset"
