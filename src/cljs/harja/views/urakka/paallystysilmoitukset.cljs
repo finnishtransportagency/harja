@@ -209,15 +209,27 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-(defn- tr-vali-paakohteen-sisalla? [lomakedata _ rivi]
+(defn- tr-vali-paakohteen-sisalla? [{paa-alkuosa :tr-alkuosa
+                                     paa-alkuetaisyys :tr-alkuetaisyys
+                                     paa-loppuosa :tr-loppuosa
+                                     paa-loppuetaisyys :tr-loppuetaisyys
+                                     :as paakohde}
+                                    _
+                                    {ali-alkuosa :tr-alkuosa
+                                     ali-alkuetaisyys :tr-alkuetaisyys
+                                     ali-loppuosa :tr-loppuosa
+                                     ali-loppuetaisyys :tr-loppuetaisyys
+                                     :as alikohde}]
   (when-not
-    (and (<= (:tr-alkuosa lomakedata) (:tr-alkuosa rivi) (:tr-loppuosa lomakedata))
-         (<= (:tr-alkuosa lomakedata) (:tr-loppuosa rivi) (:tr-loppuosa lomakedata))
-         (if (= (:tr-alkuosa lomakedata) (:tr-loppuosa rivi))
-           (>= (:tr-alkuetaisyys rivi) (:tr-alkuetaisyys lomakedata))
+    (and (<= paa-alkuosa ali-alkuosa paa-loppuosa)
+         (<= paa-alkuosa ali-loppuosa paa-loppuosa)
+         (if (= paa-alkuosa ali-loppuosa)
+           (and (>= ali-alkuetaisyys paa-alkuetaisyys)
+                (<= ali-alkuetaisyys paa-loppuetaisyys))
            true)
-         (if (= (:tr-loppuosa lomakedata) (:tr-loppuosa rivi))
-           (<= (:tr-loppuetaisyys rivi) (:tr-loppuetaisyys lomakedata))
+         (if (= paa-loppuosa ali-loppuosa)
+           (and (<= ali-loppuetaisyys paa-loppuetaisyys)
+                (>= ali-loppuetaisyys paa-alkuetaisyys))
            true))
     "Ei pääkohteen sisällä"))
 
@@ -334,7 +346,7 @@
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
            (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30
-             :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
+                                                      :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
