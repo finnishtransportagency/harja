@@ -2,7 +2,7 @@
   (:require
     [clojure.test :refer [deftest is use-fixtures]]
     [harja.testi :refer :all]
-    [harja.tyokalut.spec-apurit :refer [namespacefy poista-nil-avaimet]]))
+    [harja.tyokalut.spec-apurit :refer [namespacefy unnamespacefy poista-nil-avaimet]]))
 
 (deftest nil-arvojen-poisto-mapista-toimii
   (is (= (poista-nil-avaimet {:a "1" :b nil}) {:a "1"}))
@@ -80,3 +80,31 @@
                                                                    :useless-keyword nil}}
                                       {:our.domain.task/id 667
                                        :our.domain.task/time 8}]}))))
+
+(deftest unnamespacefy-toimii
+  (let [testimap-1 {:our.domain.player/name "Seppo"
+                    :our.domain.player/hp 666}
+        testimap-2 {:our.domain.player/name "Seppo"
+                    :our.domain.player/hp 666
+                    :our.domain.player/tasks {:our.domain.task/id 6}}
+        testimap-3 {:our.domain.player/name "Seppo"
+                    :our.domain.player/hp 666
+                    :our.domain.player/tasks [{:our.domain.task/id 6}
+                                              {:our.domain.task/time 5}]}
+        testimap-4 {:our.domain.player/name "Seppo"
+                    :our.domain.player/hp 666
+                    :our.domain.player/task {:our.domain.task/id 6}}]
+
+    (is (= (unnamespacefy testimap-1)
+           {:name "Seppo" :hp 666}))
+    (is (= (unnamespacefy testimap-2)
+           {:name "Seppo" :hp 666 :tasks {:our.domain.task/id 6}}))
+    (is (= (unnamespacefy testimap-2 {:except #{:our.domain.player/hp}})
+           {:name "Seppo" :our.domain.player/hp 666 :tasks {:our.domain.task/id 6}}))
+    (is (= (unnamespacefy testimap-3 {:recur? true})
+           {:name "Seppo" :hp 666 :tasks [{:id 6}
+                                         {:time 5}]}))
+    (is (= (unnamespacefy testimap-4 {:recur? true})
+           {:name "Seppo" :hp 666 :task {:id 6}}))
+    (is (= (unnamespacefy testimap-4 {:recur? true :except #{:our.domain.player/hp}})
+           {:name "Seppo" :our.domain.player/hp 666 :task {:id 6}}))))

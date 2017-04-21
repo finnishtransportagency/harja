@@ -1,7 +1,8 @@
 (ns harja.tyokalut.spec-apurit
   (:require [clojure.spec :as s]
             [clojure.set :as set]
-    #?@(:clj [[clojure.future :refer :all]])))
+    #?@(:clj [
+            [clojure.future :refer :all]])))
 
 ;; PostgreSQL raja-arvot
 
@@ -75,3 +76,34 @@
 
         (vector? data)
         (mapv #(namespacefy-map % options) data)))
+
+(declare unnamespacefy)
+
+(defn- unnamespacefy-map
+  [map-x {:keys [except recur?] :as options}]
+  (let [except (or except #{})
+        recur? (or recur? false)
+        keys-to-be-modified (filter (comp not except) (keys map-x))
+        original-keyword->unnamespaced-keyword (apply merge (map
+                                                              #(-> {% (keyword (name %))})
+                                                              keys-to-be-modified))
+        keys-to-inner-maps (filter (fn [avain]
+                                     (let [sisalto (avain map-x)]
+                                       (or (map? sisalto) (vector? sisalto))))
+                                   (keys map-x))
+        unnamespacefied-inner-maps (apply merge (map
+                                                  #(-> {% (unnamespacefy (% map-x))})
+                                                  keys-to-inner-maps))
+        map-x-with-modified-inner-maps (if recur?
+                                         (merge map-x unnamespacefied-inner-maps)
+                                         map-x)]
+    (set/rename-keys map-x-with-modified-inner-maps original-keyword->unnamespaced-keyword)))
+
+(defn unnamespacefy
+  ([data] (unnamespacefy data {}))
+  ([data options]
+   (cond (map? data)
+         (unnamespacefy-map data options)
+
+         (vector? data)
+         (mapv #(unnamespacefy-map % options) data))))
