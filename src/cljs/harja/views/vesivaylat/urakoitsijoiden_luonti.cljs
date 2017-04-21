@@ -3,7 +3,9 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakoitsijoiden-luonti :as tiedot]
             [harja.ui.napit :as napit]
+            [harja.loki :refer [log]]
             [harja.domain.organisaatio :as o]
+            [harja.domain.urakka :as u]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
@@ -15,7 +17,7 @@
    tietoja
    {:otsikot-omalla-rivilla? true}
    (interleave
-     (map :nimi urakat)
+     (map ::u/nimi urakat)
      (map tiedot/urakan-aikavali-str urakat))])
 
 (defn luontilomake [e! {:keys [valittu-urakoitsija tallennus-kaynnissa?] :as app}]
@@ -25,7 +27,7 @@
      #(e! (tiedot/->ValitseUrakoitsija nil))
      {:disabled tallennus-kaynnissa?}]
     [lomake/lomake
-     {:otsikko (if (:id valittu-urakoitsija)
+     {:otsikko (if (::o/id valittu-urakoitsija)
                  "Muokkaa urakoitsijaa"
                  "Luo uusi urakoitsija")
       :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu (lomake/ilman-lomaketietoja %)))
@@ -88,7 +90,7 @@
          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pituus-max 9}
          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
          {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
-         {:otsikko "Urakoita (Alk./Käyn./Päät.)" :nimi :urakoita :tyyppi :string
+         {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
         haetut-urakoitsijat]])))
 
