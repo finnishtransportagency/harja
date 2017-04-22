@@ -142,33 +142,61 @@
   [{:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
            aikataulu-paallystys-alku aikataulu-paallystys-loppu
            aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
-           nimi]}]
+           nimi id]}]
   {::aikajana/otsikko nimi
    ::aikajana/ajat
    (into []
          (remove nil?)
          [(when (and aikataulu-kohde-alku aikataulu-kohde-valmis)
             (merge (aikataulujana-tyylit :kohde)
-                         {::aikajana/alku aikataulu-kohde-alku
-                          ::aikajana/loppu aikataulu-kohde-valmis
-                          ::aikajana/teksti (str "Koko kohde: "
-                                                 (pvm/pvm aikataulu-kohde-alku) " \u2013 "
-                                                 (pvm/pvm aikataulu-kohde-valmis))}))
+                   {::aikajana/drag [id :kohde]
+                    ::aikajana/alku aikataulu-kohde-alku
+                    ::aikajana/loppu aikataulu-kohde-valmis
+                    ::aikajana/teksti (str "Koko kohde: "
+                                           (pvm/pvm aikataulu-kohde-alku) " \u2013 "
+                                           (pvm/pvm aikataulu-kohde-valmis))}))
           (when (and aikataulu-paallystys-alku aikataulu-paallystys-loppu)
             (merge (aikataulujana-tyylit :paallystys)
-                   {::aikajana/alku aikataulu-paallystys-alku
+                   {::aikajana/drag [id :paallystys]
+                    ::aikajana/alku aikataulu-paallystys-alku
                     ::aikajana/loppu aikataulu-paallystys-loppu
                     ::aikajana/teksti (str "Päällystys: "
                                            (pvm/pvm aikataulu-paallystys-alku) " \u2013 "
                                            (pvm/pvm aikataulu-paallystys-loppu))}))
           (when (and aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
             (merge (aikataulujana-tyylit :tiemerkinta)
-                   {::aikajana/alku aikataulu-tiemerkinta-alku
+                   {::aikajana/drag [id :tiemerkinta]
+                    ::aikajana/alku aikataulu-tiemerkinta-alku
                     ::aikajana/loppu aikataulu-tiemerkinta-loppu
                     ::aikajana/teksti (str "Tiemerkintä: "
                                            (pvm/pvm aikataulu-tiemerkinta-alku) " \u2013 "
                                            (pvm/pvm aikataulu-tiemerkinta-loppu))}))])})
 
+(defn- raahauksessa-paivitetyt-aikataulurivit
+  "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
+  [aikataulurivit {::aikajana/keys [drag alku loppu]}]
+  (keep
+   (fn [{id :id :as aikataulurivi}]
+     (when (= id (first drag))
+       (let [[alku-avain loppu-avain]
+             (case (second drag)
+               :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
+               :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
+               :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu])]
+         (assoc aikataulurivi
+                alku-avain alku
+                loppu-avain loppu))))
+   aikataulurivit))
+
+(defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
+  (tiedot/tallenna-yllapitokohteiden-aikataulu
+   {:urakka-id urakka-id
+    :sopimus-id sopimus-id
+    :vuosi vuosi
+    :kohteet kohteet
+    :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
+                                    :warning
+                                    viesti/viestin-nayttoaika-lyhyt)}))
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -188,7 +216,11 @@
          [valinnat/urakan-vuosi ur]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [valinnat/tienumero yllapito-tiedot/tienumero]
-         [aikajana/aikajana (map aikataulurivi-jana aikataulurivit)]
+         [aikajana/aikajana
+          {:muuta! #(tallenna-aikataulu
+                     urakka-id sopimus-id vuosi
+                     (raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+          (map aikataulurivi-jana aikataulurivit)]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
@@ -197,14 +229,7 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-yllapitokohteiden-aikataulu
-                          {:urakka-id urakka-id
-                           :sopimus-id sopimus-id
-                           :vuosi vuosi
-                           :kohteet %
-                           :epaonnistui-fn (fn [] (viesti/nayta! "Tallennus epäonnistui!"
-                                                                 :warning
-                                                                 viesti/viestin-nayttoaika-lyhyt))})
+                       #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
