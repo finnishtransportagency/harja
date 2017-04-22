@@ -6,8 +6,10 @@
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
-            [harja.ui.debug :as debug])
-  (:require-macros [harja.tyokalut.spec :refer [defn+]]))
+            [harja.ui.debug :as debug]
+            [cljs.core.async :refer [<!]])
+  (:require-macros [harja.tyokalut.spec :refer [defn+]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (s/def ::rivi (s/keys :req [::otsikko ::ajat]))
 (s/def ::rivit (s/every ::rivi))
@@ -123,74 +125,127 @@
              :text-anchor "middle"}
       text]]))
 
-(defn+ aikajana
+(defn aikajana
   "Aikajanakomponentti, joka näyttää gantt kaavion tyylisen aikajanan.
   Komponentti sovittaa alku/loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
   alkuun ja loppuun 14 päivää. Komponentti mukautuu selaimen leveyteen ja sen korkeus määräytyy
   rivimäärän perusteella."
-  [rivit ::rivit] vector?
-  (r/with-let [tooltip (r/atom nil)]
-    (let [rivin-korkeus 20
-          leveys (* 0.95 @dom/leveys)
-          alku-x 150
-          alku-y 50
-          korkeus (+ alku-y (* (count rivit) rivin-korkeus))
-          kaikki-ajat (mapcat ::ajat rivit)
-          alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
-          loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
-          [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
-          text-y-offset 8
-          bar-y-offset 3
-          bar-height (- rivin-korkeus 6)]
-      (when (and min-aika max-aika)
-        (let [paivat (pvm/paivat-valissa min-aika max-aika)
-              paivia (count paivat)
-              paivan-leveys (/ (- leveys alku-x) paivia)
-              rivin-y #(+ alku-y (* rivin-korkeus %))
-              paiva-x #(+ alku-x (* (- leveys alku-x) (/ (pvm/paivia-valissa % min-aika) paivia)))
-              kuukaudet (kuukaudet paivat)]
-          [:div.aikajana
-           [:svg {:width leveys :height korkeus
-                  :viewBox (str "0 0 " leveys " " korkeus)}
+  ([rivit] (aikajana {} rivit))
+  ([{:keys [muuta!] :as optiot} rivit]
+   (r/with-let [tooltip (r/atom nil)
+                drag (r/atom nil)]
+     (let [rivin-korkeus 20
+           leveys (* 0.95 @dom/leveys)
+           alku-x 150
+           alku-y 50
+           korkeus (+ alku-y (* (count rivit) rivin-korkeus))
+           kaikki-ajat (mapcat ::ajat rivit)
+           alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
+           loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
+           [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
+           text-y-offset 8
+           bar-y-offset 3
+           bar-height (- rivin-korkeus 6)]
+       (when (and min-aika max-aika)
+         (let [paivat (pvm/paivat-valissa min-aika max-aika)
+               paivia (count paivat)
+               paivan-leveys (/ (- leveys alku-x) paivia)
+               rivin-y #(+ alku-y (* rivin-korkeus %))
+               paiva-x #(+ alku-x (* (- leveys alku-x) (/ (pvm/paivia-valissa % min-aika) paivia)))
+               x->paiva #(t/plus min-aika
+                                 (t/days (/ % paivan-leveys)))
+               kuukaudet (kuukaudet paivat)
+               drag-stop! #(when-let [d @drag]
+                             (go
+                               (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
+                               (reset! drag nil)))
+               drag-start! (fn [e jana avain]
+                             (.preventDefault e)
+                             (println "aloita raahaus: " jana)
+                             (reset! drag
+                                     (assoc (select-keys jana #{::alku ::loppu ::drag})
+                                            :avain avain)))
+               drag-move! (fn [e]
+                            (.preventDefault e)
+                            (when @drag
+                              (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
+                                    cx (.-clientX e)
+                                    cy (.-clientY e)
+                                    x (- cx svg-x alku-x)
+                                    y (- cy svg-y)]
+                                ;; FIXME: älä salli alun mennä lopun jälkeen tai toisinpäin
+                                (swap! drag
+                                       (fn [{avain :avain :as drag}]
+                                         (assoc drag avain (x->paiva x)
+                                                :x (+ alku-x x)
+                                                :y (+ y 24)))))))
+               drag @drag]
+           [:div.aikajana
+            [:svg#aikajana
+             {:width leveys :height korkeus
+              :viewBox (str "0 0 " leveys " " korkeus)
+              :on-mouse-up drag-stop!
+              :on-mouse-move drag-move!
+              :style {:cursor (when drag "ew-resize")}}
 
-            [paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat]
+             [paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat]
 
-            ;; Renderöidään itse aikajanarivit
-            (map-indexed
-             (fn [i {::keys [ajat] :as rivi}]
-               (let [y (rivin-y i)]
-                 ^{:key i}
-                 [:g
-                  [:rect {:x (inc alku-x) :y (- y bar-y-offset)
-                          :width (- leveys alku-x)
-                          :height bar-height
-                          :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
-                  (map-indexed
-                   (fn [j {::keys [alku loppu vari reuna teksti]}]
-                     (let [x (inc (paiva-x alku))
-                           width (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)]
-                       ^{:key j}
-                       [:rect {:x x :y y
-                               :width width
-                               :height 10
-                               :style {:fill (or vari "white")
-                                       ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                       ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                       :fill-opacity (if vari 1.0 0.0)
-                                       :stroke reuna}
-                               :rx 3 :ry 3
-                               :on-mouse-over #(reset! tooltip {:x (+ x (/ width 2))
-                                                                :y (+ y 30)
-                                                                :text teksti})
-                               :on-mouse-out #(reset! tooltip nil)
-                               }]))
-                   ajat)
-                  [:text {:x 0 :y (+ text-y-offset y)
-                          :font-size 10}
-                   (::otsikko rivi)]]))
-             rivit)
+             ;; Renderöidään itse aikajanarivit
+             (map-indexed
+              (fn [i {::keys [ajat] :as rivi}]
+                (let [y (rivin-y i)]
+                  ^{:key i}
+                  [:g
+                   [:rect {:x (inc alku-x) :y (- y bar-y-offset)
+                           :width (- leveys alku-x)
+                           :height bar-height
+                           :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
+                   (map-indexed
+                    (fn [j {::keys [alku loppu vari reuna teksti] :as jana}]
+                      (let [[alku loppu] (if (and drag (= (::drag drag)
+                                                          (::drag jana)))
+                                           [(::alku drag) (::loppu drag)]
+                                           [alku loppu])
+                            x (inc (paiva-x alku))
+                            width (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)]
+                        ^{:key j}
+                        [:g
+                         [:rect {:x x :y y
+                                 :width width
+                                 :height 10
+                                 :style {:fill (or vari "white")
+                                         ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                         ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                         :fill-opacity (if vari 1.0 0.0)
+                                         :stroke reuna}
+                                 :rx 3 :ry 3
+                                 :on-mouse-over #(reset! tooltip {:x (+ x (/ width 2))
+                                                                  :y (+ y 30)
+                                                                  :text teksti})
+                                 :on-mouse-out #(reset! tooltip nil)
+                                 }]
+                         ;; kahvat draggaamiseen
+                         [:rect {:x (- x 3) :y y :width 7 :height 10
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::alku)}]
+                         [:rect {:x (+ x width -3) :y y :width 7 :height 10
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::loppu)}]
+                         ]))
+                    ajat)
+                   [:text {:x 0 :y (+ text-y-offset y)
+                           :font-size 10}
+                    (::otsikko rivi)]]))
+              rivit)
 
-            [kuukausiotsikot paiva-x korkeus kuukaudet]
+             [kuukausiotsikot paiva-x korkeus kuukaudet]
 
-            ;; tooltip, jos on
-            [tooltip* @tooltip]]])))))
+
+             [tooltip* (if drag
+                         {:x (:x drag)
+                          :y (:y drag)
+                          :text (str (pvm/pvm (::alku drag)) " \u2013 "
+                                     (pvm/pvm (::loppu drag)))}
+                         @tooltip)]]]))))))
