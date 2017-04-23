@@ -105,7 +105,9 @@
   [paiva-x korkeus kuukaudet]
   [:g.aikajana-kuukausiotsikot
    (for [{:keys [alku loppu otsikko]} kuukaudet
-         :let [x (paiva-x alku)]]
+         :let [x (paiva-x alku)
+               width (dec (- (paiva-x loppu) x))]
+         :when (> width 75)]
      ^{:key otsikko}
      [:g
       [:text {:x (+ 5 x) :y 10} otsikko]
