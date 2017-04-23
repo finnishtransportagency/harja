@@ -216,7 +216,8 @@
 
                             ;; Vähennä väritetyn korkeutta 2px
                             y (if vari (inc y) y)
-                            korkeus (if vari (- jana-korkeus 2) jana-korkeus)]
+                            korkeus (if vari (- jana-korkeus 2) jana-korkeus)
+                            voi-raahata? (some? (::drag jana))]
                         ^{:key j}
                         [:g
                          [:rect {:x x :y y
@@ -234,14 +235,16 @@
                                  :on-mouse-out #(reset! tooltip nil)
                                  }]
                          ;; kahvat draggaamiseen
-                         [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                                 :style {:fill "white" :opacity 0.0
-                                         :cursor "ew-resize"}
-                                 :on-mouse-down #(drag-start! % jana ::alku)}]
-                         [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
-                                 :style {:fill "white" :opacity 0.0
-                                         :cursor "ew-resize"}
-                                 :on-mouse-down #(drag-start! % jana ::loppu)}]
+                         (when voi-raahata?
+                           [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                   :style {:fill "white" :opacity 0.0
+                                           :cursor "ew-resize"}
+                                   :on-mouse-down #(drag-start! % jana ::alku)}])
+                         (when voi-raahata?
+                           [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
+                                   :style {:fill "white" :opacity 0.0
+                                           :cursor "ew-resize"}
+                                   :on-mouse-down #(drag-start! % jana ::loppu)}])
                          ]))
                     ajat)
                    [:text {:x 0 :y (+ text-y-offset y)

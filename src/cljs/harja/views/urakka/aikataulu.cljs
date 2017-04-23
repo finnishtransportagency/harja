@@ -139,17 +139,19 @@
 
 (defn- aikataulurivi-jana
   "Muuntaa aikataulurivin aikajankomponentin rivimuotoon."
-  [{:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
+  [voi-muokata-paallystys? voi-muokata-tiemerkinta?
+   {:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
            aikataulu-paallystys-alku aikataulu-paallystys-loppu
            aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
-           nimi id]}]
+           nimi id] :as rivi}]
   {::aikajana/otsikko nimi
    ::aikajana/ajat
    (into []
          (remove nil?)
          [(when (and aikataulu-kohde-alku aikataulu-kohde-valmis)
             (merge (aikataulujana-tyylit :kohde)
-                   {::aikajana/drag [id :kohde]
+                   {::aikajana/drag (when (voi-muokata-paallystys? rivi)
+                                      [id :kohde])
                     ::aikajana/alku aikataulu-kohde-alku
                     ::aikajana/loppu aikataulu-kohde-valmis
                     ::aikajana/teksti (str "Koko kohde: "
@@ -157,7 +159,8 @@
                                            (pvm/pvm aikataulu-kohde-valmis))}))
           (when (and aikataulu-paallystys-alku aikataulu-paallystys-loppu)
             (merge (aikataulujana-tyylit :paallystys)
-                   {::aikajana/drag [id :paallystys]
+                   {::aikajana/drag (when (voi-muokata-paallystys? rivi)
+                                      [id :paallystys])
                     ::aikajana/alku aikataulu-paallystys-alku
                     ::aikajana/loppu aikataulu-paallystys-loppu
                     ::aikajana/teksti (str "Päällystys: "
@@ -165,7 +168,8 @@
                                            (pvm/pvm aikataulu-paallystys-loppu))}))
           (when (and aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
             (merge (aikataulujana-tyylit :tiemerkinta)
-                   {::aikajana/drag [id :tiemerkinta]
+                   {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
+                                      [id :tiemerkinta])
                     ::aikajana/alku aikataulu-tiemerkinta-alku
                     ::aikajana/loppu aikataulu-tiemerkinta-loppu
                     ::aikajana/teksti (str "Tiemerkintä: "
@@ -211,7 +215,12 @@
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)
             otsikoidut-aikataulurivit (otsikoi-aikataulurivit
-                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))]
+                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+            voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
+                                          (constantly saa-muokata?))
+            voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
+                                           saa-merkita-valmiiksi?
+                                           (:valmis-tiemerkintaan %))]
         [:div.aikataulu
          [valinnat/urakan-vuosi ur]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
@@ -220,7 +229,8 @@
           {:muuta! #(tallenna-aikataulu
                      urakka-id sopimus-id vuosi
                      (raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
-          (map aikataulurivi-jana aikataulurivit)]
+          (map #(aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+               aikataulurivit)]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
@@ -274,14 +284,14 @@
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt pvm/pvm-opt
-              :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))})
+              :muokattava? voi-muokata-paallystys?})
            {:otsikko "Pääl\u00ADlystyk\u00ADsen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :muokattava? voi-muokata-paallystys?
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlystyk\u00ADsen lope\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :muokattava? voi-muokata-paallystys?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
@@ -334,25 +344,19 @@
            {:otsikko "Tiemer\u00ADkinnän aloi\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? (fn [rivi]
-                           (and (= (:nakyma optiot) :tiemerkinta)
-                                saa-merkita-valmiiksi?
-                                (:valmis-tiemerkintaan rivi)))}
+            :muokattava? voi-muokata-tiemerkinta?}
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? (fn [rivi]
-                           (and (= (:nakyma optiot) :tiemerkinta)
-                                (:aikataulu-tiemerkinta-alku rivi)
-                                saa-merkita-valmiiksi?
-                                (:valmis-tiemerkintaan rivi)))
+            :muokattava? #(and (voi-muokata-tiemerkinta? %)
+                               (:aikataulu-tiemerkinta-alku %))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :muokattava? voi-muokata-paallystys?
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
                        "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
 
