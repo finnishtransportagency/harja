@@ -328,6 +328,11 @@
   [pvm]
   (formatoi iso8601-aikaleimalla pvm))
 
+
+(defn aika-iso8601-ilman-millisekunteja
+  [pvm]
+  (formatoi iso8601-aikaleimalla pvm))
+
 (defn kuukausi-ja-vuosi-valilyonnilla
   "Formatoi pvm:n muotoon: MM / yy"
   [pvm]

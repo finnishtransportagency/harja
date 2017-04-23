@@ -318,7 +318,7 @@ https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 3. Kopioi harja-testidata repositoriosta hermes-config.xml kansioon ~/.hermes
 4. Kopioi harja-testidata repositoriosta Sonic2013_libs & SonicClientLibs Sonic MQ:n JMS kirjastot haluamaasi kansioon
 5. Avaa ~/.hermes/hermes-config.xml tiedosto
-6. Muokkaa Sonic JMS ajurien jarrien sijainti kansioihin, johon kopioit ne aiemmin
+6. Muokkaa Sonic JMS ajurien jarrien sijainti kansioihin, johon kopioit ne aiemmin project.clj -tiedostoon
 7. Lisää ssh configiin (~/.ssh/config) seuraavat asetukset:
  Host harja-app1-stg
          ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
