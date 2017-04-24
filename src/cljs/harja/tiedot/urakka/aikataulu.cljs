@@ -12,12 +12,15 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce aikataulu-nakymassa? (atom false))
+
+(defonce nayta-aikajana? (local-storage/local-storage-atom :nayta-aikajana true nil))
 
 (defn hae-aikataulu [urakka-id sopimus-id vuosi]
   (k/post! :hae-yllapitourakan-aikataulu {:urakka-id urakka-id
