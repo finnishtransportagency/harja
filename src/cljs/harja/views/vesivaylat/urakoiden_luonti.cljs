@@ -27,7 +27,7 @@
     [harja.makrot :refer [defc fnc]]))
 
 (defn- sopimukset-grid [e! urakka haetut-sopimukset]
-  (let [urakan-sopimukset (remove :poistettu (:sopimukset urakka))]
+  (let [urakan-sopimukset (remove :poistettu (::u/sopimukset urakka))]
     [grid/muokkaus-grid
      {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
       :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
@@ -98,26 +98,26 @@
            (lomake/rivi
              (if haetut-hallintayksikot
                {:otsikko "Hallintayksikkö"
-                :nimi :hallintayksikko
+                :nimi ::u/hallintayksikko
                 :tyyppi :valinta
                 :pakollinen? true
                 :valinnat haetut-hallintayksikot
                 :valinta-nayta #(if % (::o/nimi %) "- Valitse hallintayksikkö -")
-                :aseta (fn [rivi arvo] (assoc rivi :hallintayksikko (dissoc arvo :alue :type)))}
+                :aseta (fn [rivi arvo] (assoc rivi ::u/hallintayksikko (dissoc arvo :alue :type)))}
                {:otsikko "Hallintayksikkö"
-                :nimi :hallintayksikko
+                :nimi ::u/hallintayksikko
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
              (if haetut-urakoitsijat
                {:otsikko "Urakoitsija"
-                :nimi :urakoitsija
+                :nimi ::u/urakoitsija
                 :tyyppi :valinta
                 :pakollinen? true
                 :valinnat haetut-urakoitsijat
                 :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
-                :aseta (fn [rivi arvo] (assoc rivi :urakoitsija arvo))}
+                :aseta (fn [rivi arvo] (assoc rivi ::u/urakoitsija arvo))}
                {:otsikko "Urakoitsija"
-                :nimi :urakoitsija
+                :nimi ::u/urakoitsija
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
            (lomake/ryhma
@@ -125,7 +125,7 @@
               :rivi? true}
              (if haetut-hankkeet
                {:otsikko "Nimi"
-                :nimi :hanke
+                :nimi ::u/hanke
                 :tyyppi :valinta
                 :pakollinen? true
                 :valinnat (filter (fn [hanke]
@@ -135,26 +135,26 @@
                                           (= hankkeen-urakka-id (::u/id valittu-urakka)))))
                                   haetut-hankkeet)
                 :valinta-nayta #(if % (::h/nimi %) "- Valitse hanke -")
-                :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
+                :aseta (fn [rivi arvo] (assoc rivi ::u/hanke arvo))}
                {:otsikko "Nimi"
-                :nimi :hanke
+                :nimi ::u/hanke
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
              {:otsikko "Alkupvm"
               :tyyppi :pvm
               :fmt pvm/pvm-opt
               :nimi :hankkeen-alkupvm
-              :hae (comp ::h/alkupvm :hanke)
+              :hae (comp ::h/alkupvm ::u/hanke)
               :muokattava? (constantly false)}
              {:otsikko "Loppupvm"
               :tyyppi :pvm
               :fmt pvm/pvm-opt
               :nimi :hankkeen-loppupvm
-              :hae (comp ::h/loppupvm :hanke)
+              :hae (comp ::h/loppupvm ::u/hanke)
               :muokattava? (constantly false)})
            (lomake/rivi
              {:otsikko "Sopimukset"
-              :nimi :sopimukset
+              :nimi ::u/sopimukset
               :palstoja 2
               :tyyppi :komponentti
               :komponentti (fn [{urakka :data}]
@@ -180,10 +180,10 @@
             :jos-tyhja "Urakalla ei sopimuksia"
             :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
-            :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/sopimukset-paasopimuksella
-                                                             (:sopimukset rivi)
+            :aseta (fn [rivi arvo] (assoc rivi ::u/sopimukset (tiedot/sopimukset-paasopimuksella
+                                                             (::u/sopimukset rivi)
                                                              arvo)))
-            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
+            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
           valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]
