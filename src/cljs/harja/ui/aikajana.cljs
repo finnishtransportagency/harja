@@ -177,13 +177,20 @@
                                     cx (.-clientX e)
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x)
-                                    y (- cy svg-y)]
-                                ;; FIXME: älä salli alun mennä lopun jälkeen tai toisinpäin
+                                    y (- cy svg-y)
+                                    paiva (x->paiva x)
+                                    tooltip-x (+ alku-x x)
+                                    tooltip-y (+ y 24)]
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
-                                         (assoc drag avain (x->paiva x)
-                                                :x (+ alku-x x)
-                                                :y (+ y 24)))))))
+                                         (merge
+                                          {:x tooltip-x :y tooltip-y}
+                                          (if (or (and (= avain ::alku)
+                                                       (pvm/ennen? paiva (::loppu drag)))
+                                                  (and (= avain ::loppu)
+                                                       (pvm/jalkeen? paiva (::alku drag))))
+                                            (assoc drag avain (x->paiva x))
+                                            drag)))))))
                drag @drag]
            [:div.aikajana
             [:svg#aikajana
