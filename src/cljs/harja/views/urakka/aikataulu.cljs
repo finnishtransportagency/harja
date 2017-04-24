@@ -227,11 +227,14 @@
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [valinnat/tienumero yllapito-tiedot/tienumero]
 
-         [:div
-          [yleiset/linkki (if aikajana?
+         [:span.label-ja-kentta-puolikas
+          [:span.kentan-otsikko "Aikajana"]
+          [:div.kentta
+           [napit/yleinen (if aikajana?
                             "Piilota aikajana"
                             "Näytä aikajana")
-           #(swap! tiedot/nayta-aikajana? not)]]
+            #(swap! tiedot/nayta-aikajana? not)
+            {:luokka "btn-xs"}]]]
 
          (when aikajana?
            [aikajana/aikajana
