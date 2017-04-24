@@ -41,7 +41,7 @@
 
 (deftest sopimuksen-tallennus-ja-paivitys-toimii
   (let [testisopimukset (map #(-> %
-                                  (assoc ::sopimus/paasopimus nil)
+                                  (assoc ::sopimus/paasopimus-id nil)
                                   (dissoc ::sopimus/id))
                              (gen/sample (s/gen ::harja.domain.sopimus/tallenna-sopimus-kysely)))]
 
@@ -61,4 +61,5 @@
                                                           paivitetty-sopimus)]
 
           ;; Sopimus päivittyi
-          (is (= (::sopimus/nimi paivitetty-sopimus-kannassa (::sopimus/nimi sopimus)))))))))
+          (is (= (::sopimus/nimi paivitetty-sopimus-kannassa)
+                 (::sopimus/nimi paivitetty-sopimus))))))))

@@ -26,26 +26,26 @@
         nimi (::sopimus/nimi sopimus)
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
-        paasopimus (::sopimus/paasopimus sopimus)]
+        paasopimus-id (::sopimus/paasopimus-id sopimus)]
     (log/debug "Päivitetään sopimusta " nimi)
     (q/paivita-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
                                             :id id
                                             :nimi nimi
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm
-                                            :paasopimus paasopimus})))
+                                            :paasopimus paasopimus-id})))
 
 (defn luo-uusi-sopimus! [db user sopimus]
   (let [nimi (::sopimus/nimi sopimus)
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
-        paasopimus (::sopimus/paasopimus sopimus)]
+        paasopimus-id (::sopimus/paasopimus-id sopimus)]
     (log/debug "Luodaan uusi sopimus nimellä " nimi)
     (q/luo-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
                                         :nimi nimi
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm
-                                        :paasopimus paasopimus})))
+                                        :paasopimus paasopimus-id})))
 
 (defn tallenna-sopimus [db user sopimus]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -60,7 +60,7 @@
          ::sopimus/nimi (:nimi tallennettu-sopimus)
          ::sopimus/alkupvm (:alkupvm tallennettu-sopimus)
          ::sopimus/loppupvm (:loppupvm tallennettu-sopimus)
-         ::sopimus/paasopimus (:paasopimus tallennettu-sopimus)}))))
+         ::sopimus/paasopimus-id (:paasopimus-id tallennettu-sopimus)}))))
 
 (defrecord Sopimukset []
   component/Lifecycle
