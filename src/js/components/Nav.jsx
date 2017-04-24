@@ -26,8 +26,8 @@ export default React.createClass({
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
     ];
 
-    const feedbackAddress = "harja@solita.fi";
-    const feedbackSubject = "Tässä palautetta";
+    const feedbackAddress = "harjapalaute@solita.fi";
+    const feedbackSubject = "";
     const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
 
     return (
