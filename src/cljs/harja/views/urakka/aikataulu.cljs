@@ -220,17 +220,27 @@
                                           (constantly saa-muokata?))
             voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
                                            saa-merkita-valmiiksi?
-                                           (:valmis-tiemerkintaan %))]
+                                           (:valmis-tiemerkintaan %))
+            aikajana? @tiedot/nayta-aikajana?]
         [:div.aikataulu
          [valinnat/urakan-vuosi ur]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [valinnat/tienumero yllapito-tiedot/tienumero]
-         [aikajana/aikajana
-          {:muuta! #(tallenna-aikataulu
-                     urakka-id sopimus-id vuosi
-                     (raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
-          (map #(aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
-               aikataulurivit)]
+
+         [:div
+          [yleiset/linkki (if aikajana?
+                            "Piilota aikajana"
+                            "Näytä aikajana")
+           #(swap! tiedot/nayta-aikajana? not)]]
+
+         (when aikajana?
+           [aikajana/aikajana
+            {:muuta! #(tallenna-aikataulu
+                       urakka-id sopimus-id vuosi
+                       (raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+            (map #(aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+                 aikataulurivit)])
+
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
@@ -304,8 +314,8 @@
               :tyyppi :valinta
               :fmt (fn [arvo]
                      (:nimi (some
-                              #(when (= (:id %) arvo) %)
-                              @tiedot/tiemerkinnan-suorittavat-urakat)))
+                             #(when (= (:id %) arvo) %)
+                             @tiedot/tiemerkinnan-suorittavat-urakat)))
               :valinta-arvo :id
               :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
               :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
