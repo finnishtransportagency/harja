@@ -19,7 +19,7 @@ SELECT
   urk.luotu                AS urakoitsija_luotu,
   s.nimi                   AS sopimus_nimi,
   s.id                     AS sopimus_id,
-  s.paasopimus             AS sopimus_paasopimus,
+  s.paasopimus             AS "sopimus_paasopimus-id",
   s.alkupvm                AS sopimus_alkupvm,
   s.loppupvm               AS sopimus_loppupvm,
   s.muokattu               AS sopimus_muokattu,
