@@ -78,7 +78,7 @@
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}])))
 
-    ;; Pääsopimus asetetaan muualla..
+    ;; Pääsopimus asetetaan muualla
 
     (testing "Sopimuksen lisääminen gridiin, kun pääsopimus on jo asetettu"
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}]
@@ -89,7 +89,6 @@
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1} {::s/id -3 ::s/paasopimus-id 1}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id 1 :poistettu true}])))))
-
 
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
   (vaadi-async-kutsut
@@ -130,66 +129,73 @@
 
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
-    (is (false? (sequential? (luonti/paasopimus [{:id 1 :paasopimus nil}
-                                                 {:id 2 :paasopimus nil}
-                                                 {:id 3 :paasopimus 1}
-                                                 {:id 4 :paasopimus 2}])))))
+    (is (false? (sequential? (luonti/paasopimus [{:id 1 :paasopimus-id nil}
+                                                 {:id 2 :paasopimus-id nil}
+                                                 {:id 3 :paasopimus-id 1}
+                                                 {:id 4 :paasopimus-id 2}])))))
 
   (testing "Pääsopimus löytyy sopimusten joukosta"
-    (is (= {:id 1 :paasopimus nil} (luonti/paasopimus [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}])))
-    (is (= {:id 1 :paasopimus nil} (luonti/paasopimus [{:id 2 :paasopimus 1} {:id 1 :paasopimus nil}]))))
+    (is (= {:id 1 :paasopimus-id nil} (luonti/paasopimus [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}])))
+    (is (= {:id 1 :paasopimus-id nil} (luonti/paasopimus [{:id 2 :paasopimus-id 1} {:id 1 :paasopimus-id nil}]))))
 
   (testing "Jos pääsopimusta ei ole, sitä ei myöskään palauteta"
-    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus 2} {:id 3 :paasopimus 2}])))
-    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus nil} {:id 3 :paasopimus nil}])))
+    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus-id 2} {:id 3 :paasopimus-id 2}])))
+    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus-id nil} {:id 3 :paasopimus-id nil}])))
     (is (= nil (luonti/paasopimus [])))
-    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus nil}])))
-    (is (= nil (luonti/paasopimus [{:id nil :paasopimus nil}]))))
+    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus-id nil}])))
+    (is (= nil (luonti/paasopimus [{:id nil :paasopimus-id nil}]))))
 
   (testing "Pääsopimusta päätellessä ei välitetä poistetuista sopimuksista tai uusista riveistä"
-    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus nil} {:id 3 :paasopimus 1 :poistettu true}])))
-    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus nil} {:id- 3 :paasopimus 1}]))))
+    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus-id nil} {:id 3 :paasopimus-id 1 :poistettu true}])))
+    (is (= nil (luonti/paasopimus [{:id 1 :paasopimus-id nil} {:id- 3 :paasopimus-id 1}]))))
 
   (testing "Sopimus tunnistetaan pääsopimukseksi"
-    (is (true? (luonti/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}] {:id 1 :paasopimus nil})))
-    (is (true? (luonti/paasopimus? [{:id 2 :paasopimus 1} {:id 1 :paasopimus nil}] {:id 1 :paasopimus nil}))))
+    (is (true? (luonti/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
+                                   {:id 1 :paasopimus-id nil})))
+    (is (true? (luonti/paasopimus? [{:id 2 :paasopimus-id 1} {:id 1 :paasopimus-id nil}]
+                                   {:id 1 :paasopimus-id nil}))))
 
   (testing "Tunnistetaan, että sopimus ei ole pääsopimus"
-    (is (false? (luonti/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}] {:id 2 :paasopimus 1})))
-    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus 1} {:id 1 :paasopimus nil}] {:id 2 :paasopimus 1}))))
+    (is (false? (luonti/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
+                                    {:id 2 :paasopimus-id 1})))
+    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus-id 1} {:id 1 :paasopimus-id nil}]
+                                    {:id 2 :paasopimus-id 1}))))
 
   (testing "Jos pääsopimusta ei ole, sopimusta ei tunnisteta pääsopimukseksi"
-    (is (false? (luonti/paasopimus? [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}] {:id 2 :paasopimus nil})))
-    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus nil} {:id 1 :paasopimus nil}] {:id 1 :paasopimus nil})))
-    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus nil} {:id 1 :paasopimus nil}] {:id nil :paasopimus nil}))))
+    (is (false? (luonti/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id nil}]
+                                    {:id 2 :paasopimus-id nil})))
+    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus-id nil} {:id 1 :paasopimus-id nil}]
+                                    {:id 1 :paasopimus-id nil})))
+    (is (false? (luonti/paasopimus? [{:id 2 :paasopimus-id nil} {:id 1 :paasopimus-id nil}]
+                                    {:id nil :paasopimus-id nil}))))
 
   (testing "Uuden pääsopimuksen asettaminen"
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id -3 :paasopimus nil}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1 :poistettu true}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus nil} {:id 2 :paasopimus nil} {:id 3 :paasopimus nil :poistettu true}]
-                                              {:id 1 :paasopimus nil}))))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id nil}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id -3 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil} {:id -3 :paasopimus-id nil}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1 :poistettu true}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id nil :poistettu true}]
+                                              {:id 1 :paasopimus-id nil}))))
 
   (testing "Pääsopimuksen muuttaminen"
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id -3 :paasopimus 1}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id -3 :paasopimus 2}]
-                                              {:id 1 :paasopimus nil})))
-    (is (= [{:id 1 :paasopimus nil} {:id 2 :paasopimus 1} {:id 3 :paasopimus 1 :poistettu true}]
-           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus 2} {:id 2 :paasopimus nil} {:id 3 :paasopimus 2 :poistettu true}]
-                                              {:id 1 :paasopimus nil})))))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id 2} {:id 2 :paasopimus-id nil}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id 2} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id 2}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id -3 :paasopimus-id 1}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id 2} {:id 2 :paasopimus-id nil} {:id -3 :paasopimus-id 2}]
+                                              {:id 1 :paasopimus-id nil})))
+    (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1 :poistettu true}]
+           (luonti/sopimukset-paasopimuksella [{:id 1 :paasopimus-id 2} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id 2 :poistettu true}]
+                                              {:id 1 :paasopimus-id nil})))))
 
 (deftest urakan-sopimusvaihtoehdot
   (let [kaikki-sopimukset [{:id 1 :urakka {:id 1}} {:id 2 :urakka {:id 1}} {:id 3 :urakka nil} {:id 4 :urakka nil}]
