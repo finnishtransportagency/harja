@@ -32,19 +32,19 @@
      {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
       :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
      [{:otsikko "Nimi"
-       :nimi :sopimus
+       :nimi ::s/sopimus
        :leveys 3
        :tyyppi :valinta
        :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
        :virheet-dataan? true
-       :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
+       :valinta-nayta #(or (::s/nimi %) "- Valitse sopimus -")
        :hae identity
-       :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
+       :jos-tyhja-fn #(or (::s/nimi %) "Ei sopimuksia")
        :aseta (fn [_ arvo] arvo)}
-      {:otsikko "Alku" :leveys 2 :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
-      {:otsikko "Loppu" :leveys 2 :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Alku" :leveys 2 :nimi ::s/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Loppu" :leveys 2 :nimi ::s/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
       {:otsikko "Pääsopimus"
-       :nimi :paasopimus
+       :nimi ::s/paasopimus
        :leveys 1
        :tyyppi :string
        :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
@@ -157,8 +157,9 @@
               :nimi :sopimukset
               :palstoja 2
               :tyyppi :komponentti
-              :komponentti (fn [{urakka :data}] [sopimukset-grid e!
-                                                 (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
+              :komponentti (fn [{urakka :data}]
+                             [sopimukset-grid e!
+                              (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
            {:otsikko "Pääsopimus"
             :nimi :paasopimus
             :tyyppi :valinta
@@ -214,9 +215,9 @@
     [:button
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
       :class (str (case tila
-                :lahetetty "nappi-toissijainen "
-                :epaonnistunut "nappi-kielteinen "
-                :lahettamatta "nappi-ensisijainen ")
+                    :lahetetty "nappi-toissijainen "
+                    :epaonnistunut "nappi-kielteinen "
+                    :lahettamatta "nappi-ensisijainen ")
                   "nappi-grid")
       :on-click #(do
                    (.preventDefault %)

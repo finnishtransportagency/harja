@@ -16,6 +16,7 @@
 ;; TODO Tämä on generoitu käyttäen macroa (define-tables db ["sopimus" ::sopimus]).
 ;; Jouduttiin expandoimaan käsin, koska figwheel / phantom ei osannut käsitellä makroa sellaisenaan.
 ;; Vaatii pohtimista miten ratkaistaan.
+;; TODO Remappaa alaviivat viivoiksi ja viittausavainten perään -id
 (do
   (clojure.core/swap!
     specql.impl.registry/table-info-registry
@@ -248,8 +249,8 @@
 
 (defn paasopimus [sopimukset]
   (let [ps (as-> sopimukset s
-                 (filter (comp id-olemassa? :id) s)
+                 (filter (comp id-olemassa? ::s/id) s)
                  (remove :poistettu s)
-                 (filter (comp some? #{(some :paasopimus s)} :id) s))]
+                 (filter (comp some? #{(some ::s/paasopimus s)} ::s/id) s))]
     (assert (>= 1 (count ps)) (str (pr-str sopimukset) " löytyi useampi kuin yksi pääsopimus"))
     (first ps)))

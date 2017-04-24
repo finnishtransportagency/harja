@@ -10,6 +10,7 @@
 ;; TODO Tämä on generoitu käyttäen macroa (define-tables db ["urakka" ::urakka]).
 ;; Jouduttiin expandoimaan käsin, koska figwheel / phantom ei osannut käsitellä makroa sellaisenaan.
 ;; Vaatii pohtimista miten ratkaistaan.
+;; TODO Remappaa alaviivat viivoiksi ja viittausavainten perään -id
 (do
   (clojure.core/swap!
     specql.impl.registry/table-info-registry

@@ -8,6 +8,7 @@
             [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.urakka :as u]
+            [harja.domain.sopimus :as s]
             [harja.ui.viesti :as viesti]
             [namespacefy.core :refer [namespacefy]]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
@@ -16,7 +17,7 @@
             [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tyhja-sopimus {:nimi nil :alku nil :loppu nil :paasopimus nil :id nil})
+(def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus nil ::s/id nil})
 (def uusi-urakka {:sopimukset [tyhja-sopimus]})
 
 (defonce tila
@@ -37,18 +38,19 @@
 (defn sopimukset-paasopimuksella [sopimukset sopimus]
   (->>
     sopimukset
-    (map #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus))))))
+    (map #(assoc % :paasopimus (when (= (::s/id %) (::s/id sopimus))
+                                 (::s/id sopimus))))))
 
 (defn paasopimus? [sopimukset sopimus]
   (boolean (when-let [ps (paasopimus sopimukset)]
-             (= (:id sopimus) (:id ps)))))
+             (= (::s/id sopimus) (::s/id ps)))))
 
-(defn vapaa-sopimus? [s] (nil? (get-in s [:urakka :id])))
+(defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
   (->> sopimukset
        (filter vapaa-sopimus?)
-       (remove (comp (into #{} (keep :id urakan-sopimukset)) :id))))
+       (remove (comp (into #{} (keep ::s/id urakan-sopimukset)) ::s/id))))
 
 (defn uusin-tieto [hanke sopimukset urakoitsija urakka]
   (sort-by #(or (:muokattu %) (:luotu %))
