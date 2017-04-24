@@ -349,4 +349,10 @@ VALUES (:yllapitokohde, :maksueratunnus);
 UPDATE yllapitokohteen_maksueratunnus
 SET
   maksueratunnus = :maksueratunnus
-WHERE yllapitokohde = :yllapitokohde
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: paivita-paallystysilmoituksen-takuupvm<!
+UPDATE paallystysilmoitus
+SET
+  takuupvm = :takuupvm
+WHERE id = :id;
