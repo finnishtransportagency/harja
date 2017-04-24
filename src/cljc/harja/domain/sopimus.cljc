@@ -391,7 +391,7 @@
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus])))
+  (s/coll-of (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id])))
 
 ;; Tallennukset
 

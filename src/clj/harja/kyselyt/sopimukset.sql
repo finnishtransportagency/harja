@@ -48,7 +48,7 @@ SELECT
   s.nimi,
   s.alkupvm,
   s.loppupvm,
-  s.paasopimus,
+  s.paasopimus as "paasopimus-id",
   u.nimi AS urakka_nimi,
   u.id AS urakka_id
 FROM sopimus s
