@@ -58,4 +58,5 @@
                                                         paivitetty-hanke)]
 
           ;; Hanke päivittyi
-          (is (= (::hanke/nimi paivitetty-hanke-kannassa (::hanke/nimi hanke)))))))))
+          (is (= (::hanke/nimi paivitetty-hanke-kannassa)
+                 (::hanke/nimi paivitetty-hanke))))))))
