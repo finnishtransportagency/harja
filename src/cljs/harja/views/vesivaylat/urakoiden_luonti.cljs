@@ -267,6 +267,7 @@
          {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
           :hae #(get-in % [:hallintayksikko ::o/nimi])}
          {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke ::h/nimi])}
+         {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [:urakoitsija ::o/nimi])}
          {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
          {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
