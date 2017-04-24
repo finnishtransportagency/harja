@@ -44,12 +44,12 @@
       {:otsikko "Alku" :leveys 2 :nimi ::s/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
       {:otsikko "Loppu" :leveys 2 :nimi ::s/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
       {:otsikko "Pääsopimus"
-       :nimi ::s/paasopimus
+       :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
        :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
-                   (nil? (::s/paasopimus %)) (ikonit/livicon-question)
-                   :else (ikonit/unchecked))
+                   (nil? (::s/paasopimus-id %)) (ikonit/unchecked)
+                   :else (ikonit/question-sign))
        :muokattava? (constantly false)
        :hae identity}]
      (r/wrap
@@ -163,7 +163,7 @@
                              [sopimukset-grid e!
                               (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
            {:otsikko "Pääsopimus"
-            :nimi ::s/paasopimus
+            :nimi ::s/paasopimus-id
             :tyyppi :valinta
             :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
             :valinta-nayta #(do
@@ -183,8 +183,8 @@
             :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :aseta (fn [rivi arvo] (assoc rivi ::u/sopimukset (tiedot/sopimukset-paasopimuksella
-                                                             (::u/sopimukset rivi)
-                                                             arvo)))
+                                                                (::u/sopimukset rivi)
+                                                                arvo)))
             :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
           valittu-urakka])])))
 

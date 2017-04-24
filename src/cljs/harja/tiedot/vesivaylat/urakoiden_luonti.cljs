@@ -17,7 +17,7 @@
             [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus nil ::s/id nil})
+(def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus-id nil ::s/id nil})
 (def uusi-urakka {:sopimukset [tyhja-sopimus]})
 
 (defonce tila
@@ -38,7 +38,7 @@
 (defn sopimukset-paasopimuksella [sopimukset sopimus]
   (->>
     sopimukset
-    (map #(assoc % ::s/paasopimus (when (= (::s/id %) (::s/id sopimus))
+    (map #(assoc % ::s/paasopimus-id (when (= (::s/id %) (::s/id sopimus))
                                     (::s/id sopimus))))))
 
 (defn paasopimus? [sopimukset sopimus]
