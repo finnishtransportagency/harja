@@ -196,8 +196,6 @@
 
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
-    (log "PÄIVITÄ SOPIMUKSET GRID!")
-    (log "SOPPARIT: " (pr-str sopimukset))
     (->> sopimukset
          (map #(assoc % ::s/paasopimus-id (::s/id (paasopimus (::s/sopimukset urakka)))))
          ;; Jos sopimus on pääsopimus, :paasopimus-id-id asetetaan nilliksi
