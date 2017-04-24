@@ -5,7 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.tyokalut.spec-apurit :refer [unnamespacefy]]
+            [namespacefy.core :refer [get-un]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.domain.urakka :as u]
             [harja.domain.organisaatio :as o]
@@ -179,9 +179,9 @@
          valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]
-  (if (pvm/jalkeen? (:muokattu asia) (:luotu asia))
-    [(str muokattu " '" (:nimi asia) "' muokattu:") (pvm/pvm-aika-opt (:muokattu asia))]
-    [(str luotu " '" (:nimi asia) "' luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
+  (if (pvm/jalkeen? (get-un asia :muokattu) (get-un asia :luotu))
+    [(str muokattu " '" (get-un asia :nimi) "' muokattu:") (pvm/pvm-aika-opt (get-un asia :muokattu))]
+    [(str luotu " '" (get-un asia :nimi) "' luotu:") (pvm/pvm-aika-opt (get-un asia :luotu))]))
 
 (defn muokkaus-tiedot [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
   [:div "Tänne tulee metatietoja"]
@@ -195,13 +195,13 @@
          ["Viimeisin yritys" (pvm/pvm-aika-opt (:lahetetty uusin))
           "Viimeisin onnistunut lähetys" (pvm/pvm-aika-opt (tiedot/uusin-onnistunut-lahetys sahkelahetykset))])
         ["Urakan tietoja ei ole vielä lähetetty!" ""])
-      (muokkaus-otsikko (unnamespacefy urakka) "Urakkaa" "Urakka")
-      (muokkaus-otsikko (unnamespacefy hanke) "Hanketta" "Hanke")
+      (muokkaus-otsikko urakka "Urakkaa" "Urakka")
+      (muokkaus-otsikko hanke "Hanketta" "Hanke")
       (apply
         concat
         (for [sopimus sopimukset]
-         (muokkaus-otsikko (unnamespacefy sopimus) "Sopimusta" "Sopimus")))
-      (muokkaus-otsikko (unnamespacefy urakoitsija) "Urakoitsijaa" "Urakoitsija"))]))
+         (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
+      (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
 
 (defn sahke-nappi [e! {lahetykset :kaynnissa-olevat-sahkelahetykset} urakka]
   (let [lahetys-kaynnissa? (some? (lahetykset (::u/id urakka)))

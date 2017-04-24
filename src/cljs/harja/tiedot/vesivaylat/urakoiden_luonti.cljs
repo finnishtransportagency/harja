@@ -9,7 +9,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
-            [harja.tyokalut.spec-apurit :refer [namespacefy]]
+            [namespacefy.core :refer [namespacefy]]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.domain.sopimus :as sopimus-domain]
             [harja.pvm :as pvm]

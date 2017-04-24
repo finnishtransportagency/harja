@@ -8,7 +8,7 @@
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.spec-apurit :refer [namespacefy]]
+            [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
             [harja.id :refer [id-olemassa?]]
             [harja.geo :refer [muunna-pg-tulokset]]

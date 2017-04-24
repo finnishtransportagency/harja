@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.domain.hanke :as hanke]
             [harja.id :as id]
-            [harja.tyokalut.spec-apurit :refer [namespacefy]]
+            [namespacefy.core :refer [namespacefy]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]

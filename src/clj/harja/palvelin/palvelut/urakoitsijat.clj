@@ -7,7 +7,7 @@
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [taoensso.timbre :as log]
             [harja.domain.organisaatio :as o]
-            [harja.tyokalut.spec-apurit :refer [namespacefy]]
+            [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.urakoitsijat :as q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
