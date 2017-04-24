@@ -24,20 +24,20 @@
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"
-    (let [vanhat [{:id 1} {:id 2}]
-          uusi {:id 3}
+    (let [vanhat [{::u/id 1} {::u/id 2}]
+          uusi {::u/id 3}
           tulos (e-tila! luonti/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakat tulos)))))
 
   (testing "Urakan muokkaaminen"
-    (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
-          uusi {:id 2 :nimi :bb}
+    (let [vanhat [{::u/id 1 :nimi :a} {::u/id 2 :nimi :b}]
+          uusi {::u/id 2 :nimi :bb}
           tulos (e-tila! luonti/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
-      (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakat tulos))))))
+      (is (= [{::u/id 1 :nimi :a} {::u/id 2 :nimi :bb}] (:haetut-urakat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
   (let [tulos (e! luonti/->UrakkaEiTallennettu "virhe")]
@@ -89,6 +89,7 @@
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1} {::s/id -3 ::s/paasopimus-id 1}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id 1 :poistettu true}])))))
+
 
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
   (vaadi-async-kutsut
