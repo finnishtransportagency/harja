@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat
-  (:require [harja.geo :as geo]))
+  (:require [harja.geo :as geo]
+            [harja.tyokalut.spec-apurit :as apurit]))
 
 (defn rakenna-tierekisteriosoite [ilmoitus tierekisteriosoite]
   (if (and (:numero tierekisteriosoite)
@@ -35,14 +36,15 @@
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
-    (-> ilmoitus
-        (update-in [henkiloavain] dissoc :puhelinnumero)
-        (update-in [henkiloavain] dissoc :matkapuhelin)
-        (update-in [henkiloavain] dissoc :tyopuhelin)
-        (update-in [henkiloavain] dissoc :sahkoposti)
-        (assoc-in [henkiloavain :matkapuhelin] (:matkapuhelin henkilo))
-        (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
-        (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
+    (apurit/poista-nil-avaimet
+      (-> ilmoitus
+          (update-in [henkiloavain] dissoc :puhelinnumero)
+          (update-in [henkiloavain] dissoc :matkapuhelin)
+          (update-in [henkiloavain] dissoc :tyopuhelin)
+          (update-in [henkiloavain] dissoc :sahkoposti)
+          (assoc-in [henkiloavain :matkapuhelin] (:matkapuhelin henkilo))
+          (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
+          (assoc-in [henkiloavain :email] (:sahkoposti henkilo))))))
 
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
