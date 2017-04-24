@@ -38,8 +38,8 @@
 (defn sopimukset-paasopimuksella [sopimukset sopimus]
   (->>
     sopimukset
-    (map #(assoc % :paasopimus (when (= (::s/id %) (::s/id sopimus))
-                                 (::s/id sopimus))))))
+    (map #(assoc % ::s/paasopimus (when (= (::s/id %) (::s/id sopimus))
+                                    (::s/id sopimus))))))
 
 (defn paasopimus? [sopimukset sopimus]
   (boolean (when-let [ps (paasopimus sopimukset)]

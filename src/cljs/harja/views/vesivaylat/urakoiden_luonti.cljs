@@ -161,20 +161,22 @@
                              [sopimukset-grid e!
                               (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
            {:otsikko "Pääsopimus"
-            :nimi :paasopimus
+            :nimi ::s/paasopimus
             :tyyppi :valinta
             :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
-            :valinta-nayta #(cond
-                              %
-                              (::s/nimi %)
+            :valinta-nayta #(do
+                              ;; TODO Ei näytä oikein nyt tämä!?
+                              (cond
+                                %
+                                (::s/nimi %)
 
-                              (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
-                              "Määrittele pääsopimus"
+                                (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+                                "Määrittele pääsopimus"
 
-                              (= (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
-                              "Urakalla vain yksi sopimus"
+                                (= (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+                                "Urakalla vain yksi sopimus"
 
-                              :else "Valitse urakalle sopimus")
+                                :else "Valitse urakalle sopimus"))
             :jos-tyhja "Urakalla ei sopimuksia"
             :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
