@@ -38,6 +38,9 @@
                                          :vuosi vuosi
                                          :paallystysilmoitus lomakedata}))
 
+(defn tallenna-paallystysilmoitusten-takuupvmt [paallystysilmoitukset]
+  (k/post! :tallenna-paallystysilmoitusten-takuupvmt paallystysilmoitukset))
+
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
@@ -100,13 +103,13 @@
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
-  (reaction (let [taso @karttataso-paallystyskohteet
-                  paallystyskohteet @yhan-paallystyskohteet
-                  lomakedata @paallystysilmoitus-lomakedata]
-              (when (and taso paallystyskohteet)
-                (yllapitokohteet/yllapitokohteet-kartalle
-                  paallystyskohteet
-                  lomakedata)))))
+         (reaction (let [taso @karttataso-paallystyskohteet
+                         paallystyskohteet @yhan-paallystyskohteet
+                         lomakedata @paallystysilmoitus-lomakedata]
+                     (when (and taso paallystyskohteet)
+                       (yllapitokohteet/yllapitokohteet-kartalle
+                         paallystyskohteet
+                         lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
 

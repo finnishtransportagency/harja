@@ -450,6 +450,9 @@
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
+(defn tallenna-paallystysilmoitusten-takuupvmt [db user tiedot]
+  (println "---> tiedot" tiedot))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -464,6 +467,9 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystysilmoitusten-takuupvmt
+                        (fn [user tiedot]
+                          (tallenna-paallystysilmoitusten-takuupvmt db user tiedot)))
       (julkaise-palvelu http :hae-paallystyksen-maksuerat
                         (fn [user tiedot]
                           (hae-urakan-maksuerat db user tiedot))
@@ -482,5 +488,8 @@
       :urakan-paallystysilmoitukset
       :urakan-paallystysilmoitus-paallystyskohteella
       :tallenna-paallystysilmoitus
-      :tallenna-paallystyskohteet)
+      :tallenna-paallystyskohteet
+      :tallenna-paallystysilmoitusten-takuupvmt
+      :hae-paallystyksen-maksuerat
+      :tallenna-paallystyksen-maksuerat)
     this))

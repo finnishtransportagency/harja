@@ -334,7 +334,7 @@
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
            (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30
-             :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
+                                                      :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
@@ -512,7 +512,11 @@
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash
-    :tallenna #()
+    :tallenna (fn [rivit]
+                (paallystys/tallenna-paallystysilmoitusten-takuupvmt
+                  (mapv #(hash-map ::pot/id (:paallystyskohde-id %)
+                                   ::pot/takuupvm (:takuupvm %))
+                        rivit)))
     :voi-lisata? false
     :voi-kumota? false
     :voi-poistaa? (constantly false)
@@ -522,13 +526,13 @@
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 15 :muokattava? (constantly true)}
-    {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly trues) :tyyppi :komponentti
+    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (constantly true)}
+    {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
                     (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
-    {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi
-     :komponentti
+    {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly true) :leveys 25
+     :tyyppi :komponentti
      :komponentti (fn [rivi]
                     (if (:tila rivi)
                       [:button.nappi-toissijainen.nappi-grid

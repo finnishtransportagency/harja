@@ -526,3 +526,11 @@
     (clojure.spec/def :harja.domain.paallystysilmoitus/tila (clojure.spec/nilable #{"valmis" "aloitettu" "lukittu"}))
     (clojure.spec/def :harja.domain.paallystysilmoitus/muokattu (clojure.spec/nilable :specql.data-types/timestamp))
     (clojure.spec/def :harja.domain.paallystysilmoitus/asiatarkastus-pvm (clojure.spec/nilable :specql.data-types/date))))
+
+
+#_(s/def ::tallennettava-paallystysilmoituksen-takuupvm
+  (s/keys :req-un [::takuupvm ::id]))
+
+#_(s/def ::tallenna-paallystyksen-maksuerat-kysely (s/coll-of ::tallennettava-paallystysilmoituksen-takuupvm))
+
+
