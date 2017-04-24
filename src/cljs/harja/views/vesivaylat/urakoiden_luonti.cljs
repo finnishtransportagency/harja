@@ -57,7 +57,7 @@
        #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
 
 (defn voi-tallentaa? [urakka]
-  (and (> (count (filter (comp id-olemassa? ::u/id) (:sopimukset urakka))) 0)))
+  (and (> (count (filter (comp id-olemassa? ::u/id) (::u/sopimukset urakka))) 0)))
 
 (defn luontilomake [e! app]
   (komp/luo
@@ -71,7 +71,7 @@
         #(e! (tiedot/->ValitseUrakka nil))
         {:disabled tallennus-kaynnissa?}]
        (let [ilman-poistettuja #(remove :poistettu %)
-             urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
+             urakan-sopimukset (ilman-poistettuja (::u/sopimukset valittu-urakka))]
          [lomake/lomake
           {:otsikko (if (::u/id valittu-urakka)
                       "Muokkaa urakkaa"
