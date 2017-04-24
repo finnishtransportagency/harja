@@ -511,13 +511,19 @@
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-    :tunniste hash}
+    :tunniste hash
+    :tallenna #()
+    :voi-lisata? false
+    :voi-kumota? false
+    :voi-poistaa? (constantly false)
+    :voi-muokata? true}
    [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-    {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
+    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 15 :muokattava? (constantly true)}
+    {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly trues) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
                     (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
