@@ -406,6 +406,6 @@
   (let [ps (as-> sopimukset s
                  (filter (comp id-olemassa? ::s/id) s)
                  (remove :poistettu s)
-                 (filter (comp some? #{(some ::s/paasopimus-id s)} ::s/id) s))]
+                 (filter #(nil? (::s/paasopimus-id %)) s))]
     (assert (>= 1 (count ps)) (str (pr-str sopimukset) " löytyi useampi kuin yksi pääsopimus"))
     (first ps)))

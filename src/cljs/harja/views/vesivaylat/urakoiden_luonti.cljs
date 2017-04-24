@@ -47,9 +47,9 @@
        :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
-       :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
-                   (nil? (::s/paasopimus-id %)) (ikonit/unchecked)
-                   :else (ikonit/question-sign))
+       :fmt #(if (tiedot/paasopimus? %)
+               (ikonit/check)
+               (ikonit/unchecked))
        :muokattava? (constantly false)
        :hae identity}]
      (r/wrap
@@ -167,7 +167,6 @@
             :tyyppi :valinta
             :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
             :valinta-nayta #(do
-                              ;; TODO Ei näytä oikein nyt tämä!?
                               (cond
                                 %
                                 (::s/nimi %)

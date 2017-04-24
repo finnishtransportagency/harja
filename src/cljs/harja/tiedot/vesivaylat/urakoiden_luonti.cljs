@@ -35,15 +35,15 @@
 (defn paasopimus [sopimukset]
   (sopimus-domain/paasopimus sopimukset))
 
-(defn sopimukset-paasopimuksella [sopimukset sopimus]
+(defn sopimukset-paasopimuksella [sopimukset paasopimus]
   (->>
     sopimukset
-    (map #(assoc % ::s/paasopimus-id (when (= (::s/id %) (::s/id sopimus))
-                                    (::s/id sopimus))))))
+    ;; Asetetaan sopimukselle tieto siitä, mikä sopimus on niiden pääsopimus
+    (map #(assoc % ::s/paasopimus-id (when (not= (::s/id %) (::s/id paasopimus))
+                                       (::s/id paasopimus))))))
 
-(defn paasopimus? [sopimukset sopimus]
-  (boolean (when-let [ps (paasopimus sopimukset)]
-             (= (::s/id sopimus) (::s/id ps)))))
+(defn paasopimus? [sopimus]
+  (nil? (::s/paasopimus-id sopimus)))
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
