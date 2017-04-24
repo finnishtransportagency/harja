@@ -162,19 +162,19 @@
   (reset! valittu-urakkatyyppi ut)
   (vaihda-vaylamuoto! ut)
   (hy/hae-hallintayksikot! @valittu-vaylamuoto)
-  (when (= @valittu-vaylamuoto :tie)
-    (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
-                                                       :hoito @urk/urakoitsijat-hoito
-                                                       :paallystys @urk/urakoitsijat-paallystys
-                                                       :paikkaus @urk/urakoitsijat-paikkaus
-                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                       :valaistus @urk/urakoitsijat-valaistus
-                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
-                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet)]
-              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-                %
-                nil)))))
+  (swap! valittu-urakoitsija
+         #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+                                                     :hoito @urk/urakoitsijat-hoito
+                                                     :paallystys @urk/urakoitsijat-paallystys
+                                                     :paikkaus @urk/urakoitsijat-paikkaus
+                                                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                                                     :valaistus @urk/urakoitsijat-valaistus
+                                                     :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                                                     :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
+                                                     :vesivayla @urk/urakoitsijat-vesivaylat)]
+            (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+              %
+              nil))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
