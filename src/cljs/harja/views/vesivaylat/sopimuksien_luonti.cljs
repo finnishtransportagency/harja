@@ -40,11 +40,14 @@
           :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
        {:otsikko "Pääsopimus"
         :muokattava? (constantly false)
-        :nimi ::sopimus/paasopimus
+        :nimi ::sopimus/paasopimus-id
         :tyyppi :string
-        :hae (fn [s] (or (:name (first (filter #(= (::sopimus/paasopimus s) (::sopimus/id %))
-                                               haetut-sopimukset)))
-                         "Sopimus on pääsopimus"))}
+        :hae (fn [s]
+               (let [paasopimus (first (filter #(= (::sopimus/paasopimus-id s) (::sopimus/id %))
+                                               haetut-sopimukset))]
+                 (if (::sopimus/paasopimus-id s)
+                   (::sopimus/nimi paasopimus)
+                   "Sopimus on pääsopimus")))}
        (if (:id valittu-sopimus)
          {:otsikko "Urakka"
           :muokattava? (constantly false)
