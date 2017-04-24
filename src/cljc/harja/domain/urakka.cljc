@@ -33,7 +33,8 @@
 ;; urakan tietoja, kyselyspecinä.
 (s/def ::urakka-kysely (s/keys :req [::id]))
 
+(def vesivayla-urakkatyypit #{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
+                               :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
+
 (defn vesivayla-urakka? [urakka]
-  (#{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
-     :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus}
-    (:tyyppi :urakka)))
+  (vesivayla-urakkatyypit (:tyyppi urakka)))

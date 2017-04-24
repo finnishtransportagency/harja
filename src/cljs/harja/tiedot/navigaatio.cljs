@@ -23,7 +23,8 @@
     [harja.pvm :as pvm]
     [clojure.string :as str]
     [harja.geo :as geo]
-    [harja.domain.oikeudet :as oikeudet])
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.urakka :as urakka-domain])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -78,8 +79,11 @@
                     :vanha-koko vanha-koko
                     :uusi-koko uusi-koko}))))
 
-;; I-vaiheessa aina :tie
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
+
+(defn vaihda-vaylamuoto! [ut]
+  ;; Tämä muutetaan jos tulee Rata
+  (reset! valittu-vaylamuoto (if (= :vesivayla (:arvo ut)) :vesi :tie)))
 
 (def +urakkatyypit+
   [{:nimi "Hoito" :arvo :hoito}
@@ -88,7 +92,12 @@
    {:nimi "Paikkaus" :arvo :paikkaus}
    {:nimi "Valaistus" :arvo :valaistus}
    {:nimi "Siltakorjaus" :arvo :siltakorjaus}
-   {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}])
+   {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
+   ;; "Vesiväylät" ei ole urakkatyyppi, vaan väylämuoto
+   ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
+   ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
+   ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
+   {:nimi "Vesiväylät" :arvo :vesivayla}])
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
@@ -150,8 +159,10 @@
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
   [ut]
+  (reset! valittu-urakkatyyppi ut)
+  (vaihda-vaylamuoto! ut)
+  (hy/hae-hallintayksikot! @valittu-vaylamuoto)
   (when (= @valittu-vaylamuoto :tie)
-    (reset! valittu-urakkatyyppi ut)
     (swap! valittu-urakoitsija
            #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
                                                        :hoito @urk/urakoitsijat-hoito
@@ -293,7 +304,9 @@
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []
-            (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
+            (comp (filter #(or (= v-ur-tyyppi (:tyyppi %))
+                               (and (= v-ur-tyyppi :vesivayla)
+                                    (urakka-domain/vesivayla-urakka? %))))
                   (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
                   (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
             urakkalista))))

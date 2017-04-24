@@ -14,9 +14,14 @@
     nimi
     (str nro " " nimi)))
 
-(go (reset! hallintayksikot
-            (into []
-                  (map #(assoc % :type :hy))
-                  (<! (k/post! :hallintayksikot
-                               ;; FIXME: tämä päätellään serverin puolella käyttäjästä, kun on sen aika
-                               :tie)))))
+(defn hae-hallintayksikot!
+  ([] (hae-hallintayksikot! :tie))
+  ([vayla]
+   (go (reset! hallintayksikot
+               (into []
+                     (map #(assoc % :type :hy))
+                     (<! (k/post! :hallintayksikot
+                                  ;; FIXME: tämä päätellään serverin puolella käyttäjästä, kun on sen aika
+                                  vayla)))))))
+
+(hae-hallintayksikot! :tie)
