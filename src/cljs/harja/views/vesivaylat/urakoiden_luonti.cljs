@@ -47,7 +47,7 @@
        :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
-       :fmt #(if (tiedot/paasopimus? %)
+       :fmt #(if (tiedot/paasopimus? urakan-sopimukset %)
                (ikonit/check)
                (ikonit/unchecked))
        :muokattava? (constantly false)
