@@ -173,24 +173,28 @@
                drag-move! (fn [e]
                             (.preventDefault e)
                             (when @drag
-                              (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
-                                    cx (.-clientX e)
-                                    cy (.-clientY e)
-                                    x (- cx svg-x alku-x)
-                                    y (- cy svg-y)
-                                    paiva (x->paiva x)
-                                    tooltip-x (+ alku-x x)
-                                    tooltip-y (+ y 24)]
-                                (swap! drag
-                                       (fn [{avain :avain :as drag}]
-                                         (merge
-                                          {:x tooltip-x :y tooltip-y}
-                                          (if (or (and (= avain ::alku)
-                                                       (pvm/ennen? paiva (::loppu drag)))
-                                                  (and (= avain ::loppu)
-                                                       (pvm/jalkeen? paiva (::alku drag))))
-                                            (assoc drag avain (x->paiva x))
-                                            drag)))))))
+                              (if (zero? (.-buttons e))
+                                ;; Ei nappeja pohjassa, lopeta raahaus
+                                (reset! drag nil)
+
+                                (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
+                                      cx (.-clientX e)
+                                      cy (.-clientY e)
+                                      x (- cx svg-x alku-x)
+                                      y (- cy svg-y)
+                                      paiva (x->paiva x)
+                                      tooltip-x (+ alku-x x)
+                                      tooltip-y (+ y 24)]
+                                  (swap! drag
+                                         (fn [{avain :avain :as drag}]
+                                           (merge
+                                            {:x tooltip-x :y tooltip-y}
+                                            (if (or (and (= avain ::alku)
+                                                         (pvm/ennen? paiva (::loppu drag)))
+                                                    (and (= avain ::loppu)
+                                                         (pvm/jalkeen? paiva (::alku drag))))
+                                              (assoc drag avain (x->paiva x))
+                                              drag))))))))
                drag @drag]
            [:div.aikajana
             [:svg#aikajana
