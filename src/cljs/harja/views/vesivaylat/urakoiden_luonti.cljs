@@ -213,10 +213,11 @@
         tila (tiedot/urakan-sahke-tila urakka)]
     [:button
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
-      :class (case tila
-               :lahetetty "nappi-toissijainen"
-               :epaonnistunut "nappi-kielteinen"
-               :lahettamatta "nappi-ensisijainen")
+      :class (str (case tila
+                :lahetetty "nappi-toissijainen "
+                :epaonnistunut "nappi-kielteinen "
+                :lahettamatta "nappi-ensisijainen ")
+                  "nappi-grid")
       :on-click #(do
                    (.preventDefault %)
                    (.stopPropagation %)
