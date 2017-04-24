@@ -48,7 +48,7 @@
        :leveys 1
        :tyyppi :string
        :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
-                   (nil? (:paasopimus %)) (ikonit/livicon-question)
+                   (nil? (::s/paasopimus %)) (ikonit/livicon-question)
                    :else (ikonit/unchecked))
        :muokattava? (constantly false)
        :hae identity}]
@@ -163,21 +163,21 @@
            {:otsikko "Pääsopimus"
             :nimi :paasopimus
             :tyyppi :valinta
-            :valinnat (filter (comp id-olemassa? :id) urakan-sopimukset)
+            :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
             :valinta-nayta #(cond
                               %
-                              (:nimi %)
+                              (::s/nimi %)
 
-                              (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
+                              (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
                               "Määrittele pääsopimus"
 
-                              (= (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
+                              (= (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
                               "Urakalla vain yksi sopimus"
 
                               :else "Valitse urakalle sopimus")
             :jos-tyhja "Urakalla ei sopimuksia"
-            :muokattava? #(> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-            :pakollinen? (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
+            :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+            :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/sopimukset-paasopimuksella
                                                              (:sopimukset rivi)
                                                              arvo)))
