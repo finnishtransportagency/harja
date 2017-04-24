@@ -228,14 +228,14 @@
               #(assoc-in % polku
                          (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
+(defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
+  (when (and valmispvm-paallystys
+             takuupvm
+             (> valmispvm-paallystys takuupvm))
+    "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
+    
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
-  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
-        tarkista-takuu-pvm (fn [_ {valmispvm-paallystys :valmispvm-paallystys
-                                   takuupvm :takuupvm}]
-                             (when (and valmispvm-paallystys
-                                        takuupvm
-                                        (> valmispvm-paallystys takuupvm))
-                               "Takuupvm on yleensä kohteen valmistumisen jälkeen."))]
+  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
@@ -526,7 +526,7 @@
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (constantly true)}
+    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (constantly true) :fmt pvm/pvm-opt}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
