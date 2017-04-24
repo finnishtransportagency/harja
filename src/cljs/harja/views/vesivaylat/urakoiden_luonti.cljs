@@ -57,7 +57,9 @@
        #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
 
 (defn voi-tallentaa? [urakka]
-  (and (> (count (filter (comp id-olemassa? ::u/id) (::u/sopimukset urakka))) 0)))
+  (> (count (filter (comp id-olemassa? ::s/id)
+                    (::u/sopimukset urakka)))
+     0))
 
 (defn luontilomake [e! app]
   (komp/luo
