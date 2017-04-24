@@ -7,7 +7,17 @@
     #?@(:clj [
             [clojure.future :refer :all]])))
 
-;; TODO Tämä on generoitu käyttäen macroa (define-tables db ["urakka" ::urakka]).
+;; TODO Tämä on generoitu käyttäen macroa:
+;; (macroexpand '(define-tables db ["urakka" ::urakka
+;; {"hanke_sampoid" ::hanke-sampoid
+;;  "hallintayksikko" ::hallintayksikko-id
+;;  "harjassa_luotu" ::harjassa-luotu?
+;;  "hanke" ::hanke-id
+;;  "urakoitsija" ::urakoitsija-id
+;;  "takuu_loppupvm" ::takuu-loppupvm
+;;  "ulkoinen_id" ::ulkoinen-id
+;;  "luoja" ::luoja-id
+;;  "muokkaaja" ::muokkaaja-id}]))
 ;; Jouduttiin expandoimaan käsin, koska figwheel / phantom ei osannut käsitellä makroa sellaisenaan.
 ;; Vaatii pohtimista miten ratkaistaan.
 ;; TODO Remappaa alaviivat viivoiksi ja viittausavainten perään -id

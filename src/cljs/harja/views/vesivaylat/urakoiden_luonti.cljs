@@ -269,10 +269,10 @@
          :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
         [{:otsikko "Nimi" :nimi ::u/nimi}
          {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
-          :hae #(get-in % [:hallintayksikko ::o/nimi])}
-         {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke ::h/nimi])}
-         {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [:urakoitsija ::o/nimi])}
-         {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
+          :hae #(get-in % [::u/hallintayksikko ::o/nimi])}
+         {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [::u/hanke ::h/nimi])}
+         {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [::u/urakoitsija ::o/nimi])}
+         {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % ::u/sopimukset))}
          {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti

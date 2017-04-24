@@ -296,9 +296,6 @@
                    {:sopimus :sopimukset
                     :sahkelahetys :sahkelahetykset})]
       (namespacefy urakat {:ns :harja.domain.urakka
-                           ;; Poikkeuksena muutama avain, jotka ovat speksissä viittaus-id (int),
-                           ;; mutta tässä kyselyssä sisältävät suoraan viitattujen asioiden tiedot
-                           :except #{:hallintayksikko :urakoitsija :sopimukset :hanke}
                            :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
                                    :urakoitsija {:ns :harja.domain.organisaatio}
                                    :sopimukset {:ns :harja.domain.sopimus}
