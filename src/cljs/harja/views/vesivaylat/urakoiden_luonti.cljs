@@ -191,7 +191,7 @@
     [(str muokattu " '" (get-un asia :nimi) "' muokattu:") (pvm/pvm-aika-opt (get-un asia :muokattu))]
     [(str luotu " '" (get-un asia :nimi) "' luotu:") (pvm/pvm-aika-opt (get-un asia :luotu))]))
 
-(defn muokkaus-tiedot [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
+(defn muokkaus-tiedot [{::u/keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
   [:div "Tänne tulee metatietoja"]
   (let [uusin (tiedot/uusin-lahetys sahkelahetykset)]
     [apply tietoja
