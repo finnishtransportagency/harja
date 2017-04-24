@@ -90,4 +90,5 @@
                                                               paivitetty-urakoitsija)]
 
           ;; Urakoitsija päivittyi
-          (is (= (::o/nimi paivitetty-urakoitsija-kannassa (::o/nimi urakoitsija)))))))))
+          (is (= (::o/nimi paivitetty-urakoitsija-kannassa)
+                 (::o/nimi paivitetty-urakoitsija))))))))
