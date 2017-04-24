@@ -51,7 +51,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
-                "required": true
+                "required": false
               },
               "lahettaja": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/lahettaja",
