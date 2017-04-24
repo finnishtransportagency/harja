@@ -1,7 +1,9 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
   (:require [schema.core :as s]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [specql.impl.registry]
+            [specql.data-types]))
 
 (def +tyomenetelmat+
   "Kaikki työmenetelmät POT-lomake Excelistä"
@@ -278,3 +280,249 @@
 
 (defn arvo-koodilla [koodisto koodi]
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
+
+(do
+  (clojure.core/swap!
+    specql.impl.registry/table-info-registry
+    clojure.core/merge
+    {:harja.domain.paallystysilmoitus/paallystysilmoitus {:name "paallystysilmoitus",
+                                                          :type :table,
+                                                          :columns {:harja.domain.paallystysilmoitus/asiatarkastus_tarkastaja {:name "asiatarkastus_tarkastaja",
+                                                                                                                               :number 25,
+                                                                                                                               :not-null? false,
+                                                                                                                               :has-default? false,
+                                                                                                                               :type-specific-data 1028,
+                                                                                                                               :type "varchar",
+                                                                                                                               :category "S",
+                                                                                                                               :primary-key? false,
+                                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/asiatarkastus_lisatiedot {:name "asiatarkastus_lisatiedot",
+                                                                                                                               :number 28,
+                                                                                                                               :not-null? false,
+                                                                                                                               :has-default? false,
+                                                                                                                               :type-specific-data 4100,
+                                                                                                                               :type "varchar",
+                                                                                                                               :category "S",
+                                                                                                                               :primary-key? false,
+                                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/paatos_tekninen_osa {:name "paatos_tekninen_osa",
+                                                                                                                          :number 14,
+                                                                                                                          :not-null? false,
+                                                                                                                          :has-default? false,
+                                                                                                                          :type-specific-data -1,
+                                                                                                                          :type "paallystysilmoituksen_paatostyyppi",
+                                                                                                                          :category "E",
+                                                                                                                          :primary-key? false,
+                                                                                                                          :enum? true},
+                                                                    :harja.domain.paallystysilmoitus/luotu {:name "luotu",
+                                                                                                            :number 7,
+                                                                                                            :not-null? false,
+                                                                                                            :has-default? false,
+                                                                                                            :type-specific-data -1,
+                                                                                                            :type "timestamp",
+                                                                                                            :category "D",
+                                                                                                            :primary-key? false,
+                                                                                                            :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/muokkaaja-id {:name "muokkaaja",
+                                                                                                                   :number 10,
+                                                                                                                   :not-null? false,
+                                                                                                                   :has-default? false,
+                                                                                                                   :type-specific-data -1,
+                                                                                                                   :type "int4",
+                                                                                                                   :category "N",
+                                                                                                                   :primary-key? false,
+                                                                                                                   :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/perustelu_tekninen_osa {:name "perustelu_tekninen_osa",
+                                                                                                                             :number 21,
+                                                                                                                             :not-null? false,
+                                                                                                                             :has-default? false,
+                                                                                                                             :type-specific-data 2052,
+                                                                                                                             :type "varchar",
+                                                                                                                             :category "S",
+                                                                                                                             :primary-key? false,
+                                                                                                                             :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/paallystyskohde-id {:name "paallystyskohde",
+                                                                                                                         :number 1,
+                                                                                                                         :not-null? true,
+                                                                                                                         :has-default? false,
+                                                                                                                         :type-specific-data -1,
+                                                                                                                         :type "int4",
+                                                                                                                         :category "N",
+                                                                                                                         :primary-key? false,
+                                                                                                                         :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/asiatarkastus-hyvaksytty {:name "asiatarkastus_hyvaksytty",
+                                                                                                                               :number 26,
+                                                                                                                               :not-null? false,
+                                                                                                                               :has-default? false,
+                                                                                                                               :type-specific-data -1,
+                                                                                                                               :type "bool",
+                                                                                                                               :category "B",
+                                                                                                                               :primary-key? false,
+                                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/kasittelyaika_tekninen_osa {:name "kasittelyaika_tekninen_osa",
+                                                                                                                                 :number 16,
+                                                                                                                                 :not-null? false,
+                                                                                                                                 :has-default? false,
+                                                                                                                                 :type-specific-data -1,
+                                                                                                                                 :type "timestamp",
+                                                                                                                                 :category "D",
+                                                                                                                                 :primary-key? false,
+                                                                                                                                 :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/id {:name "id",
+                                                                                                         :number 18,
+                                                                                                         :not-null? true,
+                                                                                                         :has-default? true,
+                                                                                                         :type-specific-data -1,
+                                                                                                         :type "int4",
+                                                                                                         :category "N",
+                                                                                                         :primary-key? true,
+                                                                                                         :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/takuupvm {:name "takuupvm",
+                                                                                                               :number 12,
+                                                                                                               :not-null? false,
+                                                                                                               :has-default? false,
+                                                                                                               :type-specific-data -1,
+                                                                                                               :type "date",
+                                                                                                               :category "D",
+                                                                                                               :primary-key? false,
+                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/ilmoitustiedot {:name "ilmoitustiedot",
+                                                                                                                     :number 3,
+                                                                                                                     :not-null? false,
+                                                                                                                     :has-default? false,
+                                                                                                                     :type-specific-data -1,
+                                                                                                                     :type "jsonb",
+                                                                                                                     :category "U",
+                                                                                                                     :primary-key? false,
+                                                                                                                     :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/poistettu {:name "poistettu",
+                                                                                                                :number 11,
+                                                                                                                :not-null? false,
+                                                                                                                :has-default? true,
+                                                                                                                :type-specific-data -1,
+                                                                                                                :type "bool",
+                                                                                                                :category "B",
+                                                                                                                :primary-key? false,
+                                                                                                                :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/luoja-id {:name "luoja",
+                                                                                                               :number 9,
+                                                                                                               :not-null? false,
+                                                                                                               :has-default? false,
+                                                                                                               :type-specific-data -1,
+                                                                                                               :type "int4",
+                                                                                                               :category "N",
+                                                                                                               :primary-key? false,
+                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/tila {:name "tila",
+                                                                                                           :number 17,
+                                                                                                           :not-null? false,
+                                                                                                           :has-default? false,
+                                                                                                           :type-specific-data -1,
+                                                                                                           :type "paallystystila",
+                                                                                                           :category "E",
+                                                                                                           :primary-key? false,
+                                                                                                           :enum? true},
+                                                                    :harja.domain.paallystysilmoitus/muokattu {:name "muokattu",
+                                                                                                               :number 8,
+                                                                                                               :not-null? false,
+                                                                                                               :has-default? false,
+                                                                                                               :type-specific-data -1,
+                                                                                                               :type "timestamp",
+                                                                                                               :category "D",
+                                                                                                               :primary-key? false,
+                                                                                                               :enum? false},
+                                                                    :harja.domain.paallystysilmoitus/asiatarkastus-pvm {:name "asiatarkastus_pvm",
+                                                                                                                        :number 24,
+                                                                                                                        :not-null? false,
+                                                                                                                        :has-default? false,
+                                                                                                                        :type-specific-data -1,
+                                                                                                                        :type "date",
+                                                                                                                        :category "D",
+                                                                                                                        :primary-key? false,
+                                                                                                                        :enum? false}},
+                                                          :insert-spec-kw :harja.domain.paallystysilmoitus/paallystysilmoitus-insert,
+                                                          :rel {"paallystyskohde" :harja.domain.paallystysilmoitus/paallystyskohde-id,
+                                                                "luoja" :harja.domain.paallystysilmoitus/luoja-id,
+                                                                "muokkaaja" :harja.domain.paallystysilmoitus/muokkaaja-id}}})
+  (do
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/paallystysilmoitus
+      (clojure.spec/keys
+        :opt
+        [:harja.domain.paallystysilmoitus/asiatarkastus_tarkastaja
+         :harja.domain.paallystysilmoitus/asiatarkastus_lisatiedot
+         :harja.domain.paallystysilmoitus/paatos_tekninen_osa
+         :harja.domain.paallystysilmoitus/luotu
+         :harja.domain.paallystysilmoitus/muokkaaja-id
+         :harja.domain.paallystysilmoitus/perustelu_tekninen_osa
+         :harja.domain.paallystysilmoitus/paallystyskohde-id
+         :harja.domain.paallystysilmoitus/asiatarkastus-hyvaksytty
+         :harja.domain.paallystysilmoitus/kasittelyaika_tekninen_osa
+         :harja.domain.paallystysilmoitus/id
+         :harja.domain.paallystysilmoitus/takuupvm
+         :harja.domain.paallystysilmoitus/ilmoitustiedot
+         :harja.domain.paallystysilmoitus/poistettu
+         :harja.domain.paallystysilmoitus/luoja-id
+         :harja.domain.paallystysilmoitus/tila
+         :harja.domain.paallystysilmoitus/muokattu
+         :harja.domain.paallystysilmoitus/asiatarkastus-pvm]))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/paallystysilmoitus-insert
+      (clojure.spec/keys
+        :req
+        [:harja.domain.paallystysilmoitus/paallystyskohde-id]
+        :opt
+        [:harja.domain.paallystysilmoitus/asiatarkastus_tarkastaja
+         :harja.domain.paallystysilmoitus/asiatarkastus_lisatiedot
+         :harja.domain.paallystysilmoitus/paatos_tekninen_osa
+         :harja.domain.paallystysilmoitus/luotu
+         :harja.domain.paallystysilmoitus/muokkaaja-id
+         :harja.domain.paallystysilmoitus/perustelu-tekninen_osa
+         :harja.domain.paallystysilmoitus/asiatarkastus-hyvaksytty
+         :harja.domain.paallystysilmoitus/kasittelyaika_tekninen_osa
+         :harja.domain.paallystysilmoitus/id
+         :harja.domain.paallystysilmoitus/takuupvm
+         :harja.domain.paallystysilmoitus/ilmoitustiedot
+         :harja.domain.paallystysilmoitus/poistettu
+         :harja.domain.paallystysilmoitus/luoja-id
+         :harja.domain.paallystysilmoitus/tila
+         :harja.domain.paallystysilmoitus/muokattu
+         :harja.domain.paallystysilmoitus/asiatarkastus-pvm]))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/asiatarkastus_tarkastaja
+      (clojure.spec/nilable
+        (clojure.spec/and
+          :specql.data-types/varchar
+          (clojure.core/fn [s__23993__auto__] (clojure.core/<= (clojure.core/count s__23993__auto__) 1024)))))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/asiatarkastus_lisatiedot
+      (clojure.spec/nilable
+        (clojure.spec/and
+          :specql.data-types/varchar
+          (clojure.core/fn [s__23993__auto__] (clojure.core/<= (clojure.core/count s__23993__auto__) 4096)))))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/paatos_tekninen_osa
+      (clojure.spec/nilable #{"hylatty" "hyvaksytty"}))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/luotu (clojure.spec/nilable :specql.data-types/timestamp))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/muokkaaja-id (clojure.spec/nilable :specql.data-types/int4))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/perustelu-tekninen_osa
+      (clojure.spec/nilable
+        (clojure.spec/and
+          :specql.data-types/varchar
+          (clojure.core/fn [s__23993__auto__] (clojure.core/<= (clojure.core/count s__23993__auto__) 2048)))))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/paallystyskohde-id :specql.data-types/int4)
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/asiatarkastus-hyvaksytty
+      (clojure.spec/nilable :specql.data-types/bool))
+    (clojure.spec/def
+      :harja.domain.paallystysilmoitus/kasittelyaika_tekninen_osa
+      (clojure.spec/nilable :specql.data-types/timestamp))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/id :specql.data-types/int4)
+    (clojure.spec/def :harja.domain.paallystysilmoitus/takuupvm (clojure.spec/nilable :specql.data-types/date))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/ilmoitustiedot (clojure.spec/nilable :specql.data-types/jsonb))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/poistettu (clojure.spec/nilable :specql.data-types/bool))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/luoja-id (clojure.spec/nilable :specql.data-types/int4))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/tila (clojure.spec/nilable #{"valmis" "aloitettu" "lukittu"}))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/muokattu (clojure.spec/nilable :specql.data-types/timestamp))
+    (clojure.spec/def :harja.domain.paallystysilmoitus/asiatarkastus-pvm (clojure.spec/nilable :specql.data-types/date))))
