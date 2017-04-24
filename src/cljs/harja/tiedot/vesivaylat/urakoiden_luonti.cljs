@@ -130,7 +130,7 @@
         (try
           (let [vastaus (async/<! (k/post! :tallenna-urakka
                                            (update urakka
-                                                   :sopimukset
+                                                   ::u/sopimukset
                                                    #(->> %
                                                          ;; grid antaa uusille riveille negatiivisen id:n,
                                                          ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
@@ -147,12 +147,15 @@
   UrakkaTallennettu
   (process-event [{urakka :urakka} app]
     (viesti/nayta! "Urakka tallennettu!")
-    (let [vanhat (group-by :id (:haetut-urakat app))
-          uusi {(:id urakka) [urakka]}]
+    (let [vanhat (group-by ::u/id (:haetut-urakat app))
+          uusi {(::u/id urakka) [urakka]}]
       ;; Yhdistetään tallennettu jo haettuihin.
       ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
       ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
-      (assoc app :haetut-urakat (sort-by :alkupvm pvm/jalkeen? (vec (apply concat (vals (merge vanhat uusi)))))
+      (assoc app :haetut-urakat
+                 (sort-by ::u/alkupvm pvm/jalkeen?
+                          (vec (apply concat
+                                      (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-urakka nil)))
 
@@ -193,11 +196,13 @@
 
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
+    (log "PÄIVITÄ SOPIMUKSET GRID!")
+    (log "SOPPARIT: " (pr-str sopimukset))
     (->> sopimukset
-         (map #(assoc % :paasopimus-id (:id (paasopimus (:sopimukset urakka)))))
+         (map #(assoc % ::s/paasopimus-id (::s/id (paasopimus (::s/sopimukset urakka)))))
          ;; Jos sopimus on pääsopimus, :paasopimus-id-id asetetaan nilliksi
-         (map #(update % :paasopimus-id (fn [ps] (when-not (= ps (:id %)) ps))))
-         (assoc-in app [:valittu-urakka :sopimukset])))
+         (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/d %)) ps))))
+         (assoc-in app [:valittu-urakka ::u/sopimukset])))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]
