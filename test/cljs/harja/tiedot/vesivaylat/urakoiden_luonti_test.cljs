@@ -65,13 +65,15 @@
 
 (deftest sopimuksen-paivittaminen
   (let [testaa (fn [tila annettu haluttu]
-                 (= (-> (e-tila! luonti/->PaivitaSopimuksetGrid annettu {:valittu-urakka {::u/sopimukset tila}})
-                        (get-in [:valittu-urakka ::u/sopimukset]))
-                    haluttu))]
+                 (let [uusi-tila (-> (e-tila! luonti/->PaivitaSopimuksetGrid annettu {:valittu-urakka {::u/sopimukset tila}})
+                                     (get-in [:valittu-urakka ::u/sopimukset]))]
+                   (= uusi-tila haluttu)))]
     (testing "Rivin lisääminen gridiin"
+      ;; Gridissä on yksi pääsopimus, lisätään uusi rivi, uusi sopimus
+      ;; viittaa nyt pääsopimukseen
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil}]
                   [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}])))
+                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id 1}])))
 
     (testing "Rivin asettaminen sopimukseksi gridiin"
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
@@ -82,13 +84,18 @@
 
     (testing "Sopimuksen lisääminen gridiin, kun pääsopimus on jo asetettu"
       (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1} {::s/id -3 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1} {::s/id -3 ::s/paasopimus-id 1}])))
+                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}
+                   {::s/id -3 ::s/paasopimus-id nil}]
+                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}
+                   {::s/id -3 ::s/paasopimus-id 1}])))
 
     (testing "Rivin poistaminen gridistä"
-      (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1} {::s/id -3 ::s/paasopimus-id 1}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true} {::s/id -3 ::s/paasopimus-id 1 :poistettu true}])))))
+      (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}
+                   {::s/id -3 ::s/paasopimus-id 1}]
+                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
+                   {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
+                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
+                   {::s/id -3 ::s/paasopimus-id 1 :poistettu true}])))))
 
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
   (vaadi-async-kutsut
@@ -130,9 +137,9 @@
 (deftest paasopimuksen-kasittely
   (testing "Löydetään aina vain yksi pääsopimus"
     (is (false? (sequential? (s/paasopimus [{:id 1 :paasopimus-id nil}
-                                                 {:id 2 :paasopimus-id nil}
-                                                 {:id 3 :paasopimus-id 1}
-                                                 {:id 4 :paasopimus-id 2}])))))
+                                            {:id 2 :paasopimus-id nil}
+                                            {:id 3 :paasopimus-id 1}
+                                            {:id 4 :paasopimus-id 2}])))))
 
   (testing "Pääsopimus löytyy sopimusten joukosta"
     (is (= {:id 1 :paasopimus-id nil} (s/paasopimus [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}])))
@@ -151,23 +158,23 @@
 
   (testing "Sopimus tunnistetaan pääsopimukseksi"
     (is (true? (s/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
-                                   {:id 1 :paasopimus-id nil})))
+                              {:id 1 :paasopimus-id nil})))
     (is (true? (s/paasopimus? [{:id 2 :paasopimus-id 1} {:id 1 :paasopimus-id nil}]
-                                   {:id 1 :paasopimus-id nil}))))
+                              {:id 1 :paasopimus-id nil}))))
 
   (testing "Tunnistetaan, että sopimus ei ole pääsopimus"
     (is (false? (s/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1} {:id 3 :paasopimus-id 1}]
-                                    {:id 2 :paasopimus-id 1})))
+                               {:id 2 :paasopimus-id 1})))
     (is (false? (s/paasopimus? [{:id 2 :paasopimus-id 1} {:id 1 :paasopimus-id nil}]
-                                    {:id 2 :paasopimus-id 1}))))
+                               {:id 2 :paasopimus-id 1}))))
 
   (testing "Jos pääsopimusta ei ole, sopimusta ei tunnisteta pääsopimukseksi"
     (is (false? (s/paasopimus? [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id nil} {:id 3 :paasopimus-id nil}]
-                                    {:id 2 :paasopimus-id nil})))
+                               {:id 2 :paasopimus-id nil})))
     (is (false? (s/paasopimus? [{:id 2 :paasopimus-id nil} {:id 1 :paasopimus-id nil}]
-                                    {:id 1 :paasopimus-id nil})))
+                               {:id 1 :paasopimus-id nil})))
     (is (false? (s/paasopimus? [{:id 2 :paasopimus-id nil} {:id 1 :paasopimus-id nil}]
-                                    {:id nil :paasopimus-id nil}))))
+                               {:id nil :paasopimus-id nil}))))
 
   (testing "Uuden pääsopimuksen asettaminen"
     (is (= [{:id 1 :paasopimus-id nil} {:id 2 :paasopimus-id 1}]

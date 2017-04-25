@@ -35,7 +35,8 @@
 (defn sopimukset-paasopimuksella [sopimukset paasopimus]
   (->>
     sopimukset
-    ;; Asetetaan sopimukselle tieto siitä, mikä sopimus on niiden pääsopimus
+    ;; Asetetaan sopimuksille tieto siitä, mikä sopimus on niiden pääsopimus
+    ;; Kuitenkin itse pääsopimukselle asetetaan paasopimus-id:ksi nil
     (map #(assoc % ::s/paasopimus-id (when (not= (::s/id %) (::s/id paasopimus))
                                        (::s/id paasopimus))))))
 
@@ -191,6 +192,7 @@
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
     (->> sopimukset
+         ;; Asetetaan sopimukset viittaamaan pääsopimukseen
          (map #(assoc % ::s/paasopimus-id (::s/id (s/paasopimus (::u/sopimukset urakka)))))
          ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
          (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
