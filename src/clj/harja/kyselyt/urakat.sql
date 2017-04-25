@@ -395,7 +395,6 @@ UPDATE urakka
     alue = :alue,
     hallintayksikko = :hallintayksikko,
     urakoitsija = :urakoitsija,
-    hanke = :hanke,
     muokattu = NOW(),
     muokkaaja = :kayttaja
 WHERE id = :id AND harjassa_luotu IS TRUE;

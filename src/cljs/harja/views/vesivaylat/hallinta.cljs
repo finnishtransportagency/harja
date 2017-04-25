@@ -18,13 +18,15 @@
               (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylasopimukset"}
      [vsu/vesivaylasopimuksien-luonti])
-
-   "Hankkeiden luonti"
-   :vesivaylahankkeiden-luonti
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                     (oikeudet/hallinta-vesivaylat))
-     ^{:key "vesivaylahankkeet"}
-     [vhu/vesivaylahankkeiden-luonti])
+   
+   ;; Hankkeet luodaan nykyään urakan kanssa automaattisesti.
+   ;; Otetaan näkymä käyttöön jos sille vielä tarve tulee.
+   ; "Hankkeiden luonti"
+   ; :vesivaylahankkeiden-luonti
+   ; (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+   ;            (oikeudet/hallinta-vesivaylat))
+   ;   ^{:key "vesivaylahankkeet"}
+   ;   [vhu/vesivaylahankkeiden-luonti])
 
    "Urakoitsijoiden luonti"
    :vesivaylaurakoitsijoiden-luonti

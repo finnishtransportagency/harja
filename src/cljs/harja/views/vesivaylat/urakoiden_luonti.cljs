@@ -122,7 +122,9 @@
                 :nimi ::u/urakoitsija
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
-           (lomake/ryhma
+           ;; Hanke luodaan nykyään urakan mukana automaattisesti, joten hankkeen muokkaus
+           ;; tai sen tietojen tarkastelu tässä ei ole mielekästä.
+           #_(lomake/ryhma
              {:otsikko "Hanke"
               :rivi? true}
              (if haetut-hankkeet

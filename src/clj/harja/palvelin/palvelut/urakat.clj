@@ -12,6 +12,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.hankkeet :as hankkeet-palvelu]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
             [harja.id :refer [id-olemassa?]]
@@ -216,8 +217,7 @@
 
 (defn- paivita-urakkaa! [db user urakka]
   (log/debug "Päivitetään urakkaa " (:nimi urakka))
-  (let [hanke (::u/hanke urakka)
-        hallintayksikko (::u/hallintayksikko urakka)
+  (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
     (q/paivita-harjassa-luotu-urakka<!
       db
@@ -228,12 +228,13 @@
        :alue (::u/alue urakka)
        :hallintayksikko (::o/id hallintayksikko)
        :urakoitsija (::o/id urakoitsija)
-       :hanke (::h/id hanke)
        :kayttaja (:id user)})))
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
   (log/debug "Luodaan uusi urakka " (:nimi urakka))
-  (let [hanke (::u/hanke urakka)
+  (let [hanke (hankkeet-palvelu/tallenna-hanke db user {::h/nimi (str (::u/nimi urakka) " H")
+                                                        ::h/alkupvm (::u/alkupvm urakka)
+                                                        ::h/loppupvm (::u/loppupvm urakka)})
         hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
     (q/luo-harjassa-luotu-urakka<!
@@ -285,6 +286,7 @@
                           (luo-uusi-urakka! db user urakka))]
 
         (paivita-urakan-sopimukset! db user urakka sopimukset)
+
         urakka))))
 
 (defn hae-harjassa-luodut-urakat [db user]
