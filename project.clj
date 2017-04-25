@@ -63,7 +63,7 @@
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
 
-                 [namespacefy "0.2.3"]
+                 [namespacefy "0.2.4"]
 
                  ;; Sähköposti lähetys
                  [com.draines/postal "2.0.2"]
