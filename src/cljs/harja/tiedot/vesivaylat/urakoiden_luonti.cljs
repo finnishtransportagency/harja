@@ -129,7 +129,7 @@
                                                          ;; grid antaa uusille riveille negatiivisen id:n,
                                                          ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
                                                          ;; Rivillä on neg. id vain, jos sopimus jäi valitsematta.
-                                                         (filter (comp id-olemassa? :id))))))]
+                                                         (filter (comp id-olemassa? ::s/id))))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
