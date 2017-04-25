@@ -150,10 +150,14 @@
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
   (reaction
-    (let [oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
-          valittu-urakkatyyppi @valittu-urakkatyyppi
-          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
-      (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
+    (let [valittu-urakkatyyppi @valittu-urakkatyyppi
+          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))
+          vaylamuodon-urakkatyyppi (urakkatyyppi-arvolle
+                                     (case @valittu-vaylamuoto
+                                      :tie :hoito
+                                      :vesi :vesivayla))
+          oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))]
+      (or urakan-urakkatyyppi valittu-urakkatyyppi vaylamuodon-urakkatyyppi oletus-urakkatyyppi))))
 
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
@@ -161,7 +165,7 @@
   [ut]
   (reset! valittu-urakkatyyppi ut)
   (vaihda-vaylamuoto! ut)
-  (hy/hae-hallintayksikot! @valittu-vaylamuoto)
+  (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto)
   (swap! valittu-urakoitsija
          #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
                                                      :hoito @urk/urakoitsijat-hoito
@@ -336,22 +340,23 @@
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
-  (let [uri (Uri/parse url)
-        polku (.getPath uri)
-        parametrit (.getQueryData uri)]
-    (log "POLKU: " polku)
-    (if-let [hy (some-> parametrit (.get "hy") js/parseInt)]
-      (if-let [u (some-> parametrit (.get "u") js/parseInt)]
-        (do (reset! valittu-hallintayksikko-id hy)
-            (reset! valittu-urakka-id u))
-        (do
-          (reset! valittu-hallintayksikko-id hy)
-          (reset! valittu-urakka-id nil))))
+  (go
+    (let [uri (Uri/parse url)
+         polku (.getPath uri)
+         parametrit (.getQueryData uri)]
+     (log "POLKU: " polku)
+     (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
+     (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
+     (when @valittu-hallintayksikko-id
+       (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
-    (swap! reitit/url-navigaatio
-           reitit/tulkitse-polku polku))
-  (reset! render-lupa-url-kasitelty? true)
-  (t/julkaise! {:aihe :url-muuttui :url url}))
+     (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto)
+
+     (swap! reitit/url-navigaatio
+            reitit/tulkitse-polku polku))
+    (reset! render-lupa-url-kasitelty? true)
+    (log "Render lupa annettu!")
+    (t/julkaise! {:aihe :url-muuttui :url url})))
 
 (.setEnabled historia true)
 
