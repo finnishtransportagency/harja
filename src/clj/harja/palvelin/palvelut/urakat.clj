@@ -2,7 +2,6 @@
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.sopimus :as sopimus-domain]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
@@ -256,7 +255,7 @@
 
     (let [lisattavat (map ::s/id (remove :poistettu sopimukset))
           poistettavat (map ::s/id (filter :poistettu sopimukset))
-          paasopimus (sopimus-domain/paasopimus sopimukset)]
+          paasopimus (s/paasopimus sopimukset)]
       (when-not (empty? poistettavat)
         (log/debug "Poistetaan urakasta " (::u/id urakka) (count poistettavat) " sopimusta.")
         (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (::u/id urakka)
