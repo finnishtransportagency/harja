@@ -30,7 +30,7 @@
   (let [urakan-sopimukset (remove :poistettu (::u/sopimukset urakka))]
     [grid/muokkaus-grid
      {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
-      :voi-kumota? false ;; FIXME Kaatuu tällä hetkellä, ei ole olennaisen tärkeö
+      :voi-kumota? false ;; FIXME Kaatuu tällä hetkellä, ei ole olennaisen tärkeä
       :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
      [{:otsikko "Nimi"
        :nimi ::s/sopimus
