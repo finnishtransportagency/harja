@@ -216,7 +216,7 @@
     :ok))
 
 (defn- paivita-urakkaa! [db user urakka]
-  (log/debug "Päivitetään urakkaa " (:nimi urakka))
+  (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
     (q/paivita-harjassa-luotu-urakka<!
@@ -231,7 +231,7 @@
        :kayttaja (:id user)})))
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
-  (log/debug "Luodaan uusi urakka " (:nimi urakka))
+  (log/debug "Luodaan uusi urakka " (::u/nimi urakka))
   (let [hanke (hankkeet-palvelu/tallenna-hanke db user {::h/nimi (str (::u/nimi urakka) " H")
                                                         ::h/alkupvm (::u/alkupvm urakka)
                                                         ::h/loppupvm (::u/loppupvm urakka)})
