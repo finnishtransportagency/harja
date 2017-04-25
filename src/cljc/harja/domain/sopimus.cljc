@@ -392,7 +392,8 @@
   (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
                                 sopimukset)]
     (and
-      (some? (::id sopimus))
+      (id-olemassa? (::id sopimus))
+      (not (:poistettu sopimus))
       (nil? (::paasopimus-id sopimus))
       (every? #(= (::paasopimus-id %) (::id sopimus))
               muut-sopimukset))))
