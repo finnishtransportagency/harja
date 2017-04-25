@@ -15,14 +15,16 @@
 
 (defn hae-hallintayksikot
   "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
-  [db user liikennemuoto]
+  [db user tiedot]
   (oikeudet/ei-oikeustarkistusta!)
-  (into []
-        (muunna-pg-tulokset :alue)
-        (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
-                                                     :tie "T"
-                                                     :vesi "V"
-                                                     :rata "R"))))
+  (let [liikennemuoto (:liikennemuoto tiedot)]
+    (into []
+         (muunna-pg-tulokset :alue)
+         (q/listaa-hallintayksikot-kulkumuodolle db (when liikennemuoto
+                                                      (case liikennemuoto
+                                                       :tie "T"
+                                                       :vesi "V"
+                                                       :rata "R"))))))
 
 
 (defn hae-organisaatio
@@ -40,8 +42,8 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hallintayksikot (fn [user liikennemuoto]
-                                         (hae-hallintayksikot (:db this) user liikennemuoto)))
+                      :hallintayksikot (fn [user tiedot]
+                                         (hae-hallintayksikot (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatio (fn [user org-id]
                                           (hae-organisaatio (:db this) user org-id)))

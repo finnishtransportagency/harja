@@ -1,11 +1,15 @@
 -- name: listaa-hallintayksikot-kulkumuodolle
 -- Hakee hallintayksiköiden perustiedot ja geometriat kulkumuodon mukaan
-SELECT id, nimi, alue,
-       lpad(cast(elynumero as varchar), 2, '0') as elynumero
-  FROM organisaatio
- WHERE tyyppi = 'hallintayksikko'::organisaatiotyyppi AND
-       liikennemuoto = :liikennemuoto::liikennemuoto
- ORDER BY elynumero ASC
+SELECT
+  id,
+  nimi,
+  alue,
+  liikennemuoto,
+  lpad(cast(elynumero AS VARCHAR), 2, '0') AS elynumero
+FROM organisaatio
+WHERE tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND
+      (:liikennemuoto::INTEGER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
+ORDER BY elynumero ASC;
 
 -- name: hae-organisaation-tunnistetiedot
 -- Hakee organisaation perustiedot tekstihaulla.
