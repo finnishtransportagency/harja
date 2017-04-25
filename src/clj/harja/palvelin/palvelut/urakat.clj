@@ -284,10 +284,8 @@
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
 
-        (paivita-urakan-sopimukset! db user tallennettu sopimukset)
-
-        ;; Palautetaan tallennettu urakka
-        tallennettu))))
+        (paivita-urakan-sopimukset! db user urakka sopimukset)
+        urakka))))
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
