@@ -47,6 +47,8 @@ ALTER TABLE hanke ALTER COLUMN alkupvm SET NOT NULL;
 ALTER TABLE hanke ALTER COLUMN loppupvm SET NOT NULL;
 ALTER TABLE hanke ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
 ALTER TABLE sopimus ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+ALTER TABLE sopimus ADD CONSTRAINT paasopimus_ei_ole_sama_sopimus CHECK
+(paasopimus IS NULL OR (paasopimus IS NOT NULL AND paasopimus != id)); -- Pääsopimus ei voi koskaan viitata samaan sopimukseen. Jos sopimus on pääsopimus, sen paasopimus on NULL
 ALTER TABLE sopimus ALTER alkupvm SET NOT NULL;
 ALTER TABLE sopimus ALTER loppupvm SET NOT NULL;
 ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
