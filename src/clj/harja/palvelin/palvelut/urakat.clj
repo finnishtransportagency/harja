@@ -280,7 +280,7 @@
 
     (jdbc/with-db-transaction [db db]
       (let [sopimukset (::u/sopimukset urakka)
-            tallennettu (if (id-olemassa? (:id urakka))
+            tallennettu (if (id-olemassa? (::u/id urakka))
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
 
