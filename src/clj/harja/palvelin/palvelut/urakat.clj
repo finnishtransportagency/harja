@@ -223,7 +223,7 @@
       db
       {:id (::u/id urakka)
        :nimi (::u/nimi urakka)
-       :alkupvm (::u/:alkupvm urakka)
+       :alkupvm (::u/alkupvm urakka)
        :loppupvm (::u/loppupvm urakka)
        :alue (::u/alue urakka)
        :hallintayksikko (::o/id hallintayksikko)
