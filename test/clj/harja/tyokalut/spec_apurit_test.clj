@@ -1,6 +1,7 @@
 (ns harja.tyokalut.spec-apurit-test
   (:require
     [clojure.test :refer [deftest is use-fixtures]]
+    [harja.tyokalut.spec-apurit :refer [poista-nil-avaimet]]
     [harja.testi :refer :all]))
 
 (deftest nil-arvojen-poisto-mapista-toimii
