@@ -256,7 +256,7 @@
     (let [urakan-sopimus-idt (map ::s/id (remove :poistettu sopimukset))
           poistettavat-sopimus-idt (map ::s/id (filter :poistettu sopimukset))
           urakan-paasopimus (s/paasopimus sopimukset)
-          urakan-sivusopimukset (filter #(not= % urakan-paasopimus) urakan-sopimus-idt)]
+          urakan-sivusopimukset (filter #(not= % urakan-paasopimus) sopimukset)]
 
       (assert urakan-paasopimus "Urakalla oltava yksi pääsopimus!")
 
@@ -271,7 +271,7 @@
       ;; Aseta pääsopimus
       (log/debug "Asetetaan pääsopimukseksi " (pr-str urakan-paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
-                                                  {:sopimukset urakan-sivusopimukset
+                                                  {:sopimukset (map ::s/id urakan-sivusopimukset)
                                                    :paasopimus (::s/id urakan-paasopimus)})
       (sopimukset-q/aseta-sopimus-paasopimukseksi! db
                                                    {:sopimus (::s/id urakan-paasopimus)})
