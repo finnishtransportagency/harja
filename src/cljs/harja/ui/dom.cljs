@@ -48,8 +48,8 @@
         ie-versio (maarita-ie-versio-user-agentista ua)]
     (and (integer? ie-versio) (<= 10 ie-versio))))
 
-(defonce korkeus (atom (-> js/window .-innerHeight)))
-(defonce leveys (atom (-> js/window .-innerWidth)))
+(defonce korkeus (r/atom (-> js/window .-innerHeight)))
+(defonce leveys (r/atom (-> js/window .-innerWidth)))
 
 (defonce ikkunan-koko
          (reaction [@leveys @korkeus]))

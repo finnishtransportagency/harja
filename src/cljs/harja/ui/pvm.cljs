@@ -11,9 +11,7 @@
             [harja.ui.komponentti :as komp]))
 
 (def +paivat+ ["Ma" "Ti" "Ke" "To" "Pe" "La" "Su"])
-(def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
-                  "Touko" "Kesä" "Heinä" "Elo"
-                  "Syys" "Loka" "Marras" "Joulu"])
+
 
 (defn selvita-kalenterin-suunta [komponentti sijainti-atom]
   (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
@@ -87,7 +85,7 @@ Seuraavat optiot ovat mahdollisia:
 
      (komp/dom-kuuntelija js/window
                           EventType/SCROLL scroll-kuuntelija)
-     
+
      (fn [{:keys [pvm valitse style] :as optiot}]
        (let [[vuosi kk] @nayta
              naytettava-kk (t/date-time vuosi (inc kk) 1)
@@ -111,7 +109,7 @@ Seuraavat optiot ovat mahdollisia:
                                         [vuosi (dec kk)])))
                              nil)}
              (ikonit/livicon-chevron-left)]
-            [:td {:col-span 5} [:span.pvm-kuukausi (nth +kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
+            [:td {:col-span 5} [:span.pvm-kuukausi (nth pvm/+kuukaudet+ kk)] " " [:span.pvm-vuosi vuosi]]
             [:td.pvm-seuraava-kuukausi.klikattava
              {:on-click #(do (.preventDefault %)
                              (swap! nayta
