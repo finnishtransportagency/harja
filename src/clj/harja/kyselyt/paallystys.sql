@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
   ypk.id                   AS "paallystyskohde-id",
+  pi.id,
   ypk.tr_numero            AS "tr-numero",
   pi.tila,
   nimi,
@@ -352,7 +353,7 @@ SET
   maksueratunnus = :maksueratunnus
 WHERE yllapitokohde = :yllapitokohde;
 
--- name: paivita-paallystysilmoituksen-takuupvm<!
+-- name: paivita-paallystysilmoituksen-takuupvm!
 UPDATE paallystysilmoitus
 SET
   takuupvm = :takuupvm

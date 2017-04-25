@@ -14,7 +14,10 @@
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.domain.paallystysilmoitus :as pot]
-    [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
+    [harja.domain.sopimus :as sopimus-domain]
+    [harja.domain.urakka :as urakka-domain]
+    [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+    [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -38,12 +41,6 @@
                                          :vuosi vuosi
                                          :paallystysilmoitus lomakedata}))
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id sopimus-id vuosi paallystysilmoitukset]
-  (k/post! :tallenna-paallystysilmoitusten-takuupvmt {:urakka-id urakka-id
-                                                      :sopimus-id sopimus-id
-                                                      :vuosi vuosi
-                                                      :paallystysilmoitukset paallystysilmoitukset}))
-
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
@@ -52,7 +49,6 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
-
 
 (def paallystysilmoitukset-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
@@ -144,3 +140,10 @@
                       (str (:lyhenne rivi) " - " (:nimi rivi))
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
+
+(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id sopimus-id vuosi paallystysilmoitukset]
+  (k/post! :tallenna-paallystysilmoitusten-takuupvmt
+           {::urakka-domain/id urakka-id
+            ::sopimus-domain/id sopimus-id
+            ::urakka-domain/vuosi vuosi
+            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))

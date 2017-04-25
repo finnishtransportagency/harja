@@ -513,13 +513,20 @@
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash
     :tallenna (fn [rivit]
-                (paallystys/tallenna-paallystysilmoitusten-takuupvmt
-                  urakka-id
-                  sopimus-id
-                   vuosi
-                  (mapv #(hash-map ::pot/id (:paallystyskohde-id %)
-                                   ::pot/takuupvm (:takuupvm %))
-                        rivit)))
+                (go (let [paallystysilmoitukset (mapv #(do
+                                                         {::pot/id (:id %)
+                                                          ::pot/takuupvm (:takuupvm %)})
+                                                      rivit)
+                          vastaus (<! (paallystys/tallenna-paallystysilmoitusten-takuupvmt
+                                        urakka-id
+                                        sopimus-id
+                                        vuosi
+                                        paallystysilmoitukset))]
+                      (harja.atom/paivita! paallystys/paallystysilmoitukset)
+                      (when (k/virhe? vastaus)
+                        (viesti/nayta! "Päällystysilmoitusten tallennus epäonnistui"
+                                       :warning
+                                       viesti/viestin-nayttoaika-keskipitka)))))
     :voi-lisata? false
     :voi-kumota? false
     :voi-poistaa? (constantly false)
@@ -589,7 +596,7 @@
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
         [:div
          [:h3 "Päällystysilmoitukset"]
-         [paallystysilmoitukset-taulukko paallystysilmoitukset]
+         [paallystysilmoitukset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]

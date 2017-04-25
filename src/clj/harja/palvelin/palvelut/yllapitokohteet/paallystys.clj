@@ -450,13 +450,16 @@
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [db user {takuupvmt :takuupvmt :as tiedot}]
+(defn tallenna-paallystysilmoitusten-takuupvmt [db user {takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt
+                                                         urakka-id ::urakka-domain/id
+                                                         sopimus-id ::sopimus-domain/id
+                                                         vuosi ::urakka-domain/vuosi}]
   (log/debug "Tallennetaan päällystysilmoitusten takuupäivämäärät")
   (jdbc/with-db-transaction [db db]
     (doseq [takuupvm takuupvmt]
-      (q/paivita-paallystysilmoituksen-takuupvm<! db {:id (::pot-domain/id takuupvm)
-                                                      :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))}))
-    (hae-urakan-paallystysilmoitukset db user tiedot)))
+      (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)
+                                                     :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))}))
+    []))
 
 (defrecord Paallystys []
   component/Lifecycle
