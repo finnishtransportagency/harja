@@ -7,6 +7,10 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.domain.urakka :as u]
+            [harja.domain.sopimus :as s]
+            [harja.domain.hanke :as h]
+            [harja.domain.organisaatio :as o]
             [harja.kyselyt.konversio :as konv]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
@@ -210,35 +214,38 @@
                                                                               {:urakka urakka-id})
     :ok))
 
-(defn- paivita-urakkaa! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
+(defn- paivita-urakkaa! [db user urakka]
   (log/debug "Päivitetään urakkaa " (:nimi urakka))
-  (q/paivita-harjassa-luotu-urakka!
-    db
-    {:id (:id urakka)
-     :nimi (:nimi urakka)
-     :alkupvm (:alkupvm urakka)
-     :loppupvm (:loppupvm urakka)
-     :alue (:alue urakka)
-     :hallintayksikko (:id hallintayksikko)
-     :urakoitsija (:id urakoitsija)
-     :hanke (:id hanke)
-     :kayttaja (:id user)})
-
-  ;; Palautetaan ulos urakka, kuten luonnissakin
-  urakka)
+  (let [hanke (::u/hanke urakka)
+        hallintayksikko (::u/hallintayksikko urakka)
+        urakoitsija (::u/urakoitsija urakka)]
+    (q/paivita-harjassa-luotu-urakka<!
+      db
+      {:id (::u/id urakka)
+       :nimi (::u/nimi urakka)
+       :alkupvm (::u/:alkupvm urakka)
+       :loppupvm (::u/loppupvm urakka)
+       :alue (::u/alue urakka)
+       :hallintayksikko (::o/id hallintayksikko)
+       :urakoitsija (::o/id urakoitsija)
+       :hanke (::h/id hanke)
+       :kayttaja (:id user)})))
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
   (log/debug "Luodaan uusi urakka " (:nimi urakka))
-  (q/luo-harjassa-luotu-urakka<!
-    db
-    {:nimi (:nimi urakka)
-     :alkupvm (:alkupvm urakka)
-     :loppupvm (:loppupvm urakka)
-     :alue (:alue urakka)
-     :hallintayksikko (:id hallintayksikko)
-     :urakoitsija (:id urakoitsija)
-     :hanke (:id hanke)
-     :kayttaja (:id user)}))
+  (let [hanke (::u/hanke urakka)
+        hallintayksikko (::u/hallintayksikko urakka)
+        urakoitsija (::u/urakoitsija urakka)]
+    (q/luo-harjassa-luotu-urakka<!
+      db
+      {:nimi (::u/nimi urakka)
+       :alkupvm (::u/alkupvm urakka)
+       :loppupvm (::u/loppupvm urakka)
+       :alue (::u/alue urakka)
+       :hallintayksikko (::o/id hallintayksikko)
+       :urakoitsija (::o/id urakoitsija)
+       :hanke (::h/id hanke)
+       :kayttaja (:id user)})))
 
 (defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -267,12 +274,13 @@
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
-(defn tallenna-urakka [db user {:keys [sopimukset] :as urakka}]
+(defn tallenna-urakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
-      (let [tallennettu (if (id-olemassa? (:id urakka))
+      (let [sopimukset (::u/sopimukset urakka)
+            tallennettu (if (id-olemassa? (:id urakka))
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))]
 
