@@ -400,12 +400,3 @@
                                    :opt [::id ::paasopimus-id]))
 
 (s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id]))
-
-
-(defn paasopimus [sopimukset]
-  (let [ps (as-> sopimukset s
-                 (filter (comp id-olemassa? ::s/id) s)
-                 (remove :poistettu s)
-                 (filter (comp some? #{(some ::s/paasopimus-id s)} ::s/id) s))]
-    (assert (>= 1 (count ps)) (str (pr-str sopimukset) " löytyi useampi kuin yksi pääsopimus"))
-    (first ps)))

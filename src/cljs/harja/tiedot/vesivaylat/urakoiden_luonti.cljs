@@ -32,9 +32,6 @@
          :haetut-sopimukset nil
          :kaynnissa-olevat-sahkelahetykset #{}}))
 
-(defn paasopimus [sopimukset]
-  (sopimus-domain/paasopimus sopimukset))
-
 (defn sopimukset-paasopimuksella [sopimukset paasopimus]
   (->>
     sopimukset
@@ -50,6 +47,9 @@
       (nil? (::s/paasopimus-id sopimus))
          (every? #(= (::s/paasopimus-id %) (::s/id sopimus))
                  muut-sopimukset))))
+
+(defn paasopimus [sopimukset]
+  (first (filter #(paasopimus? sopimukset %) sopimukset)))
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 

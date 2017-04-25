@@ -163,7 +163,7 @@
                              [sopimukset-grid e!
                               (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
            {:otsikko "Pääsopimus"
-            :nimi ::s/paasopimus-id
+            :nimi :paasopimus-id
             :tyyppi :valinta
             :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
             :valinta-nayta #(do
@@ -181,10 +181,12 @@
             :jos-tyhja "Urakalla ei sopimuksia"
             :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
             :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
-            :aseta (fn [rivi arvo] (assoc rivi ::u/sopimukset (tiedot/sopimukset-paasopimuksella
-                                                                (::u/sopimukset rivi)
-                                                                arvo)))
-            :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
+            :aseta (fn [rivi arvo]
+                     (assoc rivi ::u/sopimukset (tiedot/sopimukset-paasopimuksella
+                                                  (::u/sopimukset rivi)
+                                                  arvo)))
+            :hae (fn [rivi]
+                   (tiedot/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
           valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]
