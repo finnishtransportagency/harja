@@ -386,7 +386,7 @@ SET nimi          = :nimi,
   urakkanro       = :urakkanro
 WHERE id = :id;
 
--- name: paivita-harjassa-luotu-urakka!
+-- name: paivita-harjassa-luotu-urakka<!
 -- Päivittää Harjassa luotua (vesiväylä)urakkaa
 UPDATE urakka
   SET nimi = :nimi,

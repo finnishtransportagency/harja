@@ -251,14 +251,14 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
-    (log/debug "Päivitetään urakan " (:nimi urakka) " " (count sopimukset) " sopimusta.")
+    (log/debug "Päivitetään urakan " (::u/nimi urakka) " " (count sopimukset) " sopimusta.")
 
-    (let [lisattavat (map :id (remove :poistettu sopimukset))
-          poistettavat (map :id (filter :poistettu sopimukset))
+    (let [lisattavat (map ::s/id (remove :poistettu sopimukset))
+          poistettavat (map ::s/id (filter :poistettu sopimukset))
           paasopimus (sopimus-domain/paasopimus sopimukset)]
       (when-not (empty? poistettavat)
-        (log/debug "Poistetaan urakasta " (:id urakka) (count poistettavat) " sopimusta.")
-        (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (:id urakka)
+        (log/debug "Poistetaan urakasta " (::u/id urakka) (count poistettavat) " sopimusta.")
+        (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (::u/id urakka)
                                                             :sopimukset poistettavat})
               lkm
               (log/debug lkm " sopimusta poistettu onnistuneesti.")))
@@ -266,10 +266,10 @@
       (log/debug "Asetetaan pääsopimukseksi " (pr-str paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
                                                   {:sopimukset lisattavat
-                                                   :paasopimus (:id paasopimus)})
+                                                   :paasopimus (::u/id paasopimus)})
       (when-not (empty? lisattavat)
-        (log/debug "Tallennetaan urakalle " (:id urakka) ", " (count lisattavat) " sopimusta.")
-        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (:id urakka)
+        (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count lisattavat) " sopimusta.")
+        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (::u/id urakka)
                                                            :sopimukset lisattavat})
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
