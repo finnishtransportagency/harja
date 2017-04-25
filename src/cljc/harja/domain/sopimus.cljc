@@ -388,6 +388,19 @@
       (clojure.spec/def :harja.domain.sopimus/poistettu (clojure.spec/nilable :specql.data-types/bool))
       (clojure.spec/def :harja.domain.sopimus/luotu (clojure.spec/nilable :specql.data-types/timestamp)))))
 
+(defn paasopimus? [sopimukset sopimus]
+  (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
+                                sopimukset)]
+    (and
+      (some? (::id sopimus))
+      (nil? (::paasopimus-id sopimus))
+      (every? #(= (::paasopimus-id %) (::id sopimus))
+              muut-sopimukset))))
+
+(defn paasopimus [sopimukset]
+  (first (filter #(paasopimus? sopimukset %) sopimukset)))
+
+
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus

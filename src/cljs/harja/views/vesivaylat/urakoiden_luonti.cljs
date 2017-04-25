@@ -47,7 +47,7 @@
        :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
-       :fmt #(if (tiedot/paasopimus? urakan-sopimukset %)
+       :fmt #(if (s/paasopimus? urakan-sopimukset %)
                (ikonit/check)
                (ikonit/unchecked))
        :muokattava? (constantly false)
@@ -188,7 +188,7 @@
                                                   (::u/sopimukset rivi)
                                                   arvo)))
             :hae (fn [rivi]
-                   (tiedot/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
+                   (s/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
           valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]

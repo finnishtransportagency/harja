@@ -39,18 +39,6 @@
     (map #(assoc % ::s/paasopimus-id (when (not= (::s/id %) (::s/id paasopimus))
                                        (::s/id paasopimus))))))
 
-(defn paasopimus? [sopimukset sopimus]
-  (let [muut-sopimukset (filter #(not= (::s/id %) (::s/id sopimus))
-                                sopimukset)]
-    (and
-      (some? (::s/id sopimus))
-      (nil? (::s/paasopimus-id sopimus))
-         (every? #(= (::s/paasopimus-id %) (::s/id sopimus))
-                 muut-sopimukset))))
-
-(defn paasopimus [sopimukset]
-  (first (filter #(paasopimus? sopimukset %) sopimukset)))
-
 (defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
@@ -203,7 +191,7 @@
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
     (->> sopimukset
-         (map #(assoc % ::s/paasopimus-id (::s/id (paasopimus (::u/sopimukset urakka)))))
+         (map #(assoc % ::s/paasopimus-id (::s/id (s/paasopimus (::u/sopimukset urakka)))))
          ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
          (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
          (assoc-in app [:valittu-urakka ::u/sopimukset])))
