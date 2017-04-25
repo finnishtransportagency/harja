@@ -22,7 +22,7 @@ before_deploy:
   - mkdir s3-deploy
   - ln target/harja-0.0.1-SNAPSHOT-standalone.jar "s3-deploy/harja-travis-${TRAVIS_BRANCH}.jar"
   - pg_dump -U postgres -Z 1 harjatest > "s3-deploy/harja-travis-${TRAVIS_BRANCH}.pgdump.gz"
-script: lein do testit, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
+script: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
 deploy:
   provider: s3
   region: eu-central-1
