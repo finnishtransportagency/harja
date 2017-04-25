@@ -266,7 +266,7 @@
       (log/debug "Asetetaan pääsopimukseksi " (pr-str paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
                                                   {:sopimukset lisattavat
-                                                   :paasopimus (::u/id paasopimus)})
+                                                   :paasopimus (::s/id paasopimus)})
       (when-not (empty? lisattavat)
         (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count lisattavat) " sopimusta.")
         (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (::u/id urakka)
