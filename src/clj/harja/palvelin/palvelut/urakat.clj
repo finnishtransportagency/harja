@@ -253,34 +253,36 @@
 
     (log/debug "Päivitetään urakan " (::u/nimi urakka) " " (count sopimukset) " sopimusta.")
 
-    (let [urakan-sopimukset (map ::s/id (remove :poistettu sopimukset))
-          poistettavat (map ::s/id (filter :poistettu sopimukset))
-          paasopimus (s/paasopimus urakan-sopimukset)
-          muut-sopimukset (filter #(not= % paasopimus) urakan-sopimukset)]
+    (let [urakan-sopimus-idt (map ::s/id (remove :poistettu sopimukset))
+          poistettavat-sopimus-idt (map ::s/id (filter :poistettu sopimukset))
+          urakan-paasopimus (s/paasopimus sopimukset)
+          urakan-sivusopimukset (filter #(not= % urakan-paasopimus) urakan-sopimus-idt)]
+
+      (assert urakan-paasopimus "Urakalla oltava yksi pääsopimus!")
 
       ;; Irrota poistetut sopimukset urakasta
-      (when-not (empty? poistettavat)
-        (log/debug "Poistetaan urakasta " (::u/id urakka) (count poistettavat) " sopimusta.")
+      (when-not (empty? poistettavat-sopimus-idt)
+        (log/debug "Poistetaan urakasta " (::u/id urakka) (count poistettavat-sopimus-idt) " sopimusta.")
         (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (::u/id urakka)
-                                                            :sopimukset poistettavat})
+                                                            :sopimukset poistettavat-sopimus-idt})
               lkm
               (log/debug lkm " sopimusta poistettu onnistuneesti.")))
 
-      ;; Liitä annetut sopimukset urakkaan
-      (when-not (empty? urakan-sopimukset)
-        (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count urakan-sopimukset) " sopimusta.")
-        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (::u/id urakka)
-                                                           :sopimukset urakan-sopimukset})
-              lkm
-              (log/debug lkm " sopimusta liitetty onnistuneesti.")))
-
       ;; Aseta pääsopimus
-      (log/debug "Asetetaan pääsopimukseksi " (pr-str paasopimus))
-      (sopimukset-q/aseta-sopimus-paasopimukseksi! db
-                                                  {:sopimus (::s/id paasopimus)})
+      (log/debug "Asetetaan pääsopimukseksi " (pr-str urakan-paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
-                                                  {:sopimukset muut-sopimukset
-                                                   :paasopimus (::s/id paasopimus)}))))
+                                                  {:sopimukset urakan-sivusopimukset
+                                                   :paasopimus (::s/id urakan-paasopimus)})
+      (sopimukset-q/aseta-sopimus-paasopimukseksi! db
+                                                   {:sopimus (::s/id urakan-paasopimus)})
+
+      ;; Liitä annetut sopimukset urakkaan
+      (when-not (empty? urakan-sopimus-idt)
+        (log/debug "Tallennetaan urakalle " (::u/id urakka) ", " (count urakan-sopimus-idt) " sopimusta.")
+        (as-> (sopimukset-q/liita-sopimukset-urakkaan! db {:urakka (::u/id urakka)
+                                                           :sopimukset urakan-sopimus-idt})
+              lkm
+              (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
 (defn tallenna-urakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
