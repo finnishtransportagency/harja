@@ -38,8 +38,11 @@
                                          :vuosi vuosi
                                          :paallystysilmoitus lomakedata}))
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [paallystysilmoitukset]
-  (k/post! :tallenna-paallystysilmoitusten-takuupvmt paallystysilmoitukset))
+(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id sopimus-id vuosi paallystysilmoitukset]
+  (k/post! :tallenna-paallystysilmoitusten-takuupvmt {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :vuosi vuosi
+                                                      :paallystysilmoitukset paallystysilmoitukset}))
 
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

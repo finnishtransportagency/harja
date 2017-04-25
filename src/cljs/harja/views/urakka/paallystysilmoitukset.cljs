@@ -233,7 +233,7 @@
              takuupvm
              (> valmispvm-paallystys takuupvm))
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
-    
+
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
   (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
     [:div.row
@@ -507,13 +507,16 @@
                             3)))
       paallystysilmoitukset)))
 
-(defn- paallystysilmoitukset-taulukko [paallystysilmoitukset]
+(defn- paallystysilmoitukset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash
     :tallenna (fn [rivit]
                 (paallystys/tallenna-paallystysilmoitusten-takuupvmt
+                  urakka-id
+                  sopimus-id
+                   vuosi
                   (mapv #(hash-map ::pot/id (:paallystyskohde-id %)
                                    ::pot/takuupvm (:takuupvm %))
                         rivit)))
