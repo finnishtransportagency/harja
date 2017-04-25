@@ -60,7 +60,7 @@
          [valinnat/hoitokauden-kuukausi]
          
          (when-let [p @laskutusyhteenvedon-parametrit]
-           [upotettu-raportti/raportin-vientimuodot])
+           [upotettu-raportti/raportin-vientimuodot p])
          
          (if-let [tiedot @laskutusyhteenvedon-tiedot]
            [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)]
