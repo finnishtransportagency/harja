@@ -94,6 +94,8 @@
                                           :tallenna-urakka +kayttaja-jvh+
                                           urakka)
           urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
+          eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
+          toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) urakan-sopimukset-kannassa))
           urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
 
       (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
@@ -107,9 +109,8 @@
 
       ;; Sopparitkin on tallentunut oikein
       (is (= (count urakan-sopimukset-kannassa) 2))
-      (is (= (set (map :paasopimus urakan-sopimukset-kannassa))
-             #{nil eka-sopimus-id})
-          "Yksi urakan sopimuksista on pääsopimus ja toinen sopimus viittaa pääsoppariin")
+      (is (nil? (:paasopimus eka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")
+      (is (= (:paasopimus toka-sopimus-kannassa) eka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
 
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
