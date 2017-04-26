@@ -18,11 +18,10 @@
   ([mappi poista-tyhjat-mapit?]
    (clojure.walk/postwalk
      (fn [elementti]
-       (if (and (map? elementti)
-                (not (record? elementti)))
+       (if (and (map? elementti) (not (record? elementti)))
          (let [m (into {} (remove (comp nil? second) elementti))]
-           (when (or (and poista-tyhjat-mapit? (seq m))
-                     (map? m))
+           (when (or (seq m)
+                     (not poista-tyhjat-mapit?))
              m))
          elementti))
      mappi)))
