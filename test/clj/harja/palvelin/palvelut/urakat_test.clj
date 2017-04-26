@@ -71,21 +71,24 @@
 (deftest urakan-tallennus-test
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
-        [eka-sopimus-id toka-sopimus-id] (hae-vapaat-sopimus-idt)
+        [eka-sopimus-id toka-sopimus-id kolmas-sopimus-id] (hae-vapaat-sopimus-idt)
         urakka {::u/nimi "lolurakka"
                 ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
                 ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
                 ::u/sopimukset [{::sop/id eka-sopimus-id
                                  ::sop/paasopimus-id nil}
                                 {::sop/id toka-sopimus-id
+                                 ::sop/paasopimus-id eka-sopimus-id}
+                                {::sop/id kolmas-sopimus-id
                                  ::sop/paasopimus-id eka-sopimus-id}]
                 ::u/hallintayksikko {::o/id hallintayksikko-id}
                 ::u/urakoitsija {::o/id urakoitsija-id}}
         urakat-lkm-ennen-testia (ffirst (q "SELECT COUNT(id) FROM urakka"))]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
-    (assert eka-sopimus-id "Sopimus pitää olla")
-    (assert toka-sopimus-id "Sopimus pitää olla")
+    (assert eka-sopimus-id "Eka sopimus pitää olla")
+    (assert toka-sopimus-id "Toka sopimus pitää olla")
+    (assert kolmas-sopimus-id "Kolmas sopimus pitää olla")
 
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
@@ -96,6 +99,7 @@
           urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
           eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
           toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) urakan-sopimukset-kannassa))
+          kolmas-sopimus-kannassa (first (filter #(= (:id %) kolmas-sopimus-id) urakan-sopimukset-kannassa))
           urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
 
       (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
@@ -108,20 +112,24 @@
       (is (= (::u/loppupvm urakka-kannassa (::u/loppupvm urakka))))
 
       ;; Sopparitkin on tallentunut oikein
-      (is (= (count urakan-sopimukset-kannassa) 2))
+      (is (= (count urakan-sopimukset-kannassa) 3))
       (is (nil? (:paasopimus eka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")
       (is (= (:paasopimus toka-sopimus-kannassa) eka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
+      (is (= (:paasopimus kolmas-sopimus-kannassa) eka-sopimus-id) "Kolmas sopimus viittaa pääsopimukseen")
 
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka
                                 ::u/id (::u/id urakka-kannassa)
                                 ;; Päivitetään nimi
                                 ::u/nimi (str (::u/nimi urakka) " päivitetty")
-                                ;; Swapataan pääsopimus
+                                ;; Toka soppari onkin nyt pääsoppari ja kolmas poistettiin
                                 ::u/sopimukset [{::sop/id eka-sopimus-id
                                                  ::sop/paasopimus-id toka-sopimus-id}
                                                 {::sop/id toka-sopimus-id
-                                                 ::sop/paasopimus-id nil}])
+                                                 ::sop/paasopimus-id nil}
+                                                {::sop/id kolmas-sopimus-id
+                                                 ::sop/paasopimus-id toka-sopimus-id
+                                                 :poistettu true}])
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :tallenna-urakka +kayttaja-jvh+
                                                        paivitetty-urakka)
