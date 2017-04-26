@@ -71,18 +71,21 @@
 (deftest urakan-tallennus-test
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
-        sopimus-id (hae-vapaa-sopimus-id)
+        [eka-sopimus-id toka-sopimus-id] (hae-vapaat-sopimus-idt)
         urakka {::u/nimi "lolurakka"
                 ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
                 ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
-                ::u/sopimukset [{::sop/id sopimus-id
-                                 ::sop/paasopimus-id nil}]
+                ::u/sopimukset [{::sop/id eka-sopimus-id
+                                 ::sop/paasopimus-id nil}
+                                {::sop/id toka-sopimus-id
+                                 ::sop/paasopimus-id eka-sopimus-id}]
                 ::u/hallintayksikko {::o/id hallintayksikko-id}
                 ::u/urakoitsija {::o/id urakoitsija-id}}
         urakat-lkm-ennen-testia (ffirst (q "SELECT COUNT(id) FROM urakka"))]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
-    (assert sopimus-id "Sopimus pitää olla")
+    (assert eka-sopimus-id "Sopimus pitää olla")
+    (assert toka-sopimus-id "Sopimus pitää olla")
 
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
@@ -103,8 +106,10 @@
       (is (= (::u/loppupvm urakka-kannassa (::u/loppupvm urakka))))
 
       ;; Sopparikin on tallentunut oikein
-      (is (= (count urakan-sopimukset-kannassa) 1))
-      (is (nil? (:paasopimus (first urakan-sopimukset-kannassa))))
+      (is (= (count urakan-sopimukset-kannassa) 2))
+      (is (= (set (map :paasopimus urakan-sopimukset-kannassa))
+             #{nil eka-sopimus-id})
+          "Yksi urakan sopimuksista on pääsopimus ja toinen sopimus viittaa pääsoppariin")
 
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
