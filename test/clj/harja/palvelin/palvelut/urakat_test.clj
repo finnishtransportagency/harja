@@ -145,3 +145,29 @@
         (is (= (count paivitetyt-urakan-sopimukset-kannassa) 2))
         (is (= (:paasopimus paivitetty-eka-sopimus-kannassa) toka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
         (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")))))
+
+(deftest urakan-tallennus-ei-toimi-virheellisilla-sopimuksilla
+  (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        urakoitsija-id (hae-vapaa-urakoitsija-id)
+        [eka-sopimus-id toka-sopimus-id] (hae-vapaat-sopimus-idt)
+        urakka {::u/nimi "lolurakka"
+                ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
+                ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
+                ::u/sopimukset [;; Virheellisesti kaksi pääsopimusta
+                                {::sop/id eka-sopimus-id
+                                 ::sop/paasopimus-id nil}
+                                {::sop/id toka-sopimus-id
+                                 ::sop/paasopimus-id nil}]
+                ::u/hallintayksikko {::o/id hallintayksikko-id}
+                ::u/urakoitsija {::o/id urakoitsija-id}}]
+    (assert hallintayksikko-id "Hallintayksikkö pitää olla")
+    (assert urakoitsija-id "Urakoitsija pitää olla")
+    (assert eka-sopimus-id "Eka sopimus pitää olla")
+    (assert toka-sopimus-id "Toka sopimus pitää olla")
+
+    (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
+
+    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :tallenna-urakka +kayttaja-jvh+
+                                                urakka))
+        "Ei voi tallentaa urakalle kahta pääsopimusta")))
