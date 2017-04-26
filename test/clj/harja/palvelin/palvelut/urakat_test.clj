@@ -113,11 +113,27 @@
       (is (= (:paasopimus toka-sopimus-kannassa) eka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
 
       ;; Päivitetään urakka
-      (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
+      (let [paivitetty-urakka (assoc urakka
+                                ::u/id (::u/id urakka-kannassa)
+                                ;; Päivitetään nimi
+                                ::u/nimi (str (::u/nimi urakka) " päivitetty")
+                                ;; Swapataan pääsopimus
+                                ::u/sopimukset [{::sop/id eka-sopimus-id
+                                                 ::sop/paasopimus-id toka-sopimus-id}
+                                                {::sop/id toka-sopimus-id
+                                                 ::sop/paasopimus-id nil}])
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :tallenna-urakka +kayttaja-jvh+
-                                                       paivitetty-urakka)]
+                                                       paivitetty-urakka)
+            paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
+            paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
+            paivitetty-toka-sopimus-kannassa (first (filter #(= (:id %) toka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))]
 
         ;; Urakka päivittyi
         (is (= (::u/nimi paivitetty-urakka-kannassa)
-               (::u/nimi paivitetty-urakka)))))))
+               (::u/nimi paivitetty-urakka)))
+
+        ;; Sopparitkin päivittyi oikein
+        (is (= (count paivitetyt-urakan-sopimukset-kannassa) 2))
+        (is (= (:paasopimus paivitetty-eka-sopimus-kannassa) toka-sopimus-id) "Toinen sopimus viittaa pääsopimukseen")
+        (is (nil? (:paasopimus paivitetty-toka-sopimus-kannassa)) "Pääsopimus asetettiin pääsopimukseksi")))))
