@@ -268,7 +268,8 @@
               lkm
               (log/debug lkm " sopimusta poistettu onnistuneesti.")))
 
-      ;; Aseta pääsopimus
+      ;; Aseta pääsopimus ja aseta muut sopimukset viittaamaan siihen
+      ;; Tärkeää tehdä tässä järjestyksessä, koska urakalla saa olla vain yksi pääsopimus
       (log/debug "Asetetaan pääsopimukseksi " (pr-str urakan-paasopimus))
       (sopimukset-q/aseta-sopimuksien-paasopimus! db
                                                   {:sopimukset (map ::s/id urakan-sivusopimukset)
