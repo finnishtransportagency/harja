@@ -141,9 +141,6 @@
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id sopimus-id vuosi paallystysilmoitukset]
+(defn tallenna-paallystysilmoitusten-takuupvmt [paallystysilmoitukset]
   (k/post! :tallenna-paallystysilmoitusten-takuupvmt
-           {::urakka-domain/id urakka-id
-            ::sopimus-domain/id sopimus-id
-            ::urakka-domain/vuosi vuosi
-            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))
+           {::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))

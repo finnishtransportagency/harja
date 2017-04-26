@@ -534,7 +534,4 @@
   (s/coll-of (s/keys :req [::id ::takuupvm])))
 
 (s/def ::tallenna-paallystysilmoitusten-takuupvmt
-  (s/keys :req [::urakka/id
-                ::sopimus/id
-                ::urakka/vuosi
-                ::tallennettavat-paallystysilmoitusten-takuupvmt]))
+  (s/keys :req [::tallennettavat-paallystysilmoitusten-takuupvmt]))

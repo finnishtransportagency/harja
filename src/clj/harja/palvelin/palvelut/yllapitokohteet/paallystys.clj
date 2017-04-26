@@ -450,10 +450,7 @@
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [db user {takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt
-                                                         urakka-id ::urakka-domain/id
-                                                         sopimus-id ::sopimus-domain/id
-                                                         vuosi ::urakka-domain/vuosi}]
+(defn tallenna-paallystysilmoitusten-takuupvmt [db user {takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
   (log/debug "Tallennetaan päällystysilmoitusten takuupäivämäärät")
   (jdbc/with-db-transaction [db db]
     (doseq [takuupvm takuupvmt]
