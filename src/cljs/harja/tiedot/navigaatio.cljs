@@ -86,18 +86,21 @@
   (reset! valittu-vaylamuoto (if (= :vesivayla (:arvo ut)) :vesi :tie)))
 
 (def +urakkatyypit+
-  [{:nimi "Hoito" :arvo :hoito}
-   {:nimi "Tiemerkintä" :arvo :tiemerkinta}
-   {:nimi "Päällystys" :arvo :paallystys}
-   {:nimi "Paikkaus" :arvo :paikkaus}
-   {:nimi "Valaistus" :arvo :valaistus}
-   {:nimi "Siltakorjaus" :arvo :siltakorjaus}
-   {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
-   ;; "Vesiväylät" ei ole urakkatyyppi, vaan väylämuoto
-   ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
-   ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
-   ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
-   {:nimi "Vesiväylät" :arvo :vesivayla}])
+  (filterv
+    some?
+    [{:nimi "Hoito" :arvo :hoito}
+    {:nimi "Tiemerkintä" :arvo :tiemerkinta}
+    {:nimi "Päällystys" :arvo :paallystys}
+    {:nimi "Paikkaus" :arvo :paikkaus}
+    {:nimi "Valaistus" :arvo :valaistus}
+    {:nimi "Siltakorjaus" :arvo :siltakorjaus}
+    {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
+    ;; "Vesiväylät" ei ole urakkatyyppi, vaan väylämuoto
+    ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
+    ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
+    ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
+    (when (istunto/ominaisuus-kaytossa? :vesivayla)
+      {:nimi "Vesiväylät" :arvo :vesivayla})]))
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
