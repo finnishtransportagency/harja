@@ -509,7 +509,12 @@
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
-        [:db :http-palvelin :integraatioloki]))))
+        [:db :http-palvelin :integraatioloki])
+
+      :mobiili-laadunseuranta
+      (component/using
+        (harja-laadunseuranta/->Laadunseuranta)
+        [:db :http-palvelin]))))
 
 (defonce harja-jarjestelma nil)
 
