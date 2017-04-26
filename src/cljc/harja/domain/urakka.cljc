@@ -346,7 +346,7 @@
 
 ;; Haut
 
-(s/def ::hae-harjassa-luodut-urakat
+(s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka
                     (s/keys :req [::hallintayksikko ::urakoitsija ::sopimukset ::hanke]))))
 
@@ -354,6 +354,10 @@
 ;; Tätä speciä on hyvä käyttää esim. palveluiden, jotka hakevat
 ;; urakan tietoja, kyselyspecinä.
 (s/def ::urakka-kysely (s/keys :req [::id]))
+
+;; Tallennukset
+
+;; TODO
 
 ;; Muut
 

@@ -62,4 +62,4 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-urakat +kayttaja-jvh+ {})]
     (is (>= (count vastaus) 3))
-    (is (s/valid? ::u/hae-harjassa-luodut-urakat vastaus))))
+    (is (s/valid? ::u/hae-harjassa-luodut-urakat-vastaus vastaus))))

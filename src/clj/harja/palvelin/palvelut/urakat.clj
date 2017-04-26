@@ -3,7 +3,7 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.domain.urakka :as u]
@@ -329,56 +329,65 @@
            db :db
            sahke :sahke
            :as this}]
-    (julkaise-palvelut
-      http
-      :hallintayksikon-urakat
-      (fn [user hallintayksikko]
-        (hallintayksikon-urakat db user hallintayksikko))
+    (julkaise-palvelu http
+                      :hallintayksikon-urakat
+                      (fn [user hallintayksikko]
+                        (hallintayksikon-urakat db user hallintayksikko)))
 
-      :hae-urakka
-      (fn [user urakka-id]
-        (hae-yksittainen-urakka db user urakka-id))
+    (julkaise-palvelu http
+                      :hae-urakka
+                      (fn [user urakka-id]
+                        (hae-yksittainen-urakka db user urakka-id)))
 
-      :hae-urakoita
-      (fn [user teksti]
-        (hae-urakoita db user teksti))
+    (julkaise-palvelu http
+                      :hae-urakoita
+                      (fn [user teksti]
+                        (hae-urakoita db user teksti)))
 
-      :hae-organisaation-urakat
-      (fn [user organisaatio-id]
-        (hae-organisaation-urakat db user organisaatio-id))
+    (julkaise-palvelu http
+                      :hae-organisaation-urakat
+                      (fn [user organisaatio-id]
+                        (hae-organisaation-urakat db user organisaatio-id)))
 
-      :hae-urakan-organisaatio
-      (fn [user urakka-id]
-        (hae-urakan-organisaatio db user urakka-id))
+    (julkaise-palvelu http
+                      :hae-urakan-organisaatio
+                      (fn [user urakka-id]
+                        (hae-urakan-organisaatio db user urakka-id)))
 
-      :tallenna-urakan-sopimustyyppi
-      (fn [user tiedot]
-        (tallenna-urakan-sopimustyyppi db user tiedot))
+    (julkaise-palvelu http
+                      :tallenna-urakan-sopimustyyppi
+                      (fn [user tiedot]
+                        (tallenna-urakan-sopimustyyppi db user tiedot)))
 
-      :tallenna-urakan-tyyppi
-      (fn [user tiedot]
-        (tallenna-urakan-tyyppi db user tiedot))
+    (julkaise-palvelu http
+                      :tallenna-urakan-tyyppi
+                      (fn [user tiedot]
+                        (tallenna-urakan-tyyppi db user tiedot)))
 
-      :aseta-takuun-loppupvm
-      (fn [user tiedot]
-        (aseta-takuun-loppupvm db user tiedot))
+    (julkaise-palvelu http
+                      :aseta-takuun-loppupvm
+                      (fn [user tiedot]
+                        (aseta-takuun-loppupvm db user tiedot)))
 
-      :poista-indeksi-kaytosta
-      (fn [user tiedot]
-        (poista-indeksi-kaytosta db user tiedot))
+    (julkaise-palvelu http
+                      :poista-indeksi-kaytosta
+                      (fn [user tiedot]
+                        (poista-indeksi-kaytosta db user tiedot)))
 
-      :tallenna-urakka
-      (fn [user tiedot]
-        (tallenna-urakka db user tiedot))
+    (julkaise-palvelu http
+                      :tallenna-urakka
+                      (fn [user tiedot]
+                        (tallenna-urakka db user tiedot)))
+    (julkaise-palvelu http
+                      :hae-harjassa-luodut-urakat
+                      (fn [user _]
+                        (hae-harjassa-luodut-urakat db user))
+                      {:kysely-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
-      :hae-harjassa-luodut-urakat
-      (fn [user _]
-        (hae-harjassa-luodut-urakat db user))
-
-      :laheta-urakka-sahkeeseen
-      (fn [user urakka-id]
-        (laheta-urakka-sahkeeseen sahke user urakka-id)))
-    this)
+    (julkaise-palvelu http
+                      :laheta-urakka-sahkeeseen
+                      (fn [user urakka-id]
+                        (laheta-urakka-sahkeeseen sahke user urakka-id))))
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
