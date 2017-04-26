@@ -36,15 +36,14 @@
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
-    (apurit/poista-nil-avaimet
-      (-> ilmoitus
-          (update-in [henkiloavain] dissoc :puhelinnumero)
-          (update-in [henkiloavain] dissoc :matkapuhelin)
-          (update-in [henkiloavain] dissoc :tyopuhelin)
-          (update-in [henkiloavain] dissoc :sahkoposti)
-          (assoc-in [henkiloavain :matkapuhelin] (:matkapuhelin henkilo))
-          (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
-          (assoc-in [henkiloavain :email] (:sahkoposti henkilo))))))
+    (-> ilmoitus
+        (update-in [henkiloavain] dissoc :puhelinnumero)
+        (update-in [henkiloavain] dissoc :matkapuhelin)
+        (update-in [henkiloavain] dissoc :tyopuhelin)
+        (update-in [henkiloavain] dissoc :sahkoposti)
+        (assoc-in [henkiloavain :matkapuhelin] (:matkapuhelin henkilo))
+        (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
+        (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
 
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus

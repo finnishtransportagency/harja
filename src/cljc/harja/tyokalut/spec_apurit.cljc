@@ -1,6 +1,5 @@
 (ns harja.tyokalut.spec-apurit
   (:require [clojure.spec :as s]
-            [clojure.set :as set]
     #?@(:clj [
             [clojure.future :refer :all]])))
 
@@ -14,13 +13,15 @@
 
 ;; Yleiset apufunktiot
 
-(defn poista-nil-avaimet [mappi]
-  (clojure.walk/postwalk
-    (fn [elementti]
-      (if (and (map? elementti)
-               (not (record? elementti)))
-        (let [m (into {} (remove (comp nil? second) elementti))]
-          (when (seq m)
-            m))
-        elementti))
-    mappi))
+(defn poista-nil-avaimet
+  ([mappi] (poista-nil-avaimet mappi true))
+  ([mappi poista-tyhjat-mapit?]
+   (clojure.walk/postwalk
+     (fn [elementti]
+       (if (and (map? elementti) (not (record? elementti)))
+         (let [m (into {} (remove (comp nil? second) elementti))]
+           (when (or (seq m)
+                     (not poista-tyhjat-mapit?))
+             m))
+         elementti))
+     mappi)))
