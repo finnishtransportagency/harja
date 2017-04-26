@@ -171,3 +171,19 @@
                                                 :tallenna-urakka +kayttaja-jvh+
                                                 urakka))
         "Ei voi tallentaa urakalle kahta pääsopimusta")))
+
+(deftest urakan-tallennus-ei-toimi-virheellisilla-kyselylla
+  (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        urakoitsija-id (hae-vapaa-urakoitsija-id)
+        sopimus-id (hae-vapaa-sopimus-id)
+        urakka {::u/nimi "lolurakka"
+                ;; Alku ja loppu puuttuu
+                ::u/sopimukset [{::sop/id sopimus-id
+                                 ::sop/paasopimus-id nil}]
+                ::u/hallintayksikko {::o/id hallintayksikko-id}
+                ::u/urakoitsija {::o/id urakoitsija-id}}]
+    (assert hallintayksikko-id "Hallintayksikkö pitää olla")
+    (assert urakoitsija-id "Urakoitsija pitää olla")
+    (assert sopimus-id "Sopimus pitää olla")
+
+    (is (not (s/valid? ::u/tallenna-urakka-kysely urakka)) "Lähtevä kysely ei ole validi")))
