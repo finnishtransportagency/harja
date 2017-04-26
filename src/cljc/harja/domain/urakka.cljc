@@ -329,6 +329,7 @@
     (clojure.spec/def :harja.domain.urakka/poistettu :specql.data-types/bool)
     (clojure.spec/def :harja.domain.urakka/luotu (clojure.spec/nilable :specql.data-types/timestamp))))
 
+;; Ylikirjoitetaan specql:n määritykset
 (clojure.spec/def
   :harja.domain.urakka/tyyppi
   #{:hoito
@@ -344,6 +345,7 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
+(s/def ::hanke (s/keys :reg [:harja.domain.hanke/id]))
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
@@ -357,7 +359,12 @@
 
 ;; Tallennukset
 
-;; TODO
+(s/def ::tallenna-urakka-kysely (s/keys :req [::sopimukset ::hallintayksikko ::urakoitsija
+                                              ::nimi ::loppupvm ::alkupvm]
+                                        :opt [::id]))
+
+;; TODO TALLENNUS VASTAUS
+#_(s/def ::tallenna-urakka-kysely-vastaus)
 
 ;; Muut
 

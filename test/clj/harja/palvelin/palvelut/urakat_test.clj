@@ -5,11 +5,15 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.kyselyt.urakat :as urk-q]
             [harja.domain.urakka :as u]
+            [harja.domain.sopimus :as sop]
+            [harja.domain.hanke :as h]
+            [harja.domain.organisaatio :as o]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [clojure.spec :as s]))
+            [clojure.spec :as s]
+            [clojure.spec.gen :as gen]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -20,8 +24,8 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :tallenna-urakan-sopimustyyppi (component/using
-                                                  (->Urakat)
-                                                  [:http-palvelin :db])))))
+                                                         (->Urakat)
+                                                         [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -35,7 +39,7 @@
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-urakan-sopimustyyppi urakanvalvoja
-                        {:urakka-id     @oulun-alueurakan-2005-2010-id
+                        {:urakka-id @oulun-alueurakan-2005-2010-id
                          :sopimustyyppi :kokonaisurakka})]
     (is (= uusi-sopimustyyppi :kokonaisurakka))
     (u (str "UPDATE urakka SET sopimustyyppi = NULL WHERE id = " @oulun-alueurakan-2005-2010-id))))
@@ -63,3 +67,18 @@
                                 :hae-harjassa-luodut-urakat +kayttaja-jvh+ {})]
     (is (>= (count vastaus) 3))
     (is (s/valid? ::u/hae-harjassa-luodut-urakat-vastaus vastaus))))
+
+(deftest urakan-tallennus-test
+  (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        urakoitsija-id (hae-vapaa-urakoitsija-id)
+        sopimus-id (hae-vapaa-sopimus-id)
+        uusi-urakka {::u/nimi "lolurakka"
+                     ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
+                     ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
+                     ::u/sopimukset [{::sop/id sopimus-id
+                                      ::sop/paasopimus-id nil}]
+                     ::u/hallintayksikko {::o/id hallintayksikko-id}
+                     ::u/urakoitsija {::o/id urakoitsija-id}}]
+    (assert hallintayksikko-id "Hallintayksikkö pitää olla")
+    (assert urakoitsija-id "Urakoitsija pitää olla")
+    (assert sopimus-id "Sopimus pitää olla")))

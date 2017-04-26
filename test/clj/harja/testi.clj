@@ -315,6 +315,15 @@
                    FROM   urakka
                    WHERE  nimi = 'Kajaanin alueurakka 2014-2019'"))))
 
+(defn hae-vapaa-urakoitsija-id []
+  (ffirst (q (str "SELECT id FROM organisaatio
+                   WHERE tyyppi = 'urakoitsija'
+                   AND id NOT IN (SELECT urakoitsija FROM urakka WHERE urakoitsija IS NOT NULL);"))))
+
+(defn hae-vapaa-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus
+                   WHERE urakka IS NULL;"))))
+
 (defn hae-vantaan-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
