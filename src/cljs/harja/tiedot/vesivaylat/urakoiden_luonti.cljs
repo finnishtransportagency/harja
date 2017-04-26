@@ -18,7 +18,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus-id nil ::s/id nil})
-(def uusi-urakka {:sopimukset [tyhja-sopimus]})
+(def uusi-urakka {::u/sopimukset [tyhja-sopimus]})
 
 (defonce tila
   (atom {:nakymassa? false
