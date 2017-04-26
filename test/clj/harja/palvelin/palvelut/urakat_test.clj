@@ -105,7 +105,7 @@
       (is (= (::u/alkupvm urakka-kannassa (::u/alkupvm urakka))))
       (is (= (::u/loppupvm urakka-kannassa (::u/loppupvm urakka))))
 
-      ;; Sopparikin on tallentunut oikein
+      ;; Sopparitkin on tallentunut oikein
       (is (= (count urakan-sopimukset-kannassa) 2))
       (is (= (set (map :paasopimus urakan-sopimukset-kannassa))
              #{nil eka-sopimus-id})
