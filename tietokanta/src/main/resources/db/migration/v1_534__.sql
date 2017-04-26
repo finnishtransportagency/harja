@@ -5,7 +5,7 @@ CREATE TYPE reimari_alus AS (tunnus TEXT, nimi TEXT);
 CREATE TYPE reimari_vayla AS (nro TEXT, nimi TEXT, ryhma INTEGER);
 
 CREATE OR REPLACE FUNCTION sisaltaa_tekstia (s TEXT) -- ei sallita: null, '', '  '
-  RETURN BOOLEAN AS $$
+  RETURNS BOOLEAN AS $$
 BEGIN
   RETURN COALESCE(TRIM(s), '') != '';
 END;
@@ -16,13 +16,13 @@ CREATE TABLE reimari_toimenpide (
   id               SERIAL PRIMARY KEY,
   reimari_id       INTEGER NOT NULL,
   urakoitsija      reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
-                                            sisaltaa_tekstia((urakoitsija).nimi),
+                                            sisaltaa_tekstia((urakoitsija).nimi)),
   sopimus          reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
                                               sisaltaa_tekstia((sopimus).tyyppi) AND
-                                            sisaltaa_tekstia((sopimus).nimi))
-  turvalaite       reimari_turvalaite  CHECK (sisaltaa_tekstia((turvalaite).nro)
+                                              sisaltaa_tekstia((sopimus).nimi)),
+  turvalaite       reimari_turvalaite  CHECK (sisaltaa_tekstia((turvalaite).nro) AND
                                               -- nimi saa olla tyhja
-                                           (turvalaite).ryhma IS NOT NULL)
+                                              (turvalaite).ryhma IS NOT NULL),
   alus             reimari_alus        CHECK (sisaltaa_tekstia((alus).tunnus)
                                               -- nimi saa olla tyhja
                                             ),
