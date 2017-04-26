@@ -533,7 +533,8 @@
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
-    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (constantly true) :fmt pvm/pvm-opt}
+    {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
+     :fmt pvm/pvm-opt}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
