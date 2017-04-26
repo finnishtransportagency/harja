@@ -196,3 +196,15 @@
           (.contains sisalto "&"))
     (tee-c-data-elementti sisalto)
     sisalto))
+
+(defn lue-attribuutit
+  "Lukee annetusta XML zipper objektista attribuutit. Palauttaa mäpin, jossa
+  luetut attribuuttien arvot. Avain-fn muuntaa attr-map olevan avaimen (XML attribuutin nimi)
+  tulosmäpin avaimeksi. Attr-map on mäppäys avaimesta prosessointifunktioon, jolla attribuutin
+  arvo käsitellään."
+  [xml-zipper avain-fn attr-map]
+  (reduce (fn [m [avain lue-fn]]
+            (assoc m (avain-fn avain)
+                   (lue-fn (z/attr xml-zipper avain))))
+          {}
+          attr-map))
