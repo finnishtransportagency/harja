@@ -14,6 +14,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE reimari_toimenpide (
   id               SERIAL PRIMARY KEY,
+  reimari_id       INTEGER NOT NULL,
   urakoitsija      reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
                                             sisaltaa_tekstia((urakoitsija).nimi),
   sopimus          reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
