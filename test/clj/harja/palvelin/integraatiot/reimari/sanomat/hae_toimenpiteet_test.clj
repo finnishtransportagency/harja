@@ -21,11 +21,11 @@
    ::toimenpide/sopimus {::sopimus/nro -666
                          ::sopimus/tyyppi :suoritusvelvoitteinen
                          ::sopimus/nimi "Hoitosopimus"}
-   ::toimenpide/tyyppi :valo-ja-energialaitetyot
+   ::toimenpide/tyyppi "1022542001"
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun"
-   ::toimenpide/tyoluokka :valo-ja-energialaitteet
-   ::toimenpide/tila :suoritettu
-   ::toimenpide/tyolaji :poijut
+   ::toimenpide/tyoluokka "1022541905"
+   ::toimenpide/tila "1022541202"
+   ::toimenpide/tyolaji "1022541802"
    ::toimenpide/muokattu (org.joda.time.DateTime. "2017-04-24T13:30:00.000Z")
    ::toimenpide/alus {::alus/tunnus "omapaatti"
                       ::alus/nimi "MS Totally out of Gravitas"}

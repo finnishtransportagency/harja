@@ -19,10 +19,10 @@
     (xml/parsi-xsd-datetime-aikaleimalla text)))
 
 (def toimenpide-attribuutit {:id identity
-                             :tyolaji toimenpide/reimari-tyolajit
-                             :tyoluokka toimenpide/reimari-tyoluokat
-                             :tyyppi toimenpide/reimari-toimenpidetyypit
-                             :tila toimenpide/reimari-tilat
+                             :tyolaji identity
+                             :tyoluokka identity
+                             :tyyppi identity
+                             :tila identity
                              :lisatyo #(Boolean/valueOf %)
                              :suoritettu aikaleima
                              :lisatieto identity
