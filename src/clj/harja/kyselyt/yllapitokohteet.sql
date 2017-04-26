@@ -446,6 +446,14 @@ WHERE id = :id
                             FROM yllapitokohde
                             WHERE urakka = :urakka);
 
+-- name: merkitse-yllapitokohteen-kohdeosat-poistetuiksi!
+UPDATE yllapitokohdeosa
+SET poistettu = TRUE
+WHERE yllapitokohde IN (SELECT id
+                       FROM yllapitokohde
+                       WHERE urakka = :urakka AND
+                             id = :yllapitokohdeid);
+
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
