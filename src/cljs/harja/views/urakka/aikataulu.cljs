@@ -373,7 +373,6 @@
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
                        "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
 
-
            (when (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
              {:otsikko "Tie\u00ADtyö\u00ADilmoi\u00ADtus"
               :leveys 6

@@ -140,3 +140,8 @@
       (tarkista-map-arvot
        (assoc-in ilm-haettu [::t/osoite ::tr/geometria] nil)
        ilm-tallennettu))))
+
+;; TODO Lisää testit:
+;; :hae-tietyoilmoitus
+;; :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+;; :hae-urakan-tiedot-tietyoilmoitukselle
