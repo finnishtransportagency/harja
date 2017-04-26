@@ -84,16 +84,21 @@
     (assert urakoitsija-id "Urakoitsija pitää olla")
     (assert sopimus-id "Sopimus pitää olla")
 
+    (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
+
     ;; Luo uusi urakka
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :tallenna-urakka +kayttaja-jvh+
                                           urakka)
           urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
 
-      (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen))
+      (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
+          "Urakoiden määrä kasvoi yhdellä")
 
-      ;; Uusi urakka löytyy vastauksesesta
+      ;; Vastauksessa on uuden urakan tiedot
       (is (= (::u/nimi urakka-kannassa (::u/nimi urakka))))
+      (is (= (::u/alkupvm urakka-kannassa (::u/alkupvm urakka))))
+      (is (= (::u/loppupvm urakka-kannassa (::u/loppupvm urakka))))
 
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
