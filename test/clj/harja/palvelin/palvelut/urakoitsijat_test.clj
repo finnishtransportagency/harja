@@ -64,7 +64,8 @@
 (deftest vesivaylaurakoitsijoiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :vesivayla-urakoitsijat +kayttaja-jvh+ {})]
-    (is (>= (count vastaus) 2))))
+    (is (>= (count vastaus) 2))
+    (is (s/valid? ::o/vesivayla-urakoitsijat-vastaus vastaus))))
 
 (deftest vesivaylaurakoitsijan-tallennus-ja-paivitys-toimii
   (let [testiurakoitsijat (map-indexed (fn [index urakoitsija]

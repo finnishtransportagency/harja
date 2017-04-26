@@ -37,7 +37,8 @@
 (deftest sopimuksien-haku-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-sopimukset +kayttaja-jvh+ {})]
-    (is (>= (count vastaus) 3))))
+    (is (>= (count vastaus) 3))
+    (is (s/valid? ::sopimus/hae-harjassa-luodut-sopimukset-vastaus vastaus))))
 
 (deftest sopimuksen-tallennus-ja-paivitys-toimii
   (let [testisopimukset (map #(-> %
