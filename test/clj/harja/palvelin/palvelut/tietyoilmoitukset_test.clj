@@ -165,6 +165,13 @@
 
       (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus)))))
 
+(deftest hae-tietyoilmoitus
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tietyoilmoitus
+                                +kayttaja-jvh+
+                                1)]
+
+    (is (s/valid? ::t/ilmoitus vastaus))))
+
 ;; TODO Lisää testit:
-;; :hae-tietyoilmoitus
 ;; :hae-urakan-tiedot-tietyoilmoitukselle
