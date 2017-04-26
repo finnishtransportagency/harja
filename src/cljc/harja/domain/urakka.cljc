@@ -329,7 +329,7 @@
     (clojure.spec/def :harja.domain.urakka/poistettu :specql.data-types/bool)
     (clojure.spec/def :harja.domain.urakka/luotu (clojure.spec/nilable :specql.data-types/timestamp))))
 
-;; Ylikirjoitetaan specql:n määritykset
+;; Tarkennetaan määrityksiä
 (clojure.spec/def
   :harja.domain.urakka/tyyppi
   #{:hoito
@@ -345,7 +345,6 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
-(s/def ::hanke (s/keys :reg [:harja.domain.hanke/id]))
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
