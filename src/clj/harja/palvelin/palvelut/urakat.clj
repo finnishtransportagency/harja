@@ -292,10 +292,10 @@
       (let [sopimukset (::u/sopimukset urakka)
             tallennettu (if (id-olemassa? (::u/id urakka))
                           (paivita-urakkaa! db user urakka)
-                          (luo-uusi-urakka! db user urakka))]
+                          (luo-uusi-urakka! db user urakka))
+            urakka (assoc urakka ::u/id (:id tallennettu))]
 
         (paivita-urakan-sopimukset! db user urakka sopimukset)
-
         urakka))))
 
 (defn hae-harjassa-luodut-urakat [db user]

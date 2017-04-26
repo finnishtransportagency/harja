@@ -90,15 +90,21 @@
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :tallenna-urakka +kayttaja-jvh+
                                           urakka)
+          urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
           urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
 
       (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen)
           "Urakoiden määrä kasvoi yhdellä")
 
       ;; Vastauksessa on uuden urakan tiedot
+      (is (integer? (::u/id urakka-kannassa)))
       (is (= (::u/nimi urakka-kannassa (::u/nimi urakka))))
       (is (= (::u/alkupvm urakka-kannassa (::u/alkupvm urakka))))
       (is (= (::u/loppupvm urakka-kannassa (::u/loppupvm urakka))))
+
+      ;; Sopparikin on tallentunut oikein
+      (is (= (count urakan-sopimukset-kannassa) 1))
+      (is (nil? (:paasopimus (first urakan-sopimukset-kannassa))))
 
       ;; Päivitetään urakka
       (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
