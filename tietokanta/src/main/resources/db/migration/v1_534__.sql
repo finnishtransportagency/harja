@@ -37,8 +37,11 @@ CREATE TABLE reimari_toimenpide (
   reimari_luotu    TIMESTAMP           NOT NULL,
   reimari_muokattu TIMESTAMP,
   luotu            TIMESTAMP           NOT NULL DEFAULT NOW(),
+  luoja            INTEGER REFERENCES kayttaja(id),
   muokattu         TIMESTAMP,
+  muokkaaja        INTEGER REFERENCES kayttaja(id),
   asiakas          TEXT,
   vastuuhenkilo    TEXT,
-  poistettu        BOOLEAN             NOT NULL DEFAULT FALSE
+  poistettu        BOOLEAN             NOT NULL DEFAULT FALSE,
+  poistaja         INTEGER REFERENCES kayttaja(id)
 );
