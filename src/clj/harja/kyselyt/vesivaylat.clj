@@ -11,6 +11,8 @@
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
+            [harja.domain.vesivaylat.vayla :as vv-vayla]
+            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [clojure.future :refer :all]))
 
 
@@ -20,16 +22,15 @@
   ["reimari_sopimus" ::vv-sopimus/sopimus]
   ["reimari_turvalaite" ::vv-turvalaite/turvalaite]
   ["reimari_alus" ::vv-alus/alus]
-  ;; ["reimari_vayla" ::vv-vayla/vayla]
+  ["reimari_vayla" ::vv-vayla/vayla]
+  ["reimari_turvalaite" ::vv-turvalaite/turvalaite]
   ["reimari_toimenpide" ::vv-toimenpide/toimenpide
-   "muokattu" ::m/muokattu
-   "muokkaaja" ::m/muokkaaja-id
-   "luotu" ::m/luotu
-   "luoja" ::m/luoja-id
-   "poistettu" ::m/poistettu
-   "poistaja" ::m/poistaja-id
-   ]
-  )
+   {"muokattu" ::m/muokattu
+    "muokkaaja" ::m/muokkaaja-id
+    "luotu" ::m/luotu
+    "luoja" ::m/luoja-id
+    "poistettu" ::m/poistettu? ;; FIXME: poistettu on TIMESTAMP tietyöilmoituksessa
+    "poistaja" ::m/poistaja-id}])
 
 #_(def kaikki-toimenpiteen-kentat
   #{::vv-toimenpide/id
