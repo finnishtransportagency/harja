@@ -16,9 +16,9 @@
 
 (defn- aikaleima [text]
   (when-not (str/blank? text)
-    (xml/parsi-xsd-datetime-aikaleimalla text)))
+    (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
 
-(def toimenpide-attribuutit {:id identity
+(def toimenpide-attribuutit {:id #(Integer/parseInt %)
                              :tyolaji identity
                              :tyoluokka identity
                              :tyyppi identity
@@ -37,18 +37,18 @@
 (defn- lue-sopimus [s]
   (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
                        {:nro #(Integer/parseInt %)
-                        :tyyppi sopimus/reimari-sopimustyypit
+                        :tyyppi identity
                         :nimi identity}))
 
 (defn- lue-turvalaite [tl]
   (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
-                       {:nro #(Integer/parseInt %)
+                       {:nro identity
                         :nimi identity
                         :ryhma #(Integer/parseInt %)}))
 
 (defn- lue-vayla [v]
   (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vayla" (name %))
-                       {:nro #(Integer/parseInt %)
+                       {:nro identity
                         :nimi identity}))
 
 (defn- lue-toimenpide [toimenpide]
