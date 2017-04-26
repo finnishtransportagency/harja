@@ -19,7 +19,7 @@
       #(e! (tiedot/->ValitseSopimus nil))
       {:disabled tallennus-kaynnissa?}]
      [lomake/lomake
-      {:otsikko (if (:id valittu-sopimus)
+      {:otsikko (if (::sopimus/id valittu-sopimus)
                   "Muokkaa sopimusta"
                   "Luo uusi sopimus")
        :muokkaa! #(e! (tiedot/->SopimustaMuokattu (lomake/ilman-lomaketietoja %)))
@@ -40,11 +40,14 @@
           :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
        {:otsikko "Pääsopimus"
         :muokattava? (constantly false)
-        :nimi ::sopimus/paasopimus
+        :nimi ::sopimus/paasopimus-id
         :tyyppi :string
-        :hae (fn [s] (or (:name (first (filter #(= (::sopimus/paasopimus s) (::sopimus/id %))
-                                               haetut-sopimukset)))
-                         "Sopimus on pääsopimus"))}
+        :hae (fn [s]
+               (let [paasopimus (first (filter #(= (::sopimus/paasopimus-id s) (::sopimus/id %))
+                                               haetut-sopimukset))]
+                 (if (::sopimus/paasopimus-id s)
+                   (::sopimus/nimi paasopimus)
+                   "Sopimus on pääsopimus")))}
        (if (:id valittu-sopimus)
          {:otsikko "Urakka"
           :muokattava? (constantly false)
@@ -71,7 +74,7 @@
                   [ajax-loader "Haetaan sopimuksia"]
                   "Sopimuksia ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseSopimus %))}
-        [{:otsikko "Nimi" :nimi ::sopimus/nimi}
+        [{:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string}
          {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Pääsopimus" :nimi ::sopimus/paasopimus

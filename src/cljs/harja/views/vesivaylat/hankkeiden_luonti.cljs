@@ -17,7 +17,7 @@
    [napit/takaisin "Takaisin luetteloon" #(e! (tiedot/->ValitseHanke nil))
     {:disabled tallennus-kaynnissa?}]
    [lomake/lomake
-    {:otsikko (if (:id valittu-hanke)
+    {:otsikko (if (::h/id valittu-hanke)
                 "Muokkaa hanketta"
                 "Luo uusi hanke")
      :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))

@@ -44,7 +44,7 @@ INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, tyyppi, luoja,
     VALUES (:nimi, :ytunnus, :katuosoite, :postinumero,
             'urakoitsija', :kayttaja, NOW(), TRUE);
 
--- name: paivita-urakoitsija!
+-- name: paivita-urakoitsija<!
 UPDATE organisaatio SET
   nimi = :nimi,
   ytunnus = :ytunnus,

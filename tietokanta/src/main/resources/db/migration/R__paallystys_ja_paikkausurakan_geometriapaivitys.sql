@@ -25,7 +25,7 @@ BEGIN
   FROM (SELECT
           u.id,
           u.nimi,
-          ST_BUFFER(ST_SIMPLIFY(ST_UNION(sijainti), 3000), 3000) AS uusi_alue
+          ST_BUFFER(ST_SIMPLIFY(ST_COLLECT(sijainti), 3000), 3000) AS uusi_alue
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
           JOIN urakka u ON ypk.urakka = u.id

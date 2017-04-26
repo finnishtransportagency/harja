@@ -142,4 +142,10 @@
  ;; :tierekisterin-varusteet
  ;; :vesivayla
  :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
- :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}}
+
+ :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
+
+ :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
+                 :paivittainen-tarkistusaika [11 00 00]
+                 :paivitysvali-paivissa 60}
+ }

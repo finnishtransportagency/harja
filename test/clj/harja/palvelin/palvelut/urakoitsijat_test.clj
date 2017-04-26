@@ -3,8 +3,11 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.urakoitsijat :refer :all]
+            [harja.domain.organisaatio :as o]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [clojure.test.check.generators :as gen]
+            [clojure.spec :as s]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -22,7 +25,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once jarjestelma-fixture tietokanta-fixture)
 
 (deftest urakoitsijoiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -57,3 +60,35 @@
 
     (is (set? vastaus))
     (is (>= (count vastaus) 1))))
+
+(deftest vesivaylaurakoitsijoiden-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :vesivayla-urakoitsijat +kayttaja-jvh+ {})]
+    (is (>= (count vastaus) 2))))
+
+(deftest vesivaylaurakoitsijan-tallennus-ja-paivitys-toimii
+  (let [testiurakoitsijat (map-indexed (fn [index urakoitsija]
+                                         (-> urakoitsija
+                                             (dissoc ::o/id)
+                                             (assoc ::o/ytunnus (str "FirmaOY" index) ::o/postinumero "86300")))
+                                       (gen/sample (s/gen ::o/tallenna-urakoitsija-kysely)))]
+
+    (doseq [urakoitsija testiurakoitsijat]
+      ;; Luo uusi urakoitsija
+      (let [urakoitsija-kannassa (kutsu-palvelua
+                                   (:http-palvelin jarjestelma)
+                                   :tallenna-urakoitsija +kayttaja-jvh+
+                                   urakoitsija)]
+        ;; Uusi urakoitsija löytyy vastauksesesta
+        (is (= (::o/nimi urakoitsija-kannassa (::o/nimi urakoitsija))))
+
+        ;; Päivitetään urakoitsija
+        (let [paivitetty-urakoitsija (assoc urakoitsija ::o/nimi (str (::o/nimi urakoitsija) " päivitetty")
+                                                        ::o/id (::o/id urakoitsija-kannassa))
+              paivitetty-urakoitsija-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                              :tallenna-urakoitsija +kayttaja-jvh+
+                                                              paivitetty-urakoitsija)]
+
+          ;; Urakoitsija päivittyi
+          (is (= (::o/nimi paivitetty-urakoitsija-kannassa)
+                 (::o/nimi paivitetty-urakoitsija))))))))

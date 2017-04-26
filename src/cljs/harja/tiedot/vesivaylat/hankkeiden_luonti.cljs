@@ -3,6 +3,7 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
+            [harja.loki :refer [log]]
             [cljs.core.async :refer [<!]]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -47,7 +48,7 @@
           fail! (tuck/send-async! ->HankeEiTallennettu)]
       (go
         (try
-          (let [vastaus (<! (k/post! :tallenna-hanke {:hanke hanke}))]
+          (let [vastaus (<! (k/post! :tallenna-hanke hanke))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))

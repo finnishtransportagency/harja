@@ -7,14 +7,17 @@
             [tuck.core :as tuck]
             [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
+            [harja.domain.urakka :as u]
+            [harja.domain.sopimus :as s]
             [harja.ui.viesti :as viesti]
+            [namespacefy.core :refer [namespacefy]]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.domain.sopimus :as sopimus-domain]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tyhja-sopimus {:nimi nil :alku nil :loppu nil :paasopimus nil :id nil})
+(def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus-id nil ::s/id nil})
 (def uusi-urakka {:sopimukset [tyhja-sopimus]})
 
 (defonce tila
@@ -29,24 +32,20 @@
          :haetut-sopimukset nil
          :kaynnissa-olevat-sahkelahetykset #{}}))
 
-(defn paasopimus [sopimukset]
-  (sopimus-domain/paasopimus sopimukset))
-
-(defn sopimukset-paasopimuksella [sopimukset sopimus]
+(defn sopimukset-paasopimuksella [sopimukset paasopimus]
   (->>
     sopimukset
-    (map #(assoc % :paasopimus (if (= (:id %) (:id sopimus)) nil (:id sopimus))))))
+    ;; Asetetaan sopimuksille tieto siitä, mikä sopimus on niiden pääsopimus
+    ;; Kuitenkin itse pääsopimukselle asetetaan paasopimus-id:ksi nil
+    (map #(assoc % ::s/paasopimus-id (when (not= (::s/id %) (::s/id paasopimus))
+                                       (::s/id paasopimus))))))
 
-(defn paasopimus? [sopimukset sopimus]
-  (boolean (when-let [ps (paasopimus sopimukset)]
-             (= (:id sopimus) (:id ps)))))
-
-(defn vapaa-sopimus? [s] (nil? (get-in s [:urakka :id])))
+(defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
 (defn vapaat-sopimukset [sopimukset urakan-sopimukset]
   (->> sopimukset
        (filter vapaa-sopimus?)
-       (remove (comp (into #{} (keep :id urakan-sopimukset)) :id))))
+       (remove (comp (into #{} (keep ::s/id urakan-sopimukset)) ::s/id))))
 
 (defn uusin-tieto [hanke sopimukset urakoitsija urakka]
   (sort-by #(or (:muokattu %) (:luotu %))
@@ -126,12 +125,12 @@
         (try
           (let [vastaus (async/<! (k/post! :tallenna-urakka
                                            (update urakka
-                                                   :sopimukset
+                                                   ::u/sopimukset
                                                    #(->> %
                                                          ;; grid antaa uusille riveille negatiivisen id:n,
                                                          ;; mutta riville annetaan "oikea id", kun sopimus valitaan.
                                                          ;; Rivillä on neg. id vain, jos sopimus jäi valitsematta.
-                                                         (filter (comp id-olemassa? :id))))))]
+                                                         (filter (comp id-olemassa? ::s/id))))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -143,12 +142,15 @@
   UrakkaTallennettu
   (process-event [{urakka :urakka} app]
     (viesti/nayta! "Urakka tallennettu!")
-    (let [vanhat (group-by :id (:haetut-urakat app))
-          uusi {(:id urakka) [urakka]}]
+    (let [vanhat (group-by ::u/id (:haetut-urakat app))
+          uusi {(::u/id urakka) [urakka]}]
       ;; Yhdistetään tallennettu jo haettuihin.
       ;; Gridiin tultaessa Grid hakee vielä taustalla kaikki hankkeet
       ;; Tietokannasta asiat tulevat järjestettynä, mutta yritetään tässä jo saada oikea järjestys aikaan
-      (assoc app :haetut-urakat (sort-by :alkupvm pvm/jalkeen? (vec (apply concat (vals (merge vanhat uusi)))))
+      (assoc app :haetut-urakat
+                 (sort-by ::u/alkupvm pvm/jalkeen?
+                          (vec (apply concat
+                                      (vals (merge vanhat uusi)))))
                  :tallennus-kaynnissa? false
                  :valittu-urakka nil)))
 
@@ -190,10 +192,11 @@
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
     (->> sopimukset
-         (map #(assoc % :paasopimus (:id (paasopimus (:sopimukset urakka)))))
-         ;; Jos sopimus on pääsopimus, :paasopimus asetetaan nilliksi
-         (map #(update % :paasopimus (fn [ps] (when-not (= ps (:id %)) ps))))
-         (assoc-in app [:valittu-urakka :sopimukset])))
+         ;; Asetetaan sopimukset viittaamaan pääsopimukseen
+         (map #(assoc % ::s/paasopimus-id (::s/id (s/paasopimus (::u/sopimukset urakka)))))
+         ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
+         (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
+         (assoc-in app [:valittu-urakka ::u/sopimukset])))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]
@@ -202,6 +205,7 @@
       (go
         (try
           (let [hallintayksikot (async/<! (k/post! :hallintayksikot {:liikennemuoto :vesi}))
+                hallintayksikot-nimiavaruuksilla (namespacefy hallintayksikot {:ns :harja.domain.organisaatio})
                 hankkeet (async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
                 sopimukset (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))
@@ -211,7 +215,7 @@
                          :sopimukset sopimukset}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)
-              (tulos! vastaus)))
+              (tulos! (assoc vastaus :hallintayksikot hallintayksikot-nimiavaruuksilla))))
           (catch :default e
             (fail! nil)
             (throw e)))))
@@ -226,7 +230,7 @@
 
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
-    (viesti/nayta! [:span "Hupsista, ongelmia Harjan kanssa juttelussa."] :danger)
+    (viesti/nayta! "Hupsista, ongelmia Harjan kanssa juttelussa." :danger)
     app)
 
   LahetaUrakkaSahkeeseen
@@ -235,21 +239,21 @@
           fail! (tuck/send-async! ->SahkeeseenEiLahetetty urakka)]
       (go
         (try
-          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (:id urakka)))]
+          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (::u/id urakka)))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
           (catch :default e
             (fail! nil)
             (throw e)))))
-    (update app :kaynnissa-olevat-sahkelahetykset conj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset conj (::u/id urakka)))
 
   SahkeeseenLahetetty
   (process-event [{tulos :tulos urakka :urakka} app]
-    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka)))
+    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka)))
 
   SahkeeseenEiLahetetty
   (process-event [{virhe :virhe urakka :urakka} app]
-    (viesti/nayta! [:span "Urakan '" (:nimi urakka) "' lähetys epäonnistui."] :danger)
-    (update app :kaynnissa-olevat-sahkelahetykset disj (:id urakka))))
+    (viesti/nayta! [:span "Urakan '" (::u/nimi urakka) "' lähetys epäonnistui."] :danger)
+    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka))))
 

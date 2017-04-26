@@ -19,7 +19,7 @@ SELECT
   urk.luotu                AS urakoitsija_luotu,
   s.nimi                   AS sopimus_nimi,
   s.id                     AS sopimus_id,
-  s.paasopimus             AS sopimus_paasopimus,
+  s.paasopimus             AS "sopimus_paasopimus-id",
   s.alkupvm                AS sopimus_alkupvm,
   s.loppupvm               AS sopimus_loppupvm,
   s.muokattu               AS sopimus_muokattu,
@@ -386,7 +386,7 @@ SET nimi          = :nimi,
   urakkanro       = :urakkanro
 WHERE id = :id;
 
--- name: paivita-harjassa-luotu-urakka!
+-- name: paivita-harjassa-luotu-urakka<!
 -- Päivittää Harjassa luotua (vesiväylä)urakkaa
 UPDATE urakka
   SET nimi = :nimi,
@@ -395,7 +395,6 @@ UPDATE urakka
     alue = :alue,
     hallintayksikko = :hallintayksikko,
     urakoitsija = :urakoitsija,
-    hanke = :hanke,
     muokattu = NOW(),
     muokkaaja = :kayttaja
 WHERE id = :id AND harjassa_luotu IS TRUE;

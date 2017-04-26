@@ -3,6 +3,9 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakoitsijoiden-luonti :as tiedot]
             [harja.ui.napit :as napit]
+            [harja.loki :refer [log]]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.urakka :as u]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
@@ -14,7 +17,7 @@
    tietoja
    {:otsikot-omalla-rivilla? true}
    (interleave
-     (map :nimi urakat)
+     (map ::u/nimi urakat)
      (map tiedot/urakan-aikavali-str urakat))])
 
 (defn luontilomake [e! {:keys [valittu-urakoitsija tallennus-kaynnissa?] :as app}]
@@ -24,7 +27,7 @@
      #(e! (tiedot/->ValitseUrakoitsija nil))
      {:disabled tallennus-kaynnissa?}]
     [lomake/lomake
-     {:otsikko (if (:id valittu-urakoitsija)
+     {:otsikko (if (::o/id valittu-urakoitsija)
                  "Muokkaa urakoitsijaa"
                  "Luo uusi urakoitsija")
       :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu (lomake/ilman-lomaketietoja %)))
@@ -38,10 +41,10 @@
                                    (not (oikeudet/hallinta-vesivaylat))
                                    (not (lomake/voi-tallentaa? urakoitsija)))
                      :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-     [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :pakollinen? true}
-      {:otsikko "Y-tunnus" :nimi :ytunnus :tyyppi :string :pakollinen? true}
-      {:otsikko "Katuosoite" :nimi :katuosoite :tyyppi :string}
-      {:otsikko "Postinumero" :nimi :postinumero :tyyppi :string}
+     [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
+      {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true}
+      {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
+      {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string}
       (when (some not-empty (vals urakat))
         (lomake/ryhma
          {:otsikko "Urakat"}
@@ -78,16 +81,16 @@
         {:otsikko (if (and (some? haetut-urakoitsijat) urakoitsijoiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
                     "Harjaan perustetut vesiväyläurakoitsijat")
-         :tunniste :id
+         :tunniste ::o/id
          :tyhja (if (nil? haetut-urakoitsijat)
                   [ajax-loader "Haetaan urakoitsijoita"]
                   "Urakoitsijoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakoitsija %))}
-        [{:otsikko "Nimi" :nimi :nimi}
-         {:otsikko "Y-tunnus" :nimi :ytunnus}
-         {:otsikko "Katuosoite" :nimi :katuosoite}
-         {:otsikko "Postinumero" :nimi :postinumero}
-         {:otsikko "Urakoita (Alk./Käyn./Päät.)" :nimi :urakoita :tyyppi :string
+        [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string }
+         {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pituus-max 9}
+         {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
+         {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
+         {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
         haetut-urakoitsijat]])))
 
