@@ -329,6 +329,21 @@
     (clojure.spec/def :harja.domain.urakka/poistettu :specql.data-types/bool)
     (clojure.spec/def :harja.domain.urakka/luotu (clojure.spec/nilable :specql.data-types/timestamp))))
 
+(clojure.spec/def
+  :harja.domain.urakka/tyyppi
+  #{:hoito
+    :tekniset-laitteet
+    :valaistus
+    :vesivayla-ruoppaus
+    :vesivayla-hoito
+    :vesivayla-kanavien-korjaus
+    :siltakorjaus
+    :paallystys
+    :paikkaus
+    :tiemerkinta
+    :vesivayla-kanavien-hoito
+    :vesivayla-turvalaitteiden-korjaus})
+
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-urakat
