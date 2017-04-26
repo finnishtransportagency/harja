@@ -4,10 +4,12 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.kyselyt.urakat :as urk-q]
+            [harja.domain.urakka :as u]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.spec :as s]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -55,3 +57,9 @@
     (is (= toka-sopimuksen-sampoid "THII-12-28555") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
     (is (= (:loppupvm haettu-urakka) (pvm/aikana (pvm/->pvm "30.9.2012") 23 59 59 999)) "haetun urakan loppupvm")))
+
+(deftest urakoiden-haku-test
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-harjassa-luodut-urakat +kayttaja-jvh+ {})]
+    (is (>= (count vastaus) 3))
+    (is (s/valid? ::u/hae-harjassa-luodut-urakat vastaus))))
