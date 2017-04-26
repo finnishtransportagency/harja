@@ -9,11 +9,18 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [taoensso.timbre :as log]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch]]
-            [harja.kyselyt.tietyoilmoitukset :as q]))
+            [harja.kyselyt.tietyoilmoitukset :as q]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.fim :as fim]
+            [clojure.java.io :as io]
+            [clojure.spec :as s])
+  (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -21,10 +28,16 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :fim (component/using
+                               (fim/->FIM +testi-fim+)
+                               [:db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
                         :tietyoilmoitukset (component/using
                                              (tietyoilmoitukset/->Tietyoilmoitukset)
-                                             [:http-palvelin :db])))))
+                                             [:http-palvelin :db :fim])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -130,18 +143,28 @@
     (is (= lkm-jalkeen (inc lkm-ennen)))
 
     (tarkista-map-arvot
-     ilm-ennen
-     (-> ilm-tallennettu
-         (dissoc  ::t/id)
-         ;; FIXME: specql ei pitäisi palauttaa nil geometriaa
-         (update ::t/osoite dissoc ::tr/geometria)))
+      ilm-ennen
+      (-> ilm-tallennettu
+          (dissoc ::t/id)
+          ;; FIXME: specql ei pitäisi palauttaa nil geometriaa
+          (update ::t/osoite dissoc ::tr/geometria)))
     (let [ilm-haettu (first (fetch db ::t/ilmoitus q/kaikki-ilmoituksen-kentat
-                               {::t/id (::t/id ilm-tallennettu)}))]
+                                   {::t/id (::t/id ilm-tallennettu)}))]
       (tarkista-map-arvot
-       (assoc-in ilm-haettu [::t/osoite ::tr/geometria] nil)
-       ilm-tallennettu))))
+        (assoc-in ilm-haettu [::t/osoite ::tr/geometria] nil)
+        ilm-tallennettu))))
+
+(deftest hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+  (with-fake-http
+    [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+    (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                                  +kayttaja-jvh+
+                                  yllapitokohde-id)]
+
+      (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus)))))
 
 ;; TODO Lisää testit:
 ;; :hae-tietyoilmoitus
-;; :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
 ;; :hae-urakan-tiedot-tietyoilmoitukselle

@@ -193,7 +193,8 @@
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
-                        (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot)))
+                        (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot))
+                      {:vastaus-spec ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus})
     (julkaise-palvelu http :hae-urakan-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
                         (hae-urakan-tiedot-tietyoilmoitukselle db fim user tiedot)))
