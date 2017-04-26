@@ -8,7 +8,8 @@
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.vesivaylat.sopimus :as sopimus]
-
+            [harja.domain.vesivaylat.turvalaite :as turvalaite]
+            [harja.domain.vesivaylat.vayla :as vayla]
             [clojure.string :as str]
             [harja.pvm :as pvm]))
 
@@ -18,47 +19,56 @@
     (xml/parsi-xsd-datetime-aikaleimalla text)))
 
 (def toimenpide-attribuutit {:id identity
-                             :tyolaji identity
-                             :tyoluokka identity
-                             :tyyppi identity
-                             :tila identity
-                             :lisatyo identity
+                             :tyolaji toimenpide/reimari-tyolajit
+                             :tyoluokka toimenpide/reimari-tyoluokat
+                             :tyyppi toimenpide/reimari-toimenpidetyypit
+                             :tila toimenpide/reimari-tilat
+                             :lisatyo #(Boolean/valueOf %)
                              :suoritettu aikaleima
                              :lisatieto identity
                              :luotu aikaleima
                              :muokattu aikaleima})
 
-(println (lue-hae-toimenpiteet-vastaus (lue-xml (slurp "resources/xsd/reimari/vastaus.xml"))))
-
 (defn- lue-alus [a]
-  {::alus/id "IMPLEMENT" ::alus/nimi "ME"})
+  (xml/lue-attribuutit a #(keyword "harja.domain.vesivaylat.alus" (name %))
+                       {:tunnus identity
+                        :nimi identity}))
 
 (defn- lue-sopimus [s]
-  {::sopimus/id "foo"})
+  (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
+                       {:nro #(Integer/parseInt %)
+                        :tyyppi sopimus/reimari-sopimustyypit
+                        :nimi identity}))
 
 (defn- lue-turvalaite [tl]
-  {:foobar 123})
+  (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
+                       {:nro #(Integer/parseInt %)
+                        :nimi identity
+                        :ryhma #(Integer/parseInt %)}))
 
+(defn- lue-vayla [v]
+  (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vayla" (name %))
+                       {:nro #(Integer/parseInt %)
+                        :nimi identity}))
 
 (defn- lue-toimenpide [toimenpide]
   (merge
-   (reduce (fn [m [avain lue-fn]]
-             (assoc m (keyword "harja.domain.vesivaylat.toimenpide" (name avain))
-                    (z/xml1-> toimenpide (z/attr avain) lue-fn)))
-           {}
-           toimenpide-attribuutit)
+   (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide" (name %))
+                        toimenpide-attribuutit)
    (when-let [a (z/xml1-> toimenpide :alus)]
      {::toimenpide/alus (lue-alus a)})
    (when-let [s (z/xml1-> toimenpide :sopimus)]
      {::toimenpide/sopimus (lue-sopimus s)})
    (when-let [tl (z/xml1-> toimenpide :turvalaite)]
-     {::toimenpide/turvalaite (lue-turvalaite tl)})))
+     {::toimenpide/turvalaite (lue-turvalaite tl)})
+   (when-let [v (z/xml1-> toimenpide :vayla)]
+     {::toimenpide/vayla (lue-vayla v)})))
 
-(defn lue-hae-toimenpiteet-vastaus [vastaus]
-  (z/xml-> vastaus
+(defn hae-toimenpiteet-vastaus [vastaus-xml]
+  (z/xml-> vastaus-xml
            :HaeToimenpiteetResponse
            :toimenpide
            lue-toimenpide))
 
-(defn lue-xml [xml]
-  (xml/lue xml "UTF-8"))
+(defn lue-hae-toimenpiteet-vastaus [xml]
+  (hae-toimenpiteet-vastaus (xml/lue xml "UTF-8")))
