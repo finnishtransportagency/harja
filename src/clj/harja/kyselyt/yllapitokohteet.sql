@@ -78,7 +78,7 @@ WHERE
 -- name: yllapitokohteen-saa-poistaa
 SELECT NOT (EXISTS(SELECT *
                    FROM yllapitokohde
-                   WHERE id = :id AND yhaid IS NOT NULL) OR
+                   WHERE id = :id AND yhaid IS NOT NULL and muok) OR
             EXISTS(SELECT *
                    FROM tiemerkinnan_yksikkohintainen_toteuma tyt
                    WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) OR
