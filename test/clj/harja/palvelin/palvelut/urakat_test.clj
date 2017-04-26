@@ -72,13 +72,35 @@
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         urakoitsija-id (hae-vapaa-urakoitsija-id)
         sopimus-id (hae-vapaa-sopimus-id)
-        uusi-urakka {::u/nimi "lolurakka"
-                     ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
-                     ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
-                     ::u/sopimukset [{::sop/id sopimus-id
-                                      ::sop/paasopimus-id nil}]
-                     ::u/hallintayksikko {::o/id hallintayksikko-id}
-                     ::u/urakoitsija {::o/id urakoitsija-id}}]
+        urakka {::u/nimi "lolurakka"
+                ::u/alkupvm #inst "2017-04-25T21:00:00.000-00:00"
+                ::u/loppupvm #inst "2017-04-26T21:00:00.000-00:00"
+                ::u/sopimukset [{::sop/id sopimus-id
+                                 ::sop/paasopimus-id nil}]
+                ::u/hallintayksikko {::o/id hallintayksikko-id}
+                ::u/urakoitsija {::o/id urakoitsija-id}}
+        urakat-lkm-ennen-testia (ffirst (q "SELECT COUNT(id) FROM urakka"))]
     (assert hallintayksikko-id "Hallintayksikkö pitää olla")
     (assert urakoitsija-id "Urakoitsija pitää olla")
-    (assert sopimus-id "Sopimus pitää olla")))
+    (assert sopimus-id "Sopimus pitää olla")
+
+    ;; Luo uusi urakka
+    (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :tallenna-urakka +kayttaja-jvh+
+                                          urakka)
+          urakat-lkm-testin-jalkeen (ffirst (q "SELECT COUNT(id) FROM urakka"))]
+
+      (is (= (+ urakat-lkm-ennen-testia 1) urakat-lkm-testin-jalkeen))
+
+      ;; Uusi urakka löytyy vastauksesesta
+      (is (= (::u/nimi urakka-kannassa (::u/nimi urakka))))
+
+      ;; Päivitetään urakka
+      (let [paivitetty-urakka (assoc urakka ::u/nimi (str (::u/nimi urakka) " päivitetty"))
+            paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :tallenna-urakka +kayttaja-jvh+
+                                                       paivitetty-urakka)]
+
+        ;; Urakka päivittyi
+        (is (= (::u/nimi paivitetty-urakka-kannassa)
+               (::u/nimi paivitetty-urakka)))))))
