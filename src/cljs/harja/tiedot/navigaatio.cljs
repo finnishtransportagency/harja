@@ -150,14 +150,29 @@
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
   (reaction
-    (let [valittu-urakkatyyppi @valittu-urakkatyyppi
+    (let [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
+
+          ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
           urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))
-          vaylamuodon-urakkatyyppi (urakkatyyppi-arvolle
-                                     (case @valittu-vaylamuoto
-                                      :tie :hoito
-                                      :vesi :vesivayla))
-          oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))]
-      (or urakan-urakkatyyppi valittu-urakkatyyppi vaylamuodon-urakkatyyppi oletus-urakkatyyppi))))
+          ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
+          valittu-urakkatyyppi @valittu-urakkatyyppi
+          ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
+          ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
+          ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
+          hallintayksikon-urakkatyyppi (when @valittu-hallintayksikko-id
+                                         (urakkatyyppi-arvolle
+                                           (case (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id)
+                                             :tie
+                                             (if-not (= :vesivayla kayttajan-oletus-tyyppi)
+                                               kayttajan-oletus-tyyppi
+                                               :hoito)
+
+                                             :vesi
+                                             :vesivayla
+                                             nil)))
+          ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
+          oletus-urakkatyyppi (urakkatyyppi-arvolle kayttajan-oletus-tyyppi)]
+      (or urakan-urakkatyyppi valittu-urakkatyyppi hallintayksikon-urakkatyyppi oletus-urakkatyyppi))))
 
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
