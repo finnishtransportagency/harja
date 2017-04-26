@@ -126,7 +126,7 @@
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
    (if payload
-     (let [json (cheshire/encode (spec-apurit/poista-nil-avaimet payload))]
+     (let [json (cheshire/encode (spec-apurit/poista-nil-avaimet payload true))]
        (if skeema
          (do
            (if (fn? skeema)
