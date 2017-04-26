@@ -57,11 +57,12 @@
                      paivitysvali-paivissa
                      url))
 
-  (ajastettu-tehtava/ajasta-paivittain
-    paivittainen-tarkistusaika
-    (fn [_]
-      (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-        (paivita-turvalaitteet integraatioloki db url)))))
+  (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
+    (ajastettu-tehtava/ajasta-paivittain
+     paivittainen-tarkistusaika
+     (fn [_]
+       (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+         (paivita-turvalaitteet integraatioloki db url))))))
 
 (defrecord TurvalaitteidenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
@@ -74,5 +75,6 @@
                   paivittainen-tarkistusaika
                   paivitysvali-paivissa)))
   (stop [this]
-    ((:turvalaitteiden-geometriahaku this))
+    (when-let [lopeta-fn (:turvalaitteiden-geometriahaku this)]
+      (lopeta-fn))
     this))
