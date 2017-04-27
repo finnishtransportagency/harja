@@ -13,7 +13,6 @@
                [harja.domain.specql-db :refer [db]]
                [specql.core :refer [define-tables]])]))
 
-;; TODO Tämä on generoitu käyttäen macroa:
 (define-tables db
   ["sopimus" ::sopimus
    {"paasopimus" ::paasopimus-id
