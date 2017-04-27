@@ -18,7 +18,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tyhja-sopimus {::s/nimi nil ::s/alku nil ::s/loppu nil ::s/paasopimus-id nil ::s/id nil})
-(def uusi-urakka {::u/sopimukset [tyhja-sopimus]})
+(def uusi-urakka {:sopimukset [tyhja-sopimus]})
 
 (defonce tila
   (atom {:nakymassa? false
@@ -204,7 +204,7 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
+          (let [hallintayksikot (async/<! (k/post! :hallintayksikot {:liikennemuoto :vesi}))
                 hallintayksikot-nimiavaruuksilla (namespacefy hallintayksikot {:ns :harja.domain.organisaatio})
                 hankkeet (async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))
                 urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
