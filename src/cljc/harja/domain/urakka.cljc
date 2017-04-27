@@ -365,7 +365,7 @@
                                         :opt [::id]))
 
 (s/def ::tallenna-urakka-vastaus (s/keys :req [::sopimukset ::hallintayksikko ::urakoitsija
-                                                      ::nimi ::loppupvm ::alkupvm ::id]))
+                                               ::nimi ::loppupvm ::alkupvm ::id]))
 
 ;; Muut
 
