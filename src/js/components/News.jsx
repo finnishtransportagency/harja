@@ -1,4 +1,6 @@
 import React from 'react';
+
+import ScrollArea from 'react-scrollbar';
 import Notice from './Notice.jsx';
 import NavButton from './NavButton.jsx';
 import request from 'superagent';
@@ -13,10 +15,10 @@ let ListItem = React.createClass({
     return (
       <div className="harja-newslist-item">
         <div className="row">
-          <div className="column medium-2 medium-offset-3 small-1 small-offset-1">
+          <div className="column large-1 large-offset-2 medium-3 medium-offset-1 small-3">
             <div className="harja-date">{this.props.notice.displayDate}</div>
           </div>
-          <div className="column medium-3 small-9">
+          <div className="column large-9 medium-6 small-9">
             <a className="harja-news-link" href="#" onClick={this.onclick}>{this.props.notice.title}</a>
           </div>
         </div>
@@ -51,11 +53,17 @@ export default React.createClass({
     }
     else {
       newsEl = (
-        <ul>
-          {news.map(notice =>
-            <ListItem notice={notice} key={notice.id + notice.type}/>
-          )}
-        </ul>
+          <ScrollArea
+              speed={0.8}
+              className="area"
+              horizontal={false}
+              >
+              <ul>
+                {news.map(notice =>
+                  <ListItem notice={notice} key={notice.id + notice.type}/>
+                )}
+              </ul>
+          </ScrollArea>
       );
     }
 

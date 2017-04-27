@@ -4,9 +4,9 @@
   "description": "Harja Info: Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut",
   "author": "Antti Ahola",
   "homepage": "http://finnishtransportagency.github.io/harja/",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/finnishtransportagency/harja/tree/gh-pages"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/finnishtransportagency/harja/tree/gh-pages"
   },
   "license": "EUPL-1.2",
   "devDependencies": {
@@ -53,6 +53,7 @@
     "pubsub-js": "^1.5.3",
     "react": "^15.3.1",
     "react-dom": "^15.3.1",
+    "react-scrollbar": "^0.5.1",
     "superagent": "^2.2.0"
   }
 }

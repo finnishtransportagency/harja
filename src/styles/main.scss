@@ -439,6 +439,16 @@ a.harja-news-link {
   }
 }
 
+.scrollarea {
+  height: 30em;
+}
+
+@include breakpoint(medium down) {
+  .scrollarea {
+    height: 100%;
+  }
+}
+
 #harja-footer {
   height: $harja-footer-height;
   background-color: $grey-dark;

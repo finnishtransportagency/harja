@@ -4175,6 +4175,13 @@ a.harja-news-link {
 .harja-menu li .button:focus {
   background-color: #0088ce; }
 
+.scrollarea {
+  height: 30em; }
+
+@media screen and (max-width: 63.9375em) {
+  .scrollarea {
+    height: 100%; } }
+
 #harja-footer {
   height: 4em;
   background-color: #4b4b4b;

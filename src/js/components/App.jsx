@@ -108,7 +108,7 @@ export default React.createClass({
 
   updateNews(notices) {
     const oldNews = this.state.news;
-    return oldNews.concat(notices).sort(this.sortByDate).slice(0, 10);
+    return oldNews.concat(notices).sort(this.sortByDate).slice(0, 20);
   },
 
   sortByDate(a, b) {
