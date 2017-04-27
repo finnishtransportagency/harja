@@ -22,22 +22,6 @@
     "luoja" ::luoja-id
     "muokkaaja" ::muokkaaja-id}])
 
-;; Tarkennetaan määrityksiä
-(s/def ::urakkatyyppi
-  #{:hoito
-    :tekniset-laitteet
-    :valaistus
-    :vesivayla-ruoppaus
-    :vesivayla-hoito
-    :vesivayla-kanavien-korjaus
-    :siltakorjaus
-    :paallystys
-    :paikkaus
-    :tiemerkinta
-    :vesivayla-kanavien-hoito
-    :vesivayla-turvalaitteiden-korjaus})
-
-
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
