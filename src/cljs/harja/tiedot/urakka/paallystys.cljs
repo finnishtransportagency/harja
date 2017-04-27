@@ -102,13 +102,13 @@
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
-         (reaction (let [taso @karttataso-paallystyskohteet
-                         paallystyskohteet @yhan-paallystyskohteet
-                         lomakedata @paallystysilmoitus-lomakedata]
-                     (when (and taso paallystyskohteet)
-                       (yllapitokohteet/yllapitokohteet-kartalle
-                         paallystyskohteet
-                         lomakedata)))))
+  (reaction (let [taso @karttataso-paallystyskohteet
+                  paallystyskohteet @yhan-paallystyskohteet
+                  lomakedata @paallystysilmoitus-lomakedata]
+              (when (and taso paallystyskohteet)
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  paallystyskohteet
+                  lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
 
