@@ -8,7 +8,6 @@
     #?@(:clj [
             [clojure.future :refer :all]])))
 
-;; TODO Tämä on generoitu käyttäen macroa:
 (define-tables db
   ["urakka" ::urakka
    {"hanke_sampoid" ::hanke-sampoid
