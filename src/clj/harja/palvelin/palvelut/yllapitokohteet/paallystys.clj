@@ -450,8 +450,14 @@
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [db user {takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
+(defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
+                                                         takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
   (log/debug "Tallennetaan päällystysilmoitusten takuupäivämäärät")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+
+  (doseq [kohde-id (distinct (mapv ::pot-domain/paallystyskohde-id takuupvmt))]
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id))
+
   (jdbc/with-db-transaction [db db]
     (doseq [takuupvm takuupvmt]
       (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)

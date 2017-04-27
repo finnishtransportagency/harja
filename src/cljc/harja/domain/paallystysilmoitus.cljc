@@ -532,7 +532,7 @@
     (clojure.spec/def :harja.domain.paallystysilmoitus/asiatarkastus_pvm (clojure.spec/nilable :specql.data-types/date))))
 
 (s/def ::tallennettavat-paallystysilmoitusten-takuupvmt
-  (s/coll-of (s/keys :req [::id ::takuupvm])))
+  (s/coll-of (s/keys :req [::id ::takuupvm ::paallystyskohde-id])))
 
 (s/def ::tallenna-paallystysilmoitusten-takuupvmt
-  (s/keys :req [::tallennettavat-paallystysilmoitusten-takuupvmt]))
+  (s/keys :req [::urakka/id ::tallennettavat-paallystysilmoitusten-takuupvmt]))

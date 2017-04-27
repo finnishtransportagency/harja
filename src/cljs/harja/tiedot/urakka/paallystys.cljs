@@ -14,7 +14,6 @@
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.domain.paallystysilmoitus :as pot]
-    [harja.domain.sopimus :as sopimus-domain]
     [harja.domain.urakka :as urakka-domain]
     [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
     [harja.ui.viesti :as viesti])
@@ -141,6 +140,7 @@
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
-(defn tallenna-paallystysilmoitusten-takuupvmt [paallystysilmoitukset]
+(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id paallystysilmoitukset]
   (k/post! :tallenna-paallystysilmoitusten-takuupvmt
-           {::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))
+           {::urakka-domain/id urakka-id
+            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))

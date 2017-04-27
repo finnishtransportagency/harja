@@ -519,7 +519,7 @@
                             3)))
       paallystysilmoitukset)))
 
-(defn- paallystysilmoitukset-taulukko [paallystysilmoitukset]
+(defn- paallystysilmoitukset-taulukko [urakka-id paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -527,9 +527,11 @@
     :tallenna (fn [rivit]
                 (go (let [paallystysilmoitukset (mapv #(do
                                                          {::pot/id (:id %)
+                                                          ::pot/paallystyskohde-id (:paallystyskohde-id %)
                                                           ::pot/takuupvm (:takuupvm %)})
                                                       rivit)
                           vastaus (<! (paallystys/tallenna-paallystysilmoitusten-takuupvmt
+                                        urakka-id
                                         paallystysilmoitukset))]
                       (harja.atom/paivita! paallystys/paallystysilmoitukset)
                       (when (k/virhe? vastaus)
@@ -606,7 +608,7 @@
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
         [:div
          [:h3 "Päällystysilmoitukset"]
-         [paallystysilmoitukset-taulukko paallystysilmoitukset]
+         [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]
