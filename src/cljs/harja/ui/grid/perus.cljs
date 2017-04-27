@@ -76,7 +76,7 @@
        (ikonit/livicon-arrow-down) " Täytä"]]]))
 
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
-                             esta-poistaminen-tooltip piilota-toiminnot?
+                             esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
                              fokus aseta-fokus! tulevat-rivit vetolaatikot
                              voi-muokata-rivia?]}
                      skeema rivi index]
@@ -98,7 +98,8 @@
 
                 ;; muokattava? -> voiko muokata yksittäistä saraketta
                 ;; voi-muokata-riviä? -> voiko muokata yksittäistä riviä
-                (if (and (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
+                (if (and (not @tallennus-kaynnissa?)
+                         (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
                          (or (nil? muokattava?) (muokattava? rivi index)))
 
                   ^{:key (str nimi)}
@@ -311,7 +312,7 @@
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
-                                       esta-poistaminen?
+                                       esta-poistaminen? tallennus-kaynnissa?
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
   (let [muokatut @muokatut
@@ -358,7 +359,8 @@
                                                 :aseta-fokus! #(reset! fokus %)
                                                 :tulevat-rivit (tulevat-rivit i)
                                                 :piilota-toiminnot? piilota-toiminnot?
-                                                :voi-muokata-rivia? voi-muokata-rivia?}
+                                                :voi-muokata-rivia? voi-muokata-rivia?
+                                                :tallennus-kaynnissa? tallennus-kaynnissa?}
                                   skeema rivi i]
                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                          jarjestys)))))))
@@ -788,7 +790,8 @@
                                               :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                               :piilota-toiminnot? piilota-toiminnot?
                                               :voi-muokata-rivia? voi-muokata-rivia?
-                                              :skeema skeema :vetolaatikot-auki vetolaatikot-auki})
+                                              :skeema skeema :vetolaatikot-auki vetolaatikot-auki
+                                              :tallennus-kaynnissa? tallennus-kaynnissa})
                      (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                             :tiedot tiedot :colspan colspan :tyhja tyhja
                                             :tunniste tunniste :ohjaus ohjaus

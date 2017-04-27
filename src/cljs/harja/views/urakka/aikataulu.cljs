@@ -333,6 +333,7 @@
                                  :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
+            :fmt pvm/pvm-opt
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
                            (if (:valmis-tiemerkintaan rivi)
