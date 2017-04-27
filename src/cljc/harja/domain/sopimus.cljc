@@ -2,18 +2,16 @@
   "Määrittelee sopimuksen specit"
   #?@(:clj [(:require [clojure.spec :as s]
                       [harja.id :refer [id-olemassa?]]
-                      [harja.domain.specql-db :refer [db]]
-                      [specql.core :refer [define-tables]]
+                      [harja.kyselyt.specql-db :refer [define-tables]]
                       [clojure.future :refer :all])]
       :cljs [(:require [clojure.spec :as s]
                [harja.id :refer [id-olemassa?]]
                [specql.impl.registry]
                [specql.data-types])
              (:require-macros
-               [harja.domain.specql-db :refer [db]]
-               [specql.core :refer [define-tables]])]))
+              [harja.kyselyt.specql-db :refer [define-tables]])]))
 
-(define-tables db
+(define-tables
   ["sopimus" ::sopimus
    {"paasopimus" ::paasopimus-id
     "harjassa_luotu" ::harjassa-luotu?

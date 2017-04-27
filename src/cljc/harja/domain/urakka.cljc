@@ -4,13 +4,13 @@
   (:require [clojure.spec :as s]
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            [harja.domain.specql-db :refer [db]]
-            #?@(:clj [[clojure.future :refer :all]
-                      [specql.core :refer [define-tables]]]))
-  #?(:cljs
-     (:require-macros [specql.core :refer [define-tables]])))
+            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
+                      [clojure.future :refer :all]]))
+    #?(:cljs
+       (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(define-tables db
+(define-tables
+  ["urakkatyyppi" ::urakkatyyppi]
   ["urakka" ::urakka
    {"hanke_sampoid" ::hanke-sampoid
     "hallintayksikko" ::hallintayksikko-id
@@ -23,8 +23,7 @@
     "muokkaaja" ::muokkaaja-id}])
 
 ;; Tarkennetaan määrityksiä
-(s/def
-  :harja.domain.urakka/tyyppi
+(s/def ::urakkatyyppi
   #{:hoito
     :tekniset-laitteet
     :valaistus
@@ -38,7 +37,6 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
-(s/def ::urakkatyyppi ::tyyppi) ;; Alias tyypille, jota ainakin tietyöilmoitus käyttää.
 
 ;; Haut
 

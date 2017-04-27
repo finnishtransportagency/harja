@@ -2,7 +2,8 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
-            [specql.core :refer [define-tables fetch]]
+            [specql.core :refer [fetch]]
+            [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
@@ -13,7 +14,7 @@
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
-(define-tables db
+(define-tables
   ["tietyon_henkilo" ::t/henkilo]
   ["tietyon_ajoneuvorajoitukset" ::t/ajoneuvorajoitukset*]
   ["tietyotyyppi" ::t/tietyotyyppi]

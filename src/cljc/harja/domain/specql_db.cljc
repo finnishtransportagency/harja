@@ -1,5 +1,3 @@
-(ns harja.domain.specql-db
-  #?(:clj (:require [harja.kyselyt.specql-db :refer [define-db]])
-     :cljs (:require-macros [harja.kyselyt.specql-db :refer [define-db]])))
+(ns harja.domain.specql-db)
 
-(define-db)
+(def db {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=postgres"})

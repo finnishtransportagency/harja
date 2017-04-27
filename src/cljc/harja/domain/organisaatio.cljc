@@ -2,16 +2,15 @@
   "Määrittelee organisaation nimiavaruuden specit"
   #?@(:clj [(:require [clojure.spec :as s]
                       [harja.domain.specql-db :refer [db]]
-                      [specql.core :refer [define-tables]]
+                      [harja.kyselyt.specql-db :refer [define-tables]]
                       [clojure.future :refer :all])]
       :cljs [(:require [clojure.spec :as s]
                        [specql.impl.registry]
-                       [specql.data-types]
-                       [harja.domain.specql-db :refer [db]])
+                       [specql.data-types])
              (:require-macros
-              [specql.core :refer [define-tables]])]))
+              [harja.kyselyt.specql-db :refer [define-tables]])]))
 
-(define-tables db
+(define-tables
   ["organisaatio" ::organisaatio
    {"sampo_ely_hash" ::sampo-ely-hash
     "harjassa_luotu" ::harjassa-luotu?
