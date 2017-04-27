@@ -345,6 +345,8 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
+(s/def ::urakkatyyppi ::tyyppi) ;; Alias tyypille, jota ainakin tietyöilmoitus käyttää.
+
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
