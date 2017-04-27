@@ -37,16 +37,17 @@
 (deftest hankkeiden-haku-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-hankkeet +kayttaja-jvh+ {})]
-    (is (>= (count vastaus) 3))))
+    (is (>= (count vastaus) 3))
+    (is (s/valid? ::hanke/hae-harjassa-luodut-hankkeet-vastaus vastaus))))
 
 (deftest hankkeen-tallennus-ja-paivitys-toimii
-  (let [testihankkeet (map #(dissoc % :id) (gen/sample (s/gen ::hanke/hanke)))]
+  (let [testihankkeet (map #(dissoc % ::hanke/id) (gen/sample (s/gen ::hanke/tallenna-hanke-kysely)))]
 
     (doseq [hanke testihankkeet]
       ;; Luo uusi hanke
       (let [hanke-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hanke +kayttaja-jvh+
-                                           {:hanke hanke})]
+                                           hanke)]
         ;; Uusi hanke löytyy vastauksesesta
         (is (= (::hanke/nimi hanke-kannassa (::hanke/nimi hanke))))
 
@@ -55,7 +56,8 @@
                                             ::hanke/id (::hanke/id hanke-kannassa))
               paivitetty-hanke-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :tallenna-hanke +kayttaja-jvh+
-                                                        {:hanke paivitetty-hanke})]
+                                                        paivitetty-hanke)]
 
           ;; Hanke päivittyi
-          (is (= (::hanke/nimi paivitetty-hanke-kannassa (::hanke/nimi hanke)))))))))
+          (is (= (::hanke/nimi paivitetty-hanke-kannassa)
+                 (::hanke/nimi paivitetty-hanke))))))))

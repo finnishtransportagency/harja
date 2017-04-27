@@ -3,6 +3,8 @@
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.urakka :as u]
             [cljs.core.async :as async]
             [harja.pvm :as pvm]
             [clojure.string :as str])
@@ -25,9 +27,9 @@
     :else nil))
 
 (defn urakoitsijan-urakat [urakoitsija]
-  (let [urakat (:urakat urakoitsija)
+  (let [urakat (::o/urakat urakoitsija)
         aloitus (partial aloitus (pvm/nyt))]
-    (group-by (comp aloitus (juxt :alkupvm :loppupvm)) urakat)))
+    (group-by (comp aloitus (juxt ::u/alkupvm ::u/loppupvm)) urakat)))
 
 (defn urakoitsijan-urakoiden-lukumaarat-str [urakoitsija]
   (let [urakat (urakoitsijan-urakat urakoitsija)]
@@ -37,7 +39,7 @@
 
 (defn urakan-aikavali-str [urakka]
   (->> urakka
-       ((juxt :alkupvm :loppupvm))
+       ((juxt ::u/alkupvm ::u/loppupvm))
        (map pvm/pvm)
        (str/join " - ")))
 

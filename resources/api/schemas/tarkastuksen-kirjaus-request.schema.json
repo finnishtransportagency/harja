@@ -60,9 +60,9 @@
         },
         "tarkastaja": {
           "id": "urn:harja/tarkastus/tarkastaja",
-          "type": "object",
+          "type": ["object","null"],
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/henkilo.schema.json",
+          "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
           "required": true
         },
         "havainnot": {

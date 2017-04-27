@@ -3,7 +3,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [define-tables fetch]]
             [harja.domain.organisaatio :as o]
-            [harja.kyselyt.specql :refer [db]]))
+            [harja.kyselyt.specql-db :refer [db]]))
 
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})

@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.22</b>  
-<b>Julkaistu: 18.4.2017</b>
+<b>Nykyinen versio: 1.0.23</b>  
+<b>Julkaistu: 19.4.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.23 Julkaistu: 19.4.2017:
+    - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
 - Versionumero: 1.0.22 Julkaistu: 18.4.2017:
     - Päällystyksen aikataulun kirjaus ei enää huomioi kellonaikaa päällystyksen aloitus- ja lopetuskentälle. Aika on syytä antaa jatkossa pelkästään päivämääränä.
 - Versionumero: 1.0.21 Julkaistu: 13.4.2017:

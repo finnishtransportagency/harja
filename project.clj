@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.4.20"]
+                 [specql "0.5"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -62,6 +62,8 @@
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
+
+                 [namespacefy "0.2.4"]
 
                  ;; Sähköposti lähetys
                  [com.draines/postal "2.0.2"]
@@ -102,7 +104,7 @@
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [webjure/json-schema "0.7.2"]
+                 [webjure/json-schema "0.7.4"]
 
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]

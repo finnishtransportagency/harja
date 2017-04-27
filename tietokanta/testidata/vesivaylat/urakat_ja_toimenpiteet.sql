@@ -68,6 +68,10 @@ INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Kotkan väyläyksikön pääsopimus',  NULL,
         '2013-08-01', '2016-07-30', true, NOW());
 
+INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Vapaa sopimus',  NULL,
+        '2013-08-01', '2016-07-30', true, NOW());
+
 INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Helsingin väyläyksikön pääsopimus',
         (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),

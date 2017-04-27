@@ -5,13 +5,19 @@
             [harja.ui.grid :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
+            [namespacefy.core :refer [get-un]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
+            [harja.domain.urakka :as u]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.hanke :as h]
+            [harja.domain.sopimus :as s]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
+            [harja.ui.debug :refer [debug]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
@@ -21,29 +27,30 @@
     [harja.makrot :refer [defc fnc]]))
 
 (defn- sopimukset-grid [e! urakka haetut-sopimukset]
-  (let [urakan-sopimukset (remove :poistettu (:sopimukset urakka))]
+  (let [urakan-sopimukset (remove :poistettu (::u/sopimukset urakka))]
     [grid/muokkaus-grid
      {:tyhja "Liitä urakkaan ainakin yksi sopimus!"
+      :voi-kumota? false ;; FIXME Kaatuu tällä hetkellä, ei ole olennaisen tärkeä
       :voi-poistaa? (fn [rivi] (> (count urakan-sopimukset) 1))}
      [{:otsikko "Nimi"
-       :nimi :sopimus
+       :nimi ::s/sopimus
        :leveys 3
        :tyyppi :valinta
        :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
        :virheet-dataan? true
-       :valinta-nayta #(or (:nimi %) "- Valitse sopimus -")
+       :valinta-nayta #(or (::s/nimi %) "- Valitse sopimus -")
        :hae identity
-       :jos-tyhja-fn #(or (:nimi %) "Ei sopimuksia")
+       :jos-tyhja-fn #(or (::s/nimi %) "Ei sopimuksia")
        :aseta (fn [_ arvo] arvo)}
-      {:otsikko "Alku" :leveys 2 :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
-      {:otsikko "Loppu" :leveys 2 :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Alku" :leveys 2 :nimi ::s/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
+      {:otsikko "Loppu" :leveys 2 :nimi ::s/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt :muokattava? (constantly false)}
       {:otsikko "Pääsopimus"
-       :nimi :paasopimus
+       :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
-       :fmt #(cond (tiedot/paasopimus? urakan-sopimukset %) (ikonit/check)
-                   (nil? (:paasopimus %)) (ikonit/livicon-question)
-                   :else (ikonit/unchecked))
+       :fmt #(if (s/paasopimus? urakan-sopimukset %)
+               (ikonit/check)
+               (ikonit/unchecked))
        :muokattava? (constantly false)
        :hae identity}]
      (r/wrap
@@ -51,7 +58,9 @@
        #(e! (tiedot/->PaivitaSopimuksetGrid (vals %))))]))
 
 (defn voi-tallentaa? [urakka]
-  (and (> (count (filter (comp id-olemassa? :id) (:sopimukset urakka))) 0)))
+  (> (count (filter (comp id-olemassa? ::s/id)
+                    (::u/sopimukset urakka)))
+     0))
 
 (defn luontilomake [e! app]
   (komp/luo
@@ -60,151 +69,164 @@
                     haetut-hallintayksikot haetut-hankkeet haetut-urakoitsijat
                     haetut-sopimukset] :as app}]
       [:div
+       [debug app]
        [napit/takaisin "Takaisin luetteloon"
         #(e! (tiedot/->ValitseUrakka nil))
         {:disabled tallennus-kaynnissa?}]
        (let [ilman-poistettuja #(remove :poistettu %)
-             urakan-sopimukset (ilman-poistettuja (:sopimukset valittu-urakka))]
+             urakan-sopimukset (ilman-poistettuja (::u/sopimukset valittu-urakka))]
          [lomake/lomake
-         {:otsikko (if (:id valittu-urakka)
-                     "Muokkaa urakkaa"
-                     "Luo uusi urakka")
-          :muokkaa! #(e! (tiedot/->UrakkaaMuokattu (lomake/ilman-lomaketietoja %)))
-          :voi-muokata? #(oikeudet/hallinta-vesivaylat)
-          :footer-fn (fn [urakka]
-                       [napit/tallenna
-                        "Tallenna urakka"
-                        #(e! (tiedot/->TallennaUrakka (lomake/ilman-lomaketietoja urakka)))
-                        {:ikoni (ikonit/tallenna)
-                         :disabled (or tallennus-kaynnissa?
-                                       (not (oikeudet/hallinta-vesivaylat))
-                                       (not (voi-tallentaa? urakka))
-                                       (not (lomake/voi-tallentaa? urakka)))
-                         :tallennus-kaynnissa? tallennus-kaynnissa?
-                         }])}
-         [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
-           :pakollinen? true}
-          (lomake/rivi
-            {:otsikko "Alkupäivämäärä" :nimi :alkupvm :tyyppi :pvm :pakollinen? true}
-            {:otsikko "Loppupäivämäärä" :nimi :loppupvm :tyyppi :pvm :pakollinen? true
-             :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
-          (lomake/rivi
-            (if haetut-hallintayksikot
-              {:otsikko "Hallintayksikkö"
-               :nimi :hallintayksikko
-               :tyyppi :valinta
-               :pakollinen? true
-               :valinnat haetut-hallintayksikot
-               :valinta-nayta #(if % (:nimi %) "- Valitse hallintayksikkö -")
-               :aseta (fn [rivi arvo] (assoc rivi :hallintayksikko (dissoc arvo :alue :type)))}
-              {:otsikko "Hallintayksikkö"
-               :nimi :hallintayksikko
-               :tyyppi :komponentti
-               :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
-            (if haetut-urakoitsijat
-              {:otsikko "Urakoitsija"
-               :nimi :urakoitsija
-               :tyyppi :valinta
-               :pakollinen? true
-               :valinnat haetut-urakoitsijat
-               :valinta-nayta #(if % (:nimi %) "- Valitse urakoitsija -")
-               :aseta (fn [rivi arvo] (assoc rivi :urakoitsija arvo))}
-              {:otsikko "Urakoitsija"
-               :nimi :urakoitsija
-               :tyyppi :komponentti
-               :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
-          (lomake/ryhma
-            {:otsikko "Hanke"
-             :rivi? true}
-            (if haetut-hankkeet
-              {:otsikko "Nimi"
-               :nimi :hanke
-               :tyyppi :valinta
-               :pakollinen? true
-               :valinnat (remove (comp :id :urakka) haetut-hankkeet)
-               :valinta-nayta #(if % (:nimi %) "- Valitse hanke -")
-               :aseta (fn [rivi arvo] (assoc rivi :hanke arvo))}
-             {:otsikko "Nimi"
-              :nimi :hanke
+          {:otsikko (if (::u/id valittu-urakka)
+                      "Muokkaa urakkaa"
+                      "Luo uusi urakka")
+           :muokkaa! #(e! (tiedot/->UrakkaaMuokattu (lomake/ilman-lomaketietoja %)))
+           :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+           :footer-fn (fn [urakka]
+                        [napit/tallenna
+                         "Tallenna urakka"
+                         #(e! (tiedot/->TallennaUrakka (lomake/ilman-lomaketietoja urakka)))
+                         {:ikoni (ikonit/tallenna)
+                          :disabled (or tallennus-kaynnissa?
+                                        (not (oikeudet/hallinta-vesivaylat))
+                                        (not (voi-tallentaa? urakka))
+                                        (not (lomake/voi-tallentaa? urakka)))
+                          :tallennus-kaynnissa? tallennus-kaynnissa?
+                          }])}
+          [{:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string
+            :pakollinen? true}
+           (lomake/rivi
+             {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true}
+             {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
+              :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
+           (lomake/rivi
+             (if haetut-hallintayksikot
+               {:otsikko "Hallintayksikkö"
+                :nimi ::u/hallintayksikko
+                :tyyppi :valinta
+                :pakollinen? true
+                :valinnat haetut-hallintayksikot
+                :valinta-nayta #(if % (::o/nimi %) "- Valitse hallintayksikkö -")
+                :aseta (fn [rivi arvo] (assoc rivi ::u/hallintayksikko (dissoc arvo :alue :type)))}
+               {:otsikko "Hallintayksikkö"
+                :nimi ::u/hallintayksikko
+                :tyyppi :komponentti
+                :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
+             (if haetut-urakoitsijat
+               {:otsikko "Urakoitsija"
+                :nimi ::u/urakoitsija
+                :tyyppi :valinta
+                :pakollinen? true
+                :valinnat haetut-urakoitsijat
+                :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
+                :aseta (fn [rivi arvo] (assoc rivi ::u/urakoitsija arvo))}
+               {:otsikko "Urakoitsija"
+                :nimi ::u/urakoitsija
+                :tyyppi :komponentti
+                :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
+           ;; Hanke luodaan nykyään urakan mukana automaattisesti, joten hankkeen muokkaus
+           ;; tai sen tietojen tarkastelu tässä ei ole mielekästä.
+           #_(lomake/ryhma
+             {:otsikko "Hanke"
+              :rivi? true}
+             (if haetut-hankkeet
+               {:otsikko "Nimi"
+                :nimi ::u/hanke
+                :tyyppi :valinta
+                :pakollinen? true
+                :valinnat (filter (fn [hanke]
+                                    ;; Näytä hankkeet joilla ei ole urakkaa tai urakka on tämä
+                                    (let [hankkeen-urakka-id (get-in hanke [::h/urakka ::u/id])]
+                                      (or (nil? hankkeen-urakka-id)
+                                          (= hankkeen-urakka-id (::u/id valittu-urakka)))))
+                                  haetut-hankkeet)
+                :valinta-nayta #(if % (::h/nimi %) "- Valitse hanke -")
+                :aseta (fn [rivi arvo] (assoc rivi ::u/hanke arvo))}
+               {:otsikko "Nimi"
+                :nimi ::u/hanke
+                :tyyppi :komponentti
+                :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
+             {:otsikko "Alkupvm"
+              :tyyppi :pvm
+              :fmt pvm/pvm-opt
+              :nimi :hankkeen-alkupvm
+              :hae (comp ::h/alkupvm ::u/hanke)
+              :muokattava? (constantly false)}
+             {:otsikko "Loppupvm"
+              :tyyppi :pvm
+              :fmt pvm/pvm-opt
+              :nimi :hankkeen-loppupvm
+              :hae (comp ::h/loppupvm ::u/hanke)
+              :muokattava? (constantly false)})
+           (lomake/rivi
+             {:otsikko "Sopimukset"
+              :nimi ::u/sopimukset
+              :palstoja 2
               :tyyppi :komponentti
-              :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
-            {:otsikko "Alkupvm"
-             :tyyppi :pvm
-             :fmt pvm/pvm-opt
-             :nimi :hankkeen-alkupvm
-             :hae (comp :alkupvm :hanke)
-             :muokattava? (constantly false)}
-            {:otsikko "Loppupvm"
-             :tyyppi :pvm
-             :fmt pvm/pvm-opt
-             :nimi :hankkeen-loppupvm
-             :hae (comp :loppupvm :hanke)
-             :muokattava? (constantly false)})
-          (lomake/rivi
-            {:otsikko "Sopimukset"
-            :nimi :sopimukset
-             :palstoja 2
-            :tyyppi :komponentti
-            :komponentti (fn [{urakka :data}] [sopimukset-grid e!
-                                               (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
-          {:otsikko "Pääsopimus"
-           :nimi :paasopimus
-           :tyyppi :valinta
-           :valinnat (filter (comp id-olemassa? :id) urakan-sopimukset)
-           :valinta-nayta #(cond
-                             %
-                             (:nimi %)
+              :komponentti (fn [{urakka :data}]
+                             [sopimukset-grid e!
+                              (lomake/ilman-lomaketietoja urakka) haetut-sopimukset])})
+           {:otsikko "Pääsopimus"
+            :nimi :paasopimus-id
+            :tyyppi :valinta
+            :valinnat (filter (comp id-olemassa? ::s/id) urakan-sopimukset)
+            :valinta-nayta #(do
+                              (cond
+                                %
+                                (::s/nimi %)
 
-                             (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-                             "Määrittele pääsopimus"
+                                (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+                                "Määrittele pääsopimus"
 
-                             (= (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-                             "Urakalla vain yksi sopimus"
+                                (= (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+                                "Urakalla vain yksi sopimus"
 
-                             :else "Valitse urakalle sopimus")
-           :jos-tyhja "Urakalla ei sopimuksia"
-           :muokattava? #(> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-           :pakollinen? (> (count (filter (comp id-olemassa? :id) urakan-sopimukset)) 1)
-           :aseta (fn [rivi arvo] (assoc rivi :sopimukset (tiedot/sopimukset-paasopimuksella
-                                                            (:sopimukset rivi)
-                                                            arvo)))
-           :hae (fn [rivi] (tiedot/paasopimus (ilman-poistettuja (:sopimukset rivi))))}]
-         valittu-urakka])])))
+                                :else "Valitse urakalle sopimus"))
+            :jos-tyhja "Urakalla ei sopimuksia"
+            :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+            :pakollinen? (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
+            :aseta (fn [rivi arvo]
+                     (assoc rivi ::u/sopimukset (tiedot/sopimukset-paasopimuksella
+                                                  (::u/sopimukset rivi)
+                                                  arvo)))
+            :hae (fn [rivi]
+                   (s/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
+          valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]
-  (if (pvm/jalkeen? (:muokattu asia) (:luotu asia))
-    [(str muokattu " '" (:nimi asia) "' muokattu:") (pvm/pvm-aika-opt (:muokattu asia))]
-    [(str luotu " '" (:nimi asia) "' luotu:") (pvm/pvm-aika-opt (:luotu asia))]))
+  (if (pvm/jalkeen? (get-un asia :muokattu) (get-un asia :luotu))
+    [(str muokattu " '" (get-un asia :nimi) "' muokattu:") (pvm/pvm-aika-opt (get-un asia :muokattu))]
+    [(str luotu " '" (get-un asia :nimi) "' luotu:") (pvm/pvm-aika-opt (get-un asia :luotu))]))
 
-(defn muokkaus-tiedot [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
-  [:div "TÄnne tulee metatietoja"]
+(defn muokkaus-tiedot [{::u/keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
+  [:div "Tänne tulee metatietoja"]
   (let [uusin (tiedot/uusin-lahetys sahkelahetykset)]
     [apply tietoja
-    {:otsikot-omalla-rivilla? true}
-    (concat
-      (if uusin
-        (if (:onnistui uusin)
-         ["Viimeisin lähetys" (pvm/pvm-aika-opt (:lahetetty uusin))]
-         ["Viimeisin yritys" (pvm/pvm-aika-opt (:lahetetty uusin))
-          "Viimeisin onnistunut lähetys" (pvm/pvm-aika-opt (tiedot/uusin-onnistunut-lahetys sahkelahetykset))])
-        ["Urakan tietoja ei ole vielä lähetetty!" ""])
-      (muokkaus-otsikko urakka "Urakkaa" "Urakka")
-      (muokkaus-otsikko hanke "Hanketta" "Hanke")
-      (apply
-        concat
-        (for [sopimus sopimukset]
-         (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
-      (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
+     {:otsikot-omalla-rivilla? true}
+     (concat
+       (if uusin
+         (if (:onnistui uusin)
+           ["Viimeisin lähetys" (pvm/pvm-aika-opt (:lahetetty uusin))]
+           ["Viimeisin yritys" (pvm/pvm-aika-opt (:lahetetty uusin))
+            "Viimeisin onnistunut lähetys" (pvm/pvm-aika-opt (tiedot/uusin-onnistunut-lahetys sahkelahetykset))])
+         ["Urakan tietoja ei ole vielä lähetetty!" ""])
+       (muokkaus-otsikko urakka "Urakkaa" "Urakka")
+       (muokkaus-otsikko hanke "Hanketta" "Hanke")
+       (apply
+         concat
+         (for [sopimus sopimukset]
+           (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
+       (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
 
 (defn sahke-nappi [e! {lahetykset :kaynnissa-olevat-sahkelahetykset} urakka]
-  (let [lahetys-kaynnissa? (some? (lahetykset (:id urakka)))
+  (let [lahetys-kaynnissa? (some? (lahetykset (::u/id urakka)))
         tila (tiedot/urakan-sahke-tila urakka)]
     [:button
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
-      :class (case tila
-               :lahetetty "nappi-toissijainen"
-               :epaonnistunut "nappi-kielteinen"
-               :lahettamatta "nappi-ensisijainen")
+      :class (str (case tila
+                    :lahetetty "nappi-toissijainen "
+                    :epaonnistunut "nappi-kielteinen "
+                    :lahettamatta "nappi-ensisijainen ")
+                  "nappi-grid")
       :on-click #(do
                    (.preventDefault %)
                    (.stopPropagation %)
@@ -239,27 +261,29 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
       [:div
-      [napit/uusi "Lisää urakka"
-       #(e! (tiedot/->UusiUrakka))
-       {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]
-      [grid/grid
-       {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
-                   [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
-                   "Harjaan perustetut vesiväyläurakat")
-        :tunniste :id
-        :tyhja (if (nil? haetut-urakat)
-                 [ajax-loader "Haetaan urakoita"]
-                 "Urakoita ei löytynyt")
-        :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
-       [{:otsikko "Nimi" :nimi :nimi}
-        {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi :hae #(get-in % [:hallintayksikko :nimi])}
-        {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [:hanke :nimi])}
-        {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % :sopimukset))}
-        {:otsikko "Alku" :nimi :alkupvm :tyyppi :pvm :fmt pvm/pvm}
-        {:otsikko "Loppu" :nimi :loppupvm :tyyppi :pvm :fmt pvm/pvm}
-        {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
-         :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
-       haetut-urakat]])))
+       [napit/uusi "Lisää urakka"
+        #(e! (tiedot/->UusiUrakka))
+        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]
+       [grid/grid
+        {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
+                    [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
+                    "Harjaan perustetut vesiväyläurakat")
+         :tunniste ::u/id
+         :tyhja (if (nil? haetut-urakat)
+                  [ajax-loader "Haetaan urakoita"]
+                  "Urakoita ei löytynyt")
+         :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
+        [{:otsikko "Nimi" :nimi ::u/nimi}
+         {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
+          :hae #(get-in % [::u/hallintayksikko ::o/nimi])}
+         {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [::u/hanke ::h/nimi])}
+         {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [::u/urakoitsija ::o/nimi])}
+         {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % ::u/sopimukset))}
+         {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
+         {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
+         {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
+          :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
+        haetut-urakat]])))
 
 (defn vesivaylaurakoiden-luonti* [e! app]
   (komp/luo
@@ -272,4 +296,4 @@
         [urakkagrid e! app]))))
 
 (defc vesivaylaurakoiden-luonti []
-  [tuck tiedot/tila vesivaylaurakoiden-luonti*])
+      [tuck tiedot/tila vesivaylaurakoiden-luonti*])

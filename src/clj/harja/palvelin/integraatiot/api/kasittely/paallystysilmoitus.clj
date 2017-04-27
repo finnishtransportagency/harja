@@ -71,7 +71,7 @@
       (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
-  (validointi/tarkista-urakan-yllapitokohde-olemassa db urakka-id (:id kohde))
+  (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)
         alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
