@@ -7,5 +7,3 @@
 
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})
-
-(define-tables db ["organisaatio" ::o/organisaatio])
