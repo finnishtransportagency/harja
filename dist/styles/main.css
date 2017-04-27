@@ -4089,9 +4089,6 @@ a.harja-news-link {
 .harja-waterways a:focus {
   background-color: #3db7e4; }
 
-.harja-hero {
-  height: 100%; }
-
 .harja-hero-large {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
@@ -4123,7 +4120,8 @@ a.harja-news-link {
 
 .harja-devlinks {
   margin-left: 0;
-  margin-right: 0; }
+  margin-right: 0;
+  padding-bottom: 2em; }
   .harja-devlinks a {
     margin-top: 2em;
     margin-bottom: 2em;
@@ -4177,6 +4175,13 @@ a.harja-news-link {
 
 .scrollarea {
   height: 30em; }
+
+.harja-hero {
+  height: 100%; }
+
+@media screen and (max-width: 63.9375em) {
+  .harja-hero {
+    height: auto; } }
 
 @media screen and (max-width: 63.9375em) {
   .scrollarea {

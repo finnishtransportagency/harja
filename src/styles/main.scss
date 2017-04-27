@@ -326,10 +326,6 @@ a.harja-news-link {
   }
 }
 
-.harja-hero {
-    height: 100%;
-}
-
 .harja-hero-large {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
@@ -370,6 +366,7 @@ a.harja-news-link {
 .harja-devlinks {
   margin-left: 0;
   margin-right: 0;
+  padding-bottom: 2em;
   a {
     margin-top: 2em;
     margin-bottom: 2em;
@@ -441,6 +438,16 @@ a.harja-news-link {
 
 .scrollarea {
   height: 30em;
+}
+
+.harja-hero {
+  height: 100%;
+}
+
+@include breakpoint(medium down) {
+  .harja-hero {
+    height: auto;
+  }
 }
 
 @include breakpoint(medium down) {
