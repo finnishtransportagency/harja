@@ -378,7 +378,9 @@
     (julkaise-palvelu http
                       :tallenna-urakka
                       (fn [user tiedot]
-                        (tallenna-urakka db user tiedot)))
+                        (tallenna-urakka db user tiedot))
+                      {:kysely-spec ::u/tallenna-urakka-kysely
+                       :vastaus-spec ::u/tallenna-urakka-vastaus})
     (julkaise-palvelu http
                       :hae-harjassa-luodut-urakat
                       (fn [user _]
