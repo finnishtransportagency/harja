@@ -364,8 +364,7 @@
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (voi-muokata-tiemerkinta? %)
-                               (:aikataulu-tiemerkinta-alku %))
+            :muokattava? voi-muokata-tiemerkinta?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
