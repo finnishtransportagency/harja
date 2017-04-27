@@ -59,7 +59,6 @@ ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
 ALTER TABLE urakka ALTER COLUMN alkupvm SET NOT NULL;
 ALTER TABLE urakka ALTER COLUMN loppupvm SET NOT NULL;
 ALTER TABLE urakka ALTER COLUMN tyyppi SET NOT NULL;
-UPDATE urakka SET poistettu = FALSE WHERE poistettu IS NULL;
 ALTER TABLE urakka ALTER COLUMN poistettu SET NOT NULL;
 ALTER TABLE urakka ALTER COLUMN poistettu SET DEFAULT FALSE;
 ALTER TABLE organisaatio ALTER COLUMN nimi SET NOT NULL;
