@@ -123,40 +123,6 @@
                 :nimi ::u/urakoitsija
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan urakoitsijoita"])}))
-           ;; Hanke luodaan nykyään urakan mukana automaattisesti, joten hankkeen muokkaus
-           ;; tai sen tietojen tarkastelu tässä ei ole mielekästä.
-           #_(lomake/ryhma
-             {:otsikko "Hanke"
-              :rivi? true}
-             (if haetut-hankkeet
-               {:otsikko "Nimi"
-                :nimi ::u/hanke
-                :tyyppi :valinta
-                :pakollinen? true
-                :valinnat (filter (fn [hanke]
-                                    ;; Näytä hankkeet joilla ei ole urakkaa tai urakka on tämä
-                                    (let [hankkeen-urakka-id (get-in hanke [::h/urakka ::u/id])]
-                                      (or (nil? hankkeen-urakka-id)
-                                          (= hankkeen-urakka-id (::u/id valittu-urakka)))))
-                                  haetut-hankkeet)
-                :valinta-nayta #(if % (::h/nimi %) "- Valitse hanke -")
-                :aseta (fn [rivi arvo] (assoc rivi ::u/hanke arvo))}
-               {:otsikko "Nimi"
-                :nimi ::u/hanke
-                :tyyppi :komponentti
-                :komponentti (fn [_] [ajax-loader-pieni "Haetaan hankkeita"])})
-             {:otsikko "Alkupvm"
-              :tyyppi :pvm
-              :fmt pvm/pvm-opt
-              :nimi :hankkeen-alkupvm
-              :hae (comp ::h/alkupvm ::u/hanke)
-              :muokattava? (constantly false)}
-             {:otsikko "Loppupvm"
-              :tyyppi :pvm
-              :fmt pvm/pvm-opt
-              :nimi :hankkeen-loppupvm
-              :hae (comp ::h/loppupvm ::u/hanke)
-              :muokattava? (constantly false)})
            (lomake/rivi
              {:otsikko "Sopimukset"
               :nimi ::u/sopimukset

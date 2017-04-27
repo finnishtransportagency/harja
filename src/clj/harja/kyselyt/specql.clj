@@ -2,7 +2,7 @@
   "Määritellään yleisiä clojure.spec tyyppejä."
   (:require [specql.core :refer [define-tables]]
             [specql.data-types :as d]
-            [harja.kyselyt.specql-db :refer [db]]
+            [harja.domain.specql-db :refer [db]]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.urakka :as urakka]
