@@ -14,7 +14,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE reimari_toimenpide (
   id               SERIAL PRIMARY KEY,
-  reimari_id       INTEGER NOT NULL,
+  "reimari-id"       INTEGER NOT NULL,
   urakoitsija      reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
                                             sisaltaa_tekstia((urakoitsija).nimi)),
   sopimus          reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
@@ -34,8 +34,8 @@ CREATE TABLE reimari_toimenpide (
   lisatyo          BOOLEAN             NOT NULL,
   tila             TEXT                CHECK (sisaltaa_tekstia(tila)),
   suoritettu       TIMESTAMP           NOT NULL,
-  reimari_luotu    TIMESTAMP           NOT NULL,
-  reimari_muokattu TIMESTAMP,
+  "reimari-luotu"    TIMESTAMP           NOT NULL,
+  "reimari-muokattu" TIMESTAMP,
   luotu            TIMESTAMP           NOT NULL DEFAULT NOW(),
   luoja            INTEGER REFERENCES kayttaja(id),
   muokattu         TIMESTAMP,
