@@ -162,6 +162,12 @@
                (:suorittava-tiemerkintaurakka kohde)
                kohteen-nykyinen-suorittava-tiemerkintaurakka-id))
            :id (:id kohde)
+           :urakka paallystysurakka-id})
+        (q/paivita-yllapitokohteen-numero-ja-nimi!
+          db
+          {:kohdenumero (:kohdenumero kohde)
+           :nimi (:nimi kohde)
+           :id (:id kohde)
            :urakka paallystysurakka-id}))
       (when voi-tallentaa-tiemerkinnan-takarajan?
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
