@@ -373,4 +373,4 @@
                               :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
 
 (defn vesivayla-urakka? [urakka]
-  (vesivayla-urakkatyypit (:tyyppi urakka)))
+  (boolean (vesivayla-urakkatyypit (:tyyppi urakka))))
