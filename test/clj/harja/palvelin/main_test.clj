@@ -4,11 +4,26 @@
   Kun lisäät komponentin, lisää se myös testin keysettiin."
   (:require [harja.palvelin.main :as sut]
             [harja.palvelin.asetukset :as asetukset]
-            [clojure.test :as t :refer [deftest is]]))
+            [clojure.test :as t :refer [deftest is]]
+            [clojure.string :as str]
+            [clojure.java.io :as io])
+  (:import (java.io File)))
+
+(def ^:dynamic *testiasetukset* nil)
+(defn- testiasetukset [testit]
+  (let [file (File/createTempFile "asetukset" ".edn")
+        asetukset (-> "asetukset.edn"
+                      slurp
+                      (str/replace #"\#=\(.*?\)" "\"foo\""))]
+    (spit file asetukset)
+    (binding [*testiasetukset* file]
+      (testit))
+    (.delete file)))
+
+(t/use-fixtures :once testiasetukset)
 
 (deftest main-komponentit-loytyy
-  (let [jarjestelma
-        (sut/luo-jarjestelma (asetukset/lue-asetukset "asetukset.edn"))]
+  (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))]
     (is #{:metriikka
           :db :db-replica :klusterin-tapahtumat
           :todennus :http-palvelin
