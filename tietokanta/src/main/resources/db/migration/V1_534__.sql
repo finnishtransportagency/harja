@@ -13,35 +13,35 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TABLE reimari_toimenpide (
-  id               SERIAL PRIMARY KEY,
+  id                 SERIAL PRIMARY KEY,
   "reimari-id"       INTEGER NOT NULL,
-  urakoitsija      reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
-                                            sisaltaa_tekstia((urakoitsija).nimi)),
-  sopimus          reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
-                                              sisaltaa_tekstia((sopimus).tyyppi) AND
-                                              sisaltaa_tekstia((sopimus).nimi)),
-  turvalaite       reimari_turvalaite  CHECK (sisaltaa_tekstia((turvalaite).nro) AND
-                                              -- nimi saa olla tyhja
-                                              (turvalaite).ryhma IS NOT NULL),
-  alus             reimari_alus        CHECK (sisaltaa_tekstia((alus).tunnus)
-                                              -- nimi saa olla tyhja
-                                            ),
-  vayla            reimari_vayla       CHECK (sisaltaa_tekstia((vayla).nro)),
-  tyolaji          TEXT                CHECK (sisaltaa_tekstia(tyolaji)),
-  tyoluokka        TEXT                CHECK (sisaltaa_tekstia(tyoluokka)),
-  tyyppi           TEXT                CHECK (sisaltaa_tekstia(tyyppi)),
-  lisatieto        TEXT                NOT NULL,
-  lisatyo          BOOLEAN             NOT NULL,
-  tila             TEXT                CHECK (sisaltaa_tekstia(tila)),
-  suoritettu       TIMESTAMP           NOT NULL,
+  urakoitsija        reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
+                                              sisaltaa_tekstia((urakoitsija).nimi)),
+  sopimus            reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
+                                                sisaltaa_tekstia((sopimus).tyyppi) AND
+                                                sisaltaa_tekstia((sopimus).nimi)),
+  turvalaite         reimari_turvalaite  CHECK (sisaltaa_tekstia((turvalaite).nro) AND
+                                                -- nimi saa olla tyhja
+                                                (turvalaite).ryhma IS NOT NULL),
+  alus               reimari_alus        CHECK (sisaltaa_tekstia((alus).tunnus)
+                                                -- nimi saa olla tyhja
+                                              ),
+  vayla              reimari_vayla       CHECK (sisaltaa_tekstia((vayla).nro)),
+  tyolaji            TEXT                CHECK (sisaltaa_tekstia(tyolaji)),
+  tyoluokka          TEXT                CHECK (sisaltaa_tekstia(tyoluokka)),
+  tyyppi             TEXT                CHECK (sisaltaa_tekstia(tyyppi)),
+  lisatieto          TEXT                NOT NULL,
+  lisatyo            BOOLEAN             NOT NULL,
+  tila               TEXT                CHECK (sisaltaa_tekstia(tila)),
+  suoritettu         TIMESTAMP           NOT NULL,
   "reimari-luotu"    TIMESTAMP           NOT NULL,
   "reimari-muokattu" TIMESTAMP,
-  luotu            TIMESTAMP           NOT NULL DEFAULT NOW(),
-  luoja            INTEGER REFERENCES kayttaja(id),
-  muokattu         TIMESTAMP,
-  muokkaaja        INTEGER REFERENCES kayttaja(id),
-  asiakas          TEXT,
-  vastuuhenkilo    TEXT,
-  poistettu        BOOLEAN             NOT NULL DEFAULT FALSE,
-  poistaja         INTEGER REFERENCES kayttaja(id)
+  luotu              TIMESTAMP           NOT NULL DEFAULT NOW(),
+  luoja              INTEGER REFERENCES kayttaja(id),
+  muokattu           TIMESTAMP,
+  muokkaaja          INTEGER REFERENCES kayttaja(id),
+  asiakas            TEXT,
+  vastuuhenkilo      TEXT,
+  poistettu          BOOLEAN             NOT NULL DEFAULT FALSE,
+  poistaja           INTEGER REFERENCES kayttaja(id)
 );
