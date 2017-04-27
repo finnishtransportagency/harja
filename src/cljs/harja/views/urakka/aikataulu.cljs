@@ -310,7 +310,9 @@
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
                        "Valmistuminen ei voi olla ennen aloitusta."]
                       [:ei-tyhja-jos-toinen-arvo-annettu :valmis-tiemerkintaan
-                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]]}
+                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-paallystys-alku
+                       "Anna päällystyksen valmistumisen aika tai aika-arvio."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittava-tiemerkintaurakka
@@ -366,7 +368,9 @@
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
-                       "Valmistuminen ei voi olla ennen aloitusta."]]}
+                       "Valmistuminen ei voi olla ennen aloitusta."]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
+                       "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? voi-muokata-paallystys?
