@@ -484,6 +484,25 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."))))
 
+(deftest aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-paallystys-valmis-jos-paallystys-aloitettu-annettu.json"))]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio"))))
+
+(deftest aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu
+  (let [urakka (hae-oulun-tiemerkintaurakan-id)
+        kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu.json"))]
+
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "Kun annetaan tiemerkinnän aloitusaika, anna myös tiemerkinnän valmistumisen aika tai aika-arvio"))))
+
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
