@@ -204,7 +204,7 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [hallintayksikot (k/post! :hallintayksikot :vesi)
+          (let [hallintayksikot (k/post! :hallintayksikot {:liikennemuoto :vesi})
                 hankkeet (k/post! :hae-harjassa-luodut-hankkeet {})
                 urakoitsijat (k/post! :vesivayla-urakoitsijat {})
                 sopimukset (k/post! :hae-harjassa-luodut-sopimukset {})
