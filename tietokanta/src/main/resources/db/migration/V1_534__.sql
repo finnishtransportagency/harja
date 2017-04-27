@@ -15,7 +15,11 @@ UPDATE sopimus SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 
 -- Urakalta ja sopimukselta pois pakollinen sampoid (ei ole pakollinen vesiväyläurakoissa)
 ALTER TABLE urakka ALTER COLUMN sampoid DROP NOT NULL;
+ALTER TABLE urakka ADD CONSTRAINT urakalla_sampoid_jos_ei_harjassa_luotu
+CHECK (harjassa_luotu IS TRUE OR harjassa_luotu IS FALSE AND sampoid IS NOT NULL);
 ALTER TABLE sopimus ALTER COLUMN sampoid DROP NOT NULL;
+ALTER TABLE sopimus ADD CONSTRAINT sopimuksella_sampoid_jos_ei_harjassa_luotu
+CHECK (harjassa_luotu IS TRUE OR harjassa_luotu IS FALSE AND sampoid IS NOT NULL);
 
 -- Luotu, muokattu, muokkaaja jne. tiedot
 ALTER TABLE urakka ADD COLUMN luotu timestamp;
