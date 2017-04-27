@@ -204,18 +204,20 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [hallintayksikot (async/<! (k/post! :hallintayksikot :vesi))
-                hallintayksikot-nimiavaruuksilla (namespacefy hallintayksikot {:ns :harja.domain.organisaatio})
-                hankkeet (async/<! (k/post! :hae-harjassa-luodut-hankkeet {}))
-                urakoitsijat (async/<! (k/post! :vesivayla-urakoitsijat {}))
-                sopimukset (async/<! (k/post! :hae-harjassa-luodut-sopimukset {}))
-                vastaus {:hallintayksikot hallintayksikot
-                         :hankkeet hankkeet
-                         :urakoitsijat urakoitsijat
-                         :sopimukset sopimukset}]
+          (let [hallintayksikot (k/post! :hallintayksikot :vesi)
+                hankkeet (k/post! :hae-harjassa-luodut-hankkeet {})
+                urakoitsijat (k/post! :vesivayla-urakoitsijat {})
+                sopimukset (k/post! :hae-harjassa-luodut-sopimukset {})
+                vastaus {:hallintayksikot (async/<! hallintayksikot)
+                         :hankkeet (async/<! hankkeet)
+                         :urakoitsijat (async/<! urakoitsijat)
+                         :sopimukset (async/<! sopimukset)}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)
-              (tulos! (assoc vastaus :hallintayksikot hallintayksikot-nimiavaruuksilla))))
+              (tulos! (assoc vastaus :hallintayksikot
+                                     (namespacefy
+                                       (:hallintayksikot vastaus)
+                                       {:ns :harja.domain.organisaatio})))))
           (catch :default e
             (fail! nil)
             (throw e)))))
