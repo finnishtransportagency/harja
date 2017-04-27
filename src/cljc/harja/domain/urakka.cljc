@@ -10,7 +10,6 @@
   #?(:cljs
      (:require-macros [specql.core :refer [define-tables]])))
 
-;; TODO Tämä on generoitu käyttäen macroa:
 (define-tables db
   ["urakka" ::urakka
    {"hanke_sampoid" ::hanke-sampoid
