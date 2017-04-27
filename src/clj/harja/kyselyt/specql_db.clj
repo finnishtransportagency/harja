@@ -1,8 +1,7 @@
 (ns harja.kyselyt.specql-db
-  (:require [clojure.future :refer :all]
-            [clojure.string :refer [trim]]
-            [clojure.java.io :as io]))
+  (:require [specql.core :as specql]))
 
-(defmacro define-db []
-  (when (.canRead (io/file ".specql-db"))
-    `(def ~'db {:connection-uri ~(trim (slurp ".specql-db"))})))
+(defmacro define-tables [& tables]
+  `(specql/define-tables
+     {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=postgres"}
+     ~@tables))

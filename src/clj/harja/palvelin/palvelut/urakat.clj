@@ -104,10 +104,13 @@
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
-        (map #(assoc %
+
+        (map #(if-let [tyyppi (:tyyppi %)]
                 ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
-                :tyyppi (keyword (str/replace (:tyyppi %) " " "-"))
-                :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
+                (assoc % :tyyppi (keyword (str/replace (:tyyppi %) " " "-")))
+                %))
+
+        (map #(assoc % :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
         ;; Käsitellään päällystysurakan tiedot
 

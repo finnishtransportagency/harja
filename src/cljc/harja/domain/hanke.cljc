@@ -2,18 +2,17 @@
   "Määrittelee hankkeen specit"
   #?@(:clj [(:require [clojure.spec :as s]
                       [harja.domain.specql-db :refer [db]]
-                      [specql.core :refer [define-tables]]
+                      [harja.kyselyt.specql-db :refer [define-tables]]
                       [harja.domain.urakka :as u]
                       [clojure.future :refer :all])]
       :cljs [(:require [clojure.spec :as s]
                [specql.impl.registry]
                [harja.domain.urakka :as u]
-               [specql.data-types]
-               [harja.domain.specql-db :refer [db]])
+               [specql.data-types])
              (:require-macros
-              [specql.core :refer [define-tables]])]))
+              [harja.kyselyt.specql-db :refer [define-tables]])]))
 
-(define-tables db
+(define-tables
   ["hanke" ::hanke
    {"harjassa_luotu" ::harjassa-luotu?
     "luoja" ::luoja-id
