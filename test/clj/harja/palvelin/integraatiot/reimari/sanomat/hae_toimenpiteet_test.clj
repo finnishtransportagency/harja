@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.reimari.hae-toimenpiteet-test
+(ns harja.palvelin.integraatiot.reimari.sanomat.hae-toimenpiteet-test
   (:require  [clojure.test :as t :refer [deftest is]]
              [harja.testi :as testi]
              [harja.palvelin.integraatiot.reimari.sanomat.hae-toimenpiteet :as hae-toimenpiteet]
