@@ -364,8 +364,8 @@
                                               ::nimi ::loppupvm ::alkupvm]
                                         :opt [::id]))
 
-;; TODO TALLENNUS VASTAUS
-#_(s/def ::tallenna-urakka-kysely-vastaus)
+(s/def ::tallenna-urakka-kysely-vastaus (s/keys :req [::sopimukset ::hallintayksikko ::urakoitsija
+                                                      ::nimi ::loppupvm ::alkupvm ::id]))
 
 ;; Muut
 
