@@ -5,8 +5,10 @@
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.specql-db :refer [db]]
-    #?@(:clj [
-            [clojure.future :refer :all]])))
+            #?@(:clj [[clojure.future :refer :all]
+                      [specql.core :refer [define-tables]]]))
+  #?(:cljs
+     (:require-macros [specql.core :refer [define-tables]])))
 
 ;; TODO Tämä on generoitu käyttäen macroa:
 (define-tables db
