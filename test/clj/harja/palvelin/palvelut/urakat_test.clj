@@ -66,7 +66,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-harjassa-luodut-urakat +kayttaja-jvh+ {})]
     (is (>= (count vastaus) 3))
-    (is (s/valid? ::u/hae-harjassa-luodut-urakat-vastaus vastaus))))
+    (is (nil? (s/explain-data ::u/hae-harjassa-luodut-urakat-vastaus vastaus)))))
 
 (deftest urakan-tallennus-test
   (let [hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
