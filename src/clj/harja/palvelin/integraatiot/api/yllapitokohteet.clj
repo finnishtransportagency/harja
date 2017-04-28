@@ -103,6 +103,20 @@
       {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
        :viesti "Tiemerkintää ei voi merkitä valmiiksi, aloitus puuttuu."}))
 
+  (when (and (some? (:paallystys-aloitettu aikataulu))
+             (nil? (:paallystys-valmis aikataulu)))
+    (virheet/heita-poikkeus
+      virheet/+viallinen-kutsu+
+      {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
+       :viesti "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio"}))
+
+  (when (and (some? (:tiemerkinta-aloitettu aikataulu))
+             (nil? (:tiemerkinta-valmis aikataulu)))
+    (virheet/heita-poikkeus
+      virheet/+viallinen-kutsu+
+      {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
+       :viesti "Kun annetaan tiemerkinnän aloitusaika, anna myös tiemerkinnän valmistumisen aika tai aika-arvio"}))
+
   (when (and (some? (:valmis-tiemerkintaan aikataulu))
              (nil? (:paallystys-valmis aikataulu)))
     (virheet/heita-poikkeus

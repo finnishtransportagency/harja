@@ -2,29 +2,64 @@
   "Määrittelee urakka nimiavaruuden specit, jotta urakan tietoja voi käyttää namespacetuilla
   keywordeilla, esim. {:urakka/id 12}"
   (:require [clojure.spec :as s]
+            [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            #?@(:clj [[clojure.future :refer :all]])))
+            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
+                      [clojure.future :refer :all]]))
+    #?(:cljs
+       (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(s/def ::id ::spec-apurit/postgres-serial)
-(s/def ::nimi string?)
+(define-tables
+  ["urakkatyyppi" ::urakkatyyppi]
+  ["urakka" ::urakka
+   {"hanke_sampoid" ::hanke-sampoid
+    "hallintayksikko" ::hallintayksikko-id
+    "harjassa_luotu" ::harjassa-luotu?
+    "hanke" ::hanke-id
+    "urakoitsija" ::urakoitsija-id
+    "takuu_loppupvm" ::takuu-loppupvm
+    "ulkoinen_id" ::ulkoinen-id
+    "luoja" ::luoja-id
+    "muokkaaja" ::muokkaaja-id}])
 
-(s/def ::alkupvm inst?)
-(s/def ::loppupvm inst?)
+;; Haut
+;; PENDING: 2 eri muotoa urakan tyypille, specql generoima string setti sekä tämä kw setti
+;; yhtenäistä, kunhan specql tukee custom read/write optiota.
+(s/def ::urakkatyyppi-kw
+  #{:hoito
+    :tekniset-laitteet
+    :valaistus
+    :vesivayla-ruoppaus
+    :vesivayla-hoito
+    :vesivayla-kanavien-korjaus
+    :siltakorjaus
+    :paallystys
+    :paikkaus
+    :tiemerkinta
+    :vesivayla-kanavien-hoito
+    :vesivayla-turvalaitteiden-korjaus})
 
-(s/def ::vuosi (s/and nat-int? #(>= % 1900)))
-
-(s/def ::sampoid string?)
-
-(s/def ::tyyppi #{:hoito :paallystys :valaistus :tiemerkinta
-                  :tekniset-laitteet :siltakorjaus :paikkaus})
-
-(s/def ::urakka (s/keys :req [::id]
-                        :opt [::nimi ::sampoid ::tyyppi
-                              ::alkupvm ::loppupvm
-                              ::urakoitsija
-                              ::hallintayksikko]))
+(s/def ::hae-harjassa-luodut-urakat-vastaus
+  (s/coll-of (s/and ::urakka
+                    (s/keys :req [::hallintayksikko ::urakoitsija ::sopimukset ::hanke]))))
 
 ;; Urakkakohtainen kysely, joka vaatii vain urakan id:n.
 ;; Tätä speciä on hyvä käyttää esim. palveluiden, jotka hakevat
 ;; urakan tietoja, kyselyspecinä.
 (s/def ::urakka-kysely (s/keys :req [::id]))
+
+;; Tallennukset
+
+(s/def ::tallenna-urakka-kysely (s/keys :req [::sopimukset ::hallintayksikko ::urakoitsija
+                                              ::nimi ::loppupvm ::alkupvm]
+                                        :opt [::id]))
+
+(s/def ::tallenna-urakka-vastaus (s/keys :req [::sopimukset ::hallintayksikko ::urakoitsija
+                                               ::nimi ::loppupvm ::alkupvm ::id]))
+
+;; Muut
+
+(defn vesivayla-urakka? [urakka]
+  (#{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
+     :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus}
+    (:tyyppi urakka)))

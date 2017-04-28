@@ -450,6 +450,20 @@
           {:yllapitokohteet yllapitokohteet
            :paallystysilmoitukset uudet-ilmoitukset})))))
 
+(defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
+                                                         takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
+  (log/debug "Tallennetaan päällystysilmoitusten takuupäivämäärät")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+
+  (doseq [kohde-id (distinct (mapv ::pot-domain/paallystyskohde-id takuupvmt))]
+    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id))
+
+  (jdbc/with-db-transaction [db db]
+    (doseq [takuupvm takuupvmt]
+      (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)
+                                                     :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))}))
+    []))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -464,6 +478,10 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :tallenna-paallystysilmoitusten-takuupvmt
+                        (fn [user tiedot]
+                          (tallenna-paallystysilmoitusten-takuupvmt db user tiedot))
+                        {:kysely-spec ::pot-domain/tallenna-paallystysilmoitusten-takuupvmt})
       (julkaise-palvelu http :hae-paallystyksen-maksuerat
                         (fn [user tiedot]
                           (hae-urakan-maksuerat db user tiedot))
@@ -482,5 +500,8 @@
       :urakan-paallystysilmoitukset
       :urakan-paallystysilmoitus-paallystyskohteella
       :tallenna-paallystysilmoitus
-      :tallenna-paallystyskohteet)
+      :tallenna-paallystyskohteet
+      :tallenna-paallystysilmoitusten-takuupvmt
+      :hae-paallystyksen-maksuerat
+      :tallenna-paallystyksen-maksuerat)
     this))
