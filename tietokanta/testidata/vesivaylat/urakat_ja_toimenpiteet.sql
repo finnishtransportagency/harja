@@ -127,7 +127,7 @@ VALUES ((SELECT id
          FROM toimenpidekoodi
          WHERE nimi = 'Rannikon kauppamerenkulku'), '2016-08-01', '2017-07-30');
 
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, sampoid, alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
@@ -138,4 +138,9 @@ VALUES ((SELECT id
 
 -- Reimarista tuodut toimenpiteet
 
-INSERT INTO reimari_toimenpide ("reimari-id", urakoitsija, sopimus, turvalaite, lisatieto, lisatyo, suoritettu, luotu, "reimari-luotu", alus, tila, tyyppi, tyolaji, tyoluokka, vayla, turvalaite) values (42, '(23, Ukko Urakoitsija)', '(-5, 1022542301, Hoitosopimus)' , '(62, Pysäytin, 555)', '', false, '2017-01-01T23:23Z', '2017-01-01', '2017-01-01', '(MBKE24524, MS Piggy)', '1022541202', '1022542001', '1022541802', 1022541905, '(123, Vayla X, 55)', );
+INSERT INTO reimari_toimenpide
+       ("reimari-id", urakoitsija, sopimus, turvalaite, lisatieto, lisatyo, suoritettu, luotu,
+        "reimari-luotu", alus, tila, tyyppi, tyolaji, tyoluokka, vayla)
+VALUES (42, '(23, Ukko Urakoitsija)', '(-5, 1022542301, Hoitosopimus)' , '(62, Pysäytin, 555)', '',
+        false, '2017-01-01T23:23Z', '2017-01-01', '2017-01-01', '(MBKE24524, MS Piggy)',
+	'1022541202', '1022542001', '1022541802', '1022541905', '(123, Vayla X, 55)');
