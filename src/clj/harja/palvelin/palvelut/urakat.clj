@@ -31,8 +31,8 @@
   "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
   hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
   [db urakkatyyppi {:keys [x y]}]
-  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 100 metrin thesholdilla
-  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 100))]
+  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
+  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 1000))]
     (if (empty? urakka-idt)
       (if (= "hoito" urakkatyyppi)
         ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
