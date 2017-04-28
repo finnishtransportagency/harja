@@ -71,6 +71,8 @@
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
     [harja.palvelin.palvelut.debug :as debug]
+    [harja.palvelin.palvelut.hankkeet :as hankkeet]
+    [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
 
     ;; karttakuvien renderöinti
@@ -264,7 +266,7 @@
                   [:http-palvelin :db])
       :urakat (component/using
                 (urakat/->Urakat)
-                [:http-palvelin :db])
+                [:http-palvelin :db :sahke])
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
                              [:http-palvelin :db])
@@ -402,6 +404,14 @@
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
+      :hankkeet (component/using
+                   (hankkeet/->Hankkeet)
+                   {:db :db-replica
+                    :http-palvelin :http-palvelin})
+      :sopimukset (component/using
+                  (sopimukset/->Sopimukset)
+                  {:db :db-replica
+                   :http-palvelin :http-palvelin})
 
       :debug (component/using
                (debug/->Debug)
@@ -499,7 +509,12 @@
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
-        [:db :http-palvelin :integraatioloki]))))
+        [:db :http-palvelin :integraatioloki])
+
+      :mobiili-laadunseuranta
+      (component/using
+        (harja-laadunseuranta/->Laadunseuranta)
+        [:db :http-palvelin]))))
 
 (defonce harja-jarjestelma nil)
 

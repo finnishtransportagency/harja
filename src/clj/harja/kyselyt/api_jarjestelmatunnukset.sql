@@ -10,7 +10,7 @@ SELECT k.id, k.kayttajanimi, k.kuvaus, k.luotu,
   FROM kayttaja k
        JOIN organisaatio o ON k.organisaatio = o.id
  WHERE jarjestelma = true AND
-       poistettu = false;
+       k.poistettu = false;
 
 -- name: hae-jarjestelmatunnuksen-lisaoikeudet
 SELECT

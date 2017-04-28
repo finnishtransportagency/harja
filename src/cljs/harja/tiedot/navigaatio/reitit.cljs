@@ -14,6 +14,7 @@
          :toteutus :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
          :hallinta :indeksit
+         :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
