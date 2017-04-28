@@ -23,6 +23,21 @@
     "muokkaaja" ::muokkaaja-id}])
 
 ;; Haut
+;; PENDING: 2 eri muotoa urakan tyypille, specql generoima string setti sekä tämä kw setti
+;; yhtenäistä, kunhan specql tukee custom read/write optiota.
+(s/def ::urakkatyyppi-kw
+  #{:hoito
+    :tekniset-laitteet
+    :valaistus
+    :vesivayla-ruoppaus
+    :vesivayla-hoito
+    :vesivayla-kanavien-korjaus
+    :siltakorjaus
+    :paallystys
+    :paikkaus
+    :tiemerkinta
+    :vesivayla-kanavien-hoito
+    :vesivayla-turvalaitteiden-korjaus})
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka
