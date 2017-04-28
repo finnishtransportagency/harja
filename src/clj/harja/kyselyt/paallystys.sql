@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
   ypk.id                   AS "paallystyskohde-id",
+  pi.id,
   ypk.tr_numero            AS "tr-numero",
   pi.tila,
   nimi,
@@ -13,7 +14,8 @@ SELECT
   kaasuindeksi,
   lahetetty,
   lahetys_onnistunut       AS "lahetys-onnistunut",
-  lahetysvirhe
+  lahetysvirhe,
+  takuupvm
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -349,4 +351,10 @@ VALUES (:yllapitokohde, :maksueratunnus);
 UPDATE yllapitokohteen_maksueratunnus
 SET
   maksueratunnus = :maksueratunnus
-WHERE yllapitokohde = :yllapitokohde
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: paivita-paallystysilmoituksen-takuupvm!
+UPDATE paallystysilmoitus
+SET
+  takuupvm = :takuupvm
+WHERE id = :id;
