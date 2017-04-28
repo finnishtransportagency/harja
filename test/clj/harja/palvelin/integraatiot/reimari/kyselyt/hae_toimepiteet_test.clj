@@ -31,6 +31,7 @@
         '(62, Pysäytin, 555)', '', false, '2017-01-01T23:23Z', '2017-01-01', '2017-01-01',
         '(MBKE24524, MS Piggy)', '1022541202', '1022542001', '1022541802', 1022541905,
         '(123, Vayla X, 55)', '2017-11-11', 1, 1, '2016-02-02', 'Vesa Vastuullinen', 'Aapo Asiakas');")
+  ;; samat kentät kuin kaikki-toimenpiteet-kentät, pl. poistaja-id joka puuttuu testidatan rivistä
   (is (= #{:harja.domain.muokkaustiedot/poistaja-id}
          (clojure.set/difference vv-kyselyt/kaikki-toimenpiteen-kentat
                                  (set (keys (first (vv-kyselyt/hae-toimenpiteet ht/ds {:urakoitsija-id 55})))))))
