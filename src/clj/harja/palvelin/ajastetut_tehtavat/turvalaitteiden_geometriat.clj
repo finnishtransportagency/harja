@@ -32,7 +32,7 @@
 
 (defn kasittele-turvalaitteet [db vastaus]
   (let [data (cheshire/decode vastaus keyword)
-        turvalaitteet (get data "features")]
+        turvalaitteet (get data :features)]
     (jdbc/with-db-transaction [db db]
       (q-turvalaitteet/poista-turvalaitteet! db)
       (doseq [turvalaite turvalaitteet]
