@@ -44,7 +44,7 @@
   (integraatiotapahtuma/suorita-integraatio
     db
     integraatioloki
-    "ptj"
+    "inspire"
     "turvalaitteiden-haku"
     (fn [konteksti]
       (let [http-asetukset {:metodi :GET :url url}
