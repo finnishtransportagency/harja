@@ -310,7 +310,9 @@
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
                        "Valmistuminen ei voi olla ennen aloitusta."]
                       [:ei-tyhja-jos-toinen-arvo-annettu :valmis-tiemerkintaan
-                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]]}
+                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-paallystys-alku
+                       "Anna päällystyksen valmistumisen aika tai aika-arvio."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittava-tiemerkintaurakka
@@ -331,6 +333,7 @@
                                  :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
+            :fmt pvm/pvm-opt
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
                            (if (:valmis-tiemerkintaan rivi)
@@ -361,12 +364,13 @@
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (voi-muokata-tiemerkinta? %)
-                               (:aikataulu-tiemerkinta-alku %))
+            :muokattava? voi-muokata-tiemerkinta?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
-                       "Valmistuminen ei voi olla ennen aloitusta."]]}
+                       "Valmistuminen ei voi olla ennen aloitusta."]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
+                       "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? voi-muokata-paallystys?
