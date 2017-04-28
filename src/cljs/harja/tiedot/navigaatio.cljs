@@ -152,30 +152,34 @@
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
-  (reaction
-    (let [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
+  (reaction<! [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
 
-          ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
-          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))
-          ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
-          valittu-urakkatyyppi @valittu-urakkatyyppi
+               ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
+               urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))
+               ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
+               valittu-urakkatyyppi @valittu-urakkatyyppi
+               ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
+               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))]
+    (go
+      (or urakan-urakkatyyppi
+          valittu-urakkatyyppi
           ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
           ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
           ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
-          hallintayksikon-urakkatyyppi (when @valittu-hallintayksikko-id
-                                         (urakkatyyppi-arvolle
-                                           (case (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id)
-                                             :tie
-                                             (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                                               kayttajan-oletus-tyyppi
-                                               :hoito)
+          ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
+          ;; ottaa huomioon asynkronisuus.
+          (when @valittu-hallintayksikko-id
+            (urakkatyyppi-arvolle
+              (case (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))
+                :tie
+                (if-not (= :vesivayla kayttajan-oletus-tyyppi)
+                  kayttajan-oletus-tyyppi
+                  :hoito)
 
-                                             :vesi
-                                             :vesivayla
-                                             nil)))
-          ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
-          oletus-urakkatyyppi (urakkatyyppi-arvolle kayttajan-oletus-tyyppi)]
-      (or urakan-urakkatyyppi valittu-urakkatyyppi hallintayksikon-urakkatyyppi oletus-urakkatyyppi))))
+                :vesi
+                :vesivayla
+                nil)))
+          oletus-urakkatyyppi))))
 
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
