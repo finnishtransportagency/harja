@@ -18,7 +18,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      '03', '03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0, 'paallyste' :: yllapitokohdetyyppi,
+      '03', 03, 'Leppäjärven ramppi', 400, 100, 4543.95, 0, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 1233534,
                                              20, 1, 0, 3, 0, 1, 1, (SELECT id
                                                                     FROM urakka
