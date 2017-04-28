@@ -1,11 +1,11 @@
 (ns harja.tiedot.hallintayksikot-test
   (:require [harja.tiedot.hallintayksikot :as hy]
             [cljs.core.async :refer [<! >! chan]]
-            [cljs.test :as test :refer-macros [deftest is async]]
-            [clojure.test :as t])
+            [cljs.test :refer-macros [deftest is async use-fixtures]]
+            [harja.testutils :as utils])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(t/use-fixtures :once harja.testutils/fake-palvelut-fixture)
+(use-fixtures :each utils/fake-palvelut-fixture)
 
 (deftest vaylamuoto-hallintayksikolle
   (async done
@@ -35,20 +35,23 @@
                                                       nil))))
       (done))))
 
-(def fake-hy-haku (constantly [{:liikennemuoto :vesi :id 1} {:liikennemuoto :tie :id 2} {:liikennemuoto :tie :id 3}]))
+(def fake-hy-haku (constantly [{:liikennemuoto "V" :id 1} {:liikennemuoto "T" :id 2} {:liikennemuoto "T" :id 3}]))
 
-(deftest foobar
+(deftest hallintayksikoiden-haku
   (async done
-    (let [haku (harja.testutils/fake-palvelukutsu :hallintayksikot fake-hy-haku)
-          haluttu {:vesi [{:liikennemuoto :vesi :id 1}] :tie [{:liikennemuoto :tie :id 2}
-                                                              {:liikennemuoto :tie :id 3}]}
-          alkutilanne @hy/haetut-hallintayksikot
-          haun-tulos (hy/hae-hallintayksikot!)
-          lopputilanne @hy/haetut-hallintayksikot]
-      (is (not= alkutilanne lopputilanne))
-      (is (not= alkutilanne haun-tulos))
-      (is (= haun-tulos lopputilanne))
+    (go
+      (let [haku (utils/fake-palvelukutsu :hallintayksikot fake-hy-haku)
+           haluttu {:vesi [{:liikennemuoto :vesi :id 1 :type :hy}] :tie [{:liikennemuoto :tie :id 2 :type :hy}
+                                                               {:liikennemuoto :tie :id 3 :type :hy}]}
+           alkutilanne @hy/haetut-hallintayksikot
+           haun-tulos (<! (hy/hae-hallintayksikot!))
+           lopputilanne @hy/haetut-hallintayksikot]
+       (is (not= alkutilanne lopputilanne))
+       (is (not= alkutilanne haun-tulos))
+       (is (= haun-tulos lopputilanne))
 
-      (is (= haun-tulos haluttu))
-      (is (= lopputilanne haluttu)))))
+       (is (= haun-tulos haluttu))
+       (is (= lopputilanne haluttu))
+
+       (done)))))
 
