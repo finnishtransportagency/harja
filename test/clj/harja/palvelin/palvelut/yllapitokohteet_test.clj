@@ -299,11 +299,16 @@
                                       AND vuodet @> ARRAY[2017]::int[]
                                       AND poistettu IS NOT TRUE")))
         ei-yha-kohde (kohde-nimella vastaus "Ei YHA-kohde")
-        muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
+        poistettava-yha-kohde (kohde-nimella vastaus "Kuusamontien testi")
+        muut-kohteet (filter #(and (not= (:nimi %) "Ei YHA-kohde")
+                                   (not= (:nimi %) "Kuusamontien testi"))
+                             vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
     (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
         "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (true? (:yllapitokohteen-voi-poistaa? poistettava-yha-kohde))
+        "Ei Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
