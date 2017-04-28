@@ -14,7 +14,9 @@
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
-            [harja.ui.grid :as g]))
+            [harja.views.vesivaylat.hallinta :as vu]
+            [harja.ui.grid :as g]
+            [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
@@ -60,4 +62,11 @@
    :api-jarjestelmatunnukset
    (when (oikeudet/hallinta-api-jarjestelmatunnukset)
      ^{:key "jarjestelmatunnukset"}
-     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])])
+     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
+
+   "Vesiväyläurakat"
+   :vesivayla-hallinta
+   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+              (oikeudet/hallinta-vesivaylat))
+     ^{:key "vesivaylaurakat"}
+     [vu/vesivayla-hallinta])])

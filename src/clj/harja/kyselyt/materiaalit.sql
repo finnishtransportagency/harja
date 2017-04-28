@@ -85,7 +85,7 @@ FROM materiaalin_kaytto
 WHERE urakka = :urakka
       AND materiaalin_kaytto.alkupvm :: DATE >= :alkuvpm
       AND materiaalin_kaytto.alkupvm :: DATE <= :alkupvm
-      AND poistettu IS NOT TRUE;
+      AND materiaalin_kaytto.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-toteutuneet-materiaalit-raportille
 -- Palauttaa urakan materiaalit ja määrät omilla riveillä.
