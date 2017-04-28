@@ -394,7 +394,7 @@
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
-                                            (assoc kohde :poistettu true)
+                                           (assoc kohde :poistettu true)
                                            kohde))
                              kohteet-ennen-testia)]
 
@@ -410,7 +410,8 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id kohteet-ennen-testia) (sort-by :id kohteet-testin-jalkeen))))))
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
