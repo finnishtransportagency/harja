@@ -1,5 +1,5 @@
 (ns harja.testutils
-  "Harjan omat testitykalut"
+  "Harjan omat testityökalut"
   (:require [cljs.test :as t :refer-macros [is]]
             [cljs-react-test.utils :as rt-utils]
             [dommy.core :as dommy]
