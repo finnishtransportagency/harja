@@ -42,9 +42,9 @@
                                    (not (lomake/voi-tallentaa? urakoitsija)))
                      :tallennus-kaynnissa? tallennus-kaynnissa?}])}
      [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
-      {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true}
+      {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9}
       {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
-      {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string}
+      {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
       (when (some not-empty (vals urakat))
         (lomake/ryhma
          {:otsikko "Urakat"}
