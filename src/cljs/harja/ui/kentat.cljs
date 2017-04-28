@@ -1069,15 +1069,25 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                       :sekunnit (and s (js/parseInt s))})
       (pvm/map->Aika {:keskenerainen string}))))
 
+(defn normalisoi-aika-teksti
+  "Rajaa annetun käyttäjän text input syötteen aika kenttään sopivaksi.
+  Trimmaa, poistaa muut kuin numerot ja kaksoispisteet sekä leikkaa viiteen kirjaimeen."
+  [t]
+  (let [t (-> t str/trim (str/replace #"[^\d:]" ""))]
+    (if (> (count t) 5)
+      (subs t 0 5)
+      t)))
+
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
     [:input {:class (str (when lomake? "form-control")
                          (when (:keskenerainen @data) " puuttuva-arvo"))
              :placeholder placeholder
              on-change* (fn [e]
-                          (let [v (-> e .-target .-value)
-                                [v aika] (aseta-aika! v (juxt identity parsi-aika))]
-                            (when aika
+                          (let [v1 (-> e .-target .-value)
+                                [v aika] (aseta-aika! v1 (juxt identity parsi-aika))]
+                            (if-not aika
+                              (swap! data assoc :keskenerainen (normalisoi-aika-teksti v1))
                               (if (:tunnit aika)
                                 (swap! data
                                        (fn [aika-nyt]
