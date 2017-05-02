@@ -257,4 +257,14 @@
                                                                    :tr-loppuosa 1
                                                                    :tr-loppuetaisyys 1}))
         "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")
-    ))
+
+
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? {:tr-alkuosa 26
+                                                                   :tr-alkuetaisyys 1
+                                                                   :tr-loppuosa 41
+                                                                   :tr-loppuetaisyys 15}
+                                                                  nil
+                                                                  {:tr-alkuosa 41
+                                                                   :tr-alkuetaisyys 1
+                                                                   :tr-loppuosa 26
+                                                                   :tr-loppuetaisyys 0})))))

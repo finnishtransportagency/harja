@@ -230,7 +230,9 @@
          (if (= paa-loppuosa ali-loppuosa)
            (and (<= ali-loppuetaisyys paa-loppuetaisyys)
                 (>= ali-loppuetaisyys paa-alkuetaisyys))
-           (<= ali-loppuetaisyys paa-loppuetaisyys)))
+
+           (and (<= ali-loppuetaisyys paa-loppuetaisyys)
+                (>= ali-loppuetaisyys paa-alkuetaisyys))))
     "Ei pääkohteen sisällä"))
 
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
