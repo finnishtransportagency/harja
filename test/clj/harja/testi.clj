@@ -1,21 +1,21 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-   [clojure.test :refer :all]
-   [taoensso.timbre :as log]
-   [harja.kyselyt.urakat :as urk-q]
-   [harja.palvelin.komponentit.todennus :as todennus]
-   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-   [harja.palvelin.komponentit.http-palvelin :as http]
-   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-   [harja.palvelin.komponentit.tietokanta :as tietokanta]
-   [harja.palvelin.komponentit.liitteet :as liitteet]
-   [com.stuartsierra.component :as component]
-   [clj-time.core :as t]
-   [clj-time.coerce :as tc]
-   [clojure.core.async :as async]
-   [clojure.spec :as s]
-   [clojure.string :as str])
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]
+    [clojure.core.async :as async]
+    [clojure.spec :as s]
+    [clojure.string :as str])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -201,22 +201,22 @@
 
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
-    (if kysely-spec
-      (fn [user payload]
-        (testing (str "Palvelun " nimi " kysely on validi")
-          (is (s/valid? kysely-spec payload)
-              (s/explain-str kysely-spec payload)))
-        (f user payload))
-      f)
+        (if kysely-spec
+          (fn [user payload]
+            (testing (str "Palvelun " nimi " kysely on validi")
+              (is (s/valid? kysely-spec payload)
+                  (s/explain-str kysely-spec payload)))
+            (f user payload))
+          f)
 
-    (if vastaus-spec
-      (fn [user payload]
-        (let [v (f user payload)]
-          (testing (str "Palvelun " nimi " vastaus on validi")
-            (is (s/valid? vastaus-spec v)
-                (s/explain-str vastaus-spec v)))
-          v))
-      f)))
+        (if vastaus-spec
+          (fn [user payload]
+            (let [v (f user payload)]
+              (testing (str "Palvelun " nimi " vastaus on validi")
+                (is (s/valid? vastaus-spec v)
+                    (s/explain-str vastaus-spec v)))
+              v))
+          f)))
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -314,6 +314,19 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Kajaanin alueurakka 2014-2019'"))))
+
+(defn hae-vapaa-urakoitsija-id []
+  (ffirst (q (str "SELECT id FROM organisaatio
+                   WHERE tyyppi = 'urakoitsija'
+                   AND id NOT IN (SELECT urakoitsija FROM urakka WHERE urakoitsija IS NOT NULL);"))))
+
+(defn hae-vapaa-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus
+                   WHERE urakka IS NULL;"))))
+
+(defn hae-vapaat-sopimus-idt []
+  (map :id (q-map (str "SELECT id FROM sopimus
+                   WHERE urakka IS NULL;"))))
 
 (defn hae-vantaan-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -739,7 +752,7 @@
       (and (number? odotettu-arvo) (number? saatu-arvo))
       (is (=marginaalissa? odotettu-arvo saatu-arvo)
           (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
-               odotettu-arvo  " (" (type odotettu-arvo) "), saatu: "
+               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
                saatu-arvo " (" (type saatu-arvo) ")"))
 
       (instance? java.util.Date odotettu-arvo)
