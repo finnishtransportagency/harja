@@ -31,12 +31,12 @@
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
 (defn kasittele-turvalaitteet [db vastaus]
-  (let [data (cheshire/decode vastaus)
-        turvalaitteet (get data "features")]
+  (let [data (cheshire/decode vastaus keyword)
+        turvalaitteet (get data :features)]
     (jdbc/with-db-transaction [db db]
       (q-turvalaitteet/poista-turvalaitteet! db)
       (doseq [turvalaite turvalaitteet]
-        (tallenna-turvalaite db (walk/keywordize-keys turvalaite)))
+        (tallenna-turvalaite db turvalaite))
       (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt)))))
 
 (defn paivita-turvalaitteet [integraatioloki db url]
@@ -44,7 +44,7 @@
   (integraatiotapahtuma/suorita-integraatio
     db
     integraatioloki
-    "ptj"
+    "inspire"
     "turvalaitteiden-haku"
     (fn [konteksti]
       (let [http-asetukset {:metodi :GET :url url}

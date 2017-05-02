@@ -14,7 +14,9 @@
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
     [harja.domain.paallystysilmoitus :as pot]
-    [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
+    [harja.domain.urakka :as urakka-domain]
+    [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+    [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -46,7 +48,6 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
-
 
 (def paallystysilmoitukset-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
@@ -138,3 +139,8 @@
                       (str (:lyhenne rivi) " - " (:nimi rivi))
                       (:nimi rivi)))
    :valinnat pot/+tyomenetelmat-ja-nil+})
+
+(defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id paallystysilmoitukset]
+  (k/post! :tallenna-paallystysilmoitusten-takuupvmt
+           {::urakka-domain/id urakka-id
+            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))
