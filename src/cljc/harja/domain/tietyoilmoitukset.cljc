@@ -1,6 +1,7 @@
 (ns harja.domain.tietyoilmoitukset
   (:require [clojure.string :as str]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [clojure.spec :as s]
             [harja.domain.roolit :as roolit]
     #?(:cljs [harja.tiedot.istunto :as istunto])))
 
@@ -136,3 +137,11 @@
               (= (::urakoitsija-id ilmoitus) (get-in user [:organisaatio :id]))
               (= (::tilaaja-id ilmoitus) (get-in user [:organisaatio :id]))
               (kayttajan-urakat (::urakka-id ilmoitus)))))))
+
+;; Haut
+
+(s/def ::hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus
+  (s/keys :req-un [::geometria ::urakka-id ::urakoitsijan-yhteyshenkilo ::kohteet ::tilaaja-nimi
+                   ::tr-loppuosa ::tr-alkuosa ::tilaaja-id ::tr-loppuetaisyys ::yllapitokohde-id ::tr-alkuetaisyys
+                   ::tr-numero ::alku ::tilaajan-yhteyshenkilo ::urakoitsija-nimi ::loppu
+                   ::urakoitsija-id ::urakka-nimi ::urakka-sampo-id]))
