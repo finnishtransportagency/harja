@@ -11,7 +11,7 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
 
-(s/def ::liikennemuoto #{:tie :vesi})
+(s/def ::liikennemuoto (s/nilable #{:tie :vesi}))
 
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
