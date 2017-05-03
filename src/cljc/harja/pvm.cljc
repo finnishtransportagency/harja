@@ -695,19 +695,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (let [kolmannesten-kuukaudet [[1 4] [5 8] [9 12]]
         vuodet (range (vuosi alkupvm) (inc (vuosi loppupvm)))
         vuosikolmannekset (fn [vuosi kolmannes [alku-kk loppu-kk]]
-                            (hash-map kolmannes {:alku (t/first-day-of-the-month (t/date-time vuosi alku-kk))
-                                                 :loppu (t/last-day-of-the-month (t/date-time vuosi loppu-kk))}))]
+                            {kolmannes {:alku (t/first-day-of-the-month (t/date-time vuosi alku-kk))
+                                        :loppu (t/last-day-of-the-month (t/date-time vuosi loppu-kk))}})]
     (reduce
       (fn [edellinen vuosi]
         (merge
           edellinen
           (let [vuosikolmannekset
-               (apply
-                 merge
-                 (map-indexed
-                   (fn [i kuukaudet] (vuosikolmannekset vuosi (inc i) kuukaudet))
-                   kolmannesten-kuukaudet))]
-           (hash-map vuosi vuosikolmannekset))))
+                (apply
+                  merge
+                  (map-indexed
+                    (fn [i kuukaudet] (vuosikolmannekset vuosi (inc i) kuukaudet))
+                    kolmannesten-kuukaudet))]
+            {vuosi vuosikolmannekset})))
       {}
       vuodet)))
 

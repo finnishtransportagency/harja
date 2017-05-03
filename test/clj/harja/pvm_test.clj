@@ -54,13 +54,13 @@
                                      (t/plus nyt (t/hours 4))
                                      false)))
   (is (true? (pvm/sama-tai-jalkeen? (t/local-date 2005 10 10)
-                                     (t/local-date 2005 10 10))))
+                                    (t/local-date 2005 10 10))))
   (is (true? (pvm/sama-tai-jalkeen? (t/local-date-time 2005 10 10 11 11 11)
-                                     (t/local-date-time 2005 10 10 11 11 11)
-                                     false)))
+                                    (t/local-date-time 2005 10 10 11 11 11)
+                                    false)))
   (is (true? (pvm/sama-tai-jalkeen? nyt
-                                     (t/plus nyt (t/hours 4))
-                                     true)))
+                                    (t/plus nyt (t/hours 4))
+                                    true)))
   (is (true? (pvm/sama-tai-jalkeen? nyt
                                     nyt)))
   (is (true? (pvm/sama-tai-jalkeen? (t/plus nyt (t/hours 4))
@@ -75,44 +75,44 @@
                            (t/minus nyt (t/minutes 5))
                            (t/plus nyt (t/minutes 5)))))
   (is (true? (pvm/valissa? (t/plus nyt (t/minutes 15))
-                            (t/minus nyt (t/minutes 5))
-                            (t/plus nyt (t/minutes 5))
-                            true)))
-  (is (false? (pvm/valissa? (t/plus nyt (t/minutes 15))
                            (t/minus nyt (t/minutes 5))
                            (t/plus nyt (t/minutes 5))
+                           true)))
+  (is (false? (pvm/valissa? (t/plus nyt (t/minutes 15))
+                            (t/minus nyt (t/minutes 5))
+                            (t/plus nyt (t/minutes 5))
                             false))))
 
 (deftest paivia-valissa-toimii
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
-                          (t/plus nyt (t/days 5))]
+                                                  (t/plus nyt (t/days 5))]
                                                  [(t/plus nyt (t/days 1))
-                          (t/plus nyt (t/days 3))])
+                                                  (t/plus nyt (t/days 3))])
          2))
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
-                          (t/plus nyt (t/days 2))]
+                                                  (t/plus nyt (t/days 2))]
                                                  [(t/plus nyt (t/days 1))
-                          (t/plus nyt (t/days 5))])
+                                                  (t/plus nyt (t/days 5))])
          1))
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [(t/plus nyt (t/days 1))
-                          (t/plus nyt (t/days 3))]
+                                                  (t/plus nyt (t/days 3))]
                                                  [nyt
-                          (t/plus nyt (t/days 2))])
+                                                  (t/plus nyt (t/days 2))])
          1))
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [(t/plus nyt (t/days 1))
-                          (t/plus nyt (t/days 3))]
+                                                  (t/plus nyt (t/days 3))]
                                                  [nyt
-                          (t/plus nyt (t/days 5))])
+                                                  (t/plus nyt (t/days 5))])
          2))
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
-                          (t/plus nyt (t/days 3))]
+                                                  (t/plus nyt (t/days 3))]
                                                  [(t/plus nyt (t/days 5))
-                          (t/plus nyt (t/days 10))])
+                                                  (t/plus nyt (t/days 10))])
          0))
   (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
-                          (t/plus nyt (t/days 3))]
+                                                  (t/plus nyt (t/days 3))]
                                                  [(t/minus nyt (t/days 3))
-                          (t/minus nyt (t/days 2))])
+                                                  (t/minus nyt (t/days 2))])
          0)))
 
 (deftest aikavalit
@@ -134,3 +134,15 @@
       (is (= 0 (t/minute (first tulos))))
       (is (= 23 (t/hour (second tulos))))
       (is (= 59 (t/minute (second tulos)))))))
+
+(deftest urakan-vuosikolmannekset
+  (let [kolmannekset (pvm/urakan-vuosikolmannekset (t/date-time 2015 1) (t/date-time 2017 10))
+        kolmannekset-2017 (kolmannekset 2017)]
+    (is (= [2015 2016 2017] (into [] (keys kolmannekset))) "Vuodet on rakennettu oikein")
+    (is (every? #(= [1 2 3] (keys (second %))) kolmannekset) "Jokaisella vuodella on kaikki vuosikolmannekset")
+    (is (= (t/date-time 2017 1 1) (:alku (kolmannekset-2017 1))) "2017 Ensimmäisen vuosikolmanneksen alku on oikea")
+    (is (= (t/date-time 2017 4 30) (:loppu (kolmannekset-2017 1))) "2017 Ensimmäisen vuosikolmanneksen loppu on oikea")
+    (is (= (t/date-time 2017 5 1) (:alku (kolmannekset-2017 2))) "2017 Toisen vuosikolmanneksen alku on oikea")
+    (is (= (t/date-time 2017 8 31) (:loppu (kolmannekset-2017 2))) "2017 Toisen vuosikolmanneksen loppu on oikea")
+    (is (= (t/date-time 2017 9 1) (:alku (kolmannekset-2017 3))) "2017 Kolmannen vuosikolmanneksen alku on oikea")
+    (is (= (t/date-time 2017 12 31) (:loppu (kolmannekset-2017 3))) "2017 Kolmannen vuosikolmanneksen loppu on oikea")))
