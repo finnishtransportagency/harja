@@ -36,7 +36,8 @@
             [harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test]
-            ;; uusi testi tähän
+            [harja.tiedot.hallintayksikot-test]
+    ;; uusi testi tähän
             ))
 
 (doo-tests 'harja.pvm-test
@@ -75,5 +76,6 @@
            'harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
+           'harja.tiedot.hallintayksikot-test
            ;; uusi testi tähän
            )
