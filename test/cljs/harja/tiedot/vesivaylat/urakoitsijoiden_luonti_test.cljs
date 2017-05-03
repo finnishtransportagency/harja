@@ -3,31 +3,31 @@
             [clojure.test :refer-macros [deftest is testing]]
             [harja.domain.urakka :as u]
             [harja.domain.organisaatio :as o]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e! e-tila!]]
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
 
 (deftest urakoitsijan-valinta
   (let [urakoitsija {:foobar 1}]
-    (is (= urakoitsija (:valittu-urakoitsija (e! tiedot/->ValitseUrakoitsija urakoitsija))))))
+    (is (= urakoitsija (:valittu-urakoitsija (e! (tiedot/->ValitseUrakoitsija urakoitsija)))))))
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! tiedot/->Nakymassa? true))))
-  (is (false? (:nakymassa? (e! tiedot/->Nakymassa? false)))))
+  (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
+  (is (false? (:nakymassa? (e! (tiedot/->Nakymassa? false))))))
 
 (deftest uuden-urakoitsijan-luonnin-aloitus
-  (is (= tiedot/uusi-urakoitsija (:valittu-urakoitsija (e! tiedot/->UusiUrakoitsija)))))
+  (is (= tiedot/uusi-urakoitsija (:valittu-urakoitsija (e! (tiedot/->UusiUrakoitsija))))))
 
 (deftest tallentamisen-aloitus
   (vaadi-async-kutsut
     #{tiedot/->UrakoitsijaTallennettu tiedot/->UrakoitsijaEiTallennettu}
 
-    (is (true? (:tallennus-kaynnissa? (e-tila! tiedot/->TallennaUrakoitsija {:id 1} {:haetut-urakoitsijat []}))))))
+    (is (true? (:tallennus-kaynnissa? (e! (tiedot/->TallennaUrakoitsija {:id 1}) {:haetut-urakoitsijat []}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakoitsijan tallentaminen"
     (let [vanhat [{:id 1} {:id 2}]
           uusi {:id 3}
-          tulos (e-tila! tiedot/->UrakoitsijaTallennettu uusi {:haetut-urakoitsijat vanhat})]
+          tulos (e! (tiedot/->UrakoitsijaTallennettu uusi) {:haetut-urakoitsijat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakoitsija tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakoitsijat tulos)))))
@@ -35,34 +35,34 @@
   (testing "Urakoitsijan muokkaaminen"
     (let [vanhat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
           uusi {:id 2 :nimi :bb}
-          tulos (e-tila! tiedot/->UrakoitsijaTallennettu uusi {:haetut-urakoitsijat vanhat})]
+          tulos (e! (tiedot/->UrakoitsijaTallennettu uusi) {:haetut-urakoitsijat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakoitsija tulos)))
       (is (= [{:id 1 :nimi :a} {:id 2 :nimi :bb}] (:haetut-urakoitsijat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! tiedot/->UrakoitsijaEiTallennettu "virhe")]
+  (let [tulos (e! (tiedot/->UrakoitsijaEiTallennettu "virhe"))]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-urakoitsija tulos)))))
 
 (deftest urakoitsijan-muokkaaminen-lomakkeessa
   (let [urakoitsija {:nimi :foobar}]
-    (is (= urakoitsija (:valittu-urakoitsija (e! tiedot/->UrakoitsijaaMuokattu urakoitsija))))))
+    (is (= urakoitsija (:valittu-urakoitsija (e! (tiedot/->UrakoitsijaaMuokattu urakoitsija)))))))
 
 (deftest hakemisen-aloitus
   (vaadi-async-kutsut
     #{tiedot/->UrakoitsijatHaettu tiedot/->UrakoitsijatEiHaettu}
 
-    (is (true? (:urakoitsijoiden-haku-kaynnissa? (e! tiedot/->HaeUrakoitsijat {:id 1}))))))
+    (is (true? (:urakoitsijoiden-haku-kaynnissa? (e! (tiedot/->HaeUrakoitsijat {:id 1})))))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
-        tulos (e! tiedot/->UrakoitsijatHaettu urakat)]
+        tulos (e! (tiedot/->UrakoitsijatHaettu urakat))]
     (is (false? (:urakoitsijoiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1 :nimi :a} {:id 2 :nimi :b}] (:haetut-urakoitsijat tulos)))))
 
 (deftest hakemisen-epaonnistuminen
-  (let [tulos (e! tiedot/->UrakoitsijatEiHaettu "virhe")]
+  (let [tulos (e! (tiedot/->UrakoitsijatEiHaettu "virhe"))]
     (is (false? (:urakoitsijoiden-haku-kaynnissa? tulos)))))
 
 (deftest aloituksen-ajankohdan-maarittely
