@@ -36,7 +36,6 @@
             [harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test]
-            [harja.tiedot.hallintayksikot-test]
             ;; uusi testi tähän
             ))
 
@@ -76,6 +75,5 @@
            'harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
-           'harja.tiedot.hallintayksikot-test
            ;; uusi testi tähän
            )

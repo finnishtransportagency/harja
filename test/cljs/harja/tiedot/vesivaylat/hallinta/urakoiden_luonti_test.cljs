@@ -1,32 +1,32 @@
-(ns harja.tiedot.vesivaylat.hallinta.hallinta.urakoiden-luonti-test
-  (:require [harja.tiedot.vesivaylat.hallinta.hallinta.urakoiden-luonti :as luonti]
+(ns harja.tiedot.vesivaylat.hallinta.urakoiden-luonti-test
+  (:require [harja.tiedot.vesivaylat.hallinta.urakoiden-luonti :as luonti]
             [harja.domain.urakka :as u]
             [harja.domain.sopimus :as s]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e! e-tila!]]))
 
 (deftest urakan-valinta
   (let [ur {:foobar 1}]
-    (is (= ur (:valittu-urakka (e! (luonti/->ValitseUrakka ur)))))))
+    (is (= ur (:valittu-urakka (e! luonti/->ValitseUrakka ur))))))
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! (luonti/->Nakymassa? true)))))
-  (is (false? (:nakymassa? (e! (luonti/->Nakymassa? false))))))
+  (is (true? (:nakymassa? (e! luonti/->Nakymassa? true))))
+  (is (false? (:nakymassa? (e! luonti/->Nakymassa? false)))))
 
 (deftest uuden-urakan-luonnin-aloitus
-  (is (= luonti/uusi-urakka (:valittu-urakka (e! (luonti/->UusiUrakka))))))
+  (is (= luonti/uusi-urakka (:valittu-urakka (e! luonti/->UusiUrakka)))))
 
 (deftest tallentamisen-aloitus
   (vaadi-async-kutsut
     #{luonti/->UrakkaTallennettu luonti/->UrakkaEiTallennettu}
 
-    (is (true? (:tallennus-kaynnissa? (e! (luonti/->TallennaUrakka {:id 1}) {:haetut-urakat []}))))))
+    (is (true? (:tallennus-kaynnissa? (e-tila! luonti/->TallennaUrakka {:id 1} {:haetut-urakat []}))))))
 
 (deftest tallentamisen-valmistuminen
   (testing "Uuden urakan tallentaminen"
     (let [vanhat [{::u/id 1} {::u/id 2}]
           uusi {::u/id 3}
-          tulos (e! (luonti/->UrakkaTallennettu uusi) {:haetut-urakat vanhat})]
+          tulos (e-tila! luonti/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= (conj vanhat uusi) (:haetut-urakat tulos)))))
@@ -34,38 +34,38 @@
   (testing "Urakan muokkaaminen"
     (let [vanhat [{::u/id 1 :nimi :a} {::u/id 2 :nimi :b}]
           uusi {::u/id 2 :nimi :bb}
-          tulos (e! (luonti/->UrakkaTallennettu uusi) {:haetut-urakat vanhat})]
+          tulos (e-tila! luonti/->UrakkaTallennettu uusi {:haetut-urakat vanhat})]
       (is (false? (:tallennus-kaynnissa? tulos)))
       (is (nil? (:valittu-urakka tulos)))
       (is (= [{::u/id 1 :nimi :a} {::u/id 2 :nimi :bb}] (:haetut-urakat tulos))))))
 
 (deftest tallentamisen-epaonnistuminen
-  (let [tulos (e! (luonti/->UrakkaEiTallennettu "virhe"))]
+  (let [tulos (e! luonti/->UrakkaEiTallennettu "virhe")]
     (is (false? (:tallennus-kaynnissa? tulos)))
     (is (nil? (:valittu-urakka tulos)))))
 
 (deftest urakan-muokkaaminen-lomakkeessa
   (let [ur {:nimi :foobar}]
-    (is (= ur (:valittu-urakka (e! (luonti/->UrakkaaMuokattu ur)))))))
+    (is (= ur (:valittu-urakka (e! luonti/->UrakkaaMuokattu ur))))))
 
 (deftest hakemisen-aloitus
   (vaadi-async-kutsut
     #{luonti/->UrakatHaettu luonti/->UrakatEiHaettu}
-    (is (true? (:urakoiden-haku-kaynnissa? (e! (luonti/->HaeUrakat) {:id 1}))))))
+    (is (true? (:urakoiden-haku-kaynnissa? (e! luonti/->HaeUrakat {:id 1}))))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]
-        tulos (e! (luonti/->UrakatHaettu urakat))]
+        tulos (e! luonti/->UrakatHaettu urakat)]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1 :nimi :a} {:id 2 :nimi :b}] (:haetut-urakat tulos)))))
 
 (deftest hakemisen-epaonnistuminen
-  (let [tulos (e! (luonti/->UrakatEiHaettu "virhe"))]
+  (let [tulos (e! luonti/->UrakatEiHaettu "virhe")]
     (is (false? (:urakoiden-haku-kaynnissa? tulos)))))
 
 (deftest sopimuksen-paivittaminen
   (let [testaa (fn [tila annettu haluttu]
-                 (let [uusi-tila (-> (e! (luonti/->PaivitaSopimuksetGrid annettu) {:valittu-urakka {::u/sopimukset tila}})
+                 (let [uusi-tila (-> (e-tila! luonti/->PaivitaSopimuksetGrid annettu {:valittu-urakka {::u/sopimukset tila}})
                                      (get-in [:valittu-urakka ::u/sopimukset]))]
                    (= uusi-tila haluttu)))]
     (testing "Rivin lisääminen tyhjään gridiin"
@@ -112,7 +112,7 @@
   (deftest lomakevaihtoehtojen-hakemisen-aloitus
     (vaadi-async-kutsut
       #{luonti/->LomakevaihtoehdotHaettu luonti/->LomakevaihtoehdotEiHaettu}
-      (is (= {:foo :bar} (e! (luonti/->HaeLomakevaihtoehdot) {:foo :bar})))))
+      (is (= {:foo :bar} (e-tila! luonti/->HaeLomakevaihtoehdot {:id 1} {:foo :bar})))))
 
   (deftest lomakevaihtoehtojen-hakemisen-valmistuminen
     (let [hy [{:id 1}]
@@ -123,7 +123,7 @@
                    :urakoitsijat ur
                    :hankkeet h
                    :sopimukset s}
-          app (e! (luonti/->LomakevaihtoehdotHaettu payload))]
+          app (e! luonti/->LomakevaihtoehdotHaettu payload)]
       (is (= hy (:haetut-hallintayksikot app)))
       (is (= ur (:haetut-urakoitsijat app)))
       (is (= h (:haetut-hankkeet app)))
@@ -131,21 +131,21 @@
 
 
   (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
-    (is (= {:foo :bar} (e! (luonti/->LomakevaihtoehdotEiHaettu "virhe") {:foo :bar}))))
+    (is (= {:foo :bar} (e-tila! luonti/->LomakevaihtoehdotEiHaettu "virhe" {:foo :bar}))))
 
   (deftest sahke-lahetyksen-aloitus
     (vaadi-async-kutsut
       #{luonti/->SahkeeseenLahetetty luonti/->SahkeeseenEiLahetetty}
       (is (= {:kaynnissa-olevat-sahkelahetykset #{1}}
-             (e! (luonti/->LahetaUrakkaSahkeeseen {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{}})))))
+             (e-tila! luonti/->LahetaUrakkaSahkeeseen {::u/id 1} {:kaynnissa-olevat-sahkelahetykset #{}})))))
 
   (deftest sahke-lahetyksen-valmistuminen
     (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-           (e! (luonti/->SahkeeseenLahetetty {} {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{1}}))))
+           (e-tila! luonti/->SahkeeseenLahetetty {} {::u/id 1} {:kaynnissa-olevat-sahkelahetykset #{1}}))))
 
   (deftest sahke-lahetyksen-epaonnistuminen
     (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-           (e! (luonti/->SahkeeseenEiLahetetty "virhe" {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{1}}))))
+           (e-tila! luonti/->SahkeeseenEiLahetetty "virhe" {::u/id 1} {:kaynnissa-olevat-sahkelahetykset #{1}}))))
 
   (deftest paasopimuksen-kasittely
     (testing "Löydetään aina vain yksi pääsopimus"

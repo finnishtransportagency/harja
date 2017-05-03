@@ -1,4 +1,4 @@
-(ns harja.tiedot.vesivaylat.hankkeiden-luonti
+(ns harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
