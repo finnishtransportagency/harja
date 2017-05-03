@@ -775,7 +775,7 @@ FROM yllapitokohde
 WHERE id = :kohdeid;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT PAIVITA_PAALLYSTYS_TAI_PAIKKAUSURAKAN_GEOMETRIA(:urakka :: INTEGER);
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
