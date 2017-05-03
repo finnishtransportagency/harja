@@ -1,7 +1,7 @@
-(ns harja.views.vesivaylat.sopimuksien-luonti
+(ns harja.views.vesivaylat.hallinta.sopimuksien-luonti
   (:require [harja.ui.komponentti :as komp]
             [tuck.core :refer [tuck]]
-            [harja.tiedot.vesivaylat.sopimuksien-luonti :as tiedot]
+            [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti :as tiedot]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.grid :as grid]
