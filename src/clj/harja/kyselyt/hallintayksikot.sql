@@ -9,7 +9,7 @@ SELECT
 FROM organisaatio
 WHERE tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND
       (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
-ORDER BY elynumero ASC;
+ORDER BY elynumero ASC, nimi ASC;
 
 -- name: hae-organisaation-tunnistetiedot
 -- Hakee organisaation perustiedot tekstihaulla.
