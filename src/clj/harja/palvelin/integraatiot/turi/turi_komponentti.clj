@@ -95,15 +95,6 @@
     (doseq [id idt]
       (laheta-turvallisuuspoikkeama this id))))
 
-(defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika]
-  (if paivittainen-lahetysaika
-    (do
-      (log/debug "Ajastetaan turvallisuuspoikkeamien lähettäminen joka päivä kello: " paivittainen-lahetysaika)
-      (ajastettu-tehtava/ajasta-paivittain
-        paivittainen-lahetysaika
-        (fn [_] (laheta-turvallisuuspoikkeamat-turiin this))))
-    (fn [])))
-
 (defn laheta-urakan-vuosikolmanneksen-tyotunnit-turiin [{:keys [db integraatioloki urakan-tyotunnit-url
                                                                 kayttajatunnus salasana]}
                                                         urakka-id vuosi vuosikolmannes]
@@ -161,6 +152,25 @@
                                urakka-id
                                vuosi
                                vuosikolmannes)))))))
+
+(defn laheta-tyotunnit-turin [this]
+  (let [lahettamattomat(q-urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db this))]
+    (doseq [{urakka ::urakan-tyotunnit/urakka
+             vuosi ::urakan-tyotunnit/vuosi
+             vuosikolmannes ::urakan-tyotunnit/vuosikolmannes}
+            lahettamattomat]
+      (laheta-urakan-vuosikolmanneksen-tyotunnit-turiin this urakka vuosi vuosikolmannes))))
+
+(defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika]
+  (if paivittainen-lahetysaika
+    (do
+      (log/debug "Ajastetaan turvallisuuspoikkeamien ja työtuntien lähettäminen joka päivä kello: " paivittainen-lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain
+        paivittainen-lahetysaika
+        (fn [_]
+          (laheta-turvallisuuspoikkeamat-turiin this)
+          (laheta-tyotunnit-turin this))))
+    (fn [])))
 
 (defrecord Turi [asetukset]
   component/Lifecycle

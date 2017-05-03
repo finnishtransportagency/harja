@@ -26,6 +26,11 @@
           ::ut/vuosi vuosi
           ::ut/vuosikolmannes vuosikolmannes}))
 
+(defn hae-lahettamattomat-tai-epaonnistuneet-tyotunnit [db]
+  (fetch db ::ut/urakan-tyotunnit kaikki-kentat
+         (op/or {::ut/lahetetty op/null?}
+                {::ut/lahetys-onnistunut false})))
+
 (defn lokita-lahetys [db urakka-id vuosi vuosikolmannes onnistunut?]
   (update! db ::ut/urakan-tyotunnit
            {::ut/lahetys-onnistunut onnistunut?
