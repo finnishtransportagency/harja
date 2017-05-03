@@ -12,7 +12,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :turi (component/using
-            (turi/->Turi {:url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"})
+            (turi/->Turi {:turvallisuuspoikkeamat-url +turi-url+ :kayttajatunnus "kayttajatunnus" :salasana "salasana"})
             [:db :http-palvelin :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)

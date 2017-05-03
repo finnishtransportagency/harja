@@ -66,8 +66,8 @@
                  :error virhe})))))
 
 (defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta
-                                                   url kayttajatunnus salasana]} id]
-  (when-not (empty? url)
+                                                   turvallisuuspoikkeamat-url kayttajatunnus salasana]} id]
+  (when-not (empty? turvallisuuspoikkeamat-url)
     (log/debug (format "Lähetetään turvallisuuspoikkeama (id: %s) TURI:n" id))
     (try
       (integraatiotapahtuma/suorita-integraatio
@@ -79,7 +79,7 @@
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta
                   konteksti :http {:metodi :POST
-                                   :url url
+                                   :url turvallisuuspoikkeamat-url
                                    :kayttajatunnus kayttajatunnus
                                    :salasana salasana
                                    :otsikot {"Content-Type" "text/xml"}}
@@ -104,9 +104,10 @@
         (fn [_] (laheta-turvallisuuspoikkeamat-turiin this))))
     (fn [])))
 
-(defn laheta-urakan-vuosikolmanneksen-tyotunnit-turiin [{:keys [db integraatioloki url kayttajatunnus salasana]}
+(defn laheta-urakan-vuosikolmanneksen-tyotunnit-turiin [{:keys [db integraatioloki urakan-tyotunnit-url
+                                                                kayttajatunnus salasana]}
                                                         urakka-id vuosi vuosikolmannes]
-  (when-not (empty? url)
+  (when-not (empty? urakan-tyotunnit-url)
     (let [lokita-lahetys (fn [onnistunut?]
                            (q-urakan-tyotunnit/lokita-lahetys db
                                                               urakka-id
@@ -115,9 +116,9 @@
                                                               onnistunut?))]
 
       (log/debug (format "Lähetetään urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtunnit TURI:n"
-                            urakka-id
-                            vuosi
-                            vuosikolmannes))
+                         urakka-id
+                         vuosi
+                         vuosikolmannes))
 
       (try
         (integraatiotapahtuma/suorita-integraatio
@@ -125,11 +126,11 @@
           (fn [konteksti]
             (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
                   tyotunnit (::urakan-tyotunnit/tyotunnit
-                              (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
-                                db
-                                urakka-id
-                                vuosi
-                                vuosikolmannes))
+                              (first (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
+                                       db
+                                       urakka-id
+                                       vuosi
+                                       vuosikolmannes)))
                   sanoma (tyotunnit-sanoma/muodosta
                            sampoid
                            vuosi
@@ -138,7 +139,7 @@
                   {body :body}
                   (integraatiotapahtuma/laheta
                     konteksti :http {:metodi :POST
-                                     :url url
+                                     :url urakan-tyotunnit-url
                                      :kayttajatunnus kayttajatunnus
                                      :salasana salasana
                                      :otsikot {"Content-Type" "text/xml"}}
@@ -151,9 +152,9 @@
               (lokita-lahetys true)))
           {:virhekasittelija (fn [_ _]
                                (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetys TURI:n epäonnistui"
-                                                    urakka-id
-                                                    vuosi
-                                                    vuosikolmannes))
+                                                  urakka-id
+                                                  vuosi
+                                                  vuosikolmannes))
                                (lokita-lahetys false))})
         (catch Throwable t
           (log/error t (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetyksessä TURI:n tapahtui poikkeus"
@@ -164,12 +165,16 @@
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [{url :url kayttajatunnus :kayttajatunnus
-           salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
-      (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
+    (let [{turvallisuuspoikkeamat-url :turvallisuuspoikkeamat-url
+           urakan-tyotunnit-url :urakan-tyotunnit-url
+           kayttajatunnus :kayttajatunnus
+           salasana :salasana
+           paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
+      (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" turvallisuuspoikkeamat-url))
       (assoc
         (assoc this
-          :url url
+          :turvallisuuspoikkeamat-url turvallisuuspoikkeamat-url
+          :urakan-tyotunnit-url urakan-tyotunnit-url
           :kayttajatunnus kayttajatunnus
           :salasana salasana)
         :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika))))
