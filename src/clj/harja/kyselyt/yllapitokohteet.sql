@@ -584,6 +584,14 @@ SET
 WHERE id = :id
       AND urakka = :urakka;
 
+-- name: paivita-yllapitokohteen-numero-ja-nimi!
+UPDATE yllapitokohde
+SET
+  kohdenumero = :kohdenumero,
+  nimi = :nimi
+WHERE id = :id
+      AND urakka = :urakka;
+
 -- name: tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
 UPDATE yllapitokohteen_aikataulu
