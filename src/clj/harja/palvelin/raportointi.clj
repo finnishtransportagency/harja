@@ -7,7 +7,6 @@
             [harja.palvelin.raportointi.pdf :as pdf]
             [harja.palvelin.raportointi.excel :as excel]
             [taoensso.timbre :as log]
-            [harja.kyselyt.raportit :as raportit-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
             ;; vaaditaan built in raportit
@@ -37,13 +36,15 @@
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.palvelin.raportointi.raportit.indeksitarkistus]
             [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
+            [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [clojure.java.io :as io]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -155,8 +156,10 @@
   (hae-raportit [this]
     (or @raportit
         (try
-          (let [r (raportit-q/raportit (:db this))]
-            (log/debug "Raportit saatu: " (pr-str r))
+          (let [r (into {}
+                        (map (juxt :nimi identity))
+                        (eval (read-string (slurp (io/resource "raportit.edn")))))]
+            (log/debug "Saatu " (count r) " raporttia: " (keys r))
             (reset! raportit r)
             r)
           (catch Exception e
