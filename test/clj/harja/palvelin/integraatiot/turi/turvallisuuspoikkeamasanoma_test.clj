@@ -4,7 +4,7 @@
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.liitteet :as liitteet]
-            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
+            [harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama :as sanoma]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.tyokalut.xml :as xml]

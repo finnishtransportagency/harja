@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
-            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
+            [harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama :as turvallisuuspoikkeamasanoma]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -70,7 +70,7 @@
         (fn [konteksti]
           (let [sanoma (->> id
                             (hae-turvallisuuspoikkeama liitteiden-hallinta db)
-                            sanoma/muodosta)
+                            turvallisuuspoikkeamasanoma/muodosta)
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta
                   konteksti :http {:metodi :POST
