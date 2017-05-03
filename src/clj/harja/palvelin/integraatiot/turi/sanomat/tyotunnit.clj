@@ -7,9 +7,11 @@
 
 (def +xsd-polku+ "xsd/turi/")
 
-(defn tyojakso[sampoid vuosi vuosikolmannes tunnit]
+(defn tyojakso [sampoid vuosi vuosikolmannes tunnit]
   [:p:tyoaikajakso
-   {:xmlns:p "http://restimport.xml.turi.oikeatoliot.fi", :xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance", :xsi:schemalocation "tyotunnit-rest ../../main/resources/xsd/tyotunnit-rest.xsd"}
+   {:xmlns:p "http://restimport.xml.turi.oikeatoliot.fi"
+    :xmlns:xsi "http://www.w3.org/2001/XMLSchema-instance"
+    :xsi:schemalocation "tyotunnit-rest ../../main/resources/xsd/tyotunnit-rest.xsd"}
    [:lahdejarjestelma "Harja"]
    [:urakkasampoid sampoid]
    [:vuosi vuosi]
@@ -22,11 +24,11 @@
     xml
     ;; todo: lisää xsd-validointi, kun skeema saadaan
     #_(if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
-      (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
+        (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
                                  Validointivirheet: %s\n
                                  Muodostettu sanoma:\n
                                  %s" virheet xml)]
-        (log/error virheviesti)
-        (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
-                 :error virheviesti}))
-      xml)))
+          (log/error virheviesti)
+          (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
+                   :error virheviesti}))
+        xml)))

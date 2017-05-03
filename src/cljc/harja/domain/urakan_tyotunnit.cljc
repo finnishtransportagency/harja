@@ -5,4 +5,4 @@
     [harja.domain.specql-db :refer [db]]))
 
 (define-tables
-  ["urakan_tyotunnit" ::urakan-tyotunnit])
+  ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut }])
