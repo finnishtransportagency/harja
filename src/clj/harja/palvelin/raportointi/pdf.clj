@@ -17,7 +17,8 @@
             [taoensso.timbre :as log]
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]
-            [harja.domain.raportointi :as raportti-domain]))
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.ui.aikajana :as aikajana]))
 
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
@@ -316,6 +317,15 @@
                                    [(muodosta-pdf %)]))
                                sisalto))
                  #_[[:fo:block {:id "raportti-loppu"}]])))
+
+(defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
+  [:fo:block
+   [:fo:instream-foreign-object {;; FIXME: entä portrait moodi?
+                                 :content-width "19cm"
+
+                                 ;; korkeus pitää laskea riveistä
+                                 :content-height (str (+ 5 (count rivit)) "cm")}
+    (aikajana/aikajana optiot rivit)]])
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)
