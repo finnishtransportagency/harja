@@ -610,7 +610,10 @@
            :voi-lisata? (not (:yha-sidottu? optiot))
            :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
            :esta-poistaminen-tooltip
-           (fn [_] "Kohteeseen on liitetty kirjauksia, kohdetta ei voi poistaa.")}
+           (fn [_]
+             (if (:yha-sidottu? optiot)
+               "Kohdetta on muokattu tai sille on tehty kirjauksia."
+               "Kohteelle on tehty kirjauksia."))}
           (into []
                 (concat
                   [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
