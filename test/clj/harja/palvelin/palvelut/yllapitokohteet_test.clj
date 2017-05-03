@@ -826,6 +826,8 @@
         vuosi 2017
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         kohteet [{:id leppajarven-ramppi-id
+                  :nimi "Leppäjärven ramppi"
+                  :kohdenumero "L03"
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :suorittava-tiemerkintaurakka lapin-urakka-id
@@ -848,6 +850,7 @@
                                             :vuosi vuosi
                                             :kohteet kohteet})
         nykyinen-aikataulu-leppajarven-ramppi (kohde-nimella nykyinen-aikataulu "Leppäjärven ramppi")]
+
     (is (not= (:suorittava-tiemerkintaurakka nykyinen-aikataulu-leppajarven-ramppi) lapin-urakka-id)
         "Suorittavaa tiemerkintäurakkaa ei vaihdettu, koska tiemerkintäurakasta on tehty kirjauksia kohteelle")
     (is (= (:suorittava-tiemerkintaurakka aiempi-aikataulu-leppajarven-ramppi)
