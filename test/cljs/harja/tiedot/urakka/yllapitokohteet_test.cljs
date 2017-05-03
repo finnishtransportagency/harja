@@ -108,4 +108,9 @@
   (is (= (yllapitokohteet/suodata-yllapitokohteet
            testikohteet-suodatukseen
            {:kohdenumero "l03"})
-         [kohde-9])))
+         [kohde-9]))
+  (is (= (count (yllapitokohteet/suodata-yllapitokohteet
+                  [{:tr-numero 5 :yllapitokohdetyotyyppi :paikkaus :yhaid nil :kohdenumero "L03a"}
+                   {:tr-numero 5 :yllapitokohdetyotyyppi :paikkaus :yhaid nil :kohdenumero "L03b"}]
+                  {:kohdenumero "l03"}))
+         2)))
