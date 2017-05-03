@@ -57,7 +57,7 @@
          :uudelleenlahetysvali-minuuteissa 30}
 
  :turi {:turvallisuuspoikkeamat-url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
-        :urakan-tyotunnit-url "https://testiextranet.liikennevirasto.fi/tyotunnit/api/tyotunnitTuonti"
+        :urakan-tyotunnit-url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/tyotuntiTuonti"
         :kayttajatunnus "testi"
         :salasana #=(slurp "../.harja/turi-salasana")
         :paivittainen-lahetysaika [15 49 00]}
