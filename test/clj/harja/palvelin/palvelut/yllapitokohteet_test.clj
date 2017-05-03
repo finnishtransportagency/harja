@@ -479,6 +479,8 @@
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
         kohteet [{:id yllapitokohde-id
+                  :nimi "Leppäjärven superramppi"
+                  :kohdenumero "L666"
                   :aikataulu-kohde-alku aikataulu-kohde-alku
                   :aikataulu-paallystys-alku aikataulu-paallystys-alku
                   :aikataulu-paallystys-loppu aikataulu-paallystys-loppu
@@ -498,6 +500,8 @@
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     ;; Muokatut kentät päivittyivät
+    (is (= "Leppäjärven superramppi" (:nimi vastaus-leppajarven-ramppi)))
+    (is (= "L666" (:kohdenumero vastaus-leppajarven-ramppi)))
     (is (= aikataulu-kohde-alku (:aikataulu-kohde-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-alku (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-loppu (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)))
