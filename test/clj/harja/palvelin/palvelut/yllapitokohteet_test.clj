@@ -496,7 +496,7 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
-        vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
+        vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven superramppi")]
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     ;; Muokatut kentät päivittyivät
