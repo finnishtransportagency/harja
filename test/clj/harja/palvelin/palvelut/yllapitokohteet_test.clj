@@ -546,6 +546,8 @@
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
             kohteet [{:id leppajarven-ramppi-id
+                      :nimi "Leppäjärven superramppi"
+                      :kohdenumero "666"
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
                      {:id nakkilan-ramppi-id
@@ -564,7 +566,10 @@
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
-        ;; Muokatut kentät päivittyivät
+        ;; Nimi ja kohdenumero eivät muuttuneet, koska näitä ei saa muokata tiemerkintäurakassa
+        (is (= "Leppäjärven ramppi" (:nimi vastaus-leppajarven-ramppi)))
+        (is (= "L03" (:kohdenumero vastaus-leppajarven-ramppi)))
+        ;; Aikataulukentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
