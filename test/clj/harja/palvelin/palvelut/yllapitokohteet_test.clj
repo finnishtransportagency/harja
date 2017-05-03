@@ -308,7 +308,7 @@
     (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
         "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (true? (:yllapitokohteen-voi-poistaa? poistettava-yha-kohde))
-        "Ei Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
+        "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
