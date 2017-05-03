@@ -1,4 +1,4 @@
-CREATE TABLE tyotunnit (
+CREATE TABLE urakan_tyotunnit (
   id             SERIAL PRIMARY KEY,
   urakka         INTEGER REFERENCES urakka (id)      NOT NULL,
   vuosi          INTEGER                             NOT NULL,
