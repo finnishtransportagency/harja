@@ -781,6 +781,7 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet [{:id oulaisten-ohitusramppi-id
+                                          :nimi "Oulaisten ohitusramppi"
                                           :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
                                           :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                                           :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
