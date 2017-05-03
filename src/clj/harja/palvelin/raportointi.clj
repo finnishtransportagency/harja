@@ -153,18 +153,7 @@
     this)
 
   RaportointiMoottori
-  (hae-raportit [this]
-    (or @raportit
-        (try
-          (let [r (into {}
-                        (map (juxt :nimi identity))
-                        (eval (read-string (slurp (io/resource "raportit.edn")))))]
-            (log/debug "Saatu " (count r) " raporttia: " (keys r))
-            (reset! raportit r)
-            r)
-          (catch Exception e
-            (log/warn e "Raporttien hakemisessa virhe!")
-            {}))))
+  (hae-raportit [this] raportit)
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db
@@ -201,5 +190,14 @@
                "koko maa" parametrit))))))))
 
 
+(defn- lataa-raportit []
+  (try
+    (into {}
+          (map (juxt :nimi identity))
+          (eval (read-string (slurp (io/resource "raportit.edn")))))
+    (catch Exception e
+      (log/error e "Raporttien lukemisessa virhe!")
+      {})))
+
 (defn luo-raportointi []
-  (->Raportointi (atom nil) (atom 0)))
+  (->Raportointi (lataa-raportit) (atom 0)))
