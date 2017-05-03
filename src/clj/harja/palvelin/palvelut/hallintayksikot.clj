@@ -2,6 +2,7 @@
   "Palvelut organisaatioiden perustietojen ja urakoiden hakemiseksi.
   Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
+            [clojure.spec :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
@@ -9,6 +10,8 @@
             [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
+
+(s/def ::liikennemuoto #{:tie :vesi})
 
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
@@ -43,7 +46,8 @@
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
                       :hallintayksikot (fn [user tiedot]
-                                         (hae-hallintayksikot (:db this) user tiedot)))
+                                         (hae-hallintayksikot (:db this) user tiedot))
+                      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatio (fn [user org-id]
                                           (hae-organisaatio (:db this) user org-id)))
