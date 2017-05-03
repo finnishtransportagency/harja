@@ -299,11 +299,16 @@
                                       AND vuodet @> ARRAY[2017]::int[]
                                       AND poistettu IS NOT TRUE")))
         ei-yha-kohde (kohde-nimella vastaus "Ei YHA-kohde")
-        muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
+        poistettava-yha-kohde (kohde-nimella vastaus "Kuusamontien testi")
+        muut-kohteet (filter #(and (not= (:nimi %) "Ei YHA-kohde")
+                                   (not= (:nimi %) "Kuusamontien testi"))
+                             vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
     (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
         "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (true? (:yllapitokohteen-voi-poistaa? poistettava-yha-kohde))
+        "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
@@ -394,7 +399,7 @@
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
-                                            (assoc kohde :poistettu true)
+                                           (assoc kohde :poistettu true)
                                            kohde))
                              kohteet-ennen-testia)]
 
@@ -410,7 +415,8 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id kohteet-ennen-testia) (sort-by :id kohteet-testin-jalkeen))))))
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]

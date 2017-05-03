@@ -76,10 +76,10 @@ WHERE
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: yllapitokohteen-saa-poistaa
-SELECT NOT (EXISTS(SELECT *
-                   FROM yllapitokohde
-                   WHERE id = :id AND yhaid IS NOT NULL) OR
-            EXISTS(SELECT *
+SELECT EXISTS(SELECT *
+              FROM yllapitokohde
+              WHERE id = :id AND (yhaid IS NULL OR muokattu IS NULL)) AND
+       NOT (EXISTS(SELECT *
                    FROM tiemerkinnan_yksikkohintainen_toteuma tyt
                    WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) OR
             EXISTS(SELECT *
@@ -346,7 +346,8 @@ SET
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
   kaasuindeksi                      = :kaasuindeksi,
-  toteutunut_hinta                  = :toteutunut_hinta
+  toteutunut_hinta                  = :toteutunut_hinta,
+  muokattu                          = now()
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -444,6 +445,14 @@ WHERE id = :id
                             FROM yllapitokohde
                             WHERE urakka = :urakka);
 
+-- name: merkitse-yllapitokohteen-kohdeosat-poistetuiksi!
+UPDATE yllapitokohdeosa
+SET poistettu = TRUE
+WHERE yllapitokohde IN (SELECT id
+                        FROM yllapitokohde
+                        WHERE urakka = :urakka AND
+                              id = :yllapitokohdeid);
+
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
@@ -523,20 +532,20 @@ ORDER BY ypka.paallystys_alku;
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
-  ypka.kohde_alku                  AS "kohde-alku",
-  ypka.paallystys_alku             AS "paallystys-alku",
-  ypka.paallystys_loppu            AS "paallystys-loppu",
-  ypka.tiemerkinta_takaraja        AS "tiemerkinta-takaraja",
-  ypka.tiemerkinta_alku            AS "tiemerkinta-alku",
-  ypka.tiemerkinta_loppu           AS "tiemerkinta-loppu",
-  ypka.kohde_valmis                AS "kohde-valmis",
-  ypka.muokattu                    AS "muokattu",
-  ypka.muokkaaja                   AS "muokkaaja",
-  ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan"
+  ypka.kohde_alku           AS "kohde-alku",
+  ypka.paallystys_alku      AS "paallystys-alku",
+  ypka.paallystys_loppu     AS "paallystys-loppu",
+  ypka.tiemerkinta_takaraja AS "tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku     AS "tiemerkinta-alku",
+  ypka.tiemerkinta_loppu    AS "tiemerkinta-loppu",
+  ypka.kohde_valmis         AS "kohde-valmis",
+  ypka.muokattu             AS "muokattu",
+  ypka.muokkaaja            AS "muokkaaja",
+  ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id = :id
-AND poistettu IS NOT TRUE;
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
@@ -757,10 +766,10 @@ WHERE paallystyskohde = :kohde_id
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohteen_aikataulu
 SET
-  tiemerkinta_alku     = :tiemerkinta_alku,
-  tiemerkinta_loppu    = :tiemerkinta_loppu,
-  muokattu             = NOW(),
-  muokkaaja            = :muokkaaja
+  tiemerkinta_alku  = :tiemerkinta_alku,
+  tiemerkinta_loppu = :tiemerkinta_loppu,
+  muokattu          = NOW(),
+  muokkaaja         = :muokkaaja
 WHERE yllapitokohde = :id;
 
 -- name: poista-yllapitokohteen-kohdeosat!
