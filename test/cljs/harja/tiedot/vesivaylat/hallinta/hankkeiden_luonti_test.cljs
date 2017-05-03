@@ -1,5 +1,5 @@
-(ns harja.tiedot.vesivaylat.hankkeiden-luonti-test
-  (:require [harja.tiedot.vesivaylat.hankkeiden-luonti :as h]
+(ns harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
+  (:require [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti :as h]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
