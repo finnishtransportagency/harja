@@ -8,7 +8,7 @@ SELECT
   lpad(cast(elynumero AS VARCHAR), 2, '0') AS elynumero
 FROM organisaatio
 WHERE tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND
-      (:liikennemuoto::INTEGER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
+      (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
 ORDER BY elynumero ASC;
 
 -- name: hae-organisaation-tunnistetiedot
