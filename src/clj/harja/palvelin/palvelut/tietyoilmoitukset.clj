@@ -127,6 +127,7 @@
           yllapitokohteet)))
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
+  (log/debug "Haetaan ylläpitokohteen " yllapitokohde-id " tiedot tietyöilmoitukselle")
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (let [{:keys [urakka-id
                 urakka-sampo-id
@@ -164,7 +165,6 @@
                        urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
                                             :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
                    urakka)
-                 ;; else
                  urakka)
         kohdelista (hae-urakan-yllapitokohdelista db urakka-id)]
     (assoc urakka :kohteet kohdelista)))
@@ -193,7 +193,8 @@
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
-                        (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot)))
+                        (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot))
+                      {:vastaus-spec ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus})
     (julkaise-palvelu http :hae-urakan-tiedot-tietyoilmoitukselle
                       (fn [user tiedot]
                         (hae-urakan-tiedot-tietyoilmoitukselle db fim user tiedot)))
