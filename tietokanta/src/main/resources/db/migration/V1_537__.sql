@@ -9,3 +9,5 @@ CREATE TABLE urakan_tyotunnit (
   UNIQUE (urakka, vuosi, vuosikolmannes),
   CONSTRAINT validi_vuosikolmannes CHECK (vuosikolmannes >= 1 AND vuosikolmannes <= 3)
 );
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('turi', 'urakan-tyotunnit')
