@@ -22,7 +22,11 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.views.vesivaylat.urakka.toteumat :as vesivaylatoteumat]
+            [harja.views.vesivaylat.urakka.laadunseuranta :as laadunseuranta-vesivaylat]
+            [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.urakka :as u-domain]
             [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -35,13 +39,19 @@
     :yleiset true
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not= sopimustyyppi :kokonaisurakka)
-                      (not= tyyppi :tiemerkinta))
+                      (not= tyyppi :tiemerkinta)
+                      (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
+                   (not (u-domain/vesivayla-urakkatyyppi? tyyppi))
                    (not= tyyppi :tiemerkinta))
+    :vesivaylatoteumat (and #_(oikeudet/urakat-vesivaylatoteumat id) ; TODO OIKEUSTARKISTUS!
+                            (u-domain/vesivayla-urakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
+    :turvalaitteet (and #_(oikeudet/urakat-turvalaitteet id) ; TODO OIKEUSTARKISTUS
+                        (u-domain/vesivayla-urakkatyyppi? tyyppi))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
@@ -50,14 +60,17 @@
     :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
                                      (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
                                  (= tyyppi :paikkaus))
-    :laadunseuranta (oikeudet/urakat-laadunseuranta id)
+    :laadunseuranta (and (oikeudet/urakat-laadunseuranta id)
+                         (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
+    :laadunseuranta-vesivaylat (and #_(oikeudet/urakat-laadunseuranta-vesivaylat id) ; TODO OIKEUSTARKISTUS
+                                    (u-domain/vesivayla-urakkatyyppi? tyyppi))
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
-                                 (= tyyppi :tiemerkinta))
+                                    (= tyyppi :tiemerkinta))
 
     false))
 
@@ -100,6 +113,18 @@
          ^{:key "toteumat"}
          [toteumat/toteumat ur])
 
+       "Toteumat"
+       :vesivaylatoteumat
+       (when (valilehti-mahdollinen? :vesivaylatoteumat ur)
+         ^{:key "vesivaylatoteumat"}
+         [vesivaylatoteumat/toteumat ur])
+
+       "Turvalaitteet"
+       :turvalaitteet
+       (when (valilehti-mahdollinen? :turvalaitteet ur)
+         ^{:key "turvalaitteet"}
+         [turvalaitteet/turvalaitteet ur])
+
        "Toteutus"
        :toteutus
        (when (valilehti-mahdollinen? :toteutus ur)
@@ -129,6 +154,12 @@
        (when (valilehti-mahdollinen? :laadunseuranta ur)
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
+
+       "Laadunseuranta"
+       :laadunseuranta-vesivaylat
+       (when (valilehti-mahdollinen? :laadunseuranta-vesivaylat ur)
+         ^{:key "laadunseuranta-vesivaylat"}
+         [laadunseuranta-vesivaylat/laadunseuranta ur])
 
        "Välitavoitteet"
        :valitavoitteet
