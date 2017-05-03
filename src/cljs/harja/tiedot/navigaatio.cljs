@@ -159,7 +159,8 @@
                ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
-               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))]
+               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+               valittu-hy-id @valittu-hallintayksikko-id]
     (go
       (or urakan-urakkatyyppi
           valittu-urakkatyyppi
@@ -168,9 +169,9 @@
           ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
           ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
           ;; ottaa huomioon asynkronisuus.
-          (when @valittu-hallintayksikko-id
+          (when valittu-hy-id
             (urakkatyyppi-arvolle
-              (case (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))
+              (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
                 :tie
                 (if-not (= :vesivayla kayttajan-oletus-tyyppi)
                   kayttajan-oletus-tyyppi
