@@ -56,8 +56,8 @@
          :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
          :uudelleenlahetysvali-minuuteissa 30}
 
- :turi {:turvallisuuspoikkeamat-url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
-        :urakan-tyotunnit-url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/tyotuntiTuonti"
+ :turi {:turvallisuuspoikkeamat-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/poikkeamaTuonti"
+        :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "testi"
         :salasana #=(slurp "../.harja/turi-salasana")
         :paivittainen-lahetysaika [15 49 00]}
