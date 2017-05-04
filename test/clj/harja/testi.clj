@@ -549,17 +549,17 @@
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
 
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 11 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
                           :roolit #{}
                           :urakkaroolit {}
-                          :organisaatioroolit {11 #{"Kayttaja"}}
+                          :organisaatioroolit {14 #{"Kayttaja"}}
                           :organisaation-urakat #{1 4 20 22}})
 
 (def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 13 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
                       :roolit #{}
                       :urakkaroolit {}
-                      :organisaatioroolit {13 #{"Kayttaja"}}
+                      :organisaatioroolit {16 #{"Kayttaja"}}
                       :organisaation-urakat #{2 21}})
 
 (defn tietokanta-fixture [testit]
