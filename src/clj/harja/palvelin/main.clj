@@ -406,12 +406,10 @@
                      [:http-palvelin :db])
       :hankkeet (component/using
                    (hankkeet/->Hankkeet)
-                   {:db :db-replica
-                    :http-palvelin :http-palvelin})
+                   [:db :http-palvelin])
       :sopimukset (component/using
                   (sopimukset/->Sopimukset)
-                  {:db :db-replica
-                   :http-palvelin :http-palvelin})
+                  [:db :http-palvelin])
 
       :debug (component/using
                (debug/->Debug)
