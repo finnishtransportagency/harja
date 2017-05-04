@@ -100,7 +100,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :laaduntarkastusraportti
                                  :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-oulun-alueurakan-2005-2012-id)
+                                 :hallintayksikko-id (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa'")))
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :urakkatyyppi "hoito"}})]
@@ -109,7 +109,7 @@
                     {:nimi "Laaduntarkastusraportti"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Liikennevirasto, Laaduntarkastusraportti ajalta 01.10.2005 - 01.10.2006"
+                     {:otsikko "Uusimaa, Laaduntarkastusraportti ajalta 01.10.2005 - 01.10.2006"
                       :sheet-nimi "Laaduntarkastusraportti"
                       :tyhja "Ei raportoitavia tarkastuksia."}
                      [{:leveys 4
