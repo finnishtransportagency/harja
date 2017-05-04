@@ -70,14 +70,13 @@
 (defn- otsikon-sisalto [sijainnit]
   [grid/grid
    {:tunniste ::t/id
-    ;; TODO Piilota otsikkosarivi (th) kokonaan?
     :tyhja (if (nil? sijainnit)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")}
-   [{:nimi ::t/tyoluokka}
-    {:nimi ::t/toimenpide}
-    {:nimi ::t/pvm :fmt pvm/pvm-opt}
-    {:nimi ::t/turvalaite}]
+   [{:otsikko "Työluokka" :nimi ::t/tyoluokka}
+    {:otsikko "Toimenpide" :nimi ::t/toimenpide}
+    {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt}
+    {:otsikko "Turvalaite" :nimi ::t/turvalaite}]
    sijainnit])
 
 (defn- toimenpidepaneelin-otsikko [otsikko maara]
