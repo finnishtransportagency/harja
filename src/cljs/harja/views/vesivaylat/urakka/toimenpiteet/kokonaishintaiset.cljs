@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.ui.otsikkokomponentti :refer [otsikot]]
             [harja.domain.vesivaylat.toimenpide :as t]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
@@ -39,7 +40,11 @@
 
 (defn- otsikon-sisalto [sijainnit]
   [grid/grid
-   {:tunniste ::t/id} ;; TODO Piilota otsikkosarivi (th) kokonaan?
+   {:tunniste ::t/id
+    ;; TODO Piilota otsikkosarivi (th) kokonaan?
+    :tyhja (if (nil? sijainnit)
+             [ajax-loader "Haetaan toimenpiteitä"]
+             "Ei toimenpiteitä")}
    [{:nimi ::t/tyoluokka}
     {:nimi ::t/toimenpide}
     {:nimi ::t/pvm}
@@ -59,9 +64,9 @@
        [otsikot ["Viitat (510kpl)"
                  (fn [] [otsikon-sisalto testidata])
                  "Poljut (0)"
-                 (fn [] [otsikon-sisalto testidata])
+                 (fn [] [otsikon-sisalto []])
                  "Tukityöt (0)"
-                 (fn [] [otsikon-sisalto testidata])]]])))
+                 (fn [] [otsikon-sisalto []])]]])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
