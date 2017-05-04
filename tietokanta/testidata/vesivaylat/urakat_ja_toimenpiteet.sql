@@ -15,16 +15,6 @@ VALUES ('Saimaan korjaushanke', '2016-07-07', '2021-05-05', true, NOW());
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 
--- HALLINTAYKSIKÖT
-INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, tyyppi, harjassa_luotu, luotu)
-VALUES ('Kanava', 'KAN', 'V', '0','hallintayksikko', true, NOW());
-
-INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, tyyppi, harjassa_luotu, luotu)
-VALUES ('Sisävesi', 'SV','V', '1','hallintayksikko', true, NOW());
-
-INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, tyyppi, harjassa_luotu, luotu)
-VALUES ('Meriväylät', 'MV','V', '2','hallintayksikko', true, NOW());
-
 -- URAKKA
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu)
 VALUES

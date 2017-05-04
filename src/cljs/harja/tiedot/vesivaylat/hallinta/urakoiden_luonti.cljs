@@ -1,4 +1,4 @@
-(ns harja.tiedot.vesivaylat.urakoiden-luonti
+(ns harja.tiedot.vesivaylat.hallinta.urakoiden-luonti
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
@@ -204,7 +204,7 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [hallintayksikot (k/post! :hallintayksikot :vesi)
+          (let [hallintayksikot (k/post! :hallintayksikot {:liikennemuoto :vesi})
                 hankkeet (k/post! :hae-harjassa-luodut-hankkeet {})
                 urakoitsijat (k/post! :vesivayla-urakoitsijat {})
                 sopimukset (k/post! :hae-harjassa-luodut-sopimukset {})
