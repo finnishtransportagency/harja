@@ -119,7 +119,7 @@
 
        "Toimenpiteet"
        :toimenpiteet
-       (when (valilehti-mahdollinen? otsikkokomponentti ur)
+       (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
 
