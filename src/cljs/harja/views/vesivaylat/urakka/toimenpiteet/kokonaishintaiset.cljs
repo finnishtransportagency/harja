@@ -3,8 +3,20 @@
             [tuck.core :refer [tuck]]
             [harja.ui.otsikkokomponentti :refer [otsikot]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.ui.grid :as grid])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def testidata [{:id 0 :nimi "Varkaus, Kuopion väylä"}
+                {:id 1 :nimi "Kopio, Iisalmen väylä"}])
+
+(defn- otsikon-sisalto [sijainnit]
+  [grid/grid
+   {:vetolaatikot {0 [:div "Sisältö tulee tähän"]
+                   1 [:div "Sisältö tulee tähän"]}}
+   [{:tyyppi :vetolaatikon-tila :leveys 5}
+    {:otsikko "Sijainti" :nimi :nimi :leveys 95}]
+   sijainnit])
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
   (komp/luo
@@ -17,11 +29,11 @@
         [:div {:style {:color "orange"}} "Työmaa"]]
 
        [otsikot ["Viitat (510kpl)"
-                 (fn [] [:div "Sisältö tulee tähän"])
+                 (fn [] [otsikon-sisalto testidata])
                  "Poljut (0)"
-                 (fn [] [:div "Sisältö tulee tähän"])
+                 (fn [] [otsikon-sisalto testidata])
                  "Tukityöt (0)"
-                 (fn [] [:div "Sisältö tulee tähän"])]]])))
+                 (fn [] [otsikon-sisalto testidata])]]])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
