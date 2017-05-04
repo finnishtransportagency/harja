@@ -1,7 +1,7 @@
 (ns harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset
   (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
-            [harja.ui.otsikkokomponentti :refer [otsikot]]
+            [harja.ui.otsikkopaneeli :refer [otsikot]]
             [harja.domain.vesivaylat.toimenpide :as t]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
