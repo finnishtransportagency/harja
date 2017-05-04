@@ -40,7 +40,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.hallintayksikot-test]
-    ;; uusi testi tähän
+            ;; uusi testi tähän
             ))
 
 (doo-tests 'harja.pvm-test

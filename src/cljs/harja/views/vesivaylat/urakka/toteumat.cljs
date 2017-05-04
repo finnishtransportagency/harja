@@ -16,9 +16,9 @@
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
        (when #_(oikeudet/urakat-vesivaylatoteumat-kokonaishintaisettyot id)
          true ;; TODO OIKEUSTARKISTUS!!!11
-         [yks-hint/yksikkohintaiset-toimenpiteet])
+         [kok-hint/kokonaishintaiset-toimenpiteet])
 
        "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
        (when #_(oikeudet/urakat-vesivaylatoteumat-yksikkohintaisettyot id)
          true ;; TODO OIKEUSTARKISTUS!!!11
-         [kok-hint/kokonaishintaiset-toimenpiteet])])))
+         [yks-hint/yksikkohintaiset-toimenpiteet])])))
