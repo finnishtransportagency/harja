@@ -1,10 +1,10 @@
 (ns harja.views.vesivaylat.hallinta
   (:require [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
-            [harja.views.vesivaylat.urakoiden-luonti :as vu]
-            [harja.views.vesivaylat.hankkeiden-luonti :as vhu]
-            [harja.views.vesivaylat.urakoitsijoiden-luonti :as vuu]
-            [harja.views.vesivaylat.sopimuksien-luonti :as vsu]
+            [harja.views.vesivaylat.hallinta.urakoiden-luonti :as vu]
+            [harja.views.vesivaylat.hallinta.hankkeiden-luonti :as vhu]
+            [harja.views.vesivaylat.hallinta.urakoitsijoiden-luonti :as vuu]
+            [harja.views.vesivaylat.hallinta.sopimuksien-luonti :as vsu]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]))
 

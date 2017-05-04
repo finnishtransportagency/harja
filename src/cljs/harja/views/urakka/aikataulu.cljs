@@ -255,9 +255,9 @@
                        #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
-            :pituus-max 128 :muokattava? (constantly false)}
+            :pituus-max 128 :muokattava? voi-muokata-paallystys?}
            {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
-            :muokattava? (constantly false)}
+            :muokattava? voi-muokata-paallystys?}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? (constantly false)}
