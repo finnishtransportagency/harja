@@ -5,4 +5,4 @@
 (defn laadunseuranta []
   [:div {:style {:padding "10px"}}
    [:img {:src "images/harja_favicon.png"}]
-   [:div {:style {:color "orange"}} "Work In Progress"]])
+   [:div {:style {:color "orange"}} "Työmaa"]])
