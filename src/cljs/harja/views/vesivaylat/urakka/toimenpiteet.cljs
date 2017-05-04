@@ -1,4 +1,4 @@
-(ns harja.views.vesivaylat.urakka.toteumat
+(ns harja.views.vesivaylat.urakka.toimenpiteet
   (:require [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
             [harja.ui.bootstrap :as bs]
@@ -7,11 +7,11 @@
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn toteumat []
+(defn toimenpiteet []
   (komp/luo
     (fn [{:keys [id] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                :active (nav/valittu-valilehti-atom :vesivaylatoteumat)}
+                :active (nav/valittu-valilehti-atom :toimenpiteet)}
 
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
        (when #_(oikeudet/urakat-vesivaylatoteumat-kokonaishintaisettyot id)
