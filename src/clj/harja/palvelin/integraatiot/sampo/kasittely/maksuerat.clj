@@ -22,7 +22,14 @@
         tpi (get-in maksuera [:toimenpideinstanssi :id])
         tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
         maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))]
+    (when (nil? (get maksueran-summat tyyppi))
+      (log/error "maksuerä, jolla ei ole tyyppinsa mukaista summaa: " numero)
+      (log/debug "maksuera kannasta:" (pr-str maksuera))
+      (log/debug "summat parametrista:" (pr-str summat))
+      (log/debug "maksueran-summat" (pr-str maksueran-summat))
+      (log/debug "tpi" tpi))
     (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
+
 
 (defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
@@ -81,8 +88,11 @@
 (defn hae-maksueran-tiedot [db numero summat]
   (let [maksueran-tiedot (hae-maksuera db numero summat)
         ;; Sakot lähetetään Sampoon negatiivisena
+        negatoi-tai-nollaa #(if %
+                              (- %)
+                              0)
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                           (update-in maksueran-tiedot [:maksuera :summa] -)
+                           (update-in maksueran-tiedot [:maksuera :summa] negatoi-tai-nollaa)
                            maksueran-tiedot)]
     maksueran-tiedot))
 
