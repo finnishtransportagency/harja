@@ -343,7 +343,7 @@
                              toteuma-id)
         ok-tulos {:alkanut #inst "2008-09-08T21:10:00.000000000-00:00"
                   :urakka-id 2
-                  :hallintayksikko-id 9
+                  :hallintayksikko-id 12
                   :aikavali {:alku #inst "2007-09-30T21:00:00.000-00:00"
                              :loppu #inst "2008-09-29T21:00:00.000-00:00"}
                   :tehtavat

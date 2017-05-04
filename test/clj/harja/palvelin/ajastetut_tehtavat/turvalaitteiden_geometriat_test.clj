@@ -109,8 +109,7 @@
     (u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '1' day WHERE nimi = 'turvalaitteet';")
     (is (false? (tg/paivitys-tarvitaan? db 10)) "Päivitystä ei tarvita, kun se on tehty tarpeeksi vasta")))
 
-
-(deftest tekstiviestin-lahetys
+(deftest turvalaitteiden-haku
   (with-fake-http [+testiurl+ +testivastaus+]
     (let [hae-turvalaitteet #(q "SELECT id FROM turvalaite;")]
       (is (= 0 (count (hae-turvalaitteet))) "Aluksi ei ole ainuttakaan turvalaitetta")

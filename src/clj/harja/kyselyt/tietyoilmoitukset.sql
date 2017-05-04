@@ -18,8 +18,8 @@ SELECT
 FROM yllapitokohde ypk
   JOIN yllapitokohteen_aikataulu ypkat ON ypk.id = ypkat.yllapitokohde
   JOIN urakka u ON ypk.urakka = u.id
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
-  JOIN organisaatio ely ON u.hallintayksikko = ely.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE ypk.id = :kohdeid;
 
 -- name: hae-urakan-tiedot-tietyoilmoitukselle

@@ -804,3 +804,8 @@ WHERE
          WHERE o.id = urk.id AND
                k.kayttajanimi = :kayttajanimi AND
                k.jarjestelma);
+
+
+-- name: urakan-paasopimus-id
+-- single?: true
+SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
