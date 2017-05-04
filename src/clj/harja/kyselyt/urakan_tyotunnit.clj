@@ -22,7 +22,7 @@
          {::ut/urakka urakka-id}))
 
 (defn hae-urakan-vuosikolmanneksen-tyotunnit [db urakka-id vuosi vuosikolmannes]
-  (::urakan-tyotunnit/tyotunnit
+  (::ut/tyotunnit
     (first (fetch db ::ut/urakan-tyotunnit #{::ut/tyotunnit}
                   {::ut/urakka urakka-id
                    ::ut/vuosi vuosi
