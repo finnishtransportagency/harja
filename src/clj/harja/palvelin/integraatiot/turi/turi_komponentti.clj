@@ -114,12 +114,11 @@
         db integraatioloki "turi" "urakan-tyotunnit" nil
         (fn [konteksti]
           (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
-                tyotunnit (::urakan-tyotunnit/tyotunnit
-                            (first (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
-                                     db
-                                     urakka-id
-                                     vuosi
-                                     vuosikolmannes)))
+                tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
+                            db
+                            urakka-id
+                            vuosi
+                            vuosikolmannes)
                 sanoma (tyotunnit-sanoma/muodosta sampoid vuosi vuosikolmannes tyotunnit)
                 {body :body} (integraatiotapahtuma/laheta
                                konteksti

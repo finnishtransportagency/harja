@@ -22,10 +22,11 @@
          {::ut/urakka urakka-id}))
 
 (defn hae-urakan-vuosikolmanneksen-tyotunnit [db urakka-id vuosi vuosikolmannes]
-  (fetch db ::ut/urakan-tyotunnit #{::ut/tyotunnit}
-         {::ut/urakka urakka-id
-          ::ut/vuosi vuosi
-          ::ut/vuosikolmannes vuosikolmannes}))
+  (::urakan-tyotunnit/tyotunnit
+    (first (fetch db ::ut/urakan-tyotunnit #{::ut/tyotunnit}
+                  {::ut/urakka urakka-id
+                   ::ut/vuosi vuosi
+                   ::ut/vuosikolmannes vuosikolmannes}))))
 
 (defn hae-lahettamattomat-tai-epaonnistuneet-tyotunnit [db]
   (fetch db ::ut/urakan-tyotunnit kaikki-kentat
