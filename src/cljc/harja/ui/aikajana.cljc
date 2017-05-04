@@ -94,7 +94,7 @@
                        ^{:key p}
                        [:line {:x1 x :y1 (- alku-y 5)
                                :x2 x :y2 korkeus
-                               :style {:stroke "lightGray"}}])]
+                               :stroke "lightGray"}])]
          (if (and (= 1 #?(:cljs (.getWeekday p)
                           :clj (t/day-of-week p))) (not= viikko-nyt viikko))
            ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
@@ -120,7 +120,7 @@
       [:text {:x (+ 5 x) :y 10} otsikko]
       [:line {:x1 x :y1 0
               :x2 x :y2 korkeus
-              :style {:stroke "gray"}}]])])
+              :stroke "gray"}]])])
 
 (defn- tooltip* [{:keys [x y text] :as tooltip}]
   (when tooltip
@@ -135,7 +135,7 @@
       text]]))
 
 #?(:cljs
-   (defn- aikajana-ui-tila [rivit optiot komponentti]
+   (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
                   drag (r/atom nil)]
        [:div.aikajana
@@ -154,39 +154,41 @@
                          (reset! drag
                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
                                         :avain avain)))
-          :drag-move! (fn [e]
-                        (.preventDefault e)
-                        (when @drag
-                          (if (zero? (.-buttons e))
-                            ;; Ei nappeja pohjassa, lopeta raahaus
-                            (reset! drag nil)
+          :drag-move! (fn [alku-x x->paiva]
+                        (fn [e]
+                          (.preventDefault e)
+                          (when @drag
+                            (if (zero? (.-buttons e))
+                              ;; Ei nappeja pohjassa, lopeta raahaus
+                              (reset! drag nil)
 
-                            (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
-                                  cx (.-clientX e)
-                                  cy (.-clientY e)
-                                  x (- cx svg-x alku-x)
-                                  y (- cy svg-y)
-                                  paiva (x->paiva x)
-                                  tooltip-x (+ alku-x x)
-                                  tooltip-y (+ y 24)]
-                              (swap! drag
-                                     (fn [{avain :avain :as drag}]
-                                       (merge
-                                        {:x tooltip-x :y tooltip-y}
-                                        (if (or (and (= avain ::alku)
-                                                     (pvm/ennen? paiva (::loppu drag)))
-                                                (and (= avain ::loppu)
-                                                     (pvm/jalkeen? paiva (::alku drag))))
-                                          (assoc drag avain (x->paiva x))
-                                          drag))))))))
+                              (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
+                                    cx (.-clientX e)
+                                    cy (.-clientY e)
+                                    x (- cx svg-x alku-x)
+                                    y (- cy svg-y)
+                                    paiva (x->paiva x)
+                                    tooltip-x (+ alku-x x)
+                                    tooltip-y (+ y 24)]
+                                (swap! drag
+                                       (fn [{avain :avain :as drag}]
+                                         (merge
+                                          {:x tooltip-x :y tooltip-y}
+                                          (if (or (and (= avain ::alku)
+                                                       (pvm/ennen? paiva (::loppu drag)))
+                                                  (and (= avain ::loppu)
+                                                       (pvm/jalkeen? paiva (::alku drag))))
+                                            (assoc drag avain (x->paiva x))
+                                            drag)))))))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
-(defn- jodaksi [rivi]
-  (update rivi ::ajat
-          (fn [ajat]
-            (mapv #(-> %
-                       (update ::alku pvm/joda-timeksi)
-                       (update ::loppu pvm/joda-timeksi)) ajat))))
+#?(:clj
+   (defn- jodaksi [rivi]
+     (update rivi ::ajat
+             (fn [ajat]
+               (mapv #(-> %
+                          (update ::alku pvm/joda-timeksi)
+                          (update ::loppu pvm/joda-timeksi)) ajat)))))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
@@ -205,7 +207,6 @@
         bar-y-offset 3
         taustapalkin-korkeus (- rivin-korkeus 6)
         jana-korkeus 10]
-    (println "RIVIT: " (pr-str rivit) ", AIKA: " min-aika " -- " max-aika)
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
@@ -223,7 +224,8 @@
           :width leveys :height korkeus
           :viewBox (str "0 0 " leveys " " korkeus)
           :on-mouse-up drag-stop!
-          :on-mouse-move drag-move!
+          :on-mouse-move (when drag-move!
+                           (drag-move! alku-x x->paiva))
           :style {:cursor (when drag "ew-resize")}}
 
          #?(:cljs
@@ -308,4 +310,4 @@
   ([rivit] (aikajana {} rivit))
   ([{:keys [muuta!] :as optiot} rivit]
    #?(:cljs [aikajana-ui-tila rivit optiot aikajana*]
-      :clj (aikajana* rivit optiot {:leveys 750}))))
+      :clj (aikajana* rivit optiot {:leveys (or (:leveys optiot) 750)}))))
