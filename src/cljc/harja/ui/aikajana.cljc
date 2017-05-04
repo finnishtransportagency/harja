@@ -262,11 +262,11 @@
                      [:rect {:x x :y y
                              :width width
                              :height korkeus
-                             :style {:fill (or vari "white")
-                                     ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                     ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                     :fill-opacity (if vari 1.0 0.0)
-                                     :stroke reuna}
+                             :fill (or vari "white")
+                             ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                             ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                             :fill-opacity (if vari 1.0 0.0)
+                             :stroke reuna
                              :rx 3 :ry 3
                              :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
                                                              :y (+ y 30)
