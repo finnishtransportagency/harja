@@ -81,8 +81,11 @@
 
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 
+(harja.loki/tarkkaile! "MURU: Valittu väylämuoto" valittu-vaylamuoto)
+
 (defn vaihda-vaylamuoto! [ut]
   ;; Tämä muutetaan jos tulee Rata
+  (log "MURU: Vaihda vaylamuoto!")
   (reset! valittu-vaylamuoto (if (= :vesivayla (:arvo ut)) :vesi :tie)))
 
 (def +urakkatyypit+
@@ -115,8 +118,12 @@
                          tätä valintaa voi käyttää esim. alueurakoitden
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
 
+(harja.loki/tarkkaile! "MURU: Valittu-urakoitsija" valittu-urakoitsija)
+
 ;; Hallintayksikön valinta id:llä (URL parametrista)
 (defonce valittu-hallintayksikko-id (atom nil))
+
+(harja.loki/tarkkaile! "MURU: Valittu hallintayksikkö id" valittu-hallintayksikko-id)
 
 ;; Atomi, joka sisältää valitun hallintayksikön
 (defonce valittu-hallintayksikko
@@ -125,8 +132,12 @@
               (when (and id yksikot)
                 (some #(and (= id (:id %)) %) yksikot)))))
 
+(harja.loki/tarkkaile! "MURU: Valittu hallintayksikko" valittu-hallintayksikko)
+
 ;; Jos urakka valitaan id:n perusteella (url parametrilla), asetetaan se tänne
 (defonce valittu-urakka-id (atom nil))
+
+(harja.loki/tarkkaile! "MURU: Valittu urakka id" valittu-urakka-id)
 
 ;; Atomi, joka sisältää valitun hallintayksikön urakat
 (defonce hallintayksikon-urakkalista
@@ -143,11 +154,27 @@
       (when (and id urakat)
         (some #(when (= id (:id %)) %) urakat)))))
 
+(harja.loki/tarkkaile! "MURU: Valittu urakka" valittu-urakka)
+
 
 ;; Käyttäjän asettama urakkatyyppi. Todellinen UI:lla näkyvästi valittu urakkatyyppi
 ;; ei kuitenkaan ole tämä, vaan alla oleva reaction (lue sitä, älä tätä)
 ;; Älä myöskään aseta suoraan, käytä vaihda-urakkatyyppi!
 (defonce ^{:private true} valittu-urakkatyyppi (atom nil))
+(harja.loki/tarkkaile! "MURU: Valittu urakkatyyppi" valittu-urakkatyyppi)
+
+(defn urakkatyyppiarvo-vaylamuodolle
+  ([vaylamuoto] (urakkatyyppiarvo-vaylamuodolle vaylamuoto (:urakkatyyppi @istunto/kayttaja)))
+  ([vaylamuoto kayttajan-oletus]
+   (case vaylamuoto
+     :tie
+     (if (and kayttajan-oletus (not (= :vesivayla kayttajan-oletus)))
+       kayttajan-oletus
+       :hoito)
+
+     :vesi
+     :vesivayla
+     nil)))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
@@ -160,7 +187,21 @@
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
                oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+               valittu-vaylamuoto @valittu-vaylamuoto
                valittu-hy-id @valittu-hallintayksikko-id]
+    (log "MUR _______")
+    (log "MUR urakan tyyppi " (pr-str (dissoc @valittu-urakka :alue)) " -> " (pr-str (:tyyppi @valittu-urakka)) "->" (pr-str urakan-urakkatyyppi))
+    (log "MUR valittu-urakkatyyppi" (pr-str valittu-urakkatyyppi))
+    (log "MUR hallintayksikön urakkatyyppi " (pr-str valittu-hy-id)
+         " -> " (pr-str (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id)))
+         " -> " (pr-str (urakkatyyppiarvo-vaylamuodolle (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))))
+         " -> " (pr-str (urakkatyyppi-arvolle (urakkatyyppiarvo-vaylamuodolle (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))))))
+    (log "MUR urakkatyyppi väylämuodolle "
+         "->" (pr-str valittu-vaylamuoto)
+         " -> " (pr-str (urakkatyyppiarvo-vaylamuodolle valittu-vaylamuoto))
+         " -> " (pr-str (urakkatyyppi-arvolle (urakkatyyppiarvo-vaylamuodolle valittu-vaylamuoto))))
+    (log "MUR oletustyyppi " (pr-str oletus-urakkatyyppi))
+    (log "MUR _______")
     (go
       (or urakan-urakkatyyppi
           valittu-urakkatyyppi
@@ -171,21 +212,17 @@
           ;; ottaa huomioon asynkronisuus.
           (when valittu-hy-id
             (urakkatyyppi-arvolle
-              (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
-                :tie
-                (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                  kayttajan-oletus-tyyppi
-                  :hoito)
-
-                :vesi
-                :vesivayla
-                nil)))
+              (urakkatyyppiarvo-vaylamuodolle (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id)))))
+          (urakkatyyppi-arvolle (urakkatyyppiarvo-vaylamuodolle valittu-vaylamuoto))
           oletus-urakkatyyppi))))
+
+(harja.loki/tarkkaile! "MURU: urakkatyyppi" urakkatyyppi)
 
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
   [ut]
+  (log "MURU: Vaihda urakkatyyppi!")
   (reset! valittu-urakkatyyppi ut)
   (vaihda-vaylamuoto! ut)
   (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto)
@@ -247,10 +284,12 @@
           (some? @valittu-urakka))))))
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id ur]
+  (log "MURU: aseta-hallintayksikko-ja-urakka")
   (reset! valittu-hallintayksikko-id hy-id)
   (valitse-urakka! ur))
 
 (defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
+  (log "MURU: aseta-hallintayksikko-ja-urakka-id!")
   (reset! valittu-hallintayksikko-id hy-id)
   (reset! valittu-urakka-id ur-id))
 
@@ -259,11 +298,13 @@
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko-id! [id]
+  (log "MURU: valitse-hallintayksikko-id!")
   (reset! valittu-hallintayksikko-id id)
   (reset! valittu-urakka-id nil)
   (paivita-url))
 
 (defn valitse-hallintayksikko! [yks]
+  (log "MURU: Valitse hallintayksikko!")
   (valitse-hallintayksikko-id! (:id yks)))
 
 (defonce ilmoita-hallintayksikkovalinnasta
@@ -278,7 +319,7 @@
 
 (defn valitse-urakka! [ur]
   (valitse-urakka-id! (:id ur))
-  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
+  (log "MURU: VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]
@@ -338,6 +379,8 @@
                   (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
             urakkalista))))
 
+(harja.loki/tarkkaile! "MURU: Suodatettu urakkalista" suodatettu-urakkalista)
+
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
   (reaction (into []
                   (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)))
@@ -365,9 +408,10 @@
   [url]
   (go
     (let [uri (Uri/parse url)
+          _ (log "MURU: Käsittele-url! " (pr-str uri))
          polku (.getPath uri)
          parametrit (.getQueryData uri)]
-     (log "POLKU: " polku)
+     (log "MURU: POLKU: " polku)
      (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
      (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
      (when @valittu-hallintayksikko-id
