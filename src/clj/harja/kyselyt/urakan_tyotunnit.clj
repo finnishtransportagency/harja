@@ -10,6 +10,7 @@
 
 (def kaikki-kentat
   #{::ut/id
+    ::ut/urakka
     ::ut/vuosi
     ::ut/vuosikolmannes
     ::ut/tyotunnit

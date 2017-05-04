@@ -92,6 +92,7 @@
 
 (defn laheta-turvallisuuspoikkeamat-turiin [this]
   (let [idt (q-turvallisuuspoikkeamat/hae-lahettamattomat-turvallisuuspoikkeamat (:db this))]
+    (log/debug (format "Lähetetään %s turvallisuuspoikkeamaa TURI:n" (count idt)))
     (doseq [id idt]
       (laheta-turvallisuuspoikkeama this id))))
 
@@ -154,7 +155,8 @@
                                vuosikolmannes)))))))
 
 (defn laheta-tyotunnit-turin [this]
-  (let [lahettamattomat(q-urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db this))]
+  (let [lahettamattomat (q-urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db this))]
+    (log/debug (format "Lähetetään %s vuosikolmanneksen työtunteja TURI:n" (count lahettamattomat)))
     (doseq [{urakka ::urakan-tyotunnit/urakka
              vuosi ::urakan-tyotunnit/vuosi
              vuosikolmannes ::urakan-tyotunnit/vuosikolmannes}
@@ -179,14 +181,15 @@
            urakan-tyotunnit-url :urakan-tyotunnit-url
            kayttajatunnus :kayttajatunnus
            salasana :salasana
-           paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
+           paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset
+          this (assoc this
+                 :turvallisuuspoikkeamat-url turvallisuuspoikkeamat-url
+                 :urakan-tyotunnit-url urakan-tyotunnit-url
+                 :kayttajatunnus kayttajatunnus
+                 :salasana salasana)]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" turvallisuuspoikkeamat-url))
       (assoc
-        (assoc this
-          :turvallisuuspoikkeamat-url turvallisuuspoikkeamat-url
-          :urakan-tyotunnit-url urakan-tyotunnit-url
-          :kayttajatunnus kayttajatunnus
-          :salasana salasana)
+        this
         :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika))))
 
   (stop [this]
