@@ -7,6 +7,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
+            [harja.ui.kentat :as kentat]
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt])
@@ -37,7 +38,12 @@
     {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::t/turvalaite :leveys 10}
     {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
-    {:nimi :valinta :tyyppi :checkbox :leveys 5}]
+    {:nimi :valinta :tyyppi :komponentti
+     :komponentti (fn []
+                    [kentat/tee-kentta
+                     {:tyyppi :checkbox}
+                     (atom false)])
+     :leveys 5}]
    sijainnit])
 
 (defn- paneelin-otsikko [otsikko maara]
@@ -54,8 +60,8 @@
            (fn [turvalaitetyyppi]
              [(paneelin-otsikko turvalaitetyyppi
                                 (count (suodata-toimenpiteet-turvalaitetyypilla
-                                                   toimenpiteet
-                                                   turvalaitetyyppi)))
+                                         toimenpiteet
+                                         turvalaitetyyppi)))
               (fn [] [paneelin-otsikon-sisalto
                       (suodata-ja-ryhmittele-toimenpiteet-gridiin
                         toimenpiteet
