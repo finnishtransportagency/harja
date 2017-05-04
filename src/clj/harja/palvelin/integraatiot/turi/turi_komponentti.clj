@@ -160,7 +160,7 @@
         paivittainen-lahetysaika
         (fn [_]
           (lukot/yrita-ajaa-lukon-kanssa
-            db
+            (:db this)
             "turi-paivittainen-lahetys"
             #(do
                (laheta-turvallisuuspoikkeamat-turiin this)
