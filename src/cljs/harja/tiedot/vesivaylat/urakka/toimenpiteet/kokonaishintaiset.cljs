@@ -14,6 +14,7 @@
                          ::t/toimenpide "Huoltotyö"
                          ::t/turvalaitetyyppi "Viitat"
                          ::t/pvm (pvm/nyt)
+                         ::t/vikakorjaus true
                          ::t/turvalaite "Siitenluoto (16469)"}
                         {::t/id 1
                          ::t/alue "Kopio, Iisalmen väylä"

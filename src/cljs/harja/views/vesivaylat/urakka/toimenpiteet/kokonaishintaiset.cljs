@@ -8,7 +8,8 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-alueella [toimenpiteet]
@@ -31,10 +32,12 @@
     :tyhja (if (nil? sijainnit)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")}
-   [{:otsikko "Työluokka" :nimi ::t/tyoluokka}
-    {:otsikko "Toimenpide" :nimi ::t/toimenpide}
-    {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt}
-    {:otsikko "Turvalaite" :nimi ::t/turvalaite}]
+   [{:otsikko "Työluokka" :nimi ::t/tyoluokka :leveys 10}
+    {:otsikko "Toimenpide" :nimi ::t/toimenpide :leveys 10}
+    {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt :leveys 10}
+    {:otsikko "Turvalaite" :nimi ::t/turvalaite :leveys 10}
+    {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
+    {:nimi :valinta :tyyppi :checkbox :leveys 5}]
    sijainnit])
 
 (defn- paneelin-otsikko [otsikko maara]
