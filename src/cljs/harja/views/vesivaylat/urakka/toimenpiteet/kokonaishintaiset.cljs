@@ -25,7 +25,7 @@
       (suodata-toimenpiteet-turvalaitetyypilla turvalaitetyyppi)
       (ryhmittele-toimenpiteet-alueella)))
 
-(defn- otsikon-sisalto [sijainnit]
+(defn- paneelin-otsikon-sisalto [sijainnit]
   [grid/grid
    {:tunniste ::t/id
     :tyhja (if (nil? sijainnit)
@@ -37,13 +37,27 @@
     {:otsikko "Turvalaite" :nimi ::t/turvalaite}]
    sijainnit])
 
-(defn- toimenpidepaneelin-otsikko [otsikko maara]
+(defn- paneelin-otsikko [otsikko maara]
   (str otsikko
        " ("
        maara
        (when (not= maara 0)
          "kpl")
        ")"))
+
+(defn- luo-otsikkorivit [toimenpiteet]
+  (let [turvalaitetyypit (keys (group-by ::t/turvalaitetyyppi toimenpiteet))]
+    (vec (mapcat
+           (fn [turvalaitetyyppi]
+             [(paneelin-otsikko turvalaitetyyppi
+                                (count (suodata-toimenpiteet-turvalaitetyypilla
+                                                   toimenpiteet
+                                                   turvalaitetyyppi)))
+              (fn [] [paneelin-otsikon-sisalto
+                      (suodata-ja-ryhmittele-toimenpiteet-gridiin
+                        toimenpiteet
+                        turvalaitetyyppi)])])
+           turvalaitetyypit))))
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
   (komp/luo
@@ -55,15 +69,7 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       [otsikot [(toimenpidepaneelin-otsikko "Viitat"
-                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Viitat")))
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Viitat")])
-                 (toimenpidepaneelin-otsikko "Poljut"
-                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Poljut")))
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Poljut")])
-                 (toimenpidepaneelin-otsikko "Tykityöt"
-                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Tykityöt")))
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Tykityöt")])]]])))
+       [otsikot (luo-otsikkorivit toimenpiteet)]])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
