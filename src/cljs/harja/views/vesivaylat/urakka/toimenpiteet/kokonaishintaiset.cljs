@@ -1,7 +1,7 @@
 (ns harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset
   (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
-            [harja.ui.otsikkopaneeli :refer [otsikot]]
+            [harja.ui.otsikkopaneeli :refer [otsikkopaneeli]]
             [harja.domain.vesivaylat.toimenpide :as t]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
@@ -69,7 +69,7 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       [otsikot (luo-otsikkorivit toimenpiteet)]])))
+       [otsikkopaneeli (luo-otsikkorivit toimenpiteet)]])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
