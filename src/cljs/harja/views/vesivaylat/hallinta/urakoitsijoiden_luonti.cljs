@@ -1,7 +1,7 @@
-(ns harja.views.vesivaylat.urakoitsijoiden-luonti
+(ns harja.views.vesivaylat.hallinta.urakoitsijoiden-luonti
   (:require [harja.ui.komponentti :as komp]
             [tuck.core :refer [tuck]]
-            [harja.tiedot.vesivaylat.urakoitsijoiden-luonti :as tiedot]
+            [harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti :as tiedot]
             [harja.ui.napit :as napit]
             [harja.loki :refer [log]]
             [harja.domain.organisaatio :as o]
