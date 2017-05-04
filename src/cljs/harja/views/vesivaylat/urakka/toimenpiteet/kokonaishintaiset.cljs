@@ -39,7 +39,7 @@
 
 (defn- otsikon-sisalto [sijainnit]
   [grid/grid
-   {} ;; TODO Piilota otsikkosarivi (th) kokonaan?
+   {:tunniste ::t/id} ;; TODO Piilota otsikkosarivi (th) kokonaan?
    [{:nimi ::t/tyoluokka}
     {:nimi ::t/toimenpide}
     {:nimi ::t/pvm}
