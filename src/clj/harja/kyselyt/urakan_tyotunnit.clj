@@ -19,7 +19,7 @@
 
 (defn hae-urakan-tyotunnit [db urakka-id]
   (fetch db ::ut/urakan-tyotunnit kaikki-kentat
-         (::ut/urakka urakka-id)))
+         {::ut/urakka urakka-id}))
 
 (defn hae-urakan-vuosikolmanneksen-tyotunnit [db urakka-id vuosi vuosikolmannes]
   (fetch db ::ut/urakan-tyotunnit #{::ut/tyotunnit}
