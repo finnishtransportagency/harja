@@ -6,52 +6,10 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
+            [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-(def testidata [{::t/id 0
-                 ::t/alue "Kopio, Iisalmen väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Viitat"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}
-                {::t/id 1
-                 ::t/alue "Kopio, Iisalmen väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Viitat"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}
-                {::t/id 2
-                 ::t/alue "Kopio, Iisalmen väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Viitat"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}
-                {::t/id 45
-                 ::t/alue "Varkaus, Kuopion väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Viitat"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}
-                {::t/id 3
-                 ::t/alue "Varkaus, Kuopion väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Tykityöt"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}
-                {::t/id 4
-                 ::t/alue "Varkaus, Kuopion väylä"
-                 ::t/tyoluokka "Asennus ja huolto"
-                 ::t/toimenpide "Huoltotyö"
-                 ::t/turvalaitetyyppi "Poljut"
-                 ::t/pvm (pvm/nyt)
-                 ::t/turvalaite "Siitenluoto (16469)"}])
 
 (defn- ryhmittele-toimenpiteet-alueella [toimenpiteet]
   (let [toimenpiteet-ryhmiteltyna (group-by ::t/alue toimenpiteet)
@@ -91,18 +49,21 @@
   (komp/luo
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! app]
+    (fn [e! {:keys [toimenpiteet] :as app}]
       [:div
        [:div {:style {:padding "10px"}}
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       [otsikot [(toimenpidepaneelin-otsikko "Viitat" (count testidata))
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin testidata "Viitat")])
-                 (toimenpidepaneelin-otsikko "Poljut" 0)
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin testidata "Poljut")])
-                 (toimenpidepaneelin-otsikko "Tykityöt" 0)
-                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin testidata "Tykityöt")])]]])))
+       [otsikot [(toimenpidepaneelin-otsikko "Viitat"
+                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Viitat")))
+                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Viitat")])
+                 (toimenpidepaneelin-otsikko "Poljut"
+                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Poljut")))
+                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Poljut")])
+                 (toimenpidepaneelin-otsikko "Tykityöt"
+                                             (count (suodata-toimenpiteet-turvalaitetyypilla toimenpiteet "Tykityöt")))
+                 (fn [] [otsikon-sisalto (suodata-ja-ryhmittele-toimenpiteet-gridiin toimenpiteet "Tykityöt")])]]])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
