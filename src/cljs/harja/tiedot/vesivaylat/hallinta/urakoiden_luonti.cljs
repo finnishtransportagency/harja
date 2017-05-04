@@ -1,4 +1,4 @@
-(ns harja.tiedot.vesivaylat.urakoiden-luonti
+(ns harja.tiedot.vesivaylat.hallinta.urakoiden-luonti
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]

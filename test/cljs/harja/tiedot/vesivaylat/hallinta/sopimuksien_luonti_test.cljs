@@ -1,5 +1,5 @@
-(ns harja.tiedot.vesivaylat.sopimuksien-luonti-test
-  (:require [harja.tiedot.vesivaylat.sopimuksien-luonti :as s]
+(ns harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
+  (:require [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti :as s]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e! e-tila!]]))
 
