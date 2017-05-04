@@ -299,11 +299,16 @@
                                       AND vuodet @> ARRAY[2017]::int[]
                                       AND poistettu IS NOT TRUE")))
         ei-yha-kohde (kohde-nimella vastaus "Ei YHA-kohde")
-        muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
+        poistettava-yha-kohde (kohde-nimella vastaus "Kuusamontien testi")
+        muut-kohteet (filter #(and (not= (:nimi %) "Ei YHA-kohde")
+                                   (not= (:nimi %) "Kuusamontien testi"))
+                             vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
     (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
         "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (true? (:yllapitokohteen-voi-poistaa? poistettava-yha-kohde))
+        "Kuusamontie-kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
@@ -394,7 +399,7 @@
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
-                                            (assoc kohde :poistettu true)
+                                           (assoc kohde :poistettu true)
                                            kohde))
                              kohteet-ennen-testia)]
 
@@ -410,7 +415,8 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id kohteet-ennen-testia) (sort-by :id kohteet-testin-jalkeen))))))
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
@@ -473,6 +479,8 @@
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
         kohteet [{:id yllapitokohde-id
+                  :nimi "Leppäjärven superramppi"
+                  :kohdenumero "L666"
                   :aikataulu-kohde-alku aikataulu-kohde-alku
                   :aikataulu-paallystys-alku aikataulu-paallystys-alku
                   :aikataulu-paallystys-loppu aikataulu-paallystys-loppu
@@ -488,10 +496,12 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
-        vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
+        vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven superramppi")]
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     ;; Muokatut kentät päivittyivät
+    (is (= "Leppäjärven superramppi" (:nimi vastaus-leppajarven-ramppi)))
+    (is (= "L666" (:kohdenumero vastaus-leppajarven-ramppi)))
     (is (= aikataulu-kohde-alku (:aikataulu-kohde-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-alku (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-loppu (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)))
@@ -536,6 +546,8 @@
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
             kohteet [{:id leppajarven-ramppi-id
+                      :nimi "Leppäjärven superramppi"
+                      :kohdenumero "666"
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}
                      {:id nakkilan-ramppi-id
@@ -554,7 +566,10 @@
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
-        ;; Muokatut kentät päivittyivät
+        ;; Nimi ja kohdenumero eivät muuttuneet, koska näitä ei saa muokata tiemerkintäurakassa
+        (is (= "Leppäjärven ramppi" (:nimi vastaus-leppajarven-ramppi)))
+        (is (= "L03" (:kohdenumero vastaus-leppajarven-ramppi)))
+        ;; Aikataulukentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
@@ -766,6 +781,7 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet [{:id oulaisten-ohitusramppi-id
+                                          :nimi "Oulaisten ohitusramppi"
                                           :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
                                           :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                                           :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
@@ -811,6 +827,8 @@
         vuosi 2017
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         kohteet [{:id leppajarven-ramppi-id
+                  :nimi "Leppäjärven ramppi"
+                  :kohdenumero "L03"
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :suorittava-tiemerkintaurakka lapin-urakka-id
@@ -833,6 +851,7 @@
                                             :vuosi vuosi
                                             :kohteet kohteet})
         nykyinen-aikataulu-leppajarven-ramppi (kohde-nimella nykyinen-aikataulu "Leppäjärven ramppi")]
+
     (is (not= (:suorittava-tiemerkintaurakka nykyinen-aikataulu-leppajarven-ramppi) lapin-urakka-id)
         "Suorittavaa tiemerkintäurakkaa ei vaihdettu, koska tiemerkintäurakasta on tehty kirjauksia kohteelle")
     (is (= (:suorittava-tiemerkintaurakka aiempi-aikataulu-leppajarven-ramppi)

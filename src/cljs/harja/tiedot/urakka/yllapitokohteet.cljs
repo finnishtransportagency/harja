@@ -35,8 +35,8 @@
             (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
             (or (str/blank? kohdenumero)
                 (and (:kohdenumero %)
-                     (= (str/lower-case (:kohdenumero %))
-                        (str/lower-case kohdenumero)))))
+                     (str/starts-with? (str/lower-case (:kohdenumero %))
+                                       (str/lower-case kohdenumero)))))
       kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]

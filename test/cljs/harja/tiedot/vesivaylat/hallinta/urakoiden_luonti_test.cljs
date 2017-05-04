@@ -1,5 +1,5 @@
-(ns harja.tiedot.vesivaylat.urakoiden-luonti-test
-  (:require [harja.tiedot.vesivaylat.urakoiden-luonti :as luonti]
+(ns harja.tiedot.vesivaylat.hallinta.urakoiden-luonti-test
+  (:require [harja.tiedot.vesivaylat.hallinta.urakoiden-luonti :as luonti]
             [harja.domain.urakka :as u]
             [harja.domain.sopimus :as s]
             [clojure.test :refer-macros [deftest is testing]]
