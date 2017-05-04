@@ -51,7 +51,7 @@
 
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
-  [aikataulurivit {drag ::drag alku ::alku loppu ::loppu}]
+  [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
   (keep
    (fn [{id :id :as aikataulurivi}]
      (when (= id (first drag))
