@@ -186,22 +186,23 @@
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
   [ut]
-  (reset! valittu-urakkatyyppi ut)
-  (vaihda-vaylamuoto! ut)
-  (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto)
-  (swap! valittu-urakoitsija
-         #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
-                                                     :hoito @urk/urakoitsijat-hoito
-                                                     :paallystys @urk/urakoitsijat-paallystys
-                                                     :paikkaus @urk/urakoitsijat-paikkaus
-                                                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                     :valaistus @urk/urakoitsijat-valaistus
-                                                     :siltakorjaus @urk/urakoitsijat-siltakorjaus
-                                                     :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
-                                                     :vesivayla @urk/urakoitsijat-vesivaylat)]
-            (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-              %
-              nil))))
+  (go
+    (reset! valittu-urakkatyyppi ut)
+    (vaihda-vaylamuoto! ut)
+    (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
+    (swap! valittu-urakoitsija
+           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+                                                       :hoito @urk/urakoitsijat-hoito
+                                                       :paallystys @urk/urakoitsijat-paallystys
+                                                       :paikkaus @urk/urakoitsijat-paikkaus
+                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                                                       :valaistus @urk/urakoitsijat-valaistus
+                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
+                                                       :vesivayla @urk/urakoitsijat-vesivaylat)]
+              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+                %
+                nil)))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -376,7 +377,12 @@
        (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
      (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
-
+     ;; urakkatyyppi on reaktio, jonka arvo johdetaan mm. hallintayksiköstä, urakasta, tai
+     ;; käyttäjän tekemästä valinnasta. Käyttäjän tekemä valinta tallennetaan valittu-urakkatyyppi
+     ;; atomiin. URLia käsiteltäessä urakkatyyppi-reaktio saa automaattisesti päätellyn arvon,
+     ;; joka asetaan myös valitun-urakkatyypin arvoksi. Näin urakkatyyppivalinta "säilyy",
+     ;; kun murupolkua pitkin navigoidaan Koko maa-näkymään
+     (reset! valittu-urakkatyyppi @urakkatyyppi)
      (swap! reitit/url-navigaatio
             reitit/tulkitse-polku polku))
     (reset! render-lupa-url-kasitelty? true)
