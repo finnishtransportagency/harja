@@ -40,8 +40,7 @@
   sen hallintayksikot-atomin sisällöksi."
   [vaylamuoto]
   (go
-    (reset! hallintayksikot ((or @haetut-hallintayksikot (<! (hae-hallintayksikot!))) vaylamuoto))
-    (harja.loki/log "MURU: aseta-hallintayksikot-vaylamuodolle!")))
+    (reset! hallintayksikot ((or @haetut-hallintayksikot (<! (hae-hallintayksikot!))) vaylamuoto))))
 
 (defn- hallintayksikon-vaylamuoto* [haetut-hallintayksikot id]
   (go
