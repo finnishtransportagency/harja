@@ -99,3 +99,5 @@
     (log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
     (doseq [id turpo-idt]
       (testaa-turpon-sanoman-muodostus id))))
+
+(deftest tyotuntien-lahetys)
