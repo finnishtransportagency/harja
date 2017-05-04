@@ -26,7 +26,9 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.aikajana :as aikajana]
-            [harja.domain.aikataulu :as aikataulu])
+            [harja.domain.aikataulu :as aikataulu]
+            [harja.ui.upotettu-raportti :as upotettu-raportti]
+            [harja.tiedot.raportit :as raportit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -180,6 +182,9 @@
                             "Näytä aikajana")
             #(swap! tiedot/nayta-aikajana? not)
             {:luokka "btn-xs"}]]]
+
+         [upotettu-raportti/raportin-vientimuodot
+          (raportit/urakkaraportin-parametrit urakka-id :yllapidon-aikataulu {})]
 
          (when aikajana?
            [aikajana/aikajana
