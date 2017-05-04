@@ -14,7 +14,8 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
-            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit])
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit]
+            [harja.palvelin.tyokalut.lukot :as lukot])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TuriLahetys
@@ -158,8 +159,12 @@
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
         (fn [_]
-          (laheta-turvallisuuspoikkeamat-turiin this)
-          (laheta-tyotunnit-turin this))))
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "turi-paivittainen-lahetys"
+            #(do
+               (laheta-turvallisuuspoikkeamat-turiin this)
+               (laheta-tyotunnit-turin this))))))
     (fn [])))
 
 (defrecord Turi [asetukset]
