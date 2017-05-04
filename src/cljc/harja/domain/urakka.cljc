@@ -67,4 +67,3 @@
 
 (defn vesivayla-urakka? [urakka]
   (vesivayla-urakkatyyppi? (:tyyppi urakka)))
-
