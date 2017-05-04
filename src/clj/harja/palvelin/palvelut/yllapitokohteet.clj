@@ -162,6 +162,12 @@
                (:suorittava-tiemerkintaurakka kohde)
                kohteen-nykyinen-suorittava-tiemerkintaurakka-id))
            :id (:id kohde)
+           :urakka paallystysurakka-id})
+        (q/paivita-yllapitokohteen-numero-ja-nimi!
+          db
+          {:kohdenumero (:kohdenumero kohde)
+           :nimi (:nimi kohde)
+           :id (:id kohde)
            :urakka paallystysurakka-id}))
       (when voi-tallentaa-tiemerkinnan-takarajan?
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
@@ -278,7 +284,8 @@
   (if poistettu
     (when (yy/yllapitokohteen-voi-poistaa? db id)
       (log/debug "Poistetaan ylläpitokohde")
-      (q/poista-yllapitokohde! db {:id id :urakka urakka-id}))
+      (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
+      (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id}))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
                                   {:kohdenumero kohdenumero
