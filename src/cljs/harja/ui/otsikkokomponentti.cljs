@@ -1,14 +1,24 @@
 (ns harja.ui.otsikkokomponentti
   "Geneerinen UI-elementti, joka piirtää avattavat/suljettavat otsikot.
    Otsikoiden alle voi sijoittaa vapaasti minkä tahansa komponentin"
-  (:require [reagent.core :as r :refer [atom]]))
+  (:require [reagent.core :as r :refer [atom]]
+            [harja.loki :refer [log]]))
 
+(defn- avaa-paneeli! [index auki-index-atom]
+  (reset! auki-index-atom index))
 
 (defn otsikot [otsikot-ja-sisallot optiot]
-  (let [otsikko-ja-sisalto-parit (partition 2 otsikot-ja-sisallot)]
+  (r/with-let [otsikko-ja-sisalto-parit (partition 2 otsikot-ja-sisallot)
+               auki-index-atom (atom 0)]
     [:div.otsikkokomponentti
-     (for [[otsikko sisalto] otsikko-ja-sisalto-parit]
-       ^{:key otsikko}
-       [:div
-        [:div.otsikkokomponentti-otsikko otsikko]
-        [:div.otsikkokomponentti-sisalto sisalto]])]))
+     (doall
+       (map-indexed
+         (fn [index [otsikko sisalto]]
+           (let [auki? (= index @auki-index-atom)]
+             ^{:key otsikko}
+             [:div
+              [:div.otsikkokomponentti-otsikko {:on-click #(avaa-paneeli! index auki-index-atom)}
+               otsikko]
+              (when auki?
+                [:div.otsikkokomponentti-sisalto [sisalto]])]))
+         otsikko-ja-sisalto-parit))]))
