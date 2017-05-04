@@ -9,34 +9,7 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
-            ;; vaaditaan built in raportit
-            [harja.palvelin.raportointi.raportit.erilliskustannukset]
-            [harja.palvelin.raportointi.raportit.ilmoitus]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
-            [harja.palvelin.raportointi.raportit.materiaali]
-            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
-            [harja.palvelin.raportointi.raportit.suolasakko]
-            [harja.palvelin.raportointi.raportit.tiestotarkastus]
-            [harja.palvelin.raportointi.raportit.kelitarkastus]
-            [harja.palvelin.raportointi.raportit.laaduntarkastus]
-            [harja.palvelin.raportointi.raportit.laatupoikkeama]
-            [harja.palvelin.raportointi.raportit.siltatarkastus]
-            [harja.palvelin.raportointi.raportit.sanktio]
-            [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
-            [harja.palvelin.raportointi.raportit.soratietarkastus]
-            [harja.palvelin.raportointi.raportit.valitavoiteraportti]
-            [harja.palvelin.raportointi.raportit.ymparisto]
-            [harja.palvelin.raportointi.raportit.tyomaakokous]
-            [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-            [harja.palvelin.raportointi.raportit.toimenpideajat]
-            [harja.palvelin.raportointi.raportit.toimenpidepaivat]
-            [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-            [harja.palvelin.raportointi.raportit.indeksitarkistus]
-            [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
-            [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+            [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
@@ -190,14 +163,5 @@
                "koko maa" parametrit))))))))
 
 
-(defn- lataa-raportit []
-  (try
-    (into {}
-          (map (juxt :nimi identity))
-          (eval (read-string (slurp (io/resource "raportit.edn")))))
-    (catch Exception e
-      (log/error e "Raporttien lukemisessa virhe!")
-      {})))
-
 (defn luo-raportointi []
-  (->Raportointi (lataa-raportit) (atom 0)))
+  (->Raportointi raportit-nimen-mukaan (atom 0)))
