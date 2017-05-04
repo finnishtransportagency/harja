@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE xml>
-<p:tyoaikajakso xmlns:p="http://restimport.xml.turi.oikeatoliot.fi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="tyotunnit-rest ../../main/resources/xsd/tyotunnit-rest.xsd">
-  <lahdejarjestelma>Harja</lahdejarjestelma>
-  <urakkasampoid>PRWE9798</urakkasampoid>
-  <vuosi>2016</vuosi>
-  <vuosikolmannes>3</vuosikolmannes>
-  <tyotunnit>21443</tyotunnit>
-</p:tyoaikajakso>
+<t:tyoaikajakso xmlns:t="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit">
+    <lahdejarjestelma>string</lahdejarjestelma>
+    <urakkasampoid>string</urakkasampoid>
+    <vuosi>1900</vuosi>
+    <vuosikolmannes>1</vuosikolmannes>
+    <tyotunnit>3</tyotunnit>
+</t:tyoaikajakso>

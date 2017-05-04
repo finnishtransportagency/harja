@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma-test
+(ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeama-test
   (:require [clojure.test :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
