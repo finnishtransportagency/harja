@@ -402,10 +402,12 @@
                     (and @render-lupa-hy? @render-lupa-u?
                          @render-lupa-url-kasitelty?)))
 
+(defonce urlia-kasitellaan? (atom false))
 
 (defn kasittele-url!
   "Käsittelee urlin (route) muutokset."
   [url]
+  (reset! urlia-kasitellaan? true)
   (go
     (let [uri (Uri/parse url)
           _ (log "MURU: Käsittele-url! " (pr-str uri))
@@ -417,13 +419,14 @@
      (when @valittu-hallintayksikko-id
        (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
-     (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto)
+     (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
 
      (swap! reitit/url-navigaatio
             reitit/tulkitse-polku polku))
     (reset! render-lupa-url-kasitelty? true)
     (log "Render lupa annettu!")
-    (t/julkaise! {:aihe :url-muuttui :url url})))
+    (t/julkaise! {:aihe :url-muuttui :url url})
+    (reset! urlia-kasitellaan? false)))
 
 (.setEnabled historia true)
 
@@ -431,7 +434,7 @@
   (add-watch reitit/url-navigaatio
              ::url-muutos
              (fn [_ _ vanha uusi]
-               (when (not= vanha uusi)
+               (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
                  (paivita-url)))))
 
 (defn paivita-urakan-tiedot! [urakka-id funktio & args]
