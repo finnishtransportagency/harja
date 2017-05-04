@@ -104,6 +104,7 @@
                           :paallystys @urakoitsijat/urakoitsijat-paallystys
                           :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
                           :valaistus @urakoitsijat/urakoitsijat-valaistus
+                          :vesivayla @urakoitsijat/urakoitsijat-vesivaylat
 
                           @urakoitsijat/urakoitsijat-hoito)) ;;defaulttina hoito
                nil))]])
