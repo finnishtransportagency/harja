@@ -40,7 +40,7 @@
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
-        urakoiden-summat (group-by :urakka-id
+        urakoiden-summat (group-by :urakka_id
                                    (mapcat #(qm/hae-urakan-maksuerien-summat db %) urakkaidt))]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
