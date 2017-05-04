@@ -17,7 +17,7 @@
                          ::t/vikakorjaus true
                          ::t/turvalaite "Siitenluoto (16469)"}
                         {::t/id 1
-                         ::t/alue "Kopio, Iisalmen väylä"
+                         ::t/alue "Kuopio, Iisalmen väylä"
                          ::t/tyoluokka "Asennus ja huolto"
                          ::t/toimenpide "Huoltotyö"
                          ::t/turvalaitetyyppi "Viitat"
