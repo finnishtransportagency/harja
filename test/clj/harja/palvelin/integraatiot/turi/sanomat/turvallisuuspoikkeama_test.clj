@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeama-test
+(ns harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.turi.sanomat.tyotunnit :as sanoma]
