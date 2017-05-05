@@ -25,7 +25,6 @@
 
       <!-- Turvalaitteen numero, nimi ja urakka (ryhmä) -->
       <turvalaite nro="904" nimi="Glosholmsklacken pohjoinen" ryhma="514"/>
-
     </toimenpide>
   </HaeToimenpiteetResponse>
 </HaeToimenpiteet>
