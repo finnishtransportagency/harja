@@ -37,5 +37,5 @@
                             :otsikko otsikko
                             :sisalto sisalto}]])]
               (when auki?
-                [:div.otsikkopaneeli-sisalto [sisalto]])]))
+                [:div.otsikkopaneeli-sisalto sisalto])]))
          (partition 3 otsikot-ja-sisallot)))]))

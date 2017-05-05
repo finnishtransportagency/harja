@@ -73,11 +73,11 @@
                                 (count (toimenpiteet-tyolajilla
                                          toimenpiteet
                                          tyolaji)))
-              (fn [] [paneelin-otsikon-sisalto
-                      (suodata-ja-ryhmittele-toimenpiteet-gridiin
-                        toimenpiteet
-                        tyolaji)
-                      e!])])
+              [paneelin-otsikon-sisalto
+               (suodata-ja-ryhmittele-toimenpiteet-gridiin
+                 toimenpiteet
+                 tyolaji)
+               e!]])
            tyolajit))))
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
@@ -98,14 +98,17 @@
                                 :sisalto
                                 (fn [{:keys [tunniste]}]
                                   (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
-                                        kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))]
+                                        kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
+                                        mitaan-ei-valittu? (every? false? (map :valittu? tyolajin-toimenpiteet))]
                                     [kentat/tee-kentta
                                      {:tyyppi :checkbox}
                                      ;; TODO Piirrä välitila jos osa valittu
-                                     (r/wrap kaikki-valittu?
-                                             (fn [uusi]
-                                               (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                             :valinta uusi}))))]))}]}]
+                                     (r/wrap #_(cond kaikki-valittu? true
+                                                     mi)
+                                       kaikki-valittu?
+                                       (fn [uusi]
+                                         (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                                       :valinta uusi}))))]))}]}]
              (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
