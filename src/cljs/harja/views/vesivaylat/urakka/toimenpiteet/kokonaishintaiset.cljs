@@ -21,13 +21,16 @@
     (vec (mapcat #(-> (cons (grid/otsikko %)
                             (get toimenpiteet-ryhmiteltyna %))) turvalaitetyypit))))
 
-(defn- suodata-toimenpiteet-turvalaitetyypilla [toimenpiteet turvalaitetyyppi]
+(defn- toimenpiteet-turvalaitetyypilla [toimenpiteet turvalaitetyyppi]
   (filterv #(= (::to/turvalaitetyyppi %) turvalaitetyyppi) toimenpiteet))
 
 (defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet turvalaitetyyppi]
   (-> toimenpiteet
-      (suodata-toimenpiteet-turvalaitetyypilla turvalaitetyyppi)
+      (toimenpiteet-turvalaitetyypilla turvalaitetyyppi)
       (ryhmittele-toimenpiteet-alueella)))
+
+(defn- alueen-toimenpiteet [toimenpiteet alue]
+  (filter #(= (::to/alue %) alue) toimenpiteet))
 
 (defn- paneelin-otsikon-sisalto [sijainnit e!]
   [grid/grid
@@ -67,8 +70,9 @@
   (let [turvalaitetyypit (keys (group-by ::to/turvalaitetyyppi toimenpiteet))]
     (vec (mapcat
            (fn [turvalaitetyyppi]
-             [(paneelin-otsikko turvalaitetyyppi
-                                (count (suodata-toimenpiteet-turvalaitetyypilla
+             [turvalaitetyyppi
+              (paneelin-otsikko turvalaitetyyppi
+                                (count (toimenpiteet-turvalaitetyypilla
                                          toimenpiteet
                                          turvalaitetyyppi)))
               (fn [] [paneelin-otsikon-sisalto
@@ -92,10 +96,14 @@
 
        (into [otsikkopaneeli {:paneelikomponentit [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
                                                    {:sijainti "94.3%"
-                                                    :sisalto (fn []
-                                                               [kentat/tee-kentta
-                                                                {:tyyppi :checkbox}
-                                                                (atom false)])}]}]
+                                                    :sisalto (fn [{:keys [tunniste]}]
+                                                               (let [turvalaitetyypin-toimenpiteet (toimenpiteet-turvalaitetyypilla toimenpiteet tunniste)
+                                                                     kaikki-valittu? (every? true? (map :valittu? turvalaitetyypin-toimenpiteet))]
+                                                                 [kentat/tee-kentta
+                                                                  {:tyyppi :checkbox}
+                                                                  ;; TODO Lisää välitila jos osa valittu
+                                                                  ;; TODO Mahdollista kaikkien valinta tästä
+                                                                  (atom kaikki-valittu?)]))}]}]
              (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
