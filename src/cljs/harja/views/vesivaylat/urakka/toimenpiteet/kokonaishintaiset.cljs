@@ -15,8 +15,8 @@
             [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- ryhmittele-toimenpiteet-alueella [toimenpiteet]
-  (let [toimenpiteet-ryhmiteltyna (group-by ::to/alue toimenpiteet)
+(defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
+  (let [toimenpiteet-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
         tyolajit (keys toimenpiteet-ryhmiteltyna)]
     (vec (mapcat #(-> (cons (grid/otsikko %)
                             (get toimenpiteet-ryhmiteltyna %))) tyolajit))))
@@ -27,10 +27,7 @@
 (defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet tyolaji]
   (-> toimenpiteet
       (toimenpiteet-tyolajilla tyolaji)
-      (ryhmittele-toimenpiteet-alueella)))
-
-(defn- alueen-toimenpiteet [toimenpiteet alue]
-  (filter #(= (::to/alue %) alue) toimenpiteet))
+      (ryhmittele-toimenpiteet-vaylalla)))
 
 (defn- paneelin-otsikon-sisalto [sijainnit e!]
   [grid/grid
