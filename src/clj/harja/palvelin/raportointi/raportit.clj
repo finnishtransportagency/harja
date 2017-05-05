@@ -44,7 +44,8 @@
     :urakkatyyppi #{:paallystys :paikkaus :tiemerkinta}}
 
    {:nimi :soratietarkastusraportti
-    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"} {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}]
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                 {:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Soratietarkastusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.soratietarkastus/suorita
