@@ -1,47 +1,64 @@
-CREATE TYPE reimari_urakoitsija AS (id INTEGER, nimi TEXT);
-CREATE TYPE reimari_sopimus AS (nro INTEGER, tyyppi TEXT, nimi TEXT);
-CREATE TYPE reimari_turvalaite AS (nro TEXT, nimi TEXT, ryhma INTEGER);
-CREATE TYPE reimari_alus AS (tunnus TEXT, nimi TEXT);
-CREATE TYPE reimari_vayla AS (nro TEXT, nimi TEXT, ryhma INTEGER);
+-- Vesiväylien Kickoff-migraatio
 
-CREATE OR REPLACE FUNCTION sisaltaa_tekstia (s TEXT) -- ei sallita: null, '', '  '
-  RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN COALESCE(TRIM(s), '') != '';
-END;
-$$ LANGUAGE plpgsql;
+-- harjassa_luotu
+ALTER TABLE hanke ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE hanke SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 
+ALTER TABLE organisaatio ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE organisaatio SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
 
-CREATE TABLE reimari_toimenpide (
-  id                 SERIAL PRIMARY KEY,
-  "reimari-id"       INTEGER NOT NULL,
-  urakoitsija        reimari_urakoitsija CHECK ((urakoitsija).id IS NOT NULL AND
-                                              sisaltaa_tekstia((urakoitsija).nimi)),
-  sopimus            reimari_sopimus     CHECK ((sopimus).nro IS NOT NULL AND
-                                                sisaltaa_tekstia((sopimus).tyyppi) AND
-                                                sisaltaa_tekstia((sopimus).nimi)),
-  turvalaite         reimari_turvalaite  CHECK (sisaltaa_tekstia((turvalaite).nro) AND
-                                                -- nimi saa olla tyhja
-                                                (turvalaite).ryhma IS NOT NULL),
-  alus               reimari_alus        CHECK (sisaltaa_tekstia((alus).tunnus)
-                                                -- nimi saa olla tyhja
-                                              ),
-  vayla              reimari_vayla       CHECK (sisaltaa_tekstia((vayla).nro)),
-  tyolaji            TEXT                CHECK (sisaltaa_tekstia(tyolaji)),
-  tyoluokka          TEXT                CHECK (sisaltaa_tekstia(tyoluokka)),
-  tyyppi             TEXT                CHECK (sisaltaa_tekstia(tyyppi)),
-  lisatieto          TEXT                NOT NULL,
-  lisatyo            BOOLEAN             NOT NULL,
-  tila               TEXT                CHECK (sisaltaa_tekstia(tila)),
-  suoritettu         TIMESTAMP           NOT NULL,
-  "reimari-luotu"    TIMESTAMP           NOT NULL,
-  "reimari-muokattu" TIMESTAMP,
-  luotu              TIMESTAMP           NOT NULL DEFAULT NOW(),
-  luoja              INTEGER REFERENCES kayttaja(id),
-  muokattu           TIMESTAMP,
-  muokkaaja          INTEGER REFERENCES kayttaja(id),
-  asiakas            TEXT,
-  vastuuhenkilo      TEXT,
-  poistettu          BOOLEAN             NOT NULL DEFAULT FALSE,
-  poistaja           INTEGER REFERENCES kayttaja(id)
-);
+ALTER TABLE urakka ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE urakka SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
+
+ALTER TABLE sopimus ADD COLUMN harjassa_luotu BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE sopimus SET harjassa_luotu = FALSE where harjassa_luotu IS NULL;
+
+-- Urakalta ja sopimukselta pois pakollinen sampoid (ei ole pakollinen vesiväyläurakoissa)
+ALTER TABLE urakka ALTER COLUMN sampoid DROP NOT NULL;
+ALTER TABLE urakka ADD CONSTRAINT urakalla_sampoid_jos_ei_harjassa_luotu
+CHECK (harjassa_luotu IS TRUE OR harjassa_luotu IS FALSE AND sampoid IS NOT NULL);
+ALTER TABLE sopimus ALTER COLUMN sampoid DROP NOT NULL;
+ALTER TABLE sopimus ADD CONSTRAINT sopimuksella_sampoid_jos_ei_harjassa_luotu
+CHECK (harjassa_luotu IS TRUE OR harjassa_luotu IS FALSE AND sampoid IS NOT NULL);
+
+-- Luotu, muokattu, muokkaaja jne. tiedot
+ALTER TABLE urakka ADD COLUMN luotu timestamp DEFAULT NOW();
+ALTER TABLE urakka ADD COLUMN muokattu timestamp;
+ALTER TABLE urakka ADD COLUMN luoja integer REFERENCES kayttaja (id);
+ALTER TABLE urakka ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
+ALTER TABLE urakka ADD COLUMN poistettu boolean not null default false;
+
+ALTER TABLE sopimus ADD COLUMN luotu timestamp DEFAULT NOW();
+ALTER TABLE sopimus ADD COLUMN muokattu timestamp;
+ALTER TABLE sopimus ADD COLUMN luoja integer REFERENCES kayttaja (id);
+ALTER TABLE sopimus ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
+ALTER TABLE sopimus ADD COLUMN poistettu boolean not null default false;
+
+ALTER TABLE hanke ADD COLUMN luotu timestamp DEFAULT NOW();
+ALTER TABLE hanke ADD COLUMN muokattu timestamp;
+ALTER TABLE hanke ADD COLUMN luoja integer REFERENCES kayttaja (id);
+ALTER TABLE hanke ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
+ALTER TABLE hanke ADD COLUMN poistettu boolean not null default false;
+
+ALTER TABLE organisaatio ADD COLUMN luotu timestamp DEFAULT NOW();
+ALTER TABLE organisaatio ADD COLUMN muokattu timestamp;
+ALTER TABLE organisaatio ADD COLUMN muokkaaja integer REFERENCES kayttaja (id);
+ALTER TABLE organisaatio ADD COLUMN poistettu boolean not null default false;
+
+-- Tiukkoja constraintteja lisää
+ALTER TABLE hanke ALTER COLUMN nimi SET NOT NULL;
+ALTER TABLE hanke ALTER COLUMN alkupvm SET NOT NULL;
+ALTER TABLE hanke ALTER COLUMN loppupvm SET NOT NULL;
+ALTER TABLE hanke ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+ALTER TABLE sopimus ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+ALTER TABLE sopimus ADD CONSTRAINT paasopimus_ei_ole_sama_sopimus CHECK
+(paasopimus IS NULL OR (paasopimus IS NOT NULL AND paasopimus != id)); -- Pääsopimus ei voi koskaan viitata samaan sopimukseen. Jos sopimus on pääsopimus, sen paasopimus on NULL
+ALTER TABLE sopimus ALTER alkupvm SET NOT NULL;
+ALTER TABLE sopimus ALTER loppupvm SET NOT NULL;
+ALTER TABLE urakka ADD CONSTRAINT loppu_ennen_alkua CHECK (alkupvm <= loppupvm);
+ALTER TABLE urakka ALTER COLUMN alkupvm SET NOT NULL;
+ALTER TABLE urakka ALTER COLUMN loppupvm SET NOT NULL;
+ALTER TABLE urakka ALTER COLUMN tyyppi SET NOT NULL;
+ALTER TABLE organisaatio ALTER COLUMN nimi SET NOT NULL;
+ALTER TABLE organisaatio ALTER COLUMN tyyppi SET NOT NULL;
+CREATE UNIQUE INDEX uniikki_hanke ON urakka (hanke) WHERE harjassa_luotu IS TRUE; -- Harjassa luodulle urakalle on hanke uniikki

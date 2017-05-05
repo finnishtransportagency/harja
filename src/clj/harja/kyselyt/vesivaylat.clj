@@ -1,10 +1,10 @@
 (ns harja.kyselyt.vesivaylat
   (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [define-tables fetch]]
+            [specql.core :refer [fetch]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
-            [harja.kyselyt.specql :refer [db]]
+            [harja.kyselyt.specql-db :refer [define-tables]]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.alus :as vv-alus]
@@ -16,7 +16,7 @@
 
 
 
-(define-tables db
+(define-tables
   ["reimari_urakoitsija" ::vv-urakoitsija/urakoitsija]
   ["reimari_sopimus" ::vv-sopimus/sopimus]
   ["reimari_turvalaite" ::vv-turvalaite/turvalaite]

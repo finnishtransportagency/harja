@@ -252,7 +252,8 @@
     (s/optional-key :verkkotyyppi) +verkkotyyppi-tai-nil+
     (s/optional-key :verkon-tarkoitus) +verkon-tarkoitus-tai-nil+
     (s/optional-key :verkon-sijainti) +verkon-sijainti-tai-nil+
-    (s/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+}])
+    (s/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+
+    (s/optional-key :poistettu) s/Bool}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
