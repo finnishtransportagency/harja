@@ -2,51 +2,56 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.ui.otsikkopaneeli :refer [otsikkopaneeli]]
-            [harja.domain.vesivaylat.toimenpide :as t]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.kentat :as kentat]
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-alueella [toimenpiteet]
-  (let [toimenpiteet-ryhmiteltyna (group-by ::t/alue toimenpiteet)
+  (let [toimenpiteet-ryhmiteltyna (group-by ::to/alue toimenpiteet)
         turvalaitetyypit (keys toimenpiteet-ryhmiteltyna)]
     (vec (mapcat #(-> (cons (grid/otsikko %)
                             (get toimenpiteet-ryhmiteltyna %))) turvalaitetyypit))))
 
 (defn- suodata-toimenpiteet-turvalaitetyypilla [toimenpiteet turvalaitetyyppi]
-  (filterv #(= (::t/turvalaitetyyppi %) turvalaitetyyppi) toimenpiteet))
+  (filterv #(= (::to/turvalaitetyyppi %) turvalaitetyyppi) toimenpiteet))
 
 (defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet turvalaitetyyppi]
   (-> toimenpiteet
       (suodata-toimenpiteet-turvalaitetyypilla turvalaitetyyppi)
       (ryhmittele-toimenpiteet-alueella)))
 
-(defn- paneelin-otsikon-sisalto [sijainnit]
+(defn- paneelin-otsikon-sisalto [sijainnit e!]
   [grid/grid
-   {:tunniste ::t/id
+   {:tunniste ::to/id
     :tyhja (if (nil? sijainnit)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")}
-   [{:otsikko "Työluokka" :nimi ::t/tyoluokka :leveys 10}
-    {:otsikko "Toimenpide" :nimi ::t/toimenpide :leveys 10}
-    {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::t/turvalaite :leveys 10}
-    {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
+   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
+    {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
+    {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
+    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10}
+    {:otsikko "Vikakorjaus" :nimi ::to/vikakorjaus :fmt fmt/totuus :leveys 5}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-     :komponentti (fn []
+     :komponentti (fn [rivi]
                     ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
                     ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
                     ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
                     ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki
                     [kentat/tee-kentta
                      {:tyyppi :checkbox}
-                     (atom false)])
+                     (r/wrap (:valittu? rivi)
+                             (fn [uusi]
+                               (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                                :valinta uusi}))))])
      :leveys 5}]
    sijainnit])
 
@@ -58,8 +63,8 @@
          "kpl")
        ")"))
 
-(defn- luo-otsikkorivit [toimenpiteet]
-  (let [turvalaitetyypit (keys (group-by ::t/turvalaitetyyppi toimenpiteet))]
+(defn- luo-otsikkorivit [toimenpiteet e!]
+  (let [turvalaitetyypit (keys (group-by ::to/turvalaitetyyppi toimenpiteet))]
     (vec (mapcat
            (fn [turvalaitetyyppi]
              [(paneelin-otsikko turvalaitetyyppi
@@ -69,7 +74,8 @@
               (fn [] [paneelin-otsikon-sisalto
                       (suodata-ja-ryhmittele-toimenpiteet-gridiin
                         toimenpiteet
-                        turvalaitetyyppi)])])
+                        turvalaitetyyppi)
+                      e!])])
            turvalaitetyypit))))
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
@@ -78,17 +84,19 @@
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet] :as app}]
       [:div
+       [debug app]
+
        [:div {:style {:padding "10px"}}
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       (into [otsikkopaneeli {:paneelikomponentit [;; TODO Ei osu täysin kohdalleen eri taulukon leveyksillä
+       (into [otsikkopaneeli {:paneelikomponentit [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
                                                    {:sijainti "94.3%"
                                                     :sisalto (fn []
                                                                [kentat/tee-kentta
                                                                 {:tyyppi :checkbox}
                                                                 (atom false)])}]}]
-             (luo-otsikkorivit toimenpiteet))])))
+             (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])

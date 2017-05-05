@@ -15,8 +15,7 @@
 
    otsikot-ja-sisallot            Otsikko ja piirrettävä komponentti funktiona. Voi olla useita."
   [{:keys [paneelikomponentit] :as optiot} & otsikot-ja-sisallot]
-  (r/with-let [otsikko-ja-sisalto-parit (partition 2 otsikot-ja-sisallot)
-               auki-index-atom (atom 0)]
+  (r/with-let [auki-index-atom (atom 0)]
     [:div.otsikkopaneeli
      (doall
        (map-indexed
@@ -32,4 +31,4 @@
                   [sisalto]])]
               (when auki?
                 [:div.otsikkopaneeli-sisalto [sisalto]])]))
-         otsikko-ja-sisalto-parit))]))
+         (partition 2 otsikot-ja-sisallot)))]))
