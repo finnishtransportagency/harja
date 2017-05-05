@@ -89,7 +89,7 @@
         {:virhekasittelija (fn [_ _]
                              (q-turvallisuuspoikkeamat/lokita-lahetys<! db false id))})
       (catch Throwable t
-        (q-turvallisuuspoikkeamat/lokita-lahetys<! db false? id)
+        (q-turvallisuuspoikkeamat/lokita-lahetys<! db false id)
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
 (defn laheta-turvallisuuspoikkeamat-turiin [this]
