@@ -405,6 +405,11 @@
                                           turvallisuuspoikkeama
                                           toimenpiteet-virheet
                                           muokkaa-lomaketta])}
+                         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+                           {:otsikko "Urakan työtunnit"
+                            :nimi :urakan-tyotunnit
+                            :tyyppi :positiivinen-numero
+                            :kokonaisluku? true})
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
