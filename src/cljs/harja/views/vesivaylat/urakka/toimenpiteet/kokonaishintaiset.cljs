@@ -40,6 +40,10 @@
     {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
     {:nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn []
+                    ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
+                    ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
+                    ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
+                    ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki
                     [kentat/tee-kentta
                      {:tyyppi :checkbox}
                      (atom false)])
