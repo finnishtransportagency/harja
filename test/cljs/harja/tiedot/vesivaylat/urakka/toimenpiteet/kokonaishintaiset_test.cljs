@@ -8,7 +8,7 @@
 
 (def testitila {:nakymassa? true
                 :toimenpiteet [{::to/id 0
-                                ::to/tyolaji "Viitat"
+                                ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
@@ -16,35 +16,35 @@
                                 ::to/vikakorjaus true
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 1
-                                ::to/tyolaji "Viitat"
+                                ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 2
-                                ::to/tyolaji "Viitat"
+                                ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 3
-                                ::to/tyolaji "Viitat"
+                                ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 4
-                                ::to/tyolaji "Tykityöt"
+                                ::to/tyolaji :kiinteat
                                 ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 5
-                                ::to/tyolaji "Poljut"
+                                ::to/tyolaji :poijut
                                 ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"

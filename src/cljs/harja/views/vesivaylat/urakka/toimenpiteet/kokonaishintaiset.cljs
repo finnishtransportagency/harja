@@ -69,7 +69,7 @@
     (vec (mapcat
            (fn [tyolaji]
              [tyolaji
-              (paneelin-otsikko tyolaji
+              (paneelin-otsikko (to/tyolaji-fmt tyolaji)
                                 (count (toimenpiteet-tyolajilla
                                          toimenpiteet
                                          tyolaji)))
