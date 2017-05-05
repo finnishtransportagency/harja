@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-05-05",
+    "title": "Harja API:n urakoitsijoiden järjestelmätunnusten jakamisesta",
+    "body": "Ainut taho, joka tarvitsee urakoitsijan Harja API:n järjestelmätunnukset salasanoineen on urakoitsijan oma järjestelmätoimittaja. Esimerkiksi Solitan Harjan kehitystiimi tarvitsee vain pelkän järjestelmätunnuksen nimen, eivätkä ikinä salasanoja. Salasanojen välittämisessä niitä tarvitseville tahoille täytyy käyttää erityistä huolellisuutta ja mieluusti turvallisempaa kanavaa kuin sähköpostia. Järjestelmätunnusten joutuessa vääriin käsiin, voidaan niillä aiheuttaa huomattavaa vahinkoa urakoitsijan hallinnoimien urakoiden tietoihin."
+  },
+  {
     "date": "2017-04-10",
     "title": "Tietyoilmoitukset käyttöön Harjassa",
     "body": "Tietyöilmoitusten kirjaus otetaan käyttöön 11.4.2017. Tällöin Harjassa on mahdollista kirjata tietyöilmoitukset, tulostaa ne ja lähettää PDF-tulosteet edelleen Tieliikennekeskukseen."
