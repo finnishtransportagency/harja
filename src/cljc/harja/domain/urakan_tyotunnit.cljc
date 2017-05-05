@@ -10,3 +10,5 @@
 
 (define-tables
   ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut}])
+
+(s/def ::urakan-tyotunnit (s/coll-of ::urakan-tyotunnit))

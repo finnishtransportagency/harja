@@ -2,7 +2,7 @@
   (:require
     [harja.kyselyt.specql-db :refer [define-tables]]
     [harja.domain.urakan-tyotunnit :as ut]
-    [specql.core :refer [fetch update!]]
+    [specql.core :refer [fetch update! insert!]]
     [specql.op :as op]
     [harja.pvm :as pvm]
     [harja.kyselyt.konversio :as konv]))
@@ -15,6 +15,9 @@
     ::ut/tyotunnit
     ::ut/lahetetty
     ::ut/lahetys-onnistunut})
+
+(defn tallenna-urakan-tyotunnit [db tyotunnit]
+  (insert! db ::ut/urakan-tyotunnit tyotunnit))
 
 (defn hae-urakan-tyotunnit [db urakka-id]
   (fetch db ::ut/urakan-tyotunnit kaikki-kentat
