@@ -178,7 +178,7 @@
       [:aika :kohdenumero :tr]]
 
      [upotettu-raportti/raportin-vientimuodot
-      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {})]]))
+      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
 
 (defn aikataulu
   [urakka optiot]

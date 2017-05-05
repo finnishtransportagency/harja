@@ -269,7 +269,13 @@
     :urakkatyyppi #{:hoito}}
 
    {:nimi :yllapidon-aikataulu
-    :parametrit []
+    :parametrit [{:tyyppi :valinta
+                  :valinnat [:aika :kohdenumero :tr]
+                  :valinta-nayta {:aika "Aloitusajan mukaan"
+                                  :kohdenumero "Kohdenumeron mukaan"
+                                  :tr "Tieosoitteen mukaan"}
+                  :nimi :jarjestys
+                  :otsikko "Järjestä kohteet"}]
     :konteksti #{"urakka"}
     :suorita #'harja.palvelin.raportointi.raportit.yllapidon-aikataulu/suorita
     :kuvaus "Ylläpidon aikataulu"
