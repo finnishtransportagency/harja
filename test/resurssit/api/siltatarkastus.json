@@ -37,7 +37,17 @@
       "paallysrakenne": {
         "kansilaatta": {
           "ehdotettutoimenpide": "puhdistettava",
-          "lisatietoja": "Kansi likainen"
+          "lisatietoja": "Kansi likainen",
+          "liitteet": [
+            {
+              "liite": {
+                "nimi": "kansilaatta.png",
+                "tyyppi": "image/png",
+                "kuvaus": "Kuva kansilaatasta",
+                "sisalto": "... sisältö base64 enkoodattuna  ..."
+              }
+            }
+          ]
         },
         "paallysteenKunto": {
           "ehdotettutoimenpide": "eiToimenpiteita"
