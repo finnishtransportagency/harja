@@ -12,7 +12,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def api-tulos->kirjain
@@ -84,16 +85,26 @@
       (paivita-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db)
       (luo-siltatarkastus ulkoinen-id urakka-id tarkastus silta kayttaja db))))
 
-(defn lisaa-siltatarkastuskohteet [sillantarkastuskohteet siltatarkastus-id db]
+(defn lisaa-siltatarkastuskohteet [db liitteiden-hallinta kayttaja urakka-id sillantarkastuskohteet siltatarkastus-id]
   (log/debug "Tallennetaan siltatarkastuskohteet")
   (let [tallenna-kohderyhma
         (fn [kohderyhma]
           (doseq [kohde (keys kohderyhma)]
-            (silta-q/luo-siltatarkastuksen-kohde<! db
-                                                   (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
-                                                   (get-in kohderyhma [kohde :lisatietoja])
-                                                   siltatarkastus-id
-                                                   (api-kohde->numero (name kohde)))))]
+            (let [liitteet (get-in kohderyhma [kohde :liitteet])
+                  kohde (silta-q/luo-siltatarkastuksen-kohde<! db
+                                                               (api-tulos->kirjain (get-in kohderyhma [kohde :ehdotettutoimenpide]))
+                                                               (get-in kohderyhma [kohde :lisatietoja])
+                                                               siltatarkastus-id
+                                                               (api-kohde->numero (name kohde)))]
+              (when (and liitteet (not (empty? liitteet)))
+                (liitteet/tallenna-liitteet-siltatarkastuskohteelle
+                  db
+                  liitteiden-hallinta
+                  kayttaja
+                  urakka-id
+                  (:siltatarkastus kohde)
+                  (:kohde kohde)
+                  liitteet)))))]
     (silta-q/poista-siltatarkastuskohteet! db siltatarkastus-id)
     (tallenna-kohderyhma (:alusrakenne sillantarkastuskohteet))
     (tallenna-kohderyhma (:paallysrakenne sillantarkastuskohteet))
@@ -107,7 +118,7 @@
                         :viesti (format "Sillalle (tunnus: %s) ei voi kirjata uutta tarkastusta, sillä samalla aikaleimalla (%s) on jo kirjattu tarkastus. Tarkastusajalle saa olla vain yksi tarkastus."
                                         siltatunnus tarkastusaika)}]})))
 
-(defn lisaa-siltatarkastus [{id :id} data kayttaja db]
+(defn lisaa-siltatarkastus [{id :id} data kayttaja db liitteiden-hallinta]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -128,7 +139,13 @@
                                       kayttaja
                                       db)]
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
-              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id db)
+              (lisaa-siltatarkastuskohteet
+                db
+                liitteiden-hallinta
+                kayttaja
+                urakka-id
+                (get-in data [:siltatarkastus :sillantarkastuskohteet])
+                siltatarkastus-id)
               (tee-kirjausvastauksen-body {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"})))
           (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                    :virheet [{:koodi virheet/+tuntematon-silta+
@@ -140,21 +157,21 @@
         ulkoiset-idt (-> data :tarkastusten-tunnisteet)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara  (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)]
+    (let [poistettujen-maara (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)]
       (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
                                                   (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
                                                   "Vastaavia tarkastuksia ei loytynyt")}))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :lisaa-siltatarkastus
       (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
         (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request
                          json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (lisaa-siltatarkastus parametrit data kayttaja db)))))
+                           (lisaa-siltatarkastus parametrit data kayttaja db liitteiden-hallinta)))))
     (julkaise-reitti
       http :poista-siltatarkastus
       (DELETE "/api/urakat/:id/tarkastus/siltatarkastus" request
