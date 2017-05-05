@@ -5,3 +5,6 @@
 
 (defn toimenpide-turvalaitetyypilla [toimenpiteet turvalaitetyyppi]
   (first (filter #(= (::turvalaitetyyppi %) turvalaitetyyppi) toimenpiteet)))
+
+(def turvalaitetyyppi-fmt
+  {})

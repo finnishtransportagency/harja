@@ -17,16 +17,16 @@
 
 (defn- ryhmittele-toimenpiteet-alueella [toimenpiteet]
   (let [toimenpiteet-ryhmiteltyna (group-by ::to/alue toimenpiteet)
-        turvalaitetyypit (keys toimenpiteet-ryhmiteltyna)]
+        tyolajit (keys toimenpiteet-ryhmiteltyna)]
     (vec (mapcat #(-> (cons (grid/otsikko %)
-                            (get toimenpiteet-ryhmiteltyna %))) turvalaitetyypit))))
+                            (get toimenpiteet-ryhmiteltyna %))) tyolajit))))
 
-(defn- toimenpiteet-turvalaitetyypilla [toimenpiteet turvalaitetyyppi]
-  (filterv #(= (::to/turvalaitetyyppi %) turvalaitetyyppi) toimenpiteet))
+(defn- toimenpiteet-tyolajilla [toimenpiteet tyolajit]
+  (filterv #(= (::to/tyolaji %) tyolajit) toimenpiteet))
 
-(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet turvalaitetyyppi]
+(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet tyolaji]
   (-> toimenpiteet
-      (toimenpiteet-turvalaitetyypilla turvalaitetyyppi)
+      (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-alueella)))
 
 (defn- alueen-toimenpiteet [toimenpiteet alue]
@@ -67,20 +67,20 @@
        ")"))
 
 (defn- luo-otsikkorivit [toimenpiteet e!]
-  (let [turvalaitetyypit (keys (group-by ::to/turvalaitetyyppi toimenpiteet))]
+  (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
-           (fn [turvalaitetyyppi]
-             [turvalaitetyyppi
-              (paneelin-otsikko turvalaitetyyppi
-                                (count (toimenpiteet-turvalaitetyypilla
+           (fn [tyolaji]
+             [tyolaji
+              (paneelin-otsikko tyolaji
+                                (count (toimenpiteet-tyolajilla
                                          toimenpiteet
-                                         turvalaitetyyppi)))
+                                         tyolaji)))
               (fn [] [paneelin-otsikon-sisalto
                       (suodata-ja-ryhmittele-toimenpiteet-gridiin
                         toimenpiteet
-                        turvalaitetyyppi)
+                        tyolaji)
                       e!])])
-           turvalaitetyypit))))
+           tyolajit))))
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
   (komp/luo
@@ -99,8 +99,8 @@
                                {:sijainti "94.3%"
                                 :sisalto
                                 (fn [{:keys [tunniste]}]
-                                  (let [turvalaitetyypin-toimenpiteet (toimenpiteet-turvalaitetyypilla toimenpiteet tunniste)
-                                        kaikki-valittu? (every? true? (map :valittu? turvalaitetyypin-toimenpiteet))]
+                                  (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
+                                        kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))]
                                     [kentat/tee-kentta
                                      {:tyyppi :checkbox}
                                      ;; TODO Lisää välitila jos osa valittu
