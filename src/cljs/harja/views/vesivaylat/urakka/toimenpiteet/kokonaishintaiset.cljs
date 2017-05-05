@@ -94,16 +94,22 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       (into [otsikkopaneeli {:paneelikomponentit [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
-                                                   {:sijainti "94.3%"
-                                                    :sisalto (fn [{:keys [tunniste]}]
-                                                               (let [turvalaitetyypin-toimenpiteet (toimenpiteet-turvalaitetyypilla toimenpiteet tunniste)
-                                                                     kaikki-valittu? (every? true? (map :valittu? turvalaitetyypin-toimenpiteet))]
-                                                                 [kentat/tee-kentta
-                                                                  {:tyyppi :checkbox}
-                                                                  ;; TODO Lisää välitila jos osa valittu
-                                                                  ;; TODO Mahdollista kaikkien valinta tästä
-                                                                  (atom kaikki-valittu?)]))}]}]
+       (into [otsikkopaneeli {:paneelikomponentit
+                              [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
+                               {:sijainti "94.3%"
+                                :sisalto
+                                (fn [{:keys [tunniste]}]
+                                  (let [turvalaitetyypin-toimenpiteet (toimenpiteet-turvalaitetyypilla toimenpiteet tunniste)
+                                        kaikki-valittu? (every? true? (map :valittu? turvalaitetyypin-toimenpiteet))]
+                                    [kentat/tee-kentta
+                                     {:tyyppi :checkbox}
+                                     ;; TODO Lisää välitila jos osa valittu
+                                     ;; TODO Mahdollista kaikkien valinta tästä
+                                     (atom kaikki-valittu?)
+                                     #_(r/wrap kaikki-valittu?
+                                             (fn [uusi]
+                                               (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                                                :valinta uusi}))))]))}]}]
              (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
