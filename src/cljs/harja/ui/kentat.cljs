@@ -1081,7 +1081,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
     [:input {:class (str (when lomake? "form-control")
-                         (when (:keskenerainen @data) " puuttuva-arvo"))
+                         (when-not (:tunnit @data) " puuttuva-arvo"))
              :placeholder placeholder
              on-change* (fn [e]
                           (let [v1 (-> e .-target .-value)
