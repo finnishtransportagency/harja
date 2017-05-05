@@ -38,7 +38,7 @@
     {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::t/turvalaite :leveys 10}
     {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
-    {:nimi :valinta :tyyppi :komponentti :tasaa :keskita
+    {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn []
                     ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
                     ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
@@ -82,7 +82,13 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       (into [otsikkopaneeli {}] (luo-otsikkorivit toimenpiteet))])))
+       (into [otsikkopaneeli {:paneelikomponentit [;; TODO Ei osu täysin kohdalleen eri taulukon leveyksillä
+                                                   {:sijainti "94.3%"
+                                                    :sisalto (fn []
+                                                               [kentat/tee-kentta
+                                                                {:tyyppi :checkbox}
+                                                                (atom false)])}]}]
+             (luo-otsikkorivit toimenpiteet))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
