@@ -1,7 +1,6 @@
 (ns harja.domain.organisaatio
   "Määrittelee organisaation nimiavaruuden specit"
   #?@(:clj [(:require [clojure.spec :as s]
-                      [harja.domain.specql-db :refer [db]]
                       [harja.kyselyt.specql-db :refer [define-tables]]
                       [clojure.future :refer :all])]
       :cljs [(:require [clojure.spec :as s]
