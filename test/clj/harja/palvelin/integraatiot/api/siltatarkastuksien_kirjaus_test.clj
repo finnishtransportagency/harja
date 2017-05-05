@@ -6,7 +6,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.liitteet :as liitteet])
+            [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
