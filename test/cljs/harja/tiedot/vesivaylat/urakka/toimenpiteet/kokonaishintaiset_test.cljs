@@ -1,6 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
+            [harja.loki :refer [log]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.vesivaylat.toimenpide :as to]))
@@ -59,7 +60,7 @@
   (testing "Rivin asettaminen valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 0)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}))
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 0)]
       (is (not (:valittu? vanha-kohde)))
       (is (true? (:valittu? muokattu-kohde)))))
@@ -67,7 +68,7 @@
   (testing "Rivin asettaminen ei-valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 1)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}))
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
       (is (true? (:valittu? vanha-kohde)))
       (is (false? (:valittu? muokattu-kohde))))))

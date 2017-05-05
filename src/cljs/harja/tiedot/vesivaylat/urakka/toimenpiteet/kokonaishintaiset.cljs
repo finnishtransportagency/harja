@@ -1,6 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
+            [harja.loki :refer [log]]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -62,8 +63,10 @@
     (assoc app :nakymassa? nakymassa?))
   
   ValitseToimenpide
-  (process-event [{:keys [id valinta]} {:keys [toimenpiteet] :as app}]
-    (let [paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet id)
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+    (let [toimenpide-id (:id tiedot)
+          valinta (:valinta tiedot)
+          paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
                                     (assoc :valittu? valinta))]
-      (assoc app :toimenpiteet (mapv #(if (= (::to/id %) id) paivitetty-toimenpide %)
+      (assoc app :toimenpiteet (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
                                      toimenpiteet)))))
