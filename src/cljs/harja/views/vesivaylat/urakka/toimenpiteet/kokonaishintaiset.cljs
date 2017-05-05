@@ -38,7 +38,7 @@
     {:otsikko "Päivämäärä" :nimi ::t/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::t/turvalaite :leveys 10}
     {:otsikko "Vikakorjaus" :nimi ::t/vikakorjaus :fmt fmt/totuus :leveys 5}
-    {:nimi :valinta :tyyppi :komponentti
+    {:nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn []
                     [kentat/tee-kentta
                      {:tyyppi :checkbox}
