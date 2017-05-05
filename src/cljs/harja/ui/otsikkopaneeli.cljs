@@ -7,7 +7,9 @@
 (defn- avaa-paneeli! [index auki-index-atom]
   (reset! auki-index-atom index))
 
-(defn otsikkopaneeli [otsikot-ja-sisallot optiot]
+(defn otsikkopaneeli
+  "otsikot-ja-sisallot            Otsikko ja piirrettävä komponentti funktiona. Voi olla useita."
+  [optiot & otsikot-ja-sisallot]
   (r/with-let [otsikko-ja-sisalto-parit (partition 2 otsikot-ja-sisallot)
                auki-index-atom (atom 0)]
     [:div.otsikkopaneeli

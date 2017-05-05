@@ -82,7 +82,7 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       [otsikkopaneeli (luo-otsikkorivit toimenpiteet)]])))
+       (into [otsikkopaneeli {}] (luo-otsikkorivit toimenpiteet))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
