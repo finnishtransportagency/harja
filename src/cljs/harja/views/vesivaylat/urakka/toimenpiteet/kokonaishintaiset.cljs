@@ -16,10 +16,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
-  (let [toimenpiteet-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
-        tyolajit (keys toimenpiteet-ryhmiteltyna)]
-    (vec (mapcat #(-> (cons (grid/otsikko %)
-                            (get toimenpiteet-ryhmiteltyna %))) tyolajit))))
+  (let [vaylalla-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
+        vaylat (keys vaylalla-ryhmiteltyna)]
+    (vec (mapcat #(-> (cons (grid/otsikko (:nimi %))
+                            (get vaylalla-ryhmiteltyna %)))
+                 vaylat))))
 
 (defn- toimenpiteet-tyolajilla [toimenpiteet tyolajit]
   (filterv #(= (::to/tyolaji %) tyolajit) toimenpiteet))
@@ -38,7 +39,7 @@
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10}
+    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite :nimi])}
     {:otsikko "Vikakorjaus" :nimi ::to/vikakorjaus :fmt fmt/totuus :leveys 5}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn [rivi]

@@ -8,49 +8,48 @@
 
 (def testitila {:nakymassa? true
                 :toimenpiteet [{::to/id 0
-                                ::to/vayla "Kopio, Iisalmen väylä"
+                                ::to/tyolaji "Viitat"
+                                ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
-                                ::to/tyolaji "Viitat"
                                 ::to/pvm (pvm/nyt)
                                 ::to/vikakorjaus true
-                                ::to/turvalaite "Siitenluoto (16469)"}
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 1
-                                ::to/vayla "Kuopio, Iisalmen väylä"
+                                ::to/tyolaji "Viitat"
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
-                                ::to/tyolaji "Viitat"
                                 ::to/pvm (pvm/nyt)
-                                :valittu? true
-                                ::to/turvalaite "Siitenluoto (16469)"}
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 2
-                                ::to/vayla "Kopio, Iisalmen väylä"
+                                ::to/tyolaji "Viitat"
+                                ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
-                                ::to/tyolaji "Viitat"
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite "Siitenluoto (16469)"}
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 3
-                                ::to/vayla "Varkaus, Kuopion väylä"
-                                ::to/tyoluokka "Asennus ja huolto"
-                                ::to/toimenpide "Huoltotyö"
                                 ::to/tyolaji "Viitat"
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/tyoluokka "Asennus ja huolto"
+                                ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite "Siitenluoto (16469)"}
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 4
-                                ::to/vayla "Varkaus, Kuopion väylä"
-                                ::to/tyoluokka "Asennus ja huolto"
-                                ::to/toimenpide "Huoltotyö"
                                 ::to/tyolaji "Tykityöt"
-                                ::to/pvm (pvm/nyt)
-                                ::to/turvalaite "Siitenluoto (16469)"}
-                               {::to/id 5
-                                ::to/vayla "Varkaus, Kuopion väylä"
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
-                                ::to/tyolaji "Poljut"
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite "Siitenluoto (16469)"}]})
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                               {::to/id 5
+                                ::to/tyolaji "Poljut"
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/tyoluokka "Asennus ja huolto"
+                                ::to/toimenpide "Huoltotyö"
+                                ::to/pvm (pvm/nyt)
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}]})
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
