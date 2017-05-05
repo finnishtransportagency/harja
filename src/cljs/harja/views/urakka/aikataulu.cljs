@@ -164,7 +164,7 @@
             otsikoidut-aikataulurivit (otsikoi-aikataulurivit
                                        (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
             voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
-                                          (constantly saa-muokata?))
+                                          saa-muokata?)
             voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
                                            saa-merkita-valmiiksi?
                                            (:valmis-tiemerkintaan %))
