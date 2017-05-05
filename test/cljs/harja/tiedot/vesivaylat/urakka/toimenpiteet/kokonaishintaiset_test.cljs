@@ -21,7 +21,8 @@
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
-                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                                ::to/turvalaite {:nimi "Siitenluoto (16469)"}
+                                :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
@@ -71,3 +72,21 @@
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
       (is (true? (:valittu? vanha-kohde)))
       (is (false? (:valittu? muokattu-kohde))))))
+
+
+(deftest tyolajin-rivien-valinta
+  (testing "Valitaan viitat"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
+                                                  :valinta true})
+                        vanha-tila)
+          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
+      (every? true? (map :valittu? viitat))))
+
+  (testing "Asetetaan valinnat pois viitoilta"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
+                                                  :valinta false})
+                        vanha-tila)
+          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
+      (every? false? (map :valittu? viitat)))))

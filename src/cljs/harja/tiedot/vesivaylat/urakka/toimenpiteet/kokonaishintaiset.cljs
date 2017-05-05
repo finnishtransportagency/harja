@@ -55,13 +55,14 @@
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseTyolaji [tiedot])
 
 (extend-protocol tuck/Event
 
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
     (assoc app :nakymassa? nakymassa?))
-  
+
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
     (let [toimenpide-id (:id tiedot)
@@ -69,4 +70,14 @@
           paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
                                     (assoc :valittu? valinta))]
       (assoc app :toimenpiteet (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                     toimenpiteet)))))
+                                     toimenpiteet))))
+
+  ValitseTyolaji
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+    (let [tyolaji (:tyolaji tiedot)
+          valinta (:valinta tiedot)
+          paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
+                                           (assoc % :valittu? valinta)
+                                           %)
+                                        toimenpiteet)]
+      (assoc app :toimenpiteet paivitetyt-toimenpiteet))))

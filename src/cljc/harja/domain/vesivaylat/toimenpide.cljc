@@ -3,8 +3,8 @@
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
 
-(defn toimenpide-tyolajilla [toimenpiteet tyolaji]
-  (first (filter #(= (::tyolaji %) tyolaji) toimenpiteet)))
+(defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
+  (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
 (def tyolajit #{:kiinteat
                 :poijut
