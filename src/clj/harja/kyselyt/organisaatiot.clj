@@ -2,8 +2,7 @@
   "Organisaatioihin liittyvät tietokantakyselyt"
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [define-tables fetch]]
-            [harja.domain.organisaatio :as o]
-            [harja.domain.specql-db :refer [db]]))
+            [harja.domain.organisaatio :as o]))
 
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})
