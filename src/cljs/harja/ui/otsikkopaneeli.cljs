@@ -2,7 +2,8 @@
   "Geneerinen UI-elementti, joka piirtää avattavat/suljettavat otsikot.
    Otsikoiden alle voi sijoittaa vapaasti minkä tahansa komponentin"
   (:require [reagent.core :as r :refer [atom]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.ui.ikonit :as ikonit]))
 
 (defn- avaa-paneeli! [index auki-index-atom]
   (reset! auki-index-atom index))
@@ -16,7 +17,7 @@
    otsikot-ja-sisallot            Tunniste, tekstiotsikko ja piirrettävä komponentti funktiona. Voi olla useita."
   [{:keys [paneelikomponentit] :as optiot} & otsikot-ja-sisallot]
   (r/with-let [auki-index-atom (atom 0)]
-    [:div.otsikkopaneeli
+    [:div.otsikkopaneeli.klikattava
      (doall
        (map-indexed
          (fn [index [tunniste otsikko sisalto]]
@@ -24,7 +25,10 @@
              ^{:key tunniste}
              [:div
               [:div.otsikkopaneeli-otsikko {:on-click #(avaa-paneeli! index auki-index-atom)}
-               otsikko
+               [:div.otsikkopaneeli-avausindikaattori (if auki?
+                                                                   (ikonit/livicon-minus)
+                                                                   (ikonit/livicon-plus))]
+               [:div.otsikkopaneeli-otsikkoteksti otsikko]
                (for [{:keys [sijainti sisalto]} paneelikomponentit]
                  ^{:key (hash sisalto)}
                  [:div.otsikkopaneeli-custom-paneelikomponentti {:style {:top -2 :left sijainti}}
