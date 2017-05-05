@@ -87,7 +87,7 @@
   (let [urakka-id (ffirst (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019'"))
         vuosi 2017
         kolmannes 1]
-    (with-fake-http [{:url +turvallisuuspoikkeama-url+ :method :post} 500]
+    (with-fake-http [{:url +tyotunnit-url+ :method :post} 500]
       (turi/laheta-urakan-vuosikolmanneksen-tyotunnit-turiin (:turi jarjestelma) urakka-id vuosi kolmannes)
       (let [tila (hae-tyotuntien-tila urakka-id vuosi kolmannes)]
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")

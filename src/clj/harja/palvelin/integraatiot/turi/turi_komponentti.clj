@@ -89,6 +89,7 @@
         {:virhekasittelija (fn [_ _]
                              (q-turvallisuuspoikkeamat/lokita-lahetys<! db false id))})
       (catch Throwable t
+        (q-turvallisuuspoikkeamat/lokita-lahetys<! db false? id)
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
 (defn laheta-turvallisuuspoikkeamat-turiin [this]
@@ -111,37 +112,45 @@
                          urakka-id
                          vuosi
                          vuosikolmannes))
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "turi" "urakan-tyotunnit" nil
-        (fn [konteksti]
-          (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
-                tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
-                            db
-                            urakka-id
-                            vuosi
-                            vuosikolmannes)
-                sanoma (tyotunnit-sanoma/muodosta sampoid vuosi vuosikolmannes tyotunnit)
-                {body :body} (integraatiotapahtuma/laheta
-                               konteksti
-                               :http
-                               {:metodi :POST
-                                :url urakan-tyotunnit-url
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana
-                                :otsikot {"Content-Type" "text/xml"}}
-                               sanoma)]
-            (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtunnit lähetetty onnistuneesti TURI:n. TURI:n vastaus: %s."
-                               urakka-id
-                               vuosi
-                               vuosikolmannes
-                               body))
-            (lokita-lahetys true)))
-        {:virhekasittelija (fn [_ _]
-                             (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetys TURI:n epäonnistui"
-                                                urakka-id
-                                                vuosi
-                                                vuosikolmannes))
-                             (lokita-lahetys false))}))))
+      (try
+
+        (integraatiotapahtuma/suorita-integraatio
+         db integraatioloki "turi" "urakan-tyotunnit" nil
+         (fn [konteksti]
+           (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
+                 tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
+                             db
+                             urakka-id
+                             vuosi
+                             vuosikolmannes)
+                 sanoma (tyotunnit-sanoma/muodosta sampoid vuosi vuosikolmannes tyotunnit)
+                 {body :body} (integraatiotapahtuma/laheta
+                                konteksti
+                                :http
+                                {:metodi :POST
+                                 :url urakan-tyotunnit-url
+                                 :kayttajatunnus kayttajatunnus
+                                 :salasana salasana
+                                 :otsikot {"Content-Type" "text/xml"}}
+                                sanoma)]
+             (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtunnit lähetetty onnistuneesti TURI:n. TURI:n vastaus: %s."
+                                urakka-id
+                                vuosi
+                                vuosikolmannes
+                                body))
+             (lokita-lahetys true)))
+         {:virhekasittelija (fn [_ _]
+                              (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetys TURI:n epäonnistui"
+                                                 urakka-id
+                                                 vuosi
+                                                 vuosikolmannes))
+                              (lokita-lahetys false))})
+        (catch Throwable t
+          (lokita-lahetys false)
+          (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtuntien lähetys TURI:n epäonnistui"
+                             urakka-id
+                             vuosi
+                             vuosikolmannes)))))))
 
 (defn laheta-tyotunnit-turin [this]
   (let [lahettamattomat (q-urakan-tyotunnit/hae-lahettamattomat-tai-epaonnistuneet-tyotunnit (:db this))]
