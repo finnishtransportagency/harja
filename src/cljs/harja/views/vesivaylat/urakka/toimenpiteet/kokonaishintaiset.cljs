@@ -101,13 +101,11 @@
                                         kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))]
                                     [kentat/tee-kentta
                                      {:tyyppi :checkbox}
-                                     ;; TODO Lisää välitila jos osa valittu
-                                     ;; TODO Mahdollista kaikkien valinta tästä
-                                     (atom kaikki-valittu?)
-                                     #_(r/wrap kaikki-valittu?
+                                     ;; TODO Piirrä välitila jos osa valittu
+                                     (r/wrap kaikki-valittu?
                                              (fn [uusi]
-                                               (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                                                :valinta uusi}))))]))}]}]
+                                               (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                                             :valinta uusi}))))]))}]}]
              (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
