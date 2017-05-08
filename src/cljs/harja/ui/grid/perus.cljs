@@ -155,28 +155,70 @@
    [:div.livi-grid-infolaatikko-sisalto
     (sisalto rivi)]])
 
+(defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
+                                         mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
+                                         rivi]}]
+    ;; Rivin klikkaus
+    (when rivi-klikattu
+      (if (not= @valittu-rivi rivi)
+        (rivi-klikattu rivi)))
+
+    ;; Rivin valinta
+    (when mahdollista-rivin-valinta
+      (if (= @valittu-rivi rivi)
+        (do (reset! valittu-rivi nil)
+            (when rivi-valinta-peruttu
+              (rivi-valinta-peruttu rivi))
+            (when rivin-infolaatikko
+              (reset! infolaatikko-nakyvissa? false)))
+        (do (reset! valittu-rivi rivi)
+            (when rivin-infolaatikko
+              (reset! infolaatikko-nakyvissa? true))))))
+
+;; TODO Alemman pitäisi toimia, miksi ei?
+#_(defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
+                                         mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
+                                         rivi]}]
+  ;; Rivin klikkaus
+  (when rivi-klikattu
+    (if (not= @valittu-rivi rivi)
+      (rivi-klikattu rivi)))
+
+  ;; Rivin valinta
+  (when mahdollista-rivin-valinta
+    (if (= @valittu-rivi rivi)
+      ;; Eri rivin klikkaus
+      (do (reset! valittu-rivi nil)
+          (when rivi-valinta-peruttu
+            (rivi-valinta-peruttu rivi))
+          (when rivin-infolaatikko
+            (reset! infolaatikko-nakyvissa? false)
+
+            (when infolaatikon-tila-muuttui
+              (infolaatikon-tila-muuttui false))))
+      ;; Jo valitun rivin klikkaus
+      (do (reset! valittu-rivi rivi)
+          (when rivin-infolaatikko
+            (reset! infolaatikko-nakyvissa? true)
+
+            (when infolaatikon-tila-muuttui
+              (infolaatikon-tila-muuttui true)))))))
+
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
-                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka]} skeema rivi index]
+                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui]}
+                   skeema rivi index]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
-        :on-click #(do
-                     ;; Rivin klikkaus
-                     (when rivi-klikattu
-                       (if (not= @valittu-rivi rivi)
-                         (rivi-klikattu rivi)))
-
-                     ;; Rivin valinta
-                     (when mahdollista-rivin-valinta
-                       (if (= @valittu-rivi rivi)
-                         (do (reset! valittu-rivi nil)
-                             (when rivi-valinta-peruttu
-                               (rivi-valinta-peruttu rivi))
-                             (when rivin-infolaatikko
-                               (reset! infolaatikko-nakyvissa? false)))
-                         (do (reset! valittu-rivi rivi)
-                             (when rivin-infolaatikko
-                               (reset! infolaatikko-nakyvissa? true))))))}
+        :on-click #(kasittele-rivin-klikkaus
+                     {:rivi-klikattu rivi-klikattu
+                      :rivi-valinta-peruttu rivi-valinta-peruttu
+                      :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
+                      :valittu-rivi valittu-rivi
+                      :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                      :rivin-infolaatikko rivin-infolaatikko
+                      :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                      :rivi rivi})}
 
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
@@ -207,10 +249,14 @@
                                    (solun-luokka haettu-arvo rivi)))}
                    ;; Solun sisältö
                    [:span
-
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
+                    (when @infolaatikko-nakyvissa?
+                      (log "PITÄISI NÄKYÄ!")
+                      (log "RIVI ON " (pr-str rivi))
+                      (log "VALITTU RIVI ON " (pr-str @valittu-rivi)))
+
                     (when (and
                             (= rivi @valittu-rivi)
                             (= (inc i) (count skeema))
@@ -391,7 +437,7 @@
                          jarjestys)))))))
 
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
-                                     rivin-infolaatikko infolaatikko-nakyvissa?
+                                     rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
                                      rivi-valinta-peruttu mahdollista-rivin-valinta piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki]}]
@@ -416,6 +462,7 @@
                           [nayttorivi {:ohjaus ohjaus
                                        :vetolaatikot vetolaatikot
                                        :id id
+                                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                                        :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                        :tallenna tallenna
                                        :luokka (str (if (even? (+ i 1))
@@ -483,7 +530,6 @@
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun riviä klikataan.
                                         Funktiota kutsutaan rivin tiedoilla.
-                                        Vakioratkaisussa voi käyttää gridin tarjoamaa gridin-infolaatikko komponenttia.
   :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
@@ -501,6 +547,7 @@
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                                         jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
+  :vetolaatikot-auki                    Ulkopuolelta annettu tila vetolaatikoille (atom, jonka arvo on setti)
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
   :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
                                          :teksti (näytettävä teksti) ja :sarakkeita (colspan)
@@ -510,7 +557,7 @@
                                         riveille yhteinen sääntö milloin rivejä saa muokata
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
-           rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos
+           rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara rivin-infolaatikko
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
@@ -840,6 +887,7 @@
                                          :rivin-infolaatikko rivin-infolaatikko
                                          :rivin-luokka rivin-luokka
                                          :valittu-rivi valittu-rivi
+                                         :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                                          :rivi-valinta-peruttu rivi-valinta-peruttu
                                          :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                          :piilota-toiminnot? piilota-toiminnot?

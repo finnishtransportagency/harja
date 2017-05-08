@@ -44,12 +44,13 @@
    "Urakoitsijan vastuuhenkilö" "TODO"
    "Henkilölukumaara" "TODO"])
 
-(defn- paneelin-sisalto [toimenpiteet e!]
+(defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
   [grid/grid
    {:tunniste ::to/id
     :tyhja (if (nil? toimenpiteet)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
+    :infolaatikon-tila-muuttui (fn [uusi] (e! (tiedot/->AsetaInfolaatikonTila uusi)))
     :rivin-infolaatikko (fn [rivi]
                           (apply grid/gridin-infolaatikko (toimenpiteet-infolaatikkoon rivi)))}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
@@ -80,7 +81,7 @@
          "kpl")
        ")"))
 
-(defn- luo-otsikkorivit [toimenpiteet e!]
+(defn- luo-otsikkorivit [toimenpiteet infolaatikko-nakyvissa? e!]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -93,6 +94,7 @@
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  toimenpiteet
                  tyolaji)
+               infolaatikko-nakyvissa?
                e!]])
            tyolajit))))
 
@@ -100,7 +102,7 @@
   (komp/luo
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! {:keys [toimenpiteet] :as app}]
+    (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
        [debug app]
 
@@ -126,7 +128,7 @@
                               (fn [uusi]
                                 (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                               :valinta uusi}))))]))}]}]
-             (luo-otsikkorivit toimenpiteet e!))])))
+             (luo-otsikkorivit toimenpiteet infolaatikko-nakyvissa? e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
