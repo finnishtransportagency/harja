@@ -194,6 +194,7 @@
 (defn turvallisuuspoikkeaman-tiedot []
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
         toimenpiteet-virheet (atom nil)]
+    (println "--->>> " turvallisuuspoikkeama)
     (fnc []
          (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                             ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))

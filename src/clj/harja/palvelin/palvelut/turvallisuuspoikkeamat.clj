@@ -27,15 +27,12 @@
 
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
-  (let [tyotunnit (::urakan-tyotunnit-d/tyotunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id))
-        turpot (konv/sarakkeet-vektoriin
+  (let [turpot (konv/sarakkeet-vektoriin
                  (into []
                        q/turvallisuuspoikkeama-xf
                        (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
                  {:korjaavatoimenpide :korjaavattoimenpiteet})]
-    (->> turpot
-         (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa)
-         (mapv #(assoc % :urakan-tyotunnit tyotunnit)))))
+    (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
   (when kayttaja-id
@@ -44,7 +41,8 @@
 (defn hae-urakan-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
+  (let [tyotunnit (::urakan-tyotunnit-d/tyotunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id))
+        tulos (as-> (first (konv/sarakkeet-vektoriin (into []
                                                            q/turvallisuuspoikkeama-xf
                                                            (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
                                                      {:kommentti :kommentit
@@ -57,6 +55,7 @@
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
                                        (:korjaavattoimenpiteet turpo)))
                     (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
+                    (assoc turpo :urakan-tyotunnit tyotunnit)
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
