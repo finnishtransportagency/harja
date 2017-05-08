@@ -33,10 +33,6 @@
      :nimi :yhatunniste
      :pituus-max 512
      :tyyppi :string}
-    {:otsikko "Sampo-tunniste"
-     :nimi :sampotunniste
-     :pituus-max 512
-     :tyyppi :string}
     {:otsikko "Vuosi"
      :nimi :vuosi
      :pituus-max 512
@@ -52,10 +48,6 @@
       :tunniste #((juxt :yhatunnus :elyt :vuosi) %)}
      [{:otsikko "YHA-nimi"
        :nimi :yhatunnus
-       :tyyppi :string
-       :muokattava? (constantly false)}
-      {:otsikko "Sampo-tunnus"
-       :nimi :sampotunnus
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "ELY:t"
