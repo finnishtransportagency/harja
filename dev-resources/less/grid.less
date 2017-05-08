@@ -1,4 +1,3 @@
-@import "livi_tyylit";
 /* Geneerinen editoitava gridi */
 
 /*
@@ -45,208 +44,226 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       font-size: @fontin-koko-leipateksti;
     }
   }
-  div.panel-body {
+}
+
+div.panel-body {
+  padding: 0;
+}
+
+table {
+  font-size: @fontin-koko-taulukko;
+  word-break: break-all;
+  td {
+    input:not([type="checkbox"]), select {
+      width: 100%;
+      z-index: 10;
+      height: @livitaulukon-input-korkeus;
+    }
+    input[type="radio"] {
+      width: auto;
+    }
+    .kombo {
+      width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
+    }
+    .dropdown-menu {
+      z-index: 1000;
+      margin-top: 0;
+    }
+
+    .varoitukset,
+    .virheet,
+    .huomautukset {
+      display: none;
+      position: relative;
+      word-break: break-word;
+    }
+    .varoitus {
+      .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
+    }
+    .virhe {
+      .virhe-tai-varoitus-grid(@vaara, @valkoinen);
+    }
+    .huomautus {
+      .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
+    }
+  }
+
+  thead {
+    background-color: @harmaa8;
+    word-break: normal;
+  }
+
+  td:hover {
+    > .varoitukset,
+    > .virheet,
+    > .huomautukset {
+      display: block;
+    }
+  }
+
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+table.grid tr.vetolaatikko-auki {
+  display: table-row;
+  > td {
+    padding-top: 10px;
+    padding-bottom: 30px;
+    padding-left: 15px;
+  }
+}
+
+// tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
+tr.vetolaatikko-kiinni {
+  display: none;
+}
+
+td.vetolaatikon-tila {
+  text-align: center;
+}
+
+tr, td, th {
+  padding: @livi-taulukon-padding;
+  .livi-taulukon-reunat;
+  .pvm-aika-kentta td {
     padding: 0;
   }
-  table {
-    font-size: @fontin-koko-taulukko;
-    word-break: break-all;
-    td {
-      input:not([type="checkbox"]), select {
-        width: 100%;
-        z-index: 10;
-        height: @livitaulukon-input-korkeus;
-      }
-      input[type="radio"] {
-        width: auto;
-      }
-      .kombo {
-        width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
-      }
-      .dropdown-menu {
-        z-index: 1000;
-        margin-top: 0;
-      }
+}
 
-      .varoitukset,
-      .virheet,
-      .huomautukset {
-        display: none;
-        position: relative;
-        word-break: break-word;
-      }
-      .varoitus {
-        .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
-      }
-      .virhe {
-        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
-      }
-      .huomautus {
-        .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
-      }
-    }
+th.muokataan {
+  width: 20px;
+}
 
-    thead {
-      background-color: @harmaa8;
-      word-break: normal;
-    }
+.sisaltaa-virheen {
+  .sisaltaa-virheen-tai-varoituksen(@vaara);
+}
 
-    td:hover {
-      > .varoitukset,
-      > .virheet,
-      > .huomautukset {
-            display: block;
-       }
-    }
+.sisaltaa-varoituksen {
+  .sisaltaa-virheen-tai-varoituksen(@varoitus);
+}
 
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+.sisaltaa-huomautuksen {
+  .sisaltaa-virheen-tai-varoituksen(@huomautus)
+}
+
+.grid-muokkaa {
+  margin-bottom: 1px;
+}
+
+.muokkaustoiminnot {
+  margin-bottom: 1px;
+  button {
+    margin-right: 1em;
   }
-  table.grid tr.vetolaatikko-auki {
-    display: table-row;
-    > td {
-      padding-top: 10px;
-      padding-bottom: 30px;
-      padding-left: 15px;
-    }
+  button:last-child {
+    margin-right: 0;
   }
+  .ikoni {
+    position: relative;
+    top: 5px;
+  }
+}
 
-  // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
-  tr.vetolaatikko-kiinni {
-    display: none;
+table th {
+  overflow: hidden;
+}
+
+.panel-title {
+  color: @harmaa1;
+  font-size: @fontin-koko-leipateksti;
+}
+
+button.grid-lisaa {
+  margin-right: 3em;
+}
+
+td.toiminnot span {
+  display: inline-block;
+  .livicon-trash {
+    margin-left: 2px;
+    line-height: @livitaulukon-input-korkeus;
   }
-  td.vetolaatikon-tila {
-    text-align: center;
+}
+
+td.rivinumero {
+  text-align: center;
+}
+
+div.pvm {
+  position: relative;
+}
+
+tr.parillinen {
+  background-color: @harmaa10;
+}
+
+tr.pariton {
+  background-color: @harmaa15;
+}
+
+tr.rivi-valittu {
+  color: @valkoinen;
+  background-color: @harmaa7;
+}
+
+tr.yhteenveto {
+  background-color: @harmaa15;
+  border-bottom: 2px solid @harmaa7;
+  border-top: 2px solid @harmaa7;
+  font-weight: bold;
+}
+
+tr.korostettu-rivi {
+  background-color: @varoitus;
+}
+
+tr.klikattava:hover {
+  cursor: pointer;
+  background-color: #D2CFCE;
+}
+
+.ei-arvoa {
+  color: @varoitus;
+}
+
+tr.muokataan {
+  height: @livitaulukon-rivi-korkeus;
+  padding: @livi-taulukon-padding-muokatessa;
+  &.parillinen {
+    background-color: @harmaa10;
   }
-  tr, td, th {
-    padding: @livi-taulukon-padding;
+  &.pariton {
+    background-color: @harmaa13;
+  }
+  td {
+    &.ei-muokattava {
+      padding-left: @livi-taulukon-padding;
+    }
+    &.ei-muokattava.tasaa-oikealle {
+      padding-right: @livi-taulukon-padding;
+    }
+    &.muokattava > input {
+      padding: 0 0 0 @livi-taulukon-padding;
+    }
+    &.muokattava.tasaa-oikealle > input {
+      padding: 0 @livi-taulukon-padding 0 0;
+    }
+    padding: @livi-taulukon-padding-muokatessa;
     .livi-taulukon-reunat;
+    > input {
+      border: none;
+    }
+    .nappi-alasveto {
+      border: none;
+    }
     .pvm-aika-kentta td {
       padding: 0;
     }
   }
+}
 
-  th.muokataan {
-    width: 20px;
-  }
-
-  .sisaltaa-virheen {
-    .sisaltaa-virheen-tai-varoituksen(@vaara);
-  }
-  .sisaltaa-varoituksen {
-    .sisaltaa-virheen-tai-varoituksen(@varoitus);
-  }
-  .sisaltaa-huomautuksen {
-    .sisaltaa-virheen-tai-varoituksen(@huomautus)
-  }
-  .grid-muokkaa {
-    margin-bottom: 1px;
-  }
-  .muokkaustoiminnot {
-    margin-bottom: 1px;
-    button {
-      margin-right: 1em;
-    }
-    button:last-child {
-      margin-right: 0;
-    }
-    .ikoni {
-      position: relative;
-      top: 5px;
-    }
-  }
-
-  table th {
-    overflow: hidden;
-  }
-
-  .panel-title {
-    color: @harmaa1;
-    font-size: @fontin-koko-leipateksti;
-  }
-
-  button.grid-lisaa {
-    margin-right: 3em;
-  }
-
-  td.toiminnot span {
-    display: inline-block;
-    .livicon-trash {
-      margin-left: 2px;
-      line-height: @livitaulukon-input-korkeus;
-    }
-  }
-
-  td.rivinumero {
-    text-align: center;
-  }
-
-  div.pvm {
-    position: relative;
-  }
-  tr.parillinen {
-    background-color: @harmaa10;
-  }
-  tr.pariton {
-    background-color: @harmaa15;
-  }
-  tr.rivi-valittu {
-    color: @valkoinen;
-    background-color: @harmaa7;
-  }
-  tr.yhteenveto {
-    background-color: @harmaa15;
-    border-bottom: 2px solid @harmaa7;
-    border-top: 2px solid @harmaa7;
-    font-weight: bold;
-  }
-  tr.korostettu-rivi {
-    background-color: @varoitus;
-  }
-  tr.klikattava:hover {
-    cursor: pointer;
-    background-color: #D2CFCE;
-  }
-  .ei-arvoa {
-    color: @varoitus;
-  }
-
-  tr.muokataan {
-    height: @livitaulukon-rivi-korkeus;
-    padding: @livi-taulukon-padding-muokatessa;
-    &.parillinen {
-      background-color: @harmaa10;
-    }
-    &.pariton {
-      background-color: @harmaa13;
-    }
-    td {
-      &.ei-muokattava {
-        padding-left: @livi-taulukon-padding;
-      }
-      &.ei-muokattava.tasaa-oikealle {
-        padding-right: @livi-taulukon-padding;
-      }
-      &.muokattava > input {
-        padding: 0 0 0 @livi-taulukon-padding;
-      }
-      &.muokattava.tasaa-oikealle > input {
-        padding: 0 @livi-taulukon-padding 0 0;
-      }
-      padding: @livi-taulukon-padding-muokatessa;
-      .livi-taulukon-reunat;
-      > input {
-        border: none;
-      }
-      .nappi-alasveto {
-        border: none;
-      }
-      .pvm-aika-kentta td {
-        padding: 0;
-      }
-    }
-  }
 }
 
 .gridin-napit-alhaalla {
