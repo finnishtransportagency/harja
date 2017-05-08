@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.aikataulu
   "Ylläpidon urakoiden aikataulu"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.ui.protokollat :refer [Haku hae]]
@@ -27,6 +27,8 @@
    {:nayta-aikajana? true
     :jarjestys :aika}
    nil))
+
+(defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))
