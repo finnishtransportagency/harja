@@ -19,7 +19,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 @livitaulukon-rivi-korkeus: 24px;
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
-@infolaatikko-leveys: 250px;
+@infolaatikko-leveys: 300px;
 
 .livi-taulukon-reunat {
   border: 1px solid @harmaa7;
@@ -251,7 +251,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .livi-grid-infolaatikolla {
-  width: calc(100% - @infolaatikko-leveys);
+  width: calc(~'100% - ' @infolaatikko-leveys);
 }
 
 .gridin-napit-alhaalla {
