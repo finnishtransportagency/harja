@@ -405,22 +405,32 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
-  (let [arvo (if (nil? @data)
-               false
-               @data)]
-    [:div.boolean
-     (let [checkbox [:div.checkbox
-                     [:label
-                      [:input {:type      "checkbox" :checked arvo
-                               :on-change #(let [valittu? (-> % .-target .-checked)]
-                                             (reset! data valittu?))}]
-                      teksti]]]
-       (if nayta-rivina?
-         [:table.boolean-group
-          [:tbody
-           [:tr
-            [:td checkbox]]]]
-         checkbox))]))
+  (let [input-id (str "harja-checkbox-" (gensym))
+        paivita-valitila #(when-let [node (.getElementById js/document input-id)]
+                            (set! (.-indeterminate node)
+                                  (= @data ::indeterminate)))]
+    (komp/luo
+      (komp/piirretty paivita-valitila)
+      (komp/kun-muuttui paivita-valitila)
+      (fn [{:keys [teksti nayta-rivina?]} data]
+        (let [arvo (if (nil? @data)
+                     false
+                     @data)]
+          [:div.boolean
+           (let [checkbox [:div.checkbox {:on-click #(.stopPropagation %)}
+                           [:label
+                            [:input {:id input-id
+                                     :type "checkbox"
+                                     :checked arvo
+                                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                   (reset! data valittu?))}]
+                            teksti]]]
+             (if nayta-rivina?
+               [:table.boolean-group
+                [:tbody
+                 [:tr
+                  [:td checkbox]]]]
+               checkbox))])))))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
@@ -1070,15 +1080,25 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                       :sekunnit (and s (js/parseInt s))})
       (pvm/map->Aika {:keskenerainen string}))))
 
+(defn normalisoi-aika-teksti
+  "Rajaa annetun käyttäjän text input syötteen aika kenttään sopivaksi.
+  Trimmaa, poistaa muut kuin numerot ja kaksoispisteet sekä leikkaa viiteen kirjaimeen."
+  [t]
+  (let [t (-> t str/trim (str/replace #"[^\d:]" ""))]
+    (if (> (count t) 5)
+      (subs t 0 5)
+      t)))
+
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
     [:input {:class (str (when lomake? "form-control")
-                         (when (:keskenerainen @data) " puuttuva-arvo"))
+                         (when-not (:tunnit @data) " puuttuva-arvo"))
              :placeholder placeholder
              on-change* (fn [e]
-                          (let [v (-> e .-target .-value)
-                                [v aika] (aseta-aika! v (juxt identity parsi-aika))]
-                            (when aika
+                          (let [v1 (-> e .-target .-value)
+                                [v aika] (aseta-aika! v1 (juxt identity parsi-aika))]
+                            (if-not aika
+                              (swap! data assoc :keskenerainen (normalisoi-aika-teksti v1))
                               (if (:tunnit aika)
                                 (swap! data
                                        (fn [aika-nyt]

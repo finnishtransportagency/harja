@@ -14,7 +14,6 @@
     (fn [{:keys [id] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
-
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (oikeudet/urakat-vesivaylat-toimenpiteet-kokonaishintaiset id))
