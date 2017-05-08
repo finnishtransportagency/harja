@@ -199,13 +199,17 @@
                               (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                            :sopimus sopimus-id
                                                                            :vuosi vuosi}))
+        idt (map :id yllapitokohteet)
         yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet :id)
         osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
+        ei-voi-poistaa (into #{}
+                             (map :yllapitokohde)
+                             (q/yllapitokohteet-joille-linkityksia db {:idt idt}))
         yllapitokohteet (->> yllapitokohteet
                              (map #(assoc % :pituus
                                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
                                             :yllapitokohteen-voi-poistaa?
-                                            (yllapitokohteen-voi-poistaa? db (:id %)))))]
+                                            (not (ei-voi-poistaa (:id %))))))]
     (vec yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi]}]

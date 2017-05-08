@@ -1,8 +1,13 @@
 (ns harja.kyselyt.yllapitokohteet
   (:require [jeesql.core :refer [defqueries]]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [jeesql.postgres :as postgres]))
 
-(defqueries "harja/kyselyt/yllapitokohteet.sql")
+(defqueries "harja/kyselyt/yllapitokohteet.sql"
+  ;; PENDING: ylläpitokohteen poiston päättely on edelleen melko hidas.
+  ;; Nyt tehdään yksi kysely, joka hakee kaikki urakan kohteiden linkitykset.
+  ;; Jätetään tämä jatkoa varten, ota raportointi käyttöön testauksessa.
+  #_{:report-slow-queries postgres/report-slow-queries})
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
