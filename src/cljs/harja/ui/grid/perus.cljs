@@ -483,6 +483,7 @@
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun riviä klikataan.
                                         Funktiota kutsutaan rivin tiedoilla.
+                                        Vakioratkaisussa voi käyttää gridin tarjoamaa gridin-infolaatikko komponenttia.
   :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
