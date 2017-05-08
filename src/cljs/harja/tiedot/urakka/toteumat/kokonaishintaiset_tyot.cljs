@@ -100,34 +100,6 @@ tehtävän avain (ks. avatut-toteumat)."}
                 (hae-toteumatehtavien-paivakohtaiset-summat
                   (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
-
-(defonce hae-avattujen-toteumien-paivakohtaiset-tiedot
-  ;; Tämä lohko hakee toteumien tiedot aina kun
-  ;; avatut-toteumat muuttuvat (vetolaatikko avataan).
-  (run!
-   (let [avatut @avatut-toteumat
-         haetut (into #{} (keys @toteumien-paivakohtaiset-tiedot))
-         haettavat (set/difference avatut haetut)]
-     (when-not (empty? haettavat)
-       (go
-         (let [in-ch (async/merge
-                      (map
-                       (fn [[urakka-id pvm toimenpidekoodi _ :as key]]
-                         (go
-                           {key
-                            (sort-by :alkanut
-                                     (<! (hae-kokonaishintaisen-toteuman-tiedot
-                                          urakka-id pvm toimenpidekoodi)))}))
-                       haettavat))]
-           (loop [in (<! in-ch)]
-             (when in
-               (swap! toteumien-paivakohtaiset-tiedot merge in)
-               (recur (<! in-ch))))))))))
-
-(defonce poista-haetut-toteumat-urakan-muuttuessa
-  (run! @nav/valittu-urakka-id
-        (reset! toteumien-paivakohtaiset-tiedot {})))
-
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
 (defn luo-kokonaishintainen-toteuma-kuvataso
@@ -217,6 +189,3 @@ tehtävän avain (ks. avatut-toteumat)."}
 
 (defn avaa-toteuma! [urakka-id pvm tpk jarjestelmanlisaama?]
   (swap! avatut-toteumat conj [urakka-id pvm tpk jarjestelmanlisaama?]))
-
-(defn sulje-toteuma! [pvm tpk jarjestelmanlisaama?]
-  (swap! avatut-toteumat disj [pvm tpk jarjestelmanlisaama?]))
