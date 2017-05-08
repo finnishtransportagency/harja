@@ -20,7 +20,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.domain.urakan-tyotunnit :as ut])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -400,7 +401,12 @@
                                              toimenpiteet-virheet
                                              muokkaa-lomaketta])}
                             (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
-                              {:otsikko "Urakan työtunnit"
+                              {:otsikko (let [kolmannes (ut/kuluva-vuosikolmannes)]
+                                          (str "Urakan työtunnit ("
+                                               (::ut/vuosikolmannes kolmannes)
+                                               "/"
+                                               (::ut/vuosi kolmannes)
+                                               ")"))
                                :nimi :urakan-tyotunnit
                                :tyyppi :positiivinen-numero
                                :kokonaisluku? true})
