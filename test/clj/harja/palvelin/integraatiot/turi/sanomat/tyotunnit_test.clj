@@ -1,10 +1,10 @@
-(ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma-test
+(ns harja.palvelin.integraatiot.turi.sanomat.tyotunnit-test
   (:require [clojure.test :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.liitteet :as liitteet]
-            [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
+            [harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama :as sanoma]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.tyokalut.xml :as xml]
@@ -99,3 +99,5 @@
     (log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
     (doseq [id turpo-idt]
       (testaa-turpon-sanoman-muodostus id))))
+
+(deftest tyotuntien-lahetys)
