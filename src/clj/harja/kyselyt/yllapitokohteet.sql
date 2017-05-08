@@ -106,6 +106,33 @@ SELECT EXISTS(SELECT *
 FROM yllapitokohde
 WHERE id = :id;
 
+-- name: yllapitokohteet-joille-linkityksia
+-- Palauttaa ne ylläpitokohteiden idt annetusta id joukosta, joille on tehty jotain linkityksiä,
+-- kuten laatupoikkeamia tai ilmoituksia.
+SELECT tyt.yllapitokohde
+  FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+ WHERE tyt.yllapitokohde IN (:idt) AND tyt.poistettu IS NOT TRUE
+UNION
+SELECT lp.yllapitokohde
+  FROM laatupoikkeama lp
+ WHERE lp.yllapitokohde IN (:idt) AND lp.poistettu IS NOT TRUE
+UNION
+SELECT pi.paallystyskohde
+  FROM paallystysilmoitus pi
+ WHERE pi.paallystyskohde IN (:idt) AND pi.poistettu IS NOT TRUE
+UNION
+SELECT pai.paikkauskohde
+  FROM paikkausilmoitus pai
+ WHERE pai.paikkauskohde IN (:idt) AND pai.poistettu IS NOT TRUE
+UNION
+SELECT ttm.yllapitokohde
+  FROM tietyomaa ttm
+ WHERE ttm.yllapitokohde IN (:idt)
+UNION
+SELECT t.yllapitokohde
+  FROM tarkastus t
+ WHERE t.yllapitokohde IN (:idt) AND t.poistettu IS NOT TRUE
+
 -- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
 SELECT ((EXISTS(SELECT *
                 FROM tiemerkinnan_yksikkohintainen_toteuma
