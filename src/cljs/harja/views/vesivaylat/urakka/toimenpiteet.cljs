@@ -4,7 +4,9 @@
             [harja.ui.bootstrap :as bs]
             [harja.views.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as yks-hint]
             [harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn toimenpiteet []
@@ -14,11 +16,11 @@
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
 
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
-       (when #_(oikeudet/urakat-vesivaylatoteumat-kokonaishintaisettyot id)
-         true ;; TODO OIKEUSTARKISTUS!!!11
+       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (oikeudet/urakat-vesivaylat-toimenpiteet-kokonaishintaiset id))
          [kok-hint/kokonaishintaiset-toimenpiteet])
 
        "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
-       (when #_(oikeudet/urakat-vesivaylatoteumat-yksikkohintaisettyot id)
-         true ;; TODO OIKEUSTARKISTUS!!!11
+       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (oikeudet/urakat-vesivaylat-toimenpiteet-yksikkohintaiset id))
          [yks-hint/yksikkohintaiset-toimenpiteet])])))
