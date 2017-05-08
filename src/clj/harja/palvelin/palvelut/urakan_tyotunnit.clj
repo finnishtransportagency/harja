@@ -10,9 +10,9 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
   (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit))
 
-(defn hae-urakan-vuosikolmanneksen-tunnit [db kayttaja hakuehdot]
+(defn hae-urakan-tyotunnit [db kayttaja hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja (::urakan-tyotunnit-d/urakka hakuehdot))
-  (urakan-tyotunnit-q/hae-urakan-vuosikolmanneksen-tyotunnit db hakuehdot))
+  (urakan-tyotunnit-q/hae-urakan-tyotunnit db hakuehdot))
 
 (defrecord UrakanTyotunnit []
   component/Lifecycle
@@ -28,11 +28,11 @@
                        :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit})
 
     (julkaise-palvelu http
-                      :hae-urakan-vuosikolmanneksen-tunnit
+                      :hae-urakan-tyotunnit
                       (fn [kayttaja tiedot]
                         (println "---> " tiedot)
-                        (hae-urakan-vuosikolmanneksen-tunnit db kayttaja tiedot))
-                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
+                        (hae-urakan-tyotunnit db kayttaja tiedot))
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunntien-haku
                        :vastaus-spec ::urakan-tyotunnit-d/tyotunnit})
     this)
 

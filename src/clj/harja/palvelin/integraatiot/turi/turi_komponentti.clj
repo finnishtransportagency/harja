@@ -120,9 +120,9 @@
             (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
                   tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
                               db
-                              {::urakan-tyotunnit/urakka urakka-id
-                               ::urakan-tyotunnit/vuosi vuosi
-                               ::urakan-tyotunnit/vuosikolmannes vuosikolmannes})
+                              urakka-id
+                              vuosi
+                              vuosikolmannes)
                   sanoma (tyotunnit-sanoma/muodosta sampoid vuosi vuosikolmannes tyotunnit)
                   {body :body} (integraatiotapahtuma/laheta
                                  konteksti

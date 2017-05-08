@@ -17,15 +17,18 @@
     ::ut/lahetys-onnistunut})
 
 (defn tallenna-urakan-tyotunnit [db tyotunnit]
-  (insert! db ::ut/urakan-tyotunnit tyotunnit))
+  (insert! db ::ut/urakan-tyotunnit-vuosikolmanneksella tyotunnit))
 
-(defn hae-urakan-tyotunnit [db urakka-id]
-  (fetch db ::ut/urakan-tyotunnit kaikki-kentat
-         {::ut/urakka urakka-id}))
+(defn hae-urakan-tyotunnit [db hakuehdot]
+  (fetch db ::ut/urakan-tyotunnit kaikki-kentat hakuehdot))
 
-(defn hae-urakan-vuosikolmanneksen-tyotunnit [db hakuehdot]
+(defn hae-urakan-vuosikolmanneksen-tyotunnit [db urakka-id vuosi vuosikolmannes]
   (::ut/tyotunnit
-    (first (fetch db ::ut/urakan-tyotunnit #{::ut/tyotunnit} hakuehdot))))
+    (first (hae-urakan-tyotunnit db
+                                 {::urakan-tyotunnit/urakka urakka-id
+                                  ::urakan-tyotunnit/vuosi vuosi
+                                  ::urakan-tyotunnit/vuosikolmannes vuosikolmannes}))))
+
 
 (defn hae-lahettamattomat-tai-epaonnistuneet-tyotunnit [db]
   (fetch db ::ut/urakan-tyotunnit kaikki-kentat
