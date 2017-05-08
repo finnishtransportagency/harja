@@ -428,9 +428,10 @@
          [yleiset/tooltip {} :%
           (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
          [napit/uusi "Lisää turvallisuuspoikkeama"
-          ;; todo: disabloi nappi, kysely käynnissä
           #(tiedot/uusi-turvallisuuspoikkeama (:id urakka))
-          {:disabled (not oikeus?)}]))
+          {:disabled (or
+                       @tiedot/turvallisuuspoikkeaman-luonti-kesken?
+                       (not oikeus?))}]))
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

@@ -24,10 +24,11 @@
 
 (defn hae-urakan-vuosikolmanneksen-tyotunnit [db urakka-id vuosi vuosikolmannes]
   (::ut/tyotunnit
-    (first (hae-urakan-tyotunnit db
-                                 {::ut/urakka-id urakka-id
-                                  ::ut/vuosi vuosi
-                                  ::ut/vuosikolmannes vuosikolmannes}))))
+    (first (hae-urakan-tyotunnit
+             db
+             {::ut/urakka-id urakka-id
+              ::ut/vuosi vuosi
+              ::ut/vuosikolmannes vuosikolmannes}))))
 
 (defn paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db urakka-id tunnit]
   (let [kolmannes (ut/kuluva-vuosikolmannes)
@@ -35,6 +36,7 @@
                       ::ut/tyotunnit tunnit}
                      kolmannes)
         ehdot (dissoc arvot ::ut/tyotunnit)]
+    ;; todo: jostain syystä tämä tekee aina insertin
     (upsert! db ::ut/urakan-tyotunnit arvot ehdot)))
 
 (defn hae-kuluvan-vuosikolmanneksen-tyotunnit [db urakka-id]

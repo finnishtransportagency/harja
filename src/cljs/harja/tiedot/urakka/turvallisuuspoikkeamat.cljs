@@ -19,6 +19,7 @@
 (def kayttajahakutulokset-data (atom []))
 
 (defonce valittu-turvallisuuspoikkeama (atom nil))
+(def turvallisuuspoikkeaman-luonti-kesken? (atom false))
 
 (defn hae-urakan-turvallisuuspoikkeamat
   [urakka-id [alku loppu]]
@@ -90,10 +91,14 @@
    :tyontekijanammatti :muu_tyontekija})
 
 (defn uusi-turvallisuuspoikkeama [urakka-id]
-  (go
-    (let [vastaus (<! (k/post! :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit
-                               {::urakan-tyotunnit/urakka-id urakka-id}))]
-      (if (k/virhe? vastaus)
-        (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
-        (let [tyotunnit (::urakan-tyotunnit/tyotunnit vastaus)]
-          (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit)))))))
+  (when (not @turvallisuuspoikkeaman-luonti-kesken?)
+    (reset! turvallisuuspoikkeaman-luonti-kesken? true)
+    (go
+      (let [vastaus (<! (k/post! :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit
+                                 {::urakan-tyotunnit/urakka-id urakka-id}))]
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
+          (let [tyotunnit (::urakan-tyotunnit/tyotunnit vastaus)]
+            (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit))))
+
+        (reset! turvallisuuspoikkeaman-luonti-kesken? false)))))
