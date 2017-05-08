@@ -8,6 +8,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
@@ -26,12 +27,15 @@
 
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
-  (let [turpot (konv/sarakkeet-vektoriin
+  (let [tyotunnit (::urakan-tyotunnit-d/tyotunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id))
+        turpot (konv/sarakkeet-vektoriin
                  (into []
                        q/turvallisuuspoikkeama-xf
                        (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
                  {:korjaavatoimenpide :korjaavattoimenpiteet})]
-    (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
+    (->> turpot
+         (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa)
+         (mapv #(assoc % :urakan-tyotunnit tyotunnit)))))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
   (when kayttaja-id
