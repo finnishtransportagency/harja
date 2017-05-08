@@ -416,7 +416,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                      false
                      @data)]
           [:div.boolean
-           (let [checkbox [:div.checkbox
+           (let [checkbox [:div.checkbox {:on-click #(.stopPropagation %)}
                            [:label
                             [:input {:id input-id
                                      :type "checkbox"
