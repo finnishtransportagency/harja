@@ -252,6 +252,21 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
 .livi-grid-infolaatikolla {
   width: calc(~'100% - ' @infolaatikko-leveys);
+
+  tr td:last-child {
+    position: relative;
+
+    .livi-grid-infolaatikko {
+      text-align: left;
+      color: @fontin-vari-leipateksti;
+      position: absolute;
+      top: 0;
+      right: -@infolaatikko-leveys;
+      background-color: @harmaa8;
+      padding: 10px;
+      width: (@infolaatikko-leveys - 10px)
+    }
+  }
 }
 
 .gridin-napit-alhaalla {

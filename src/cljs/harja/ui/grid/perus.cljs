@@ -149,6 +149,10 @@
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
+(defn- rivin-infolaatikko* [sisalto]
+  [:div.livi-grid-infolaatikko
+   sisalto])
+
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                            mahdollista-rivin-valinta rivin-infolaatikko solun-luokka]} skeema rivi index]
@@ -160,12 +164,9 @@
                        (if (not= @valittu-rivi rivi)
                          (rivi-klikattu rivi)))
 
-                     (log "CLICK! Rivin infolaatikko" (pr-str rivin-infolaatikko))
-
                      ;; Infolaatikon näyttäminen
                      (when rivin-infolaatikko
-                       (swap! infolaatikko-nakyvissa? not)
-                       (log "INFOLAATIKKO NÄKYVISSÄ ON NYT " (pr-str @infolaatikko-nakyvissa?)))
+                       (swap! infolaatikko-nakyvissa? not))
 
                      ;; Rivin valinta
                      (when mahdollista-rivin-valinta
@@ -175,6 +176,7 @@
                              (when rivi-valinta-peruttu
                                (rivi-valinta-peruttu rivi)))
                          (reset! valittu-rivi rivi))))}
+
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
                            solu-klikattu solun-luokka huomio
@@ -204,6 +206,17 @@
                                    (solun-luokka haettu-arvo rivi)))}
                    ;; Solun sisältö
                    [:span
+
+                    ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
+                    ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
+                    ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
+                    (when (and
+                            (= rivi @valittu-rivi)
+                            (= (inc i) (count skeema))
+                            rivin-infolaatikko
+                            @infolaatikko-nakyvissa?)
+                      [rivin-infolaatikko* rivin-infolaatikko])
+
                     (if (= tyyppi :komponentti)
                       (komponentti rivi {:index index
                                          :muokataan? false})
