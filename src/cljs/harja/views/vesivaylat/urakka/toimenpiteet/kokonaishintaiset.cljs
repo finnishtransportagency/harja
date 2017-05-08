@@ -92,23 +92,24 @@
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
 
-       (into [otsikkopaneeli {:paneelikomponentit
-                              [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
-                               {:sijainti "94.3%"
-                                :sisalto
-                                (fn [{:keys [tunniste]}]
-                                  (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
-                                        kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
-                                        mitaan-ei-valittu? (every? false? (map :valittu? tyolajin-toimenpiteet))]
-                                    [kentat/tee-kentta
-                                     {:tyyppi :checkbox}
-                                     ;; TODO Piirrä välitila jos osa valittu
-                                     (r/wrap #_(cond kaikki-valittu? true
-                                                     mi)
-                                       kaikki-valittu?
-                                       (fn [uusi]
-                                         (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                       :valinta uusi}))))]))}]}]
+       (into [otsikkopaneeli
+              {:paneelikomponentit
+               [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
+                {:sijainti "94.3%"
+                 :sisalto
+                 (fn [{:keys [tunniste]}]
+                   (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
+                         kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
+                         mitaan-ei-valittu? (every? (comp not true?)
+                                                    (map :valittu? tyolajin-toimenpiteet))]
+                     [kentat/tee-kentta
+                      {:tyyppi :checkbox}
+                      (r/wrap (cond kaikki-valittu? true
+                                    mitaan-ei-valittu? false
+                                    :default ::kentat/indeterminate)
+                              (fn [uusi]
+                                (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                              :valinta uusi}))))]))}]}]
              (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []

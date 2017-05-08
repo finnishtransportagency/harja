@@ -404,22 +404,32 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
-  (let [arvo (if (nil? @data)
-               false
-               @data)]
-    [:div.boolean
-     (let [checkbox [:div.checkbox
-                     [:label
-                      [:input {:type      "checkbox" :checked arvo
-                               :on-change #(let [valittu? (-> % .-target .-checked)]
-                                             (reset! data valittu?))}]
-                      teksti]]]
-       (if nayta-rivina?
-         [:table.boolean-group
-          [:tbody
-           [:tr
-            [:td checkbox]]]]
-         checkbox))]))
+  (let [input-id (str "harja-checkbox-" (gensym))
+        paivita-valitila #(when-let [node (.getElementById js/document input-id)]
+                            (set! (.-indeterminate node)
+                                  (= @data ::indeterminate)))]
+    (komp/luo
+      (komp/piirretty paivita-valitila)
+      (komp/kun-muuttui paivita-valitila)
+      (fn [{:keys [teksti nayta-rivina?]} data]
+        (let [arvo (if (nil? @data)
+                     false
+                     @data)]
+          [:div.boolean
+           (let [checkbox [:div.checkbox
+                           [:label
+                            [:input {:id input-id
+                                     :type "checkbox"
+                                     :checked arvo
+                                     :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                   (reset! data valittu?))}]
+                            teksti]]]
+             (if nayta-rivina?
+               [:table.boolean-group
+                [:tbody
+                 [:tr
+                  [:td checkbox]]]]
+               checkbox))])))))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
