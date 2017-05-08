@@ -51,6 +51,13 @@
                          ::to/tyoluokka "Asennus ja huolto"
                          ::to/toimenpide "Huoltotyö"
                          ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 6
+                         ::to/tyolaji :poijut
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Huoltotyö"
+                         ::to/pvm (pvm/nyt)
                          ::to/turvalaite {:nimi "Siitenluoto (16469)"}}]}))
 
 (defrecord Nakymassa? [nakymassa?])
