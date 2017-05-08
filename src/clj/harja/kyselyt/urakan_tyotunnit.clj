@@ -34,10 +34,8 @@
   (let [kolmannes (ut/kuluva-vuosikolmannes)
         arvot (merge {::ut/urakka-id urakka-id
                       ::ut/tyotunnit tunnit}
-                     kolmannes)
-        ehdot (dissoc arvot ::ut/tyotunnit)]
-    ;; todo: jostain syystä tämä tekee aina insertin
-    (upsert! db ::ut/urakan-tyotunnit arvot ehdot)))
+                     kolmannes)]
+    (upsert! db ::ut/urakan-tyotunnit #{::ut/urakka-id ::ut/vuosi ::ut/vuosikolmannes} arvot)))
 
 (defn hae-kuluvan-vuosikolmanneksen-tyotunnit [db urakka-id]
   (first (hae-urakan-tyotunnit db (merge {::ut/urakka-id urakka-id} (ut/kuluva-vuosikolmannes)))))
