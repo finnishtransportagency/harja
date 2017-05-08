@@ -35,7 +35,8 @@
    {:tunniste ::to/id
     :tyhja (if (nil? sijainnit)
              [ajax-loader "Haetaan toimenpiteitä"]
-             "Ei toimenpiteitä")}
+             "Ei toimenpiteitä")
+    :rivin-infolaatikko grid/gridin-infolaatikko}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}

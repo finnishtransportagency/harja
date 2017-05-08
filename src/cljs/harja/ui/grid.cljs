@@ -16,5 +16,8 @@
 (def poista-idt protokollat/poista-idt)
 
 ;; UI
+
 (def grid perus/grid)
 (def muokkaus-grid muokkaus/muokkaus-grid)
+
+(def gridin-infolaatikko perus/gridin-infolaatikko)

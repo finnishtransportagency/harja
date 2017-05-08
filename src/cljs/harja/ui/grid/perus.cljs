@@ -155,12 +155,17 @@
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
+                     ;; Rivi klikattu -callback
                      (when rivi-klikattu
                        (if (not= @valittu-rivi rivi)
                          (rivi-klikattu rivi)))
+
+                     ;; Rivin valinta
                      (when mahdollista-rivin-valinta
+                       (log "Valitaanpas rivi!")
                        (if (= @valittu-rivi rivi)
                          (do (reset! valittu-rivi nil)
+                             (log "Rivi valittu: " (pr-str @valittu-rivi))
                              (when rivi-valinta-peruttu
                                (rivi-valinta-peruttu rivi)))
                          (reset! valittu-rivi rivi))))}
@@ -366,6 +371,7 @@
                          jarjestys)))))))
 
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
+                                     rivin-infolaatikko
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
                                      rivi-valinta-peruttu mahdollista-rivin-valinta piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki]}]
@@ -394,7 +400,7 @@
                                        :luokka (str (if (even? (+ i 1))
                                                       "parillinen "
                                                       "pariton ")
-                                                    (when rivi-klikattu
+                                                    (when (or rivi-klikattu rivin-infolaatikko)
                                                       "klikattava ")
                                                     (when (:korosta rivi) "korostettu-rivi ")
                                                     (when (:lihavoi rivi) "bold ")
@@ -402,6 +408,7 @@
                                                     (when rivin-luokka
                                                       (rivin-luokka rivi)))
                                        :rivi-klikattu rivi-klikattu
+                                       :rivin-infolaatikko rivin-infolaatikko
                                        :rivi-valinta-peruttu rivi-valinta-peruttu
                                        :valittu-rivi valittu-rivi
                                        :mahdollista-rivin-valinta mahdollista-rivin-valinta
@@ -419,19 +426,13 @@
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
-  :tunniste                             rivin tunnistava kenttä, oletuksena :id
-  :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
-  :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
-  :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
-  :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
-  :voi-lisata?                          voiko rivin lisätä (boolean)
+
   :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
   :tasaa                                voit antaa :oikea, :keskita jos haluat tasata kentän
                                         oikealle (esim. rahasummat) tai keskelle
-  :max-rivimaara                        montako riviä grid suostuu näyttämään ennen \"liikaa rivejä\"-ilmoitusta
-  :max-rivimaaran-ylitys-viesti         custom viesti :max-rivimaara -optiolle
+
   :reunus                               määrittää sarakkeen solujen reunuksen, oletuksena kaikki
                                         :ei       ei kumpaakaan reunusta
                                         :vasen    vain vasemman puolen reunus
@@ -439,17 +440,29 @@
   :solu-klikattu                        Valinnainen käsittelijä kyseisen solun klikkaamiselle,
                                         saa rivin tiedot parametrina. Jos solulle on annettu
                                         käsittelijä, ei rivi-klikattu käsittelijää kutsuta.
+  :komponentti                          Jos sarakkeen tyyppi on :komponentti, tämän avaimen takana tulee olla
+                                        komponentin määrittävä funktio.
 
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
   Optiot on mappi optioita:
+  :max-rivimaara                        montako riviä grid suostuu näyttämään ennen 'liikaa rivejä' -ilmoitusta
+  :max-rivimaaran-ylitys-viesti         custom viesti :max-rivimaara -optiolle
+  :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
+  :voi-lisata?                          voiko rivin lisätä (boolean)
+  :tunniste                             rivin tunnistava kenttä, oletuksena :id
+  :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
+  :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
+  :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
                                         jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
+  :rivin-infolaatikko                   Komponentti, joka näytetään gridin infolaatikossa kun riviä klikataan.
   :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
+                                        Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
@@ -476,7 +489,7 @@
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara rivin-infolaatikko
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -490,6 +503,7 @@
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
+        mahdollista-rivin-valinta (if rivin-infolaatikko true mahdollista-rivin-valinta)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -733,10 +747,10 @@
        (fn []
          (nollaa-muokkaustiedot!))}
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
-                    piilota-toiminnot? nayta-toimintosarake?
+                    piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
-                    mahdollista-rivin-valinta rivi-valinta-peruttu
-                    korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
+                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts}
+            skeema alkup-tiedot]
            (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
                  muuta-gridia-muokataan? (and
                                            (>= (count @muokkauksessa-olevat-gridit) 1)
@@ -796,7 +810,9 @@
                                             :tiedot tiedot :colspan colspan :tyhja tyhja
                                             :tunniste tunniste :ohjaus ohjaus
                                             :vetolaatikot vetolaatikot :tallenna tallenna
-                                            :rivi-klikattu rivi-klikattu :rivin-luokka rivin-luokka
+                                            :rivi-klikattu rivi-klikattu
+                                            :rivin-infolaatikko rivin-infolaatikko
+                                            :rivin-luokka rivin-luokka
                                             :valittu-rivi valittu-rivi
                                             :rivi-valinta-peruttu rivi-valinta-peruttu
                                             :mahdollista-rivin-valinta mahdollista-rivin-valinta
@@ -824,3 +840,8 @@
                                    :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                    :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                    :peruuta peruuta :otsikko otsikko})])])))))
+
+(defn gridin-infolaatikko
+  "Gridin infolaatikon vakiomuotoista sisältöä kuvaava komponentti."
+  [tiedot]
+  [:span "Tähän tulee tavaraa"])
