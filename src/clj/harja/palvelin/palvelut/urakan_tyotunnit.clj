@@ -5,14 +5,15 @@
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
             [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]))
 
-(defn tallenna-urakan-tyotunnit [db kayttaja {tyotunnit ::urakan-tyotunnit-d/urakan-tyotunnit}]
+(defn tallenna-urakan-tyotunnit [db kayttaja {tyotunnit ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain}]
   (doseq [{urakka-id ::urakan-tyotunnit-d/urakka} tyotunnit]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
   (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit))
 
-(defn hae-urakan-tyotunnit [db kayttaja hakuehdot]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja (::urakan-tyotunnit-d/urakka hakuehdot))
-  (urakan-tyotunnit-q/hae-urakan-tyotunnit db hakuehdot))
+(defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+  (let [tunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id)]
+    tunnit))
 
 (defrecord UrakanTyotunnit []
   component/Lifecycle
@@ -24,21 +25,20 @@
                       :tallenna-urakan-tyotunnit
                       (fn [kayttaja tiedot]
                         (tallenna-urakan-tyotunnit db kayttaja tiedot))
-                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
-                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit})
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain
+                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain})
 
     (julkaise-palvelu http
-                      :hae-urakan-tyotunnit
-                      (fn [kayttaja tiedot]
-                        (println "---> " tiedot)
-                        (hae-urakan-tyotunnit db kayttaja tiedot))
-                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunntien-haku
-                       :vastaus-spec ::urakan-tyotunnit-d/tyotunnit})
+                      :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit
+                      (fn [kayttaja {urakka-id ::urakan-tyotunnit-d/urakka-id}]
+                        (hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit db kayttaja urakka-id))
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-kuluvan-vuosikolmanneksen-tyotuntien-haku
+                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit})
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
                      :tallenna-urakan-tyotunnit
-                     :hae-urakan-vuosikolmanneksen-tunnit)
+                     :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit)
 
     this))

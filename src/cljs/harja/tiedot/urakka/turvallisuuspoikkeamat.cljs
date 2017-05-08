@@ -91,13 +91,9 @@
 
 (defn uusi-turvallisuuspoikkeama [urakka-id]
   (go
-    (let [{vuosi :vuosi vuosikolmannes :vuosikolmannes}
-          (urakan-tyotunnit/kuluva-urakan-vuosikolmannes)
-          vastaus (<! (k/post! :hae-urakan-vuosikolmanneksen-tunnit
-                               {::urakan-tyotunnit/urakka urakka-id
-                                ::urakan-tyotunnit/vuosi vuosi
-                                ::urakan-tyotunnit/vuosikolmannes vuosikolmannes}))]
-
+    (let [vastaus (<! (k/post! :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit
+                               {::urakan-tyotunnit/urakka-id urakka-id}))]
       (if (k/virhe? vastaus)
         (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
-        (reset! valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)))))
+        (let [tyotunnit (::urakan-tyotunnit/tyotunnit vastaus)]
+          (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit)))))))

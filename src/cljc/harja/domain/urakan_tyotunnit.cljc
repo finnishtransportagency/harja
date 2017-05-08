@@ -13,13 +13,15 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["urakan_tyotunnit" ::urakan-tyotunnit-vuosikolmanneksella {"lahetys_onnistunut" ::lahetys-onnistunut
+  ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut
                                                               "urakka" ::urakka-id}])
 
-(s/def ::urakan-tyotunnit (s/coll-of ::urakan-tyotunnit))
+(s/def ::urakan-tyotunnit-vuosikolmanneksittain (s/coll-of ::urakan-tyotunnit))
 
 (s/def ::urakan-tyotunntien-haku (s/keys :req [::urakka-id]
                                          :opt [::vuosi ::vuosikolmannes]))
+
+(s/def ::urakan-kuluvan-vuosikolmanneksen-tyotuntien-haku (s/keys :req [::urakka-id]))
 
 (def vuosikolmannesten-kuukaudet
   [[1 4] [5 8] [9 12]])
@@ -35,7 +37,7 @@
                                  3 (kolmannes vuosi (nth vuosikolmannesten-kuukaudet 2))})))
           (range (pvm/vuosi alkupvm) (inc (pvm/vuosi loppupvm))))))
 
-(defn kuluva-urakan-vuosikolmannes []
+(defn kuluva-vuosikolmannes []
   (let [valissa? (fn [[alku-kk loppu-kk] kuukausi]
                    (and
                      (>= kuukausi alku-kk)
