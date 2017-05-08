@@ -53,10 +53,10 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON u.id = :urakka
-  LEFT JOIN organisaatio org ON y.organisaatio = org.id
+  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
 WHERE p.urakka = :urakka AND
-      (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
-      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
+      (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: TIMESTAMP) AND
+      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: TIMESTAMP);
 
 -- name: hae-kaikki-paivystajat
 -- Hakee kaikki päivystykset
@@ -86,8 +86,8 @@ FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON p.urakka = u.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
-      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
+WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: TIMESTAMP) AND
+      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: TIMESTAMP);
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät
@@ -365,3 +365,13 @@ SELECT
   ensisijainen
 FROM urakanvastuuhenkilo
 WHERE urakka = :id;
+
+-- name: onko-urakalla-paivystajia?
+-- single?: true
+SELECT exists(SELECT p.id
+              FROM paivystys p
+                INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
+              WHERE
+                urakka = :urakkaid AND
+                ((now() BETWEEN p.alku AND p.loppu) OR
+                 (now() <= p.alku AND loppu IS NULL)));

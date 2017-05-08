@@ -71,7 +71,7 @@
       (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
-  (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))
+  (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)
         alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
@@ -83,7 +83,7 @@
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
         alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero) (:alikohteet paallystysilmoitus))]
     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
-    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
+    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))

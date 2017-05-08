@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.kasittely.ilmoitus
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -78,12 +78,14 @@
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
     id))
 
-(defn tallenna-ilmoitus [db ilmoitus]
-  (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
+(defn tallenna-ilmoitus [db urakka-id ilmoitus]
+  (log/debug (format "Käsitellään ilmoitusta T-LOIK:sta id:llä: %s, joka välitettiin viestillä id: %s urakalle id: %s."
+                     (:ilmoitus-id ilmoitus)
+                     (:viesti-id ilmoitus)
+                     urakka-id))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         nykyinen-id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
         urakkatyyppi (urakkatyyppi (:urakkatyyppi ilmoitus))
-        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi (:sijainti ilmoitus)))
         uusi-id (if nykyinen-id
                   (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
                   (luo-ilmoitus db urakka-id urakkatyyppi ilmoitus))]

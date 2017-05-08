@@ -26,6 +26,17 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaa
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio, jarjestelma) values ('yit-rakennus', null, null, null, null, (SELECT id  FROM organisaatio  WHERE nimi = 'YIT Rakennus Oy'), true);
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio, jarjestelma) values ('skanska', null, null, null, null, (SELECT id  FROM organisaatio  WHERE nimi = 'Skanska Asfaltti Oy'), true);
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio, jarjestelma) values ('tiemies', null, null, null, null, (SELECT id  FROM organisaatio  WHERE nimi = 'Tien Merkitsijät Oy'), true);
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio, jarjestelma) values ('carement', null, null, null, null, (SELECT id  FROM organisaatio  WHERE nimi = 'Carement Oy'), true);
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,jarjestelma) values ('AURA-SIIRTO', 'AURA', 'SIIRTO', TRUE);
 INSERT INTO kayttaja (kayttajanimi, organisaatio, jarjestelma, kuvaus) VALUES ('livi', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), TRUE, 'Liikenneviraston testi järjestelmätunnus');
+
+
+-- Erillisoikeudet urakoihin
+
+INSERT INTO kayttajan_lisaoikeudet_urakkaan (kayttaja, urakka) VALUES ((SELECT id
+                                                                        FROM kayttaja
+                                                                        WHERE kayttajanimi = 'carement'),
+                                                                       (SELECT id
+                                                                        FROM urakka
+                                                                        WHERE nimi = 'Oulun alueurakka 2014-2019'));

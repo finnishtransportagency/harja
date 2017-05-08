@@ -85,13 +85,16 @@
       (try
         (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        (let [pdf (kasittelija kayttaja params)]
+        (let [pdf (kasittelija kayttaja params)
+              tiedostonimi (-> pdf meta :tiedostonimi)]
           (if (map? pdf)
             ;; Käsittelijä palautti ring vastauksen, annetaan se läpi as is
             pdf
             ;; Käsittelijä palautti hiccupia, generoidaan siitä PDF
             {:status  200
-             :headers {"Content-Type" "application/pdf"} ;; content-disposition!
+             :headers (merge {"Content-Type" "application/pdf"}
+                             (when tiedostonimi
+                               {"Content-Disposition" (str "attachment; filename=\"" tiedostonimi "\"")}))
              :body    (piped-input-stream
                        (fn [out]
                          (try

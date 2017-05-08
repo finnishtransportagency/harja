@@ -180,7 +180,7 @@
         (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
         (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-        (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
+        (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto") "Viesti on käsitelty ja merkitty vastaanotetuksi")
 
         (poista-ilmoitus)))
     (catch IllegalArgumentException e

@@ -1,5 +1,5 @@
 (ns harja.palvelin.komponentit.fim
-  "Komponentti FIM käyttäjätietojen hakemiseen."
+  "Komponentti FIM-käyttäjätietojen hakemiseen."
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
@@ -17,7 +17,6 @@
     [this sampoid]
     "Hakee urakkaan liitetyt käyttäjät."))
 
-
 ;; Kentät, joita voidaan hakea:
 ;; ObjectID EmployeeEndDate
 ;; AccountName FirstName MiddleName LastName
@@ -33,26 +32,27 @@
    :Email :sahkoposti
    :MobilePhone [:puhelin #(str/replace % " " "")]
    :Role :roolit
-   :Company :organisaatio})
+   :Company :organisaatio
+   :Disabled [:poistettu #(= "true" %)]})
 
 (defn- roolien-kuvaukset-ja-nimet [roolit urakan-sampo-id]
   (and
-   roolit
-   (let [roolit (into []
-                      (comp
-                       (filter #(str/starts-with? % urakan-sampo-id))
-                       (map #(subs % (inc (count urakan-sampo-id))))
-                       (map #(oikeudet/roolit %))
-                       (remove nil?))
-                      (str/split roolit #","))]
-     {:roolit (mapv :kuvaus roolit)
-      :roolinimet (mapv :nimi roolit)})))
+    roolit
+    (let [roolit (into []
+                       (comp
+                         (filter #(str/starts-with? % urakan-sampo-id))
+                         (map #(subs % (inc (count urakan-sampo-id))))
+                         (map #(oikeudet/roolit %))
+                         (remove nil?))
+                       (str/split roolit #","))]
+      {:roolit (mapv :kuvaus roolit)
+       :roolinimet (mapv :nimi roolit)})))
 
 (defn- kuvaa-roolit [henkilot urakan-sampo-id]
   (map
-   #(merge %
-           (roolien-kuvaukset-ja-nimet (:roolit %) urakan-sampo-id))
-   henkilot))
+    #(merge %
+            (roolien-kuvaukset-ja-nimet (:roolit %) urakan-sampo-id))
+    (remove #(true? (:poistettu %)) henkilot)))
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."
@@ -64,7 +64,7 @@
                    (map (fn [[elementti avain]]
                           (if (vector? avain)
                             (let [[avain muunnos] avain]
-                              [avain (z/xml1-> p elementti z/text muunnos)])
+                              [avain (muunnos (z/xml1-> p elementti z/text))])
                             [avain (z/xml1-> p elementti z/text)])))
                    +fim-elementit+))))
 
@@ -74,7 +74,7 @@
 (defn- urakan-kayttajat-parametrit [urakan-sampo-id]
   {:filter (str "SopimusID=" urakan-sampo-id)
    :ignorecache "false"
-   :fetch "AccountName,FirstName,LastName,DisplayName,Email,MobilePhone,Company"})
+   :fetch "AccountName,FirstName,LastName,DisplayName,Email,MobilePhone,Company,Disabled"})
 
 
 (defn suodata-kayttajaroolit
@@ -101,18 +101,19 @@
 
   FIMHaku
   (hae-urakan-kayttajat
-      [{:keys [url db integraatioloki]} urakan-sampo-id]
+    [{:keys [url db integraatioloki]} urakan-sampo-id]
+    (assert urakan-sampo-id "Urakan sampo-id puutuu!")
     (when-not (empty? url)
       (integraatiotapahtuma/suorita-integraatio
-       db integraatioloki "fim" "hae-urakan-kayttajat"
-       #(-> (integraatiotapahtuma/laheta
-             % :http {:metodi :GET
-                      :url url
-                      :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
-            :body
-            lue-xml
-            lue-fim-vastaus
-            (kuvaa-roolit urakan-sampo-id))))))
+        db integraatioloki "fim" "hae-urakan-kayttajat"
+        #(-> (integraatiotapahtuma/laheta
+               % :http {:metodi :GET
+                        :url url
+                        :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
+             :body
+             lue-xml
+             lue-fim-vastaus
+             (kuvaa-roolit urakan-sampo-id))))))
 
 (defrecord FakeFIM [tiedosto]
   component/Lifecycle

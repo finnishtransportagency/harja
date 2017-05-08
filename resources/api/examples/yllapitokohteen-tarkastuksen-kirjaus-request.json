@@ -1,0 +1,50 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
+  },
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 123
+        },
+        "aika": "2015-07-06T15:01:00+02:00",
+        "alkusijainti": {
+          "x": 441057,
+          "y": 7198624
+        },
+        "loppusijainti": {
+          "x": 441037,
+          "y": 7198450
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Vanha päällyste on uusittava",
+        "liitteet": [
+          {
+            "liite": {
+              "nimi": "tie.png",
+              "tyyppi": "image/png",
+              "kuvaus": "Kuva tiestä",
+              "sisalto": "... sisältö base64 enkoodattuna  ..."
+            }
+          }
+        ]
+      },
+      "tarkastustyyppi": "katselmus"
+    }
+  ]
+}

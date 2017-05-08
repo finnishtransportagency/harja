@@ -4,7 +4,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.hoitoluokat :as hoitoluokat-q]
             [harja.geo :as geo]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy])
@@ -19,8 +19,7 @@
                              ulkoinen-id havainnot laadunalitus yllapitokohde
                              nayta-urakoitsijalle] :as tarkastus}]
   (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
-  (when yllapitokohde
-    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde))
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde)
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
                    (and sijainti (geo/geometry (geo/clj->pg sijainti))))

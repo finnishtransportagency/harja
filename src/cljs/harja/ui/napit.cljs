@@ -44,6 +44,7 @@
     (fn [teksti kysely asetukset]
       (let [luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
             ikoni (:ikoni asetukset)
+            virheviestin-nayttoaika (:virheviestin-nayttoaika asetukset)
             virheviesti (or (:virheviesti asetukset) "Virhe tapahtui.")
             virheen-esitystapa (case (:virheen-esitystapa asetukset)
                                  :modal :modal
@@ -85,7 +86,8 @@
          (when @nayta-virheviesti?
            (case virheen-esitystapa
              :flash (do
-                      (viesti/nayta! virheviesti :warning viesti/viestin-nayttoaika-keskipitka)
+                      (viesti/nayta! virheviesti :warning (or virheviestin-nayttoaika
+                                                              viesti/viestin-nayttoaika-keskipitka))
                       (sulkemisfunktio)
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
@@ -165,7 +167,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
   ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
   ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
    [:button.nappi-ensisijainen
-    {:class (str (when disabled "disabled " luokka))
+    {:class (str (when disabled "disabled ") luokka)
      :disabled disabled
      :on-click #(do (.preventDefault %)
                     (toiminto-fn))}

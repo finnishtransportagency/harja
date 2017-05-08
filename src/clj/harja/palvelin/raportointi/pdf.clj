@@ -17,7 +17,10 @@
             [taoensso.timbre :as log]
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]
-            [harja.domain.raportointi :as raportti-domain]))
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.ui.aikajana :as aikajana]))
+
+(def ^:dynamic *orientaatio* nil)
 
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
@@ -58,6 +61,11 @@
    [:fo:inline (if fmt (fmt arvo) arvo)]
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
+
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:fo:inline
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline (str yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
@@ -142,8 +150,10 @@
                                          (cond
                                            (raportti-domain/raporttielementti? arvo-datassa)
                                            (muodosta-pdf
-                                             (raportti-domain/raporttielementti-formatterilla
-                                               arvo-datassa fmt))
+                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                               (raportti-domain/raporttielementti-formatterilla
+                                                arvo-datassa fmt)
+                                               arvo-datassa))
 
                                            :else (fmt arvo-datassa))
                                          "")]]
@@ -296,19 +306,34 @@
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (apply fo/dokumentti {:orientation (or (:orientaatio raportin-tunnistetiedot) :portrait)
-                        :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
-         (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
-                  (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
-                    [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
-                     (muodosta-pdf [:yhteenveto tiedot])])]
-                 (keep identity
-                       (mapcat #(when %
-                                 (if (seq? %)
-                                   (map muodosta-pdf %)
-                                   [(muodosta-pdf %)]))
-                               sisalto))
-                 #_[[:fo:block {:id "raportti-loppu"}]])))
+  (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
+    (apply fo/dokumentti {:orientation *orientaatio*
+                          :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
+           (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
+                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
+                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
+                       (muodosta-pdf [:yhteenveto tiedot])])]
+                   (keep identity
+                         (mapcat #(when %
+                                    (if (seq? %)
+                                      (map muodosta-pdf %)
+                                      [(muodosta-pdf %)]))
+                                 sisalto))
+                   #_[[:fo:block {:id "raportti-loppu"}]]))))
+
+(defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
+  (let [aikajana (aikajana/aikajana (merge {:leveys (case *orientaatio*
+                                                      :portrait 750
+                                                      :landscape 1000)}
+                                           optiot) rivit)]
+    [:fo:block
+     (when aikajana
+       [:fo:instream-foreign-object {:content-width (case *orientaatio*
+                                                      :portrait "19cm"
+                                                      :landscape "27.5cm")
+
+                                     :content-height (str (+ 5 (count rivit)) "cm")}
+        aikajana])]))
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)

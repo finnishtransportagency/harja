@@ -47,6 +47,7 @@
           (error errorObj)
           (k/post! :raportoi-selainvirhe
                    {:url    url
+                    :sijainti (-> js/window .-location .-href)
                     :viesti errorMsg
                     :rivi   lineNumber
                     :sarake column
@@ -61,5 +62,6 @@
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
     (k/kaynnista-palvelimen-pingaus)
+    (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))

@@ -15,7 +15,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="300" />
+                                        <xs:maxLength value="300"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -27,7 +27,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1" />
+                                        <xs:minInclusive value="1"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -45,7 +45,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1" />
+                                        <xs:minInclusive value="1"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -57,7 +57,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="300" />
+                                        <xs:maxLength value="300"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -69,7 +69,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="32" />
+                                        <xs:maxLength value="32"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -82,7 +82,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -94,7 +94,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -106,7 +106,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -118,7 +118,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="254" />
+                                        <xs:maxLength value="254"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -130,7 +130,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="300" />
+                                        <xs:maxLength value="300"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -142,7 +142,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="32" />
+                                        <xs:maxLength value="32"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -161,9 +161,9 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="Tie" />
-                                        <xs:enumeration value="Rautatie" />
-                                        <xs:enumeration value="Vesiväylä" />
+                                        <xs:enumeration value="Tie"/>
+                                        <xs:enumeration value="Rautatie"/>
+                                        <xs:enumeration value="Vesiväylä"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -175,10 +175,15 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="hoito" />
-                                        <xs:enumeration value="ylläpito" />
-                                        <xs:enumeration value="investoinnit" />
-                                        <xs:enumeration value="muut" />
+                                        <xs:enumeration value="hoito"/>
+                                        <xs:enumeration value="paallystys"/>
+                                        <xs:enumeration value="paikkaus"/>
+                                        <xs:enumeration value="tiemerkinta"/>
+                                        <xs:enumeration value="valaistus"/>
+                                        <xs:enumeration value="siltakorjaus"/>
+                                        <xs:enumeration value="tekniset-laitteet"/>
+                                        <xs:enumeration value="investoinnit"/>
+                                        <xs:enumeration value="muut"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -190,15 +195,15 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="UUD ELY" />
-                                        <xs:enumeration value="VAR ELY" />
-                                        <xs:enumeration value="PIR ELY" />
-                                        <xs:enumeration value="KAS ELY" />
-                                        <xs:enumeration value="KES ELY" />
-                                        <xs:enumeration value="POS ELY" />
-                                        <xs:enumeration value="EPO ELY" />
-                                        <xs:enumeration value="POP ELY" />
-                                        <xs:enumeration value="LAP ELY" />
+                                        <xs:enumeration value="UUD ELY"/>
+                                        <xs:enumeration value="VAR ELY"/>
+                                        <xs:enumeration value="PIR ELY"/>
+                                        <xs:enumeration value="KAS ELY"/>
+                                        <xs:enumeration value="KES ELY"/>
+                                        <xs:enumeration value="POS ELY"/>
+                                        <xs:enumeration value="EPO ELY"/>
+                                        <xs:enumeration value="POP ELY"/>
+                                        <xs:enumeration value="LAP ELY"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -210,7 +215,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="16" />
+                                        <xs:maxLength value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -230,10 +235,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
+                                        <xs:enumeration value="64"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -263,11 +268,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -281,7 +286,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -303,12 +308,12 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -326,11 +331,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -350,10 +355,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -373,10 +378,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -395,10 +400,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -412,7 +417,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -426,7 +431,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="2000" />
+                                        <xs:maxLength value="2000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -447,8 +452,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -485,22 +490,22 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                        <xs:enumeration value="128" />
-                                        <xs:enumeration value="256" />
-                                        <xs:enumeration value="512" />
-                                        <xs:enumeration value="1024" />
-                                        <xs:enumeration value="2048" />
-                                        <xs:enumeration value="4096" />
-                                        <xs:enumeration value="8192" />
-                                        <xs:enumeration value="16384" />
-                                        <xs:enumeration value="32768" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
+                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="128"/>
+                                        <xs:enumeration value="256"/>
+                                        <xs:enumeration value="512"/>
+                                        <xs:enumeration value="1024"/>
+                                        <xs:enumeration value="2048"/>
+                                        <xs:enumeration value="4096"/>
+                                        <xs:enumeration value="8192"/>
+                                        <xs:enumeration value="16384"/>
+                                        <xs:enumeration value="32768"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -514,8 +519,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
-                                        <xs:maxInclusive value="9999999" />
+                                        <xs:minInclusive value="0"/>
+                                        <xs:maxInclusive value="9999999"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -527,7 +532,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -544,66 +549,66 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="eureffinn" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:double">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="eureffine" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:double">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tienimi" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tienumero" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tieaosa" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tielosa" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tieaet" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tielet" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -625,7 +630,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="2000" />
+                                        <xs:maxLength value="2000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -642,10 +647,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -659,7 +664,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="2000" />
+                                        <xs:maxLength value="2000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -671,7 +676,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -685,7 +690,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -708,7 +713,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -740,7 +745,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -753,7 +758,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="sairaalahoitovuorokaudet" minOccurs="0">
@@ -766,7 +771,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -780,7 +785,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="2000" />
+                                        <xs:maxLength value="2000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -798,7 +803,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -817,7 +822,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80" />
+                                        <xs:maxLength value="80"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -829,7 +834,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80" />
+                                        <xs:maxLength value="80"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -843,7 +848,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80" />
+                                        <xs:maxLength value="80"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -854,7 +859,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tila" minOccurs="1" maxOccurs="1">
@@ -865,10 +870,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="Avoin" />
-                                        <xs:enumeration value="Käsitelty" />
-                                        <xs:enumeration value="Täydennetty" />
-                                        <xs:enumeration value="Suljettu" />
+                                        <xs:enumeration value="Avoin"/>
+                                        <xs:enumeration value="Käsitelty"/>
+                                        <xs:enumeration value="Täydennetty"/>
+                                        <xs:enumeration value="Suljettu"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -883,7 +888,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="2000" />
+                                        <xs:maxLength value="2000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -901,7 +906,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="300" />
+                                        <xs:maxLength value="300"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -913,11 +918,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="5000" />
+                                        <xs:maxLength value="5000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-
 
 
                             <xs:element name="vastuuhenkilokayttajatunnus" minOccurs="1" maxOccurs="1">
@@ -928,7 +932,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -940,7 +944,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -952,7 +956,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -964,11 +968,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="254" />
+                                        <xs:maxLength value="254"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-
 
 
                             <xs:element name="toteuttaja" minOccurs="0">
@@ -979,7 +982,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -991,7 +994,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="5000" />
+                                        <xs:maxLength value="5000"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1008,9 +1011,9 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="0" />
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="0"/>
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1021,7 +1024,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="maarapvm" type="xs:date" minOccurs="0">
@@ -1040,11 +1043,11 @@
                             <xs:element name="tiedostonimi">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="tiedosto" type="xs:base64Binary" />
+                            <xs:element name="tiedosto" type="xs:base64Binary"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

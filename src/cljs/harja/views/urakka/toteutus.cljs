@@ -5,12 +5,13 @@
             [harja.tiedot.urakka :as u]
             [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot :as yks-hint-tiemerkinta]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.tiemerkinnan-yksikkohintaiset-tyot :as tyy-tiedot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.toteumat.tiemerkinta-muut-tyot :as muut-tyot]))
+            [harja.views.urakka.toteumat.tiemerkinta-muut-kustannukset :as muut-kustannukset]))
 
 
 (defn toteutus [ur]
@@ -32,10 +33,13 @@
           :yksikkohintaiset
           (when (oikeudet/urakat-toteutus-yksikkohintaisettyot id)
             ^{:key "yksikkohintaiset-tyot"}
-            [yks-hint-tiemerkinta/yksikkohintaiset-tyot ur])
+            [yks-hint-tiemerkinta/yksikkohintaiset-tyot
+             ur
+             tyy-tiedot/tiemerkinnan-toteumat
+             tyy-tiedot/paallystysurakan-kohteet])
 
-          "Muut työt"
+          "Muut kustannukset"
           :muut
-          (when (oikeudet/urakat-toteutus-muuttyot id)
-            ^{:key "muut-tyot"}
-            [muut-tyot/muut-tyot ur])]]))))
+          (when (oikeudet/urakat-toteutus-muutkustannukset id)
+            ^{:key "muut-kustannukset"}
+            [muut-kustannukset/muut-kustannukset ur])]]))))

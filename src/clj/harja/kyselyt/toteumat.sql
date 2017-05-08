@@ -634,11 +634,17 @@ SELECT
   tk.yksikko                                                AS tehtava_yksikko,
   tt.toteuma                                                AS tehtava_id,
   tk.nimi                                                   AS toimenpide,
+  mk.nimi AS materiaalitoteuma_materiaali_nimi,
+  mk.yksikko AS materiaalitoteuma_materiaali_yksikko,
+  tm.maara AS materiaalitoteuma_maara,
+  tm.id AS materiaalitoteuma_id,
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1) :: TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
   t.urakka = :urakka-id
   AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)

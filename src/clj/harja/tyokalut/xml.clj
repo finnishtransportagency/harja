@@ -67,6 +67,7 @@
   (nil? (validoi-xml xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto)))
 
 (defn lue
+  "Lukee XML-tekstin Clojure-muotoon (vectoreiksi ja mapeiksi)"
   ([xml] (lue xml "UTF-8"))
   ([xml charset]
    (let [in (ByteArrayInputStream. (.getBytes xml charset))]
@@ -74,6 +75,34 @@
           (catch SAXParseException e
             (log/error e "Tapahtui poikkeus luettuessa XML-sisältöä: " xml)
             nil)))))
+
+(defn luetun-xmln-tagi
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa ensimmäisen tagin, jonka nimi on annettu keyword"
+  [luettu-xml tagi]
+  (first (filter #(= tagi (:tag %)) luettu-xml)))
+
+(defn luetun-tagin-sisalto
+  "Ottaa Clojure-muotoon muunnetun XML-tagin ja palauttaa sen sisällön"
+  [luettu-tagi]
+  (:content luettu-tagi))
+
+(defn luetun-xmln-tagin-sisalto
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja etsii ensimmäisen tagin, jonka nimi on annettu keyword.
+   Palauttaa kyseisen tagin sisällön."
+  [luettu-xml tagi]
+  (luetun-tagin-sisalto (luetun-xmln-tagi luettu-xml tagi)))
+
+(defn luetun-xmln-tagien-sisalto
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa tagijonon viimeisen tagin sisällön.
+
+   Kutsu esim.:
+   (luetun-xmln-tagien-sisalto xml :urakka :kohde)"
+  [luettu-xml & tagit]
+  (reduce
+    (fn [tulos seuraava]
+      (luetun-xmln-tagin-sisalto tulos seuraava))
+    luettu-xml
+    tagit))
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))

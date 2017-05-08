@@ -306,7 +306,7 @@
           (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
           (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
           (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-          (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
+          (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (or (:maara tehtava) 0) (:poistettu tehtava)
                                                 (:paivanhinta tehtava) (:tehtava_id tehtava)))
 
         (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
@@ -757,7 +757,8 @@
             db
             (merge {:x x :y y :tyyppi "kokonaishintainen"}
                    parametrit)))
-    {:tehtava :tehtavat}))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 
 (defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
   (let [{urakka-id :urakka-id :as p} parametrit
@@ -779,7 +780,8 @@
             (merge {:x x :y y :tyyppi "yksikkohintainen"
                     :toimenpidekoodi nil}
                    parametrit)))
-    {:tehtava :tehtavat}))
+    {:tehtava :tehtavat
+     :materiaalitoteuma :materiaalit}))
 
 (defn- siirry-kokonaishintainen-toteuma
   "Palauttaa frontin tarvitsemat tiedot, joilla kokonaishintaiseen toteumaan voidaan siirtyä"

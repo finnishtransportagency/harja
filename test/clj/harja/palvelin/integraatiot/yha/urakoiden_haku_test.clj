@@ -18,6 +18,8 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+(def urakkahaku-url (str +yha-url+ "urakkahaku"))
+
 (deftest tarkista-urakoiden-haku
   (let [odotettu-vastaus [{:elyt ["POP"]
                            :sampotunnus "SAMPOTUNNUS"
@@ -25,18 +27,18 @@
                            :yhaid 3
                            :yhatunnus "YHATUNNUS"}]
 
-        url (str +yha-url+ "urakkahaku")]
+        url urakkahaku-url]
     (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]
         (is (= odotettu-vastaus vastaus))))))
 
 (deftest tarkista-epaonnistunut-kutsu
-  (with-fake-http [{:url (str +yha-url+ "urakkahaku") :method :get} 500]
+  (with-fake-http [{:url urakkahaku-url :method :get} 500]
     (is (thrown? Exception (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016))
         "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")))
 
 (deftest tarkista-virhevastaus
-  (let [url (str +yha-url+ "urakkahaku")]
+  (let [url urakkahaku-url]
     (with-fake-http [url +virhevastaus+]
       (try+
         (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)

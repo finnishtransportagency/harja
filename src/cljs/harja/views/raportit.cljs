@@ -26,7 +26,8 @@
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t]
             [harja.fmt :as fmt]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.kentat :as kentat])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -429,7 +430,15 @@
                        valittu?])]))))]])))
 
 (defmethod raportin-parametri :default [p arvo]
-  [:span (pr-str p)])
+  (if (keyword? (:tyyppi p))
+    ;; Tehdään suoraan lomake kenttä annetuilla spekseillä
+    (let [nimi (:nimi p)]
+      [:div.label-ja-kentta
+       [:span (:otsikko p)]
+       [kentat/tee-kentta p (r/wrap (nimi @arvo)
+                                    #(swap! arvo merge {nimi %}))]])
+
+    [:span (pr-str p)]))
 
 ;; Tarkistaa raporttityypin mukaan voiko näillä parametreilla suorittaa
 (defmulti raportin-voi-suorittaa? (fn [raporttityyppi parametrit] (:nimi raporttityyppi)))

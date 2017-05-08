@@ -7,15 +7,16 @@ SELECT
   nimi,
   kohdenumero,
   pi.paatos,
-  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
-  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
-  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
-  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
                                    AND pi.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
@@ -33,6 +34,7 @@ SELECT
   valmispvm_paikkaus AS "valmispvm-paikkaus",
   ypk.nimi as kohdenimi,
   ypk.kohdenumero,
+  ypk.toteutunut_hinta AS "toteutunut-hinta",
   ilmoitustiedot,
   paatos,
   perustelu,
@@ -51,7 +53,6 @@ UPDATE paikkausilmoitus
 SET
   tila                              = :tila::paikkausilmoituksen_tila,
   ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
-  toteutunut_hinta                  = :toteutunut_hinta,
   aloituspvm                        = :aloituspvm,
   valmispvm_kohde                   = :valmispvm_kohde,
   valmispvm_paikkaus                = :valmispvm_paikkaus,
@@ -65,12 +66,11 @@ WHERE paikkauskohde = :id;
 
 -- name: luo-paikkausilmoitus<!
 -- Luo uuden paikkausilmoituksen
-INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, toteutunut_hinta,
+INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot,
                               aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
 VALUES (:paikkauskohde,
         :tila::paikkausilmoituksen_tila,
         :ilmoitustiedot::JSONB,
-        :toteutunut_hinta,
         :aloituspvm,
         :valmispvm_kohde,
         :valmispvm_paikkaus,
@@ -123,3 +123,9 @@ WHERE urakka = :urakka AND id = :id;
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
               WHERE paikkauskohde = :yllapitokohde);
+
+-- name: paivita-paikkauskohteen-toteutunut-hinta!
+-- Päivittää paikkauskohteen toteutuneen hinnan yllapitokohde tauluun
+UPDATE yllapitokohde
+   SET toteutunut_hinta = :toteutunut_hinta
+ WHERE id = :id;

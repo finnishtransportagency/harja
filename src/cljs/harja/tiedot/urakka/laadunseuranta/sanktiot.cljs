@@ -28,10 +28,11 @@
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot annetulle hoitokaudelle."
-  [urakka-id [alku loppu]]
+  [{:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
   (k/post! :hae-urakan-sanktiot {:urakka-id urakka-id
                                  :alku      alku
-                                 :loppu     loppu}))
+                                 :loppu     loppu
+                                 :vain-yllapitokohteettomat? vain-yllapitokohteettomat?}))
 
 (defonce haetut-sanktiot
   (reaction<! [urakka (:id @nav/valittu-urakka)
@@ -39,7 +40,9 @@
                _ @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
-                (hae-urakan-sanktiot urakka hoitokausi))))
+                (hae-urakan-sanktiot {:urakka-id urakka
+                                      :alku (first hoitokausi)
+                                      :loppu (second hoitokausi)}))))
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]

@@ -34,9 +34,6 @@
   .huomautus {
     .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
   }
-  .puuttuva-arvo {
-    border-bottom: solid 1px @vaara;
-  }
   .viesti {
     display: inline-block;
     margin-left: 0.5em;
@@ -74,6 +71,9 @@
     .nappi-ensisijainen {
       margin-right: 0;
     }
+    .nappi-tyhjenna.nappi-kielteinen {
+      margin: 2px 5px;
+    }
     thead {
       font-size: @fontin-koko-leipateksti;
       th {
@@ -85,6 +85,7 @@
 
   table.boolean-group {
     td {
+      text-align: center;
       .checkbox {
         padding-top: 0;
       }
@@ -196,4 +197,13 @@
 fieldset.lomake-osa {
   margin-top: 10px;
 
+}
+
+/* Tämä luokka lomakkeessa lisää ryhmien otsikkoihin väliä ja borderin */
+.ryhma-reuna {
+  .lomake-ryhman-otsikko {
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: solid 1px black;
+  }
 }

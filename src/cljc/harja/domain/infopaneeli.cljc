@@ -1,7 +1,8 @@
 (ns harja.domain.infopaneeli
   "Infopaneelin tuloksien spec määrittelyt"
   (:require [clojure.spec :as s]
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.domain.tietyoilmoitukset :as t]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -67,6 +68,17 @@
 (defmethod infopaneeli-skeema :tietyomaa [_]
   (s/keys :req-un [::yllapitokohteen-nimi ::yllapitokohteen-numero ::aika
                    ::kaistat ::ajoradat ::nopeusrajoitus]))
+
+(defmethod infopaneeli-skeema :tietyoilmoitus [_]
+  (s/keys :req [::t/alku ::t/ilmoittaja ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo
+                ::t/tyotyypit ::t/osoite ::t/tien-nimi ::t/kunnat ::t/alkusijainnin-kuvaus
+                ::t/loppusijainnin-kuvaus ::t/alku ::t/loppu ::t/tyoajat ::t/vaikutussuunta
+                ::t/kaistajarjestelyt ::t/nopeusrajoitukset ::t/tienpinnat ::t/kiertotien-pituus
+                ::t/kiertotien-mutkaisuus ::t/kiertotienpinnat ::t/liikenteenohjaus
+                ::t/liikenteenohjaaja ::t/viivastys-normaali-liikenteessa ::t/viivastys-ruuhka-aikana
+                ::t/ajoneuvorajoitukset ::t/huomautukset ::t/ajoittaiset-pysaytykset
+                ::t/ajoittain-suljettu-tie ::t/pysaytysten-alku ::t/pysaytysten-loppu
+                ::t/lisatietoja ::t/urakoitsijan-nimi]))
 
 ;; Infopaneelin tuloksen spec päätetään :tyyppi-kartalla avaimen perusteella
 (s/def ::tulos (s/multi-spec infopaneeli-skeema :tyyppi-kartalla))

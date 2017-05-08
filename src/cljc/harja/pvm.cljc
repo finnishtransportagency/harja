@@ -21,10 +21,24 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-     (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat)
-              (org.joda.time DateTimeZone))))
+           (:import (java.util Calendar Date)
+                    (java.text SimpleDateFormat)
+                    (org.joda.time DateTimeZone))))
 
+(def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
+                  "Touko" "Kesä" "Heinä" "Elo"
+                  "Syys" "Loka" "Marras" "Joulu"])
+#?(:cljs
+   (do
+     (defrecord Aika [tunnit minuutit sekunnit])
+     (defn- vertailuaika [{:keys [tunnit minuutit sekunnit]}]
+       (+ (* 10000 (or tunnit 0))
+          (* 100 (or minuutit 0))
+          (or sekunnit 0)))
+     (defn aika-jalkeen? [eka toka]
+       (> (vertailuaika eka) (vertailuaika toka)))
+     (defn aika-ennen? [eka toka]
+       (< (vertailuaika eka) (vertailuaika toka)))))
 
 #?(:cljs
    ;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
@@ -44,13 +58,13 @@
 
 #?(:clj
    (defn suomen-aikavyohykkeessa
-     "Antaa joda daten suomen aikavyöhykkeellä"
+     "Palautteen uuden Joda-ajan suomen aikavyöhykkeellä niin, että aika on sama, mutta aikavyöhyke muuttuu."
      [joda-time]
      (t/from-time-zone joda-time suomen-aikavyohyke)))
 
 #?(:clj
    (defn suomen-aikavyohykkeeseen
-     "Antaa joda daten suomen aikavyöhykkeellä"
+     "Palauttaa uuden Joda-ajan Suomen aikavyöhykkeessä niin, että aika on absoluuttisesti paikallisessa Suomeen ajassa."
      [joda-time]
      (t/to-time-zone joda-time suomen-aikavyohyke)))
 
@@ -119,19 +133,36 @@
        (instance? java.sql.Timestamp dt)
        (tc/from-sql-time dt))))
 
+#?(:clj
+   (defn dateksi [dt]
+     (if (instance? java.util.Date dt)
+       dt
+       (tc/to-date dt))))
+
 (defn nyt
   "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)
-     :clj (Date.)))
+     :clj  (Date.)))
+
+#?(:clj
+   (defn nyt-suomessa []
+     (suomen-aikavyohykkeeseen (tc/from-date (nyt)))))
+
+(defn pvm?
+  [pvm]
+  #?(:cljs (instance? DateTime pvm)
+     :clj  (joda-time? pvm)))
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
-  Backendissä palauttaa java.util.Daten"
+  Backendissä palauttaa java.util.Daten
+
+  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index"
   [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
-     :clj (Date. (- vuosi 1900) kk pv)))
+     :clj  (Date. (- vuosi 1900) kk pv)))
 
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
@@ -139,6 +170,10 @@
     (and (= (t/year eka) (t/year toka))
          (= (t/month eka) (t/month toka))
          (= (t/day eka) (t/day toka)))))
+
+#?(:clj
+   (defn sama-tyyppiriippumaton-pvm? [eka toka]
+     (sama-pvm? (joda-timeksi eka) (joda-timeksi toka))))
 
 
 #?(:cljs
@@ -208,13 +243,13 @@
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
-     :clj (SimpleDateFormat. str)))
+     :clj  (SimpleDateFormat. str)))
 (defn- formatoi [format date]
   #?(:cljs (df/unparse format date)
-     :clj (.format format date)))
+     :clj  (.format format date)))
 (defn parsi [format teksti]
   #?(:cljs (df/parse-local format teksti)
-     :clj (.parse format teksti)))
+     :clj  (.parse format teksti)))
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
@@ -242,6 +277,10 @@
 
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
+
+(defn aika-iso8601-ilman-millisekunteja
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
 
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
@@ -321,7 +360,7 @@
     (try
       (parsi fi-pvm-aika (str/trim teksti-kellonaika-korjattu))
       (catch #?(:cljs js/Error
-                :clj Exception) e
+                :clj  Exception) e
         nil))))
 
 (defn ->pvm-aika-sek [teksti]
@@ -333,7 +372,7 @@
   (try
     (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error
-              :clj Exception) e
+              :clj  Exception) e
       nil)))
 
 (defn kuukauden-nimi [kk]
@@ -395,9 +434,9 @@
 
 (defn- d [x]
   #?(:cljs x
-     :clj (if (instance? Date x)
-            (suomen-aikavyohykkeeseen (tc/from-date x))
-            x)))
+     :clj  (if (instance? Date x)
+             (suomen-aikavyohykkeeseen (tc/from-date x))
+             x)))
 
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
@@ -411,6 +450,11 @@
   ;; esim 2015-09-30T21:00:00.000-00:00 (joka olisi keskiyöllä meidän aikavyöhykkeellä)
   ;; pitäisi joda date timeihin vaihtaa koko backend puolella
   (t/month (d pvm)))
+
+(defn koko-kuukausi-ja-vuosi
+  "Formatoi pvm:n muotoon: MMMM yyyy. Esim. Touko 2017."
+  [pvm]
+  (str (nth +kuukaudet+ (dec (kuukausi pvm))) " " (vuosi pvm)))
 
 (defn paiva
   "Palauttaa annetun DateTime päivän."
@@ -587,12 +631,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                         (kuukauden-aikavali kk))
                   (t/plus kk (t/months 1))))))))
 
-#?(:cljs
-   (defn ed-kk-aikavalina
-     [p]
-     (let [pvm-ed-kkna (t/minus p (t/months 1))]
-       [(t/first-day-of-the-month pvm-ed-kkna)
-        (t/last-day-of-the-month pvm-ed-kkna)])))
+(defn ed-kk-aikavalina
+  [p]
+  (let [pvm-ed-kkna (t/minus p (t/months 1))]
+    [(aikana (t/first-day-of-the-month pvm-ed-kkna) 0 0 0 0)
+     (aikana (t/last-day-of-the-month pvm-ed-kkna) 23 59 59 999)]))
 
 #?(:clj
    (defn kyseessa-kk-vali?
@@ -710,8 +753,22 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn tuntia-sitten [tuntia]
      (t/minus (nyt) (t/hours tuntia))))
 
+#?(:cljs
+   (defn tunnin-paasta [tuntia]
+     (t/plus (nyt) (t/hours tuntia))))
+
 #?(:clj
    (defn tuntia-sitten [tuntia]
      (-> tuntia t/hours t/ago)))
 
 (def kayttoonottto (t/local-date 2016 10 1))
+
+(defn- paivat-valissa* [alku loppu]
+  (if (jalkeen? alku loppu)
+    nil
+    (lazy-seq
+     (cons alku
+           (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
+
+(defn paivat-valissa [alku loppu]
+  (paivat-valissa* (d alku) (d loppu)))

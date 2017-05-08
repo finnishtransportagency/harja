@@ -14,7 +14,8 @@
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
     [clojure.core.async :as async]
-    [clojure.spec :as s])
+    [clojure.spec :as s]
+    [clojure.string :as str])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -28,12 +29,16 @@
 (defn travis? []
   (= "true" (System/getenv "TRAVIS")))
 
+(defn circleci? []
+  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
 (log/set-config! [:appenders :standard-out :min-level]
                  (cond
                    (or (ollaanko-jenkinsissa?)
                        (travis?)
+                       (circleci?)
                        (= "true" (System/getenv "NOLOG")))
                    :fatal
 
@@ -58,10 +63,10 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
-  (loop [max-ts (+ max-aika (System/currentTimeMillis))]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
+  (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
-      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
+      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika-ms "ms kuluessa"))
       (when-not (ehto-fn)
         (recur max-ts)))))
 
@@ -196,22 +201,22 @@
 
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
-    (if kysely-spec
-      (fn [user payload]
-        (testing (str "Palvelun " nimi " kysely on validi")
-          (is (s/valid? kysely-spec payload)
-              (s/explain-str kysely-spec payload)))
-        (f user payload))
-      f)
+        (if kysely-spec
+          (fn [user payload]
+            (testing (str "Palvelun " nimi " kysely on validi")
+              (is (s/valid? kysely-spec payload)
+                  (s/explain-str kysely-spec payload)))
+            (f user payload))
+          f)
 
-    (if vastaus-spec
-      (fn [user payload]
-        (let [v (f user payload)]
-          (testing (str "Palvelun " nimi " vastaus on validi")
-            (is (s/valid? vastaus-spec v)
-                (s/explain-str vastaus-spec v)))
-          v))
-      f)))
+        (if vastaus-spec
+          (fn [user payload]
+            (let [v (f user payload)]
+              (testing (str "Palvelun " nimi " vastaus on validi")
+                (is (s/valid? vastaus-spec v)
+                    (s/explain-str vastaus-spec v)))
+              v))
+          f)))
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -310,6 +315,19 @@
                    FROM   urakka
                    WHERE  nimi = 'Kajaanin alueurakka 2014-2019'"))))
 
+(defn hae-vapaa-urakoitsija-id []
+  (ffirst (q (str "SELECT id FROM organisaatio
+                   WHERE tyyppi = 'urakoitsija'
+                   AND id NOT IN (SELECT urakoitsija FROM urakka WHERE urakoitsija IS NOT NULL);"))))
+
+(defn hae-vapaa-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus
+                   WHERE urakka IS NULL;"))))
+
+(defn hae-vapaat-sopimus-idt []
+  (map :id (q-map (str "SELECT id FROM sopimus
+                   WHERE urakka IS NULL;"))))
+
 (defn hae-vantaan-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -342,6 +360,9 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
+(defn hae-yha-paallystysurakan-id []
+  (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'")))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -359,6 +380,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
+
+(defn hae-lapin-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
 
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
@@ -406,11 +432,31 @@
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
+(defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   suorittava_tiemerkintaurakka = " urakka-id ";"))))
+
 (defn hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-nakkilan-ramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Nakkilan ramppi';"))))
+
+(defn hae-yllapitokohde-oulaisten-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulaisten ohitusramppi';"))))
+
+(defn hae-yllapitokohde-oulun-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulun ohitusramppi';"))))
 
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -473,7 +519,7 @@
                       :etunimi "Tero"
                       :sukunimi "Toripolliisi"
                       :kayttajanimi "LX123456789"
-                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
+                      :organisaatio {:id 9 :tyyppi "hallintayksikko" :nimi "Pop"}
                       :roolit #{"ELY_Urakanvalvoja"}
                       :organisaation-urakat #{}})
 
@@ -482,7 +528,7 @@
                      :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                                    :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
                      :urakkaroolit {}})
 
@@ -503,17 +549,17 @@
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
 
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 11 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
                           :roolit #{}
                           :urakkaroolit {}
-                          :organisaatioroolit {11 #{"Kayttaja"}}
+                          :organisaatioroolit {14 #{"Kayttaja"}}
                           :organisaation-urakat #{1 4 20 22}})
 
 (def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 13 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
                       :roolit #{}
                       :urakkaroolit {}
-                      :organisaatioroolit {13 #{"Kayttaja"}}
+                      :organisaatioroolit {16 #{"Kayttaja"}}
                       :organisaation-urakat #{2 21}})
 
 (defn tietokanta-fixture [testit]
@@ -685,6 +731,11 @@
   ([eka toka marginaali]
    (< (Math/abs (double (- eka toka))) marginaali)))
 
+(defn- =ts [d1 d2]
+  (let [ts1 (and d1 (.getTime d1))
+        ts2 (and d2 (.getTime d2))]
+    (= ts1 ts2)))
+
 (defn tarkista-map-arvot
   "Tarkistaa, että mäpissä on oikeat arvot. Numeroita vertaillaan =marginaalissa? avulla, muita
   = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
@@ -693,17 +744,28 @@
   (doseq [k (keys odotetut)
           :let [odotettu-arvo (get odotetut k)
                 saatu-arvo (get saadut k ::ei-olemassa)]]
-    (if (= saatu-arvo ::ei-olemassa)
+    (cond
+      (= saatu-arvo ::ei-olemassa)
       (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
                      ", odotettiin arvoa: " odotettu-arvo))
 
-      (if (and (number? odotettu-arvo) (number? saatu-arvo))
-        (is (=marginaalissa? odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
-                 odotettu-arvo ", saatu: " saatu-arvo))
-        (is (= odotettu-arvo saatu-arvo)
-            (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
-                 ", saatu: " saatu-arvo))))))
+      (and (number? odotettu-arvo) (number? saatu-arvo))
+      (is (=marginaalissa? odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      (instance? java.util.Date odotettu-arvo)
+      (is (=ts odotettu-arvo saatu-arvo)
+          (str "Odotettu date arvo avaimelle " k " ei ole millisekunteina sama, odotettu: "
+               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+               saatu-arvo " (" (type saatu-arvo) ")"))
+
+      :default
+      (is (= odotettu-arvo saatu-arvo)
+          (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+               " (" (type odotettu-arvo)
+               "), saatu: " saatu-arvo " (" (type odotettu-arvo) ")")))))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 

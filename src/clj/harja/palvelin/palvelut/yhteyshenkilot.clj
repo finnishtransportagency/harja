@@ -58,7 +58,7 @@
      (fn [user urakka-id]
        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
        (async
-        (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id)))
+        (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
 
      :hae-urakan-vastuuhenkilot
      (fn [user urakka-id]
@@ -81,7 +81,7 @@
                      :tallenna-urakan-vastuuhenkilot-roolille)
     this))
 
-(defn hae-urakan-kayttajat [db fim user urakka-id]
+(defn hae-urakan-kayttajat [db fim urakka-id]
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
@@ -104,7 +104,6 @@
                (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi
                              :organisaatio_tyyppi :organisaatio_lyhenne)))
               tulokset)]
-    ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
 (defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]

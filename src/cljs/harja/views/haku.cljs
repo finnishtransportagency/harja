@@ -150,16 +150,18 @@
                                                    (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
                            :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
-                                             :urakka "Urakat"
-                                             :kayttaja "Käyttäjät"
-                                             :organisaatio "Organisaatiot"
-                                             "Muut")
+                                              :urakka "Urakat"
+                                              :kayttaja "Käyttäjät"
+                                              :organisaatio "Organisaatiot"
+                                              "Muut")
                            :on-select #(valitse-hakutulos %)
                            :aputeksti "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
                            :vinkki #(when-not (empty? @hakutermi)
-                                     (if (liikaa-osumia? @hakutulokset)
-                                       "Paljon osumia, tarkenna hakua..."
-                                       (when (= [] @hakutulokset)
-                                         (str "Ei tuloksia haulla " @hakutermi))))}
+                                      (if (liikaa-osumia? @hakutulokset)
+                                        "Paljon osumia, tarkenna hakua..."
+                                        (if (nil? (:organisaatio @istunto/kayttaja))
+                                          "Käyttäjän organisaatiota ei tunnistettu, hakutoiminto ei käytössä. Ota yhteys pääkäyttäjään."
+                                          (when (= [] @hakutulokset)
+                                           (str "Ei tuloksia haulla " @hakutermi)))))}
          @hakutulokset]]])))

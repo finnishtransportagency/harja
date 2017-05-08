@@ -7,41 +7,17 @@
             [harja.palvelin.raportointi.pdf :as pdf]
             [harja.palvelin.raportointi.excel :as excel]
             [taoensso.timbre :as log]
-            [harja.kyselyt.raportit :as raportit-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.organisaatiot :as organisaatiot-q]
-            ;; vaaditaan built in raportit
-            [harja.palvelin.raportointi.raportit.erilliskustannukset]
-            [harja.palvelin.raportointi.raportit.ilmoitus]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
-            [harja.palvelin.raportointi.raportit.materiaali]
-            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
-            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
-            [harja.palvelin.raportointi.raportit.suolasakko]
-            [harja.palvelin.raportointi.raportit.tiestotarkastus]
-            [harja.palvelin.raportointi.raportit.kelitarkastus]
-            [harja.palvelin.raportointi.raportit.laaduntarkastus]
-            [harja.palvelin.raportointi.raportit.laatupoikkeama]
-            [harja.palvelin.raportointi.raportit.siltatarkastus]
-            [harja.palvelin.raportointi.raportit.sanktio]
-            [harja.palvelin.raportointi.raportit.soratietarkastus]
-            [harja.palvelin.raportointi.raportit.valitavoiteraportti]
-            [harja.palvelin.raportointi.raportit.ymparisto]
-            [harja.palvelin.raportointi.raportit.tyomaakokous]
-            [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-            [harja.palvelin.raportointi.raportit.toimenpideajat]
-            [harja.palvelin.raportointi.raportit.toimenpidepaivat]
-            [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-            [harja.palvelin.raportointi.raportit.indeksitarkistus]
+            [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
             [harja.transit :as t]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [clojure.java.io :as io]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -150,16 +126,7 @@
     this)
 
   RaportointiMoottori
-  (hae-raportit [this]
-    (or @raportit
-        (try
-          (let [r (raportit-q/raportit (:db this))]
-            (log/debug "Raportit saatu: " (pr-str r))
-            (reset! raportit r)
-            r)
-          (catch Exception e
-            (log/warn e "Raporttien hakemisessa virhe!")
-            {}))))
+  (hae-raportit [this] raportit)
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db
@@ -197,4 +164,4 @@
 
 
 (defn luo-raportointi []
-  (->Raportointi (atom nil) (atom 0)))
+  (->Raportointi raportit-nimen-mukaan (atom 0)))

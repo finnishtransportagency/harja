@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as toimenpide-sanoma]
             [harja.palvelin.tyokalut.lukot :as lukko]

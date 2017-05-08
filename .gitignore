@@ -49,6 +49,8 @@ tietokanta/restored_stg_dump.sql
 tietokanta/*.csv
 out/
 resources/private/
-
 resources/public/laadunseuranta/js/compiled/
 resources/public/laadunseuranta/css/
+/test_envs/upcloud/*.retry
+.deploy3
+.deploy3_known_hosts

@@ -1,7 +1,31 @@
-<b>Nykyinen versio: 1.0.12</b>  
-<b>Julkaistu: 9.2.2017</b>
+<b>Nykyinen versio: 1.0.24</b>  
+<b>Julkaistu: 5.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.24 Julkaistu: 5.5.2017:
+    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä 
+- Versionumero: 1.0.23 Julkaistu: 19.4.2017:
+    - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
+- Versionumero: 1.0.22 Julkaistu: 18.4.2017:
+    - Päällystyksen aikataulun kirjaus ei enää huomioi kellonaikaa päällystyksen aloitus- ja lopetuskentälle. Aika on syytä antaa jatkossa pelkästään päivämääränä.
+- Versionumero: 1.0.21 Julkaistu: 13.4.2017:
+    - Viheralueiden ja -kuvioiden tietolajitunnisteet korvattu uusilla.
+- Versionumero: 1.0.20 Julkaistu: 4.4.2017:
+    - Ylläpitokohteelle on jatkossa mahdollista raportoida tieto, sisältääkö se poikkeamaraportin.
+- Versionumero: 1.0.19 Julkaistu: 22.3.2017:
+    - Urakan ylläpitokohteen päivityksessä alikohteen kokonaismassa-kenttä on nyt nimeltään massamaara.
+- Versionumero: 1.0.18 Julkaistu: 20.3.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu kenttä edellinen-paallyste.
+- Versionumero: 1.0.17 Julkaistu: 16.3.2017:
+    - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
+- Versionumero: 1.0.16 Julkaistu: 9.3.2017:
+    - Lisätty ylläpitokohteen päivitykseen uudet alikohteen kentät: paallystetyyppi, raekoko, tyomenetelma & kokonaismassamaara.
+- Versionumero: 1.0.15 Julkaistu: 7.3.2017:
+    - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.14 Julkaistu: 7.3.2017:
+    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.13 Julkaistu: 23.2.2017:
+    - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
 - Versionumero: 1.0.12 Julkaistu: 9.2.2017:
     - Tietolajien haulla voidaan hakea kaikki tietolajin kuvaukset kerralla. Muutospäivämäärää ei enää voi antaa parametrinä.
 - Versionumero: 1.0.11 Julkaistu: 7.2.2017:

@@ -25,18 +25,28 @@
 (test/use-fixtures :each komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
 (deftest tien-pituus-laskettu-oikein
-  (let [tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
-        tie2 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 5 :tr-loppuetaisyys 5}
-        tie3 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys -100}
-        tie4 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1 :tr-loppuetaisyys 2}
-        tie5 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
-        tie6 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1}]
-    (is (= (tierekisteri-domain/laske-tien-pituus tie1) 2))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie2) 0))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie3) 103))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie4) 1))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
-    (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))))
+    (let [osat {1 100
+                2 50}
+          ;; Tiet, jossa alku- ja loppuosa samat
+          tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
+          tie2 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 5 :tr-loppuetaisyys 5}
+          tie3 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys -100}
+          tie4 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1 :tr-loppuetaisyys 2}
+          tie5 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
+          tie6 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1}
+          ;; Tiet, jossa alku- ja loppuosa erit
+          tie7 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
+          tie8 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 0}
+          tie9 {:tr-alkuosa 1 :tr-loppuosa 2 :tr-alkuetaisyys 0 :tr-loppuetaisyys 20}]
+      (is (= (tierekisteri-domain/laske-tien-pituus tie1) 2))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie2) 0))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie3) 103))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie4) 1))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))
+      (is (= (tierekisteri-domain/laske-tien-pituus tie7) nil)) ;; Ei voida laskea ilman osien pituutta
+      (is (= (tierekisteri-domain/laske-tien-pituus osat tie8) 100))
+      (is (= (tierekisteri-domain/laske-tien-pituus osat tie9) 120))))
 
 (def paallystysilmoituslomake-alkutila
   {:tila :aloitettu
@@ -59,32 +69,43 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
-   :ilmoitustiedot {:osoitteet [{:tr-numero 20
+   :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
+                                 :tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0
                                  :tunnus "p" :nimi "piru 1"
-                                 :tyomenetelma 12
-                                 :toimenpide "eka?"}
-                                {:tr-numero 20
+                                 :toimenpide "eka?"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-tyomenetelma 12}
+                                {;; Alikohteen tiedot
+                                 :tr-numero 20
                                  :tr-alkuosa 3 :tr-alkuetaisyys 42
                                  :tr-loppuosa 3 :tr-loppuetaisyys 123
-                                 :kohdeosa-id 32 :tr-kaista nil :lisaaineet "huono tyyri"
-                                 :tr-ajorata nil :sideainetyyppi 13 :muotoarvo "1"
-                                 :esiintyma "kovasti kovestä" :pitoisuus 44
-                                 :tunnus "y" :nimi "piru 1.5"
+                                 :kohdeosa-id 32 :tr-kaista nil
+                                 :tr-ajorata nil
                                  :toimenpide "toka!"
-                                 :tyomenetelma 12
+                                 :tunnus "y" :nimi "piru 1.5"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-tyomenetelma 12
+                                 ; Kiviaines- ja sideainetiedot
+                                 :lisaaineet "huono tyyri"
+                                 :sideainetyyppi 13 :muotoarvo "1"
+                                 :esiintyma "kovasti kovestä" :pitoisuus 44
                                  :km-arvo "9"}
-                                {:tr-numero 20
-                                 :tr-alkuosa 3 :tr-alkuetaisyys 123
+                                {;; Alikohteen tiedot
+                                 :tr-alkuosa 3 :tr-alkuetaisyys 123 :tr-numero 20
                                  :tr-loppuosa 5 :tr-loppuetaisyys 100
                                  :kohdeosa-id 31 :tr-kaista 26 :tr-ajorata 2
-                                 :tunnus "k" :massamenekki 42
-                                 :nimi "piru 2" :raekoko 66
+                                 :tunnus "k"
+                                 :nimi "piru 2"
+                                 :raekoko 6
                                  :paallystetyyppi 1
                                  :toimenpide "ja kolomas"
-                                 :tyomenetelma 12}]
+                                 :tyomenetelma 12
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :massamenekki 42 :toimenpide-raekoko 66
+                                 :toimenpide-paallystetyyppi 1 :toimenpide-tyomenetelma 12}]
                     :alustatoimet []}
    :asiatarkastus {:lisatiedot nil :tarkastusaika nil :tarkastaja nil}
    :arvonvahennykset nil
@@ -128,75 +149,112 @@
       (is (nil? (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys]))))))
 
 (deftest paallystysilmoituslomake
-  (let [urakka {:id 1}
-        lukko nil
-        lomake (r/atom paallystysilmoituslomake-alkutila)
-        historia (historia/historia lomake)
-        _ (historia/kuuntele! historia)
-        comp (fn []
-               [p/paallystysilmoituslomake urakka @lomake lukko (partial swap! lomake) historia])
-        pituudet-haettu (fake-palvelukutsu :hae-tr-osien-pituudet (constantly {1 1000
-                                                                               2 2000
-                                                                               3 3000
-                                                                               4 3900
-                                                                               5 400}))
-        _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
-        _ (fake-palvelukutsu :lukitse (constantly {:id "paallystysilmoitus_777",
-                                                   :kayttaja 2, :aikaleima (pvm/nyt)}))
-        tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
-    (async
-      done
-      (go
-        (render [comp])
+    (let [urakka {:id 1}
+          lukko nil
+          lomake (r/atom paallystysilmoituslomake-alkutila)
+          historia (historia/historia lomake)
+          _ (historia/kuuntele! historia)
+          comp (fn []
+                 [p/paallystysilmoituslomake urakka @lomake lukko (partial swap! lomake) historia])
+          pituudet-haettu (fake-palvelukutsu :hae-tr-osien-pituudet (constantly {1 1000
+                                                                                 2 2000
+                                                                                 3 3000
+                                                                                 4 3900
+                                                                                 5 400}))
+          _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
+          _ (fake-palvelukutsu :lukitse (constantly {:id "paallystysilmoitus_777",
+                                                     :kayttaja 2, :aikaleima (pvm/nyt)}))
+          tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
+      (async
+        done
+        (go
+          (render [comp])
 
-        ;; Tarkista, että tieosoite näkyy oikein
-        (is (= "piru 1"
-               (some-> (grid-solu "yllapitokohdeosat" 0 1)
-                       .-value)))
+          ;; Tarkista, että tieosoite näkyy oikein
+          (is (= "piru 1"
+                 (some-> (grid-solu "yllapitokohdeosat" 0 1)
+                         .-value)))
 
-        (<! pituudet-haettu)
-
-        (<! (paivita))
-
-        (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
-               (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
-
-
-        ;; Tallennus nappi enabled
-        (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
-
-        (let [tila-ok @lomake]
-
-          ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
-          (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                      {:target {:value "888"}})
+          (<! pituudet-haettu)
 
           (<! (paivita))
 
-          (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+          (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
+                 (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
-          (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
-                 '("Anna arvo välillä 0 - 100")))
 
-          ;; Tallennus nappi disabled
-          (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+          ;; Tallennus nappi enabled
+          (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
 
-          (<! (tarkista-asiatarkastus lomake))
-          (reset! lomake tila-ok))
+          (let [tila-ok @lomake]
 
-        (<! (paivita))
+            ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
+            (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                        {:target {:value "888"}})
 
-        ;; Muutetaan takaisin validiksi ja yritetään tallentaa
-        (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                    {:target {:value "8"}})
+            (<! (paivita))
 
-        (<! (paivita))
+            (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
 
-        (<! (tarkista-kopioidun-rivin-virhe lomake))
+            (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
+                   '("Anna arvo välillä 0 - 100")))
 
-        (click :#tallenna-paallystysilmoitus)
+            ;; Tallennus nappi disabled
+            (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
 
-        ;; Tallennusta kutsuttu
-        (let [tulos (<! tallennus)]
-          (is tulos))
-        (done)))))
+            (<! (tarkista-asiatarkastus lomake))
+            (reset! lomake tila-ok))
+
+          (<! (paivita))
+
+          ;; Muutetaan takaisin validiksi ja yritetään tallentaa
+          (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                      {:target {:value "8"}})
+
+          (<! (paivita))
+
+          (<! (tarkista-kopioidun-rivin-virhe lomake))
+
+          (click :#tallenna-paallystysilmoitus)
+
+          ;; Tallennusta kutsuttu
+          (let [tulos (<! tallennus)]
+            (is tulos))
+          (done)))))
+
+(deftest tr-vali-paakohteen-sisalla
+  (let [paakohde {:tr-alkuosa 2
+                  :tr-alkuetaisyys 1
+                  :tr-loppuosa 3
+                  :tr-loppuetaisyys 1}
+        alikohde {:tr-alkuosa 2
+                  :tr-alkuetaisyys 1
+                  :tr-loppuosa 3
+                  :tr-loppuetaisyys 1}]
+    (is (nil? (p/tr-vali-paakohteen-sisalla? paakohde nil alikohde))
+        "Sama tieväli on pääkohteen sisällä")
+    (is (nil? (p/tr-vali-paakohteen-sisalla? (assoc paakohde :tr-loppuetaisyys 10) nil (assoc alikohde :tr-alkuetaisyys 10 :tr-loppuetaisyys 2)))
+        "Lyhempi osuus on pääkohteen sisällä")
+
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-alkuosa 1)))
+        "Pienempi alkuosa ei ole kohteen sisällä")
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-alkuetaisyys 0)))
+        "Lyhyempi alkuetäisyys ei ole kohteen sisällä")
+
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-loppuosa 4)))
+        "Suurempi loppuosa ei ole kohteen sisällä")
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-loppuetaisyys 10)))
+        "Pidempi loppuetäisyys ei ole kohteen sisällä")
+
+
+    (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? {:tr-alkuosa 1
+                                                                   :tr-alkuetaisyys 1
+                                                                   :tr-loppuosa 1
+                                                                   :tr-loppuetaisyys 100}
+                                                                  nil
+                                                                  {:tr-alkuosa 1
+                                                                   :tr-alkuetaisyys 112
+                                                                   :tr-loppuosa 1
+                                                                   :tr-loppuetaisyys 1}))
+        "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")
+    ))

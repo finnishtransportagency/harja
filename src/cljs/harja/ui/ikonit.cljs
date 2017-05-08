@@ -523,6 +523,8 @@
   [:span.livicon-save])
 (defn livicon-plus []
   [:span.livicon-plus])
+(defn livicon-minus []
+  [:span.livicon-minus])
 (defn livicon-pen []
   [:span.livicon-pen])
 (defn livicon-warning-sign []
@@ -547,6 +549,8 @@
   [:span.livicon-wrench])
 (defn livicon-eye []
   [:span.livicon-eye])
+(defn livicon-delete []
+  [:span.livicon-delete])
 
 ;; Tiettyjen toimintojen vakioikonit
 

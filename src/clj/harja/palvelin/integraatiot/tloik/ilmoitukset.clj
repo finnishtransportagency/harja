@@ -11,7 +11,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
@@ -27,8 +27,16 @@
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
-  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (ilmoitus/urakkatyyppi urakkatyyppi) sijainti))]
-    (first (urakat/hae-urakka db urakka-id))))
+  (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)
+        hae-urakka (fn [urakkatyyppi]
+                     (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
+                       (first (urakat/hae-urakka db urakka-id))))
+        urakka (hae-urakka ilmoituksen-urakkatyyppi)]
+
+    ;; Jos varsinaiselle urakalle ei löydy yhtään päivystäjää, haetaan oletuksena hoidon urakka
+    (if (yhteyshenkilot/onko-urakalla-paivystajia? db (:id urakka))
+      urakka
+      (hae-urakka "hoito"))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
@@ -76,7 +84,7 @@
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
-        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)
+        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)

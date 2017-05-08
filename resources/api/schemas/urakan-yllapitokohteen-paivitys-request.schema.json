@@ -66,6 +66,26 @@
                     "required": false,
                     "type": "string",
                     "maxLength": 128
+                  },
+                  "paallystetyyppi": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/paallystetyyppi",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
+                  },
+                  "raekoko": {
+                    "id": "urn:harja/raekoko",
+                    "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
+                  },
+                  "tyomenetelma": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tyomenetelma",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/paallystys_tyomenetelma.schema.json"
+                  },
+                  "massamaara": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/massamaara",
+                    "type": "number"
                   }
                 }
               }

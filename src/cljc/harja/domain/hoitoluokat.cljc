@@ -13,7 +13,13 @@ nimen. Numero on tierekisterin koodi luokalle."}
    {:nimi "K1"  :numero 7 :numero-str "7"}
    {:nimi "K2"  :numero 8 :numero-str "8"}])
 
-(def ei-talvihoitoluokkaa-nimi "-")
+(def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
+
+(def ^{:doc "Mahdolliset talvihoitoluokat ja tuntematon"}
+  talvihoitoluokat-ja-tuntematon
+  (conj talvihoitoluokat {:nimi ei-talvihoitoluokkaa-nimi  :numero 0 :numero-str "0"}))
+
+
 
 (defn haluttujen-hoitoluokkien-nimet-ja-numerot [hoitoluokan-numero-set]
   (conj
@@ -27,15 +33,15 @@ nimen. Numero on tierekisterin koodi luokalle."}
 
 (def ^{:doc "Mäppäys talvihoitoluokan numerosta sen nimeen."}
   talvihoitoluokan-nimi
-  (into {} (map (juxt :numero :nimi)) talvihoitoluokat))
+  (into {} (map (juxt :numero :nimi)) talvihoitoluokat-ja-tuntematon))
 
 (def ^{:doc "Mäppäys talvihoitoluokan numerosta (stringinä) sen nimeen."}
 talvihoitoluokan-nimi-str
-  (into {} (map (juxt :numero-str :nimi)) talvihoitoluokat))
+  (into {} (map (juxt :numero-str :nimi)) talvihoitoluokat-ja-tuntematon))
 
 (def ^{:doc "Mäppäys talvihoitoluokan nimestä sen numeroon."}
   talvihoitoluokan-numero
-  (into {} (map (juxt :nimi :numero)) talvihoitoluokat))
+  (into {} (map (juxt :nimi :numero)) talvihoitoluokat-ja-tuntematon))
 
 (def ^{:doc "Mahdolliset soratieluokat. Nimi kertoo käyttöliittymässä käytetyn nimen.
 Numero on tierekisterin koodi luokalle."}

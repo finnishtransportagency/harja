@@ -10,7 +10,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use org.httpkit.fake))
 
-(def +testi-fim-+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
+(def +testi-fim+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -22,7 +22,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM +testi-fim-+)
+                 (fim/->FIM +testi-fim+)
                  [:db :integraatioloki])))))
 
   (testit)
@@ -55,36 +55,38 @@
                 (map :roolit (fim/suodata-kayttajaroolit kayttajat pida-vastuuhenkilo))))))
 
 (deftest kayttajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
-      [+testi-fim-+ vastaus-xml]
-      (let [vastaus (fim/hae-urakan-kayttajat
-                      (:fim jarjestelma)
-                      "1242141-OULU2")]
+      [+testi-fim+ vastaus-xml]
+      (let [vastaus (fim/hae-urakan-kayttajat (:fim jarjestelma) "1242141-OULU2")]
         (is (= vastaus [{:etunimi "Erkki"
                          :kayttajatunnus "A000001"
                          :organisaatio "ELY"
+                         :poistettu false
                          :puhelin ""
-                         :roolit ["ELY urakanvalvoja"]
                          :roolinimet ["ELY_Urakanvalvoja"]
+                         :roolit ["ELY urakanvalvoja"]
                          :sahkoposti "erkki.esimerkki@example.com"
                          :sukunimi "Esimerkki"
                          :tunniste nil}
-                         {:etunimi "Eero"
-                          :kayttajatunnus "A000002"
-                          :organisaatio "ELY"
-                          :puhelin "0400123456789"
-                          :roolit ["Urakan vastuuhenkilö"]
-                          :roolinimet ["vastuuhenkilo"]
-                          :sahkoposti "eero.esimerkki@example.com"
-                          :sukunimi "Esimerkki"
-                          :tunniste nil}
-                         {:etunimi "Eetvartti"
-                          :kayttajatunnus "A000003"
-                          :organisaatio "ELY"
-                          :puhelin "0400123456788"
-                          :roolit []
-                          :roolinimet []
-                          :sahkoposti "eetvartti.esimerkki@example.com"
-                          :sukunimi "Esimerkki"
-                          :tunniste nil}]))))))
+                        {:etunimi "Eero"
+                         :kayttajatunnus "A000002"
+                         :organisaatio "ELY"
+                         :poistettu false
+                         :puhelin "0400123456789"
+                         :roolinimet ["vastuuhenkilo"]
+                         :roolit ["Urakan vastuuhenkilö"]
+                         :sahkoposti "eero.esimerkki@example.com"
+                         :sukunimi "Esimerkki"
+                         :tunniste nil}
+                        {:etunimi "Eetvartti"
+                         :kayttajatunnus "A000003"
+                         :organisaatio "ELY"
+                         :poistettu false
+                         :puhelin "0400123456788"
+                         :roolinimet []
+                         :roolit []
+                         :sahkoposti "eetvartti.esimerkki@example.com"
+                         :sukunimi "Esimerkki"
+                         :tunniste nil}]))
+        (is (every? #(false? (:poistettu %)) vastaus) "Yhtään poistettua henkilöä ei ole listassa")))))

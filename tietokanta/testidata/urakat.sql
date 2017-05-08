@@ -1222,11 +1222,13 @@ VALUES (
   'Oulun päällystyksen palvelusopimus',
   '2016-01-01',
   '2018-01-01',
-  9,
-  20,
+  (SELECT id
+   FROM organisaatio
+   WHERE lyhenne = 'POP'),
+  (SELECT id FROM organisaatio WHERE nimi = 'Lampunvaihtajat Oy'),
   'palvelusopimus' :: sopimustyyppi,
   'paallystys' :: urakkatyyppi,
-  '9992'
+  '3003'
 );
 
 -- Tampereen rantatunneli

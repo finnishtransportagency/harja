@@ -9,27 +9,23 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
-            [harja.palvelin.palvelut.yha :as yha]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as paallystys-q]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
-                        (map #(yllapitokohteet-q/liita-kohdeosat db % (:paikkauskohde-id %)))
-                        (map #(assoc % :kohdeosat
-                                       (into []
-                                             yllapitokohteet-q/kohdeosa-xf
-                                             (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db {:yllapitokohde (:paikkauskohde-id %)})))))
-                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
+                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]])))
+                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))
+        vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin
+                  db vastaus :paikkauskohde-id)]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
 
@@ -87,7 +83,6 @@
     (q/paivita-paikkausilmoitus! db
                                  tila
                                  encoodattu-ilmoitustiedot
-                                 toteutunut-hinta
                                  (konv/sql-date aloituspvm)
                                  (konv/sql-date valmispvm-kohde)
                                  (konv/sql-date valmispvm-paikkaus)
@@ -99,24 +94,24 @@
   id)
 
 (defn- luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paikkaus paikkauskohde-id]}]
-  (log/debug "Luodaan uusi paikkausilmoitus.")
-  (log/debug "valmispvm-kohde: " (pr-str valmispvm-kohde))
-  (log/debug "valmispvm-paikkaus: " (pr-str valmispvm-paikkaus))
-  (let [tila (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu")
-        toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
-        encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-    (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
-    (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
-    (:id (q/luo-paikkausilmoitus<! db
-                                   paikkauskohde-id
-                                   tila
-                                   encoodattu-ilmoitustiedot
-                                   toteutunut-hinta
-                                   (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmispvm-kohde)
-                                   (konv/sql-date valmispvm-paikkaus)
-                                   (:id user)))))
+  (log/debug "Luodaan uusi paikkausilmoitus: " ilmoitustiedot)
+  (jdbc/with-db-transaction [db db]
+    (let [tila (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu")
+          toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
+          encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)
+          paikkauskohteen-id (:id (q/luo-paikkausilmoitus<! db
+                                                            paikkauskohde-id
+                                                            tila
+                                                            encoodattu-ilmoitustiedot
+                                                            (konv/sql-date aloituspvm)
+                                                            (konv/sql-date valmispvm-kohde)
+                                                            (konv/sql-date valmispvm-paikkaus)
+                                                            (:id user)))]
+      (log/debug "Asetetaan ilmoituksen toteutuneeksi hinnaksi " toteutunut-hinta)
+      (when paikkauskohteen-id
+        (q/paivita-paikkauskohteen-toteutunut-hinta! db {:toteutunut_hinta toteutunut-hinta
+                                                         :id paikkauskohde-id})
+        paikkauskohteen-id))))
 
 (defn- luo-tai-paivita-paikkausilmoitus [db user lomakedata paikkausilmoitus-kannassa]
   (if paikkausilmoitus-kannassa
@@ -124,8 +119,8 @@
     (luo-paikkausilmoitus db user lomakedata)))
 
 (defn- tarkista-paikkausilmoituksen-tallentamisoikeudet [user urakka-id
-                                                           uusi-paikkausilmoitus
-                                                           paikkausilmoitus-kannassa]
+                                                         uusi-paikkausilmoitus
+                                                         paikkausilmoitus-kannassa]
   (let [kasittelytiedot-muuttuneet?
         (fn [uudet-tiedot tiedot-kannassa]
           (let [vertailtavat
@@ -155,7 +150,7 @@
   (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella
                                       c user {:urakka-id urakka-id
                                               :sopimus-id sopimus-id
@@ -185,7 +180,7 @@
             (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
 
         (hae-urakan-paikkausilmoitukset c user {:urakka-id urakka-id
-                                             :sopimus-id sopimus-id})))))
+                                                :sopimus-id sopimus-id})))))
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]

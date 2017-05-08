@@ -5,7 +5,9 @@
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr-domain])
+  (:import (org.postgresql.util PSQLException)))
 
 (def +threshold+ 250)
 
@@ -63,6 +65,35 @@
 (defn hae-tieosan-ajoradat [db params]
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
+
+(defn validoi-tr-osoite-tieverkolla
+  "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
+  :ok?      Oliko TR-osoite validi (true / false)
+  :syy      Tekstimuotoinen selitys siitä, miksi ei ole validi (voi olla myös null)"
+  [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
+  (try
+    (clojure.core/let
+      [osien-pituudet (hae-osien-pituudet db {:tie tienumero
+                                              :aosa aosa
+                                              :losa losa})
+       tulos {:aosa-olemassa? (tr-domain/osa-olemassa-verkolla? aosa osien-pituudet)
+              :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
+              :aosa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet)
+              :losa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet)
+              :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
+                                                          :alkuosa aosa
+                                                          :alkuetaisyys aet
+                                                          :loppuosa losa
+                                                          :loppuetaisyys let}))}
+       kaikki-ok? (every? true? (vals tulos))]
+      {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) (str "Alkuosaa " aosa " ei ole olemassa")
+                                  (not (:losa-olemassa? tulos)) (str "Loppuosaa " losa " ei ole olemassa")
+                                  (not (:aosa-pituus-validi? tulos)) (str "Alkuosan pituus " aet " ei kelpaa")
+                                  (not (:losa-pituus-validi? tulos)) (str "Loppuosan pituus " let " ei kelpaa")
+                                  (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
+                                  :default nil)})
+    (catch PSQLException e
+      {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle

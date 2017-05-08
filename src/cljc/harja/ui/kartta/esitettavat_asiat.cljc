@@ -6,11 +6,13 @@
                [taoensso.timbre :as log])
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.domain.ilmoitukset :as ilmoitukset]
+            [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.geo :as geo]
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.tierekisteri :as tr]
+            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -290,6 +292,16 @@
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
+(defmethod asia-kartalle :tietyoilmoitus [tietyoilmoitus valittu?]
+  (let [ikoni (ulkoasu/tietyoilmoituksen-ikoni)
+        viiva (ulkoasu/tietyoilmoituksen-viiva)]
+    (assoc tietyoilmoitus
+      :type :tietyoilmoitus
+      :nimi (or (:tooltip tietyoilmoitus) "Tietyoilmoitus")
+      :selite {:teksti "Tietyoilmoitus"
+               :img ikoni
+               :tietyoilmoituksen-viiva (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+      :alue (maarittele-feature (get-in tietyoilmoitus [::tietyoilmoitukset/osoite ::tr/geometria]) valittu? ikoni viiva))))
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
@@ -314,25 +326,24 @@
         :alue (maarittele-feature tp valittu? ikoni)))))
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
-  (let [tila (:tila-kartalla yllapitokohde)
-        tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla
-                                      (:tila-kartalla yllapitokohde)))
+  (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
+        tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
         ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
+        viiva (ulkoasu/yllapidon-viiva valittu? tila-kartalla tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
-      :selite {:teksti (str teksti ", " tila-teksti)
+      :selite {:teksti (str teksti " (" tila-teksti ")")
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
                                 viiva))))
 
 (defmethod asia-kartalle :paallystys [pt valittu?]
-  (assoc (yllapitokohde :paallystys pt valittu? "Päällystys")
+  (assoc (yllapitokohde :paallystys pt valittu? "Päällystyskohde")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu?]
-  (assoc (yllapitokohde :paikkaus pt valittu? "Paikkaus")
+  (assoc (yllapitokohde :paikkaus pt valittu? "Paikkauskohde")
     :type :paikkaus))
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]

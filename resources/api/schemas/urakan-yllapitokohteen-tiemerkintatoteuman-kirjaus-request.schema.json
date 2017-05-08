@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tiemerkintatoteumat": {
+      "id": "urn:harja/tiemerkintatoteumat",
+      "type": "array",
+      "maxItems": 4096,
+      "required": true,
+      "items": {
+        "id": "urn:harja/tiemerkintatoteumat/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tiemerkintatoteuma": {
+            "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma",
+            "type": "object",
+            "required": true,
+            "properties": {
+              "tunniste": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/tunniste",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+                "required": true
+              },
+              "hinta": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/hinta",
+                "type": "number",
+                "minimum": 0,
+                "required": true
+              },
+              "paivamaara": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/paivamaara",
+                "type": "string",
+                "format": "date-time",
+                "required": true
+              },
+              "selite": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/selite",
+                "type": "string",
+                "required": true
+              },
+              "hintatyyppi": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/hintatyyppi",
+                "required": true,
+                "type": "string",
+                "enum": [
+                  "toteuma",
+                  "suunnitelma"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

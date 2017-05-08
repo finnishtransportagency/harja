@@ -1,7 +1,16 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
-  (:require [schema.core :as s]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+  (:require [schema.core :as schema]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [specql.impl.registry]
+            [specql.data-types]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.muokkaustiedot :as m]
+            [clojure.spec :as s]
+    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
+              [clojure.future :refer :all]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (def +tyomenetelmat+
   "Kaikki työmenetelmät POT-lomake Excelistä"
@@ -20,11 +29,14 @@
    {:nimi "Urapaikkaus" :lyhenne "UP" :koodi 71}
    {:nimi "Uraremix" :lyhenne "UREM" :koodi 72}])
 
-(def +tyomenetelma+ "Työmenetelmän valinta koodilla"
-  (apply s/enum (map :koodi +tyomenetelmat+)))
+(def +tyomenetelmat-ja-nil+
+  (conj +tyomenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
+
+(def +tyomenetelma-tai-nil+ "Työmenetelmän valinta koodilla"
+  (apply schema/enum (map :koodi +tyomenetelmat-ja-nil+)))
 
 (defn tyomenetelman-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat-ja-nil+))))
 
 (def +alustamenetelmat+
   "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä"
@@ -44,11 +56,14 @@
    {:nimi "Laatikkojyrsintä" :lyhenne "LJYR" :koodi 42}
    {:nimi "Reunajyrsintä" :lyhenne "RJYR" :koodi 43}])
 
+(def +alustamenetelmat-ja-nil+
+  (conj +alustamenetelmat+ {:nimi "Ei menetelmää" :lyhenne "Ei menetelmää" :koodi nil}))
+
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
-  (apply s/enum (map :koodi +alustamenetelmat+)))
+  (apply schema/enum (map :koodi +alustamenetelmat-ja-nil+)))
 
 (defn alustamenetelma-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat-ja-nil+))))
 
 (def +kuulamyllyt+
   [{:nimi "AN5" :koodi 1}
@@ -59,11 +74,14 @@
    {:nimi "N30" :koodi 6}
    {:nimi "N22" :koodi 7}])
 
-(def +kuulamylly+ "Kuulamylly annetulla koodilla"
-  (apply s/enum (map :koodi +kuulamyllyt+)))
+(def +kyylamyllyt-ja-nil+
+  (conj +kuulamyllyt+ {:nimi "Ei kuulamyllyä" :koodi nil}))
+
+(def +kuulamylly-tai-nil+ "Kuulamylly annetulla koodilla"
+  (apply schema/enum (map :koodi +kyylamyllyt-ja-nil+)))
 
 (defn kuulamylly-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +kuulamyllyt+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +kyylamyllyt-ja-nil+))))
 
 (def +verkkotyypit+
   "Verkkotyypit POT-lomake Excelistä"
@@ -71,11 +89,14 @@
    {:nimi "Lasikuituverkko" :koodi 2}
    {:nimi "Muu" :koodi 9}])
 
-(def +verkkotyyppi+ "Verkkotyypin valinta koodilla"
-  (apply s/enum (map :koodi +verkkotyypit+)))
+(def +verkkotyypit-ja-nil+
+  (conj +verkkotyypit+ {:nimi "Ei verkkotyyppiä" :koodi nil}))
+
+(def +verkkotyyppi-tai-nil+ "Verkkotyypin valinta koodilla"
+  (apply schema/enum (map :koodi +verkkotyypit-ja-nil+)))
 
 (defn verkkotyyppi-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit-ja-nil+))))
 
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
@@ -84,32 +105,20 @@
    {:nimi "Raskas rakenteen parantaminen" :koodi 3}
    {:nimi "Kevyt rakenteen parantaminen" :koodi 4}])
 
+(def +tekniset-toimenpiteet-ja-nil+
+  (conj +tekniset-toimenpiteet+ {:nimi "Ei toimenpidettä" :koodi nil}))
 
-(def +tekninen-toimenpide+ "Teknisen toimenpiteen valinta koodilla"
-  (apply s/enum (map :koodi +tekniset-toimenpiteet+)))
+(def +tekninen-toimenpide-tai-nil+ "Teknisen toimenpiteen valinta koodilla"
+  (apply schema/enum (map :koodi +tekniset-toimenpiteet-ja-nil+)))
 
 (defn tekninentoimenpide-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
 
 (def +ajoradat+
   "Ajoratavalinnat"
   [{:nimi "Yksiajoratainen" :koodi 0}
    {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
    {:nimi "Kaksiajorataisen toinen ajorata" :koodi 2}])
-
-(def +ajorata+
-  "Ajoratavalinta koodilla"
-  (apply s/enum (map :koodi +ajoradat+)))
-
-(def +suunnat+
-  "Suuntavalinnat"
-  [{:nimi "Molemmat suunnat samassa" :koodi 0}
-   {:nimi "Tierekisterin suunta" :koodi 1}
-   {:nimi "Tierekisterin vastainen suunta" :koodi 2}])
-
-(def +suunta+
-  "Suuntavalinta koodilla"
-  (apply s/enum (map :koodi +suunnat+)))
 
 (def +kaistat+
   "Kaistavalinnat"
@@ -132,10 +141,6 @@
    {:nimi "27" :koodi 27}
    {:nimi "28" :koodi 28}
    {:nimi "29" :koodi 29}])
-
-(def +kaista+
-  "Kaistavalinta koodilla"
-  (apply s/enum (map :koodi +kaistat+)))
 
 (def +sideainetyypit+
   "Sideainetyypit"
@@ -162,12 +167,15 @@
    {:nimi "BE-SOP" :koodi 21}
    {:nimi "BE-PAB" :koodi 22}])
 
-(def +sideainetyyppi+
+(def +sideainetyypit-ja-nil+
+  (conj +sideainetyypit+ {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil}))
+
+(def +sideainetyyppi-tai-nil+
   "Sideainetyypin valinta koodilla"
-  (apply s/enum (map :koodi +sideainetyypit+)))
+  (apply schema/enum (map :koodi +sideainetyypit-ja-nil+)))
 
 (defn sideainetyypin-koodi-nimella [nimi]
-  (:koodi (first (filter #(= nimi (:nimi %)) +sideainetyypit+))))
+  (:koodi (first (filter #(= nimi (:nimi %)) +sideainetyypit-ja-nil+))))
 
 (def +verkon-tarkoitukset+
   [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
@@ -177,12 +185,15 @@
    {:nimi "Moniongelmaisen tukeminen" :koodi 5}
    {:nimi "Muu tarkoitus" :koodi 9}])
 
-(def +verkon-tarkoitus+
+(def +verkon-tarkoitukset-ja-nil+
+  (conj +verkon-tarkoitukset+ {:nimi "Ei tarkoitusta" :koodi nil}))
+
+(def +verkon-tarkoitus-tai-nil+
   "Verkon tarkoituksen valinta koodilla"
-  (apply s/enum (map :koodi +verkon-tarkoitukset+)))
+  (apply schema/enum (map :koodi +verkon-tarkoitukset-ja-nil+)))
 
 (defn verkon-tarkoitus-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset+))))
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset-ja-nil+))))
 
 (def +verkon-sijainnit+
   [{:nimi "Päällysteessä" :koodi 1}
@@ -191,12 +202,15 @@
    {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
    {:nimi "Muu sijainti" :koodi 9}])
 
-(def +verkon-sijainti+
+(def +verkon-sijainnit-ja-nil+
+  (conj +verkon-sijainnit+ {:nimi "Ei sijaintia" :koodi nil}))
+
+(def +verkon-sijainti-tai-nil+
   "Verkon sijainnin valinta koodilla"
-  (apply s/enum (map :koodi +verkon-sijainnit+)))
+  (apply schema/enum (map :koodi +verkon-sijainnit-ja-nil+)))
 
 (defn verkon-sijainti-koodi-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit-ja-nil+))))
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
@@ -206,51 +220,49 @@
    {:nimi "Jyrsinnät" :koodi :jyrsinnat}
    {:nimi "Muut" :koodi :muut}])
 
-(defn paallystystyon-tyypin-koodi-nimella [nimi]
-  (:koodi (first (filter
-                   #(= nimi (:nimi %))
-                   +paallystystyon-tyypit+))))
-
 (defn paallystystyon-tyypin-nimi-koodilla [koodi]
   (:nimi (first (filter
                   #(= koodi (:koodi %))
                   +paallystystyon-tyypit+))))
 
-(def paallystysilmoitus-osoitteet
+(def paallystysilmoitus-osoitteet ;; Kantaan tallennettava päällystysilmoitus
   [;; Linkki ylläpitokohdeosaan
-   {:kohdeosa-id s/Int
+   {:kohdeosa-id schema/Int
 
     ; Osoitteelle tehdyt toimenpiteet
-    (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
-    (s/optional-key :raekoko) (s/maybe s/Int)
-    (s/optional-key :massamenekki) (s/maybe s/Int) ;; kg/m2
-    (s/optional-key :rc%) (s/maybe s/Int)
-    (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+)
-    (s/optional-key :leveys) (s/maybe s/Num) ;; metriä
-    (s/optional-key :kokonaismassamaara) (s/maybe s/Num) ;; tonnia
-    (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
-    (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
-    (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
+    (schema/optional-key :paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+
+    (schema/optional-key :raekoko) (schema/maybe schema/Int)
+    (schema/optional-key :massamenekki) (schema/maybe schema/Int) ;; kg/m2
+    (schema/optional-key :rc%) (schema/maybe schema/Int)
+    (schema/optional-key :tyomenetelma) +tyomenetelma-tai-nil+
+    (schema/optional-key :leveys) (schema/maybe schema/Num) ;; metriä
+    (schema/optional-key :kokonaismassamaara) (schema/maybe schema/Num) ;; tonnia
+    (schema/optional-key :pinta-ala) (schema/maybe schema/Num) ;; m2
+    (schema/optional-key :kuulamylly) +kuulamylly-tai-nil+
+    ;; Edellinen päällystetyyppi -arvoa käytettiin lomakkeessa aiemmin, nykyään ei ole enää kiinnostava tieto
+    ;; Säilytetään skeemassa vanhan datan yhteensopivuuden vuoksi
+    (schema/optional-key :edellinen-paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+
 
     ;; N kpl kiviainesesiintymiä
-    (s/optional-key :esiintyma) (s/maybe s/Str)
-    (s/optional-key :km-arvo) (s/maybe s/Str)
-    (s/optional-key :muotoarvo) (s/maybe s/Str)
-    (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
-    (s/optional-key :pitoisuus) (s/maybe s/Num)
-    (s/optional-key :lisaaineet) (s/maybe s/Str)}])
+    (schema/optional-key :esiintyma) (schema/maybe schema/Str)
+    (schema/optional-key :km-arvo) (schema/maybe schema/Str)
+    (schema/optional-key :muotoarvo) (schema/maybe schema/Str)
+    (schema/optional-key :sideainetyyppi) +sideainetyyppi-tai-nil+
+    (schema/optional-key :pitoisuus) (schema/maybe schema/Num)
+    (schema/optional-key :lisaaineet) (schema/maybe schema/Str)}])
 
 (def paallystysilmoitus-alustatoimet
-  [{:tr-alkuosa s/Int
-    :tr-alkuetaisyys s/Int
-    :tr-loppuosa s/Int
-    :tr-loppuetaisyys s/Int
+  [{:tr-alkuosa schema/Int
+    :tr-alkuetaisyys schema/Int
+    :tr-loppuosa schema/Int
+    :tr-loppuetaisyys schema/Int
     :kasittelymenetelma +alustamenetelma+
-    :paksuus s/Int ;; cm
-    :verkkotyyppi +verkkotyyppi+
-    :verkon-tarkoitus +verkon-tarkoitus+
-    :verkon-sijainti +verkon-sijainti+
-    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
+    :paksuus schema/Int ;; cm
+    (schema/optional-key :verkkotyyppi) +verkkotyyppi-tai-nil+
+    (schema/optional-key :verkon-tarkoitus) +verkon-tarkoitus-tai-nil+
+    (schema/optional-key :verkon-sijainti) +verkon-sijainti-tai-nil+
+    (schema/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+
+    (schema/optional-key :poistettu) schema/Bool}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
@@ -273,3 +285,26 @@
 
     :default
     "aloitettu"))
+
+(defn arvo-koodilla [koodisto koodi]
+  (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
+
+(define-tables
+  ["paallystysilmoitus"
+   ::paallystysilmoitus {"kasittelyaika_tekninen_osa" ::kasittelyaika-tekninen-osa
+                         "perustelu_tekninen_osa" ::perustelu-tekninen-osa
+                         "asiatarkastus_pvm" ::asiatarkastus-pvm
+                         "asiatarkastus_tarkastaja" ::asiatarkastus-tarkastaja
+                         "asiatarkastus_hyvaksytty" ::asiatarkastus-hyvaksytty
+                         "asiatarkastus_lisatiedot" ::asiatarkastus-lisatiedot
+                         "paatos_tekninen_osa" ::paatos-tekninen-osa
+                         "luoja" ::m/luoja-id
+                         "muokkaaja" ::m/muokkaaja-id
+                         "paallystyskohde" ::paallystyskohde-id}])
+
+
+(s/def ::tallennettavat-paallystysilmoitusten-takuupvmt
+  (s/coll-of (s/keys :req [::id ::takuupvm ::paallystyskohde-id])))
+
+(s/def ::tallenna-paallystysilmoitusten-takuupvmt
+  (s/keys :req [::urakka/id ::tallennettavat-paallystysilmoitusten-takuupvmt]))

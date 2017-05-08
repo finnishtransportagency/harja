@@ -21,7 +21,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.aikajana :as aikajana]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -40,6 +41,11 @@
    [:span.arvo (if fmt (fmt arvo) arvo)]
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
+
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span.yksikko (str yksikko)]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
@@ -97,7 +103,10 @@
                              (when raporttielementteja?
                                {:komponentti (fn [rivi]
                                                (let [elementti (get rivi i)]
-                                                 (muodosta-html (raportti-domain/raporttielementti-formatterilla elementti format-fn))))}))))
+                                                 (muodosta-html
+                                                   (if (raportti-domain/formatoi-solu? elementti)
+                                                     (raportti-domain/raporttielementti-formatterilla elementti format-fn)
+                                                     elementti))))}))))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]
@@ -180,6 +189,9 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
+
+(defmethod muodosta-html :aikajana [[_ optiot rivit]]
+  (aikajana/aikajana optiot rivit))
 
 (defmethod muodosta-html :default [elementti]
   (log "HTML-raportti ei tue elementtiä: " elementti)
