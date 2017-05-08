@@ -166,6 +166,15 @@
    (fn [& args]
      (apply callback (drop 2 args)))})
 
+(defn kun-muuttui
+  "Mixin, jota kutsutaan kun komponentti päivittyi. Tekee :component-did-update
+  elinkaaren kuuntelijan ja laukaisee callbackin aina kun parametrit muuttuvat.
+  Callbackille annetaan samat parametrit kuin render funktiolle."
+  [callback]
+  {:component-did-update
+   (fn [& args]
+     (apply callback (drop 2 args)))})
+
 (defn vanhat-ja-uudet-parametrit
   "Mixin, jonka avulla voi verrata komponentin vanhoja ja uusia parametreja. Tekee
   :component-will-receive-props elinkaaren kuuntelijan. Callbackille annetaan parametrina
