@@ -5,8 +5,10 @@
             [harja.loki :refer [log]]
             [harja.ui.ikonit :as ikonit]))
 
-(defn- avaa-paneeli! [index auki-index-atom]
-  (reset! auki-index-atom index))
+(defn- toggle-paneeli! [index auki-index-atom]
+  (if (= index @auki-index-atom)
+    (reset! auki-index-atom nil)
+    (reset! auki-index-atom index)))
 
 (defn otsikkopaneeli
   "Optiot on map:
@@ -21,13 +23,14 @@
      (doall
        (map-indexed
          (fn [index [tunniste otsikko sisalto]]
-           (let [auki? (= index @auki-index-atom)]
+           (let [auki? (and auki-index-atom
+                            (= index @auki-index-atom))]
              ^{:key tunniste}
              [:div
-              [:div.otsikkopaneeli-otsikko {:on-click #(avaa-paneeli! index auki-index-atom)}
+              [:div.otsikkopaneeli-otsikko {:on-click #(toggle-paneeli! index auki-index-atom)}
                [:div.otsikkopaneeli-avausindikaattori (if auki?
-                                                                   (ikonit/livicon-minus)
-                                                                   (ikonit/livicon-plus))]
+                                                        (ikonit/livicon-minus)
+                                                        (ikonit/livicon-plus))]
                [:div.otsikkopaneeli-otsikkoteksti otsikko]
                (for [{:keys [sijainti sisalto]} paneelikomponentit]
                  ^{:key (hash sisalto)}
