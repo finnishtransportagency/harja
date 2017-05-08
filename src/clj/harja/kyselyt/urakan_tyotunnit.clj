@@ -2,7 +2,7 @@
   (:require
     [harja.kyselyt.specql-db :refer [define-tables]]
     [harja.domain.urakan-tyotunnit :as ut]
-    [specql.core :refer [fetch update! insert!]]
+    [specql.core :refer [fetch update! insert! upsert!]]
     [specql.op :as op]
     [harja.pvm :as pvm]
     [harja.kyselyt.konversio :as konv]))
@@ -28,6 +28,14 @@
                                  {::ut/urakka-id urakka-id
                                   ::ut/vuosi vuosi
                                   ::ut/vuosikolmannes vuosikolmannes}))))
+
+(defn paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db urakka-id tunnit]
+  (let [kolmannes (ut/kuluva-vuosikolmannes)
+        arvot (merge {::ut/urakka-id urakka-id
+                      ::ut/tyotunnit tunnit}
+                     kolmannes)
+        ehdot (dissoc arvot ::ut/tyotunnit)]
+    (upsert! db ::ut/urakan-tyotunnit arvot ehdot)))
 
 (defn hae-kuluvan-vuosikolmanneksen-tyotunnit [db urakka-id]
   (first (hae-urakan-tyotunnit db (merge {::ut/urakka-id urakka-id} (ut/kuluva-vuosikolmannes)))))

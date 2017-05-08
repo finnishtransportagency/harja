@@ -7,6 +7,7 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
+            [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
@@ -26,10 +27,10 @@
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (let [turpot (konv/sarakkeet-vektoriin
-     (into []
-           q/turvallisuuspoikkeama-xf
-           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
-     {:korjaavatoimenpide :korjaavattoimenpiteet})]
+                 (into []
+                       q/turvallisuuspoikkeama-xf
+                       (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+                 {:korjaavatoimenpide :korjaavattoimenpiteet})]
     (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
@@ -55,8 +56,8 @@
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                                       (dissoc % :liite)
-                                                       %)
+                                                        (dissoc % :liite)
+                                                        %)
                                                      kommentit)))))]
     (log/debug "Tulos: " (pr-str tulos))
     tulos))
@@ -125,7 +126,7 @@
                    ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
-                                                      vaaralliset-aineet))
+                                                       vaaralliset-aineet))
         vaarallisten-aineiden-vuoto? (boolean (some #{:vaarallisten-aineiden-vuoto}
                                                     vaaralliset-aineet))
         parametrit
@@ -192,7 +193,10 @@
 
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
-    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)
+          tyotunnit (:urakan-tyotunnit tp)]
+      (when tyotunnit
+        (urakan-tyotunnit-q/paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit db urakka tyotunnit))
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
       (tallenna-turvallisuuspoikkeaman-liite db tp)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
