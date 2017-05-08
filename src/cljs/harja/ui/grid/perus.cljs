@@ -149,11 +149,11 @@
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
-(defn- rivin-infolaatikko* [sisalto]
-  (log "Piirretään infolaatikko")
+(defn- rivin-infolaatikko* [sisalto rivi]
   [:div.livi-grid-infolaatikko
    [:div.livi-grid-infolaatikko-yhdistysviiva]
-   [:div.livi-grid-infolaatikko-sisalto sisalto]])
+   [:div.livi-grid-infolaatikko-sisalto
+    (sisalto rivi)]])
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
@@ -216,7 +216,7 @@
                             (= (inc i) (count skeema))
                             rivin-infolaatikko
                             @infolaatikko-nakyvissa?)
-                      [rivin-infolaatikko* rivin-infolaatikko])
+                      [rivin-infolaatikko* rivin-infolaatikko rivi])
 
                     (if (= tyyppi :komponentti)
                       (komponentti rivi {:index index
@@ -481,7 +481,8 @@
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
-  :rivin-infolaatikko                   Komponentti, joka näytetään gridin infolaatikossa kun riviä klikataan.
+  :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun riviä klikataan.
+                                        Funktiota kutsutaan rivin tiedoilla.
   :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
@@ -868,11 +869,6 @@
 
 (defn gridin-infolaatikko
   "Gridin infolaatikon vakiomuotoista sisältöä kuvaava komponentti."
-  [tiedot]
+  [& otsikko-arvo-parit]
   [:div
-   [:div "Infolaatikon sisältö (työmaa)"]
-   [:div "."]
-   [:div ".."]
-   [:div "..."]
-   [:div "...."]
-   [:div "....."]])
+   (into [yleiset/tietoja {:otsikot-omalla-rivilla? true}] otsikko-arvo-parit)])

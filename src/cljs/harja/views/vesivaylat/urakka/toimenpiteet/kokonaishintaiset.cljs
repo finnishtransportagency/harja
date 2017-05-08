@@ -30,13 +30,26 @@
       (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-vaylalla)))
 
+(defn- toimenpiteet-infolaatikkoon [toimenpide]
+  ["Urakoitsija" "TODO"
+   "Sopimusnumero" "TODO"
+   "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
+   "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
+   "Työluokka" (::to/tyoluokka toimenpide)
+   "Toimenpide" (::to/toimenpide toimenpide)
+   "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
+   "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
+   "Urakoitsijan vastuuhenkilö" "TODO"
+   "Henkilölukumaara" "TODO"])
+
 (defn- paneelin-sisalto [toimenpiteet e!]
   [grid/grid
    {:tunniste ::to/id
     :tyhja (if (nil? toimenpiteet)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
-    :rivin-infolaatikko (grid/gridin-infolaatikko toimenpiteet)}
+    :rivin-infolaatikko (fn [rivi]
+                          (apply grid/gridin-infolaatikko (toimenpiteet-infolaatikkoon rivi)))}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}

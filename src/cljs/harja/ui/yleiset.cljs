@@ -318,7 +318,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn tietoja
   "Tekee geneerisen tietonäkymän.
-Optiot on mäppi, joka tukee seuraavia optioita:
+
+   Optiot on mäppi, joka tukee seuraavia optioita:
   :class   asetetaan lisäluokaksi containerille
   :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
   [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
