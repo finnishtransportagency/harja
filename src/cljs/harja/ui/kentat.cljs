@@ -9,6 +9,7 @@
             [harja.ui.tierekisteri :as tr]
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta
                                       maarita-pudotusvalikon-suunta-ja-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
+            [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
@@ -1105,3 +1106,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                     (<= 0 (js/parseInt t) 23))
                            (reset! data (pvm/->Aika (js/parseInt t) 0 nil))))
              :value (or keskenerainen (fmt/aika aika))}]))
+
+(defmethod tee-kentta :toggle [{:keys [paalle-teksti pois-teksti toggle!]} data]
+  (assert (and paalle-teksti pois-teksti)
+          "Määrittele :paalle-teksti ja :pois-teksti kentät!")
+  (let [arvo-nyt @data]
+    [napit/yleinen (if arvo-nyt
+                     pois-teksti
+                     paalle-teksti)
+     (or toggle! #(swap! data not))
+     {:luokka "btn-xs"}]))
