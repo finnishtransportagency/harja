@@ -429,7 +429,7 @@
           (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
          [napit/uusi "Lisää turvallisuuspoikkeama"
           ;; todo: disabloi nappi, kysely käynnissä
-          #(tiedot/uusi-turvallisuuspoikkeama urakka)
+          #(tiedot/uusi-turvallisuuspoikkeama (:id urakka))
           {:disabled (not oikeus?)}]))
 
      [grid/grid

@@ -1,6 +1,6 @@
 (ns harja.palvelin.palvelut.urakan-tyotunnit
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
             [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]))
@@ -14,7 +14,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja (::urakan-tyotunnit-d/urakka hakuehdot))
   (urakan-tyotunnit-q/hae-urakan-vuosikolmanneksen-tyotunnit db hakuehdot))
 
-(defrecord Urakan-tyotunnit []
+(defrecord UrakanTyotunnit []
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
@@ -30,6 +30,7 @@
     (julkaise-palvelu http
                       :hae-urakan-vuosikolmanneksen-tunnit
                       (fn [kayttaja tiedot]
+                        (println "---> " tiedot)
                         (hae-urakan-vuosikolmanneksen-tunnit db kayttaja tiedot))
                       {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
                        :vastaus-spec ::urakan-tyotunnit-d/tyotunnit})

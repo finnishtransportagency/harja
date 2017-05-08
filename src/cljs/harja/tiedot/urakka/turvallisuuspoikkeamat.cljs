@@ -93,9 +93,10 @@
   (go
     (let [{vuosi :vuosi vuosikolmannes :vuosikolmannes}
           (urakan-tyotunnit/kuluva-urakan-vuosikolmannes)
-          vastaus (<! (k/post! :tallenna-turvallisuuspoikkeama {::urakan-tyotunnit/urakka urakka-id
-                                                                  ::urakan-tyotunnit/vuosi vuosi
-                                                                  ::urakan-tyotunnit/vuosikolmannes vuosikolmannes}))]
+          vastaus (<! (k/post! :hae-urakan-vuosikolmanneksen-tunnit
+                               {::urakan-tyotunnit/urakka urakka-id
+                                ::urakan-tyotunnit/vuosi vuosi
+                                ::urakan-tyotunnit/vuosikolmannes vuosikolmannes}))]
 
       (if (k/virhe? vastaus)
         (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
