@@ -161,23 +161,22 @@
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
-                     ;; Rivi klikattu -callback
+                     ;; Rivin klikkaus
                      (when rivi-klikattu
                        (if (not= @valittu-rivi rivi)
                          (rivi-klikattu rivi)))
-
-                     ;; Infolaatikon näyttäminen
-                     (when rivin-infolaatikko
-                       (swap! infolaatikko-nakyvissa? not))
 
                      ;; Rivin valinta
                      (when mahdollista-rivin-valinta
                        (if (= @valittu-rivi rivi)
                          (do (reset! valittu-rivi nil)
-                             (log "Rivi valittu: " (pr-str @valittu-rivi))
                              (when rivi-valinta-peruttu
-                               (rivi-valinta-peruttu rivi)))
-                         (reset! valittu-rivi rivi))))}
+                               (rivi-valinta-peruttu rivi))
+                             (when rivin-infolaatikko
+                               (reset! infolaatikko-nakyvissa? false)))
+                         (do (reset! valittu-rivi rivi)
+                             (when rivin-infolaatikko
+                               (reset! infolaatikko-nakyvissa? true))))))}
 
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
