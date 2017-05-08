@@ -149,9 +149,9 @@
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
-(defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
+(defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
-                           mahdollista-rivin-valinta]} skeema rivi index]
+                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka]} skeema rivi index]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
@@ -160,9 +160,15 @@
                        (if (not= @valittu-rivi rivi)
                          (rivi-klikattu rivi)))
 
+                     (log "CLICK! Rivin infolaatikko" (pr-str rivin-infolaatikko))
+
+                     ;; Infolaatikon näyttäminen
+                     (when rivin-infolaatikko
+                       (swap! infolaatikko-nakyvissa? not)
+                       (log "INFOLAATIKKO NÄKYVISSÄ ON NYT " (pr-str @infolaatikko-nakyvissa?)))
+
                      ;; Rivin valinta
                      (when mahdollista-rivin-valinta
-                       (log "Valitaanpas rivi!")
                        (if (= @valittu-rivi rivi)
                          (do (reset! valittu-rivi nil)
                              (log "Rivi valittu: " (pr-str @valittu-rivi))
@@ -371,7 +377,7 @@
                          jarjestys)))))))
 
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
-                                     rivin-infolaatikko
+                                     rivin-infolaatikko infolaatikko-nakyvissa?
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
                                      rivi-valinta-peruttu mahdollista-rivin-valinta piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki]}]
@@ -396,6 +402,7 @@
                           [nayttorivi {:ohjaus ohjaus
                                        :vetolaatikot vetolaatikot
                                        :id id
+                                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                        :tallenna tallenna
                                        :luokka (str (if (even? (+ i 1))
                                                       "parillinen "
@@ -510,7 +517,7 @@
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
                                  tallenna-vain-muokatut)
-
+        infolaatikko-nakyvissa? (atom false)
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
@@ -751,21 +758,90 @@
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts}
             skeema alkup-tiedot]
-           (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
-                 muuta-gridia-muokataan? (and
-                                           (>= (count @muokkauksessa-olevat-gridit) 1)
-                                           (not (@muokkauksessa-olevat-gridit komponentti-id)))
-                 colspan (if (or piilota-toiminnot? (nil? tallenna))
-                           (count skeema)
-                           (inc (count skeema)))
-                 muokataan (not (nil? @muokatut))
-                 tiedot (if max-rivimaara
-                          (take max-rivimaara alkup-tiedot)
-                          alkup-tiedot)
-                 muokattu? (not (empty? @historia))]
-             [:div.panel.panel-default.livi-grid {:id (:id opts)
-                                                  :class (clojure.string/join " " luokat)}
-              (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
+        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+              muuta-gridia-muokataan? (and
+                                        (>= (count @muokkauksessa-olevat-gridit) 1)
+                                        (not (@muokkauksessa-olevat-gridit komponentti-id)))
+              colspan (if (or piilota-toiminnot? (nil? tallenna))
+                        (count skeema)
+                        (inc (count skeema)))
+              muokataan (not (nil? @muokatut))
+              tiedot (if max-rivimaara
+                       (take max-rivimaara alkup-tiedot)
+                       alkup-tiedot)
+              luokat (if @infolaatikko-nakyvissa?
+                       (conj luokat "livi-grid-infolaatikolla")
+                       luokat)
+              muokattu? (not (empty? @historia))]
+          [:div.panel.panel-default.livi-grid {:id (:id opts)
+                                               :class (clojure.string/join " " luokat)}
+           (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
+                             :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
+                             :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
+                             :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
+                             :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
+                             :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
+                             :tallenna-vain-muokatut tallenna-vain-muokatut
+                             :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
+                             :aloita-muokkaus! aloita-muokkaus! :peru! peru!
+                             :peruuta peruuta :otsikko otsikko})
+           [:div.panel-body
+            (when @kiinnita-otsikkorivi?
+              ^{:key "kiinnitettyotsikko"}
+              [:table.grid
+               {:style {:position "fixed"
+                        :top 0
+                        :width @kiinnitetyn-otsikkorivin-leveys
+                        :z-index 200}}
+               [otsikkorivi {:opts opts :skeema skeema
+                             :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                             :tallenna tallenna}]])
+            (if (nil? tiedot)
+              (ajax-loader)
+              ^{:key "taulukkodata"}
+              [:table.grid
+               [otsikkorivi {:opts opts :skeema skeema
+                             :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
+                             :tallenna tallenna}]
+               [:tbody
+                (if muokataan
+                  (muokkauskayttoliittyma {:muokatut muokatut :jarjestys jarjestys :colspan colspan
+                                           :tyhja tyhja :virheet virheet :varoitukset varoitukset
+                                           :huomautukset huomautukset :fokus fokus :ohjaus ohjaus
+                                           :vetolaatikot vetolaatikot :muokkaa! muokkaa!
+                                           :voi-poistaa? voi-poistaa?
+                                           :esta-poistaminen? esta-poistaminen?
+                                           :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                           :piilota-toiminnot? piilota-toiminnot?
+                                           :voi-muokata-rivia? voi-muokata-rivia?
+                                           :skeema skeema :vetolaatikot-auki vetolaatikot-auki
+                                           :tallennus-kaynnissa? tallennus-kaynnissa})
+                  (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
+                                         :tiedot tiedot :colspan colspan :tyhja tyhja
+                                         :tunniste tunniste :ohjaus ohjaus
+                                         :vetolaatikot vetolaatikot :tallenna tallenna
+                                         :rivi-klikattu rivi-klikattu
+                                         :rivin-infolaatikko rivin-infolaatikko
+                                         :rivin-luokka rivin-luokka
+                                         :valittu-rivi valittu-rivi
+                                         :rivi-valinta-peruttu rivi-valinta-peruttu
+                                         :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                                         :piilota-toiminnot? piilota-toiminnot?
+                                         :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
+                                         :nayta-toimintosarake? nayta-toimintosarake?
+                                         :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))]])
+
+            (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
+              [:div.alert-warning (or max-rivimaaran-ylitys-viesti
+                                      "Liikaa hakutuloksia, rajaa hakua")])
+            (when (and muokataan muokkaa-footer)
+              [muokkaa-footer ohjaus])]
+           ;; Taulukon allekin muokkaustoiminnot jos rivejä
+           ;; yli rajamäärän (joko muokkaus- tai näyttötila)
+           (when (> (count (or @muokatut tiedot))
+                    +rivimaara-jonka-jalkeen-napit-alaskin+)
+             [:span.gridin-napit-alhaalla
+              (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
                                 :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                                 :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
                                 :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
@@ -774,72 +850,7 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko})
-              [:div.panel-body
-               (when @kiinnita-otsikkorivi?
-                 ^{:key "kiinnitettyotsikko"}
-                 [:table.grid
-                  {:style {:position "fixed"
-                           :top 0
-                           :width @kiinnitetyn-otsikkorivin-leveys
-                           :z-index 200}}
-                  [otsikkorivi {:opts opts :skeema skeema
-                                :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
-                                :tallenna tallenna}]])
-               (if (nil? tiedot)
-                 (ajax-loader)
-                 ^{:key "taulukkodata"}
-                 [:table.grid
-                  [otsikkorivi {:opts opts :skeema skeema
-                                :nayta-toimintosarake? nayta-toimintosarake? :piilota-toiminnot? piilota-toiminnot?
-                                :tallenna tallenna}]
-                  [:tbody
-                   (if muokataan
-                     (muokkauskayttoliittyma {:muokatut muokatut :jarjestys jarjestys :colspan colspan
-                                              :tyhja tyhja :virheet virheet :varoitukset varoitukset
-                                              :huomautukset huomautukset :fokus fokus :ohjaus ohjaus
-                                              :vetolaatikot vetolaatikot :muokkaa! muokkaa!
-                                              :voi-poistaa? voi-poistaa?
-                                              :esta-poistaminen? esta-poistaminen?
-                                              :esta-poistaminen-tooltip esta-poistaminen-tooltip
-                                              :piilota-toiminnot? piilota-toiminnot?
-                                              :voi-muokata-rivia? voi-muokata-rivia?
-                                              :skeema skeema :vetolaatikot-auki vetolaatikot-auki
-                                              :tallennus-kaynnissa? tallennus-kaynnissa})
-                     (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
-                                            :tiedot tiedot :colspan colspan :tyhja tyhja
-                                            :tunniste tunniste :ohjaus ohjaus
-                                            :vetolaatikot vetolaatikot :tallenna tallenna
-                                            :rivi-klikattu rivi-klikattu
-                                            :rivin-infolaatikko rivin-infolaatikko
-                                            :rivin-luokka rivin-luokka
-                                            :valittu-rivi valittu-rivi
-                                            :rivi-valinta-peruttu rivi-valinta-peruttu
-                                            :mahdollista-rivin-valinta mahdollista-rivin-valinta
-                                            :piilota-toiminnot? piilota-toiminnot?
-                                            :nayta-toimintosarake? nayta-toimintosarake?
-                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))]])
-
-               (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
-                 [:div.alert-warning (or max-rivimaaran-ylitys-viesti
-                                         "Liikaa hakutuloksia, rajaa hakua")])
-               (when (and muokataan muokkaa-footer)
-                 [muokkaa-footer ohjaus])]
-              ;; Taulukon allekin muokkaustoiminnot jos rivejä
-              ;; yli rajamäärän (joko muokkaus- tai näyttötila)
-              (when (> (count (or @muokatut tiedot))
-                       +rivimaara-jonka-jalkeen-napit-alaskin+)
-                [:span.gridin-napit-alhaalla
-                 (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
-                                   :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
-                                   :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
-                                   :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
-                                   :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
-                                   :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
-                                   :tallenna-vain-muokatut tallenna-vain-muokatut
-                                   :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
-                                   :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                   :peruuta peruuta :otsikko otsikko})])])))))
+                                :peruuta peruuta :otsikko otsikko})])])))))
 
 (defn gridin-infolaatikko
   "Gridin infolaatikon vakiomuotoista sisältöä kuvaava komponentti."
