@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma
+(ns harja.palvelin.integraatiot.turi.sanomat.turvallisuuspoikkeama
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]

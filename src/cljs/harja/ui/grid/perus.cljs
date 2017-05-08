@@ -151,7 +151,7 @@
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
-                           mahdollista-rivin-valinta]} skeema rivi index solun-luokka]
+                           mahdollista-rivin-valinta]} skeema rivi index]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
