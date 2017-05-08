@@ -16,10 +16,10 @@
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylat-toimenpiteet-kokonaishintaiset id))
+                  (oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset id))
          [kok-hint/kokonaishintaiset-toimenpiteet])
 
        "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylat-toimenpiteet-yksikkohintaiset id))
+                  (oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset id))
          [yks-hint/yksikkohintaiset-toimenpiteet])])))

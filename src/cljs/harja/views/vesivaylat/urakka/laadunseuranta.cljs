@@ -10,11 +10,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn laadunseuranta []
-  [:div {:style {:padding "10px"}}
-   [:img {:src "images/harja_favicon.png"}]
-   [:div {:style {:color "orange"}} "Työmaa"]])
-
-(defn laadunseuranta []
   (komp/luo
     (fn [{:keys [id] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
@@ -22,10 +17,10 @@
 
        "Viat" :vesivayla-viat
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylat-laadunseuranta-viat id))
+                  (oikeudet/urakat-vesivaylalaadunseuranta-viat id))
          [viat/viat])
 
        "Sanktiot" :vesivayla-sanktiot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylat-laadunseuranta-sanktiot id))
+                  (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
          [sanktiot/sanktiot])])))
