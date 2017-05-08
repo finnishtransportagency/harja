@@ -13,7 +13,8 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut}])
+  ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut
+                                          "urakka" ::urakka-id}])
 
 (s/def ::urakan-tyotunnit (s/coll-of ::urakan-tyotunnit))
 

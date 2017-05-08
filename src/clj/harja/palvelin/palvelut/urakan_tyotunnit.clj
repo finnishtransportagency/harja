@@ -10,22 +10,34 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
   (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit))
 
-(defn hae-urakan-vuosikolmanneksen-tunnit [db kayttaja urakka-id vuosi vuosikolmannes]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
-  (urakan-tyotunnit-q/hae-urakan-vuosikolmanneksen-tyotunnit db urakka-id vuosi vuosikolmannes ))
+(defn hae-urakan-vuosikolmanneksen-tunnit [db kayttaja hakuehdot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja (::urakan-tyotunnit-d/urakka hakuehdot))
+  (urakan-tyotunnit-q/hae-urakan-vuosikolmanneksen-tyotunnit db hakuehdot))
 
 (defrecord Urakan-tyotunnit []
   component/Lifecycle
-  (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu
-        :tallenna-urakan-tyotunnit
-        (fn [kayttaja tiedot]
-          (tallenna-urakan-tyotunnit (:db this) kayttaja tiedot))
-        {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
-         :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit}))
+  (start [{http :http-palvelin
+           db :db
+           :as this}]
+
+    (julkaise-palvelu http
+                      :tallenna-urakan-tyotunnit
+                      (fn [kayttaja tiedot]
+                        (tallenna-urakan-tyotunnit db kayttaja tiedot))
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
+                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit})
+
+    (julkaise-palvelu http
+                      :hae-urakan-vuosikolmanneksen-tunnit
+                      (fn [kayttaja tiedot]
+                        (hae-urakan-vuosikolmanneksen-tunnit db kayttaja tiedot))
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit
+                       :vastaus-spec ::urakan-tyotunnit-d/tyotunnit})
     this)
 
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-tyotunnit)
+  (stop [{http :http-palvelin :as this}]
+    (poista-palvelut http
+                     :tallenna-urakan-tyotunnit
+                     :hae-urakan-vuosikolmanneksen-tunnit)
+
     this))
