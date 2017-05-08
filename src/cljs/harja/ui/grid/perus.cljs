@@ -150,8 +150,10 @@
          (ikonit/livicon-warning-sign)])])])
 
 (defn- rivin-infolaatikko* [sisalto]
+  (log "Piirretään infolaatikko")
   [:div.livi-grid-infolaatikko
-   sisalto])
+   [:div.livi-grid-infolaatikko-yhdistysviiva]
+   [:div.livi-grid-infolaatikko-sisalto sisalto]])
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
@@ -868,4 +870,10 @@
 (defn gridin-infolaatikko
   "Gridin infolaatikon vakiomuotoista sisältöä kuvaava komponentti."
   [tiedot]
-  [:span "Tähän tulee tavaraa"])
+  [:div
+   [:div "Infolaatikon sisältö (työmaa)"]
+   [:div "."]
+   [:div ".."]
+   [:div "..."]
+   [:div "...."]
+   [:div "....."]])

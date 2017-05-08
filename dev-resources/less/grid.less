@@ -262,9 +262,21 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       position: absolute;
       top: 0;
       right: -@infolaatikko-leveys;
-      background-color: @harmaa8;
-      padding: 10px;
-      width: (@infolaatikko-leveys - 10px)
+      width: @infolaatikko-leveys;
+
+      > .livi-grid-infolaatikko-yhdistysviiva {
+        height: 42px; // TODO Pitäisi olla rivin korkeus, mutta hankala määrittää?
+        background-color: @harmaa8;
+      }
+
+      > .livi-grid-infolaatikko-sisalto {
+        background-color: @harmaa8;
+        padding: 10px;
+        width: 90%;
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
     }
   }
 }
