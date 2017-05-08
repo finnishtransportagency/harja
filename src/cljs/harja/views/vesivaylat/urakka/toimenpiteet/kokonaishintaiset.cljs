@@ -30,10 +30,10 @@
       (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-vaylalla)))
 
-(defn- paneelin-otsikon-sisalto [sijainnit e!]
+(defn- paneelin-sisalto [toimenpiteet e!]
   [grid/grid
    {:tunniste ::to/id
-    :tyhja (if (nil? sijainnit)
+    :tyhja (if (nil? toimenpiteet)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :rivin-infolaatikko (grid/gridin-infolaatikko toimenpiteet)}
@@ -55,7 +55,7 @@
                                (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
                                                                 :valinta uusi}))))])
      :leveys 5}]
-   sijainnit])
+   toimenpiteet])
 
 (defn- paneelin-otsikko [otsikko maara]
   (str otsikko
@@ -74,7 +74,7 @@
                                 (count (toimenpiteet-tyolajilla
                                          toimenpiteet
                                          tyolaji)))
-              [paneelin-otsikon-sisalto
+              [paneelin-sisalto
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  toimenpiteet
                  tyolaji)
