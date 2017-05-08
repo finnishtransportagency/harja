@@ -28,7 +28,8 @@
             [harja.ui.aikajana :as aikajana]
             [harja.domain.aikataulu :as aikataulu]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
-            [harja.tiedot.raportit :as raportit])
+            [harja.tiedot.raportit :as raportit]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -148,6 +149,36 @@
     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
                                     :warning
                                     viesti/viestin-nayttoaika-lyhyt)}))
+
+(defn valinnat [ur]
+  (let [{aikajana? :nayta-aikajana?
+         jarjestys :jarjestys
+         :as valinnat} @tiedot/valinnat]
+    [:span.aikataulu-valinnat
+     [valinnat/urakan-vuosi ur]
+     [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+     [valinnat/tienumero yllapito-tiedot/tienumero]
+
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajana"
+       :kentta-params {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! tiedot/toggle-nayta-aikajana!}
+       :arvo-atom tiedot/nayta-aikajana?}]
+
+     [yleiset/pudotusvalikko
+      "Järjestä kohteet"
+      {:valinta jarjestys
+       :valitse-fn tiedot/jarjesta-kohteet!
+       :format-fn  {:aika "Aloistusajan mukaan"
+                    :kohdenumero "Kohdenumeron mukaan"
+                    :tr "Tieosoitteen mukaan"}}
+      [:aika :kohdenumero :tr]]
+
+     [upotettu-raportti/raportin-vientimuodot
+      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -161,30 +192,22 @@
             {:keys [voi-tallentaa? saa-muokata?
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)
-            otsikoidut-aikataulurivit (otsikoi-aikataulurivit
-                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+
+
+            otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
+                                        (otsikoi-aikataulurivit
+                                         (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+                                        aikataulurivit)
+
             voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
-                                          (constantly saa-muokata?))
+                                          saa-muokata?)
             voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
                                            saa-merkita-valmiiksi?
                                            (:valmis-tiemerkintaan %))
-            aikajana? @tiedot/nayta-aikajana?]
+            aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
-         [valinnat/urakan-vuosi ur]
-         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
 
-         [:span.label-ja-kentta-puolikas
-          [:span.kentan-otsikko "Aikajana"]
-          [:div.kentta
-           [napit/yleinen (if aikajana?
-                            "Piilota aikajana"
-                            "Näytä aikajana")
-            #(swap! tiedot/nayta-aikajana? not)
-            {:luokka "btn-xs"}]]]
-
-         [upotettu-raportti/raportin-vientimuodot
-          (raportit/urakkaraportin-parametrit urakka-id :yllapidon-aikataulu {})]
+         [valinnat ur]
 
          (when aikajana?
            [aikajana/aikajana
