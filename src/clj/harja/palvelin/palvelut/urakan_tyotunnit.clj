@@ -10,6 +10,10 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
   (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit))
 
+(defn hae-urakan-vuosikolmanneksen-tunnit [db kayttaja urakka-id vuosi vuosikolmannes]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+  (urakan-tyotunnit-q/hae-urakan-vuosikolmanneksen-tyotunnit db urakka-id vuosi vuosikolmannes ))
+
 (defrecord Urakan-tyotunnit []
   component/Lifecycle
   (start [this]
