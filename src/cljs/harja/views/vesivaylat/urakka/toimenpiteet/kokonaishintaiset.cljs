@@ -31,6 +31,8 @@
       (ryhmittele-toimenpiteet-vaylalla)))
 
 (defn- toimenpiteet-infolaatikkoon [toimenpide]
+  ;; FIXME Ei täysin Jounin mallin mukainen. Vaatisi yleiset-komponentille tukea
+  ;; näyttää osa otsikoista omalla rivillä asettaa tyhjiä rivejä
   ["Urakoitsija" "TODO"
    "Sopimusnumero" "TODO"
    "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
