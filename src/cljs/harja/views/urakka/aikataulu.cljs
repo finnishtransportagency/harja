@@ -159,14 +159,13 @@
      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
      [valinnat/tienumero yllapito-tiedot/tienumero]
 
-     [:span.label-ja-kentta-puolikas
-      [:span.kentan-otsikko "Aikajana"]
-      [:div.kentta
-       [napit/yleinen (if aikajana?
-                        "Piilota aikajana"
-                        "Näytä aikajana")
-        tiedot/toggle-nayta-aikajana!
-        {:luokka "btn-xs"}]]]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajana"
+       :kentta-params {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! tiedot/toggle-nayta-aikajana!}
+       :arvo-atom tiedot/nayta-aikajana?}]
 
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
