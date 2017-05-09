@@ -157,15 +157,15 @@
 
 (defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
                                          mahdollista-rivin-valinta? rivin-infolaatikko infolaatikon-tila-muuttui
-                                         rivi tunniste]}]
+                                         rivi id]}]
   ;; Rivin klikkaus
   (when rivi-klikattu
-    (if (not= @valittu-rivi (tunniste rivi))
+    (if (not= @valittu-rivi id)
       (rivi-klikattu rivi)))
 
   ;; Rivin valinta
   (when mahdollista-rivin-valinta?
-    (if (= @valittu-rivi (tunniste rivi))
+    (if (= @valittu-rivi id)
       ;; Saman rivin klikkaus
       (do (reset! valittu-rivi nil)
           (when rivi-valinta-peruttu
@@ -175,7 +175,7 @@
           (when infolaatikon-tila-muuttui
             (infolaatikon-tila-muuttui false)))
       ;; Eri rivin klikkaus
-      (do (reset! valittu-rivi (tunniste rivi))
+      (do (reset! valittu-rivi id)
           (when rivin-infolaatikko
             (reset! infolaatikko-nakyvissa? true))
           (when infolaatikon-tila-muuttui
@@ -184,16 +184,16 @@
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                            mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
-                           data tunniste]}
+                           data]}
                    skeema rivi index]
-  [:tr {:class (str luokka (when (= (tunniste rivi) @valittu-rivi)
+  [:tr {:class (str luokka (when (= id @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(kasittele-rivin-klikkaus
                      {:rivi-klikattu rivi-klikattu
                       :rivi-valinta-peruttu rivi-valinta-peruttu
                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                       :valittu-rivi valittu-rivi
-                      :tunniste tunniste
+                      :id id
                       :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                       :rivin-infolaatikko rivin-infolaatikko
                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
@@ -232,7 +232,7 @@
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
                     (when (and
-                            (= (tunniste rivi) @valittu-rivi)
+                            (= id @valittu-rivi)
                             (= (inc i) (count skeema))
                             rivin-infolaatikko
                             @infolaatikko-nakyvissa?)
@@ -355,7 +355,7 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
-(defn- valiotsikko [colspan teksti]
+(defn- valiotsikko [{:keys [colspan teksti]}]
   [:tr.otsikko
    [:td {:colSpan colspan}
     [:h5 teksti]]])
@@ -383,7 +383,7 @@
                            (if (otsikko? id)
                              (let [teksti (:teksti id)]
                                [^{:key teksti}
-                               [valiotsikko colspan teksti]])
+                               [valiotsikko {:colspan colspan :teksti teksti}]])
                              (let [rivi (get muokatut id)
                                    rivin-virheet (get kaikki-virheet id)
                                    rivin-varoitukset (get kaikki-varoitukset id)
@@ -430,7 +430,7 @@
                     (fn [i rivi]
                       (if (otsikko? rivi)
                         [^{:key (:teksti rivi)}
-                        [valiotsikko colspan (:teksti rivi)]]
+                        [valiotsikko {:colspan colspan :teksti (:teksti rivi)}]]
 
                         (let [id (tunniste rivi)]
                           [^{:key id}
@@ -455,7 +455,6 @@
                                        :rivi-valinta-peruttu rivi-valinta-peruttu
                                        :valittu-rivi valittu-rivi
                                        :data tiedot
-                                       :tunniste tunniste
                                        :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                                        :piilota-toiminnot? piilota-toiminnot?
                                        :nayta-toimintosarake? nayta-toimintosarake?}
