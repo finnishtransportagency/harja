@@ -95,7 +95,7 @@
 (defn laheta-turvallisuuspoikkeamat-turiin [this]
   (let [idt (q-turvallisuuspoikkeamat/hae-lahettamattomat-turvallisuuspoikkeamat (:db this))]
     (log/debug (format "Lähetetään %s turvallisuuspoikkeamaa TURI:n" (count idt)))
-    (doseq [id idt]
+    (doseq [{id :id} idt]
       (laheta-turvallisuuspoikkeama this id))))
 
 (defn laheta-urakan-vuosikolmanneksen-tyotunnit-turiin [{:keys [db integraatioloki urakan-tyotunnit-url

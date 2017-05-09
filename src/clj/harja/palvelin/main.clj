@@ -456,7 +456,7 @@
                             [:http-palvelin :db :tierekisteri :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
-                               [:http-palvelin :db :integraatioloki])
+                               [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])

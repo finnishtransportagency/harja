@@ -13,12 +13,12 @@
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
 
-       "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
+       "Kokonaishintaiset" :kokonaishintaiset
        (when #_(oikeudet/urakat-vesivaylatoteumat-kokonaishintaisettyot id)
          true ;; TODO OIKEUSTARKISTUS!!!11
          [kok-hint/kokonaishintaiset-toimenpiteet])
 
-       "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
+       "Yksikköhintaiset" :yksikkohintaiset
        (when #_(oikeudet/urakat-vesivaylatoteumat-yksikkohintaisettyot id)
          true ;; TODO OIKEUSTARKISTUS!!!11
          [yks-hint/yksikkohintaiset-toimenpiteet])])))
