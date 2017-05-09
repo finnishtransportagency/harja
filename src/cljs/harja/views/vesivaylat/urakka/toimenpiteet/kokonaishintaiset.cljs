@@ -36,16 +36,17 @@
   ;; näyttää osa otsikoista omalla rivillä ja asettaa tyhjiä rivejä
   [:div
    [yleiset/tietoja {:otsikot-omalla-rivilla? true}
-    "Urakoitsija" "TODO"
-    "Sopimusnumero" "TODO"
+    ;; TODO Osa tiedoista puuttuu
+    "Urakoitsija" "-"
+    "Sopimusnumero" "-"
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
     "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)
     "Toimenpide" (::to/toimenpide toimenpide)
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
-    "Urakoitsijan vastuuhenkilö" "TODO"
-    "Henkilölukumaara" "TODO"]
+    "Urakoitsijan vastuuhenkilö" "-"
+    "Henkilölukumaara" "-"]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Käytetyt komponentit"]
     [:table
@@ -56,9 +57,10 @@
        [:th {:style {:width "25%"}} "Jäljellä"]]]
      [:tbody
       [:tr
-       [:td "TODO"]
-       [:td "TODO"]
-       [:td "TODO"]]]]]])
+       ;; TODO Komponenttitiedot puuttuu
+       [:td "-"]
+       [:td "-"]
+       [:td "-"]]]]]])
 
 (defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
   [grid/grid
