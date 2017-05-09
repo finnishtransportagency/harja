@@ -20,12 +20,9 @@ ALTER TABLE turvalaite
 ALTER TABLE vv_turvalaite
   ADD COLUMN tyyppi TURVALAITTEEN_TYYPPI,
   ADD COLUMN nimi VARCHAR,
-  ADD COLUMN vayla INTEGER REFERENCES vv_vayla (id);
-
-DELETE FROM vv_turvalaite WHERE nimi = NULL;
-
-ALTER TABLE vv_turvalaite
-  ALTER COLUMN nimi SET NOT NULL;
+  ADD COLUMN vayla INTEGER REFERENCES vv_vayla (id),
+  ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD CONSTRAINT uniikki_tunniste UNIQUE (tunniste);
 
 -- VIKAILMOITUKSET
 
