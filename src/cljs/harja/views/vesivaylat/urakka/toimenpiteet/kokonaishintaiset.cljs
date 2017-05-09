@@ -37,7 +37,7 @@
    [yleiset/tietoja {:otsikot-omalla-rivilla? true
                      :kavenna? true
                      :jata-kaventamatta #{"Työlaji" "Työluokka" "Toimenpide"}
-                     :tietyt-otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
+                     :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     ;; TODO Osa tiedoista puuttuu
     "Urakoitsija" "-"
