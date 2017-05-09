@@ -37,6 +37,7 @@
       <xs:element name="alus" type="AlusType" minOccurs="0"/>
       <xs:element name="vayla" type="VaylaType"/>
       <xs:element name="turvalaite" type="TurvalaiteType"/>
+      <xs:element name="komponentit" type="KomponentitType" minOccurs="0"/>
     </xs:all>
 
     <xs:attribute type="xs:string" name="id" use="required"/>
@@ -80,4 +81,16 @@
     <xs:attribute type="xs:integer" name="ryhma" use="required"/>
   </xs:complexType>
 
+  <xs:complexType name="KomponenttiType">
+      <xs:attribute type="xs:token" name="id" use="required"/> <!--COMPONENT_ID -->
+      <xs:attribute type="xs:string" name="nimi" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="KomponentitType">
+
+      <xs:sequence>
+          <xs:element name="komponentti" type="KomponenttiType" maxOccurs="unbounded">
+          </xs:element>
+      </xs:sequence>
+  </xs:complexType>
 </xs:schema>
