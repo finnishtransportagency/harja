@@ -70,9 +70,14 @@
                    (hae %)
                    (get % nimi))))
 
-(defn suorita [db user parametrit]
+(defn suorita [db user {jarjestys :jarjestys :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
+        aikataulu (if (or (nil? jarjestys) (= :aika jarjestys))
+                    aikataulu
+                    (sort-by (case jarjestys
+                               :kohdenumero :kohdenumero
+                               :tr tr/tieosoitteen-jarjestys) aikataulu))
         sarakkeet (kohdeluettelo-sarakkeet (:tyyppi parametrit))]
     [:raportti {:nimi "Ylläpidon aikataulu"
                 :orientaatio :landscape}

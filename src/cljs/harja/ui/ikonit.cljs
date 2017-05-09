@@ -523,6 +523,8 @@
   [:span.livicon-save])
 (defn livicon-plus []
   [:span.livicon-plus])
+(defn livicon-minus []
+  [:span.livicon-minus])
 (defn livicon-pen []
   [:span.livicon-pen])
 (defn livicon-warning-sign []

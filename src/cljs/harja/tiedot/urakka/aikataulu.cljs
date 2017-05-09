@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.aikataulu
   "Ylläpidon urakoiden aikataulu"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.ui.protokollat :refer [Haku hae]]
@@ -18,9 +18,23 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+
 (defonce aikataulu-nakymassa? (atom false))
 
-(defonce nayta-aikajana? (local-storage/local-storage-atom :nayta-aikajana true nil))
+(defonce valinnat
+  (local-storage/local-storage-atom
+   :aikataulu-valinnat
+   {:nayta-aikajana? true
+    :jarjestys :aika}
+   nil))
+
+(defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
+
+(defn toggle-nayta-aikajana! []
+  (swap! valinnat update :nayta-aikajana? not))
+
+(defn jarjesta-kohteet! [kentta]
+  (swap! valinnat assoc :jarjestys kentta))
 
 (defn hae-aikataulu [urakka-id sopimus-id vuosi]
   (k/post! :hae-yllapitourakan-aikataulu {:urakka-id urakka-id
@@ -49,10 +63,18 @@
 (def aikataulurivit-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
-                  aikataulurivit @aikataulurivit]
+                  aikataulurivit @aikataulurivit
+                  jarjestys (:jarjestys @valinnat)]
               (when aikataulurivit
-                (yllapitokohteet/suodata-yllapitokohteet aikataulurivit {:tienumero tienumero
-                                                                         :kohdenumero kohdenumero})))))
+                (let [kohteet (yllapitokohteet/suodata-yllapitokohteet aikataulurivit
+                                                                       {:tienumero tienumero
+                                                                        :kohdenumero kohdenumero})]
+                  (if (= :aika jarjestys)
+                    kohteet
+                    (sort-by (case jarjestys
+                               :tr tr-domain/tieosoitteen-jarjestys
+                               :kohdenumero :kohdenumero)
+                             kohteet)))))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

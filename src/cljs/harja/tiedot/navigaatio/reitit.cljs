@@ -11,11 +11,13 @@
          :urakat :yleiset
          :suunnittelu :kokonaishintaiset
          :toteumat :kokonaishintaiset-tyot
+         :toimenpiteet :kokonaishintaiset-toimenpiteet
          :toteutus :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
          :hallinta :indeksit
          :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
+         :laadunseuranta-vesivaylat :vesivayla-viat
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
          :raportit nil
