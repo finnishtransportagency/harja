@@ -33,10 +33,12 @@
       (ryhmittele-toimenpiteet-vaylalla)))
 
 (defn- toimenpide-infolaatikossa [toimenpide]
-  ;; FIXME Ei täysin Jounin mallin mukainen. Vaatisi yleiset-komponentille tukea
-  ;; näyttää osa otsikoista omalla rivillä ja asettaa tyhjiä rivejä
   [:div
-   [yleiset/tietoja {:otsikot-omalla-rivilla? true}
+   [yleiset/tietoja {:otsikot-omalla-rivilla? true
+                     :kavenna? true
+                     :jata-kaventamatta #{"Työlaji" "Työluokka" "Toimenpide"}
+                     :tietyt-otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
+                     :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     ;; TODO Osa tiedoista puuttuu
     "Urakoitsija" "-"
     "Sopimusnumero" "-"

@@ -322,8 +322,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    Optiot on mäppi, joka tukee seuraavia optioita:
   :class   asetetaan lisäluokaksi containerille
   :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
-  [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
-  (let [attrs (if otsikot-omalla-rivilla?
+  [{:keys [class otsikot-omalla-rivilla? tietyt-otsikot-samalla-rivilla
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta]} & otsikot-ja-arvot]
+  (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
+        tietyt-otsikot-samalla-rivilla (or tietyt-otsikot-samalla-rivilla #{})
+        jata-kaventamatta (or jata-kaventamatta #{})
+        attrs (if otsikot-omalla-rivilla?
                 {:style {:display "block"}}
                 {})]
     [:div.tietoja {:class class}
@@ -331,9 +335,15 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (fn [i [otsikko arvo]]
          (when arvo
            ^{:key (str i otsikko)}
-           [:div.tietorivi
-            [:span.tietokentta attrs otsikko]
-            [:span.tietoarvo arvo]]))
+           (let [rivin-attribuutit (when (tietyt-otsikot-samalla-rivilla otsikko)
+                                     {:style {:display "auto"}})]
+             [:div.tietorivi (when (and kavenna?
+                                        (not (jata-kaventamatta otsikko)))
+                               {:style {:margin-bottom "0.5em"}})
+              [:span.tietokentta (merge attrs rivin-attribuutit) otsikko]
+              [:span.tietoarvo arvo]
+              (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
@@ -640,7 +650,7 @@ jatkon."
                           [:button {:class hyvaksy-napin-luokka
                                     :type "button"
                                     :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!)
-                                                                    (toiminto-fn))}
+                                                   (modal/piilota!)
+                                                   (toiminto-fn))}
                            [:span hyvaksy-ikoni hyvaksy]]]}
                 sisalto))
