@@ -713,6 +713,10 @@
                                  (reset! historia nil)
                                  (reset! viime-assoc nil)
                                  (reset! uusi-id 0)
+                                 ;; Valittua riviä ei nollata, koska se ei ole osa muokkaustilaa.
+                                 ;; Lisäksi koska propsien muuttuminen suorittaa tämän,
+                                 ;; niin valittu rivi ja näkyvissä oleva infolaatikko häviävät,
+                                 ;; vaikkei gridin data oleellisesti muuttuisikaan.
                                  (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
                            (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
