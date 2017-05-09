@@ -32,8 +32,7 @@
           (if (= :maksuera (:viesti-tyyppi kuittaus))
             (maksuera/kasittele-maksuera-kuittaus db kuittaus viesti-id)
             (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id)))
-        (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))
-    #_(log/error "Samposta vastaanotettu kuittaus ei ole validia XML:ää.")))
+        (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))))
 
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
   (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
@@ -43,8 +42,16 @@
         urakoiden-summat (group-by :urakka_id
                                    (mapcat #(qm/hae-urakan-maksuerien-summat db %) urakkaidt))]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
+
     (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
-      (let [summat (urakoiden-summat urakkaid)]
-        (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos maksuera-numero summat)))
+      (try
+        (let [summat (urakoiden-summat urakkaid)]
+          (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos maksuera-numero summat))
+        (catch Exception e
+          (log/error e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
+
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
+      (try
+        (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma))
+        (catch Exception e
+          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))))
