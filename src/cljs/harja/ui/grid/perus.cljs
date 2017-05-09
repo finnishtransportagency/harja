@@ -157,15 +157,15 @@
 
 (defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
                                          mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
-                                         rivi]}]
+                                         rivi tunniste]}]
   ;; Rivin klikkaus
   (when rivi-klikattu
-    (if (not= @valittu-rivi rivi)
+    (if (not= @valittu-rivi (tunniste rivi))
       (rivi-klikattu rivi)))
 
   ;; Rivin valinta
   (when mahdollista-rivin-valinta
-    (if (= @valittu-rivi rivi)
+    (if (= @valittu-rivi (tunniste rivi))
       ;; Saman rivin klikkaus
       (do (reset! valittu-rivi nil)
           (when rivi-valinta-peruttu
@@ -175,7 +175,7 @@
           (when infolaatikon-tila-muuttui
             (infolaatikon-tila-muuttui false)))
       ;; Eri rivin klikkaus
-      (do (reset! valittu-rivi rivi)
+      (do (reset! valittu-rivi (tunniste rivi))
           (when rivin-infolaatikko
             (reset! infolaatikko-nakyvissa? true))
           (when infolaatikon-tila-muuttui
@@ -184,15 +184,16 @@
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                            mahdollista-rivin-valinta rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
-                           data]}
+                           data tunniste]}
                    skeema rivi index]
-  [:tr {:class (str luokka (when (= rivi @valittu-rivi)
+  [:tr {:class (str luokka (when (= (tunniste rivi) @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(kasittele-rivin-klikkaus
                      {:rivi-klikattu rivi-klikattu
                       :rivi-valinta-peruttu rivi-valinta-peruttu
                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                       :valittu-rivi valittu-rivi
+                      :tunniste tunniste
                       :mahdollista-rivin-valinta mahdollista-rivin-valinta
                       :rivin-infolaatikko rivin-infolaatikko
                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
@@ -231,7 +232,7 @@
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
                     (when (and
-                            (= rivi @valittu-rivi)
+                            (= (tunniste rivi) @valittu-rivi)
                             (= (inc i) (count skeema))
                             rivin-infolaatikko
                             @infolaatikko-nakyvissa?)
@@ -430,7 +431,7 @@
                          [:td {:colSpan colspan}
                           [:h5 (:teksti rivi)]]]]
 
-                        (let [id ((or tunniste :id) rivi)]
+                        (let [id (tunniste rivi)]
                           [^{:key id}
                           [nayttorivi {:ohjaus ohjaus
                                        :vetolaatikot vetolaatikot
@@ -453,6 +454,7 @@
                                        :rivi-valinta-peruttu rivi-valinta-peruttu
                                        :valittu-rivi valittu-rivi
                                        :data tiedot
+                                       :tunniste tunniste
                                        :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                        :piilota-toiminnot? piilota-toiminnot?
                                        :nayta-toimintosarake? nayta-toimintosarake?}
@@ -546,7 +548,8 @@
         viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
-        valittu-rivi (atom nil)
+        tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
+        valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         mahdollista-rivin-valinta (if rivin-infolaatikko true mahdollista-rivin-valinta)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -566,11 +569,11 @@
                                                   (let [virheet (validointi/validoi-rivi uudet-tiedot rivi skeema tyyppi)]
                                                     (if (empty? virheet)
                                                       nil
-                                                      [((or tunniste :id) rivi) virheet]))))
+                                                      [(tunniste rivi) virheet]))))
                                               (vals uudet-tiedot))))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
-                   (let [id (or ((or tunniste :id) rivin-tiedot) (swap! uusi-id dec))
+                   (let [id (or (tunniste rivin-tiedot) (swap! uusi-id dec))
                          vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          vanhat-varoitukset @varoitukset
@@ -578,7 +581,7 @@
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut assoc id
                                              ((or uusi-rivi identity)
-                                               (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))
+                                               (merge rivin-tiedot {tunniste id :koskematon true})))
                          uusi-jarjestys (swap! jarjestys conj id)]
                      (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanhat-huomautukset vanha-jarjestys])
                      (swap! virheet (fn [virheet]
@@ -624,7 +627,7 @@
                                                                                              (get muokatut id))
                                                                                            @jarjestys)]
                                                           (into {}
-                                                                (map (juxt (or tunniste :id) #(dissoc % :koskematon)))
+                                                                (map (juxt tunniste #(dissoc % :koskematon)))
                                                                 (apply funktio muokatut-jarjestyksessa args)))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (reset! viimeisin-muokattu-id nil) ;; bulk muutoksesta ei jätetä viimeisintä muokkausta
@@ -735,7 +738,7 @@
                                  (recur muok
                                         (conj jarj r)
                                         rivit)
-                                 (let [id ((or tunniste :id) r)]
+                                 (let [id (tunniste r)]
                                    (recur (assoc muok
                                             id (assoc r :koskematon true))
                                           (conj jarj id)
