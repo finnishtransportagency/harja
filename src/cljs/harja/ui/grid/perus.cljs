@@ -149,11 +149,11 @@
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
-(defn- rivin-infolaatikko* [sisalto rivi]
+(defn- rivin-infolaatikko* [sisalto rivi data]
   [:div.livi-grid-infolaatikko
    [:div.livi-grid-infolaatikko-yhdistysviiva]
    [:div.livi-grid-infolaatikko-sisalto
-    (sisalto rivi)]])
+    (sisalto rivi data)]])
 
 (defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
                                          mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
@@ -183,7 +183,8 @@
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
-                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui]}
+                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
+                           data]}
                    skeema rivi index]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
@@ -234,7 +235,7 @@
                             (= (inc i) (count skeema))
                             rivin-infolaatikko
                             @infolaatikko-nakyvissa?)
-                      [rivin-infolaatikko* rivin-infolaatikko rivi])
+                      [rivin-infolaatikko* rivin-infolaatikko rivi data])
 
                     (if (= tyyppi :komponentti)
                       (komponentti rivi {:index index
@@ -451,6 +452,7 @@
                                        :rivin-infolaatikko rivin-infolaatikko
                                        :rivi-valinta-peruttu rivi-valinta-peruttu
                                        :valittu-rivi valittu-rivi
+                                       :data tiedot
                                        :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                        :piilota-toiminnot? piilota-toiminnot?
                                        :nayta-toimintosarake? nayta-toimintosarake?}

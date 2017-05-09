@@ -13,7 +13,8 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [reagent.core :as r]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
@@ -31,7 +32,7 @@
       (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-vaylalla)))
 
-(defn- toimenpiteen-infolaatikko [toimenpide]
+(defn- toimenpide-infolaatikossa [toimenpide]
   ;; FIXME Ei täysin Jounin mallin mukainen. Vaatisi yleiset-komponentille tukea
   ;; näyttää osa otsikoista omalla rivillä ja asettaa tyhjiä rivejä
   [:div
@@ -62,7 +63,11 @@
        [:td "-"]
        [:td "-"]]]]]])
 
-(defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
+(defn- toimenpiteiden-siirto [toimenpide]
+  [napit/yleinen "Siirrä valitut yksikköhintaisiin"
+   #(log "Painoit nappia")])
+
+(defn- paneelin-sisalto [toimenpiteet e!]
   [grid/grid
    {:tunniste ::to/id
     :tyhja (if (nil? toimenpiteet)
@@ -70,8 +75,10 @@
              "Ei toimenpiteitä")
     :infolaatikon-tila-muuttui (fn [uusi]
                                  (e! (tiedot/->AsetaInfolaatikonTila uusi)))
-    :rivin-infolaatikko (fn [rivi]
-                          [toimenpiteen-infolaatikko rivi])}
+    :rivin-infolaatikko (fn [rivi data]
+                          (if (some :valittu? data)
+                            [toimenpiteiden-siirto rivi]
+                            [toimenpide-infolaatikossa rivi]))}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
@@ -100,7 +107,7 @@
          "kpl")
        ")"))
 
-(defn- luo-otsikkorivit [toimenpiteet infolaatikko-nakyvissa? e!]
+(defn- luo-otsikkorivit [toimenpiteet e!]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -113,7 +120,6 @@
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  toimenpiteet
                  tyolaji)
-               infolaatikko-nakyvissa?
                e!]])
            tyolajit))))
 
@@ -148,7 +154,7 @@
                               (fn [uusi]
                                 (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                               :valinta uusi}))))]))}]}]
-             (luo-otsikkorivit toimenpiteet infolaatikko-nakyvissa? e!))])))
+             (luo-otsikkorivit toimenpiteet e!))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
