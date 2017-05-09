@@ -5,7 +5,10 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
+            [harja.pvm :as pvm]
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -16,15 +19,16 @@
 (def kayttajahakutulokset-data (atom []))
 
 (defonce valittu-turvallisuuspoikkeama (atom nil))
+(def turvallisuuspoikkeaman-luonti-kesken? (atom false))
 
 (defn hae-urakan-turvallisuuspoikkeamat
   [urakka-id [alku loppu]]
   (k/post! :hae-turvallisuuspoikkeamat {:urakka-id urakka-id
-                                        :alku      alku
-                                        :loppu     loppu}))
+                                        :alku alku
+                                        :loppu loppu}))
 
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
-  (k/post! :hae-turvallisuuspoikkeama {:urakka-id                urakka-id
+  (k/post! :hae-turvallisuuspoikkeama {:urakka-id urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
 
 (defn hae-kayttajat [hakuparametrit]
@@ -35,24 +39,24 @@
             :kayttajanimi (:kayttajanimi hakuparametrit)}))
 
 (defonce haetut-turvallisuuspoikkeamat
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               hoitokausi @urakka/valittu-hoitokausi
-               nakymassa? @nakymassa?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when nakymassa?
-                (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                      hoitokausi @urakka/valittu-hoitokausi
+                      nakymassa? @nakymassa?]
+                     {:nil-kun-haku-kaynnissa? true}
+                     (when nakymassa?
+                       (hae-urakan-turvallisuuspoikkeamat urakka-id hoitokausi))))
 
 (def karttataso-turvallisuuspoikkeamat (atom false))
 
 (defonce turvallisuuspoikkeamat-kartalla
-  (reaction
-   (let [valittu-turvallisuuspoikkeama-id (:id @valittu-turvallisuuspoikkeama)]
-     (when @karttataso-turvallisuuspoikkeamat
-       (kartalla-esitettavaan-muotoon
-        @haetut-turvallisuuspoikkeamat
-        #(= valittu-turvallisuuspoikkeama-id (:id %))
-        (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
-              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
+         (reaction
+           (let [valittu-turvallisuuspoikkeama-id (:id @valittu-turvallisuuspoikkeama)]
+             (when @karttataso-turvallisuuspoikkeamat
+               (kartalla-esitettavaan-muotoon
+                 @haetut-turvallisuuspoikkeamat
+                 #(= valittu-turvallisuuspoikkeama-id (:id %))
+                 (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+                       (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn kasaa-tallennettava-turpo
   [tp]
@@ -78,3 +82,23 @@
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]
   (reset! haetut-turvallisuuspoikkeamat turvallisuuspoikkeamat))
+
+(def +uusi-turvallisuuspoikkeama+
+  ^{:uusi? true}
+  {:tila :avoin
+   :vakavuusaste :lieva
+   :vaylamuoto :tie
+   :tyontekijanammatti :muu_tyontekija})
+
+(defn uusi-turvallisuuspoikkeama [urakka-id]
+  (when (not @turvallisuuspoikkeaman-luonti-kesken?)
+    (reset! turvallisuuspoikkeaman-luonti-kesken? true)
+    (go
+      (let [vastaus (<! (k/post! :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit
+                                 {::urakan-tyotunnit/urakka-id urakka-id}))]
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
+          (let [tyotunnit (::urakan-tyotunnit/tyotunnit vastaus)]
+            (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit))))
+
+        (reset! turvallisuuspoikkeaman-luonti-kesken? false)))))
