@@ -14,7 +14,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
             [harja.id :refer [id-olemassa?]]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
 
 (defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
   ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
@@ -224,7 +225,7 @@
       (when turi
         ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
         (turi/laheta-turvallisuuspoikkeama turi id)
-        (when urakan-tyotunnit
+        (when (and (ominaisuudet/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
           (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
             (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
               turi
