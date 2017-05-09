@@ -22,12 +22,6 @@
         tpi (get-in maksuera [:toimenpideinstanssi :id])
         tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
         maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))]
-    (when (nil? (get maksueran-summat tyyppi))
-      (log/error "maksuerä, jolla ei ole tyyppinsa mukaista summaa: " numero)
-      (log/debug "maksuera kannasta:" (pr-str maksuera))
-      (log/debug "summat parametrista:" (pr-str summat))
-      (log/debug "maksueran-summat" (pr-str maksueran-summat))
-      (log/debug "tpi" tpi))
     (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
 
 
@@ -102,23 +96,24 @@
 (defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
   (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
   (if (maksuerat/onko-olemassa? db numero)
-    (if (lukitse-maksuera db numero)
-      (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-            maksuera (hae-maksueran-tiedot db numero summat)
-            muodosta-xml (fn []
-                           (tarkista-maksueran-tiedot maksuera)
-                           (maksuera-sanoma/maksuera-xml maksuera))]
-        (try
-          (let [viesti-id (jms-lahettaja muodosta-xml nil)]
+    (try
+      (if (lukitse-maksuera db numero)
+        (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+              muodosta-sanoma (fn []
+                                (let [maksuera (hae-maksueran-tiedot db numero summat)]
+                                  (tarkista-maksueran-tiedot maksuera)
+                                  (maksuera-sanoma/maksuera-xml maksuera)))]
+
+          (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
             (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-            (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero)))
+            (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
+        (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
 
-          (catch Exception e
-            (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-            (merkitse-maksueralle-lahetysvirhe db numero)
-            (throw e))))
+      (catch Exception e
+        (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+        (merkitse-maksueralle-lahetysvirhe db numero)
+        (throw e)))
 
-      (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
     (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-maksuera+
