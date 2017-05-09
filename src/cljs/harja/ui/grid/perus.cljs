@@ -156,7 +156,7 @@
     (sisalto rivi data)]])
 
 (defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
-                                         mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
+                                         mahdollista-rivin-valinta? rivin-infolaatikko infolaatikon-tila-muuttui
                                          rivi tunniste]}]
   ;; Rivin klikkaus
   (when rivi-klikattu
@@ -164,7 +164,7 @@
       (rivi-klikattu rivi)))
 
   ;; Rivin valinta
-  (when mahdollista-rivin-valinta
+  (when mahdollista-rivin-valinta?
     (if (= @valittu-rivi (tunniste rivi))
       ;; Saman rivin klikkaus
       (do (reset! valittu-rivi nil)
@@ -183,7 +183,7 @@
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
-                           mahdollista-rivin-valinta rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
+                           mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
                            data tunniste]}
                    skeema rivi index]
   [:tr {:class (str luokka (when (= (tunniste rivi) @valittu-rivi)
@@ -194,7 +194,7 @@
                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                       :valittu-rivi valittu-rivi
                       :tunniste tunniste
-                      :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                      :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                       :rivin-infolaatikko rivin-infolaatikko
                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                       :rivi rivi})}
@@ -355,6 +355,11 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
+(defn- valiotsikko [colspan teksti]
+  [:tr.otsikko
+   [:td {:colSpan colspan}
+    [:h5 teksti]]])
+
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
@@ -378,9 +383,7 @@
                            (if (otsikko? id)
                              (let [teksti (:teksti id)]
                                [^{:key teksti}
-                               [:tr.otsikko
-                                [:td {:colSpan colspan}
-                                 [:h5 teksti]]]])
+                               [valiotsikko colspan teksti]])
                              (let [rivi (get muokatut id)
                                    rivin-virheet (get kaikki-virheet id)
                                    rivin-varoitukset (get kaikki-varoitukset id)
@@ -413,7 +416,7 @@
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
                                      rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
-                                     rivi-valinta-peruttu mahdollista-rivin-valinta piilota-toiminnot?
+                                     rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
     (if (empty? rivit)
@@ -427,9 +430,7 @@
                     (fn [i rivi]
                       (if (otsikko? rivi)
                         [^{:key (:teksti rivi)}
-                        [:tr.otsikko
-                         [:td {:colSpan colspan}
-                          [:h5 (:teksti rivi)]]]]
+                        [valiotsikko colspan (:teksti rivi)]]
 
                         (let [id (tunniste rivi)]
                           [^{:key id}
@@ -455,7 +456,7 @@
                                        :valittu-rivi valittu-rivi
                                        :data tiedot
                                        :tunniste tunniste
-                                       :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                                       :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                                        :piilota-toiminnot? piilota-toiminnot?
                                        :nayta-toimintosarake? nayta-toimintosarake?}
                            skeema rivi i]
@@ -506,7 +507,7 @@
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun riviä klikataan.
                                         Funktiota kutsutaan rivin tiedoilla.
-  :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
+  :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
@@ -535,7 +536,7 @@
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara rivin-infolaatikko
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -550,7 +551,7 @@
         tallennus-kaynnissa (atom false)
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
-        mahdollista-rivin-valinta (if rivin-infolaatikko true mahdollista-rivin-valinta)
+        mahdollista-rivin-valinta? (if rivin-infolaatikko true mahdollista-rivin-valinta?)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -872,7 +873,7 @@
                                          :valittu-rivi valittu-rivi
                                          :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                                          :rivi-valinta-peruttu rivi-valinta-peruttu
-                                         :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                                         :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                          :nayta-toimintosarake? nayta-toimintosarake?
