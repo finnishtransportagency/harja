@@ -82,11 +82,8 @@
 (defn hae-maksueran-tiedot [db numero summat]
   (let [maksueran-tiedot (hae-maksuera db numero summat)
         ;; Sakot lähetetään Sampoon negatiivisena
-        negatoi-tai-nollaa #(if %
-                              (- %)
-                              0)
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                           (update-in maksueran-tiedot [:maksuera :summa] negatoi-tai-nollaa)
+                           (update-in maksueran-tiedot [:maksuera :summa] (fnil - 0))
                            maksueran-tiedot)]
     maksueran-tiedot))
 
