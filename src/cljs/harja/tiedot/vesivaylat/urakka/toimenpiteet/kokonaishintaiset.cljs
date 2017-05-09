@@ -39,6 +39,76 @@
                          ::to/toimenpide "Huoltotyö"
                          ::to/pvm (pvm/nyt)
                          ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 600
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Asennustyö"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 601
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 1"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 602
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 2"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 603
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 3"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 604
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 4"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 605
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 5"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 606
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 6"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 607
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 7"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 608
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 8"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
+                        {::to/id 609
+                         ::to/tyolaji :viitat
+                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                         ::to/tyoluokka "Asennus ja huolto"
+                         ::to/toimenpide "Testihuolto 9"
+                         ::to/pvm (pvm/nyt)
+                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                         {::to/id 4
                          ::to/tyolaji :kiinteat
                          ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
