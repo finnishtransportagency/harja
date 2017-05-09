@@ -255,6 +255,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .livi-grid.livi-grid-infolaatikolla {
+  @livi-grid-infolaatikko-sisennys: 10px;
+
   tr td:last-child {
     position: relative;
 
@@ -274,11 +276,25 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
       > .livi-grid-infolaatikko-sisalto {
         background-color: @harmaa8;
-        padding: 10px;
+        padding: @livi-grid-infolaatikko-sisennys;
         width: 90%;
         position: absolute;
         top: 0;
         right: 0;
+
+        .livi-grid-infolaatikko-footer {
+          background-color: @harmaa10;
+          margin-top: @livi-grid-infolaatikko-sisennys;
+          margin-left: -@livi-grid-infolaatikko-sisennys;
+          margin-right: -@livi-grid-infolaatikko-sisennys;
+          margin-bottom: -@livi-grid-infolaatikko-sisennys;
+          padding: @livi-grid-infolaatikko-sisennys;
+          padding-top: @livi-grid-infolaatikko-sisennys / 2;
+
+          > h5 {
+            text-transform: uppercase;
+          }
+        }
       }
     }
   }

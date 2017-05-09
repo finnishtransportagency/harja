@@ -45,7 +45,20 @@
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
     "Urakoitsijan vastuuhenkilö" "TODO"
-    "Henkilölukumaara" "TODO"]])
+    "Henkilölukumaara" "TODO"]
+   [:footer.livi-grid-infolaatikko-footer
+    [:h5 "Käytetyt komponentit"]
+    [:table
+     [:thead
+      [:tr
+       [:th {:style {:width "50%"}} "Kompo\u00ADnent\u00ADti"]
+       [:th {:style {:width "25%"}} "Määrä"]
+       [:th {:style {:width "25%"}} "Jäljellä"]]]
+     [:tbody]
+     [:tr
+      [:td "TODO"]
+      [:td "TODO"]
+      [:td "TODO"]]]]])
 
 (defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
   [grid/grid
