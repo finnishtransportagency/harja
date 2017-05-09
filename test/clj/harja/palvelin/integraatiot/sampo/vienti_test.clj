@@ -68,6 +68,4 @@
                  clojure.java.io/input-stream
                  parse
                  xml-zip
-                 (z/xml1-> :Products :Product :CustomInformation :instance :CustomInformation :ColumnValue (z/attr= :name "vv_paym_sum") z/text)
-                 ;; (get-in [:content 1 :content 0 :content 4 :content 7 :content 0 :content 2 :content 0])
-                 ))))))
+                 (z/xml1-> :Products :Product :CustomInformation :instance :CustomInformation :ColumnValue (z/attr= :name "vv_paym_sum") z/text)))))))
