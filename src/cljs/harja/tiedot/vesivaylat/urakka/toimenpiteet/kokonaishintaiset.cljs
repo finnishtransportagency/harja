@@ -8,6 +8,7 @@
 
 (defonce tila
   (atom {:nakymassa? false
+         :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
          :toimenpiteet [{::to/id 0
                          ::to/tyolaji :viitat
@@ -63,6 +64,7 @@
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseTyolaji [tiedot])
+(defrecord AsetaInfolaatikonTila [uusi-tila])
 
 (extend-protocol tuck/Event
 
@@ -87,4 +89,8 @@
                                            (assoc % :valittu? valinta)
                                            %)
                                         toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet))))
+      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
+
+  AsetaInfolaatikonTila
+  (process-event [{uusi-tila :uusi-tila} app]
+    (assoc app :infolaatikko-nakyvissa? uusi-tila)))

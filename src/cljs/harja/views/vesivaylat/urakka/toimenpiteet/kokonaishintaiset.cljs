@@ -12,7 +12,9 @@
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
@@ -30,12 +32,55 @@
       (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-vaylalla)))
 
-(defn- paneelin-otsikon-sisalto [sijainnit e!]
+(defn- toimenpide-infolaatikossa [toimenpide]
+  [:div
+   [yleiset/tietoja {:otsikot-omalla-rivilla? true
+                     :kavenna? true
+                     :jata-kaventamatta #{"Työlaji" "Työluokka" "Toimenpide"}
+                     :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
+                     :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
+    ;; TODO Osa tiedoista puuttuu
+    "Urakoitsija" "-"
+    "Sopimusnumero" "-"
+    "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
+    "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
+    "Työluokka" (::to/tyoluokka toimenpide)
+    "Toimenpide" (::to/toimenpide toimenpide)
+    "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
+    "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
+    "Urakoitsijan vastuuhenkilö" "-"
+    "Henkilölukumaara" "-"]
+   [:footer.livi-grid-infolaatikko-footer
+    [:h5 "Käytetyt komponentit"]
+    [:table
+     [:thead
+      [:tr
+       [:th {:style {:width "50%"}} "Kompo\u00ADnent\u00ADti"]
+       [:th {:style {:width "25%"}} "Määrä"]
+       [:th {:style {:width "25%"}} "Jäljellä"]]]
+     [:tbody
+      [:tr
+       ;; TODO Komponenttitiedot puuttuu
+       [:td "-"]
+       [:td "-"]
+       [:td "-"]]]]]])
+
+(defn- toimenpiteiden-siirto [toimenpide]
+  [napit/yleinen "Siirrä valitut yksikköhintaisiin"
+   #(log "Painoit nappia")])
+
+(defn- paneelin-sisalto [toimenpiteet e!]
   [grid/grid
    {:tunniste ::to/id
-    :tyhja (if (nil? sijainnit)
+    :tyhja (if (nil? toimenpiteet)
              [ajax-loader "Haetaan toimenpiteitä"]
-             "Ei toimenpiteitä")}
+             "Ei toimenpiteitä")
+    :infolaatikon-tila-muuttui (fn [uusi]
+                                 (e! (tiedot/->AsetaInfolaatikonTila uusi)))
+    :rivin-infolaatikko (fn [rivi data]
+                          (if (some :valittu? data)
+                            [toimenpiteiden-siirto rivi]
+                            [toimenpide-infolaatikossa rivi]))}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
@@ -54,7 +99,7 @@
                                (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
                                                                 :valinta uusi}))))])
      :leveys 5}]
-   sijainnit])
+   toimenpiteet])
 
 (defn- paneelin-otsikko [otsikko maara]
   (str otsikko
@@ -73,7 +118,7 @@
                                 (count (toimenpiteet-tyolajilla
                                          toimenpiteet
                                          tyolaji)))
-              [paneelin-otsikon-sisalto
+              [paneelin-sisalto
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  toimenpiteet
                  tyolaji)
@@ -84,7 +129,7 @@
   (komp/luo
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! {:keys [toimenpiteet] :as app}]
+    (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
        [debug app]
 
@@ -93,7 +138,8 @@
         [:div {:style {:color "orange"}} "Työmaa"]]
 
        (into [otsikkopaneeli
-              {:paneelikomponentit
+              {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+               :paneelikomponentit
                [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
                 {:sijainti "94.3%"
                  :sisalto

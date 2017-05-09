@@ -318,21 +318,36 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn tietoja
   "Tekee geneerisen tietonäkymän.
-Optiot on mäppi, joka tukee seuraavia optioita:
-  :class   asetetaan lisäluokaksi containerille
-  :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
-  [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
-  (let [attrs (if otsikot-omalla-rivilla?
+
+   Optiot on mäppi, joka tukee seuraavia optioita:
+  :class                        Asetetaan lisäluokaksi containerille
+  :kavenna?                     Jos true, jättää tyhjää tilaa tietorivien väliin
+  :jata-kaventamatta            Setti otsikoita, joita ei kavenneta, vaikka 'kavenna?' olisi true
+  :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
+  :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
+  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi"
+  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta]} & otsikot-ja-arvot]
+  (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
+        otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
+        jata-kaventamatta (or jata-kaventamatta #{})
+        attrs (if otsikot-omalla-rivilla?
                 {:style {:display "block"}}
                 {})]
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
          (when arvo
-           ^{:key (str i otsikko)}
-           [:div.tietorivi
-            [:span.tietokentta attrs otsikko]
-            [:span.tietoarvo arvo]]))
+           (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
+                                     {:style {:display "auto"}})]
+             ^{:key (str i otsikko)}
+             [:div.tietorivi (when (and kavenna?
+                                        (not (jata-kaventamatta otsikko)))
+                               {:style {:margin-bottom "0.5em"}})
+              [:span.tietokentta (merge attrs rivin-attribuutit) otsikko]
+              [:span.tietoarvo arvo]
+              (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
@@ -639,7 +654,7 @@ jatkon."
                           [:button {:class hyvaksy-napin-luokka
                                     :type "button"
                                     :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!)
-                                                                    (toiminto-fn))}
+                                                   (modal/piilota!)
+                                                   (toiminto-fn))}
                            [:span hyvaksy-ikoni hyvaksy]]]}
                 sisalto))
