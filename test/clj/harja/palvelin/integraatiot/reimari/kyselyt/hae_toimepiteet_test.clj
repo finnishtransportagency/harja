@@ -22,10 +22,11 @@
 
 (deftest hae-toimenpiteet-kysely
   (ht/u "INSERT INTO reimari_toimenpide
-    (\"reimari-id\", \"reimari-urakoitsija\", sopimus, turvalaite, lisatieto, lisatyo,
-     suoritettu, luotu, \"reimari-luotu\", alus, tila, tyyppi, tyolaji, tyoluokka,
-     vayla, \"reimari-muokattu\", \"luoja\", \"muokkaaja\", \"muokattu\",
-     vastuuhenkilo, asiakas)
+    (\"reimari-id\", \"reimari-urakoitsija\", \"reimari-sopimus\", \"reimari-turvalaite\", lisatieto, lisatyo,
+     suoritettu, luotu, \"reimari-luotu\", \"reimari-alus\", \"reimari-tila\", \"reimari-tyyppi\",
+     \"reimari-tyolaji\", \"reimari-tyoluokka\",
+     \"reimari-vayla\", \"reimari-muokattu\", \"luoja\", \"muokkaaja\", \"muokattu\",
+     \"reimari-vastuuhenkilo\", \"reimari-asiakas\")
      VALUES
        (42, '(55, Ukko Urakoitsija)', '(-5, 1022542301, Hoitosopimus)',
         '(62, Pysäytin, 555)', '', false, '2017-01-01T23:23Z', '2017-01-01', '2017-01-01',
@@ -33,5 +34,4 @@
         '(123, Vayla X, 55)', '2017-11-11', 1, 1, '2016-02-02', 'Vesa Vastuullinen', 'Aapo Asiakas');")
   (is (= #{:harja.domain.muokkaustiedot/poistaja-id}
          (clojure.set/difference vv-kyselyt/kaikki-toimenpiteen-kentat
-                                 (set (keys (first (vv-kyselyt/hae-toimenpiteet ht/ds {:urakoitsija-id 55})))))))
-  )
+                                 (set (keys (first (vv-kyselyt/hae-toimenpiteet ht/ds {:urakoitsija-id 55}))))))))
