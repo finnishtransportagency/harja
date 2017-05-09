@@ -7,6 +7,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]))
 
 (def testitila {:nakymassa? true
+                :infolaatikko-nakyvissa? false
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
@@ -97,3 +98,10 @@
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
       (every? false? (map :valittu? viitat)))))
+
+(deftest infolaatikon-tila
+  (testing "Asetetaan infolaatikko näkyviin"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila true) vanha-tila)]
+      (is (false? (:infolaatikko-nakyvissa? vanha-tila)))
+      (is (true? (:infolaatikko-nakyvissa? uusi-tila))))))

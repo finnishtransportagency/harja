@@ -53,7 +53,7 @@
   (vaadi-async-kutsut
     #{tiedot/->UrakoitsijatHaettu tiedot/->UrakoitsijatEiHaettu}
 
-    (is (true? (:urakoitsijoiden-haku-kaynnissa? (e! (tiedot/->HaeUrakoitsijat {:id 1})))))))
+    (is (true? (:urakoitsijoiden-haku-kaynnissa? (e! (tiedot/->HaeUrakoitsijat)))))))
 
 (deftest hakemisen-valmistuminen
   (let [urakat [{:id 1 :nimi :a} {:id 2 :nimi :b}]

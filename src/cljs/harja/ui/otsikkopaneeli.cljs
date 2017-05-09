@@ -3,7 +3,8 @@
    Otsikoiden alle voi sijoittaa vapaasti minkä tahansa komponentin"
   (:require [reagent.core :as r :refer [atom]]
             [harja.loki :refer [log]]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str]))
 
 (defn- toggle-paneeli! [index auki-index-atom]
   (if (= index @auki-index-atom)
@@ -17,7 +18,7 @@
                                   joka palauttaa komponentin.
 
    otsikot-ja-sisallot            Tunniste, tekstiotsikko ja piirrettävä komponentti funktiona. Voi olla useita."
-  [{:keys [paneelikomponentit] :as optiot} & otsikot-ja-sisallot]
+  [{:keys [paneelikomponentit otsikkoluokat] :as optiot} & otsikot-ja-sisallot]
   (r/with-let [auki-index-atom (atom 0)]
     [:div.otsikkopaneeli.klikattava
      (doall
@@ -27,7 +28,8 @@
                             (= index @auki-index-atom))]
              ^{:key tunniste}
              [:div
-              [:div.otsikkopaneeli-otsikko {:on-click #(toggle-paneeli! index auki-index-atom)}
+              [:div.otsikkopaneeli-otsikko {:on-click #(toggle-paneeli! index auki-index-atom)
+                                            :class (str/join " " otsikkoluokat)}
                [:div.otsikkopaneeli-avausindikaattori (if auki?
                                                         (ikonit/livicon-minus)
                                                         (ikonit/livicon-plus))]
