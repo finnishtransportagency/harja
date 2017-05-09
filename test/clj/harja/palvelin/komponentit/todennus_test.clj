@@ -92,7 +92,7 @@
                                     "oam_user_mobile" "1234567890"
                                     "oam_organization" "Destia Oy"
                                     "oam_groups" ""}})]
-        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 16))))
 
     (testing "Jos muuta organisaatiotietoa ei löyty, yritä ottaa se roolin Y-tunnuksesta"
       (let [req (todennus/todenna-pyynto (:todennus jarjestelma)
@@ -103,7 +103,7 @@
                                                     "oam_user_mobile" "1234567890"
                                                     "oam_organization" "Eitällaistaolekaan Oy"
                                                     "oam_groups" "2234567-8_Paakayttaja"}})]
-        (is (= (get-in req [:kayttaja :organisaatio :id]) 20))))))
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 23))))))
 
 (deftest ota-organisaatio-companyid-headerista
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
@@ -116,7 +116,7 @@
                                     "oam_organization" "Dezdia Oy"
                                     "oam_user_companyid" "2163026-3"
                                     "oam_groups" ""}})]
-        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 16))))
 
     (testing "Organisaatio löytyy edelleen nimen perusteella, jos OAM_USER_COMPANYID:ssä on roskaa"
       (let [req (todennus/todenna-pyynto (:todennus jarjestelma)
@@ -128,4 +128,4 @@
                                                     "oam_organization" "Destia oy"
                                                     "oam_user_companyid" "NOT_FOUND"
                                                     "oam_groups" ""}})]
-        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))))
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 16))))))

@@ -2,6 +2,7 @@
   "Harjan urakoitsijoiden tietojen hallinta"
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.urakka :as urakka-domain]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [tarkkaile!]]
             
@@ -25,6 +26,8 @@
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "siltakorjaus") @urakoitsijat))))
 (def urakoitsijat-tekniset-laitteet
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "tekniset-laitteet") @urakoitsijat))))
+(def urakoitsijat-vesivaylat
+  (reaction (into #{} (filter (comp urakka-domain/vesivayla-urakkatyypit keyword :urakkatyyppi) @urakoitsijat))))
 
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]

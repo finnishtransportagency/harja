@@ -190,7 +190,7 @@
                    (str " / " loppuosa " / " loppuetaisyys)))
             ei-tierekisteriosoitetta)))))
 
-(defn- tieosoitteen-jarjestys
+(defn tieosoitteen-jarjestys
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero

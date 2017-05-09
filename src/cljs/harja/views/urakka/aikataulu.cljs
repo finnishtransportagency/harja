@@ -25,7 +25,11 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.aikajana :as aikajana])
+            [harja.ui.aikajana :as aikajana]
+            [harja.domain.aikataulu :as aikataulu]
+            [harja.ui.upotettu-raportti :as upotettu-raportti]
+            [harja.tiedot.raportit :as raportit]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -132,65 +136,9 @@
             (into [(grid/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
-(def aikataulujana-tyylit
-  {:kohde {::aikajana/reuna "black"}
-   :paallystys {::aikajana/vari "#282B2A"}
-   :tiemerkinta {::aikajana/vari "#DECB03"}})
 
-(defn- aikataulurivi-jana
-  "Muuntaa aikataulurivin aikajankomponentin rivimuotoon."
-  [voi-muokata-paallystys? voi-muokata-tiemerkinta?
-   {:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
-           aikataulu-paallystys-alku aikataulu-paallystys-loppu
-           aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
-           nimi id] :as rivi}]
-  {::aikajana/otsikko nimi
-   ::aikajana/ajat
-   (into []
-         (remove nil?)
-         [(when (and aikataulu-kohde-alku aikataulu-kohde-valmis)
-            (merge (aikataulujana-tyylit :kohde)
-                   {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                      [id :kohde])
-                    ::aikajana/alku aikataulu-kohde-alku
-                    ::aikajana/loppu aikataulu-kohde-valmis
-                    ::aikajana/teksti (str "Koko kohde: "
-                                           (pvm/pvm aikataulu-kohde-alku) " \u2013 "
-                                           (pvm/pvm aikataulu-kohde-valmis))}))
-          (when (and aikataulu-paallystys-alku aikataulu-paallystys-loppu)
-            (merge (aikataulujana-tyylit :paallystys)
-                   {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                      [id :paallystys])
-                    ::aikajana/alku aikataulu-paallystys-alku
-                    ::aikajana/loppu aikataulu-paallystys-loppu
-                    ::aikajana/teksti (str "Päällystys: "
-                                           (pvm/pvm aikataulu-paallystys-alku) " \u2013 "
-                                           (pvm/pvm aikataulu-paallystys-loppu))}))
-          (when (and aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
-            (merge (aikataulujana-tyylit :tiemerkinta)
-                   {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
-                                      [id :tiemerkinta])
-                    ::aikajana/alku aikataulu-tiemerkinta-alku
-                    ::aikajana/loppu aikataulu-tiemerkinta-loppu
-                    ::aikajana/teksti (str "Tiemerkintä: "
-                                           (pvm/pvm aikataulu-tiemerkinta-alku) " \u2013 "
-                                           (pvm/pvm aikataulu-tiemerkinta-loppu))}))])})
 
-(defn- raahauksessa-paivitetyt-aikataulurivit
-  "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
-  [aikataulurivit {::aikajana/keys [drag alku loppu]}]
-  (keep
-   (fn [{id :id :as aikataulurivi}]
-     (when (= id (first drag))
-       (let [[alku-avain loppu-avain]
-             (case (second drag)
-               :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
-               :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
-               :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu])]
-         (assoc aikataulurivi
-                alku-avain alku
-                loppu-avain loppu))))
-   aikataulurivit))
+
 
 (defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (tiedot/tallenna-yllapitokohteiden-aikataulu
@@ -201,6 +149,36 @@
     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
                                     :warning
                                     viesti/viestin-nayttoaika-lyhyt)}))
+
+(defn valinnat [ur]
+  (let [{aikajana? :nayta-aikajana?
+         jarjestys :jarjestys
+         :as valinnat} @tiedot/valinnat]
+    [:span.aikataulu-valinnat
+     [valinnat/urakan-vuosi ur]
+     [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+     [valinnat/tienumero yllapito-tiedot/tienumero]
+
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajana"
+       :kentta-params {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! tiedot/toggle-nayta-aikajana!}
+       :arvo-atom tiedot/nayta-aikajana?}]
+
+     [yleiset/pudotusvalikko
+      "Järjestä kohteet"
+      {:valinta jarjestys
+       :valitse-fn tiedot/jarjesta-kohteet!
+       :format-fn  {:aika "Aloistusajan mukaan"
+                    :kohdenumero "Kohdenumeron mukaan"
+                    :tr "Tieosoitteen mukaan"}}
+      [:aika :kohdenumero :tr]]
+
+     [upotettu-raportti/raportin-vientimuodot
+      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -214,34 +192,29 @@
             {:keys [voi-tallentaa? saa-muokata?
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)
-            otsikoidut-aikataulurivit (otsikoi-aikataulurivit
-                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+
+
+            otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
+                                        (otsikoi-aikataulurivit
+                                         (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+                                        aikataulurivit)
+
             voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
-                                          (constantly saa-muokata?))
+                                          saa-muokata?)
             voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
                                            saa-merkita-valmiiksi?
                                            (:valmis-tiemerkintaan %))
-            aikajana? @tiedot/nayta-aikajana?]
+            aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
-         [valinnat/urakan-vuosi ur]
-         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
 
-         [:span.label-ja-kentta-puolikas
-          [:span.kentan-otsikko "Aikajana"]
-          [:div.kentta
-           [napit/yleinen (if aikajana?
-                            "Piilota aikajana"
-                            "Näytä aikajana")
-            #(swap! tiedot/nayta-aikajana? not)
-            {:luokka "btn-xs"}]]]
+         [valinnat ur]
 
          (when aikajana?
            [aikajana/aikajana
             {:muuta! #(tallenna-aikataulu
                        urakka-id sopimus-id vuosi
-                       (raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
-            (map #(aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+                       (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+            (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
 
          [grid/grid

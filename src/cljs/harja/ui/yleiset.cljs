@@ -383,22 +383,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [:span [:h4 otsikko]
    komp])
 
-;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
-;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
-;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
-(def lasipaneeli-tyyli {:display "block"
-                        :position "absolute"
-                        :top 0
-                        :bottom 0
-                        :opacity 0.5
-                        :background-color "black"
-                        :height "expression(parentElement.scrollHeight+'px')"
-                        :width "100%"})
-
-(defn lasipaneeli [& sisalto]
-  [:div {:style lasipaneeli-tyyli}
-   sisalto])
-
 (defn keskita
   "Div-elementti, joka on absoluuttisesti positioitu top 50% left 50%"
   [& sisalto]

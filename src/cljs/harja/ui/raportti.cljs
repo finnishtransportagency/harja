@@ -21,7 +21,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.aikajana :as aikajana]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -188,6 +189,9 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
+
+(defmethod muodosta-html :aikajana [[_ optiot rivit]]
+  (aikajana/aikajana optiot rivit))
 
 (defmethod muodosta-html :default [elementti]
   (log "HTML-raportti ei tue elementtiä: " elementti)

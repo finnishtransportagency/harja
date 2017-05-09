@@ -18,6 +18,11 @@
     "lisatietoja": {
       "id": "urn:harja/lisatietoja",
       "type": "string"
+    },
+    "liitteet": {
+      "id": "urn:harja/tarkastukset/0/liitteet",
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
     }
   }
 }

@@ -75,19 +75,6 @@ E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joit
 - jatkuva: Onko tämä välikohtainen havainto (true jos on, false jos pistemäinen)\n
 - avain: Vakiohavainnon tunniste muotoiltuna Clojure-avaiksi ilman kaksoispistettä (sama joka on mobiilityökalun UI:ssa)';
 
--- Raportointi
-
-COMMENT ON TABLE raportti IS
-E'Raportti-taulu sisältää raportit, jotka voidaan suorittaa.\n\n
-
-  nimi                      Raportin keyword nimi, esim "laskutusyhteenveto"\n
-  kuvaus                    Raportin ihmisen luettava nimi, esim, "Laskutusyhteenveto"\n
-  konteksti                 kontekstit, jossa raportin voi suorittaa (ks. raporttiparametri-enum)\n
-  parametrit                Parametrit, joilla raportti voidaan suorittaa (ks. raporttiparametri-enum)\n
-  koodi                     Viittaus Clojure-koodiin, joka suorittaa raportin\n
-  urakkatyyppi              Array urakkatyyppejä, joille raportti voidaan suorittaa';
-
--- Välitavoitteet
 
 COMMENT ON TABLE valitavoite IS
 E'Välitavoite kuvaa urakkaan liittyvää tehtävää asiaa, joka pyritään saamaan valmiiksi urakan aikana. Välitavoite sisältää mm. tehtävän asian kuvauksen sekä tiedot välitavoitteen valmistumisesta.\n\n
