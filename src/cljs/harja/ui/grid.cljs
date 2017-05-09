@@ -19,5 +19,3 @@
 
 (def grid perus/grid)
 (def muokkaus-grid muokkaus/muokkaus-grid)
-
-(def gridin-infolaatikko perus/gridin-infolaatikko)

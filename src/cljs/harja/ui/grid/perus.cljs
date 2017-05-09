@@ -889,9 +889,3 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko})])])))))
-
-(defn gridin-infolaatikko
-  "Gridin infolaatikon vakiomuotoista sisältöä kuvaava komponentti."
-  [& otsikko-arvo-parit]
-  [:div
-   (into [yleiset/tietoja {:otsikot-omalla-rivilla? true}] otsikko-arvo-parit)])

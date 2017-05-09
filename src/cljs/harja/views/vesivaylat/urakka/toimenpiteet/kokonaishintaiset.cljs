@@ -12,7 +12,8 @@
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
@@ -30,19 +31,21 @@
       (toimenpiteet-tyolajilla tyolaji)
       (ryhmittele-toimenpiteet-vaylalla)))
 
-(defn- toimenpiteet-infolaatikkoon [toimenpide]
+(defn- toimenpiteen-infolaatikko [toimenpide]
   ;; FIXME Ei täysin Jounin mallin mukainen. Vaatisi yleiset-komponentille tukea
-  ;; näyttää osa otsikoista omalla rivillä asettaa tyhjiä rivejä
-  ["Urakoitsija" "TODO"
-   "Sopimusnumero" "TODO"
-   "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
-   "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
-   "Työluokka" (::to/tyoluokka toimenpide)
-   "Toimenpide" (::to/toimenpide toimenpide)
-   "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
-   "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
-   "Urakoitsijan vastuuhenkilö" "TODO"
-   "Henkilölukumaara" "TODO"])
+  ;; näyttää osa otsikoista omalla rivillä ja asettaa tyhjiä rivejä
+  [:div
+   [yleiset/tietoja {:otsikot-omalla-rivilla? true}
+    "Urakoitsija" "TODO"
+    "Sopimusnumero" "TODO"
+    "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
+    "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
+    "Työluokka" (::to/tyoluokka toimenpide)
+    "Toimenpide" (::to/toimenpide toimenpide)
+    "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
+    "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
+    "Urakoitsijan vastuuhenkilö" "TODO"
+    "Henkilölukumaara" "TODO"]])
 
 (defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
   [grid/grid
@@ -53,7 +56,7 @@
     :infolaatikon-tila-muuttui (fn [uusi]
                                  (e! (tiedot/->AsetaInfolaatikonTila uusi)))
     :rivin-infolaatikko (fn [rivi]
-                          (apply grid/gridin-infolaatikko (toimenpiteet-infolaatikkoon rivi)))}
+                          [toimenpiteen-infolaatikko rivi])}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
