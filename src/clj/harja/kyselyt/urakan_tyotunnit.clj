@@ -49,6 +49,6 @@
   (update! db ::ut/urakan-tyotunnit
            {::ut/lahetys-onnistunut onnistunut?
             ::ut/lahetetty (konv/sql-timestamp (pvm/nyt))}
-           {::ut/urakka urakka-id
+           {::ut/urakka-id urakka-id
             ::ut/vuosi vuosi
             ::ut/vuosikolmannes vuosikolmannes}))

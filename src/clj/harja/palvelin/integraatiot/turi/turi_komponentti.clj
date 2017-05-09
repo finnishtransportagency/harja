@@ -20,7 +20,7 @@
 
 (defprotocol TuriLahetys
   (laheta-turvallisuuspoikkeama [this id])
-  (laheta-urakan-vuosikolmanneksen-tyotunnit [this id vuosi vuosikolmannes]))
+  (laheta-urakan-vuosikolmanneksen-tyotunnit [this urakka-id vuosi vuosikolmannes]))
 
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))

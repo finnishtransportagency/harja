@@ -214,19 +214,29 @@
         (throw (SecurityException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan."))))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
-  ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
-  (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db (:urakka tp) (:id tp))
-  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti (:urakka tp))]
-    (when turi
-      ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
-      (turi/laheta-turvallisuuspoikkeama turi id)))
-  (hae-urakan-turvallisuuspoikkeamat db
-                                     user
-                                     {:urakka-id (:urakka tp)
-                                      :alku (first hoitokausi)
-                                      :loppu (second hoitokausi)}))
+  (let [{:keys [id urakka urakan-tyotunnit]} tp]
+    (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka)
+    ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
+    (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db urakka id)
+
+    (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti urakka)]
+      (when turi
+        ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
+        (turi/laheta-turvallisuuspoikkeama turi id)
+        (when urakan-tyotunnit
+          (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
+            (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
+              turi
+              urakka
+              (::urakan-tyotunnit-d/vuosi kolmannes)
+              (::urakan-tyotunnit-d/vuosikolmannes kolmannes))))))
+
+    (hae-urakan-turvallisuuspoikkeamat db
+                                       user
+                                       {:urakka-id urakka
+                                        :alku (first hoitokausi)
+                                        :loppu (second hoitokausi)})))
 
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
