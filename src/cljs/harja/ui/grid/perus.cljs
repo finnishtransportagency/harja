@@ -166,43 +166,20 @@
     ;; Rivin valinta
     (when mahdollista-rivin-valinta
       (if (= @valittu-rivi rivi)
+        ;; Saman rivin klikkaus
         (do (reset! valittu-rivi nil)
             (when rivi-valinta-peruttu
               (rivi-valinta-peruttu rivi))
             (when rivin-infolaatikko
-              (reset! infolaatikko-nakyvissa? false)))
+              (reset! infolaatikko-nakyvissa? false))
+            (when infolaatikon-tila-muuttui
+              (infolaatikon-tila-muuttui false)))
+        ;; Eri rivin klikkaus
         (do (reset! valittu-rivi rivi)
             (when rivin-infolaatikko
-              (reset! infolaatikko-nakyvissa? true))))))
-
-;; TODO Alemman pitäisi toimia, miksi ei?
-#_(defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
-                                         mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
-                                         rivi]}]
-  ;; Rivin klikkaus
-  (when rivi-klikattu
-    (if (not= @valittu-rivi rivi)
-      (rivi-klikattu rivi)))
-
-  ;; Rivin valinta
-  (when mahdollista-rivin-valinta
-    (if (= @valittu-rivi rivi)
-      ;; Eri rivin klikkaus
-      (do (reset! valittu-rivi nil)
-          (when rivi-valinta-peruttu
-            (rivi-valinta-peruttu rivi))
-          (when rivin-infolaatikko
-            (reset! infolaatikko-nakyvissa? false)
-
+              (reset! infolaatikko-nakyvissa? true))
             (when infolaatikon-tila-muuttui
-              (infolaatikon-tila-muuttui false))))
-      ;; Jo valitun rivin klikkaus
-      (do (reset! valittu-rivi rivi)
-          (when rivin-infolaatikko
-            (reset! infolaatikko-nakyvissa? true)
-
-            (when infolaatikon-tila-muuttui
-              (infolaatikon-tila-muuttui true)))))))
+              (infolaatikon-tila-muuttui true))))))
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
@@ -252,11 +229,6 @@
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
-                    (when @infolaatikko-nakyvissa?
-                      (log "PITÄISI NÄKYÄ!")
-                      (log "RIVI ON " (pr-str rivi))
-                      (log "VALITTU RIVI ON " (pr-str @valittu-rivi)))
-
                     (when (and
                             (= rivi @valittu-rivi)
                             (= (inc i) (count skeema))
