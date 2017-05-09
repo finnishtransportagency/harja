@@ -355,7 +355,8 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
-(defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?]}]
+(defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
+                            piilotetut-valiotsikot]}]
   [:tr.otsikko
    [:td {:colSpan colspan}
     [:h5 teksti]]])
@@ -364,6 +365,7 @@
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
                                        salli-valiotsikoiden-piilotus?
+                                       piilotetut-valiotsikot
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
   (let [muokatut @muokatut
@@ -386,6 +388,7 @@
                              (let [teksti (:teksti id)]
                                [^{:key teksti}
                                [valiotsikko {:colspan colspan :teksti teksti :otsikko-record id
+                                             :piilotetut-valiotsikot piilotetut-valiotsikot
                                              :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
                              (let [rivi (get muokatut id)
                                    rivin-virheet (get kaikki-virheet id)
@@ -419,6 +422,7 @@
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
                                      rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
+                                     piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
@@ -435,6 +439,7 @@
                         [^{:key (:teksti rivi)}
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
+                                      :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
                         (let [id (tunniste rivi)]
@@ -868,6 +873,7 @@
                                            :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                            :piilota-toiminnot? piilota-toiminnot?
                                            :voi-muokata-rivia? voi-muokata-rivia?
+                                           :piilotetut-valiotsikot piilotetut-valiotsikot
                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
@@ -879,6 +885,7 @@
                                          :rivin-infolaatikko rivin-infolaatikko
                                          :rivin-luokka rivin-luokka
                                          :valittu-rivi valittu-rivi
+                                         :piilotetut-valiotsikot piilotetut-valiotsikot
                                          :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                                          :rivi-valinta-peruttu rivi-valinta-peruttu
                                          :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
