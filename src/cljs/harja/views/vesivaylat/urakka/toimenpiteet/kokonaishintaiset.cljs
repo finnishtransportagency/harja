@@ -112,7 +112,8 @@
         [:div {:style {:color "orange"}} "Työmaa"]]
 
        (into [otsikkopaneeli
-              {:paneelikomponentit
+              {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+               :paneelikomponentit
                [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
                 {:sijainti "94.3%"
                  :sisalto
