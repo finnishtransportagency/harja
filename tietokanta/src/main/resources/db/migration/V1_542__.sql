@@ -38,25 +38,6 @@ CREATE TABLE vv_vikailmoitus (
   "toteuma-id"    INTEGER REFERENCES toteuma (id)
 );
 
--- HINNOITTELU
-
-CREATE TYPE VV_HINTATYYPPI AS ENUM ('komponentti', 'materiaali', 'matka', 'tyo', 'muu');
-
-CREATE TABLE vv_hinta (
-  id                 SERIAL PRIMARY KEY,
-  "toteuma-id"       INTEGER REFERENCES toteuma (id) NOT NULL,
-  hinta              NUMERIC                         NOT NULL,
-  kuvaus             VARCHAR,
-  yleiskustannuslisa BOOLEAN DEFAULT FALSE           NOT NULL,
-  tyyppi             VV_HINTATYYPPI,
-  luotu TIMESTAMP NOT NULL DEFAULT NOW(),
-  luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
-  muokattu TIMESTAMP,
-  muokkaaja INTEGER REFERENCES kayttaja(id),
-  poistettu BOOLEAN DEFAULT FALSE NOT NULL,
-  poistaja INTEGER REFERENCES kayttaja(id)
-);
-
 CREATE TYPE REIMARI_URAKOITSIJA AS (id INTEGER, nimi TEXT);
 CREATE TYPE REIMARI_SOPIMUS AS (nro INTEGER, tyyppi TEXT, nimi TEXT);
 CREATE TYPE REIMARI_TURVALAITE AS (nro TEXT, nimi TEXT, ryhma INTEGER);
