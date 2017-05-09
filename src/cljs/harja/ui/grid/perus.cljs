@@ -744,7 +744,7 @@
                                           (conj jarj id)
                                           rivit)))))
                            nil)
-        kiinnita-otsikkorivi? (atom false)
+        kiinnita-otsikkorivi? (atom false) ;; Jos true, otsikkorivi naulataan kiinni selaimen yläreunaan scrollatessa
         kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
                                                   (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
