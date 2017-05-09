@@ -119,13 +119,18 @@
 (defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
-(def tyolajit #{:kiinteat
-                :poijut
-                :viitat
-                :vesiliikennemerkki})
+(def tyolajit (vals reimari-tyolajit))
 
 (def tyolaji-fmt
-  {:kiinteat "Kiinteät turvalaitteet"
-   :poijut "Poijut"
-   :viitat "Viitat"
-   :vesiliikennemerkki "Vesiliikennemerkki"})
+  (merge
+    (into {}
+          (map (juxt identity
+                     (comp
+                       (fn [s] (clojure.string/replace s "-" " "))
+                       clojure.string/capitalize
+                       name))
+               tyolajit))
+    {:kiinteat-turvalaitteet "Kiinteät turvalaitteet"
+     :kiintea-turvalaite "Kiinteä turvalaite"
+     :tukityot "Tukityöt"
+     :muut-vaylatyot "Muut väylätyöt"}))
