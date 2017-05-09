@@ -22,7 +22,7 @@
 
 (deftest hae-toimenpiteet-kysely
   (ht/u "INSERT INTO reimari_toimenpide
-    (\"reimari-id\", urakoitsija, sopimus, turvalaite, lisatieto, lisatyo,
+    (\"reimari-id\", \"reimari-urakoitsija\", sopimus, turvalaite, lisatieto, lisatyo,
      suoritettu, luotu, \"reimari-luotu\", alus, tila, tyyppi, tyolaji, tyoluokka,
      vayla, \"reimari-muokattu\", \"luoja\", \"muokkaaja\", \"muokattu\",
      vastuuhenkilo, asiakas)

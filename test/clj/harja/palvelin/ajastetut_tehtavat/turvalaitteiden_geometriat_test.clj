@@ -111,7 +111,7 @@
 
 (deftest turvalaitteiden-haku
   (with-fake-http [+testiurl+ +testivastaus+]
-    (let [hae-turvalaitteet #(q "SELECT id FROM turvalaite;")]
+    (let [hae-turvalaitteet #(q "SELECT id FROM vv_turvalaite;")]
       (is (= 0 (count (hae-turvalaitteet))) "Aluksi ei ole ainuttakaan turvalaitetta")
       (tg/paivita-turvalaitteet (:integraatioloki jarjestelma) (:db jarjestelma) +testiurl+)
       (is (= 2 (count (hae-turvalaitteet))) "Päivityksen jälkeen löytyy 2 turvalaitetta")
