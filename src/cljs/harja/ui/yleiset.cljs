@@ -338,9 +338,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      (keep-indexed
        (fn [i [otsikko arvo]]
          (when arvo
-           ^{:key (str i otsikko)}
            (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
                                      {:style {:display "auto"}})]
+             ^{:key (str i otsikko)}
              [:div.tietorivi (when (and kavenna?
                                         (not (jata-kaventamatta otsikko)))
                                {:style {:margin-bottom "0.5em"}})
