@@ -14,7 +14,8 @@
             [harja.fmt :as fmt]
             [reagent.core :as r]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
@@ -80,7 +81,8 @@
     :rivin-infolaatikko (fn [rivi data]
                           (if (some :valittu? data)
                             [toimenpiteiden-siirto rivi]
-                            [toimenpide-infolaatikossa rivi]))}
+                            [toimenpide-infolaatikossa rivi]))
+    :salli-valiotsikoiden-piilotus? true}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
