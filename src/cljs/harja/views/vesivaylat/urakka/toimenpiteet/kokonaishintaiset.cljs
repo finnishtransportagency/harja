@@ -54,11 +54,11 @@
        [:th {:style {:width "50%"}} "Kompo\u00ADnent\u00ADti"]
        [:th {:style {:width "25%"}} "Määrä"]
        [:th {:style {:width "25%"}} "Jäljellä"]]]
-     [:tbody]
-     [:tr
-      [:td "TODO"]
-      [:td "TODO"]
-      [:td "TODO"]]]]])
+     [:tbody
+      [:tr
+       [:td "TODO"]
+       [:td "TODO"]
+       [:td "TODO"]]]]]])
 
 (defn- paneelin-sisalto [toimenpiteet infolaatikko-nakyvissa? e!]
   [grid/grid
