@@ -158,28 +158,28 @@
 (defn- kasittele-rivin-klikkaus [{:keys [rivi-klikattu rivi-valinta-peruttu infolaatikko-nakyvissa? valittu-rivi
                                          mahdollista-rivin-valinta rivin-infolaatikko infolaatikon-tila-muuttui
                                          rivi]}]
-    ;; Rivin klikkaus
-    (when rivi-klikattu
-      (if (not= @valittu-rivi rivi)
-        (rivi-klikattu rivi)))
+  ;; Rivin klikkaus
+  (when rivi-klikattu
+    (if (not= @valittu-rivi rivi)
+      (rivi-klikattu rivi)))
 
-    ;; Rivin valinta
-    (when mahdollista-rivin-valinta
-      (if (= @valittu-rivi rivi)
-        ;; Saman rivin klikkaus
-        (do (reset! valittu-rivi nil)
-            (when rivi-valinta-peruttu
-              (rivi-valinta-peruttu rivi))
-            (when rivin-infolaatikko
-              (reset! infolaatikko-nakyvissa? false))
-            (when infolaatikon-tila-muuttui
-              (infolaatikon-tila-muuttui false)))
-        ;; Eri rivin klikkaus
-        (do (reset! valittu-rivi rivi)
-            (when rivin-infolaatikko
-              (reset! infolaatikko-nakyvissa? true))
-            (when infolaatikon-tila-muuttui
-              (infolaatikon-tila-muuttui true))))))
+  ;; Rivin valinta
+  (when mahdollista-rivin-valinta
+    (if (= @valittu-rivi rivi)
+      ;; Saman rivin klikkaus
+      (do (reset! valittu-rivi nil)
+          (when rivi-valinta-peruttu
+            (rivi-valinta-peruttu rivi))
+          (when rivin-infolaatikko
+            (reset! infolaatikko-nakyvissa? false))
+          (when infolaatikon-tila-muuttui
+            (infolaatikon-tila-muuttui false)))
+      ;; Eri rivin klikkaus
+      (do (reset! valittu-rivi rivi)
+          (when rivin-infolaatikko
+            (reset! infolaatikko-nakyvissa? true))
+          (when infolaatikon-tila-muuttui
+            (infolaatikon-tila-muuttui true))))))
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
@@ -769,6 +769,10 @@
       (aloita-muokkaus! tiedot))
 
     (komp/luo
+      (komp/sisaan #(when infolaatikon-tila-muuttui
+                      (infolaatikon-tila-muuttui false)))
+      (komp/ulos #(when infolaatikon-tila-muuttui
+                    (infolaatikon-tila-muuttui false)))
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL kasittele-scroll-event
                            EventType/RESIZE kasittele-resize-event)
