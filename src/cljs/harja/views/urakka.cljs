@@ -46,13 +46,13 @@
                    (not= sopimustyyppi :kokonaisurakka)
                    (not (u-domain/vesivayla-urakkatyyppi? tyyppi))
                    (not= tyyppi :tiemerkinta))
-    :toimenpiteet (and #_(oikeudet/urakat-vesivaylatoteumat id) ; TODO OIKEUSTARKISTUS!
+    :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                     (u-domain/vesivayla-urakkatyyppi? tyyppi)
                     (istunto/ominaisuus-kaytossa? :vesivayla))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
-    :turvalaitteet (and #_(oikeudet/urakat-turvalaitteet id) ; TODO OIKEUSTARKISTUS
+    :turvalaitteet (and (oikeudet/urakat-vesivayla-turvalaitteet id)
                      (u-domain/vesivayla-urakkatyyppi? tyyppi)
                      (istunto/ominaisuus-kaytossa? :vesivayla))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
@@ -65,7 +65,7 @@
                                  (= tyyppi :paikkaus))
     :laadunseuranta (and (oikeudet/urakat-laadunseuranta id)
                          (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
-    :laadunseuranta-vesivaylat (and #_(oikeudet/urakat-laadunseuranta-vesivaylat id) ; TODO OIKEUSTARKISTUS
+    :laadunseuranta-vesivaylat (and (oikeudet/urakat-vesivaylalaadunseuranta id)
                                  (u-domain/vesivayla-urakkatyyppi? tyyppi)
                                  (istunto/ominaisuus-kaytossa? :vesivayla))
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)

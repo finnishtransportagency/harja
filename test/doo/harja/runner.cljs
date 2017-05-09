@@ -40,6 +40,8 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.hallintayksikot-test]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -82,5 +84,7 @@
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.hallintayksikot-test
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat
            ;; uusi testi tähän
            )
