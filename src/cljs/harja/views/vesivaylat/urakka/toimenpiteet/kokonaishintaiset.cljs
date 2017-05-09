@@ -51,8 +51,7 @@
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :infolaatikon-tila-muuttui (fn [uusi]
-                                 ;; TODO Rikkoo infolaatikon jotenkin oudosti?
-                                 #_(e! (tiedot/->AsetaInfolaatikonTila uusi)))
+                                 (e! (tiedot/->AsetaInfolaatikonTila uusi)))
     :rivin-infolaatikko (fn [rivi]
                           (apply grid/gridin-infolaatikko (toimenpiteet-infolaatikkoon rivi)))}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}

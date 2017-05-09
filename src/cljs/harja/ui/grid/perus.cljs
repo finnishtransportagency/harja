@@ -713,8 +713,6 @@
                                  (reset! historia nil)
                                  (reset! viime-assoc nil)
                                  (reset! uusi-id 0)
-                                 (when rivi-valinta-peruttu (rivi-valinta-peruttu))
-                                 (reset! valittu-rivi nil)
                                  (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
                            (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
