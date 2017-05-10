@@ -355,16 +355,24 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
+(defn- toggle-valiotsikko [valiotsikko-id piilotetut-valiotsikot]
+  (if (@piilotetut-valiotsikot valiotsikko-id)
+    (swap! piilotetut-valiotsikot disj valiotsikko-id)
+    (swap! piilotetut-valiotsikot conj valiotsikko-id)))
+
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
-  [:tr.otsikko (when piilotetut-valiotsikot
-                 {:class "gridin-collapsoitava-valiotsikko"})
-   [:td {:colSpan colspan}
-    (when salli-valiotsikoiden-piilotus?
-      (if (piilotetut-valiotsikot (get-in otsikko-record [:optiot :id]))
-        (ikonit/livicon-minus)
-        (ikonit/livicon-plus)))
-    [:h5 teksti]]])
+  (let [valiotsikko-id (get-in otsikko-record [:optiot :id])]
+    [:tr.otsikko (when piilotetut-valiotsikot
+                   {:class "gridin-collapsoitava-valiotsikko klikattava"
+                    :on-click #(toggle-valiotsikko valiotsikko-id
+                                                   piilotetut-valiotsikot)})
+     [:td {:colSpan colspan}
+      (when salli-valiotsikoiden-piilotus?
+        (if (@piilotetut-valiotsikot valiotsikko-id)
+          (ikonit/livicon-plus)
+          (ikonit/livicon-minus)))
+      [:h5 teksti]]]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
@@ -568,7 +576,7 @@
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         mahdollista-rivin-valinta? (if rivin-infolaatikko true mahdollista-rivin-valinta?)
         rivien-maara (atom (count tiedot))
-        piilotetut-valiotsikot #{} ;; Setti väliotsikoita, joiden sisältö on piilossa
+        piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
