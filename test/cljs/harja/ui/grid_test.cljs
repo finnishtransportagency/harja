@@ -5,7 +5,8 @@
             [reagent.core :as r]
             [clojure.string :as str]
             [harja.loki :refer [log tarkkaile! error]]
-            [cljs-react-test.simulate :as sim])
+            [cljs-react-test.simulate :as sim]
+            [harja.ui.grid :as grid])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -205,3 +206,19 @@
 
       "Toimintonappeja ei ole"
       (is (= "Kumoa" (u/text (u/sel1 :button)))))))
+
+(deftest rivi-piilotetun-otsikon-alla
+  (let [testirivit [(grid/otsikko "A" {:id :A}) 1 2 3 4
+                    (grid/otsikko "B" {:id :B}) 5 6
+                    (grid/otsikko "C" {:id :C}) 7 8]]
+    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 1 #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 2 #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 9 #{:B})))
+
+    (is (true? (g/rivi-piilotetun-otsikon-alla? testirivit 6 #{:B})))
+    (is (true? (g/rivi-piilotetun-otsikon-alla? testirivit 7 #{:B})))
+
+    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 0 #{:B}))
+        "Otsikkorivi ei koskaan ole piilotetun otsikon alla")
+    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 5 #{:B}))
+        "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))

@@ -360,6 +360,18 @@
     (swap! piilotetut-valiotsikot disj valiotsikko-id)
     (swap! piilotetut-valiotsikot conj valiotsikko-id)))
 
+(defn rivi-piilotetun-otsikon-alla? [rivit nykyinen-rivi-indeksi piilotetut-otsikot]
+  (if (otsikko? (get rivit nykyinen-rivi-indeksi))
+    false
+    (let [otsikot (filter otsikko? rivit)
+          otsikoiden-indeksit (map #(.indexOf rivit %) otsikot)
+          nykyista-rivia-edeltavat-otsikkoindeksit (filter #(< % nykyinen-rivi-indeksi) otsikoiden-indeksit)
+          nykyisen-rivin-otsikon-indeksi (when-not (empty? nykyista-rivia-edeltavat-otsikkoindeksit)
+                                           (apply max nykyista-rivia-edeltavat-otsikkoindeksit))]
+      (boolean (piilotetut-otsikot (get-in (get rivit nykyisen-rivin-otsikon-indeksi)
+                                           [:optiot :id]))))))
+
+
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])]
