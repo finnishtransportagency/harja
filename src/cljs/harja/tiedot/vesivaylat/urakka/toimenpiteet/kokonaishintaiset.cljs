@@ -279,6 +279,7 @@
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseTyolaji [tiedot])
+(defrecord ValitseVayla [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
 (extend-protocol tuck/Event
@@ -301,6 +302,16 @@
     (let [tyolaji (:tyolaji tiedot)
           valinta (:valinta tiedot)
           paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
+                                           (assoc % :valittu? valinta)
+                                           %)
+                                        toimenpiteet)]
+      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
+
+  ValitseVayla
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+    (let [vayla-id (:vayla-id tiedot)
+          valinta (:valinta tiedot)
+          paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla :id]) vayla-id)
                                            (assoc % :valittu? valinta)
                                            %)
                                         toimenpiteet)]

@@ -10,7 +10,8 @@
                 :infolaatikko-nakyvissa? false
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"
+                                            :id 1}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
@@ -18,7 +19,8 @@
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 1
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"
+                                            :id 1}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
@@ -26,35 +28,40 @@
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"
+                                            :id 1}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 3
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"
+                                            :id 2}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
-                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"
+                                            :id 2}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 5
                                 ::to/tyolaji :poijut
-                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"
+                                            :id 2}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                                {::to/id 6
                                 ::to/tyolaji :poijut
-                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
+                                ::to/vayla {:nimi "Varkaus, Kuopion väylä"
+                                            :id 2}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
@@ -105,3 +112,20 @@
           uusi-tila (e! (tiedot/->AsetaInfolaatikonTila true) vanha-tila)]
       (is (false? (:infolaatikko-nakyvissa? vanha-tila)))
       (is (true? (:infolaatikko-nakyvissa? uusi-tila))))))
+
+(deftest vaylan-rivien-valinta
+  (testing "Valitaan Iisalmen väylä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+                                                  :valinta true})
+                        vanha-tila)
+          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
+      (every? true? (map :valittu? viitat))))
+
+  (testing "Asetetaan valinnat pois Iisalmen väylältä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+                                                :valinta false})
+                        vanha-tila)
+          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
+      (every? false? (map :valittu? viitat)))))
