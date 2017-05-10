@@ -32,7 +32,9 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
             [harja.ui.lomake :as lomake]
-            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
+            [harja.ui.kentat :as kentat]
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -211,6 +213,35 @@
         [paivystajalista ur @paivystajat
          (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            #(tallenna-paivystajat ur paivystajat %))]))))
+
+(defn urakan-tyotuntilista [ur tyotunnit tallenna!]
+  [:div
+   [grid/grid
+    {:otsikko "Työtunnit"
+     :tyhja "Ei työtunteja."
+     :tallenna tallenna!}
+    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero}
+     {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
+    tyotunnit]])
+
+(defn urakan-tyotunnit [{:keys [id alkupvm loppupvm] :as urakka}]
+  (let [vuodet (reverse (map #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
+        tyotunnit (atom nil)
+        hae! (fn [urakka-id]
+               (reset! tyotunnit vuodet)
+               #_(go (reset! tyotunnit
+                             (reverse (sort-by :loppu
+                                               (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+    (hae! id)
+    (komp/luo
+      (komp/kun-muuttuu (comp hae! :id :vuosi))
+      (fn [ur]
+        [urakan-tyotuntilista ur @tyotunnit
+         (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+           (fn [_])
+           #_(tallenna-paivystajat ur paivystajat %))]))))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
@@ -560,4 +591,5 @@
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat ur])]))))
+           [paivystajat ur])
+         [urakan-tyotunnit ur]]))))

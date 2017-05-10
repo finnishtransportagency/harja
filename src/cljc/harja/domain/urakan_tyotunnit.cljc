@@ -14,7 +14,7 @@
 
 (define-tables
   ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut
-                                                              "urakka" ::urakka-id}])
+                                          "urakka" ::urakka-id}])
 
 (s/def ::urakan-tyotunnit-vuosikolmanneksittain (s/coll-of ::urakan-tyotunnit))
 
