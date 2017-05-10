@@ -74,7 +74,6 @@
 
       (sampo-vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) +lahetysjono-ulos+)
       (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
-      (println "HÖHÖÖ " (pr-str @viestit))
       (is (= "424242.2"
              (-> @viestit
                  first
