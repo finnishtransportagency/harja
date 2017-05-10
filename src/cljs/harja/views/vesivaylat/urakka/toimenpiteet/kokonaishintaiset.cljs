@@ -120,7 +120,8 @@
                     ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
                     ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
                     ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
-                    ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki
+                    ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
+                    ;; Ja entäs otsikkorivit?
                     [kentat/tee-kentta
                      {:tyyppi :checkbox}
                      (r/wrap (:valittu? rivi)
