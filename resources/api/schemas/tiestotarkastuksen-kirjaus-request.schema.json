@@ -14,7 +14,7 @@
     "tarkastukset": {
       "id": "urn:harja/tarkastukset",
       "type": "array",
-      "maxItems": 1000,
+      "maxItems": 2000,
       "items": {
         "id": "urn:harja/tarkastukset/0",
         "type": "object",
