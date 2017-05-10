@@ -355,14 +355,43 @@
                      tallenna))
         [:th.toiminnot {:width "40px"} " "])]]))
 
-(defn- valiotsikko [{:keys [colspan teksti]}]
-  [:tr.otsikko
-   [:td {:colSpan colspan}
-    [:h5 teksti]]])
+(defn- toggle-valiotsikko [valiotsikko-id piilotetut-valiotsikot]
+  (if (@piilotetut-valiotsikot valiotsikko-id)
+    (swap! piilotetut-valiotsikot disj valiotsikko-id)
+    (swap! piilotetut-valiotsikot conj valiotsikko-id)))
+
+(defn rivi-piilotetun-otsikon-alla? [rivi-indeksi rivit piilotetut-otsikot]
+  (assert (vector? rivit) "Rivien täytyy olla vector")
+  (if (otsikko? (get rivit rivi-indeksi))
+    false
+    (let [otsikot (filter otsikko? rivit)
+          otsikoiden-indeksit (map #(.indexOf rivit %) otsikot)
+          nykyista-rivia-edeltavat-otsikkoindeksit (filter #(< % rivi-indeksi) otsikoiden-indeksit)
+          nykyisen-rivin-otsikon-indeksi (when-not (empty? nykyista-rivia-edeltavat-otsikkoindeksit)
+                                           (apply max nykyista-rivia-edeltavat-otsikkoindeksit))]
+      (boolean (piilotetut-otsikot (get-in (get rivit nykyisen-rivin-otsikon-indeksi)
+                                           [:optiot :id]))))))
+
+
+(defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
+                            piilotetut-valiotsikot]}]
+  (let [valiotsikko-id (get-in otsikko-record [:optiot :id])]
+    [:tr.otsikko (when salli-valiotsikoiden-piilotus?
+                   {:class "gridin-collapsoitava-valiotsikko klikattava"
+                    :on-click #(toggle-valiotsikko valiotsikko-id
+                                                   piilotetut-valiotsikot)})
+     [:td {:colSpan colspan}
+      (when salli-valiotsikoiden-piilotus?
+        (if (@piilotetut-valiotsikot valiotsikko-id)
+          (ikonit/livicon-plus)
+          (ikonit/livicon-minus)))
+      [:h5 teksti]]]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
+                                       salli-valiotsikoiden-piilotus?
+                                       piilotetut-valiotsikot tiedot
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
   (let [muokatut @muokatut
@@ -380,44 +409,49 @@
         (doall (mapcat #(keep identity %)
                        (map-indexed
                          (fn [i id]
+
                            (if (otsikko? id)
                              (let [teksti (:teksti id)]
                                [^{:key teksti}
-                               [valiotsikko {:colspan colspan :teksti teksti}]])
-                             (let [rivi (get muokatut id)
-                                   rivin-virheet (get kaikki-virheet id)
-                                   rivin-varoitukset (get kaikki-varoitukset id)
-                                   rivin-huomautukset (get kaikki-huomautukset id)]
-                               (when-not (or (:yhteenveto rivi) (:poistettu rivi))
-                                 [^{:key id}
-                                 [muokkausrivi {:ohjaus ohjaus
-                                                :vetolaatikot vetolaatikot
-                                                :muokkaa! muokkaa!
-                                                :luokka (str (if (even? (+ i 1))
-                                                               "parillinen"
-                                                               "pariton"))
-                                                :id id
-                                                :rivin-virheet rivin-virheet
-                                                :rivin-varoitukset rivin-varoitukset
-                                                :rivin-huomautukset rivin-huomautukset
-                                                :voi-poistaa? voi-poistaa?
-                                                :esta-poistaminen? esta-poistaminen?
-                                                :esta-poistaminen-tooltip esta-poistaminen-tooltip
-                                                :fokus nykyinen-fokus
-                                                :aseta-fokus! #(reset! fokus %)
-                                                :tulevat-rivit (tulevat-rivit i)
-                                                :piilota-toiminnot? piilota-toiminnot?
-                                                :voi-muokata-rivia? voi-muokata-rivia?
-                                                :tallennus-kaynnissa? tallennus-kaynnissa?}
-                                  skeema rivi i]
-                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
+                               [valiotsikko {:colspan colspan :teksti teksti :otsikko-record id
+                                             :piilotetut-valiotsikot piilotetut-valiotsikot
+                                             :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
+                             (when-not (rivi-piilotetun-otsikon-alla? i (vec tiedot) @piilotetut-valiotsikot)
+                               (let [rivi (get muokatut id)
+                                     rivin-virheet (get kaikki-virheet id)
+                                     rivin-varoitukset (get kaikki-varoitukset id)
+                                     rivin-huomautukset (get kaikki-huomautukset id)]
+                                 (when-not (or (:yhteenveto rivi) (:poistettu rivi))
+                                   [^{:key id}
+                                   [muokkausrivi {:ohjaus ohjaus
+                                                  :vetolaatikot vetolaatikot
+                                                  :muokkaa! muokkaa!
+                                                  :luokka (str (if (even? (+ i 1))
+                                                                 "parillinen"
+                                                                 "pariton"))
+                                                  :id id
+                                                  :rivin-virheet rivin-virheet
+                                                  :rivin-varoitukset rivin-varoitukset
+                                                  :rivin-huomautukset rivin-huomautukset
+                                                  :voi-poistaa? voi-poistaa?
+                                                  :esta-poistaminen? esta-poistaminen?
+                                                  :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                                  :fokus nykyinen-fokus
+                                                  :aseta-fokus! #(reset! fokus %)
+                                                  :tulevat-rivit (tulevat-rivit i)
+                                                  :piilota-toiminnot? piilota-toiminnot?
+                                                  :voi-muokata-rivia? voi-muokata-rivia?
+                                                  :tallennus-kaynnissa? tallennus-kaynnissa?}
+                                    skeema rivi i]
+                                    (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))))
                          jarjestys)))))))
 
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
                                      rivin-infolaatikko infolaatikko-nakyvissa? infolaatikon-tila-muuttui
                                      vetolaatikot tallenna rivi-klikattu rivin-luokka valittu-rivi
+                                     piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
-                                     nayta-toimintosarake? skeema vetolaatikot-auki]}]
+                                     nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
     (if (empty? rivit)
       [:tr.tyhja [:td {:col-span colspan} tyhja]]
@@ -430,36 +464,40 @@
                     (fn [i rivi]
                       (if (otsikko? rivi)
                         [^{:key (:teksti rivi)}
-                        [valiotsikko {:colspan colspan :teksti (:teksti rivi)}]]
+                        [valiotsikko {:colspan colspan :teksti (:teksti rivi)
+                                      :otsikko-record rivi
+                                      :piilotetut-valiotsikot piilotetut-valiotsikot
+                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                        (let [id (tunniste rivi)]
-                          [^{:key id}
-                          [nayttorivi {:ohjaus ohjaus
-                                       :vetolaatikot vetolaatikot
-                                       :id id
-                                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
-                                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
-                                       :tallenna tallenna
-                                       :luokka (str (if (even? (+ i 1))
-                                                      "parillinen "
-                                                      "pariton ")
-                                                    (when (or rivi-klikattu rivin-infolaatikko)
-                                                      "klikattava ")
-                                                    (when (:korosta rivi) "korostettu-rivi ")
-                                                    (when (:lihavoi rivi) "bold ")
-                                                    (when (:yhteenveto rivi) "yhteenveto ")
-                                                    (when rivin-luokka
-                                                      (rivin-luokka rivi)))
-                                       :rivi-klikattu rivi-klikattu
-                                       :rivin-infolaatikko rivin-infolaatikko
-                                       :rivi-valinta-peruttu rivi-valinta-peruttu
-                                       :valittu-rivi valittu-rivi
-                                       :data tiedot
-                                       :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
-                                       :piilota-toiminnot? piilota-toiminnot?
-                                       :nayta-toimintosarake? nayta-toimintosarake?}
-                           skeema rivi i]
-                           (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
+                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                          (let [id (tunniste rivi)]
+                            [^{:key id}
+                            [nayttorivi {:ohjaus ohjaus
+                                         :vetolaatikot vetolaatikot
+                                         :id id
+                                         :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                                         :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
+                                         :tallenna tallenna
+                                         :luokka (str (if (even? (+ i 1))
+                                                        "parillinen "
+                                                        "pariton ")
+                                                      (when (or rivi-klikattu rivin-infolaatikko)
+                                                        "klikattava ")
+                                                      (when (:korosta rivi) "korostettu-rivi ")
+                                                      (when (:lihavoi rivi) "bold ")
+                                                      (when (:yhteenveto rivi) "yhteenveto ")
+                                                      (when rivin-luokka
+                                                        (rivin-luokka rivi)))
+                                         :rivi-klikattu rivi-klikattu
+                                         :rivin-infolaatikko rivin-infolaatikko
+                                         :rivi-valinta-peruttu rivi-valinta-peruttu
+                                         :valittu-rivi valittu-rivi
+                                         :data tiedot
+                                         :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
+                                         :piilota-toiminnot? piilota-toiminnot?
+                                         :nayta-toimintosarake? nayta-toimintosarake?}
+                             skeema rivi i]
+                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
 
 (defn grid
@@ -508,6 +546,9 @@
                                         Funktiota kutsutaan rivin tiedoilla.
   :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
+  :salli-valiotsikoiden-piilotus?       Jos true, väliotsikoiden sisällön voi piilottaa klikkaamalla riviä
+  :valiotsikoiden-alkutila              Jos väliotsikot on sallittu piilottaa, tämä määrittää, mitkä otsikot ovat
+                                        oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
@@ -532,10 +573,11 @@
   :voi-muokata-rivia?                   predikaattifunktio, jolla voidaan määrittää jolla voidaan määrittää kaikille
                                         riveille yhteinen sääntö milloin rivejä saa muokata
   "
-  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
+  [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
+           valiotsikoiden-alkutila
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -552,6 +594,8 @@
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         mahdollista-rivin-valinta? (if rivin-infolaatikko true mahdollista-rivin-valinta?)
         rivien-maara (atom (count tiedot))
+        piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
+        valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
@@ -707,7 +751,20 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-
+        maarita-valiotsikoiden-alkutila! (fn [{:keys [valiotsikoiden-alkutila-maaritelty?
+                                                      salli-valiotsikoiden-piilotus?
+                                                      valiotsikoiden-alkutila
+                                                      piilotetut-valiotsikot
+                                                      tiedot]}]
+                                           (when (and (not @valiotsikoiden-alkutila-maaritelty?)
+                                                      salli-valiotsikoiden-piilotus?)
+                                             (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
+                                                          (set (keep #(when (otsikko? %)
+                                                                        (get-in % [:optiot :id]))
+                                                                     tiedot))
+                                                          #{})]
+                                               (reset! piilotetut-valiotsikot tila)
+                                               (reset! valiotsikoiden-alkutila-maaritelty? true))))
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
@@ -786,6 +843,11 @@
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
+         (maarita-valiotsikoiden-alkutila! {:valiotsikoiden-alkutila-maaritelty? valiotsikoiden-alkutila-maaritelty?
+                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
+                                            :valiotsikoiden-alkutila valiotsikoiden-alkutila
+                                            :piilotetut-valiotsikot piilotetut-valiotsikot
+                                            :tiedot tiedot})
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))
@@ -856,20 +918,25 @@
                                            :huomautukset huomautukset :fokus fokus :ohjaus ohjaus
                                            :vetolaatikot vetolaatikot :muokkaa! muokkaa!
                                            :voi-poistaa? voi-poistaa?
+                                           :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
                                            :esta-poistaminen? esta-poistaminen?
                                            :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                            :piilota-toiminnot? piilota-toiminnot?
                                            :voi-muokata-rivia? voi-muokata-rivia?
+                                           :tiedot tiedot
+                                           :piilotetut-valiotsikot piilotetut-valiotsikot
                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa})
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
+                                         :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
                                          :vetolaatikot vetolaatikot :tallenna tallenna
                                          :rivi-klikattu rivi-klikattu
                                          :rivin-infolaatikko rivin-infolaatikko
                                          :rivin-luokka rivin-luokka
                                          :valittu-rivi valittu-rivi
+                                         :piilotetut-valiotsikot piilotetut-valiotsikot
                                          :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                                          :rivi-valinta-peruttu rivi-valinta-peruttu
                                          :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
