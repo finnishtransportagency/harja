@@ -341,6 +341,31 @@ tr.otsikko {
   background-color: @harmaa5;
   color: @valkoinen;
 
+  td {
+    position: relative;
+
+    span[class^="livicon"] {
+      position: absolute;
+      left: 5px;
+      top: 10px;
+    }
+  }
+}
+
+.gridin-collapsoitava-valiotsikko {
+  td {
+    position: relative;
+
+    h5 {
+      margin-left: 20px;
+    }
+
+    span[class^="livicon"] {
+      position: absolute;
+      left: 5px;
+      top: 12px;
+    }
+  }
 }
 
 > * {

@@ -357,8 +357,13 @@
 
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
-  [:tr.otsikko
+  [:tr.otsikko (when piilotetut-valiotsikot
+                 {:class "gridin-collapsoitava-valiotsikko"})
    [:td {:colSpan colspan}
+    (when salli-valiotsikoiden-piilotus?
+      (if (piilotetut-valiotsikot (get-in otsikko-record [:optiot :id]))
+        (ikonit/livicon-minus)
+        (ikonit/livicon-plus)))
     [:h5 teksti]]])
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset

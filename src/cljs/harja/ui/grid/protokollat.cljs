@@ -26,7 +26,7 @@
 
   Optiot on map, jossa voi olla:
   :id           Otsikkorivin yksilöivä id (vaaditaan jos otsikkorivit halutaan piilottaa gridissä)
-                Jos ei anneta, uniikki id generoidaan."
+                Jos ei anneta, generoidaan uniikki id."
   ([teksti] (otsikko teksti {}))
   ([teksti optiot]
    (assert (not (nil? teksti)) "Anna otsikolle teksti.")
