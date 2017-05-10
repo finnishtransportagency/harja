@@ -83,6 +83,7 @@
                             [toimenpiteiden-siirto rivi]
                             [toimenpide-infolaatikossa rivi]))
     :salli-valiotsikoiden-piilotus? true
+    :ei-footer-muokkauspaneelia? true
     :valiotsikoiden-alkutila :kaikki-kiinni}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}

@@ -564,6 +564,7 @@
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                                         jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
+  :ei-footer-muokkauspaneelia?          Jos true, muokkauspaneelia ei koskaan piirretä gridin alaosaan.
   :vetolaatikot-auki                    Ulkopuolelta annettu tila vetolaatikoille (atom, jonka arvo on setti)
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
   :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
@@ -577,7 +578,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
-           valiotsikoiden-alkutila
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -951,9 +952,10 @@
             (when (and muokataan muokkaa-footer)
               [muokkaa-footer ohjaus])]
            ;; Taulukon allekin muokkaustoiminnot jos rivejä
-           ;; yli rajamäärän (joko muokkaus- tai näyttötila)
-           (when (> (count (or @muokatut tiedot))
-                    +rivimaara-jonka-jalkeen-napit-alaskin+)
+           ;; yli rajamäärän (joko muokkaus- tai näyttötila), eikä tätä ole erikseen estetty
+           (when (and (> (count (or @muokatut tiedot))
+                         +rivimaara-jonka-jalkeen-napit-alaskin+)
+                      (not ei-footer-muokkauspaneelia?))
              [:span.gridin-napit-alhaalla
               (muokkauspaneeli {:nayta-otsikko? false :muokataan muokataan :tallenna tallenna
                                 :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
