@@ -302,6 +302,11 @@
                                 #{(::t/liikenteenohjaaja ilm)})
                 (pvm-ja-aika "alkaa" (::t/pysaytysten-alku ilm))
                 (pvm-ja-aika "päättyy" (::t/pysaytysten-loppu ilm))])]
+       [(tieto "Liikenteenohjaus"
+               [:fo:block
+                (checkbox-lista [["Ohjataan vuorotellen" "ohjataanVuorotellen"]
+                                 ["Ohjataan kaksisuuntaisena" "ohjataanKaksisuuntaisena"]]
+                                #{(::t/liikenteenohjaus ilm)})])]
        [(tieto "Arvioitu viivytys"
                [:fo:block
                 (sisennetty-arvo (::t/viivastys-normaali-liikenteessa ilm) "(min, normaali liikenne)")
