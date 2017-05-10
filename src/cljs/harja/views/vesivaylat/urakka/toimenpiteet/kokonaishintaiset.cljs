@@ -18,10 +18,19 @@
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn- paneelin-otsikko [otsikko maara]
+  (str otsikko
+       " ("
+       maara
+       (when (not= maara 0)
+         "kpl")
+       ")"))
+
 (defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
   (let [vaylalla-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
         vaylat (keys vaylalla-ryhmiteltyna)]
-    (vec (mapcat #(-> (cons (grid/otsikko (:nimi %))
+    (vec (mapcat #(-> (cons (grid/otsikko (paneelin-otsikko (:nimi %)
+                                                            (count (to/toimenpiteet-vaylalla toimenpiteet (:id %)))))
                             (get vaylalla-ryhmiteltyna %)))
                  vaylat))))
 
@@ -104,14 +113,6 @@
                                                                 :valinta uusi}))))])
      :leveys 5}]
    toimenpiteet])
-
-(defn- paneelin-otsikko [otsikko maara]
-  (str otsikko
-       " ("
-       maara
-       (when (not= maara 0)
-         "kpl")
-       ")"))
 
 (defn- luo-otsikkorivit [e! toimenpiteet]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]

@@ -119,6 +119,9 @@
 (defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
+(defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
+  (filter #(= (get-in % [::vayla :id]) vayla-id) toimenpiteet))
+
 (def tyolajit (vals reimari-tyolajit))
 
 (def tyolaji-fmt
