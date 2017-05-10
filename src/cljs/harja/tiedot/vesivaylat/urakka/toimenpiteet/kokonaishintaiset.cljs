@@ -12,7 +12,7 @@
          ;; TODO Testidataa vain
          :toimenpiteet [{::to/id 0
                          ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
+                         ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                          ::to/tyoluokka "Asennus ja huolto"
                          ::to/toimenpide "Huoltotyö"
                          ::to/pvm (pvm/nyt)
@@ -27,7 +27,7 @@
                          ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
                         {::to/id 2
                          ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
+                         ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                          ::to/tyoluokka "Asennus ja huolto"
                          ::to/toimenpide "Huoltotyö"
                          ::to/pvm (pvm/nyt)

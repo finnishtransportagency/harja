@@ -10,7 +10,7 @@
                 :infolaatikko-nakyvissa? false
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
@@ -26,7 +26,7 @@
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
-                                ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
+                                ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
