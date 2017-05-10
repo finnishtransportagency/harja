@@ -141,14 +141,14 @@
             :muokattava? (constantly false)
             :tyyppi :string
             :tasaa :oikea
-            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
+            :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
             :leveys 3}
            {:otsikko "Kais\u00ADta"
             :muokattava? (constantly false)
             :nimi :tr-kaista
             :tyyppi :string
             :tasaa :oikea
-            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
+            :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
             :leveys 3}
            {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
             :tyyppi :positiivinen-numero
