@@ -53,14 +53,29 @@
       (is (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" sampoon-lahetetty-kustannussuunnitelma)))))
 
 (deftest lahetettavat-maksuerat
-  (with-redefs [qm/hae-likaiset-maksuerat (constantly (list {:numero +testi-maksueran-numero+, :urakkaid 104, :tpi_id +testi-maksueran-numero+}))
-                qk/hae-likaiset-kustannussuunnitelmat (constantly (list {:maksuera +testi-maksueran-numero+, :urakkaid 104, :tpi_id +testi-maksueran-numero+}))
-                qm/hae-urakan-maksuerien-summat (constantly (list {:akillinen-hoitotyo 0.0M, :yksikkohintainen 0.0M, :sakko -3000.0M, :muu 0.0M, :indeksi nil, :bonus 0.0M, :lisatyo 100.29M, :urakka_id 104, :kokonaishintainen 424242.2M, :tpi_id +testi-maksueran-numero+} ))]
+  (with-redefs [qm/hae-likaiset-maksuerat (constantly (list {:numero +testi-maksueran-numero+
+                                                             :urakkaid 104
+                                                             :tpi_id +testi-maksueran-numero+}))
+                qk/hae-likaiset-kustannussuunnitelmat (constantly (list {:maksuera +testi-maksueran-numero+
+                                                                         :urakkaid 104
+                                                                         :tpi_id +testi-maksueran-numero+}))
+                qm/hae-urakan-maksuerien-summat (constantly (list {:akillinen-hoitotyo 0.0M
+                                                                   :yksikkohintainen 0.0M
+                                                                   :sakko -3000.0M
+                                                                   :muu 0.0M
+                                                                   :indeksi nil
+                                                                   :bonus 0.0M
+                                                                   :lisatyo 100.29M
+                                                                   :urakka_id 104
+                                                                   :kokonaishintainen 424242.2M
+                                                                   :tpi_id +testi-maksueran-numero+}))]
     (let [viestit (atom [])]
       (sonja/kuuntele (:sonja jarjestelma) +lahetysjono-ulos+ #(swap! viestit conj (.getText %)))
 
       (sampo-vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) +lahetysjono-ulos+)
-      (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
+      (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma
+että maksuerä on lähetetty." 10000)
+      (println "HÖHÖÖ " (pr-str @viestit))
       (is (= "424242.2"
              (-> @viestit
                  first
