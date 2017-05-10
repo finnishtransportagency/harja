@@ -18,8 +18,8 @@
 
 (s/def ::urakan-tyotunnit-vuosikolmanneksittain (s/coll-of ::urakan-tyotunnit))
 
-(s/def ::urakan-tyotunntien-haku (s/keys :req [::urakka-id]
-                                         :opt [::vuosi ::vuosikolmannes]))
+(s/def ::urakan-tyotuntien-haku (s/keys :req [::urakka-id]
+                                        :opt [::vuosi ::vuosikolmannes]))
 
 (s/def ::urakan-kuluvan-vuosikolmanneksen-tyotuntien-haku (s/keys :req [::urakka-id]))
 

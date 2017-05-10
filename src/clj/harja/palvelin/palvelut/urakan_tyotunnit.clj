@@ -29,7 +29,7 @@
                       :hae-urakan-tyotunnit
                       (fn [kayttaja {urakka-id ::urakan-tyotunnit-d/urakka-id}]
                         (hae-urakan-tyotunnit db kayttaja urakka-id))
-                      {:kysely-spec ::urakan-tyotunnit-d/urakka-id
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotuntien-haku
                        :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain})
 
     (julkaise-palvelu http

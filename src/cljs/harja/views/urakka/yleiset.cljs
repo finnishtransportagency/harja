@@ -31,10 +31,10 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
+            [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.ui.kentat :as kentat]
-            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit])
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -233,9 +233,11 @@
         tyotunnit (atom nil)
         hae! (fn [urakka-id]
                (reset! tyotunnit vuodet)
-               #_(go (reset! tyotunnit
-                             (reverse (sort-by :loppu
-                                               (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+               (go
+                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
+                   (log "--->>>" (pr-str vastaus))
+                   #_(if (k/virhe? vastaus)
+                     ))))]
     (hae! id)
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id :vuosi))
