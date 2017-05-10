@@ -360,12 +360,13 @@
     (swap! piilotetut-valiotsikot disj valiotsikko-id)
     (swap! piilotetut-valiotsikot conj valiotsikko-id)))
 
-(defn rivi-piilotetun-otsikon-alla? [rivit nykyinen-rivi-indeksi piilotetut-otsikot]
-  (if (otsikko? (get rivit nykyinen-rivi-indeksi))
+(defn rivi-piilotetun-otsikon-alla? [rivi-indeksi rivit piilotetut-otsikot]
+  (assert (vector? rivit) "Rivien täytyy olla vector")
+  (if (otsikko? (get rivit rivi-indeksi))
     false
     (let [otsikot (filter otsikko? rivit)
           otsikoiden-indeksit (map #(.indexOf rivit %) otsikot)
-          nykyista-rivia-edeltavat-otsikkoindeksit (filter #(< % nykyinen-rivi-indeksi) otsikoiden-indeksit)
+          nykyista-rivia-edeltavat-otsikkoindeksit (filter #(< % rivi-indeksi) otsikoiden-indeksit)
           nykyisen-rivin-otsikon-indeksi (when-not (empty? nykyista-rivia-edeltavat-otsikkoindeksit)
                                            (apply max nykyista-rivia-edeltavat-otsikkoindeksit))]
       (boolean (piilotetut-otsikot (get-in (get rivit nykyisen-rivin-otsikon-indeksi)
@@ -467,34 +468,35 @@
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                        (let [id (tunniste rivi)]
-                          [^{:key id}
-                          [nayttorivi {:ohjaus ohjaus
-                                       :vetolaatikot vetolaatikot
-                                       :id id
-                                       :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
-                                       :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
-                                       :tallenna tallenna
-                                       :luokka (str (if (even? (+ i 1))
-                                                      "parillinen "
-                                                      "pariton ")
-                                                    (when (or rivi-klikattu rivin-infolaatikko)
-                                                      "klikattava ")
-                                                    (when (:korosta rivi) "korostettu-rivi ")
-                                                    (when (:lihavoi rivi) "bold ")
-                                                    (when (:yhteenveto rivi) "yhteenveto ")
-                                                    (when rivin-luokka
-                                                      (rivin-luokka rivi)))
-                                       :rivi-klikattu rivi-klikattu
-                                       :rivin-infolaatikko rivin-infolaatikko
-                                       :rivi-valinta-peruttu rivi-valinta-peruttu
-                                       :valittu-rivi valittu-rivi
-                                       :data tiedot
-                                       :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
-                                       :piilota-toiminnot? piilota-toiminnot?
-                                       :nayta-toimintosarake? nayta-toimintosarake?}
-                           skeema rivi i]
-                           (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
+                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                          (let [id (tunniste rivi)]
+                            [^{:key id}
+                            [nayttorivi {:ohjaus ohjaus
+                                         :vetolaatikot vetolaatikot
+                                         :id id
+                                         :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                                         :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
+                                         :tallenna tallenna
+                                         :luokka (str (if (even? (+ i 1))
+                                                        "parillinen "
+                                                        "pariton ")
+                                                      (when (or rivi-klikattu rivin-infolaatikko)
+                                                        "klikattava ")
+                                                      (when (:korosta rivi) "korostettu-rivi ")
+                                                      (when (:lihavoi rivi) "bold ")
+                                                      (when (:yhteenveto rivi) "yhteenveto ")
+                                                      (when rivin-luokka
+                                                        (rivin-luokka rivi)))
+                                         :rivi-klikattu rivi-klikattu
+                                         :rivin-infolaatikko rivin-infolaatikko
+                                         :rivi-valinta-peruttu rivi-valinta-peruttu
+                                         :valittu-rivi valittu-rivi
+                                         :data tiedot
+                                         :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
+                                         :piilota-toiminnot? piilota-toiminnot?
+                                         :nayta-toimintosarake? nayta-toimintosarake?}
+                             skeema rivi i]
+                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
 
 (defn grid

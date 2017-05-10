@@ -211,14 +211,14 @@
   (let [testirivit [(grid/otsikko "A" {:id :A}) 1 2 3 4
                     (grid/otsikko "B" {:id :B}) 5 6
                     (grid/otsikko "C" {:id :C}) 7 8]]
-    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 1 #{:B})))
-    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 2 #{:B})))
-    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 9 #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 1 testirivit #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 2 testirivit #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 9 testirivit #{:B})))
 
-    (is (true? (g/rivi-piilotetun-otsikon-alla? testirivit 6 #{:B})))
-    (is (true? (g/rivi-piilotetun-otsikon-alla? testirivit 7 #{:B})))
+    (is (true? (g/rivi-piilotetun-otsikon-alla? 6 testirivit #{:B})))
+    (is (true? (g/rivi-piilotetun-otsikon-alla? 7 testirivit #{:B})))
 
-    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 0 #{:B}))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 0 testirivit #{:B}))
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")
-    (is (false? (g/rivi-piilotetun-otsikon-alla? testirivit 5 #{:B}))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 5 testirivit #{:B}))
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))
