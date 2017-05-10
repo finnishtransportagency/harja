@@ -134,4 +134,6 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Vesiväylät
 
-\i testidata/vesivaylat/urakat_ja_toimenpiteet.sql
+\i testidata/vesivaylat/vesivaylien_urakat.sql
+\i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
+\i testidata/vesivaylat/vesivaylien_toimenpiteet.sql

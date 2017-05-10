@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 sp1 (x64) (http://www.altova.com) by self (self) -->
+<xs:schema xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari"
+	   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	   targetNamespace="http://www.liikennevirasto.fi/xsd/harja/reimari"
+	   elementFormDefault="qualified">
+
+  <xs:element name="HaeToimenpiteet" type="HaeToimenpiteetPayload"/>
+
+  <xs:complexType name="HaeToimenpiteetPayload">
+    <xs:choice>
+      <xs:element name="HaeToimenpiteetRequest" type="HaeToimenpiteetRequestType"/>
+      <xs:element name="HaeToimenpiteetResponse" type="HaeToimenpiteetResponseType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- HaeToimenpiteetRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
+       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <xs:complexType name="HaeToimenpiteetRequestType">
+    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut toimenpiteet
+       sekä niihin linkitetyt tiedot. -->
+  <xs:complexType name="HaeToimenpiteetResponseType">
+    <xs:sequence>
+      <xs:element name="toimenpide" type="ToimenpideType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Toimenpide sisältää itse toimenpiteen tiedot -->
+  <xs:complexType name="ToimenpideType">
+
+    <xs:all>
+      <xs:element name="urakoitsija" type="UrakoitsijaType"/>
+      <xs:element name="sopimus" type="SopimusType"/>
+      <xs:element name="alus" type="AlusType" minOccurs="0"/>
+      <xs:element name="vayla" type="VaylaType"/>
+      <xs:element name="turvalaite" type="TurvalaiteType"/>
+    </xs:all>
+
+    <xs:attribute type="xs:string" name="id" use="required"/>
+    <xs:attribute type="xs:token" name="tyolaji" use="required"/> <!-- esim "1022541802" (poijut) -->
+    <xs:attribute type="xs:token" name="tyoluokka" use="required"/> <!-- esim "1022541905" (valo- ja energialaitteet) -->
+    <xs:attribute type="xs:token" name="tyyppi" use="required"/> <!-- esim "1022542001" (valo- ja energialaitetyöt) -->
+    <xs:attribute type="xs:string" name="lisatieto" use="required"/> <!-- vapaateksti lisätieto -->
+    <xs:attribute type="xs:boolean" name="lisatyo" use="required"/> <!-- true = lisätyötä -->
+    <xs:attribute type="xs:token" name="tila" use="required"/> <!-- esim "1022541202" (suoritettu) -->
+    <xs:attribute type="xs:dateTime" name="suoritettu" use="required"/> <!-- suorituspvm ja -aika -->
+    <xs:attribute type="xs:dateTime" name="luotu" use="required"/> <!-- tietokantaan luontiaika -->
+    <xs:attribute type="xs:dateTime" name="muokattu" use="optional"/> <!-- muokkausaika, jos muokattu luonnin jälkeen -->
+    <xs:attribute type="xs:string" name="asiakas" use="optional"/> <!-- asiakkaan nimi, jos merkitty -->
+    <xs:attribute type="xs:string" name="vastuuhenkilo" use="optional"/> <!-- vastuuhenkilön nimi, jos tiedossa -->
+  </xs:complexType>
+
+  <xs:complexType name="UrakoitsijaType">
+    <xs:attribute type="xs:integer" name="id" use="required"/> <!-- PRODUCER_ID -->
+    <xs:attribute type="xs:string" name="nimi" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="SopimusType">
+    <xs:attribute type="xs:integer" name="nro" use="required"/> <!-- CONTRACT_ID -->
+    <xs:attribute type="xs:token" name="tyyppi" use="required"/>
+    <xs:attribute type="xs:string" name="nimi" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="AlusType">
+    <xs:attribute type="xs:token" name="tunnus" use="required"/>
+    <xs:attribute type="xs:string" name="nimi"/>
+  </xs:complexType>
+
+  <xs:complexType name="VaylaType">
+    <xs:attribute type="xs:token" name="nro" use="required"/>
+    <xs:attribute type="xs:string" name="nimi" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteType">
+    <xs:attribute type="xs:token" name="nro" use="required"/>
+    <xs:attribute type="xs:string" name="nimi" use="optional"/>
+    <xs:attribute type="xs:integer" name="ryhma" use="required"/>
+  </xs:complexType>
+
+</xs:schema>
