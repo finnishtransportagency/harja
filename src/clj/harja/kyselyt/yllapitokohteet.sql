@@ -246,7 +246,8 @@ SELECT
   ypk.tr_ajorata       AS "tr-ajorata",
   ypk.tr_kaista        AS "tr-kaista",
   ypk.yhaid            AS "yha-id",
-  ypk.yha_kohdenumero  AS "yha-kohdenumero"
+  ypk.yha_kohdenumero  AS "yha-kohdenumero",
+  ypk.yllapitoluokka   AS "yllapitoluokka"
 FROM yllapitokohde ypk
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
