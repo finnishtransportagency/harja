@@ -752,13 +752,10 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-        maarita-valiotsikoiden-alkutila! (fn [{:keys [valiotsikoiden-alkutila-maaritelty?
-                                                      salli-valiotsikoiden-piilotus?
-                                                      valiotsikoiden-alkutila
-                                                      piilotetut-valiotsikot
-                                                      tiedot]}]
+        maarita-valiotsikoiden-alkutila! (fn []
                                            (when (and (not @valiotsikoiden-alkutila-maaritelty?)
-                                                      salli-valiotsikoiden-piilotus?)
+                                                      salli-valiotsikoiden-piilotus?
+                                                      (some? tiedot))
                                              (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
                                                           (set (keep #(when (otsikko? %)
                                                                         (get-in % [:optiot :id]))
@@ -832,8 +829,10 @@
       (aloita-muokkaus! tiedot))
 
     (komp/luo
-      (komp/sisaan #(when infolaatikon-tila-muuttui
-                      (infolaatikon-tila-muuttui false)))
+      (komp/sisaan (fn []
+                     (maarita-valiotsikoiden-alkutila!)
+                     (when infolaatikon-tila-muuttui
+                       (infolaatikon-tila-muuttui false))))
       (komp/ulos #(when infolaatikon-tila-muuttui
                     (infolaatikon-tila-muuttui false)))
       (komp/dom-kuuntelija js/window
@@ -844,11 +843,7 @@
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
-         (maarita-valiotsikoiden-alkutila! {:valiotsikoiden-alkutila-maaritelty? valiotsikoiden-alkutila-maaritelty?
-                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
-                                            :valiotsikoiden-alkutila valiotsikoiden-alkutila
-                                            :piilotetut-valiotsikot piilotetut-valiotsikot
-                                            :tiedot tiedot})
+         (maarita-valiotsikoiden-alkutila!)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))

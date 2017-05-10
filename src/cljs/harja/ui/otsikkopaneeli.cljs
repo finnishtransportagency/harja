@@ -19,7 +19,7 @@
 
    otsikot-ja-sisallot            Tunniste, tekstiotsikko ja piirrettävä komponentti funktiona. Voi olla useita."
   [{:keys [paneelikomponentit otsikkoluokat] :as optiot} & otsikot-ja-sisallot]
-  (r/with-let [auki-index-atom (atom 0)]
+  (r/with-let [auki-index-atom (atom nil)]
     [:div.otsikkopaneeli.klikattava
      (doall
        (map-indexed
