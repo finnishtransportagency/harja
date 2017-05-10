@@ -376,7 +376,7 @@
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])]
-    [:tr.otsikko (when piilotetut-valiotsikot
+    [:tr.otsikko (when salli-valiotsikoiden-piilotus?
                    {:class "gridin-collapsoitava-valiotsikko klikattava"
                     :on-click #(toggle-valiotsikko valiotsikko-id
                                                    piilotetut-valiotsikot)})
