@@ -391,7 +391,7 @@
                                        huomautukset fokus ohjaus vetolaatikot muokkaa! voi-poistaa?
                                        esta-poistaminen? tallennus-kaynnissa?
                                        salli-valiotsikoiden-piilotus?
-                                       piilotetut-valiotsikot
+                                       piilotetut-valiotsikot tiedot
                                        esta-poistaminen-tooltip piilota-toiminnot?
                                        voi-muokata-rivia? skeema vetolaatikot-auki]}]
   (let [muokatut @muokatut
@@ -416,33 +416,34 @@
                                [valiotsikko {:colspan colspan :teksti teksti :otsikko-record id
                                              :piilotetut-valiotsikot piilotetut-valiotsikot
                                              :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
-                             (let [rivi (get muokatut id)
-                                   rivin-virheet (get kaikki-virheet id)
-                                   rivin-varoitukset (get kaikki-varoitukset id)
-                                   rivin-huomautukset (get kaikki-huomautukset id)]
-                               (when-not (or (:yhteenveto rivi) (:poistettu rivi))
-                                 [^{:key id}
-                                 [muokkausrivi {:ohjaus ohjaus
-                                                :vetolaatikot vetolaatikot
-                                                :muokkaa! muokkaa!
-                                                :luokka (str (if (even? (+ i 1))
-                                                               "parillinen"
-                                                               "pariton"))
-                                                :id id
-                                                :rivin-virheet rivin-virheet
-                                                :rivin-varoitukset rivin-varoitukset
-                                                :rivin-huomautukset rivin-huomautukset
-                                                :voi-poistaa? voi-poistaa?
-                                                :esta-poistaminen? esta-poistaminen?
-                                                :esta-poistaminen-tooltip esta-poistaminen-tooltip
-                                                :fokus nykyinen-fokus
-                                                :aseta-fokus! #(reset! fokus %)
-                                                :tulevat-rivit (tulevat-rivit i)
-                                                :piilota-toiminnot? piilota-toiminnot?
-                                                :voi-muokata-rivia? voi-muokata-rivia?
-                                                :tallennus-kaynnissa? tallennus-kaynnissa?}
-                                  skeema rivi i]
-                                  (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
+                             (when-not (rivi-piilotetun-otsikon-alla? i (vec tiedot) @piilotetut-valiotsikot)
+                               (let [rivi (get muokatut id)
+                                     rivin-virheet (get kaikki-virheet id)
+                                     rivin-varoitukset (get kaikki-varoitukset id)
+                                     rivin-huomautukset (get kaikki-huomautukset id)]
+                                 (when-not (or (:yhteenveto rivi) (:poistettu rivi))
+                                   [^{:key id}
+                                   [muokkausrivi {:ohjaus ohjaus
+                                                  :vetolaatikot vetolaatikot
+                                                  :muokkaa! muokkaa!
+                                                  :luokka (str (if (even? (+ i 1))
+                                                                 "parillinen"
+                                                                 "pariton"))
+                                                  :id id
+                                                  :rivin-virheet rivin-virheet
+                                                  :rivin-varoitukset rivin-varoitukset
+                                                  :rivin-huomautukset rivin-huomautukset
+                                                  :voi-poistaa? voi-poistaa?
+                                                  :esta-poistaminen? esta-poistaminen?
+                                                  :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                                  :fokus nykyinen-fokus
+                                                  :aseta-fokus! #(reset! fokus %)
+                                                  :tulevat-rivit (tulevat-rivit i)
+                                                  :piilota-toiminnot? piilota-toiminnot?
+                                                  :voi-muokata-rivia? voi-muokata-rivia?
+                                                  :tallennus-kaynnissa? tallennus-kaynnissa?}
+                                    skeema rivi i]
+                                    (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)])))))
                          jarjestys)))))))
 
 (defn- nayttokayttoliittyma [{:keys [renderoi-max-rivia tiedot colspan tyhja tunniste ohjaus
@@ -922,6 +923,7 @@
                                            :esta-poistaminen-tooltip esta-poistaminen-tooltip
                                            :piilota-toiminnot? piilota-toiminnot?
                                            :voi-muokata-rivia? voi-muokata-rivia?
+                                           :tiedot tiedot
                                            :piilotetut-valiotsikot piilotetut-valiotsikot
                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa})
