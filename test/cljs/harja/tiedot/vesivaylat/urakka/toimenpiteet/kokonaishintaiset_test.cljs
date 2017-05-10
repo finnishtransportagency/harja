@@ -117,7 +117,7 @@
   (testing "Valitaan Iisalmen väylä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                  :valinta true})
+                                                :valinta true})
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
       (every? true? (map :valittu? viitat))))
