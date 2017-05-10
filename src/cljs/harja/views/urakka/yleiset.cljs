@@ -219,8 +219,10 @@
    [grid/grid
     {:otsikko "Työtunnit"
      :tyhja "Ei työtunteja."
-     :tallenna tallenna!}
-    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero}
+     :tallenna tallenna!
+     :voi-lisata? false
+     :voi-poistaa? (constantly false)}
+    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
      {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
      {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
      {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
