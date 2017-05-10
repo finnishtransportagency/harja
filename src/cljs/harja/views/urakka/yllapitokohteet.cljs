@@ -116,7 +116,7 @@
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Ajorata -"
                                                      "")))
-            :valinnat pot/+ajoradat+
+            :valinnat pot/+ajoradat-numerona+
             :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
             :muokattava? (or (:muokattava? kaista) (constantly true))

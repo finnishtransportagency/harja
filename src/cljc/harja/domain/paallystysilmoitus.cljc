@@ -114,7 +114,7 @@
 (defn tekninentoimenpide-koodi-nimella [nimi]
   (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet-ja-nil+))))
 
-(def +ajoradat+
+(def +ajoradat-tekstina+
   "Ajoratavalinnat"
   [{:nimi "Yksiajoratainen" :koodi 0}
    {:nimi "Kaksiajorataisen ensimmäinen" :koodi 1}
