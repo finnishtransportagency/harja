@@ -34,13 +34,17 @@
                                                         (ikonit/livicon-minus)
                                                         (ikonit/livicon-plus))]
                [:div.otsikkopaneeli-otsikkoteksti otsikko]
-               (for [{:keys [sijainti sisalto]} paneelikomponentit]
-                 ^{:key (hash sisalto)}
-                 [:div.otsikkopaneeli-custom-paneelikomponentti {:style {:top -2 :left sijainti}}
-                  [sisalto {:index index
-                            :tunniste tunniste
-                            :otsikko otsikko
-                            :sisalto sisalto}]])]
+
+               (map-indexed
+                 (fn [i {:keys [sijainti sisalto]}]
+                      ^{:key i}
+                      [:div.otsikkopaneeli-custom-paneelikomponentti {:style {:top -2 :left sijainti}}
+                       [sisalto {:index index
+                                 :tunniste tunniste
+                                 :otsikko otsikko
+                                 :sisalto sisalto}]])
+                 paneelikomponentit)]
+
               (when auki?
                 [:div.otsikkopaneeli-sisalto sisalto])]))
          (partition 3 otsikot-ja-sisallot)))]))
