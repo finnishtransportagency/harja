@@ -5,6 +5,10 @@
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
             [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]))
 
+(defn hae-urakan-tyotunnit [db kayttaja urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+  (urakan-tyotunnit-q/hae-urakan-tyotunnit db {::urakan-tyotunnit-d/urakka-id urakka-id}))
+
 (defn tallenna-urakan-tyotunnit [db kayttaja {tyotunnit ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain}]
   (doseq [{urakka-id ::urakan-tyotunnit-d/urakka} tyotunnit]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
@@ -20,6 +24,13 @@
   (start [{http :http-palvelin
            db :db
            :as this}]
+
+    (julkaise-palvelu http
+                      :hae-urakan-tyotunnit
+                      (fn [kayttaja {urakka-id ::urakan-tyotunnit-d/urakka-id}]
+                        (hae-urakan-tyotunnit db kayttaja urakka-id))
+                      {:kysely-spec ::urakan-tyotunnit-d/urakka-id
+                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain})
 
     (julkaise-palvelu http
                       :tallenna-urakan-tyotunnit
@@ -38,6 +49,7 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
+                     :hae-urakan-tyotunnit
                      :tallenna-urakan-tyotunnit
                      :hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit)
 
