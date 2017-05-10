@@ -375,7 +375,8 @@
 
 (defn- valiotsikko [{:keys [otsikko-record colspan teksti salli-valiotsikoiden-piilotus?
                             piilotetut-valiotsikot]}]
-  (let [valiotsikko-id (get-in otsikko-record [:optiot :id])]
+  (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
+        otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
     [:tr.otsikko (when salli-valiotsikoiden-piilotus?
                    {:class "gridin-collapsoitava-valiotsikko klikattava"
                     :on-click #(toggle-valiotsikko valiotsikko-id
@@ -385,6 +386,14 @@
         (if (@piilotetut-valiotsikot valiotsikko-id)
           (ikonit/livicon-plus)
           (ikonit/livicon-minus)))
+
+      (map-indexed
+        (fn [i {:keys [sijainti sisalto]}]
+          ^{:key i}
+          [:div.grid-valiotsikko-custom-komponentti {:style {:top -2 :left sijainti}}
+           [sisalto {:id valiotsikko-id}]])
+        otsikkokomponentit)
+
       [:h5 teksti]]]))
 
 (defn- muokkauskayttoliittyma [{:keys [muokatut jarjestys colspan tyhja virheet varoitukset

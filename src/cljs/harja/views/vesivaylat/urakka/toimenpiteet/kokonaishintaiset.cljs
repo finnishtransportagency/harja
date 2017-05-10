@@ -18,22 +18,45 @@
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- ryhmittele-toimenpiteet-vaylalla [toimenpiteet]
+(def otsikoiden-checkbox-sijainti "94.3%")
+;; FIXME Tämä ei aina osu täysin samalle Y-akselille gridissä olevien checkboksien kanssa
+;; Ilmeisesti mahdoton määrittää arvoa, joka toimisi aina?
+
+(defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet]
   (let [vaylalla-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
         vaylat (keys vaylalla-ryhmiteltyna)]
-    (vec (mapcat #(-> (cons (grid/otsikko (grid/otsikkorivin-tiedot
-                                            (:nimi %)
-                                            (count (to/toimenpiteet-vaylalla toimenpiteet (:id %)))))
+    (vec (mapcat #(-> (cons (grid/otsikko
+                              (grid/otsikkorivin-tiedot
+                                (:nimi %)
+                                (count (to/toimenpiteet-vaylalla toimenpiteet (:id %))))
+                              {:id (:id %)
+                               :otsikkokomponentit
+                               [{:sijainti otsikoiden-checkbox-sijainti
+                                 :sisalto
+                                 (fn [{:keys [id]}]
+                                   (let [vayla-id id
+                                         vaylan-toimenpiteet (to/toimenpiteet-vaylalla toimenpiteet vayla-id)
+                                         kaikki-valittu? (every? true? (map :valittu? vaylan-toimenpiteet))
+                                         mitaan-ei-valittu? (every? (comp not true?)
+                                                                    (map :valittu? vaylan-toimenpiteet))]
+                                     [kentat/tee-kentta
+                                      {:tyyppi :checkbox}
+                                      (r/wrap (cond kaikki-valittu? true
+                                                    mitaan-ei-valittu? false
+                                                    :default ::kentat/indeterminate)
+                                              (fn [uusi]
+                                                (e! (tiedot/->ValitseVayla {:vayla-id vayla-id
+                                                                            :valinta uusi}))))]))}]})
                             (get vaylalla-ryhmiteltyna %)))
                  vaylat))))
 
 (defn- toimenpiteet-tyolajilla [toimenpiteet tyolajit]
   (filterv #(= (::to/tyolaji %) tyolajit) toimenpiteet))
 
-(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [toimenpiteet tyolaji]
+(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [e! toimenpiteet tyolaji]
   (-> toimenpiteet
       (toimenpiteet-tyolajilla tyolaji)
-      (ryhmittele-toimenpiteet-vaylalla)))
+      (->> (ryhmittele-toimenpiteet-vaylalla e!))))
 
 (defn- toimenpide-infolaatikossa [toimenpide]
   [:div
@@ -119,6 +142,7 @@
               [paneelin-sisalto
                e!
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
+                 e!
                  toimenpiteet
                  tyolaji)]])
            tyolajit))))
@@ -143,8 +167,7 @@
        (into [otsikkopaneeli
               {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
                :paneelikomponentit
-               [;; FIXME Ei osu täysin kohdalleen eri taulukon leveyksillä :(
-                {:sijainti "94.3%"
+               [{:sijainti otsikoiden-checkbox-sijainti
                  :sisalto
                  (fn [{:keys [tunniste]}]
                    (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)

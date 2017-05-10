@@ -25,8 +25,11 @@
   "Luo otsikon annetulla tekstillä.
 
   Optiot on map, jossa voi olla:
-  :id           Otsikkorivin yksilöivä id (vaaditaan jos otsikkorivit halutaan piilottaa gridissä)
-                Jos ei anneta, generoidaan uniikki id."
+  :id                             Otsikkorivin yksilöivä id (vaaditaan jos otsikkorivit halutaan piilottaa gridissä)
+                                  Jos ei anneta, generoidaan uniikki id.
+  :otsikkokomponentit             Vector mappeja, jossa avaimina sijainti ja sisalto.
+                                  Sijainti annetaan prosentteina X-akselilla ja sisalto on funktio,
+                                  joka palauttaa komponentin."
   ([teksti] (otsikko teksti {}))
   ([teksti optiot]
    (assert (not (nil? teksti)) "Anna otsikolle teksti.")
