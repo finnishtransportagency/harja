@@ -15,6 +15,7 @@
 (def filteroi-uudet-poistetut protokollat/filteroi-uudet-poistetut)
 (def poista-idt protokollat/poista-idt)
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)
+(def otsikkorivin-tiedot perus/otsikkorivin-tiedot)
 
 ;; UI
 

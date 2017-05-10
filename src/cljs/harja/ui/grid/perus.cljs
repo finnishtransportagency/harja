@@ -967,3 +967,11 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko})])])))))
+
+(defn otsikkorivin-tiedot [otsikko maara]
+  (str otsikko
+       " ("
+       maara
+       (when (not= maara 0)
+         "kpl")
+       ")"))
