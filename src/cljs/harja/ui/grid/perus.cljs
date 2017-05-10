@@ -406,8 +406,6 @@
   (let [muokatut @muokatut
         jarjestys @jarjestys
         tulevat-rivit (fn [aloitus-idx]
-                        ;;(log "TULEVAT RIVIT, alk: " (pr-str aloitus-idx))
-                        ;;(log "jarjestys: " (pr-str (drop (inc aloitus-idx) jarjestys)))
                         (map #(get muokatut %) (drop (inc aloitus-idx) jarjestys)))]
     (if (empty? muokatut)
       [:tr.tyhja [:td {:colSpan colspan} tyhja]]
