@@ -82,7 +82,8 @@
                           (if (some :valittu? data)
                             [toimenpiteiden-siirto rivi]
                             [toimenpide-infolaatikossa rivi]))
-    :salli-valiotsikoiden-piilotus? true}
+    :salli-valiotsikoiden-piilotus? true
+    :valiotsikoiden-alkutila :kaikki-kiinni}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}

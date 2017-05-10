@@ -546,6 +546,8 @@
   :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
                                         Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :salli-valiotsikoiden-piilotus?       Jos true, väliotsikoiden sisällön voi piilottaa klikkaamalla riviä
+  :valiotsikoiden-alkutila              Jos väliotsikot on sallittu piilottaa, tämä määrittää, mitkä otsikot ovat
+                                        oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
@@ -574,6 +576,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
+           valiotsikoiden-alkutila
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -591,6 +594,7 @@
         mahdollista-rivin-valinta? (if rivin-infolaatikko true mahdollista-rivin-valinta?)
         rivien-maara (atom (count tiedot))
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
+        valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
@@ -746,7 +750,20 @@
                   (swap! historia pop)
                   (when muutos
                     (muutos ohjaus))))
-
+        maarita-valiotsikoiden-alkutila! (fn [{:keys [valiotsikoiden-alkutila-maaritelty?
+                                                      salli-valiotsikoiden-piilotus?
+                                                      valiotsikoiden-alkutila
+                                                      piilotetut-valiotsikot
+                                                      tiedot]}]
+                                           (when (and (not @valiotsikoiden-alkutila-maaritelty?)
+                                                      salli-valiotsikoiden-piilotus?)
+                                             (let [tila (if (= valiotsikoiden-alkutila :kaikki-kiinni)
+                                                          (set (keep #(when (otsikko? %)
+                                                                        (get-in % [:optiot :id]))
+                                                                     tiedot))
+                                                          #{})]
+                                               (reset! piilotetut-valiotsikot tila)
+                                               (reset! valiotsikoiden-alkutila-maaritelty? true))))
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
@@ -825,6 +842,11 @@
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
+         (maarita-valiotsikoiden-alkutila! {:valiotsikoiden-alkutila-maaritelty? valiotsikoiden-alkutila-maaritelty?
+                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
+                                            :valiotsikoiden-alkutila valiotsikoiden-alkutila
+                                            :piilotetut-valiotsikot piilotetut-valiotsikot
+                                            :tiedot tiedot})
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
          (reset! rivien-maara (count tiedot))
