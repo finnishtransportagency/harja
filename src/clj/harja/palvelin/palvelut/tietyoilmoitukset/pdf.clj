@@ -227,7 +227,7 @@
                      :as ilm}]
   (let [jarj (into {}
                    (map (juxt ::t/jarjestely ::t/selite))
-                   kaistajarj)
+                   [kaistajarj])
         nopeus (into {}
                      (map (juxt ::t/rajoitus ::t/matka))
                      nopeusrajoitukset)
@@ -299,14 +299,13 @@
                 (checkbox-lista [["Liikennevalot" "liikennevalot"]
                                  ["Liikenteen ohjaaja" "lohj"]
                                  ["Satunnaisia" "satunnaisia"]]
-                                ;; FIXME: näytä pysäytykset
-                                #{})
-                (pvm-ja-aika "alkaa" (::t/pysaytysten_alku ilm))
-                (pvm-ja-aika "päättyy" (::t/pysaytysten_loppu ilm))])]
+                                #{(::t/liikenteenohjaaja ilm)})
+                (pvm-ja-aika "alkaa" (::t/pysaytysten-alku ilm))
+                (pvm-ja-aika "päättyy" (::t/pysaytysten-loppu ilm))])]
        [(tieto "Arvioitu viivytys"
                [:fo:block
-                (sisennetty-arvo (::t/viivastys_normaali_liikenteessa ilm) "(min, normaali liikenne)")
-                (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
+                (sisennetty-arvo (::t/viivastys-normaali-liikenteessa ilm) "(min, normaali liikenne)")
+                (sisennetty-arvo (::t/viivastys-ruuhka-aikana ilm) "(min, ruuhka-aika)")])]
        [(tieto "Kulkurajoituksia"
                [:fo:block
                 (ajoneuvorajoitukset ilm)])])])))
