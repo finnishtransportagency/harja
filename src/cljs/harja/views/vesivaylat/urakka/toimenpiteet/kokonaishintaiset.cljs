@@ -69,7 +69,7 @@
   [napit/yleinen "Siirrä valitut yksikköhintaisiin"
    #(log "Painoit nappia")])
 
-(defn- paneelin-sisalto [toimenpiteet e!]
+(defn- paneelin-sisalto [e! toimenpiteet]
   [grid/grid
    {:tunniste ::to/id
     :tyhja (if (nil? toimenpiteet)
@@ -109,7 +109,7 @@
          "kpl")
        ")"))
 
-(defn- luo-otsikkorivit [toimenpiteet e!]
+(defn- luo-otsikkorivit [e! toimenpiteet]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -119,11 +119,14 @@
                                          toimenpiteet
                                          tyolaji)))
               [paneelin-sisalto
+               e!
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  toimenpiteet
-                 tyolaji)
-               e!]])
+                 tyolaji)]])
            tyolajit))))
+
+(defn- suodattimet [e! app]
+  [:span "Suodattimet"])
 
 (defn kokonaishintaiset-toimenpiteet* [e! app]
   (komp/luo
@@ -132,6 +135,8 @@
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
        [debug app]
+
+       [suodattimet e! app]
 
        [:div {:style {:padding "10px"}}
         [:img {:src "images/harja_favicon.png"}]
@@ -156,7 +161,7 @@
                               (fn [uusi]
                                 (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                               :valinta uusi}))))]))}]}]
-             (luo-otsikkorivit toimenpiteet e!))])))
+             (luo-otsikkorivit e! toimenpiteet))])))
 
 (defn kokonaishintaiset-toimenpiteet []
   [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
