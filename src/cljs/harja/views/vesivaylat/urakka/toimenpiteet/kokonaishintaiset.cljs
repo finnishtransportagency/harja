@@ -15,7 +15,10 @@
             [reagent.core :as r]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.views.urakka.valinnat :as urakka-valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def otsikoiden-checkbox-sijainti "94.3%")
@@ -142,18 +145,19 @@
                  tyolaji)]])
            tyolajit))))
 
-(defn- suodattimet [e! app]
-  [:span "Suodattimet"])
+(defn- suodattimet [e! app urakka]
+  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka])
 
-(defn kokonaishintaiset-toimenpiteet* [e! app]
+(defn kokonaishintaiset-toimenpiteet* [e! app tiedot]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->PaivitaValinnat (get-in tiedot [:urakka :id]))))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
        [debug app]
 
-       [suodattimet e! app]
+       [suodattimet e! app (:urakka tiedot)]
 
        [:div {:style {:padding "10px"}}
         [:img {:src "images/harja_favicon.png"}]
@@ -180,4 +184,5 @@
              (luo-otsikkorivit e! toimenpiteet))])))
 
 (defn kokonaishintaiset-toimenpiteet []
-  [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
+  [tuck tiedot/tila kokonaishintaiset-toimenpiteet*
+   {:urakka @nav/valittu-urakka}])
