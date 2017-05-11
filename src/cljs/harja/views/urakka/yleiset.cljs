@@ -221,7 +221,8 @@
      :tyhja "Ei työtunteja."
      :tallenna tallenna!
      :voi-lisata? false
-     :voi-poistaa? (constantly false)}
+     :voi-poistaa? (constantly false)
+     :tunniste :vuosi}
     [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
      {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
      {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
