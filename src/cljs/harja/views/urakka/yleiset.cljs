@@ -34,7 +34,7 @@
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.ui.kentat :as kentat])
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -229,16 +229,29 @@
      {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
     tyotunnit]])
 
+(defn hae-vuosikolmanneksen-tunnit [vuosi kolmannes tyotunnit]
+  (log "--->>>" (pr-str vuosi) (pr-str kolmannes) (pr-str tyotunnit))
+  (::urakan-tyotunnit-d/tyotunnit
+    (first (filter #(and (= vuosi (::urakan-tyotunnit-d/vuosi %))
+                         (= kolmannes (::urakan-tyotunnit-d/vuosikolmannes %)))
+                   tyotunnit))))
+
 (defn urakan-tyotunnit [{:keys [id alkupvm loppupvm] :as urakka}]
-  (let [vuodet (reverse (map #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
+  (let [vuodet (reverse (mapv #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
         tyotunnit (atom nil)
         hae! (fn [urakka-id]
                (reset! tyotunnit vuodet)
                (go
-                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
-                   (log "--->>>" (pr-str vastaus))
-                   #_(if (k/virhe? vastaus)
-                     ))))]
+                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))
+                       vuodet-tunteineen (map #(assoc %
+                                                 :ensimmainen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 1 vastaus)
+                                                 :toinen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 2 vastaus)
+                                                 :kolmas-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 3 vastaus))
+                                              vuodet)]
+                   (log "--->>>> " (pr-str vuodet-tunteineen))
+                   (if (k/virhe? vastaus)
+                     (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                     (reset! tyotunnit vuodet-tunteineen)))))]
     (hae! id)
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id :vuosi))
