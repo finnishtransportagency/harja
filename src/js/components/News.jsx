@@ -29,21 +29,14 @@ let ListItem = React.createClass({
 
 
 export default React.createClass({
-  getInitialState() {
-    return {
-    };
-  },
-
   getDefaultProps() {
     return {
       news: [],
-      shorten: 0
     }
   },
 
   render() {
     let loadingEl, newsEl;
-
     let {news} = this.props;
 
     if (!news.length > 0) {
@@ -56,13 +49,8 @@ export default React.createClass({
           <ScrollArea
               speed={0.8}
               className="area"
-              horizontal={false}
-              >
-              <ul>
-                {news.map(notice =>
-                  <ListItem notice={notice} key={notice.id + notice.type}/>
-                )}
-              </ul>
+              horizontal={false}>
+              <ScrollContent news={news}/>
           </ScrollArea>
       );
     }
@@ -76,3 +64,53 @@ export default React.createClass({
     );
   }
 });
+
+
+class ScrollContent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+        feedLength: 5,
+    };
+  }
+
+  componentDidUpdate() {
+    //TODO bug in react-scrollbar prevents us to automatically scrolling
+    // this.context.scrollArea.scrollBottom();
+  }
+
+  render() {
+    const {feedLength} = this.state;
+    let {news} = this.props;
+    let moreEl = null;
+
+    if (news.length > feedLength) {
+      moreEl = (
+          <div className="harja-newslist-item">
+            <div className="row column small-4 small-offset-4">
+              <button onClick={()=>this.handleMoreNews()}>Lisää uutisia</button>
+            </div>
+          </div>
+      );
+    }
+
+    return (
+      <ul>
+          {news.slice(0, feedLength).map(notice =>
+            <ListItem notice={notice} key={notice.id + notice.type}/>
+          )}
+          {moreEl}
+      </ul>
+    );
+  }
+
+  handleMoreNews(){
+    this.setState({
+      feedLength: this.state.feedLength + 5,
+    });
+  }
+}
+
+ScrollContent.contextTypes = {
+    scrollArea: React.PropTypes.object
+};

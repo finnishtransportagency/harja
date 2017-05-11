@@ -106,9 +106,9 @@ export default React.createClass({
       });
   },
 
-  updateNews(notices) {
+  updateNews(newNews) {
     const oldNews = this.state.news;
-    return oldNews.concat(notices).sort(this.sortByDate).slice(0, 20);
+    return oldNews.concat(newNews).sort(this.sortByDate);
   },
 
   sortByDate(a, b) {

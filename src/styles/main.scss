@@ -236,6 +236,7 @@ a.harja-notice-link {
 }
 
 .harja-newslist {
+  height: 100%;
   border-left: 0;
   border-right: 0;
   padding: 0 1em 1em 1em;
@@ -437,7 +438,8 @@ a.harja-news-link {
 }
 
 .scrollarea {
-  height: 30em;
+  height: 100%;
+  max-height: 40em;
 }
 
 .harja-hero {
@@ -446,13 +448,14 @@ a.harja-news-link {
 
 @include breakpoint(medium down) {
   .harja-hero {
-    height: auto;
+    height: 100%;
   }
 }
 
 @include breakpoint(medium down) {
   .scrollarea {
     height: 100%;
+    max-height: none;
   }
 }
 
