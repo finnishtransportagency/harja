@@ -146,11 +146,18 @@
                  tyolaji)]])
            tyolajit))))
 
-(defn- suodattimet [e! app urakka]
-  [valinnat/valintaryhmat-3
-   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
-   [:div "Tähän tulee lisää suodattimia"]
-   [:div "Tähän tulee lisää suodattimia"]])
+(defn- suodattimet-ja-toiminnot [e! app urakka]
+  [valinnat/urakkavalinnat
+   [valinnat/valintaryhmat-3
+    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
+    [:div "Tähän tulee lisää suodattimia"]
+    [:div "Tähän tulee lisää suodattimia"]]
+
+   [valinnat/urakkatoiminnot
+    [napit/yleinen "Siirrä valitut yksikköhintaisiin"
+     #(log "Painoit nappia")
+     ;; TODO Lisää sticky-optio --> Voisi samalla yhtenäistää napit yhdeksi funktioksi
+     {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
   (komp/luo
@@ -170,7 +177,7 @@
         [:div {:style {:color "orange"}} "Työmaa"]]
        [debug app]
 
-       [suodattimet e! app (:urakka tiedot)]
+       [suodattimet-ja-toiminnot e! app (:urakka tiedot)]
 
        (into [otsikkopaneeli
               {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
