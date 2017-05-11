@@ -3,8 +3,11 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.navigaatio :as nav])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (defonce tila
   (atom {:valinnat {:urakka-id nil
@@ -278,6 +281,12 @@
                          ::to/toimenpide "Huoltotyö"
                          ::to/pvm (pvm/nyt)
                          ::to/turvalaite {:nimi "Siitenluoto (16469)"}}]}))
+
+(def valinnat
+  (reaction
+    {:urakka-id (:id @nav/valittu-urakka)
+     :sopimus-id (first @u/valittu-sopimusnumero)
+     :aikavali @u/valittu-aikavali}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
