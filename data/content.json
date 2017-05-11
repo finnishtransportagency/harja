@@ -11,7 +11,7 @@
     "title": "Teiden ylläpito",
     "short": "",
     "body": "Ylläpidon HARJA otetaan käyttöön huhtikuun 2017 aikana. ",
-    "images": ["images/yllapidon_aikataulu.png"]
+    "images": ["images/yllapidon aikataulu_3.png"]
   },
   {
     "category": "faq",
@@ -25,6 +25,6 @@
     "title": "Vesiväylät",
     "short": "",
     "body": "Uutisia Harjan käytöstä vesiväylillä",
-    "images": []
+    "images": ["images/vesivaylien aikataulu_1.png"]
   }
 ]
