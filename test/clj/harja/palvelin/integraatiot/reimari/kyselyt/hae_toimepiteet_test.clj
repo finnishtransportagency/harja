@@ -3,7 +3,7 @@
              [harja.testi :as ht]
              [harja.palvelin.komponentit.tietokanta :as tietokanta]
              [com.stuartsierra.component :as component]
-             [harja.kyselyt.vesivaylat :as vv-kyselyt]))
+             [harja.kyselyt.vesivaylat.toimenpiteet :as q]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'ht/jarjestelma
@@ -33,5 +33,5 @@
         '(MBKE24524, MS Piggy)', '1022541202', '1022542001', '1022541802', 1022541905,
         '(123, Vayla X, 55)', '2017-11-11', 1, 1, '2016-02-02', 'Vesa Vastuullinen', 'Aapo Asiakas');")
   (is (= #{:harja.domain.muokkaustiedot/poistaja-id}
-         (clojure.set/difference vv-kyselyt/kaikki-toimenpiteen-kentat
-                                 (set (keys (first (vv-kyselyt/hae-toimenpiteet ht/ds {:urakoitsija-id 55}))))))))
+         (clojure.set/difference q/kaikki-toimenpiteen-kentat
+                                 (set (keys (first (q/hae-toimenpiteet ht/ds {:urakoitsija-id 55}))))))))

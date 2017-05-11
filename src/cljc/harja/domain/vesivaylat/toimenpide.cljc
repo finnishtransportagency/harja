@@ -1,4 +1,16 @@
-(ns harja.domain.vesivaylat.toimenpide)
+(ns harja.domain.vesivaylat.toimenpide
+  (:require [clojure.spec :as s]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
+            [harja.domain.vesivaylat.alus :as vv-alus]
+            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.vesivaylat.sopimus :as vv-sopimus]
+            [harja.domain.vesivaylat.vayla :as vv-vayla]
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (def
   ^{:doc "Reimarin työlajit."}
@@ -43,7 +55,7 @@
    "1022541910" :telematiikkalaitteet})
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
-  reimari-toimenpidetyypit
+reimari-toimenpidetyypit
   {"1022542046" :alukset-ja-veneet
    "1022542040" :toimistotyot
    "1022542048" :muu-kuljetuskalusto
@@ -108,10 +120,19 @@
    "1022542026" :kaukovalvontalaitetyot})
 
 (def ^{:doc "Reimarin toimenpiteen tilat"}
-  reimari-tilat
+reimari-tilat
   {"1022541202" :suoritettu
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
+
+(define-tables
+  ["reimari_toimenpide" ::toimenpide
+   {"muokattu" ::m/muokattu
+    "muokkaaja" ::m/muokkaaja-id
+    "luotu" ::m/luotu
+    "luoja" ::m/luoja-id
+    "poistettu" ::m/poistettu?
+    "poistaja" ::m/poistaja-id}])
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))

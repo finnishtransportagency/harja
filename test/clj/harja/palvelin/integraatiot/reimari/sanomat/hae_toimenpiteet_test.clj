@@ -9,7 +9,7 @@
              [harja.domain.vesivaylat.alus :as alus]
              [harja.pvm :as pvm]
              [clojure.spec :as s]
-             [harja.kyselyt.vesivaylat]))
+             [harja.kyselyt.vesivaylat.toimenpiteet]))
 
 (def toimenpide
   {::toimenpide/turvalaite {::turvalaite/nro "904"
