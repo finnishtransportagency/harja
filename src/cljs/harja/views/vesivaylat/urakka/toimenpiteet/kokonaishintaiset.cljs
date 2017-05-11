@@ -156,6 +156,7 @@
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])
+                                                          :sopimus-id (first (:sopimus tiedot))
                                                           :aikavali (:aikavali tiedot)})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
@@ -189,6 +190,7 @@
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app tiedot]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
+                                                 :sopimus @u/valittu-sopimusnumero
                                                  :aikavali @u/valittu-aikavali}])
 
 (defn kokonaishintaiset-toimenpiteet []
