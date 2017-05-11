@@ -18,7 +18,8 @@
             [clojure.string :as str]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def otsikoiden-checkbox-sijainti "94.3%")
@@ -151,10 +152,11 @@
    [:div "Tähän tulee lisää suodattimia"]
    [:div "Tähän tulee lisää suodattimia"]])
 
-(defn kokonaishintaiset-toimenpiteet* [e! app tiedot]
+(defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])})))
+                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])
+                                                          :aikvali (:aikavali tiedot)})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
@@ -185,6 +187,9 @@
                                                               :valinta uusi}))))]))}]}]
              (luo-otsikkorivit e! toimenpiteet))])))
 
+(defn- kokonaishintaiset-toimenpiteet* [e! app tiedot]
+  [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
+                                                 :aikavali @u/valittu-aikavali}])
+
 (defn kokonaishintaiset-toimenpiteet []
-  [tuck tiedot/tila kokonaishintaiset-toimenpiteet*
-   {:urakka @nav/valittu-urakka}])
+  [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])

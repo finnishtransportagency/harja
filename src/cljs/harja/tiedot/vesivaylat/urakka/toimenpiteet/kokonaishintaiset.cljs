@@ -293,7 +293,7 @@
     (assoc app :nakymassa? nakymassa?))
 
   PaivitaValinnat
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+  (process-event [{tiedot :tiedot} app]
     (-> app
         (assoc-in [:valinnat :urakka-id] (:urakka-id tiedot))
         (assoc-in [:valinnat :sopimus-id] (:sopimus-id tiedot))
