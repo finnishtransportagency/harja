@@ -43,7 +43,7 @@
             ^{:key (str "ip-toiminto-" i)}
             [yleiset/wrap-if tooltip
              [yleiset/tooltip {} :% tooltip]
-             [napit/yleinen teksti #(toiminto data) {:ikoni ikoni
+             [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
                                                      :luokka "ip-toiminto btn-xs"}]])
           (if (vector? linkit)
             linkit [linkit])))])

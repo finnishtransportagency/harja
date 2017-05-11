@@ -508,13 +508,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                        paatosoikeus?
                                        laatupoikkeama optiot])})
                     (when (nayta-siirtymisnappi? @laatupoikkeama)
-                      {:rivi?       true
-                       :uusi-rivi?  true
-                       :nimi        :laatupoikkeama
-                       :vihje       (siirtymisnapin-vihje @laatupoikkeama)
-                       :tyyppi      :komponentti
+                      {:rivi? true
+                       :uusi-rivi? true
+                       :nimi :laatupoikkeama
+                       :vihje (siirtymisnapin-vihje @laatupoikkeama)
+                       :tyyppi :komponentti
                        :komponentti (fn [_]
-                                      [napit/yleinen
+                                      [napit/yleinen-toissijainen
                                        (siirtymisnapin-teksti @laatupoikkeama)
                                        (fn []
                                          (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))

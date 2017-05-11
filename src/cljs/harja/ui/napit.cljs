@@ -150,15 +150,22 @@
                            :disabled disabled
                            :ikoni (ikonit/livicon-ban)})))
 
-(defn yleinen
-  ([teksti toiminto] (yleinen teksti toiminto {}))
+(defn yleinen-ensisijainen
+  ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka ikoni]}]
+   (nappi teksti toiminto {:luokka (str "nappi-ensisijainen" " " luokka)
+                           :disabled disabled
+                           :ikoni ikoni})))
+
+(defn yleinen-toissijainen
+  ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni]}]
    (nappi teksti toiminto {:luokka (str "nappi-toissijainen" " " luokka)
                            :disabled disabled
                            :ikoni ikoni})))
 
 (defn tallenna
-  ([teksti toiminto] (yleinen teksti toiminto {}))
+  ([teksti toiminto] (tallenna teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
    (nappi teksti toiminto {:luokka (str "nappi-ensisijainen" " " luokka)
                            :disabled disabled

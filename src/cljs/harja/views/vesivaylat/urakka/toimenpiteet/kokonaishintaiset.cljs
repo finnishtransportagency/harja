@@ -157,7 +157,7 @@
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot
     ^{:key "siirto"}
-    [napit/yleinen "Siirrä valitut yksikköhintaisiin"
+    [napit/yleinen-ensisijainen "Siirrä valitut yksikköhintaisiin"
      #(log "Painoit nappia")
      ;; TODO Lisää sticky-optio --> Voisi samalla yhtenäistää napit yhdeksi funktioksi
      {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
