@@ -95,15 +95,29 @@
              :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
 
 (defn nappi
+  "Yleinen nappikomponentti, jota voi muokata optioilla.
+   Yleensä kannattaa tämän sijaan käyttää tarkemmin määriteltyjä nappeja.
+
+   Optiot:
+   disabled                   boolean. Jos true, nappi on disabloitu
+   luokka                     Luokka napille (string, erota välilyönnillä jos useita)
+   ikoni                      Nappiin piirrettävä ikonikomponentti
+   tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni]}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
    [:button
     {:class (str (when disabled "disabled") " " luokka)
      :disabled disabled
      :on-click #(do
                   (.preventDefault %)
                   (toiminto))}
-    (if ikoni
+    (when tallennus-kaynnissa?
+      [y/ajax-loader])
+    (when tallennus-kaynnissa?
+      " ")
+
+    (if (and ikoni
+             (not tallennus-kaynnissa?))
       [ikonit/ikoni-ja-teksti ikoni teksti]
       teksti)]))
 
@@ -113,9 +127,6 @@
                              :ikoni (ikonit/livicon-chevron-left)}))
 
 (defn uusi
-  "Nappi 'uuden asian' luonnille.
-   Asetukset on optionaalinen mäppi ja voi sisältää:
-   :disabled  jos true, nappi on disabloitu"
   ([toiminto] (uusi "Uusi" toiminto {}))
   ([teksti toiminto] (uusi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka]}]
@@ -140,10 +151,6 @@
                            :ikoni (ikonit/livicon-ban)})))
 
 (defn yleinen
-  "Yleinen toimintopainike
-  Asetukset on optionaalinen mäppi ja voi sisältää:
-  :disabled jos true, nappi on disabloitu
-  :ikoni näytettävä ikoni"
   ([teksti toiminto] (yleinen teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni]}]
    (nappi teksti toiminto {:luokka (str "nappi-toissijainen" " " luokka)
@@ -151,19 +158,12 @@
                            :ikoni ikoni})))
 
 (defn tallenna
-  "Yleinen 'Tallenna' nappi."
-  ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
-  ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
-   [:button.nappi-ensisijainen
-    {:class (str (when disabled "disabled ") luokka)
-     :disabled disabled
-     :on-click #(do (.preventDefault %)
-                    (toiminto-fn))}
-    (if tallennus-kaynnissa?
-      [y/ajax-loader]
-      ikoni)
-    (when (or ikoni tallennus-kaynnissa?) " ")
-    sisalto]))
+  ([teksti toiminto] (yleinen teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
+   (nappi teksti toiminto {:luokka (str "nappi-ensisijainen" " " luokka)
+                           :disabled disabled
+                           :ikoni ikoni
+                           :tallennus-kaynnissa? tallennus-kaynnissa?})))
 
 (defn sulje-ruksi
   [sulje!]
