@@ -57,7 +57,7 @@
 (defn sulje-nappi [piilota-fn!]
   (when piilota-fn!
     [:div
-     [napit/sulje piilota-fn!]]))
+     [napit/sulje-ruksi piilota-fn!]]))
 
 (defn infopaneeli-komponentti [{:keys [haetaan? avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]} asiat]
   [:span

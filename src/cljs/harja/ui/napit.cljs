@@ -94,73 +94,61 @@
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
              :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
 
+(defn nappi
+  ([teksti toiminto] (nappi teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka ikoni]}]
+   [:button
+    {:class (str (when disabled "disabled") " " luokka)
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (toiminto))}
+    (if ikoni
+      [ikonit/ikoni-ja-teksti ikoni teksti]
+      teksti)]))
+
 (defn takaisin
   [teksti takaisin-fn]
-  [:button.nappi-toissijainen {:on-click #(do
-                                           (.preventDefault %)
-                                           (takaisin-fn))}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
-
-(defn urakan-sivulle [teksti click-fn]
-  [:button.nappi-toissijainen {:on-click #(do
-                                           (.preventDefault %)
-                                           (click-fn))}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+  (nappi teksti takaisin-fn {:luokka "nappi-toissijainen"
+                             :ikoni (ikonit/livicon-chevron-left)}))
 
 (defn uusi
   "Nappi 'uuden asian' luonnille.
-Asetukset on optionaalinen mäppi ja voi sisältää:
-  :disabled  jos true, nappi on disabloitu"
-
-  ([teksti uusi-fn] (uusi teksti uusi-fn {}))
-  ([teksti uusi-fn {:keys [disabled luokka]}]
-   [:button.nappi-ensisijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (uusi-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
+   Asetukset on optionaalinen mäppi ja voi sisältää:
+   :disabled  jos true, nappi on disabloitu"
+  ([toiminto] (uusi "Uusi" toiminto {}))
+  ([teksti toiminto] (uusi teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-ensisijainen" " " luokka)
+                           :ikoni (ikonit/livicon-plus)
+                           :disabled disabled})))
 
 (defn hyvaksy
-  ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
-  ([teksti hyvaksy-fn] (hyvaksy teksti hyvaksy-fn))
-  ([teksti hyvaksy-fn {:keys [disabled luokka]}]
-    [:button.nappi-myonteinen
-     {:class (str (when disabled "disabled") (or luokka ""))
-      :disabled disabled
-      :on-click #(do
-                  (.preventDefault %)
-                  (hyvaksy-fn))}
-     [ikonit/ikoni-ja-teksti [ikonit/check] teksti]]))
+  ([toiminto] (hyvaksy "OK" toiminto {}))
+  ([teksti toiminto] (hyvaksy teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-myonteinen" " " luokka)
+                           :ikoni (ikonit/check)
+                           :disabled disabled})))
 
 (defn peruuta
-  ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
-  ([teksti peruuta-fn {:keys [disabled luokka]}]
-   [:button.nappi-kielteinen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (peruuta-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
+  ([toiminto] (peruuta "Peruuta" toiminto {}))
+  ([teksti toiminto] (peruuta teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-kielteinen" " " luokka)
+                           :disabled disabled
+                           :ikoni (ikonit/livicon-ban)})))
 
 (defn yleinen
   "Yleinen toimintopainike
   Asetukset on optionaalinen mäppi ja voi sisältää:
   :disabled jos true, nappi on disabloitu
   :ikoni näytettävä ikoni"
-  ([teksti toiminto-fn] (yleinen teksti toiminto-fn {}))
-  ([teksti toiminto-fn {:keys [disabled luokka ikoni]}]
-   [:button.nappi-toissijainen
-    {:class (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (toiminto-fn))}
-    (if ikoni
-      [:span ikoni (str " " teksti)]
-      teksti)]))
+  ([teksti toiminto] (yleinen teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka ikoni]}]
+   (nappi teksti toiminto {:luokka (str "nappi-toissijainen" " " luokka)
+                           :disabled disabled
+                           :ikoni ikoni})))
 
 (defn tallenna
   "Yleinen 'Tallenna' nappi."
@@ -177,42 +165,29 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
     (when (or ikoni tallennus-kaynnissa?) " ")
     sisalto]))
 
-(defn sulje
-  "'Sulje' ruksi"
+(defn sulje-ruksi
   [sulje!]
   [:button.close {:on-click sulje!
                   :type "button"}
    [ikonit/remove]])
 
 (defn poista
-  ([teksti poista-fn] (poista teksti poista-fn {}))
-  ([teksti poista-fn {:keys [disabled luokka]}]
-   [:button.nappi-kielteinen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (poista-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] teksti]]))
+  ([teksti toiminto] (poista teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-kielteinen" " " luokka)
+                           :disabled disabled
+                           :ikoni (ikonit/livicon-trash)})))
 
 (defn tarkasta
-  ([teksti tarkasta-fn] (tarkasta teksti tarkasta-fn {}))
-  ([teksti tarkasta-fn {:keys [disabled luokka]}]
-   [:button.nappi-toissijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (tarkasta-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/eye-open] teksti]]))
+  ([teksti toiminto] (tarkasta teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-toissijainen" " " luokka)
+                           :disabled disabled
+                           :ikoni (ikonit/eye-open)})))
 
 (defn muokkaa
-  ([teksti muokkaa-fn] (muokkaa teksti muokkaa-fn {}))
-  ([teksti muokkaa-fn {:keys [disabled luokka]}]
-   [:button.nappi-toissijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (muokkaa-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-pen] teksti]]))
+  ([teksti toiminto] (muokkaa teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka]}]
+   (nappi teksti toiminto {:luokka (str "nappi-toissijainen" " " luokka)
+                           :disabled disabled
+                           :ikoni (ikonit/livicon-pen)})))
