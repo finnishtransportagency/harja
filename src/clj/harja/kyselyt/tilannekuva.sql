@@ -501,12 +501,14 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 SELECT yrita_tierekisteriosoite_pisteelle2(:piste ::geometry, :etaisyys ::integer) as tr_osoite;
 
 -- name: reittipisteiden-sijainnit-toteuman-reitilla
-SELECT
-  ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
-  rp.id AS reittipiste_id,
-  rp.aika AS aika
-FROM toteuma t, reittipiste rp
-WHERE t.id = :toteuma-id AND rp.toteuma = t.id AND  rp.id IN (:reittipiste-idt);
+SELECT ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
+       rp.ordinality AS reittipiste_id,
+       rp.aika AS aika
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+       LEFT JOIN LATERAL unnest(tr.reittipisteet) WITH ORDINALITY rp
+ WHERE t.id = :toteuma-id
+   AND rp.ordinality IN (:reittipiste-idt);
 
 -- name: suhteellinen-paikka-pisteiden-valissa
 SELECT

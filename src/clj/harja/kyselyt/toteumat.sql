@@ -741,12 +741,13 @@ WHERE
   tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
 
 -- name: hae-toteuman-reittipisteet
-SELECT
-  (x.rp).aika     AS aika,
-  (x.rp).sijainti AS sijainti
-FROM (SELECT unnest(reittipisteet) AS rp
-        FROM toteuman_reittipisteet
-       WHERE toteuma = :toteuma_id) x
+SELECT rp.aika     AS aika,
+       rp.sijainti AS sijainti,
+       rp.ordinality AS id
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+       LEFT JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
+ WHERE t.id = :toteuma_id
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
