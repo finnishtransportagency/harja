@@ -87,9 +87,9 @@ BEGIN
      RAISE NOTICE '[%] Reittipisteet siirretty % toteumalle (yht % pistettä)', clock_timestamp()-alku, lkm, kaikki;
    END IF;
  END LOOP;
-END; 
+END;
 $$ LANGUAGE plpgsql;
 
 -- FIXME: toteumassa oleva hoitoluokittainen triggeri pitää poistaa ja siirtää
 -- tähän toteuman_reittipisteet tauluun.
-EXECUTE siirra_kaikki_reittipisteet() FROM toteuma;
+--SELECT siirra_kaikki_reittipisteet();
