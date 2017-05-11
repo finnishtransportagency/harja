@@ -148,12 +148,15 @@
 
 (defn- suodattimet-ja-toiminnot [e! app urakka]
   [valinnat/urakkavalinnat
+   ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
     [:div "Tähän tulee lisää suodattimia"]
     [:div "Tähän tulee lisää suodattimia"]]
 
+   ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot
+    ^{:key "siirto"}
     [napit/yleinen "Siirrä valitut yksikköhintaisiin"
      #(log "Painoit nappia")
      ;; TODO Lisää sticky-optio --> Voisi samalla yhtenäistää napit yhdeksi funktioksi
