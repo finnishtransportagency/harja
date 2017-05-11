@@ -239,7 +239,7 @@
             :nimi :tr-ajorata
             :muokattava? (constantly false)
             :tyyppi :string :tasaa :oikea
-            :fmt #(pot/arvo-koodilla pot/+ajoradat+ %)
+            :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
             :leveys 3}
            {:otsikko "Kais\u00ADta"
             :muokattava? (constantly false)
