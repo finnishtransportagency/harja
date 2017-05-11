@@ -125,59 +125,59 @@
   ([toiminto] (takaisin "Takaisin" toiminto {}))
   ([teksti toiminto] (takaisin teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
-                             :ikoni (ikonit/livicon-chevron-left)}))))
+                             :ikoni (ikonit/livicon-chevron-left)})]))
 
 (defn uusi
   ([toiminto] (uusi "Uusi" toiminto {}))
   ([teksti toiminto] (uusi teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-ensisijainen" " " luokka)
-                             :ikoni (ikonit/livicon-plus)}))))
+                             :ikoni (ikonit/livicon-plus)})]))
 
 (defn hyvaksy
   ([toiminto] (hyvaksy "OK" toiminto {}))
   ([teksti toiminto] (hyvaksy teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-myonteinen" " " luokka)
-                             :ikoni (ikonit/check)}))))
+                             :ikoni (ikonit/check)})]))
 
 (defn peruuta
   ([toiminto] (peruuta "Peruuta" toiminto {}))
   ([teksti toiminto] (peruuta teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-kielteinen" " " luokka)
-                             :ikoni (ikonit/livicon-ban)}))))
+                             :ikoni (ikonit/livicon-ban)})]))
 
 (defn yleinen-ensisijainen
   ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-ensisijainen" " " luokka)
-                             :disabled disabled}))))
+                             :disabled disabled})]))
 
 (defn yleinen-toissijainen
   ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-toissijainen" " " luokka)}))))
+                            {:luokka (str "nappi-toissijainen" " " luokka)})]))
 
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
-                            {:luokka (str "nappi-ensisijainen" " " luokka)}))))
+                            {:luokka (str "nappi-ensisijainen" " " luokka)})]))
 
 (defn sulje-ruksi
   [sulje!]
@@ -188,23 +188,23 @@
 (defn poista
   ([teksti toiminto] (poista teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-kielteinen" " " luokka)
-                             :ikoni (ikonit/livicon-trash)}))))
+                             :ikoni (ikonit/livicon-trash)})]))
 
 (defn tarkasta
   ([teksti toiminto] (tarkasta teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
-                             :ikoni (ikonit/eye-open)}))))
+                             :ikoni (ikonit/eye-open)})]))
 
 (defn muokkaa
   ([teksti toiminto] (muokkaa teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
-   (nappi teksti toiminto (merge
+   [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
-                             :ikoni (ikonit/livicon-pen)}))))
+                             :ikoni (ikonit/livicon-pen)})]))
