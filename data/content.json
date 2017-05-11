@@ -10,8 +10,8 @@
     "category": "maintenance",
     "title": "Teiden ylläpito",
     "short": "",
-    "body": "Ylläpidon HARJA otetaan käyttöön huhtikuun 2017 aikana. ",
-    "images": ["images/yllapidon aikataulu_3.png"]
+    "body": "Ylläpidon HARJA on ottu käyttöön huhtikuussa 2017 Päällystys- ja Tiemerkintäurakoissa. ",
+    "images": ["images/Yllapidon aikataulu_3.png"]
   },
   {
     "category": "faq",
@@ -25,6 +25,6 @@
     "title": "Vesiväylät",
     "short": "",
     "body": "Uutisia Harjan käytöstä vesiväylillä",
-    "images": ["images/vesivaylien aikataulu_1.png"]
+    "images": ["images/Vesivaylien aikataulu_1.png"]
   }
 ]
