@@ -13,7 +13,7 @@ let ListItem = React.createClass({
     return (
       <div className="harja-noticelist-item">
         <div className="row column">
-          <div className="harja-date harja-icon-clock">{this.props.notice.date}</div>
+          <div className="harja-date harja-icon-clock">{this.props.notice.displayDate}</div>
         </div>
         <div className="row column">
           <a className="harja-notice-link" href="#" onClick={this.onclick}>{this.props.notice.title}</a>

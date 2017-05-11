@@ -1,0 +1,18 @@
+[
+	{
+		"date": "2015-03-21",
+		"title": "Vesiväylät #1",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue."
+	},
+  {
+		"date": "2013-02-25",
+		"title": "Vesiväylät #2",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue."
+	},
+  {
+		"date": "2014-02-25",
+		"body": "Vesiväylät Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue."
+	}
+]

@@ -37,7 +37,7 @@ export default React.createClass({
   },
 
   render() {
-    let {care, maintenance, faq, content} = this.props;
+    let {care, maintenance, faq, waterways, content} = this.props;
     let {selection} = this.state;
     let heroEl, devEl, mainEl, singleNoticeEl, noticeTypeEl;
 
@@ -62,7 +62,7 @@ export default React.createClass({
       );
     }
     else {
-      heroEl = <Hero />;
+      heroEl = <Hero news={this.props.news}/>;
       devEl = <DevLinks />;
       mainEl = (
         <div id="harja-main-view">
@@ -78,8 +78,8 @@ export default React.createClass({
               </div>
             </div>
             <div className="small-12 medium-12 large-4  columns">
-              <div className="harja-noticelist harja-faq-noticelist">
-                <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+              <div className="harja-noticelist harja-waterways-noticelist">
+                <NoticeList notices={waterways} category={Category.WATERWAYS} shorten={3}/>
               </div>
             </div>
           </div>
@@ -91,8 +91,6 @@ export default React.createClass({
       <div id="harja-home">
         <Nav />
         {heroEl}
-        {devEl}
-        {mainEl}
         {singleNoticeEl}
         {noticeTypeEl}
         <Footer />

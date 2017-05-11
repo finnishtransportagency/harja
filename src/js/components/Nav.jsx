@@ -14,6 +14,7 @@ export default React.createClass({
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}, buttonStyle: 'large button'},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}, buttonStyle: 'large button'},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
+      {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}, buttonStyle: 'large button'},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
     ];
 
@@ -21,8 +22,13 @@ export default React.createClass({
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
+      {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}},
       {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
     ];
+
+    const feedbackAddress = "harjapalaute@solita.fi";
+    const feedbackSubject = "";
+    const feedbackHref = "mailto:" + feedbackAddress + "?subject=" +feedbackSubject;
 
     return (
       <nav>
@@ -32,6 +38,7 @@ export default React.createClass({
             <img className="harja-header-logo" src="images/harja_logo_text.png" alt="harja logo" srcSet="images/harja_logo_text.svg" />
           </div>
           <div className="top-bar-right">
+            <div className="harja-feedback"><a href={feedbackHref}>Palautetta!</a></div>
             <div className="title-bar-title">Liikenneviraston Harja-projekti</div>
           </div>
         </div>
@@ -61,6 +68,9 @@ export default React.createClass({
               </li>
               <li >
                 <a className="large button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
+              </li>
+              <li>
+                <a className="large button" href={feedbackHref}>Palautetta!</a>
               </li>
             </ul>
 

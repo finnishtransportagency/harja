@@ -4019,6 +4019,29 @@ a.harja-notice-link {
 .harja-noticelist-item {
   margin-bottom: 1em; }
 
+.harja-newslist {
+  height: 100%;
+  border-left: 0;
+  border-right: 0;
+  padding: 0 1em 1em 1em; }
+  .harja-newslist ul {
+    margin-left: 0; }
+
+.harja-newslist-item {
+  color: white;
+  padding-bottom: 1em; }
+  .harja-newslist-item .harja-date {
+    height: 1.5em;
+    font-weight: bold;
+    padding-left: 0;
+    color: white;
+    float: right; }
+
+a.harja-news-link {
+  color: white;
+  float: left;
+  text-align: left; }
+
 .harja-care-noticelist {
   padding-top: 1em;
   border-top: 0.5em solid #9eb83d;
@@ -4030,6 +4053,11 @@ a.harja-notice-link {
   border-bottom: 0.2em solid #c8c8c8; }
 
 .harja-faq-noticelist {
+  padding-top: 1em;
+  border-top: 0.5em solid #0088ce;
+  border-bottom: 0.2em solid #c8c8c8; }
+
+.harja-waterways-noticelist {
   padding-top: 1em;
   border-top: 0.5em solid #0088ce;
   border-bottom: 0.2em solid #c8c8c8; }
@@ -4055,7 +4083,14 @@ a.harja-notice-link {
 .harja-faq a:focus {
   background-color: #3db7e4; }
 
-.harja-hero {
+.harja-waterways a {
+  background-color: #0088ce; }
+
+.harja-waterways a:hover,
+.harja-waterways a:focus {
+  background-color: #3db7e4; }
+
+.harja-hero-large {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
   background-position: center;
@@ -4064,19 +4099,30 @@ a.harja-notice-link {
   background-color: #c8c8c8;
   color: white;
   padding-bottom: 2em;
-  padding-top: 2em; }
-  .harja-hero p {
+  padding-top: 2em;
+  height: 100%; }
+  .harja-hero-large p {
     padding-bottom: 2em; }
-  .harja-hero .harja-more {
+  .harja-hero-large .harja-more {
     margin: auto;
     width: 50%; }
-    .harja-hero .harja-more a {
+    .harja-hero-large .harja-more a {
       width: 100%; }
 
+.harja-hero-small {
+  background-color: #4b4b4b;
+  color: white;
+  padding-bottom: 2em;
+  padding-top: 2em;
+  height: 100%; }
+
+.harja-feedback {
+  text-align: right; }
+
 .harja-devlinks {
-  background-color: #3db7e4;
   margin-left: 0;
-  margin-right: 0; }
+  margin-right: 0;
+  padding-bottom: 2em; }
   .harja-devlinks a {
     margin-top: 2em;
     margin-bottom: 2em;
@@ -4127,6 +4173,22 @@ a.harja-notice-link {
 .harja-menu li .button:hover,
 .harja-menu li .button:focus {
   background-color: #0088ce; }
+
+.scrollarea {
+  height: 100%;
+  max-height: 40em; }
+
+.harja-hero {
+  height: 100%; }
+
+@media screen and (max-width: 63.9375em) {
+  .harja-hero {
+    height: 100%; } }
+
+@media screen and (max-width: 63.9375em) {
+  .scrollarea {
+    height: 100%;
+    max-height: none; } }
 
 #harja-footer {
   height: 4em;

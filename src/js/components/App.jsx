@@ -8,12 +8,14 @@ export default React.createClass({
 
   getInitialState() {
     let initialState = {
-      Category: {}
+      Category: {},
+      news: []
     }
     initialState[Category.CARE] = []
     initialState[Category.MAINTENANCE] = []
     initialState[Category.FAQ] = []
     initialState[Category.CONTENT] = []
+    initialState[Category.WATERWAYS] = []
     return initialState;
   },
 
@@ -25,18 +27,21 @@ export default React.createClass({
     const careUrl = test + 'care.json';
     const maintenanceUrl = test + 'maintenance.json';
     const faqUrl = test + 'faq.json';
+    const waterUrl = test + 'faq.json';
 
     if (param === 'test') {
       // Slow down fetching for development
       setTimeout(() => { this.getNotices(careUrl, Category.CARE); }, 500);
       setTimeout(() => { this.getNotices(maintenanceUrl, Category.MAINTENANCE); }, 3000);
       setTimeout(() => { this.getNotices(faqUrl, Category.FAQ); }, 5000);
+      setTimeout(() => { this.getNotices(waterUrl, Category.WATERWAYS); }, 5000);
       setTimeout(() => { this.getContent(); }, 5000);
     }
     else {
       this.getNotices(careUrl, Category.CARE);
       this.getNotices(maintenanceUrl, Category.MAINTENANCE);
       this.getNotices(faqUrl, Category.FAQ);
+      this.getNotices(waterUrl, Category.WATERWAYS);
       this.getContent();
     }
   },
@@ -49,6 +54,8 @@ export default React.createClass({
         return 'Ylläpitötiedote';
       case Category.FAQ:
         return 'Koulutusvideo';
+      case Category.WATERWAYS:
+        return 'Vesiväylät';
       default:
         return 'Tiedote';
     }
@@ -79,26 +86,36 @@ export default React.createClass({
           notice.date = d;
           return notice;
         })
-        .sort((a,b) => {
-          if (a.date === null && b.date === null) return 0;
-          if (a.date === null) return 1;
-          if (b.date === null) return -1;
-          return b.date.getTime() - a.date.getTime()
-        })
+        .sort(this.sortByDate)
         .map((notice, index) => {
           notice.id = index;
           notice.type = type
-          notice.date = notice.date === null ? 'Ei päivämäärää' : notice.date.toLocaleDateString('fi-FI');
+          notice.displayDate = notice.date === null ? 'Ei päivämäärää' : notice.date.toLocaleDateString('fi-FI');
           notice.title = notice.title || this.defaultTitle(type);
           notice.body = notice.body || '';
           notice.images = notice.images || [];
           return notice;
         });
 
+        const news = this.updateNews(notices);
+
         this.setState({
           [type]: notices,
+          news: news
         });
       });
+  },
+
+  updateNews(newNews) {
+    const oldNews = this.state.news;
+    return oldNews.concat(newNews).sort(this.sortByDate);
+  },
+
+  sortByDate(a, b) {
+    if (a.date === null && b.date === null) return 0;
+    if (a.date === null) return 1;
+    if (b.date === null) return -1;
+    return b.date.getTime() - a.date.getTime()
   },
 
   getContent() {
@@ -125,8 +142,6 @@ export default React.createClass({
   },
 
   render () {
-
-
     return (
       <Home {...this.state}/>
     )

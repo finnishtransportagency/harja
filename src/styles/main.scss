@@ -235,6 +235,34 @@ a.harja-notice-link {
   margin-bottom: 1em;
 }
 
+.harja-newslist {
+  height: 100%;
+  border-left: 0;
+  border-right: 0;
+  padding: 0 1em 1em 1em;
+  ul {
+    margin-left: 0;
+  }
+}
+
+.harja-newslist-item {
+  color: white;
+  padding-bottom: 1em;
+  .harja-date {
+    height: 1.5em;
+    font-weight: bold;
+    padding-left: 0;
+    color: white;
+    float: right;
+  }
+}
+
+a.harja-news-link {
+  color: white;
+  float: left;
+  text-align: left;
+}
+
 .harja-care-noticelist {
   padding-top: 1em;
   border-top: $harja-list-top-height solid $green;
@@ -248,6 +276,12 @@ a.harja-notice-link {
 }
 
 .harja-faq-noticelist {
+  padding-top: 1em;
+  border-top: $harja-list-top-height solid $blue;
+  border-bottom: $harja-list-bottom-height solid $grey-light;
+}
+
+.harja-waterways-noticelist {
   padding-top: 1em;
   border-top: $harja-list-top-height solid $blue;
   border-bottom: $harja-list-bottom-height solid $grey-light;
@@ -283,7 +317,17 @@ a.harja-notice-link {
   }
 }
 
-.harja-hero {
+.harja-waterways {
+  a {
+    background-color: $blue;
+  }
+  a:hover,
+  a:focus {
+    background-color: $blue-light;
+  }
+}
+
+.harja-hero-large {
   background: url("hero_bw.jpg");
   background-repeat: no-repeat;
   background-position: center;
@@ -293,6 +337,7 @@ a.harja-notice-link {
   color: white;
   padding-bottom: 2em;
   padding-top:  2em;
+  height: 100%;
 
   p {
     padding-bottom: 2em;
@@ -307,10 +352,22 @@ a.harja-notice-link {
   }
 }
 
+.harja-hero-small {
+  background-color: $grey-dark;
+  color: white;
+  padding-bottom: 2em;
+  padding-top:  2em;
+  height: 100%;
+}
+
+.harja-feedback {
+  text-align: right;
+}
+
 .harja-devlinks {
-  background-color: $blue-light;
   margin-left: 0;
   margin-right: 0;
+  padding-bottom: 2em;
   a {
     margin-top: 2em;
     margin-bottom: 2em;
@@ -377,6 +434,28 @@ a.harja-notice-link {
   .button:hover,
   .button:focus {
     background-color: $blue;
+  }
+}
+
+.scrollarea {
+  height: 100%;
+  max-height: 40em;
+}
+
+.harja-hero {
+  height: 100%;
+}
+
+@include breakpoint(medium down) {
+  .harja-hero {
+    height: 100%;
+  }
+}
+
+@include breakpoint(medium down) {
+  .scrollarea {
+    height: 100%;
+    max-height: none;
   }
 }
 

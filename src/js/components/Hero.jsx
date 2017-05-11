@@ -1,5 +1,7 @@
 import React from 'react';
 import NavButton from './NavButton.jsx'
+import DevLinks from './DevLinks.jsx';
+import News from './News.jsx';
 import {Events, Category} from '../enums.js';
 
 export default React.createClass({
@@ -26,11 +28,18 @@ export default React.createClass({
       </div>
     );
 
+    const linkWater = {title: "Vesiväylät", data: {action: Events.CATEGORY, category: Category.WATERWAYS}};
+    const moreWaterEl = (
+      <div className="harja-more harja-waterways">
+        <NavButton item={linkWater} />
+      </div>
+    );
+
     return (
-      <section className="harja-hero show-for-large">
+      <div className="harja-hero">
+      <section className="harja-hero-large show-for-large">
         <div className="row column align-middle text-center">
-          <h4>Liikenneviraston Harja-projekti</h4>
-          <p>Liikenneviraston väylien kunnossapidon seurannan ja raportoinnin järjestelmä Harja</p>
+          <News news={this.props.news}/>
           <div className="row">
             <div className="large-4 column">
               {moreCareEl}
@@ -39,11 +48,16 @@ export default React.createClass({
               {moreMaintenanceEl}
             </div>
             <div className="large-4 column">
-              {moreFaqEl}
+              {moreWaterEl}
             </div>
           </div>
         </div>
+        <DevLinks />
       </section>
+      <section className="harja-hero-small hide-for-large">
+        <News news={this.props.news}/>
+      </section>
+      </div>
     );
   }
 });
