@@ -4,7 +4,8 @@
             [harja.loki :refer [log]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
-            [harja.domain.vesivaylat.toimenpide :as to]))
+            [harja.domain.vesivaylat.toimenpide :as to]
+            [cljs-time.core :as t]))
 
 (def testitila {:nakymassa? true
                 :infolaatikko-nakyvissa? false
@@ -133,7 +134,15 @@
 (deftest valintojen-paivittaminen
   (testing "Asetetaan uudet valinnat"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666})
+          uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666
+                                                   :sopimus-id 777
+                                                   :aikavali [(t/now) (t/now)]})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
-      (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666)))))
+      (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
+
+      (is (nil? (get-in vanha-tila [:valinnat :aikavali])))
+      (is (vector? (get-in uusi-tila [:valinnat :aikavali])))
+
+      (is (nil? (get-in vanha-tila [:valinnat :sopimus-id])))
+      (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777)))))

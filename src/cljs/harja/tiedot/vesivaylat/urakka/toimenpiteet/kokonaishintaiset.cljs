@@ -7,7 +7,9 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tila
-  (atom {:valinnat {:urakka-id nil}
+  (atom {:valinnat {:urakka-id nil
+                    :sopimus-id nil
+                    :aikavali [nil nil]}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
@@ -292,7 +294,10 @@
 
   PaivitaValinnat
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (assoc-in app [:valinnat :urakka-id] (:urakka-id tiedot)))
+    (-> app
+        (assoc-in [:valinnat :urakka-id] (:urakka-id tiedot))
+        (assoc-in [:valinnat :sopimus-id] (:sopimus-id tiedot))
+        (assoc-in [:valinnat :aikavali] (:aikavali tiedot))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
