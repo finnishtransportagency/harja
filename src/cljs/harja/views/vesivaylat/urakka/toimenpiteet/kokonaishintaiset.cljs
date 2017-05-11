@@ -151,7 +151,7 @@
 (defn kokonaishintaiset-toimenpiteet* [e! app tiedot]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat (get-in tiedot [:urakka :id]))))
+                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
