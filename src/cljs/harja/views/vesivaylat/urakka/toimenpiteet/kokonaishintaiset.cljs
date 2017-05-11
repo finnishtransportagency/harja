@@ -146,7 +146,10 @@
            tyolajit))))
 
 (defn- suodattimet [e! app urakka]
-  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka])
+  [valinnat/valintaryhmat-3
+   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
+   [:div "Tähän tulee lisää suodattimia"]
+   [:div "Tähän tulee lisää suodattimia"]])
 
 (defn kokonaishintaiset-toimenpiteet* [e! app tiedot]
   (komp/luo
@@ -155,13 +158,12 @@
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
-       [debug app]
-
-       [suodattimet e! app (:urakka tiedot)]
-
        [:div {:style {:padding "10px"}}
         [:img {:src "images/harja_favicon.png"}]
         [:div {:style {:color "orange"}} "Työmaa"]]
+       [debug app]
+
+       [suodattimet e! app (:urakka tiedot)]
 
        (into [otsikkopaneeli
               {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])

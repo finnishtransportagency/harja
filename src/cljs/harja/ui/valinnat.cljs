@@ -324,3 +324,16 @@
        (lomake/ryhma
          {:rivi? true}
          vakio-aikavalikentta)))))
+
+(defn urakkavalinnat [sisalto]
+  [:div.urakkavalinnat sisalto])
+
+(defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
+  [urakkavalinnat
+   [:div.row
+    [:div.valintaryhma.col-sm-12.col-md-4
+     ryhma1]
+    [:div.valintaryhma.col-sm-12.col-md-4
+     ryhma2]
+    [:div.valintaryhma.col-sm-12.col-md-4
+     ryhma3]]])
