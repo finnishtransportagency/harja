@@ -7,7 +7,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tila
-  (atom {:nakymassa? false
+  (atom {:valinnat {:urakka-id nil}
+         :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
          :toimenpiteet [{::to/id 0
@@ -280,6 +281,7 @@
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseTyolaji [tiedot])
 (defrecord ValitseVayla [tiedot])
+(defrecord PaivitaValinnat [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
 (extend-protocol tuck/Event
@@ -287,6 +289,10 @@
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
     (assoc app :nakymassa? nakymassa?))
+
+  PaivitaValinnat
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+    (assoc-in app [:valinnat :urakka-id] (:urakka-id tiedot)))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]

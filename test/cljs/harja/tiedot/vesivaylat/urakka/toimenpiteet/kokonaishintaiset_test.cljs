@@ -96,7 +96,7 @@
                                                   :valinta true})
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
-      (every? true? (map :valittu? viitat))))
+      (is (every? true? (map :valittu? viitat)))))
 
   (testing "Asetetaan valinnat pois viitoilta"
     (let [vanha-tila testitila
@@ -104,7 +104,7 @@
                                                   :valinta false})
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
-      (every? false? (map :valittu? viitat)))))
+      (is (every? false? (map :valittu? viitat))))))
 
 (deftest infolaatikon-tila
   (testing "Asetetaan infolaatikko näkyviin"
@@ -120,7 +120,7 @@
                                                 :valinta true})
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
-      (every? true? (map :valittu? viitat))))
+      (is (every? true? (map :valittu? viitat)))))
 
   (testing "Asetetaan valinnat pois Iisalmen väylältä"
     (let [vanha-tila testitila
@@ -128,4 +128,12 @@
                                                 :valinta false})
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
-      (every? false? (map :valittu? viitat)))))
+      (is (every? false? (map :valittu? viitat))))))
+
+(deftest valintojen-paivittaminen
+  (testing "Asetetaan uudet valinnat"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666})
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
+      (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666)))))
