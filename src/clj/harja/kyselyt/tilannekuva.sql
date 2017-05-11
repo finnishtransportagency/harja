@@ -506,7 +506,7 @@ SELECT ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
        rp.aika AS aika
   FROM toteuma t
        JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-       LEFT JOIN LATERAL unnest(tr.reittipisteet) WITH ORDINALITY rp
+       LEFT JOIN LATERAL unnest(tr.reittipisteet) WITH ORDINALITY rp ON TRUE
  WHERE t.id = :toteuma-id
    AND rp.ordinality IN (:reittipiste-idt);
 
