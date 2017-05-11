@@ -156,7 +156,7 @@
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])
-                                                          :aikvali (:aikavali tiedot)})))
+                                                          :aikavali (:aikavali tiedot)})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       [:div
