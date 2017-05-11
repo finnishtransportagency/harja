@@ -91,10 +91,6 @@
        [:td "-"]
        [:td "-"]]]]]])
 
-(defn- toimenpiteiden-siirto [toimenpide]
-  [napit/yleinen "Siirrä valitut yksikköhintaisiin"
-   #(log "Painoit nappia")])
-
 (defn- paneelin-sisalto [e! toimenpiteet]
   [grid/grid
    {:tunniste ::to/id
@@ -104,9 +100,7 @@
     :infolaatikon-tila-muuttui (fn [uusi]
                                  (e! (tiedot/->AsetaInfolaatikonTila uusi)))
     :rivin-infolaatikko (fn [rivi data]
-                          (if (some :valittu? data)
-                            [toimenpiteiden-siirto rivi]
-                            [toimenpide-infolaatikossa rivi]))
+                          [toimenpide-infolaatikossa rivi])
     :salli-valiotsikoiden-piilotus? true
     :ei-footer-muokkauspaneelia? true
     :valiotsikoiden-alkutila :kaikki-kiinni}
