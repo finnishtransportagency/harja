@@ -26,8 +26,8 @@
       <!-- Turvalaitteen numero, nimi ja urakka (ryhmä) -->
       <turvalaite nro="904" nimi="Glosholmsklacken pohjoinen" ryhma="514"/>
       <komponentit>
-          <komponentti id="123" nimi="Erikoispoiju"/>
-          <komponentti id="124" nimi="Erikoismerkki"/>
+          <komponentti id="123" nimi="Erikoispoiju" tila="234"/>
+          <komponentti id="124" nimi="Erikoismerkki" tila="345"/>
       </komponentit>
     </toimenpide>
   </HaeToimenpiteetResponse>
