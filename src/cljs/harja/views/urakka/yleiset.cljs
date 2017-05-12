@@ -229,19 +229,8 @@
      {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
     tyotunnit]])
 
-(defn hae-vuosikolmanneksen-tunnit [vuosi kolmannes tyotunnit]
-  (::urakan-tyotunnit-d/tyotunnit
-    (first (filter #(and (= vuosi (::urakan-tyotunnit-d/vuosi %))
-                         (= kolmannes (::urakan-tyotunnit-d/vuosikolmannes %)))
-                   tyotunnit))))
-
 (defn urakan-tyotunnit [{:keys [id alkupvm loppupvm]}]
   (let [vuodet (reverse (mapv #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
-        tunnit-vastauksesta (fn [vastaus](map #(assoc %
-                                     :ensimmainen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 1 vastaus)
-                                     :toinen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 2 vastaus)
-                                     :kolmas-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 3 vastaus))
-                                  vuodet))
         tyotunnit (atom nil)
         hae! (fn [urakka-id]
                (reset! tyotunnit vuodet)
@@ -249,7 +238,7 @@
                  (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
                    (if (k/virhe? vastaus)
                      (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                     (reset! tyotunnit (tunnit-vastauksesta vastaus))))))
+                     (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus))))))
         tallenna! (fn [ur]
                     [urakan-tyotuntilista ur @tyotunnit
                      (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
@@ -257,7 +246,7 @@
                          (go (let [vastaus (<! (urakan-tyotunnit/tallenna-urakan-tyotunnit id uudet))]
                                (if (k/virhe? vastaus)
                                  (viesti/nayta! "Urakan työtuntien tallennus epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                                 (reset! tyotunnit (tunnit-vastauksesta vastaus)))))))])]
+                                 (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus)))))))])]
     (hae! id)
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id :vuosi))

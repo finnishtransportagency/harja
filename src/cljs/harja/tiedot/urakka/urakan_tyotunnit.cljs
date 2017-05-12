@@ -12,6 +12,12 @@
    ::urakan-tyotunnit/vuosikolmannes kolmannes
    ::urakan-tyotunnit/tyotunnit tunnit})
 
+(defn vuosikolmanneksen-tunnit [vuosi kolmannes tyotunnit]
+  (::urakan-tyotunnit/tyotunnit
+    (first (filter #(and (= vuosi (::urakan-tyotunnit/vuosi %))
+                         (= kolmannes (::urakan-tyotunnit/vuosikolmannes %)))
+                   tyotunnit))))
+
 (defn tyotunnit-tallennettavana [urakka-id tyotunnit-vuosittain]
   (mapcat (fn [{:keys [vuosi
                        ensimmainen-vuosikolmannes
@@ -26,6 +32,13 @@
                (when kolmas-vuosikolmannes
                  (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 3 toinen-vuosikolmannes))]))
           tyotunnit-vuosittain))
+
+(defn tyotunnit-naytettavana [vuodet tyotunnit]
+  (map #(assoc %
+          :ensimmainen-vuosikolmannes (vuosikolmanneksen-tunnit (:vuosi %) 1 tyotunnit)
+          :toinen-vuosikolmannes (vuosikolmanneksen-tunnit (:vuosi %) 2 tyotunnit)
+          :kolmas-vuosikolmannes (vuosikolmanneksen-tunnit (:vuosi %) 3 tyotunnit))
+       vuodet))
 
 (defn hae-urakan-tyotunnit [urakka-id]
   (k/post! :hae-urakan-tyotunnit {::urakan-tyotunnit/urakka-id urakka-id}))

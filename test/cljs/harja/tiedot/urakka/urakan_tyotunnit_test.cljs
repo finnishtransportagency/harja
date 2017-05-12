@@ -9,7 +9,7 @@
 
 (t/use-fixtures :each u/komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
-(deftest urakantyotunnit-naytettavasta-tallennettavaksi
+(deftest urakan-tyotunnit-naytettavasta-tallennettavaksi
   (let [naytettavat [{:vuosi 2017
                       :ensimmainen-vuosikolmannes 111
                       :toinen-vuosikolmannes 222
@@ -44,6 +44,31 @@
                    :harja.domain.urakan-tyotunnit/tyotunnit 555}]
         tallennettavat (urakan-tyotunnit/tyotunnit-tallennettavana 666 naytettavat)]
     (is (= odotetut tallennettavat))))
+
+(deftest urakan-tyotunnit-palvelusta-naytettavaksi
+  (let [vuodet [{:vuosi 2017}
+                {:vuosi 2016}
+                {:vuosi 2015}]
+        palvelusta [{:harja.domain.urakan-tyotunnit/tyotunnit 666
+                     :harja.domain.urakan-tyotunnit/id 27
+                     :harja.domain.urakan-tyotunnit/vuosi 2017
+                     :harja.domain.urakan-tyotunnit/lahetys-onnistunut false
+                     :harja.domain.urakan-tyotunnit/vuosikolmannes 2
+                     :harja.domain.urakan-tyotunnit/urakka-id 4}]
+        naytettavat (urakan-tyotunnit/tyotunnit-naytettavana vuodet palvelusta)
+        odotetut [{:kolmas-vuosikolmannes nil
+                   :vuosi 2017
+                   :ensimmainen-vuosikolmannes nil
+                   :toinen-vuosikolmannes 666}
+                  {:kolmas-vuosikolmannes nil
+                   :vuosi 2016
+                   :ensimmainen-vuosikolmannes nil
+                   :toinen-vuosikolmannes nil}
+                  {:kolmas-vuosikolmannes nil
+                   :vuosi 2015
+                   :ensimmainen-vuosikolmannes nil
+                   :toinen-vuosikolmannes nil}]]
+    (is (= odotetut naytettavat))))
 
 
 
