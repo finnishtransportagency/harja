@@ -117,11 +117,11 @@ VALUES ((SELECT id
          FROM toimenpidekoodi
          WHERE nimi = 'Rannikon kauppamerenkulku'), '2016-08-01', '2017-07-30');
 
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, sampoid, alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
         'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann muu vl, TP',
         (SELECT id
          FROM toimenpidekoodi
-         WHERE koodi = '24103'), '2016-08-01', '2017-07-30');
+         WHERE koodi = '24103'), 'PR00008511', '2016-08-01', '2017-07-30');

@@ -137,7 +137,8 @@
 
 (defn parsi-aikaleima
   ([teksti] (parsi-aika teksti "yyyy-MM-dd'T'HH:mm:ss.SSS"))
-  ([teksti formaatti] (parsi-aika formaatti teksti)))
+  ([teksti formaatti]
+   (parsi-aika formaatti teksti)))
 
 (defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
@@ -153,6 +154,11 @@
              (if (instance? java.util.Date date)
                (tc/from-date date)
                date)))
+
+(defn parsi-xsd-datetime-aikaleimalla [teksti]
+  (-> (org.joda.time.format.ISODateTimeFormat/dateTimeNoMillis)
+      (.withOffsetParsed)
+      (.parseDateTime teksti)))
 
 (defn json-date-time->joda-time
   "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
@@ -190,3 +196,15 @@
           (.contains sisalto "&"))
     (tee-c-data-elementti sisalto)
     sisalto))
+
+(defn lue-attribuutit
+  "Lukee annetusta XML zipper objektista attribuutit. Palauttaa mäpin, jossa
+  luetut attribuuttien arvot. Avain-fn muuntaa attr-map olevan avaimen (XML attribuutin nimi)
+  tulosmäpin avaimeksi. Attr-map on mäppäys avaimesta prosessointifunktioon, jolla attribuutin
+  arvo käsitellään."
+  [xml-zipper avain-fn attr-map]
+  (reduce (fn [m [avain lue-fn]]
+            (assoc m (avain-fn avain)
+                   (lue-fn (z/attr xml-zipper avain))))
+          {}
+          attr-map))

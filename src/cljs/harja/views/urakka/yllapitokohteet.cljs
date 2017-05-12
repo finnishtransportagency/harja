@@ -111,12 +111,12 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :fmt #(pot/arvo-koodilla pot/+ajoradat+ %)
+            :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Ajorata -"
                                                      "")))
-            :valinnat pot/+ajoradat+
+            :valinnat pot/+ajoradat-numerona+
             :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
             :muokattava? (or (:muokattava? kaista) (constantly true))

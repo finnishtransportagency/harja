@@ -24,7 +24,6 @@
         maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))]
     (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
 
-
 (defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
 
@@ -83,7 +82,12 @@
   (let [maksueran-tiedot (hae-maksuera db numero summat)
         ;; Sakot lähetetään Sampoon negatiivisena
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                           (update-in maksueran-tiedot [:maksuera :summa] (fnil - 0))
+                           (update-in maksueran-tiedot [:maksuera :summa]
+                                      #(if %
+                                         (if (> % 0)
+                                           (- %)
+                                           %)
+                                         0))
                            maksueran-tiedot)]
     maksueran-tiedot))
 
