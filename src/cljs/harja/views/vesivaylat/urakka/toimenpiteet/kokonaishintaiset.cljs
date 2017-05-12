@@ -18,6 +18,8 @@
             [clojure.string :as str]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.vesivaylat.vayla :as va]
+            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -29,29 +31,30 @@
 (defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet]
   (let [vaylalla-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
         vaylat (keys vaylalla-ryhmiteltyna)]
-    (vec (mapcat #(-> (cons (grid/otsikko
-                              (grid/otsikkorivin-tiedot
-                                (:nimi %)
-                                (count (to/toimenpiteet-vaylalla toimenpiteet (:id %))))
-                              {:id (:id %)
-                               :otsikkokomponentit
-                               [{:sijainti otsikoiden-checkbox-sijainti
-                                 :sisalto
-                                 (fn [{:keys [id]}]
-                                   (let [vayla-id id
-                                         vaylan-toimenpiteet (to/toimenpiteet-vaylalla toimenpiteet vayla-id)
-                                         kaikki-valittu? (every? true? (map :valittu? vaylan-toimenpiteet))
-                                         mitaan-ei-valittu? (every? (comp not true?)
-                                                                    (map :valittu? vaylan-toimenpiteet))]
-                                     [kentat/tee-kentta
-                                      {:tyyppi :checkbox}
-                                      (r/wrap (cond kaikki-valittu? true
-                                                    mitaan-ei-valittu? false
-                                                    :default ::kentat/indeterminate)
-                                              (fn [uusi]
-                                                (e! (tiedot/->ValitseVayla {:vayla-id vayla-id
-                                                                            :valinta uusi}))))]))}]})
-                            (get vaylalla-ryhmiteltyna %)))
+    (vec (mapcat (fn [vayla]
+                   (cons (grid/otsikko
+                           (grid/otsikkorivin-tiedot
+                             (::va/nimi vayla)
+                             (count (to/toimenpiteet-vaylalla toimenpiteet (::va/id vayla))))
+                           {:id (::va/id vayla)
+                            :otsikkokomponentit
+                            [{:sijainti otsikoiden-checkbox-sijainti
+                              :sisalto
+                              (fn [{:keys [id]}]
+                                (let [vayla-id id
+                                      vaylan-toimenpiteet (to/toimenpiteet-vaylalla toimenpiteet vayla-id)
+                                      kaikki-valittu? (every? true? (map :valittu? vaylan-toimenpiteet))
+                                      mitaan-ei-valittu? (every? (comp not true?)
+                                                                 (map :valittu? vaylan-toimenpiteet))]
+                                  [kentat/tee-kentta
+                                   {:tyyppi :checkbox}
+                                   (r/wrap (cond kaikki-valittu? true
+                                                 mitaan-ei-valittu? false
+                                                 :default ::kentat/indeterminate)
+                                           (fn [uusi]
+                                             (e! (tiedot/->ValitseVayla {:vayla-id vayla-id
+                                                                         :valinta uusi}))))]))}]})
+                         (get vaylalla-ryhmiteltyna vayla)))
                  vaylat))))
 
 (defn- toimenpiteet-tyolajilla [toimenpiteet tyolajit]
@@ -72,12 +75,12 @@
     ;; TODO Osa tiedoista puuttuu
     "Urakoitsija" "-"
     "Sopimusnumero" "-"
-    "Vesialue ja väylä" (get-in toimenpide [::to/vayla :nimi])
+    "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)
     "Toimenpide" (::to/toimenpide toimenpide)
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
-    "Turvalaite" (get-in toimenpide [::to/turvalaite :nimi])
+    "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
     "Urakoitsijan vastuuhenkilö" "-"
     "Henkilölukumaara" "-"]
    [:footer.livi-grid-infolaatikko-footer
@@ -111,7 +114,7 @@
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite :nimi])}
+    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
     {:otsikko "Vikakorjaus" :nimi ::to/vikakorjaus :fmt fmt/totuus :leveys 5}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn [rivi]

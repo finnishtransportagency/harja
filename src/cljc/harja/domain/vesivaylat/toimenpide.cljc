@@ -141,7 +141,7 @@ reimari-tilat
   (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
 (defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
-  (filter #(= (get-in % [::vayla :id]) vayla-id) toimenpiteet))
+  (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
 
 (def tyolajit (vals reimari-tyolajit))
 
