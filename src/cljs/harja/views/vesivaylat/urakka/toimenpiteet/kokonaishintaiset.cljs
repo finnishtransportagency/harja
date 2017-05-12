@@ -104,8 +104,8 @@
     :tyhja (if (nil? toimenpiteet)
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
-    :infolaatikon-tila-muuttui (fn [uusi]
-                                 (e! (tiedot/->AsetaInfolaatikonTila uusi)))
+    :infolaatikon-tila-muuttui (fn [nakyvissa?]
+                                 (e! (tiedot/->AsetaInfolaatikonTila nakyvissa?)))
     :rivin-infolaatikko (fn [rivi data]
                           [toimenpide-infolaatikossa rivi])
     :salli-valiotsikoiden-piilotus? true
