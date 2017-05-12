@@ -27,7 +27,7 @@ export default React.createClass({
     const careUrl = test + 'care.json';
     const maintenanceUrl = test + 'maintenance.json';
     const faqUrl = test + 'faq.json';
-    const waterUrl = test + 'faq.json';
+    const waterUrl = test + 'waterways.json';
 
     if (param === 'test') {
       // Slow down fetching for development
