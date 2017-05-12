@@ -4,14 +4,18 @@
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
+            [goog.events.EventType :as EventType]
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
 
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi ;todo lisää onnistumisviesti
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
@@ -62,25 +66,25 @@
          [:button
           {:id (:id asetukset)
            :disabled (or @kysely-kaynnissa? (:disabled asetukset))
-           :class    (if (or @kysely-kaynnissa? (:disabled asetukset))
-                       (str luokka " disabled")
-                       luokka)
+           :class (if (or @kysely-kaynnissa? (:disabled asetukset))
+                    (str luokka " disabled")
+                    luokka)
            :on-click #(do
-                       (.preventDefault %)
-                       (reset! kysely-kaynnissa? true)
-                       (reset! nayta-virheviesti? false)
-                       (go (let [tulos (<! (kysely))]
-                             (when kun-valmis (kun-valmis tulos))
-                             (if (not (k/virhe? tulos))
-                               (do
-                                 (reset! kysely-kaynnissa? false)
-                                 (when kun-onnistuu (kun-onnistuu tulos)))
-                               (do
-                                 (reset! kysely-kaynnissa? false)
-                                 (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                                 (reset! nayta-virheviesti? true)
-                                 (when kun-virhe (kun-virhe tulos)))))))
-           :title    (:title asetukset)}
+                        (.preventDefault %)
+                        (reset! kysely-kaynnissa? true)
+                        (reset! nayta-virheviesti? false)
+                        (go (let [tulos (<! (kysely))]
+                              (when kun-valmis (kun-valmis tulos))
+                              (if (not (k/virhe? tulos))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (when kun-onnistuu (kun-onnistuu tulos)))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                  (reset! nayta-virheviesti? true)
+                                  (when kun-virhe (kun-virhe tulos)))))))
+           :title (:title asetukset)}
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
@@ -99,27 +103,55 @@
    Yleensä kannattaa tämän sijaan käyttää tarkemmin määriteltyjä nappeja.
 
    Optiot:
-   disabled                   boolean. Jos true, nappi on disabloitu
-   luokka                     Luokka napille (string, erota välilyönnillä jos useita)
-   ikoni                      Nappiin piirrettävä ikonikomponentti
+   disabled                   boolean. Jos true, nappi on disabloitu.
+   luokka                     Luokka napille (string, erota välilyönnillä jos useita).
+   ikoni                      Nappiin piirrettävä ikonikomponentti.
+   sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
-   [:button
-    {:class (str (when disabled "disabled") " " luokka)
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (toiminto))}
-    (when tallennus-kaynnissa?
-      [y/ajax-loader])
-    (when tallennus-kaynnissa?
-      " ")
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky?] :as optiot}]
+   (let [naulattu? (atom false)
+         disabled? (atom disabled)
+         napin-etaisyys-ylareunaan (atom nil)
+         maarita-sticky! (fn []
+                          (if (and
+                                sticky?
+                                (not @disabled?)
+                                (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
+                            (reset! naulattu? true)
+                            (reset! naulattu? false)))
+         kasittele-scroll-event (fn [this _]
+                                  (maarita-sticky!))
+         kasittele-resize-event (fn [this _]
+                                  (maarita-sticky!))]
+     (komp/luo
+       (komp/dom-kuuntelija js/window
+                            EventType/SCROLL kasittele-scroll-event
+                            EventType/RESIZE kasittele-resize-event)
+       (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                           (reset! disabled? disabled)
+                           (maarita-sticky!)))
+       (komp/piirretty #(reset! napin-etaisyys-ylareunaan
+                                (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                  (r/dom-node %))))
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
+         [:button
+          {:class (str (when disabled "disabled ")
+                       (when @naulattu? "nappi-naulattu ")
+                       luokka)
+           :disabled disabled
+           :on-click #(do
+                        (.preventDefault %)
+                        (toiminto))}
+          (when tallennus-kaynnissa?
+            [y/ajax-loader])
+          (when tallennus-kaynnissa?
+            " ")
 
-    (if (and ikoni
-             (not tallennus-kaynnissa?))
-      [ikonit/ikoni-ja-teksti ikoni teksti]
-      teksti)]))
+          (if (and ikoni
+                   (not tallennus-kaynnissa?))
+            [ikonit/ikoni-ja-teksti ikoni teksti]
+            teksti)])))))
 
 (defn takaisin
   ([toiminto] (takaisin "Takaisin" toiminto {}))

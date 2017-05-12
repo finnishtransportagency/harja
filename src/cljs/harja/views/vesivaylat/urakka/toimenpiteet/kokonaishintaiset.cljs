@@ -159,8 +159,8 @@
     ^{:key "siirto"}
     [napit/yleinen-ensisijainen "Siirrä valitut yksikköhintaisiin"
      #(log "Painoit nappia")
-     ;; TODO Lisää sticky-optio --> Voisi samalla yhtenäistää napit yhdeksi funktioksi
-     {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
+     {:sticky? true
+      :disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
   (komp/luo
