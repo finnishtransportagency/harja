@@ -151,4 +151,12 @@
       (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
 
       (is (nil? (get-in vanha-tila [:valinnat :vaylatyyppi])))
-      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu)))))
+      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))))
+
+  (testing "Asetetaan vain yksi valinta"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->PaivitaValinnat {:vaylatyyppi :muu
+                                                   :foo :bar})
+                        vanha-tila)]
+      (is (nil? (:valinnat vanha-tila)))
+      (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu})))))

@@ -306,11 +306,9 @@
 
   PaivitaValinnat
   (process-event [{tiedot :tiedot} app]
-    (-> app
-        (assoc-in [:valinnat :urakka-id] (:urakka-id tiedot))
-        (assoc-in [:valinnat :sopimus-id] (:sopimus-id tiedot))
-        (assoc-in [:valinnat :aikavali] (:aikavali tiedot))
-        (assoc-in [:valinnat :vaylatyyppi] (:vaylatyyppi tiedot))))
+    (assoc app :valinnat (merge (:valinnat app)
+                                (select-keys tiedot
+                                             [:urakka-id :sopimus-id :aikavali :vaylatyyppi]))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
