@@ -98,7 +98,7 @@
                                  {::urakan-tyotunnit/urakka-id urakka-id}))]
         (if (k/virhe? vastaus)
           (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
-          (let [tyotunnit (::urakan-tyotunnit/tyotunnit vastaus)]
+          (let [tyotunnit (get-in vastaus [::urakan-tyotunnit/urakan-tyotunnit ::urakan-tyotunnit/tyotunnit])]
             (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit))))
 
         (reset! turvallisuuspoikkeaman-luonti-kesken? false)))))

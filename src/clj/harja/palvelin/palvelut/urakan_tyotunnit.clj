@@ -11,9 +11,7 @@
 (defn hae-urakan-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
   (let [tunnit (urakan-tyotunnit-q/hae-urakan-tyotunnit db {::urakan-tyotunnit-d/urakka-id urakka-id})]
-    (if tunnit
-      tunnit
-      {})))
+    tunnit))
 
 (defn tallenna-urakan-tyotunnit [turi
                                  db
@@ -40,7 +38,7 @@
 (defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
   (let [tunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id)]
-    tunnit))
+    {::urakan-tyotunnit-d/urakan-tyotunnit tunnit}))
 
 (defrecord UrakanTyotunnit []
   component/Lifecycle
@@ -67,7 +65,7 @@
                       (fn [kayttaja {urakka-id ::urakan-tyotunnit-d/urakka-id}]
                         (hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit db kayttaja urakka-id))
                       {:kysely-spec ::urakan-tyotunnit-d/urakan-kuluvan-vuosikolmanneksen-tyotuntien-haku
-                       :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit})
+                       :vastaus-spec ::urakan-tyotunnit-d/urakan-kuluvan-vuosikolmanneksen-tyotuntien-hakuvastaus})
     this)
 
   (stop [{http :http-palvelin :as this}]

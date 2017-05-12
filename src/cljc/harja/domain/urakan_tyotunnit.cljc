@@ -25,6 +25,8 @@
 
 (s/def ::urakan-kuluvan-vuosikolmanneksen-tyotuntien-haku (s/keys :req [::urakka-id]))
 
+(s/def ::urakan-kuluvan-vuosikolmanneksen-tyotuntien-hakuvastaus (s/keys :opt [::urakan-tyotunnit]))
+
 (def vuosikolmannesten-kuukaudet
   [[1 4] [5 8] [9 12]])
 
