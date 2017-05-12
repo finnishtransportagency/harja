@@ -23,4 +23,4 @@
   (let [sahkopostit (->> (keep :sahkoposti vastaanottajat)
                          (filter #(str/includes? % "@")))]
     (str "mailto:?bcc="
-         (str/join "," sahkopostit))))
+         (str/join ";" sahkopostit))))
