@@ -3,16 +3,20 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
-            [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]))
+            [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn hae-urakan-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
   (urakan-tyotunnit-q/hae-urakan-tyotunnit db {::urakan-tyotunnit-d/urakka-id urakka-id}))
 
-(defn tallenna-urakan-tyotunnit [db kayttaja {tyotunnit ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain}]
-  (doseq [{urakka-id ::urakan-tyotunnit-d/urakka} tyotunnit]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id))
-  (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit))
+(defn tallenna-urakan-tyotunnit [db kayttaja {urakka-id ::urakan-tyotunnit-d/urakka-id
+                                              urakan-tyotunnit ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain}]
+  (jdbc/with-db-transaction [db db]
+    (doseq [{urakka-id ::urakan-tyotunnit-d/urakka-id :as tyotunnit} urakan-tyotunnit]
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+      (urakan-tyotunnit-q/tallenna-urakan-tyotunnit db tyotunnit)))
+  (hae-urakan-tyotunnit db kayttaja urakka-id))
 
 (defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
@@ -36,7 +40,7 @@
                       :tallenna-urakan-tyotunnit
                       (fn [kayttaja tiedot]
                         (tallenna-urakan-tyotunnit db kayttaja tiedot))
-                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain
+                      {:kysely-spec ::urakan-tyotunnit-d/urakan-tyotuntien-tallennus
                        :vastaus-spec ::urakan-tyotunnit-d/urakan-tyotunnit-vuosikolmanneksittain})
 
     (julkaise-palvelu http

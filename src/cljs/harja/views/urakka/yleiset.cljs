@@ -230,36 +230,38 @@
     tyotunnit]])
 
 (defn hae-vuosikolmanneksen-tunnit [vuosi kolmannes tyotunnit]
-  (log "--->>>" (pr-str vuosi) (pr-str kolmannes) (pr-str tyotunnit))
   (::urakan-tyotunnit-d/tyotunnit
     (first (filter #(and (= vuosi (::urakan-tyotunnit-d/vuosi %))
                          (= kolmannes (::urakan-tyotunnit-d/vuosikolmannes %)))
                    tyotunnit))))
 
-(defn urakan-tyotunnit [{:keys [id alkupvm loppupvm] :as urakka}]
+(defn urakan-tyotunnit [{:keys [id alkupvm loppupvm]}]
   (let [vuodet (reverse (mapv #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
+        tunnit-vastauksesta (fn [vastaus](map #(assoc %
+                                     :ensimmainen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 1 vastaus)
+                                     :toinen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 2 vastaus)
+                                     :kolmas-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 3 vastaus))
+                                  vuodet))
         tyotunnit (atom nil)
         hae! (fn [urakka-id]
                (reset! tyotunnit vuodet)
                (go
-                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))
-                       vuodet-tunteineen (map #(assoc %
-                                                 :ensimmainen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 1 vastaus)
-                                                 :toinen-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 2 vastaus)
-                                                 :kolmas-vuosikolmannes (hae-vuosikolmanneksen-tunnit (:vuosi %) 3 vastaus))
-                                              vuodet)]
-                   (log "--->>>> " (pr-str vuodet-tunteineen))
+                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
                    (if (k/virhe? vastaus)
                      (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                     (reset! tyotunnit vuodet-tunteineen)))))]
+                     (reset! tyotunnit (tunnit-vastauksesta vastaus))))))
+        tallenna! (fn [ur]
+                    [urakan-tyotuntilista ur @tyotunnit
+                     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                       (fn [uudet]
+                         (go (let [vastaus (<! (urakan-tyotunnit/tallenna-urakan-tyotunnit id uudet))]
+                               (if (k/virhe? vastaus)
+                                 (viesti/nayta! "Urakan työtuntien tallennus epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                                 (reset! tyotunnit (tunnit-vastauksesta vastaus)))))))])]
     (hae! id)
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id :vuosi))
-      (fn [ur]
-        [urakan-tyotuntilista ur @tyotunnit
-         (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-           (fn [_])
-           #_(tallenna-paivystajat ur paivystajat %))]))))
+      tallenna!)))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
