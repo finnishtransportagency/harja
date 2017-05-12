@@ -10,7 +10,10 @@
 
 (defn hae-urakan-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
-  (urakan-tyotunnit-q/hae-urakan-tyotunnit db {::urakan-tyotunnit-d/urakka-id urakka-id}))
+  (let [tunnit (urakan-tyotunnit-q/hae-urakan-tyotunnit db {::urakan-tyotunnit-d/urakka-id urakka-id})]
+    (if tunnit
+      tunnit
+      {})))
 
 (defn tallenna-urakan-tyotunnit [turi
                                  db

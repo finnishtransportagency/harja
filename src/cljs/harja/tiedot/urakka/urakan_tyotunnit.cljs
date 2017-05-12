@@ -27,7 +27,7 @@
                                       (when toinen-vuosikolmannes
                                         (urakan-tyotunnit-vuosikolmanneksella vuosi 2 toinen-vuosikolmannes))
                                       (when kolmas-vuosikolmannes
-                                        (urakan-tyotunnit-vuosikolmanneksella vuosi 2 toinen-vuosikolmannes))]))
+                                        (urakan-tyotunnit-vuosikolmanneksella vuosi 3 toinen-vuosikolmannes))]))
                                  tyotunnit-vuosittain)]
     (k/post! :tallenna-urakan-tyotunnit {::urakan-tyotunnit/urakka-id urakka-id
                                          ::urakan-tyotunnit/urakan-tyotunnit-vuosikolmanneksittain urakan-tyotunnit})))

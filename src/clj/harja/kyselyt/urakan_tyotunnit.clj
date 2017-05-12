@@ -17,7 +17,7 @@
     ::ut/lahetys-onnistunut})
 
 (defn tallenna-urakan-tyotunnit [db tyotunnit]
-  (insert! db ::ut/urakan-tyotunnit tyotunnit))
+  (upsert! db ::ut/urakan-tyotunnit #{::ut/urakka-id ::ut/vuosi ::ut/vuosikolmannes} tyotunnit))
 
 (defn hae-urakan-tyotunnit [db hakuehdot]
   (fetch db ::ut/urakan-tyotunnit kaikki-kentat hakuehdot))
