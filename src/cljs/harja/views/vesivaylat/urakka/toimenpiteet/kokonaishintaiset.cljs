@@ -163,7 +163,7 @@
       va/tyypit
       va/tyyppi-fmt]
      [valinnat/vayla
-      ;; TODO Pitäisi varmaan olla combobox, koska suodatetaan kantakyselystä?
+      ;; TODO Pitäisi varmaan olla combobox, koska väyliä on paljon ja suodatetaan kantakyselystä?
       (r/wrap (get-in app [:valinnat :vayla])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:vayla uusi}))))
@@ -174,8 +174,8 @@
 
     [:div
      [:div "TODO Lisää turvalaitetyyppi (define-tables: viitta, kiinteä, polju)"]
-     [:div "TODO Lisää työluokka (combobox?)"]
-     [:div "TODO Lisää toimenpide (combobox?)"]]]
+     [:div "TODO Lisää työluokka (ks. reimari-tyoluokat)"]
+     [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]
 
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot
