@@ -33,8 +33,7 @@
             [harja.tiedot.urakat :as urakat]
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
-            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d])
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
