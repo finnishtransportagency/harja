@@ -15,6 +15,7 @@
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
                     :aikavali [nil nil]
+                    :vayla :kaikki
                     :vaylatyyppi :kauppamerenkulku}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
@@ -308,7 +309,8 @@
   (process-event [{tiedot :tiedot} app]
     (assoc app :valinnat (merge (:valinnat app)
                                 (select-keys tiedot
-                                             [:urakka-id :sopimus-id :aikavali :vaylatyyppi]))))
+                                             [:urakka-id :sopimus-id :aikavali
+                                              :vaylatyyppi :vayla]))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]

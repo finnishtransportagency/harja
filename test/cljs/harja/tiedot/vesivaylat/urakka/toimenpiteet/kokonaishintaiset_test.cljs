@@ -11,6 +11,11 @@
 
 (def testitila {:nakymassa? true
                 :infolaatikko-nakyvissa? false
+                :valinnat {:urakka-id nil
+                           :sopimus-id nil
+                           :aikavali [nil nil]
+                           :vayla :kaikki
+                           :vaylatyyppi :kauppamerenkulku}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -139,7 +144,8 @@
           uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666
                                                    :sopimus-id 777
                                                    :aikavali [(t/now) (t/now)]
-                                                   :vaylatyyppi :muu})
+                                                   :vaylatyyppi :muu
+                                                   :vayla 1})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
@@ -151,7 +157,11 @@
       (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
 
       (is (nil? (get-in vanha-tila [:valinnat :vaylatyyppi])))
-      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))))
+      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
+
+
+      (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kaikki))
+      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) 1))))
 
   (testing "Asetetaan vain yksi valinta"
     (let [vanha-tila testitila
@@ -160,3 +170,11 @@
                         vanha-tila)]
       (is (nil? (:valinnat vanha-tila)))
       (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu})))))
+
+(deftest toimenpiteiden-vaylat
+  (testing "Valitaan toimenpiteiden väylät"
+    (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
+           [{::va/nimi "Kuopio, Iisalmen väylä"
+             ::va/id 1}
+            {::va/nimi "Varkaus, Kuopion väylä"
+             ::va/id 2}]))))

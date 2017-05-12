@@ -11,8 +11,7 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]
-            [harja.ui.lomake :as lomake]
-            [harja.domain.vesivaylat.vayla :as va]))
+            [harja.ui.lomake :as lomake]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -326,13 +325,22 @@
          vakio-aikavalikentta)))))
 
 (defn vaylatyyppi
-  [valittu-vaylatyyppi-atom vaylatyypit]
+  [valittu-vaylatyyppi-atom vaylatyypit format-fn]
   [:div.label-ja-alasveto.urakkatyyppi
    [:span.alasvedon-otsikko "Väylätyyppi"]
    [livi-pudotusvalikko {:valinta @valittu-vaylatyyppi-atom
-                         :format-fn va/tyyppi-fmt
+                         :format-fn format-fn
                          :valitse-fn #(reset! valittu-vaylatyyppi-atom %)}
     vaylatyypit]])
+
+(defn vayla
+  [valittu-vayla-atom vaylat format-fn]
+  [:div.label-ja-alasveto.urakkatyyppi
+   [:span.alasvedon-otsikko "Väylä"]
+   [livi-pudotusvalikko {:valinta @valittu-vayla-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vayla-atom %)}
+    vaylat]])
 
 (defn urakkavalinnat [& sisalto]
   [:div.urakkavalinnat sisalto])

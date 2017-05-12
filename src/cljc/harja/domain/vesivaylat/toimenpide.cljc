@@ -143,6 +143,9 @@ reimari-tilat
 (defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
   (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
 
+(defn toimenpiteiden-vaylat [toimenpiteet]
+  (distinct (map #(::vayla %) toimenpiteet)))
+
 (def tyolajit (vals reimari-tyolajit))
 
 (def tyolaji-fmt

@@ -154,11 +154,23 @@
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
-    [valinnat/vaylatyyppi
-     (r/wrap (get-in app [:valinnat :vaylatyyppi])
-             (fn [uusi]
-               (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
-     va/tyypit]
+
+    [:div
+     [valinnat/vaylatyyppi
+      (r/wrap (get-in app [:valinnat :vaylatyyppi])
+              (fn [uusi]
+                (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
+      va/tyypit
+      va/tyyppi-fmt]
+     [valinnat/vayla
+      (r/wrap (get-in app [:valinnat :vayla])
+              (fn [uusi]
+                (e! (tiedot/->PaivitaValinnat {:vayla uusi}))))
+      (into [:kaikki] (map ::va/id (to/toimenpiteiden-vaylat (:toimenpiteet app))))
+      #(if (= % :kaikki)
+         "Kaikki"
+         (va/vaylan-nimi-idlla (to/toimenpiteiden-vaylat (:toimenpiteet app)) %))]]
+
     [:div "Tähän tulee lisää suodattimia"]]
 
    ^{:key "urakkatoiminnot"}

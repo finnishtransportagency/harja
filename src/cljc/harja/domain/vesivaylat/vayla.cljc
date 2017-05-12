@@ -21,3 +21,8 @@
 (defn tyyppi-fmt [tyyppi]
   (when tyyppi
     (str/capitalize (name tyyppi))))
+
+(defn vaylan-nimi-idlla [vaylat vayla-id]
+  (::nimi (first (filter
+                   #(= (::id %) vayla-id)
+                   vaylat))))
