@@ -414,7 +414,7 @@
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
-                          [:db :http-palvelin])
+                          [:db :http-palvelin :turi])
 
       :debug (component/using
                (debug/->Debug)
