@@ -52546,6 +52546,9 @@ exports.default = _react2.default.createClass({
     var feedbackSubject = "";
     var feedbackHref = "mailto:" + feedbackAddress + "?subject=" + feedbackSubject;
 
+    var harjaLink = "https://extranet.liikennevirasto.fi/harja/";
+    var testiHarjaLink = "https://testiextranet.liikennevirasto.fi/harja/";
+
     return _react2.default.createElement(
       'nav',
       null,
@@ -52563,17 +52566,43 @@ exports.default = _react2.default.createClass({
           { className: 'top-bar-right' },
           _react2.default.createElement(
             'div',
-            { className: 'harja-feedback' },
+            { className: 'row' },
             _react2.default.createElement(
-              'a',
-              { href: feedbackHref },
-              'Palautetta!'
+              'div',
+              { className: 'column medium-4 harja-feedback' },
+              _react2.default.createElement(
+                'a',
+                { href: harjaLink, target: '_blank' },
+                'HARJA'
+              )
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: 'column medium-4 harja-feedback' },
+              _react2.default.createElement(
+                'a',
+                { href: testiHarjaLink, target: '_blank' },
+                'TestiHARJA'
+              )
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: 'column medium-4 harja-feedback' },
+              _react2.default.createElement(
+                'a',
+                { href: feedbackHref },
+                'Palautetta!'
+              )
             )
           ),
           _react2.default.createElement(
             'div',
-            { className: 'title-bar-title' },
-            'Liikenneviraston Harja-projekti'
+            { className: 'row harja-title-bar-title' },
+            _react2.default.createElement(
+              'div',
+              { className: 'title-bar-title column medium-12' },
+              'Liikenneviraston Harja-projekti'
+            )
           )
         )
       ),
@@ -52634,7 +52663,25 @@ exports.default = _react2.default.createClass({
               null,
               _react2.default.createElement(
                 'a',
-                { className: 'large button', href: feedbackHref },
+                { className: 'large button', href: harjaLink, target: '_blank' },
+                'HARJA'
+              )
+            ),
+            _react2.default.createElement(
+              'li',
+              null,
+              _react2.default.createElement(
+                'a',
+                { className: 'large button', href: testiHarjaLink, target: '_blank' },
+                'TestiHARJA'
+              )
+            ),
+            _react2.default.createElement(
+              'li',
+              null,
+              _react2.default.createElement(
+                'a',
+                { className: 'large button', href: feedbackHref, target: '_blank' },
                 'Palautetta!'
               )
             )

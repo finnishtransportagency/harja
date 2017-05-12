@@ -4150,6 +4150,9 @@ a.harja-news-link {
 .harja-title-bar {
   background-color: #3db7e4; }
 
+.harja-title-bar-title {
+  float: right; }
+
 .harja-menu {
   background-color: #3db7e4;
   padding-top: 0;
