@@ -213,7 +213,7 @@
          (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            #(tallenna-paivystajat ur paivystajat %))]))))
 
-(defn urakan-tyotuntilista [ur tyotunnit tallenna!]
+(defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
    [grid/grid
     {:otsikko "Työtunnit"
@@ -221,7 +221,8 @@
      :tallenna tallenna!
      :voi-lisata? false
      :voi-poistaa? (constantly false)
-     :tunniste :vuosi}
+     :tunniste :vuosi
+     :piilota-toiminnot? true}
     [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
      {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
      {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
@@ -239,7 +240,7 @@
                      (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
                      (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus))))))
         tallenna! (fn [ur]
-                    [urakan-tyotuntilista ur @tyotunnit
+                    [urakan-tyotuntilista @tyotunnit
                      (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                        (fn [uudet]
                          (go (let [vastaus (<! (urakan-tyotunnit/tallenna-urakan-tyotunnit id uudet))]

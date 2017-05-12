@@ -16,6 +16,15 @@
   ["urakan_tyotunnit" ::urakan-tyotunnit {"lahetys_onnistunut" ::lahetys-onnistunut
                                           "urakka" ::urakka-id}])
 
+(def kaikki-kentat
+  #{::id
+    ::urakka-id
+    ::vuosi
+    ::vuosikolmannes
+    ::tyotunnit
+    ::lahetetty
+    ::lahetys-onnistunut})
+
 (s/def ::urakan-tyotunnit-vuosikolmanneksittain (s/coll-of ::urakan-tyotunnit))
 
 (s/def ::urakan-tyotuntien-haku (s/keys :req [::urakka-id]
