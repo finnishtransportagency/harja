@@ -138,7 +138,8 @@
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666
                                                    :sopimus-id 777
-                                                   :aikavali [(t/now) (t/now)]})
+                                                   :aikavali [(t/now) (t/now)]
+                                                   :vaylatyyppi :muu})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
@@ -147,4 +148,7 @@
       (is (vector? (get-in uusi-tila [:valinnat :aikavali])))
 
       (is (nil? (get-in vanha-tila [:valinnat :sopimus-id])))
-      (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777)))))
+      (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
+
+      (is (nil? (get-in vanha-tila [:valinnat :vaylatyyppi])))
+      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu)))))

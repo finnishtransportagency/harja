@@ -11,7 +11,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]
-            [harja.ui.lomake :as lomake]))
+            [harja.ui.lomake :as lomake]
+            [harja.domain.vesivaylat.vayla :as va]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -288,7 +289,6 @@
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta @valittu-varustetoteumatyyppi-atom
                           :format-fn #(if % (second %) "Kaikki")
-
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
 
@@ -324,6 +324,15 @@
        (lomake/ryhma
          {:rivi? true}
          vakio-aikavalikentta)))))
+
+(defn vaylatyyppi
+  [valittu-vaylatyyppi-atom vaylatyypit]
+  [:div.label-ja-alasveto.urakkatyyppi
+   [:span.alasvedon-otsikko "Väylätyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-vaylatyyppi-atom
+                         :format-fn va/tyyppi-fmt
+                         :valitse-fn #(reset! valittu-vaylatyyppi-atom %)}
+    vaylatyypit]])
 
 (defn urakkavalinnat [& sisalto]
   [:div.urakkavalinnat sisalto])

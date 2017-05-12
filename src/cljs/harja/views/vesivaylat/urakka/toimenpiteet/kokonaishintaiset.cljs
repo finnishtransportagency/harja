@@ -154,7 +154,11 @@
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
-    [:div "Tähän tulee lisää suodattimia"]
+    [valinnat/vaylatyyppi
+     (r/wrap (get-in app [:valinnat :vaylatyyppi])
+             (fn [uusi]
+               (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
+     va/tyypit]
     [:div "Tähän tulee lisää suodattimia"]]
 
    ^{:key "urakkatoiminnot"}

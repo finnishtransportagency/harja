@@ -14,7 +14,8 @@
 (defonce tila
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
-                    :aikavali [nil nil]}
+                    :aikavali [nil nil]
+                    :vaylatyyppi :kauppamerenkulku}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
@@ -308,7 +309,8 @@
     (-> app
         (assoc-in [:valinnat :urakka-id] (:urakka-id tiedot))
         (assoc-in [:valinnat :sopimus-id] (:sopimus-id tiedot))
-        (assoc-in [:valinnat :aikavali] (:aikavali tiedot))))
+        (assoc-in [:valinnat :aikavali] (:aikavali tiedot))
+        (assoc-in [:valinnat :vaylatyyppi] (:vaylatyyppi tiedot))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
