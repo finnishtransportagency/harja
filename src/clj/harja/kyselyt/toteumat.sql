@@ -464,6 +464,14 @@ VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y) :: POINT,
         hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'soratie' :: hoitoluokan_tietolajitunniste,
                               250 :: INTEGER));
 
+-- name: hae-pisteen-hoitoluokat
+SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'talvihoito'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS talvihoitoluokka,
+       hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'soratie'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS soratiehoitoluokka;
+
 -- name: poista-reittipiste-toteuma-idlla!
 -- Poistaa toteuman kaikki reittipisteet
 DELETE FROM reittipiste
