@@ -10,7 +10,7 @@
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [clojure.spec.gen :as gen]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]))
 

@@ -13,7 +13,7 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen :as gen]))
+            [clojure.spec.gen.alpha :as gen]))
 
 
 (defn jarjestelma-fixture [testit]
