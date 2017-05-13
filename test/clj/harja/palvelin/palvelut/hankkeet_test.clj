@@ -11,7 +11,7 @@
             [harja.domain.hanke :as hanke]
             [taoensso.timbre :as log]
             [clojure.spec.gen :as gen]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [harja.palvelin.palvelut.hankkeet :as hankkeet]))
 

@@ -15,7 +15,7 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch upsert!]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
             [specql.op :as op]

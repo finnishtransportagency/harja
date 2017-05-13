@@ -1,6 +1,6 @@
 (ns harja.domain.urakan-tyotunnit
   "Urakan työtuntien skeemat."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [specql.impl.registry]
             [specql.data-types]
             #?@(:clj [

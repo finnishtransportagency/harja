@@ -1,7 +1,7 @@
 (ns harja.tyokalut.spec
   "Makroja specien helpommalle käyttämiselle.
   Määrittelee defn+ ja let+ makrot, joilla määritellään nimen lisäksi arvon spec."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.core.specs :as cs]
             [clojure.future :refer :all]))
 

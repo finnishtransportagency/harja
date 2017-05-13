@@ -7,7 +7,7 @@
     #?@(:clj
         [
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [clojure.spec :as s]
+    [clojure.spec.alpha :as s]
     [clojure.future :refer :all]
     [harja.pvm :as pvm]
     [clj-time.core :as t]

@@ -14,7 +14,7 @@
             [harja.pvm :as pvm]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.domain.skeema :as skeema]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.spec.gen :as gen]))
 
 (defn jarjestelma-fixture [testit]

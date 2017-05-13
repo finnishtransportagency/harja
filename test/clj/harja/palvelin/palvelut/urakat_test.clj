@@ -12,7 +12,7 @@
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.spec.gen :as gen]))
 
 

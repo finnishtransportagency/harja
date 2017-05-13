@@ -10,7 +10,7 @@
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
             ;; Metriikkadatan julkaisu
