@@ -3,7 +3,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
-            [specql.core :refer [upsert!]]
+            [specql.core :refer [upsert! delete!]]
             [harja.domain.reittipiste :as rp]))
 
 (defn muunna-reitti [{reitti :reitti :as rivi}]
@@ -23,3 +23,7 @@
 (defn tallenna-toteuman-reittipisteet! [db toteuman-reittipisteet]
   (upsert! db ::rp/toteuman-reittipisteet
            toteuman-reittipisteet))
+
+(defn poista-reittipiste-toteuma-idlla! [db toteuma-id]
+  (delete! db ::rp/toteuman-reittipisteet
+           {::rp/toteuma-id toteuma-id}))
