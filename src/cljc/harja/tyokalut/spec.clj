@@ -2,7 +2,7 @@
   "Makroja specien helpommalle käyttämiselle.
   Määrittelee defn+ ja let+ makrot, joilla määritellään nimen lisäksi arvon spec."
   (:require [clojure.spec.alpha :as s]
-            [clojure.core.specs :as cs]
+            [clojure.core.specs.alpha :as cs]
             [clojure.future :refer :all]))
 
 (s/def ::specish (s/or :kw keyword?
