@@ -7,12 +7,11 @@ SELECT
   (EXTRACT(HOUR FROM t.alkanut))::integer as tunti,
   rp.talvihoitoluokka as luokka
   FROM toteuma t
-    JOIN urakka u ON t.urakka = u.id
-    LEFT JOIN reittipiste rp ON rp.toteuma = t.id
-    LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
-    LEFT JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-    JOIN toimenpidekoodi tpk ON rt.toimenpidekoodi = tpk.id
-                                OR tt.toimenpidekoodi = tpk.id
+       JOIN urakka u ON t.urakka = u.id
+       JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+       JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+       JOIN toteuma_tehtava tt ON t.id = tt.toteuma
+       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
@@ -30,13 +29,12 @@ SELECT
   rp.talvihoitoluokka as luokka,
   COUNT(DISTINCT t.alkanut::date) as lkm
 FROM toteuma t
-  LEFT JOIN reittipiste rp ON rp.toteuma = t.id
+  JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+  JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio o ON u.hallintayksikko = o.id
-  LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
-  LEFT JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-  JOIN toimenpidekoodi toimkood ON rt.toimenpidekoodi = toimkood.id
-                              OR tt.toimenpidekoodi = toimkood.id
+  JOIN toteuma_tehtava tt ON t.id = tt.toteuma
+  JOIN toimenpidekoodi toimkood ON tt.toimenpidekoodi = toimkood.id
 WHERE (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
       AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE
