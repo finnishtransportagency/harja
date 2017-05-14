@@ -41,6 +41,9 @@ DECLARE
   rpt RECORD;
   rpm RECORD;
 BEGIN
+  IF EXISTS(SELECT toteuma FROM toteuman_reittipisteet WHERE toteuma = toteumaid) THEN
+    RETURN 0;
+  END IF;
   lkm := 0;
   pist := ARRAY[]::reittipistedata[];
   FOR rp IN SELECT * FROM reittipiste WHERE reittipiste.toteuma = toteumaid
@@ -90,6 +93,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- FIXME: toteumassa oleva hoitoluokittainen triggeri pitää poistaa ja siirtää
--- tähän toteuman_reittipisteet tauluun.
---SELECT siirra_kaikki_reittipisteet();
