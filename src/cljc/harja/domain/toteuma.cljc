@@ -4,16 +4,12 @@
   (:require [clojure.spec.alpha :as s]
             [harja.domain.muokkaustiedot :as m]
             #?(:clj [harja.kyselyt.specql-db :refer [define-tables]])
+            #?(:clj [clojure.future :refer :all])
             #?(:cljs [specql.impl.registry]))
   #?(:cljs (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]
                             )))
 
 (define-tables
-  ["reittipiste_materiaali" ::reittipiste-materiaali]
-  ["reittipiste_tehtava" ::reittipiste-tehtava]
-  ["reittipistedata" ::reittipiste]
   ["toteuma" ::toteuma
    harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistettu?-sarake]
-  ["toteuman_reittipisteet" ::toteuman-reittipisteet
-   {"toteuma" ::toteuma-id}])
+   harja.domain.muokkaustiedot/poistettu?-sarake])
