@@ -402,8 +402,12 @@
                             (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
                               {:otsikko (let [kolmannes (ut/kuluva-vuosikolmannes)]
                                           (str "Urakan työtunnit ("
-                                               (::ut/vuosikolmannes kolmannes)
-                                               "/"
+                                               (case (::ut/vuosikolmannes kolmannes)
+                                                 1 "tammikuu - huhtikuu"
+                                                 2 "toukokuu - elokuu"
+                                                 3 "syyskuu - joulukuu"
+                                                 :else "")
+                                               " "
                                                (::ut/vuosi kolmannes)
                                                ")"))
                                :nimi :urakan-tyotunnit
