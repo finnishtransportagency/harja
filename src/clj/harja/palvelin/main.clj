@@ -23,6 +23,7 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -73,8 +74,8 @@
     [harja.palvelin.palvelut.debug :as debug]
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
-    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
-
+    [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
+    
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
@@ -410,6 +411,10 @@
       :sopimukset (component/using
                   (sopimukset/->Sopimukset)
                   [:db :http-palvelin])
+
+      :urakan-tyotunnit (component/using
+                          (urakan-tyotunnit/->UrakanTyotunnit)
+                          [:db :http-palvelin :turi])
 
       :debug (component/using
                (debug/->Debug)
