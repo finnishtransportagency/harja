@@ -498,7 +498,7 @@
 
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
-                              [:http-palvelin :db :integraatioloki])
+                              [:http-palvelin :db :integraatioloki :turi])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
