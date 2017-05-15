@@ -321,7 +321,7 @@
               "vastenTienumeronkasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
               "")])]))
 
-(defn- muuta [{m ::t/huomautukset}]
+(defn- muuta [{m ::t/lisatietoja}]
   [:fo:block m])
 
 (defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::m/luotu muokattu ::m/muokattu}]
