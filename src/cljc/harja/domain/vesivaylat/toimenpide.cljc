@@ -40,10 +40,8 @@
     ;; Formatoidaan sinne päin
     (str/capitalize (name tyyppi))))
 
-(defn reimari-tyolajien-jarjestys [tyolaji]
-  (case tyolaji ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
-    nil 0
-    1))
+(defn jarjesta-reimari-tyolajit [tyolajit]
+  (sort tyolajit))
 
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
@@ -97,10 +95,8 @@
     ;; Formatoidaan sinne päin
     (str/capitalize (name tyoluokka))))
 
-(defn reimari-tyoluokat-jarjestys [tyoluokka]
-  (case tyoluokka ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
-    nil 0
-    1))
+(defn jarjesta-reimari-tyoluokat [tyoluokat]
+  (sort tyoluokat))
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
 reimari-toimenpidetyypit
@@ -217,10 +213,8 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (str/capitalize (name toimenpide))))
 
-(defn reimari-toimenpidetyyppien-jarjestys [toimenpide]
-  (case toimenpide ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
-    nil 0
-    1))
+(defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
+  (sort toimenpidetyypit))
 
 (def ^{:doc "Reimarin toimenpiteen tilat"}
 reimari-tilat

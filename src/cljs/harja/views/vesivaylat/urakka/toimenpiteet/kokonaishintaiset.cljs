@@ -177,21 +177,21 @@
       (r/wrap (get-in app [:valinnat :tyolaji])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:tyolaji uusi}))))
-      (sort-by to/reimari-tyolajien-jarjestys (into [nil] (distinct (vals to/reimari-tyolajit))))
+      (to/jarjesta-reimari-tyolajit (into [nil] (distinct (vals to/reimari-tyolajit))))
       #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
 
      [valinnat/tyoluokka
       (r/wrap (get-in app [:valinnat :tyoluokka])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:tyoluokka uusi}))))
-      (sort-by to/reimari-tyoluokat-jarjestys (into [nil] (distinct (vals to/reimari-tyoluokat))))
+      (to/jarjesta-reimari-tyoluokat (into [nil] (distinct (vals to/reimari-tyoluokat))))
       #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
 
      [valinnat/toimenpide
       (r/wrap (get-in app [:valinnat :toimenpide])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:toimenpide uusi}))))
-      (sort-by to/reimari-toimenpidetyyppien-jarjestys (into [nil] (distinct (vals to/reimari-toimenpidetyypit))))
+      (to/jarjesta-reimari-toimenpidetyypit (into [nil] (distinct (vals to/reimari-toimenpidetyypit))))
       #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
 
      [kentat/tee-kentta {:tyyppi :checkbox
