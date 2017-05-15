@@ -16,7 +16,10 @@
                     :sopimus-id nil
                     :aikavali [nil nil]
                     :vayla :kaikki
-                    :vaylatyyppi :kauppamerenkulku}
+                    :vaylatyyppi :kauppamerenkulku
+                    :turvalaitetyyppi :kiintea
+                    :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
+                    :toimenpide :alukset-ja-veneet}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
@@ -310,7 +313,8 @@
     (assoc app :valinnat (merge (:valinnat app)
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
-                                              :vaylatyyppi :vayla]))))
+                                              :vaylatyyppi :vayla
+                                              :turvalaitetyyppi :tyoluokka :toimenpide]))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]

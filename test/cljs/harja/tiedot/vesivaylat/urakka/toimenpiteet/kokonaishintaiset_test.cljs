@@ -15,7 +15,10 @@
                            :sopimus-id nil
                            :aikavali [nil nil]
                            :vayla :kaikki
-                           :vaylatyyppi :kauppamerenkulku}
+                           :vaylatyyppi :kauppamerenkulku
+                           :turvalaitetyyppi :kiintea
+                           :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
+                           :toimenpide :alukset-ja-veneet}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -145,7 +148,10 @@
                                                    :sopimus-id 777
                                                    :aikavali [(t/now) (t/now)]
                                                    :vaylatyyppi :muu
-                                                   :vayla 1})
+                                                   :vayla 1
+                                                   :turvalaitetyyppi :polju
+                                                   :tyoluokka :asennus-ja-huolto
+                                                   :toimenpide :autot-traktorit})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
@@ -159,9 +165,17 @@
       (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
       (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-
       (is (= (get-in vanha-tila [:valinnat :vayla]) :kaikki))
-      (is (= (get-in uusi-tila [:valinnat :vayla]) 1))))
+      (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
+
+      (is (= (get-in vanha-tila [:valinnat :turvalaitetyyppi]) :kiintea))
+      (is (= (get-in uusi-tila [:valinnat :turvalaitetyyppi]) :polju))
+
+      (is (= (get-in vanha-tila [:valinnat :tyoluokka]) :kuljetuskaluston-huolto-ja-kunnossapito))
+      (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))
+
+      (is (= (get-in vanha-tila [:valinnat :toimenpide]) :alukset-ja-veneet))
+      (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))))
 
   (testing "Asetetaan vain yksi valinta"
     (let [vanha-tila {}
