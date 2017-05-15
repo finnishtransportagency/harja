@@ -354,6 +354,24 @@
                          :valitse-fn #(reset! valittu-turvalaitetyyppi-atom %)}
     turvalaitetyypit]])
 
+(defn tyoluokka
+  [valittu-tyoluokka-atom tyoluokat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Työluokka"]
+   [livi-pudotusvalikko {:valinta @valittu-tyoluokka-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-tyoluokka-atom %)}
+    tyoluokat]])
+
+(defn toimenpide
+  [valittu-toimenpide-atom toimenpiteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Toimenpide"]
+   [livi-pudotusvalikko {:valinta @valittu-toimenpide-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-toimenpide-atom %)}
+    toimenpiteet]])
+
 (defn urakkavalinnat [optiot & sisalto]
   [:div.urakkavalinnat sisalto])
 

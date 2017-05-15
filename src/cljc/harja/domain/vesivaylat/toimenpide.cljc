@@ -5,6 +5,7 @@
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
+            [clojure.string :as str]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
@@ -53,6 +54,34 @@
    "1022541924" :luotsitoiminnan-palvelut
    "1022541907" :telematiikkalaitteet
    "1022541910" :telematiikkalaitteet})
+
+(defn reimari-tyoluokka-fmt [tyoluokka]
+  (case tyoluokka
+    :kuljetuskaluston-huolto-ja-kunnossapito "Kuljetuskaluston huolto ja kunnossapito"
+    :toimistotyot "Toimistotyöt"
+    :valo-ja-energialaitteet "Valo- ja energialaitteet"
+    :turvalaitteiden-tukikohtatyot "Turvalaitteiden tukikohtatyöt"
+    :asennus-ja-huolto "Asennus ja huolto"
+    :tukikohtatyot "Tukikohtatyöt"
+    :tarkastustyot "Tarkastustyöt"
+    :muut-tukikohtatyot "Muut tukikohtatyöt"
+    :ymparistotyot "Ympäristötyöt"
+    :navi "Ravi"
+    :rakennuspalvelut "Rakennuspalvelut"
+    :muut-tyot "Muut työt"
+    :kuljetuspalvelut "Kuljetuspalvelut"
+    :vts-tyot "VTS-työt"
+    :rakenteet "Rakenteet"
+    :pienehkot-vaylatyot "Pienehköt väylätyöt"
+    :telematiikkalaitteet "Telematiikkalaitteet"
+    :luotsitoiminnan-palvelut "Luotsitoiminnan palvelut"
+    ;; Formatoidaan sinne päin
+    (str/capitalize (name tyoluokka))))
+
+(defn reimari-tyoluokat-jarjestys [tyoluokka]
+  (case tyoluokka
+    nil 0
+    1))
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
 reimari-toimenpidetyypit
