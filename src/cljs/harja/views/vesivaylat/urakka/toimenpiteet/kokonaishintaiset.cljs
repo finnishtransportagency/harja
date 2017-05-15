@@ -173,7 +173,12 @@
          (va/vaylan-nimi-idlla (to/toimenpiteiden-vaylat (:toimenpiteet app)) %))]]
 
     [:div
-     [:div "TODO Lisää turvalaitetyyppi (define-tables: viitta, kiinteä, polju)"]
+     [valinnat/turvalaitetyyppi
+      (r/wrap (get-in app [:valinnat :turvalaitetyyppi])
+              (fn [uusi]
+                (e! (tiedot/->PaivitaValinnat {:turvalaitetyyppi uusi}))))
+      tu/tyypit
+      tu/tyyppi-fmt]
      [:div "TODO Lisää työluokka (ks. reimari-tyoluokat)"]
      [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]
 

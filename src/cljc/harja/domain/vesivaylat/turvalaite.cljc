@@ -2,6 +2,7 @@
   "Turvalaitteen tiedot"
   (:require
     [clojure.spec :as s]
+    [clojure.string :as str]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
               [clojure.future :refer :all]]))
   #?(:cljs
@@ -15,3 +16,11 @@
 (s/def ::tyyppi #{:kiintea :poiju :viitta})
 
 (def tyypit (s/describe ::tyyppi))
+
+(defn tyyppi-fmt [tyyppi]
+  (case tyyppi
+    :kiintea "Kiinteä"
+    :poiju "Poiju"
+    :viitta "Viitta"
+    ;; Formatoidaan sinne päin
+    (str/capitalize (name tyyppi))))

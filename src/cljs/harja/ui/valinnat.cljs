@@ -329,7 +329,7 @@
 
 (defn vaylatyyppi
   [valittu-vaylatyyppi-atom vaylatyypit format-fn]
-  [:div.label-ja-alasveto.urakkatyyppi
+  [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Väylätyyppi"]
    [livi-pudotusvalikko {:valinta @valittu-vaylatyyppi-atom
                          :format-fn format-fn
@@ -338,12 +338,21 @@
 
 (defn vayla
   [valittu-vayla-atom vaylat format-fn]
-  [:div.label-ja-alasveto.urakkatyyppi
+  [:div.label-ja-alasveto
    [:span.alasvedon-otsikko "Väylä"]
    [livi-pudotusvalikko {:valinta @valittu-vayla-atom
                          :format-fn format-fn
                          :valitse-fn #(reset! valittu-vayla-atom %)}
     vaylat]])
+
+(defn turvalaitetyyppi
+  [valittu-turvalaitetyyppi-atom turvalaitetyypit format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Turvalaitetyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-turvalaitetyyppi-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-turvalaitetyyppi-atom %)}
+    turvalaitetyypit]])
 
 (defn urakkavalinnat [optiot & sisalto]
   [:div.urakkavalinnat sisalto])

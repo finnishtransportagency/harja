@@ -19,7 +19,10 @@
 (def tyypit (s/describe ::tyyppi))
 
 (defn tyyppi-fmt [tyyppi]
-  (when tyyppi
+  (case tyyppi
+    :kauppamerenkulku "Kauppamerenkulku"
+    :muu "Muu"
+    ;; Formatoidaan sinne päin
     (str/capitalize (name tyyppi))))
 
 (defn vaylan-nimi-idlla [vaylat vayla-id]
