@@ -1,7 +1,7 @@
 (ns harja.domain.tiemerkinta-toteumat
   "Tiemerkinnän toteumien spec-määritykset"
   (:require
-    [clojure.spec :as s]
+    [clojure.spec.alpha :as s]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka]
     [harja.domain.yllapitokohde :as yllapitokohteet]

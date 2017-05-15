@@ -7,7 +7,7 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [clojure.test.check.generators :as gen]
-            [clojure.spec :as s]))
+            [clojure.spec.alpha :as s]))
 
 
 (defn jarjestelma-fixture [testit]

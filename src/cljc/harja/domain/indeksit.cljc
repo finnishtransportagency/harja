@@ -1,6 +1,6 @@
 (ns harja.domain.indeksit
   "Domain tietojen määrittely indekseillä. Palvelujen käyttämät specit."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             #?@(:clj [[clojure.future :refer :all]])
             [harja.domain.urakka :as urakka]))
 

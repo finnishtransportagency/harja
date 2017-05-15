@@ -1,7 +1,7 @@
 (ns harja.ui.aikajana
   "Aikajananäkymä, jossa voi useita eri asioita näyttää aikajanalla.
   Vähän kuten paljon käytetty gantt kaavio."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             #?(:cljs [reagent.core :as r])
             #?(:cljs [harja.ui.dom :as dom])
             [harja.pvm :as pvm]

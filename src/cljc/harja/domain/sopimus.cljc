@@ -1,10 +1,10 @@
 (ns harja.domain.sopimus
   "Määrittelee sopimuksen specit"
-  #?@(:clj [(:require [clojure.spec :as s]
+  #?@(:clj [(:require [clojure.spec.alpha :as s]
                       [harja.id :refer [id-olemassa?]]
                       [harja.kyselyt.specql-db :refer [define-tables]]
                       [clojure.future :refer :all])]
-      :cljs [(:require [clojure.spec :as s]
+      :cljs [(:require [clojure.spec.alpha :as s]
                [harja.id :refer [id-olemassa?]]
                [specql.impl.registry]
                [specql.data-types])
@@ -20,6 +20,14 @@
     "luoja" ::luoja-id
     "urakka" ::urakka-id
     "muokkaaja" ::muokkaaja-id}])
+
+(def perustiedot
+  #{::id
+    ::nimi
+    ::paasopimus-id
+    ::alkupvm
+    ::loppupvm
+    ::sampoid})
 
 (defn paasopimus? [sopimukset sopimus]
   (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))

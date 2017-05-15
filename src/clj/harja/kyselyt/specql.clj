@@ -1,11 +1,11 @@
 (ns harja.kyselyt.specql
-  "Määritellään yleisiä clojure.spec tyyppejä."
+  "Määritellään yleisiä clojure.spec.alpha tyyppejä."
   (:require [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.data-types :as d]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.urakka :as urakka]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
             [clojure.string :refer [trim]]
             [clojure.java.io :as io]))
