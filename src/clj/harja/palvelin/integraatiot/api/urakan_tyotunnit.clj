@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.urakan_tyotunnit
+(ns harja.palvelin.integraatiot.api.urakan-tyotunnit
   "Urakan yleistietojen API-kutsut"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
