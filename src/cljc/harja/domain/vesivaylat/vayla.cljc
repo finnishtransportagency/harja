@@ -1,13 +1,14 @@
 (ns harja.domain.vesivaylat.vayla
   "Väylän tiedot"
   (:require
-    [clojure.string :as str])
+    [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [clojure.set]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-              [clojure.future :refer :all]
-              [specql.rel :as rel]]
+    #?@(:clj  [
+    [harja.kyselyt.specql-db :refer [define-tables]]
+    [clojure.future :refer :all]
+    [specql.rel :as rel]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
