@@ -37,13 +37,11 @@
                       kayttaja
                       tyotunnit))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (println "--->>>" tyotunnit)
     (jdbc/with-db-transaction [db db]
       (doseq [{vuosikolmannes :vuosikolmannes} tyotunnit]
-        (println "---->>>" vuosikolmannes)
         (q/tallenna-urakan-tyotunnit db (kolmannes-tallennetavaksi urakka-id vuosikolmannes))))
 
-    #_(laheta-turiin turi urakka (map :vuosikolmannes tyotunnit))
+    (laheta-turiin turi urakka-id (map :vuosikolmannes tyotunnit))
 
     (tee-kirjausvastauksen-body {:ilmoitukset "Työtunnit kirjattu onnistuneesti"})))
 
