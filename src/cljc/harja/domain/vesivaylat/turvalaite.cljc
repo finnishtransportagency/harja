@@ -10,3 +10,6 @@
 (define-tables
   ["reimari_turvalaite" ::reimari-turvalaite]
   ["vv_turvalaite" ::turvalaite])
+
+;; TODO Korvaa specql:n tuella muuttaa suoraan setiksi keywordeja
+(s/def ::tyyppi #{:kiintea :poiju :viitta})
