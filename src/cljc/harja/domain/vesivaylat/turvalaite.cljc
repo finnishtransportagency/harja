@@ -1,18 +1,27 @@
 (ns harja.domain.vesivaylat.turvalaite
   "Turvalaitteen tiedot"
   (:require
-    [clojure.spec :as s]
     [clojure.string :as str]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-              [clojure.future :refer :all]]))
+    [clojure.spec.alpha :as s]
+    [harja.domain.vesivaylat.vayla :as v]
+
+    #?@(:clj [
+    [harja.kyselyt.specql-db :refer [define-tables]]
+    [clojure.future :refer :all]
+    [specql.rel :as rel]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
   ["reimari_turvalaite" ::reimari-turvalaite]
-  ["vv_turvalaite" ::turvalaite])
-
-;; TODO Korvaa specql:n tuella muuttaa suoraan setiksi keywordeja
-(s/def ::tyyppi #{:kiintea :poiju :viitta})
+  ["vv_turvalaite" ::turvalaite
+   {"vayla" ::vayla-id
+    #?@(:clj [::vayla (rel/has-one ::vayla-id ::v/vayla ::v/id)])}])
 
 (def tyypit (s/describe ::tyyppi))
+
+(def perustiedot
+  #{::id
+    ::nimi
+    ::tyyppi
+    [::vayla v/perustiedot]})
