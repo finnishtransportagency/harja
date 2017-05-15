@@ -150,7 +150,7 @@
            tyolajit))))
 
 (defn- suodattimet-ja-toiminnot [e! app urakka]
-  [valinnat/urakkavalinnat
+  [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
@@ -178,12 +178,11 @@
      [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]
 
    ^{:key "urakkatoiminnot"}
-   [valinnat/urakkatoiminnot
+   [valinnat/urakkatoiminnot {:sticky? true}
     ^{:key "siirto"}
     [napit/yleinen-ensisijainen "Siirrä valitut yksikköhintaisiin"
      #(log "Painoit nappia")
-     {:sticky? true
-      :disabled (not (some :valittu? (:toimenpiteet app)))}]]])
+     {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
   (komp/luo

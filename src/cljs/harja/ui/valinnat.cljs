@@ -11,7 +11,10 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]
-            [harja.ui.lomake :as lomake]))
+            [goog.events.EventType :as EventType]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -342,11 +345,34 @@
                          :valitse-fn #(reset! valittu-vayla-atom %)}
     vaylat]])
 
-(defn urakkavalinnat [& sisalto]
+(defn urakkavalinnat [optiot & sisalto]
   [:div.urakkavalinnat sisalto])
 
-(defn urakkatoiminnot [& sisalto]
-  [:div.urakkatoiminnot sisalto])
+(defn urakkatoiminnot [{:keys [sticky?] :as optiot} & sisalto]
+  (let [naulattu? (atom false)
+        elementin-etaisyys-ylareunaan (atom nil)
+        maarita-sticky! (fn []
+                          (if (and
+                                sticky?
+                                (> (dom/scroll-sijainti-ylareunaan) (+ @elementin-etaisyys-ylareunaan 20)))
+                            (reset! naulattu? true)
+                            (reset! naulattu? false)))
+        kasittele-scroll-event (fn [this _]
+                                 (maarita-sticky!))
+        kasittele-resize-event (fn [this _]
+                                 (maarita-sticky!))]
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL kasittele-scroll-event
+                           EventType/RESIZE kasittele-resize-event)
+      (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                          (maarita-sticky!)))
+      (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
+                               (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                 (r/dom-node %))))
+      (fn [optiot & sisalto]
+        [:div.urakkatoiminnot {:class (when @naulattu? "urakkatoiminnot-naulattu ")}
+         sisalto]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
   [:div.row
