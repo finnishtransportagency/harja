@@ -243,6 +243,7 @@
        [(tieto "Kaistajärjestelyt"
                (checkbox-lista [["Yksi ajokaista suljettu" "ajokaistaSuljettu"]
                                 ["Yksi ajorata suljettu" "ajorataSuljettu"]
+                                ["Tie suljettu" "tieSuljettu"]
                                 ["Muu" "muu" (get jarj "muu")]]
                                jarj))]
        [(tieto "Nopeusrajoitus"
