@@ -38,10 +38,10 @@
     :vesiliikennemerkit "Vesiliikennemerkit"
     :kiintea-turvalaite "Kiinteä turvalaite"
     ;; Formatoidaan sinne päin
-    (str/capitalize (name tyyppi))))
+    (some-> tyyppi name str/capitalize)))
 
 (defn jarjesta-reimari-tyolajit [tyolajit]
-  (sort tyolajit))
+  (sort-by reimari-tyolaji-fmt tyolajit))
 
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
@@ -93,10 +93,10 @@
     :telematiikkalaitteet "Telematiikkalaitteet"
     :luotsitoiminnan-palvelut "Luotsitoiminnan palvelut"
     ;; Formatoidaan sinne päin
-    (str/capitalize (name tyoluokka))))
+    (some-> tyoluokka name str/capitalize)))
 
 (defn jarjesta-reimari-tyoluokat [tyoluokat]
-  (sort tyoluokat))
+  (sort-by reimari-tyoluokka-fmt tyoluokat))
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
 reimari-toimenpidetyypit
@@ -211,10 +211,10 @@ reimari-toimenpidetyypit
     :tutkintoajo "Tutkintoajo"
     :luotsiajo "Luotsiajo"
     ;; Formatoidaan sinne päin
-    (str/capitalize (name toimenpide))))
+    (some-> toimenpide name str/capitalize)))
 
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
-  (sort toimenpidetyypit))
+  (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
 (def ^{:doc "Reimarin toimenpiteen tilat"}
 reimari-tilat
