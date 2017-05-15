@@ -1,15 +1,20 @@
 (ns harja.domain.vesivaylat.toimenpide
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.toteuma :as t]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.sopimus :as sopimus]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
+            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]]))
+            [clojure.future :refer :all]
+            [specql.rel :as rel]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -229,7 +234,70 @@ reimari-tilat
     "luotu" ::m/luotu
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu?
-    "poistaja" ::m/poistaja-id}])
+    "poistaja" ::m/poistaja-id
+    "lisatyo" ::lisatyo?
+    #?@(:clj
+        [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
+         ::toteuma (rel/has-one ::toteuma-id ::t/toteuma ::t/id)
+         ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+         ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
+         ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
+         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+
+(def reimari-kentat
+  #{::reimari-id
+    ::reimari-tyolaji
+    ::reimari-tyoluokka
+    ::reimari-tyyppi
+    ::reimari-tila
+    ::reimari-luotu
+    ::reimari-muokattu
+    ::reimari-asiakas
+    ::reimari-vastuuhenkilo
+    ::reimari-alus
+    ::reimari-urakoitsija
+    ::reimari-sopimus
+    ::reimari-turvalaite
+    ::reimari-vayla})
+
+(def metatiedot
+  #{::m/muokattu
+    ::m/muokkaaja-id
+    ::m/luotu
+    ::m/luoja-id
+    ::m/poistettu?
+    ::m/poistaja-id})
+
+(def viittaus-idt
+  #{::toteuma-id
+    ::urakoitsija-id
+    ::sopimus-id
+    ::turvalaite-id
+    ::vayla-id
+    ::luoja
+    ::luoja-id})
+
+(def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
+(def toteuma #{[::toteuma #{::t/id ::t/tyyppi}]})
+(def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
+(def sopimus #{[::sopimus sopimus/perustiedot]})
+(def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
+(def vayla #{[::vayla vv-vayla/perustiedot]})
+
+(def viittaukset
+  (clojure.set/union
+    vikailmoitus
+    toteuma
+    urakoitsija
+    sopimus
+    turvalaite
+    vayla))
+
+(def perustiedot
+  #{::id
+    ::lisatieto
+    ::suoritettu
+    ::lisatyo?})
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
