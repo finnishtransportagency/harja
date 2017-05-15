@@ -348,7 +348,7 @@
 (defn tyolaji
   [valittu-tyolaji-atom tyolajit format-fn]
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Työlajit"]
+   [:span.alasvedon-otsikko "Työlaji"]
    [livi-pudotusvalikko {:valinta @valittu-tyolaji-atom
                          :format-fn format-fn
                          :valitse-fn #(reset! valittu-tyolaji-atom %)}
