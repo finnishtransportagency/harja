@@ -196,6 +196,7 @@
                                     (::t/max-korkeus raj)))})
      (sisennetty-arvo (::t/max-korkeus raj) "(m, ajoneuvon max. korkeus)")
      (sisennetty-arvo (::t/max-leveys raj) "(m, ajoneuvon max. leveys)")
+     (sisennetty-arvo (::t/max-pituus raj) "(m, ajoneuvon max. pituus)")
 
      (checkbox-lista [["Painorajoitus" true
                        [:fo:inline
