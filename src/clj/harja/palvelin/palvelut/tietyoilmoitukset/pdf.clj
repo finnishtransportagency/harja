@@ -298,7 +298,7 @@
        [(tieto "Pysäytyksiä"
                [:fo:block
                 (checkbox-lista [["Liikennevalot" "liikennevalot"]
-                                 ["Liikenteen ohjaaja" "lohj"]
+                                 ["Liikenteen ohjaaja" "liikenteneohjaaja"]
                                  ["Satunnaisia" "satunnaisia"]]
                                 #{(::t/liikenteenohjaaja ilm)})
                 (pvm-ja-aika "alkaa" (::t/pysaytysten-alku ilm))
