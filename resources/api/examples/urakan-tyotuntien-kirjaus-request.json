@@ -1,0 +1,34 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2017-01-30T12:00:00+02:00"
+  },
+  "tyotunnit": [
+    {
+      "vuosikolmannes": {
+        "vuosi": 2017,
+        "kolmannes": 1,
+        "tunnit": 2000
+      },
+      "vuosikolmannes": {
+        "vuosi": 2017,
+        "kolmannes": 2,
+        "tunnit": 345345
+      },
+      "vuosikolmannes": {
+        "vuosi": 2017,
+        "kolmannes": 3,
+        "tunnit": 2345
+      }
+    }
+  ]
+}
