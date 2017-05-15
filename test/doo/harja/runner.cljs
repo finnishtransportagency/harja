@@ -42,6 +42,7 @@
             [harja.tiedot.hallintayksikot-test]
             [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot]
             [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat]
+            [harja.tiedot.urakka.urakan-tyotunnit]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -86,5 +87,6 @@
            'harja.tiedot.hallintayksikot-test
            'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot
            'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat
+           'harja.tiedot.urakka.urakan-tyotunnit
            ;; uusi testi tähän
            )
