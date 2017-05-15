@@ -187,7 +187,12 @@
       (sort-by to/reimari-tyoluokat-jarjestys (into [nil] (distinct (vals to/reimari-tyoluokat))))
       #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
 
-     [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]
+     [valinnat/toimenpide
+      (r/wrap (get-in app [:valinnat :toimenpide])
+              (fn [uusi]
+                (e! (tiedot/->PaivitaValinnat {:toimenpide uusi}))))
+      (sort-by to/reimari-toimenpidetyyppien-jarjestys (into [nil] (distinct (vals to/reimari-toimenpidetyypit))))
+      #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]]]
 
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}

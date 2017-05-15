@@ -79,7 +79,7 @@
     (str/capitalize (name tyoluokka))))
 
 (defn reimari-tyoluokat-jarjestys [tyoluokka]
-  (case tyoluokka
+  (case tyoluokka ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
     nil 0
     1))
 
@@ -130,7 +130,7 @@ reimari-toimenpidetyypit
    "1022542012" :siirto
    "1022542027" :tarkastus-huolto-ja-korjaus
    "1022542031" :kivien-ym-esteiden-poisto
-   "1022540608" :Sektorin-tarkastus
+   "1022540608" :sektorin-tarkastus
    "1022542037" :uittorakenteet
    "1022542035" :satamarakenteet
    "1022542016" :sijoittajatyot
@@ -147,6 +147,61 @@ reimari-toimenpidetyypit
    "1022542055" :luotsiajo
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
+
+(defn reimari-toimenpidetyyppi-fmt [toimenpide]
+  (case toimenpide
+    :alukset-ja-veneet "Alukset ja veneet"
+    :toimistotyot "Toimistötyöt"
+    :muu-kuljetuskalusto "Muu kuljetuskalusto"
+    :valo-ja-energialaitetyot "Valo ja energialaitetyöt"
+    :poiju-ja-viittakorjaustyot "Polju- ja viittakorjaustyöt"
+    :sijaintitarkastus "Sijaintitarkastus"
+    :asennus-tarkastus-ja-vaihto "Asennus, tarkastus ja vaihto"
+    :autot-traktorit "Autot, traktorit"
+    :T&K "T&K"
+    :kiinteistojen-yllapito-ja-huolto "Kiinteistöjen ylläpito ja huolto"
+    :asennus "Asennus"
+    :tarkastustyot "Tarkastustyöt"
+    :muut-tukityot "Muut tukityöt"
+    :muun-kaluston-kunnossapito "Muun kaluston kunnossapito"
+    :muut-turvalaitetyot "Muut turvalaitetyöt"
+    :raivaus-ja-ymparistonhoito "Raivaus ja ympäristönhoito"
+    :koulutus "Koulutus"
+    :varasto-ja-hankintatyot "Varasto- ja hankintatyöt"
+    :ankkuripainojen-tyot "Ankkuripainojen työt"
+    :navityot "Navityöt"
+    :kiinteistot "Kiinteistöt"
+    :muut-palvelut "Muut palvelut"
+    :sijoittajatyot "Sijoittajatyöt"
+    :aluskalustolla "Aluskalustolla"
+    :sektorien-tarkastus-ja-saato "Sektorien tarkastus ja säätö"
+    :auto-tai-muulla-kalustolla "Auto tai muulla kalustolla"
+    :huoltotyo "Huoltotyö"
+    :uudisrakentaminen "Uudisrakentaminen"
+    :VTS-tyot "VTS-työt"
+    :tutkamajakkatyot "Tutkamajakkatyöt"
+    :siirto "Siirto"
+    :tarkastus-huolto-ja-korjaus "Tarkastus, huolto ja korjaus"
+    :kivien-ym-esteiden-poisto "Kivien ym. esteiden poisto"
+    :sektorin-tarkastus "Sektorien tarkastus"
+    :uittorakenteet "Uittorakenteet"
+    :satamarakenteet "Satamarakenteet"
+    :pelastustoimintapalvelut "Pelastustoimintapalvelut"
+    :kanavarakenteet "Kanavarakenteet"
+    :peruskorjaus "Peruskorjaus"
+    :kaukovalvontalaitetyot "Kaukovalvontalaitetyöt"
+    :poisto "Poisto"
+    :ankkurointityot "Ankkurityöt"
+    :jaanmurtopalvelut "Jäänmurtopalvelut"
+    :tutkintoajo "Tutkintoajo"
+    :luotsiajo "Luotsiajo"
+    ;; Formatoidaan sinne päin
+    (str/capitalize (name toimenpide))))
+
+(defn reimari-toimenpidetyyppien-jarjestys [toimenpide]
+  (case toimenpide ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
+    nil 0
+    1))
 
 (def ^{:doc "Reimarin toimenpiteen tilat"}
 reimari-tilat

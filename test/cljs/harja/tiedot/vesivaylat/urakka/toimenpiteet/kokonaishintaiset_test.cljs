@@ -18,7 +18,8 @@
                            :vayla nil
                            :turvalaitetyyppi :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
-                           :toimenpide :alukset-ja-veneet}
+                           :toimenpide :alukset-ja-veneet
+                           :vain-vikailmoituksista-tulleet? false}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"

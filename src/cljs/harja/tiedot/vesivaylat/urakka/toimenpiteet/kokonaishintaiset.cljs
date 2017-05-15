@@ -19,7 +19,8 @@
                     :vayla nil
                     :turvalaitetyyppi nil
                     :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
-                    :toimenpide :alukset-ja-veneet}
+                    :toimenpide :alukset-ja-veneet
+                    :vain-vikailmoituksista-tulleet? false}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
