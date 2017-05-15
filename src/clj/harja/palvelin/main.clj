@@ -100,6 +100,7 @@
     [harja.palvelin.integraatiot.api.ping :as api-ping]
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
+    [harja.palvelin.integraatiot.api.urakan_tyotunnit :as api-urakan-tyotunnit]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -494,6 +495,10 @@
       :api-tiemerkintatoteuma (component/using
                                 (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
                                 [:http-palvelin :db :integraatioloki])
+
+      :api-urakan-tyotunnit (component/using
+                              (api-urakan-tyotunnit/->UrakanTyotunnit)
+                              [:http-palvelin :db :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
