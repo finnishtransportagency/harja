@@ -130,7 +130,7 @@ VALUES
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(62, Hietasaaren viitta, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
-    '',
+    'TESTITOIMENPIDE 2',
     FALSE,
     '2017-04-04T23:23Z',
    '2017-04-04',
@@ -145,11 +145,11 @@ VALUES
    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 INSERT INTO vv_vikailmoitus
-("reimari-id", kuvaus, pvm, "turvalaite-id", "toteuma-id")
+("reimari-id", kuvaus, pvm, "turvalaite-id", "toimenpide-id")
     VALUES
       ('123', 'Hietasaaren viitta on kaatunut', '2017-04-02', (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
         (SELECT id
-         FROM toteuma
+         FROM reimari_toimenpide
          WHERE lisatieto = 'TESTITOIMENPIDE 2'));
 
 -- KOKONAISHINTAISIIN SIIRRETTY, REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU TYÖ
