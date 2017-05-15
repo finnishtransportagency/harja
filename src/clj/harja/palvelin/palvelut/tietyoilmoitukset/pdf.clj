@@ -193,7 +193,8 @@
     [:fo:block
      (checkbox-lista [["Ulottumarajoituksia" true]]
                      #{(boolean (or (::t/max-leveys raj)
-                                    (::t/max-korkeus raj)))})
+                                    (::t/max-korkeus raj)
+                                    (::t/max-pituus raj)))})
      (sisennetty-arvo (::t/max-korkeus raj) "(m, ajoneuvon max. korkeus)")
      (sisennetty-arvo (::t/max-leveys raj) "(m, ajoneuvon max. leveys)")
      (sisennetty-arvo (::t/max-pituus raj) "(m, ajoneuvon max. pituus)")
