@@ -78,8 +78,8 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta :desimaalien-maara 0
             :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
-            :valinta-nayta #(if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-")
-            :fmt :lyhyt-nimi
+            :valinta-nayta #(do (if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-"))
+            :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "Hinta"
             :validoi [[:ei-tyhja "Anna hinta"]]
@@ -129,7 +129,7 @@
                     "Kohteita ei löytynyt")}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "YHA-id" :leveys 3 :nimi :y-haid :tyyppi :string
+           {:otsikko "YHA-id" :leveys 3 :nimi :yha-id :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
            {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
@@ -166,12 +166,13 @@
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
-           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+           {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :fmt #(yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %)
             :muokattava? (constantly false)}]
           (yllapitokohteet-domain/jarjesta-yllapitokohteet paallystysurakan-kohteet)]]))))
 
