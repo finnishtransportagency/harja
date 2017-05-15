@@ -192,7 +192,13 @@
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:toimenpide uusi}))))
       (sort-by to/reimari-toimenpidetyyppien-jarjestys (into [nil] (distinct (vals to/reimari-toimenpidetyypit))))
-      #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]]]
+      #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
+
+     [kentat/tee-kentta {:tyyppi :checkbox
+                         :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
+      (r/wrap (get-in app [:valinnat :vain-vikailmoituksista-tulleet?])
+              (fn [uusi]
+                (e! (tiedot/->PaivitaValinnat {:vain-vikailmoituksista-tulleet? uusi}))))]]]
 
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}

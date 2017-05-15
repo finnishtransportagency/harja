@@ -152,7 +152,8 @@
                                                    :vayla 1
                                                    :tyolaji :polju
                                                    :tyoluokka :asennus-ja-huolto
-                                                   :toimenpide :autot-traktorit})
+                                                   :toimenpide :autot-traktorit
+                                                   :vain-vikailmoituksista-tulleet? true})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
@@ -176,7 +177,10 @@
       (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))
 
       (is (= (get-in vanha-tila [:valinnat :toimenpide]) :alukset-ja-veneet))
-      (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))))
+      (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))
+
+      (is (false? (get-in vanha-tila [:valinnat :vain-vikailmoituksista-tulleet?])))
+      (is (true? (get-in uusi-tila [:valinnat :vain-vikailmoituksista-tulleet?])))))
 
   (testing "Asetetaan vain yksi valinta"
     (let [vanha-tila {}

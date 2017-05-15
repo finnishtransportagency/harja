@@ -315,6 +315,7 @@
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
                                               :vaylatyyppi :vayla
+                                              :vain-vikailmoituksista-tulleet?
                                               :tyolaji :tyoluokka :toimenpide]))))
 
   ValitseToimenpide
