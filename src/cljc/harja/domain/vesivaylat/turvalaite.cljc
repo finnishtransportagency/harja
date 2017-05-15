@@ -13,3 +13,5 @@
 
 ;; TODO Korvaa specql:n tuella muuttaa suoraan setiksi keywordeja
 (s/def ::tyyppi #{:kiintea :poiju :viitta})
+
+(def tyypit (s/describe ::tyyppi))
