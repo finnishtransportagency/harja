@@ -76,7 +76,7 @@
     "Urakoitsija" "-"
     "Sopimusnumero" "-"
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
-    "Työlaji" (to/tyolaji-fmt (::to/tyolaji toimenpide))
+    "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)
     "Toimenpide" (::to/toimenpide toimenpide)
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
@@ -137,7 +137,7 @@
     (vec (mapcat
            (fn [tyolaji]
              [tyolaji
-              (grid/otsikkorivin-tiedot (to/tyolaji-fmt tyolaji)
+              (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
                                         (count (toimenpiteet-tyolajilla
                                                  toimenpiteet
                                                  tyolaji)))

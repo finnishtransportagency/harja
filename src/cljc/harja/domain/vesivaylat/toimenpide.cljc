@@ -33,7 +33,7 @@
 
 (defn reimari-tyolaji-fmt [tyyppi]
   (case tyyppi
-    :tukityot "Tykityöt"
+    :tukityot "Tukityöt"
     :kiinteat-turvalaitteet "Kiinteät turvalaitteet"
     :poijut "Poijut"
     :viitat "Viitat"
@@ -310,19 +310,3 @@ reimari-tilat
 
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
-
-(def tyolajit (vals reimari-tyolajit))
-
-(def tyolaji-fmt
-  (merge
-    (into {}
-          (map (juxt identity
-                     (comp
-                       (fn [s] (clojure.string/replace s "-" " "))
-                       clojure.string/capitalize
-                       name))
-               tyolajit))
-    {:kiinteat-turvalaitteet "Kiinteät turvalaitteet"
-     :kiintea-turvalaite "Kiinteä turvalaite"
-     :tukityot "Tukityöt"
-     :muut-vaylatyot "Muut väylätyöt"}))
