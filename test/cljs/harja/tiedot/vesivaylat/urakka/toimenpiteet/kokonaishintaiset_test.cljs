@@ -150,21 +150,21 @@
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
 
-      (is (nil? (get-in vanha-tila [:valinnat :aikavali])))
-      (is (vector? (get-in uusi-tila [:valinnat :aikavali])))
+      (is (= (get-in vanha-tila [:valinnat :aikavali]) [nil nil]))
+      (is (not= (get-in uusi-tila [:valinnat :aikavali]) [nil nil]))
 
       (is (nil? (get-in vanha-tila [:valinnat :sopimus-id])))
       (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
 
-      (is (nil? (get-in vanha-tila [:valinnat :vaylatyyppi])))
+      (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
       (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
 
-      (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kaikki))
-      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) 1))))
+      (is (= (get-in vanha-tila [:valinnat :vayla]) :kaikki))
+      (is (= (get-in uusi-tila [:valinnat :vayla]) 1))))
 
   (testing "Asetetaan vain yksi valinta"
-    (let [vanha-tila testitila
+    (let [vanha-tila {}
           uusi-tila (e! (tiedot/->PaivitaValinnat {:vaylatyyppi :muu
                                                    :foo :bar})
                         vanha-tila)]
