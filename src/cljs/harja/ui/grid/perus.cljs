@@ -12,7 +12,6 @@
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid.protokollat :refer
              [Grid vetolaatikko-auki? sulje-vetolaatikko!

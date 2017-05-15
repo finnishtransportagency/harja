@@ -5,7 +5,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [cljs.core.async :refer [<! put! chan]]
-            [schema.core :as s :include-macros true]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
