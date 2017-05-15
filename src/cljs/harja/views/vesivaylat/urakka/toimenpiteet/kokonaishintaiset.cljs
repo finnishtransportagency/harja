@@ -160,25 +160,24 @@
       (r/wrap (get-in app [:valinnat :vaylatyyppi])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
-      va/tyypit
-      va/tyyppi-fmt]
+      (into [nil] va/tyypit)
+      #(if % (va/tyyppi-fmt %) "Kaikki")]
      [valinnat/vayla
       ;; TODO Pitäisi varmaan olla combobox, koska väyliä on paljon ja suodatetaan kantakyselystä?
       (r/wrap (get-in app [:valinnat :vayla])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:vayla uusi}))))
-      (into [:kaikki] (map ::va/id (to/toimenpiteiden-vaylat (:toimenpiteet app))))
-      #(if (= % :kaikki)
-         "Kaikki"
-         (va/vaylan-nimi-idlla (to/toimenpiteiden-vaylat (:toimenpiteet app)) %))]]
+      (into [nil] (map ::va/id (to/toimenpiteiden-vaylat (:toimenpiteet app))))
+      #(if % (va/vaylan-nimi-idlla (to/toimenpiteiden-vaylat (:toimenpiteet app)) %)
+             "Kaikki")]]
 
     [:div
      [valinnat/turvalaitetyyppi
       (r/wrap (get-in app [:valinnat :turvalaitetyyppi])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:turvalaitetyyppi uusi}))))
-      tu/tyypit
-      tu/tyyppi-fmt]
+      (into [nil] tu/tyypit)
+      #(if % (tu/tyyppi-fmt %) "Kaikki")]
      [:div "TODO Lisää työluokka (ks. reimari-tyoluokat)"]
      [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]
 

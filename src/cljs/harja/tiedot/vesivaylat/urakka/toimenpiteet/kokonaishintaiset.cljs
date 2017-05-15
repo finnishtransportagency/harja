@@ -15,9 +15,9 @@
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
                     :aikavali [nil nil]
-                    :vayla :kaikki
                     :vaylatyyppi :kauppamerenkulku
-                    :turvalaitetyyppi :kiintea
+                    :vayla nil
+                    :turvalaitetyyppi nil
                     :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                     :toimenpide :alukset-ja-veneet}
          :nakymassa? false

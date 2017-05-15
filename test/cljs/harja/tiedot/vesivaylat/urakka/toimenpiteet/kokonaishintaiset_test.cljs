@@ -14,8 +14,8 @@
                 :valinnat {:urakka-id nil
                            :sopimus-id nil
                            :aikavali [nil nil]
-                           :vayla :kaikki
                            :vaylatyyppi :kauppamerenkulku
+                           :vayla nil
                            :turvalaitetyyppi :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
@@ -165,7 +165,7 @@
       (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
       (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-      (is (= (get-in vanha-tila [:valinnat :vayla]) :kaikki))
+      (is (nil? (get-in vanha-tila [:valinnat :vayla])))
       (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
 
       (is (= (get-in vanha-tila [:valinnat :turvalaitetyyppi]) :kiintea))
