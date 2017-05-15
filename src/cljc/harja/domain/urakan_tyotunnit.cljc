@@ -3,7 +3,6 @@
   (:require [clojure.spec.alpha :as s]
             [specql.impl.registry]
             [specql.data-types]
-            [clojure.spec :as s]
             [harja.pvm :as pvm]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
