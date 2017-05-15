@@ -46,6 +46,7 @@ schemas:
  - yllapitokohteen-tarkastuksen-kirjaus-request: !include schemas/yllapitokohteen-tarkastuksen-kirjaus-request.schema.json
  - urakan-tiemerkintatoteuman-kirjaus-request: !include schemas/urakan-tiemerkintatoteuman-kirjaus-request.schema.json
  - urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request: !include schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json
+ - urakan-tyotuntien-kirjaus-request: !include schemas/urakan-tyotuntien-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -956,7 +957,31 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
-
+  /tyotunnit:
+    /{urakkanumero}:
+      post:
+        is: [secured]
+        description: Urakan työtuntien kirjaus vuosikolmanneksittain. Kolmannekset ovat 1 tammi-huhtikuu, 2 touko-elokuu, 3 syys-joulukuu.
+        body:
+          application/json:
+            example: !include examples/urakan-tyotuntien-kirjaus-request.json
+            schema: urakan-tyotuntien-kirjaus-request
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
 
 /varusteet:
   is: [secured]
