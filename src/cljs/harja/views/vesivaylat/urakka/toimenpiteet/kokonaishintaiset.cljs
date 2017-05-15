@@ -160,7 +160,7 @@
       (r/wrap (get-in app [:valinnat :vaylatyyppi])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
-      (into [nil] va/tyypit)
+      (sort-by va/tyyppien-jarjestys (into [nil] va/tyypit))
       #(if % (va/tyyppi-fmt %) "Kaikki")]
      [valinnat/vayla
       ;; TODO Pitäisi varmaan olla combobox, koska väyliä on paljon ja suodatetaan kantakyselystä?
@@ -176,7 +176,7 @@
       (r/wrap (get-in app [:valinnat :turvalaitetyyppi])
               (fn [uusi]
                 (e! (tiedot/->PaivitaValinnat {:turvalaitetyyppi uusi}))))
-      (into [nil] tu/tyypit)
+      (sort-by tu/turvalaitteiden-jarjestys (into [nil] tu/tyypit))
       #(if % (tu/tyyppi-fmt %) "Kaikki")]
      [:div "TODO Lisää työluokka (ks. reimari-tyoluokat)"]
      [:div "TODO Lisää toimenpide (ks. reimari-toimenpidetyypit)"]]]

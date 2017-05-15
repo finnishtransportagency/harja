@@ -18,6 +18,13 @@
 
 (def tyypit (s/describe ::tyyppi))
 
+(defn tyyppien-jarjestys [tyyppi]
+  (case tyyppi
+    nil 0
+    :kauppamerenkulku 1
+    :muu 2
+    99))
+
 (defn tyyppi-fmt [tyyppi]
   (case tyyppi
     :kauppamerenkulku "Kauppamerenkulku"
