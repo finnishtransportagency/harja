@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.core.async :as async]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
             [harja.geo :as geo]
@@ -13,7 +14,9 @@
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]))
 
 (defn hae-kokonaishintaiset-toimenpiteet [db user tiedot]
-  nil)
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user)
+    (q/hae-toimenpiteet db tiedot)))
 
 (defrecord KokonaishintaisetToimenpiteet []
   component/Lifecycle
