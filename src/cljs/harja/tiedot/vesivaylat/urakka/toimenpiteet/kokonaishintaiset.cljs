@@ -17,9 +17,9 @@
                     :aikavali [nil nil]
                     :vaylatyyppi :kauppamerenkulku
                     :vayla nil
-                    :turvalaitetyyppi nil
-                    :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
-                    :toimenpide :alukset-ja-veneet
+                    :tyolaji nil
+                    :tyoluokka nil
+                    :toimenpide nil
                     :vain-vikailmoituksista-tulleet? false}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
@@ -315,7 +315,7 @@
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
                                               :vaylatyyppi :vayla
-                                              :turvalaitetyyppi :tyoluokka :toimenpide]))))
+                                              :tyolaji :tyoluokka :toimenpide]))))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]

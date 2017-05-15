@@ -26,6 +26,25 @@
    "1022541804" :vesiliikennemerkit
    "1022540501" :kiintea-turvalaite})
 
+(defn reimari-tyolaji-fmt [tyyppi]
+  (case tyyppi
+    :tukityot "Tykityöt"
+    :kiinteat-turvalaitteet "Kiinteät turvalaitteet"
+    :poijut "Poijut"
+    :viitat "Viitat"
+    :muut-vaylatyot "Muut väylätyöt"
+    :rakennus-ja-kuljetuspalvelut "Rakennus- ja kuljetuspalvelut"
+    :muut-palvelut "Muut palvelut"
+    :vesiliikennemerkit "Vesiliikennemerkit"
+    :kiintea-turvalaite "Kiinteä turvalaite"
+    ;; Formatoidaan sinne päin
+    (str/capitalize (name tyyppi))))
+
+(defn reimari-tyolajien-jarjestys [tyolaji]
+  (case tyolaji ;; TODO nil ekaksi ja muuten aakkosjärjestykseen
+    nil 0
+    1))
+
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
   reimari-tyoluokat

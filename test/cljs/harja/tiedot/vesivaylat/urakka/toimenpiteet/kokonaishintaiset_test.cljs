@@ -16,7 +16,7 @@
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
                            :vayla nil
-                           :turvalaitetyyppi :kiintea
+                           :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet
                            :vain-vikailmoituksista-tulleet? false}
@@ -150,7 +150,7 @@
                                                    :aikavali [(t/now) (t/now)]
                                                    :vaylatyyppi :muu
                                                    :vayla 1
-                                                   :turvalaitetyyppi :polju
+                                                   :tyolaji :polju
                                                    :tyoluokka :asennus-ja-huolto
                                                    :toimenpide :autot-traktorit})
                         vanha-tila)]
@@ -169,8 +169,8 @@
       (is (nil? (get-in vanha-tila [:valinnat :vayla])))
       (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
 
-      (is (= (get-in vanha-tila [:valinnat :turvalaitetyyppi]) :kiintea))
-      (is (= (get-in uusi-tila [:valinnat :turvalaitetyyppi]) :polju))
+      (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
+      (is (= (get-in uusi-tila [:valinnat :tyolaji]) :polju))
 
       (is (= (get-in vanha-tila [:valinnat :tyoluokka]) :kuljetuskaluston-huolto-ja-kunnossapito))
       (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))

@@ -16,19 +16,3 @@
 (s/def ::tyyppi #{:kiintea :poiju :viitta})
 
 (def tyypit (s/describe ::tyyppi))
-
-(defn tyyppi-fmt [tyyppi]
-  (case tyyppi
-    :kiintea "Kiinteä"
-    :poiju "Poiju"
-    :viitta "Viitta"
-    ;; Formatoidaan sinne päin
-    (str/capitalize (name tyyppi))))
-
-(defn turvalaitteiden-jarjestys [tyyppi]
-  (case tyyppi
-    nil 0
-    :kiintea 1
-    :poiju 2
-    :viitta 3
-    99))

@@ -173,12 +173,12 @@
              "Kaikki")]]
 
     [:div
-     [valinnat/turvalaitetyyppi
-      (r/wrap (get-in app [:valinnat :turvalaitetyyppi])
+     [valinnat/tyolaji
+      (r/wrap (get-in app [:valinnat :tyolaji])
               (fn [uusi]
-                (e! (tiedot/->PaivitaValinnat {:turvalaitetyyppi uusi}))))
-      (sort-by tu/turvalaitteiden-jarjestys (into [nil] tu/tyypit))
-      #(if % (tu/tyyppi-fmt %) "Kaikki")]
+                (e! (tiedot/->PaivitaValinnat {:tyolaji uusi}))))
+      (sort-by to/reimari-tyolajien-jarjestys (into [nil] (distinct (vals to/reimari-tyolajit))))
+      #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
 
      [valinnat/tyoluokka
       (r/wrap (get-in app [:valinnat :tyoluokka])

@@ -345,14 +345,14 @@
                          :valitse-fn #(reset! valittu-vayla-atom %)}
     vaylat]])
 
-(defn turvalaitetyyppi
-  [valittu-turvalaitetyyppi-atom turvalaitetyypit format-fn]
+(defn tyolaji
+  [valittu-tyolaji-atom tyolajit format-fn]
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Turvalaitetyyppi"]
-   [livi-pudotusvalikko {:valinta @valittu-turvalaitetyyppi-atom
+   [:span.alasvedon-otsikko "Työlajit"]
+   [livi-pudotusvalikko {:valinta @valittu-tyolaji-atom
                          :format-fn format-fn
-                         :valitse-fn #(reset! valittu-turvalaitetyyppi-atom %)}
-    turvalaitetyypit]])
+                         :valitse-fn #(reset! valittu-tyolaji-atom %)}
+    tyolajit]])
 
 (defn tyoluokka
   [valittu-tyoluokka-atom tyoluokat format-fn]
