@@ -697,18 +697,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
-(defn urakan-vuosikolmannekset [alkupvm loppupvm]
-  (let [kuukaudet [[1 4] [5 8] [9 12]]
-        kolmannes (fn [v [alku-kk loppu-kk]]
-                    {:alku (t/first-day-of-the-month v alku-kk)
-                     :loppu (t/last-day-of-the-month v loppu-kk)})]
-    (into {}
-          (map (juxt identity (fn [vuosi]
-                                {1 (kolmannes vuosi (nth kuukaudet 0))
-                                 2 (kolmannes vuosi (nth kuukaudet 1))
-                                 3 (kolmannes vuosi (nth kuukaudet 2))})))
-          (range (vuosi alkupvm) (inc (vuosi loppupvm))))))
-
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
 
 #?(:clj
@@ -778,8 +766,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (if (jalkeen? alku loppu)
     nil
     (lazy-seq
-     (cons alku
-           (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
+      (cons alku
+            (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
 
 (defn paivat-valissa [alku loppu]
   (paivat-valissa* (d alku) (d loppu)))
