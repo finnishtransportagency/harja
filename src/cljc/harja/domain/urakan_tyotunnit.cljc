@@ -65,3 +65,11 @@
                     :else (assert false (str "Tuntematon kuukausi:" kuukausi)))]
     {::vuosi vuosi
      ::vuosikolmannes kolmannes}))
+
+(defn kuluvan-vuosikolmanneksen-paattymispaiva[]
+  (let [{vuosi ::vuosi kolmannes ::vuosikolmannes} (kuluva-vuosikolmannes)
+        kuukausi (cond (= kolmannes 1) 4
+                       (= kolmannes 2) 8
+                       (= kolmannes 3) 12
+                       :else 1)]
+    (t/last-day-of-the-month vuosi kuukausi )))

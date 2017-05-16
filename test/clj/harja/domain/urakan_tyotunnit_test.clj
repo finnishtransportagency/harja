@@ -38,3 +38,12 @@
             ::urakan-tyotunnit/vuosikolmannes 2}
            (urakan-tyotunnit/kuluva-vuosikolmannes)))))
 
+(deftest kuluvan-vuosikolmanneksen-paattymispaiva
+  (with-redefs [t/now #(t/first-day-of-the-month 2017 2)]
+    (is (= (t/date-time 2017 4 30) (urakan-tyotunnit/kuluvan-vuosikolmanneksen-paattymispaiva))))
+
+  (with-redefs [t/now #(t/date-time 2017 5 1)]
+    (is (= (t/date-time 2017 8 31) (urakan-tyotunnit/kuluvan-vuosikolmanneksen-paattymispaiva))))
+
+  (with-redefs [t/now #(t/date-time 2017 12 30)]
+    (is (= (t/date-time 2017 12 31) (urakan-tyotunnit/kuluvan-vuosikolmanneksen-paattymispaiva)))))
