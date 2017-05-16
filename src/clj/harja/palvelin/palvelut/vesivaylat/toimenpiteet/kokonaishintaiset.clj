@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clojure.core.async :as async]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
@@ -21,14 +21,15 @@
 (defrecord KokonaishintaisetToimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db}]
-    (julkaise-palvelut
-      http
+           db :db :as this}]
+    (julkaise-palvelu http
       :hae-kokonaishintaiset-toimenpiteet
       (fn [user tiedot]
-        (hae-kokonaishintaiset-toimenpiteet db user tiedot))))
+        (hae-kokonaishintaiset-toimenpiteet db user tiedot)))
+    this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kokonaishintaiset-toimenpiteet)))
+      :hae-kokonaishintaiset-toimenpiteet)
+    this))
