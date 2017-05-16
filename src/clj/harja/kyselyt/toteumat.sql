@@ -455,19 +455,13 @@ WHERE
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi);
 
--- name: luo-reittipiste<!
--- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka)
-VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y) :: POINT,
-        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'talvihoito' :: hoitoluokan_tietolajitunniste,
-                              250 :: INTEGER),
-        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'soratie' :: hoitoluokan_tietolajitunniste,
-                              250 :: INTEGER));
-
--- name: poista-reittipiste-toteuma-idlla!
--- Poistaa toteuman kaikki reittipisteet
-DELETE FROM reittipiste
-WHERE toteuma = :id;
+-- name: hae-pisteen-hoitoluokat
+SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'talvihoito'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS talvihoitoluokka,
+       hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'soratie'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS soratiehoitoluokka;
 
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
@@ -493,32 +487,6 @@ VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
 -- Poistaa toteuman materiaalit
 DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
-
--- name: luo-reitti_tehtava<!
--- Luo uuden reitin tehtävän
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
-
--- name: poista-reitti_tehtava-reittipiste-idlla!
--- Poistaa reitin tehtävät
-DELETE FROM reitti_tehtava
-WHERE reittipiste = :id;
-
--- name: luo-reitti_materiaali<!
--- Luo uuden reitin materiaalin
-INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara)
-VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
-
--- name: poista-reitti_materiaali-reittipiste-idlla!
--- Poistaa reitin materiaalit
-DELETE FROM reitti_materiaali
-WHERE reittipiste = :id;
-
--- name: hae-toteuman-reittipisteet-idlla
-SELECT *
-FROM reittipiste
-WHERE toteuma = :id
-ORDER BY aika ASC;
 
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
@@ -747,14 +715,13 @@ WHERE
   tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
 
 -- name: hae-toteuman-reittipisteet
-SELECT
-  rp.id       AS id,
-  rp.aika     AS aika,
-  rp.sijainti AS sijainti
-FROM reittipiste rp
-WHERE
-  rp.toteuma = :toteuma_id
-ORDER BY rp.aika ASC;
+SELECT rp.aika     AS aika,
+       rp.sijainti AS sijainti,
+       rp.ordinality AS id
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+       JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
+ WHERE t.id = :toteuma_id
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
@@ -940,25 +907,24 @@ WHERE id = :id;
 -- Hakee toteumat, joille on olemassa reittipisteitä, mutta reittiä ei ole jostain syystä saatu tehtyä.
 -- Käytetään ajastetussa tehtävässä
 SELECT DISTINCT t.id
-FROM toteuma t
-  JOIN reittipiste rp ON t.id = rp.toteuma
-WHERE t.reitti IS NULL;
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON t.id = tr.toteuma
+ WHERE t.reitti IS NULL;
 
 -- name: hae-reitittomat-mutta-osoitteelliset-toteumat
 -- Hakee toteumat, joille on tr-osoite, mutta reittiä ei ole saatu laskettua.
 -- Käytetään ajastetussa tehtävässä
-SELECT
-  id,
-  tr_numero        AS numero,
-  tr_alkuosa       AS alkuosa,
-  tr_alkuetaisyys  AS alkuetaisyys,
-  tr_loppuosa      AS loppuosa,
-  tr_loppuetaisyys AS loppuetaisyys
-FROM toteuma t
-WHERE reitti IS NULL
-      AND t.tr_numero IS NOT NULL
-      AND t.tr_alkuosa IS NOT NULL
-      AND t.tr_alkuetaisyys IS NOT NULL;
+SELECT id,
+       tr_numero        AS numero,
+       tr_alkuosa       AS alkuosa,
+       tr_alkuetaisyys  AS alkuetaisyys,
+       tr_loppuosa      AS loppuosa,
+       tr_loppuetaisyys AS loppuetaisyys
+  FROM toteuma t
+ WHERE reitti IS NULL
+   AND t.tr_numero IS NOT NULL
+   AND t.tr_alkuosa IS NOT NULL
+   AND t.tr_alkuetaisyys IS NOT NULL;
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma

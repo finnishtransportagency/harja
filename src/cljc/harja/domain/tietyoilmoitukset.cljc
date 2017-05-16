@@ -1,7 +1,7 @@
 (ns harja.domain.tietyoilmoitukset
   (:require [clojure.string :as str]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [harja.domain.roolit :as roolit]
     #?(:cljs [harja.tiedot.istunto :as istunto])))
 

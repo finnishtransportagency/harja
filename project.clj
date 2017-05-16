@@ -5,12 +5,12 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.293"]
+                 [org.clojure/clojurescript "1.9.542"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [clojure-future-spec "1.9.0-alpha14"]
+                 [clojure-future-spec "1.9.0-alpha16-1"]
 
-                 [prismatic/schema "1.1.3"]
+                 [prismatic/schema "1.1.6"]
                  [org.clojure/core.async "0.2.395"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.239"]
@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.5"]
+                 [specql "0.6-alpha16"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]

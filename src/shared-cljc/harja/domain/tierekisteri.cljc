@@ -1,5 +1,5 @@
 (ns harja.domain.tierekisteri
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
             #?@(:clj [[clojure.future :refer :all]])))
