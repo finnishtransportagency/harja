@@ -41,7 +41,7 @@
                       {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-kokonaishintainen"}})
                     (when (= :yksikkohintainen tyyppi)
                       {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-yksikkohintainen"}})
-                    (when sopimus-id {:vv-toimenpide/sopimus-id sopimus-id})
+                    (when sopimus-id {::vv-toimenpide/sopimus-id sopimus-id})
                     (when (and alku loppu)
                       {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
                     (when (and vaylatyyppi (not vayla-id))
