@@ -27,12 +27,13 @@
           otsikko (format "Urakan '%s' työtunnit välille %s kirjaamatta"
                           nimi
                           kuukausivali)
-          sisalto (format "Urakan %s työtunnit vuoden %s välille %s on kirjaamatta. Työtunnit täytyy kirjata %s mennessä. Urakka Harjassa: %s"
+          sisalto (format "Urakan <a href=%s>%s</a> työtunnit vuoden <b>%s</b> välille <b>%s</b> on kirjaamatta.
+                           Työtunnit täytyy kirjata <b>%s</b> mennessä."
+                          url
                           nimi
                           vuosi
                           kuukausivali
-                          paattymispvm
-                          url)
+                          paattymispvm)
           viesti {:fim fim
                   :email email
                   :urakka-sampoid sampoid
