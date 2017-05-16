@@ -61,7 +61,7 @@ BEGIN
     -- Lisätään piste taulukkoon
     pist := pist || (rp.aika, rp.sijainti,
                      rp.talvihoitoluokka, rp.soratiehoitoluokka,
-                     teht, mat)::reittipistedata;
+            teht, mat)::reittipistedata;
     lkm := lkm + 1;
   END LOOP;
   INSERT INTO toteuman_reittipisteet (toteuma,reittipisteet) VALUES (toteumaid, pist);
@@ -71,22 +71,22 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION siirra_kaikki_reittipisteet () RETURNS VOID AS $$
 DECLARE
-  t RECORD;
-  lkm INTEGER;
-  pisteita INTEGER;
-  kaikki INTEGER;
-  alku TIMESTAMP;
+ t RECORD;
+ lkm INTEGER;
+ pisteita INTEGER;
+ kaikki INTEGER;
+ alku TIMESTAMP;
 BEGIN
-  lkm := 0;
-  kaikki := 0;
-  alku := clock_timestamp();
-  FOR t IN SELECT id FROM toteuma LOOP
-    SELECT INTO pisteita siirra_reittipisteet(t.id);
-    kaikki := kaikki + pisteita;
-    lkm := lkm + 1;
-    IF (lkm % 1000) = 0 THEN
-      RAISE NOTICE '[%] Reittipisteet siirretty % toteumalle (yht % pistettä)', clock_timestamp()-alku, lkm, kaikki;
-    END IF;
-  END LOOP;
+ lkm := 0;
+ kaikki := 0;
+ alku := clock_timestamp();
+ FOR t IN SELECT id FROM toteuma LOOP
+   SELECT INTO pisteita siirra_reittipisteet(t.id);
+   kaikki := kaikki + pisteita;
+   lkm := lkm + 1;
+   IF (lkm % 1000) = 0 THEN
+     RAISE NOTICE '[%] Reittipisteet siirretty % toteumalle (yht % pistettä)', clock_timestamp()-alku, lkm, kaikki;
+   END IF;
+ END LOOP;
 END;
 $$ LANGUAGE plpgsql;
