@@ -8,11 +8,12 @@
             [cljs.pprint :refer [pprint]]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.urakka :as u]
+            [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as s]
+            [harja.domain.hanke :as h]
             [harja.ui.viesti :as viesti]
             [namespacefy.core :refer [namespacefy]]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
-            [harja.domain.sopimus :as sopimus-domain]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -225,10 +226,10 @@
 
   LomakevaihtoehdotHaettu
   (process-event [{tulos :tulos} app]
-    (assoc app :haetut-hallintayksikot (sort-by :nimi (:hallintayksikot tulos))
-               :haetut-urakoitsijat (sort-by :nimi (:urakoitsijat tulos))
-               :haetut-hankkeet (sort-by :nimi (remove #(pvm/jalkeen? (pvm/nyt) (:loppupvm %)) (:hankkeet tulos)))
-               :haetut-sopimukset (sort-by :alkupvm pvm/jalkeen? (:sopimukset tulos))))
+    (assoc app :haetut-hallintayksikot (sort-by ::o/nimi (:hallintayksikot tulos))
+               :haetut-urakoitsijat (sort-by ::o/nimi (:urakoitsijat tulos))
+               :haetut-hankkeet (sort-by ::h/nimi (remove #(pvm/jalkeen? (pvm/nyt) (::h/loppupvm %)) (:hankkeet tulos)))
+               :haetut-sopimukset (sort-by ::s/alkupvm pvm/jalkeen? (:sopimukset tulos))))
 
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
