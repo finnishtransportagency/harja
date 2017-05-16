@@ -4,6 +4,7 @@
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
             [clojure.future :refer :all]
             [harja.kyselyt.specql-db :refer [define-tables]]
 
@@ -24,7 +25,7 @@
          (op/and
            (merge {}
                   {::m/poistettu? false}
-                  {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka urakka-id}}
+                  {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka-id urakka-id}}
                   (when (and luotu-alku luotu-loppu)
                     {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                   (when urakoitsija-id
