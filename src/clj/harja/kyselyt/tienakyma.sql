@@ -145,4 +145,7 @@ SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
 
 -- name: hae-reittipisteet
 -- Hakee yhden annetun toteuman reittipisteet
-SELECT aika,sijainti FROM reittipiste WHERE toteuma = :toteuma-id
+SELECT (x.rp).aika, (x.rp).sijainti
+  FROM (SELECT unnest(reittipisteet) AS rp
+          FROM toteuman_reittipisteet
+	 WHERE toteuma = :toteuma-id) x

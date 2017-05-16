@@ -137,3 +137,7 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 \i testidata/vesivaylat/vesivaylien_urakat.sql
 \i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
 \i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
+
+
+-- Muunnetaan testidatan reittipisteet uuteen tallennusmuotoon
+SELECT siirra_kaikki_reittipisteet();

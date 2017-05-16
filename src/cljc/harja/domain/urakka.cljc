@@ -1,7 +1,7 @@
 (ns harja.domain.urakka
   "Määrittelee urakka nimiavaruuden specit, jotta urakan tietoja voi käyttää namespacetuilla
   keywordeilla, esim. {:urakka/id 12}"
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.sopimus :as sopimus]

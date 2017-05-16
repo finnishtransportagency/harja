@@ -6,7 +6,7 @@
             [specql.data-types]
             [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
     #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
               [clojure.future :refer :all]]))
   #?(:cljs

@@ -1,8 +1,8 @@
 (ns harja.domain.urakan-tyotunnit
   "Urakan työtuntien skeemat."
-  (:require [specql.impl.registry]
+  (:require [clojure.spec.alpha :as s]
+            [specql.impl.registry]
             [specql.data-types]
-            [clojure.spec :as s]
             [harja.pvm :as pvm]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
@@ -66,7 +66,7 @@
     {::vuosi vuosi
      ::vuosikolmannes kolmannes}))
 
-(defn kuluvan-vuosikolmanneksen-paattymispaiva[]
+(defn kuluvan-vuosikolmanneksen-paattymispaiva []
   (let [{vuosi ::vuosi kolmannes ::vuosikolmannes} (kuluva-vuosikolmannes)
         kuukausi (cond (= kolmannes 1) 4
                        (= kolmannes 2) 8

@@ -4,7 +4,7 @@
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
                            GeometryCollection Geometry MultiPoint)))
-  (:require [clojure.spec :as s]))
+  (:require [clojure.spec.alpha :as s]))
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
