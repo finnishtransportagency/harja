@@ -128,12 +128,12 @@ maksimi-linnuntien-etaisyys 200)
        (toteumat/pisteen-hoitoluokat db koordinaatit)
        (for [t tehtavat]
          {::rp/toimenpidekoodi (get-in t [:tehtava :id])
-          ::rp/maara (get-in t [:tehtava :maara :maara])})
+          ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
        (for [m materiaalit]
          {::rp/materiaalikoodi (->> m :materiaali
                                     (materiaalit/hae-materiaalikoodin-id-nimella db)
                                     first :id)
-          ::rp/maara (get-in m [:maara :maara])})))}))
+          ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
 
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
@@ -225,8 +225,11 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/reittitoteuman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
-                           (#'kirjaa-toteuma db db-replica
-                                             parametit data kayttaja)))))
+                           (try
+                             (#'kirjaa-toteuma db db-replica
+                                               parametit data kayttaja)
+                             (catch Exception e
+                               (.printStackTrace e)))))))
 
     (julkaise-reitti
      http :lisaa-reittitoteuma
