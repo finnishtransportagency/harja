@@ -13,12 +13,12 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["reimari_turvalaite" ::reimari-turvalaite]
-  ["vv_turvalaite" ::turvalaite
+  ["reimari_turvalaite" ::reimari-turvalaite
    {"nro" ::r-nro
     "nimi" ::r-nimi
-    "ryhma" ::r-ryhma
-    "vayla" ::vayla-id
+    "ryhma" ::r-ryhma}]
+  ["vv_turvalaite" ::turvalaite
+   {"vayla" ::vayla-id
     #?@(:clj [::vayla (rel/has-one ::vayla-id ::v/vayla ::v/id)])}])
 
 (def tyypit (s/describe ::tyyppi))
