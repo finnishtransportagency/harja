@@ -9,7 +9,7 @@ SELECT
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
        JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-       JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+       LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
        JOIN toteuma_tehtava tt ON t.id = tt.toteuma
        JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
