@@ -294,6 +294,17 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
+(defn hae-helsingin-vesivaylaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'"))))
+
+(defn hae-helsingin-vesivaylaurakan-sopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  urakka IN (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'
+                   LIMIT  1"))))
+
 (defn hae-oulujoen-sillan-id []
   (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Oulujoen silta';"))))
 
