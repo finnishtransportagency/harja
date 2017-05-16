@@ -125,3 +125,8 @@ E'Sisältää tiedon mitä indeksejä erityyppisissä urakoissa on käytössä.'
 COMMENT ON TABLE paallystysurakan_indeksi IS
 E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen polttoöljyn tai \n
  nestekaasun hintaindekseihin. Tässä taulussa on tieto, mitä sidontoja päällystysurakoissa on tehty.';
+
+-- Vesiväylät
+
+COMMENT ON TABLE reimari_toimenpide IS
+E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin.';
