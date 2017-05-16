@@ -8,9 +8,10 @@
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.vesivaylat.toimenpide :as toi]
             [clojure.string :as str]
             [harja.domain.vesivaylat.vayla :as va]
+            [harja.domain.toteuma :as tot]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]
             [clojure.spec.alpha :as s]))
 
@@ -38,7 +39,7 @@
         sopimus-id (hae-helsingin-vesivaylaurakan-sopimuksen-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
-                                {::to/urakka-id urakka-id
-                                 ::to/sopimus-id sopimus-id})]
+                                {::tot/urakka-id urakka-id
+                                 ::toi/sopimus-id sopimus-id})]
     (is (>= (count vastaus) 1))
     (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet vastaus))))

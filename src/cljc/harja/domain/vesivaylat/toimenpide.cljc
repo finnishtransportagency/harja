@@ -10,6 +10,7 @@
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
+            [harja.domain.toteuma :as to]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
     #?@(:clj [
@@ -314,15 +315,15 @@ reimari-tilat
 
 ;; Haut
 
-(s/def ::urakka-id ::urakka/id)
-
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
   (s/keys
-    :req [::urakka-id]
+    :req [::to/urakka-id]
+    ;; Toimenpiteen hakuparametrit
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::tyolaji ::tyoluokka ::toimenpide]
-    :opt-un [::alku ::loppu ::vikakorjaukset? ::tyyppi
-             ::luotu-alku ::luotu-loppu ::urakoitsija-id]))
+    ;; Muut hakuparametrit
+    :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
+             ::vikakorjaukset? ::tyyppi ::urakoitsija-id]))
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
