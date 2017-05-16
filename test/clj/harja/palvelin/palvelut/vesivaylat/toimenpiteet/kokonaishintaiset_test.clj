@@ -42,4 +42,4 @@
                                 {::tot/urakka-id urakka-id
                                  ::toi/sopimus-id sopimus-id})]
     (is (>= (count vastaus) 1))
-    (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet vastaus))))
+    (is (s/valid? ::tot/hae-kokonaishintaiset-toimenpiteet vastaus))))
