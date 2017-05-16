@@ -4,6 +4,7 @@
             [harja.domain.toteuma :as t]
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
+            [harja.domain.urakka :as urakka]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
@@ -310,3 +311,16 @@ reimari-tilat
 
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
+
+;; Haut
+
+(s/def ::urakka-id ::urakka/id)
+
+;; TODO Kesken, lisää:
+;; ::vayla ::tyolaji ::tyoluokka ::toimenpide
+;; ::vikakorjaukset? ::tyyppi ::luotu-alku ::luotu-loppu ::urakoitsija-id
+
+(s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
+  (s/keys
+    :opt [::urakka-id ::sopimus-id ::vv-vayla/vaylatyyppi]
+    :opt-un [::alku ::loppu]))
