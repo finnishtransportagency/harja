@@ -1,7 +1,5 @@
--- FIXME: muuta tämän nimi, placeholder
+-- Uusi reittipisteiden tallennusmuoto
 
-
--- Reittipiste on jo käytetty nimi
 
 CREATE TYPE reittipiste_materiaali AS (
   materiaalikoodi INTEGER,
@@ -92,4 +90,3 @@ BEGIN
  END LOOP;
 END;
 $$ LANGUAGE plpgsql;
-
