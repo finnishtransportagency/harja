@@ -233,7 +233,7 @@
                :tyyppi :string
                :pituus-max 1024
                :pakollinen? true
-               :validoi [[:ei-tyhja "Valitse tila"]]
+               :validoi [[:ei-tyhja "Anna otsikko"]]
                :palstoja 1}
               {:otsikko "Tapahtunut" :pakollinen? true
                :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
