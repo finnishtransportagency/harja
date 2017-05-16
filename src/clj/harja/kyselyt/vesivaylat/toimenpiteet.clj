@@ -13,10 +13,9 @@
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [clojure.future :refer :all]))
 
-(defn hae-toimenpiteet [db {:keys [sopimus alku loppu vaylatyyppi vayla
-                         tyolaji tyoluokka toimenpide vikakorjaukset?
-                         tyyppi luotu-alku luotu-loppu urakoitsija-id
-                                   urakka-id]}]
+(defn hae-toimenpiteet [db {:keys [urakka-id sopimus-id alku loppu vaylatyyppi vayla
+                                   tyolaji tyoluokka toimenpide vikakorjaukset?
+                                   tyyppi luotu-alku luotu-loppu urakoitsija-id]}]
   (fetch db ::vv-toimenpide/toimenpide (clojure.set/union
                                          vv-toimenpide/perustiedot
                                          vv-toimenpide/viittaukset
@@ -34,7 +33,7 @@
                     {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-kokonaishintainen"}})
                   (when (= :yksikkohintainen tyyppi)
                     {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-yksikkohintainen"}})
-                  (when sopimus {:vv-toimenpide/sopimus-id sopimus})
+                  (when sopimus-id {:vv-toimenpide/sopimus-id sopimus-id})
                   (when (and alku loppu)
                     {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
                   (when (and vaylatyyppi (not vayla))
