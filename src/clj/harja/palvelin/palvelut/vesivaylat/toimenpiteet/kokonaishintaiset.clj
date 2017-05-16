@@ -14,9 +14,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]))
 
-(defn hae-kokonaishintaiset-toimenpiteet [db user tiedot]
+(defn hae-kokonaishintaiset-toimenpiteet [db user {:keys [urakka-id] :as tiedot}]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
     (q/hae-toimenpiteet db tiedot)))
 
 (defrecord KokonaishintaisetToimenpiteet []

@@ -318,7 +318,8 @@ reimari-tilat
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
   (s/keys
-    :opt [::urakka-id ::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
+    :req [::urakka-id]
+    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::tyolaji ::tyoluokka ::toimenpide]
     :opt-un [::alku ::loppu ::vikakorjaukset? ::tyyppi
              ::luotu-alku ::luotu-loppu ::urakoitsija-id]))

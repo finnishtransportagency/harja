@@ -12,7 +12,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]))
 
-(defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
+(defn hae-yksikkohintaiset-toimenpiteet [db user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
   nil)
 
 (defrecord YksikkohintaisetToimenpiteet []
