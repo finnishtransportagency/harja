@@ -529,7 +529,7 @@
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
-        [:db :email :fim]))))
+        [:db :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
 
