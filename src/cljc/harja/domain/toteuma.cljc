@@ -11,7 +11,17 @@
 
 (define-tables
   ["toteuma" ::toteuma
-   {"muokattu" ::m/muokattu
+   {"urakka" ::urakka-id
+    "sopimus" ::sopimus-id
+    "suorittajan_ytunnus" ::suorittajan-ytunnus
+    "suorittajan_nimi" ::suorittajan-nimi
+    "ulkoinen_id " ::ulkoinen-id
+    "tr_numero" ::tr-numero
+    "tr_alkuosa" ::tr-alkuosa
+    "tr_alkuetaisyys" ::tr-alkuetaisyys
+    "tr_loppuosa" ::tr-loppuosa
+    "tr_loppuetaisyys" ::tr-loppuetaisyys
+    "muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
     "luotu" ::m/luotu
     "luoja" ::m/luoja-id
