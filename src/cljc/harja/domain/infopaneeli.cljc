@@ -1,6 +1,6 @@
 (ns harja.domain.infopaneeli
   "Infopaneelin tuloksien spec määrittelyt"
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoitukset :as t]))
 

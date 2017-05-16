@@ -1,5 +1,6 @@
 (ns harja.kyselyt.specql-db
-  (:require [specql.core :as specql]))
+  (:require [specql.core :as specql]
+            [harja.domain.muokkaustiedot]))
 
 (defmacro define-tables [& tables]
   `(specql/define-tables

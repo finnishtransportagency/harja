@@ -5,7 +5,7 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.urakka :as urakka]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
             [clojure.string :refer [trim]]
             [clojure.java.io :as io]))

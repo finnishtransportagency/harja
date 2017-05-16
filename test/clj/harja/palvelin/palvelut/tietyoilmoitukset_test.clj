@@ -19,7 +19,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.fim :as fim]
             [clojure.java.io :as io]
-            [clojure.spec :as s])
+            [clojure.spec.alpha :as s])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
