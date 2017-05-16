@@ -10,7 +10,7 @@
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha16-1"]
 
-                 [prismatic/schema "1.1.3"]
+                 [prismatic/schema "1.1.6"]
                  [org.clojure/core.async "0.2.395"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.239"]
