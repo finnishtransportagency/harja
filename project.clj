@@ -76,7 +76,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.8"]
-                 [figwheel "0.5.9"]
+                 [figwheel "0.5.10"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
@@ -125,7 +125,7 @@
                  [dk.ative/docjure "1.11.0"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [figwheel-sidecar "0.5.8"]
+                 [figwheel-sidecar "0.5.10"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
@@ -158,7 +158,7 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.9"]
+            [lein-figwheel "0.5.10"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
