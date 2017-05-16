@@ -720,7 +720,7 @@ SELECT rp.aika     AS aika,
        rp.ordinality AS id
   FROM toteuma t
        JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-       LEFT JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
+       JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
  WHERE t.id = :toteuma_id
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
