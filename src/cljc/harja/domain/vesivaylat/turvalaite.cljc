@@ -15,7 +15,10 @@
 (define-tables
   ["reimari_turvalaite" ::reimari-turvalaite]
   ["vv_turvalaite" ::turvalaite
-   {"vayla" ::vayla-id
+   {"nro" ::r-nro
+    "nimi" ::r-nimi
+    "ryhma" ::r-ryhma
+    "vayla" ::vayla-id
     #?@(:clj [::vayla (rel/has-one ::vayla-id ::v/vayla ::v/id)])}])
 
 (def tyypit (s/describe ::tyyppi))

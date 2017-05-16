@@ -14,7 +14,10 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["reimari_vayla" ::reimari-vayla]
+  ["reimari_vayla" ::reimari-vayla
+   {"nro" ::r-nro
+    "nimi" ::r-nimi
+    "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" :harja.domain.vesivaylat.vayla.tyyppi/tyyppi (specql.transform/transform (specql.transform/to-keyword "harja.domain.vesivaylat.vayla.tyyppi"))]
   ["vv_vayla" ::vayla
    {

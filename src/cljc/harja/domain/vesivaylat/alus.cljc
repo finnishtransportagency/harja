@@ -7,4 +7,6 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["reimari_alus" ::alus])
+  ["reimari_alus" ::alus
+   {"tunnus" ::r-tunnus
+    "nimi" ::r-nimi}])

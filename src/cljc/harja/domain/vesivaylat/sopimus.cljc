@@ -12,4 +12,7 @@
    "1022542303" :laajuuden-mukainen})
 
 (define-tables
-  ["reimari_sopimus" ::reimari-sopimus])
+  ["reimari_sopimus" ::reimari-sopimus
+   {"nro" ::r-nro
+    "nimi" ::r-nimi
+    "tyyppi" ::r-tyyppi}])
