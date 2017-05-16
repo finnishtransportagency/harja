@@ -8,8 +8,11 @@
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [clojure.string :as str]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]))
+            [harja.domain.vesivaylat.vayla :as va]
+            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]
+            [clojure.spec.alpha :as s]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -30,4 +33,12 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-;; TODO ja itse testi...
+(deftest toimenpiteiden-haku
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-sopimuksen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                {::to/urakka-id urakka-id
+                                 ::to/sopimus-id sopimus-id})]
+    (is (>= (count vastaus) 1))
+    (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet vastaus))))
