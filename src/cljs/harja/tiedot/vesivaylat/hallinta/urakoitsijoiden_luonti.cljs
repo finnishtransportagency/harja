@@ -140,8 +140,8 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [urakoitsijat (async/<! (k/post! :hae-urakoitsijat {}))
-                ytunnukset (into {} (map (juxt :ytunnus :nimi) urakoitsijat))
+          (let [urakoitsijat (async/<! (k/post! :hae-kaikki-urakoitsijat {}))
+                ytunnukset (into {} (map (juxt ::o/ytunnus ::o/nimi) urakoitsijat))
                 vastaus {:ytunnukset ytunnukset}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)

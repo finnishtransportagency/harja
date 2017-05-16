@@ -206,7 +206,7 @@
         (try
           (let [hallintayksikot (k/post! :hallintayksikot {:liikennemuoto :vesi})
                 hankkeet (k/post! :hae-harjassa-luodut-hankkeet {})
-                urakoitsijat (k/post! :hae-urakoitsijat {})
+                urakoitsijat (k/post! :hae-kaikki-urakoitsijat {})
                 sopimukset (k/post! :hae-harjassa-luodut-sopimukset {})
                 vastaus {:hallintayksikot (async/<! hallintayksikot)
                          :hankkeet (async/<! hankkeet)
