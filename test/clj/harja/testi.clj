@@ -14,7 +14,7 @@
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
     [clojure.core.async :as async]
-    [clojure.spec :as s]
+    [clojure.spec.alpha :as s]
     [clojure.string :as str])
   (:import (java.util Locale)))
 

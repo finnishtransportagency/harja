@@ -3,7 +3,7 @@
             [specql.core :refer [fetch]]
             [specql.op :as op]
             [specql.rel :as rel]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [harja.kyselyt.specql-db :refer [define-tables]]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
