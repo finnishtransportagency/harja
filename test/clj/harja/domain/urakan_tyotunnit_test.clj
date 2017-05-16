@@ -15,3 +15,26 @@
     (is (= (t/date-time 2017 8 31) (:loppu (kolmannekset-2017 2))) "2017 Toisen vuosikolmanneksen loppu on oikea")
     (is (= (t/date-time 2017 9 1) (:alku (kolmannekset-2017 3))) "2017 Kolmannen vuosikolmanneksen alku on oikea")
     (is (= (t/date-time 2017 12 31) (:loppu (kolmannekset-2017 3))) "2017 Kolmannen vuosikolmanneksen loppu on oikea")))
+
+
+(deftest kuluva-vuosikolmannes
+  (with-redefs [t/now #(t/first-day-of-the-month 2017 2)]
+    (is (= {::urakan-tyotunnit/vuosi 2017
+            ::urakan-tyotunnit/vuosikolmannes 1}
+           (urakan-tyotunnit/kuluva-vuosikolmannes))))
+
+  (with-redefs [t/now #(t/first-day-of-the-month 2017 5)]
+    (is (= {::urakan-tyotunnit/vuosi 2017
+            ::urakan-tyotunnit/vuosikolmannes 2}
+           (urakan-tyotunnit/kuluva-vuosikolmannes))))
+
+  (with-redefs [t/now #(t/first-day-of-the-month 2017 10)]
+    (is (= {::urakan-tyotunnit/vuosi 2017
+            ::urakan-tyotunnit/vuosikolmannes 3}
+           (urakan-tyotunnit/kuluva-vuosikolmannes))))
+
+  (with-redefs [t/now #(t/first-day-of-the-month 2020 7)]
+    (is (= {::urakan-tyotunnit/vuosi 2020
+            ::urakan-tyotunnit/vuosikolmannes 2}
+           (urakan-tyotunnit/kuluva-vuosikolmannes)))))
+
