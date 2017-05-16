@@ -97,10 +97,9 @@
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          sopimus-id (ffirst (q (str "SELECT sopimus FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))]
+          sopimus-id (ffirst (q (str "SELECT sopimus FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= 5 sopimus-id) "Toteuma kirjattiin pääsopimukselle")
-      (poista-reittitoteuma toteuma-id ulkoinen-id reittipiste-idt))))
+      (poista-reittitoteuma toteuma-id ulkoinen-id))))
 
 (deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
