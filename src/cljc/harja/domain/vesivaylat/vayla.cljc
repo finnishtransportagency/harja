@@ -18,7 +18,7 @@
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-tyhma}]
-  ["vv_vaylatyyppi" :harja.domain.vesivaylat.vayla.tyyppi/tyyppi (specql.transform/transform (specql.transform/to-keyword "harja.domain.vesivaylat.vayla.tyyppi"))]
+  ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["vv_vayla" ::vayla
    {
     #?@(:clj [::turvalaite (rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)])}])
