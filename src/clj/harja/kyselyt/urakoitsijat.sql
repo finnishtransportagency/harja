@@ -1,10 +1,19 @@
 -- name: listaa-urakoitsijat
 -- Hakee kaikkien väylämuotojen ja urakkatyyppien urakoitsijat
-SELECT y.id, y.ytunnus, y.nimi,
-       u.tyyppi as urakkatyyppi
-  FROM urakka u
-       LEFT JOIN organisaatio y ON u.urakoitsija = y.id
- WHERE y.tyyppi = 'urakoitsija'::organisaatiotyyppi
+SELECT
+  u.tyyppi AS urakkatyyppi,
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id,
+  u.alkupvm AS urakka_alkupvm,
+  u.loppupvm AS urakka_loppupvm,
+  y.id,
+  y.ytunnus,
+  y.nimi,
+  y.katuosoite,
+  y.postinumero
+FROM urakka u
+  LEFT JOIN organisaatio y ON u.urakoitsija = y.id
+WHERE y.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI;
 
 -- name: hae-urakkatyypin-urakoitsijat
 -- Palauttaa annetun urakkatyypin urakoitsijoiden id:t
