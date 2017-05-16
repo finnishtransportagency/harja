@@ -7,7 +7,9 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [specql.core :refer [fetch columns]]
+            [harja.domain.reittipiste :as rp])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
@@ -93,7 +95,9 @@
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))
+              {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
+                                                               (columns ::rp/toteuman-reittipisteet)
+                                                               {::rp/toteuma-id toteuma-id}))
               toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
               toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
@@ -101,23 +105,21 @@
                                                             JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                             WHERE toteuma = " toteuma-id)))]
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
-          (is (= (count reittipiste-idt) 3))
+          (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 2))
           (is (= (count toteuma-materiaali-idt) 1))
           (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
 
-          (doseq [reittipiste-id reittipiste-idt]
-            (let [reitti-tehtava-idt (into [] (flatten (q (str "SELECT id FROM reitti_tehtava WHERE reittipiste = " reittipiste-id))))
-                  reitti-materiaali-idt (into [] (flatten (q (str "SELECT id FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))))
-                  reitti-hoitoluokka (ffirst (q (str "SELECT soratiehoitoluokka FROM reittipiste WHERE id = " reittipiste-id)))]
+          (doseq [reittipiste reittipisteet]
+            (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
+                  reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
+                  reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
               (is (= (count reitti-tehtava-idt) 2))
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7))))               ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-          (doseq [reittipiste-id reittipiste-idt]
-            (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))
-            (u (str "DELETE FROM reitti_tehtava WHERE reittipiste = " reittipiste-id)))
-          (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+
+          (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id)))))
     (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
