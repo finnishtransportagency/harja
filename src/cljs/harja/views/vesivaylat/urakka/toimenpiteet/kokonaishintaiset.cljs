@@ -163,14 +163,13 @@
       (sort-by va/tyyppien-jarjestys (into [nil] va/tyypit))
       #(if % (va/tyyppi-fmt %) "Kaikki")]
 
-     [valinnat/vayla
-      ;; TODO Pitäisi varmaan olla combobox, koska väyliä on paljon ja suodatetaan kantakyselystä?
-      (r/wrap (get-in app [:valinnat :vayla])
-              (fn [uusi]
-                (e! (tiedot/->PaivitaValinnat {:vayla uusi}))))
-      (into [nil] (map ::va/id (to/toimenpiteiden-vaylat (:toimenpiteet app))))
-      #(if % (va/vaylan-nimi-idlla (to/toimenpiteiden-vaylat (:toimenpiteet app)) %)
-             "Kaikki")]]
+     [kentat/tee-otsikollinen-kentta {:otsikko "Väylä"
+                                      :kentta-params {:tyyppi :haku
+                                                      :nayta ::va/nimi
+                                                      :lahde tiedot/vaylahaku}
+                                      :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
+                                                         (fn [uusi]
+                                                           (e! (tiedot/->PaivitaValinnat {:vayla (::va/id uusi)}))))}]]
 
     [:div
      [valinnat/tyolaji

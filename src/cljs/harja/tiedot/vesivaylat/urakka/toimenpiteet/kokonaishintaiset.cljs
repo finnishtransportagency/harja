@@ -7,7 +7,8 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.protokollat :as protokollat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -295,6 +296,15 @@
     {:urakka-id (:id @nav/valittu-urakka)
      :sopimus-id (first @u/valittu-sopimusnumero)
      :aikavali @u/valittu-aikavali}))
+
+(def vaylahaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      ;; TODO Hae palvelimelta
+      (go [{::va/nimi "Kuopio, Iisalmen väylä"
+            ::va/id 1}
+           {::va/nimi "Varkaus, Kuopion väylä"
+            ::va/id 2}]))))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
