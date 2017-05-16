@@ -8,7 +8,7 @@
              [harja.domain.vesivaylat.sopimus :as sopimus]
              [harja.domain.vesivaylat.alus :as alus]
              [harja.pvm :as pvm]
-             [clojure.spec :as s]
+             [clojure.spec.alpha :as s]
              [harja.kyselyt.vesivaylat]))
 
 (def toimenpide

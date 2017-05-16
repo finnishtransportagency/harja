@@ -2,7 +2,7 @@
   "Palvelut organisaatioiden perustietojen ja urakoiden hakemiseksi.
   Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]

@@ -1,5 +1,5 @@
 (ns harja.tyokalut.spec-apurit
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
     #?@(:clj [
             [clojure.future :refer :all]])))
 
