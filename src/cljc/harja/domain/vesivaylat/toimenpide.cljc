@@ -317,10 +317,15 @@ reimari-tilat
 (s/def ::urakka-id ::urakka/id)
 
 ;; TODO Kesken, lisää:
-;; ::vayla ::tyolaji ::tyoluokka ::toimenpide
+;; ::tyolaji ::tyoluokka ::toimenpide
 ;; ::vikakorjaukset? ::tyyppi ::luotu-alku ::luotu-loppu ::urakoitsija-id
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
   (s/keys
-    :opt [::urakka-id ::sopimus-id ::vv-vayla/vaylatyyppi]
+    :opt [::urakka-id ::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id]
     :opt-un [::alku ::loppu]))
+
+(s/def ::hae-kokonaishintaiset-toimenpiteet-kysely-vastaus
+  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+                           ::tyoluokka ::toimenpide ::pvm
+                           ::vikakorjaus ::turvalaite])))
