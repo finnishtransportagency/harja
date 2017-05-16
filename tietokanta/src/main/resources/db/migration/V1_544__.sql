@@ -61,7 +61,7 @@ BEGIN
     -- Lisätään piste taulukkoon
     pist := pist || (rp.aika, rp.sijainti,
                      rp.talvihoitoluokka, rp.soratiehoitoluokka,
-		     teht, mat)::reittipistedata;
+            teht, mat)::reittipistedata;
     lkm := lkm + 1;
   END LOOP;
   INSERT INTO toteuman_reittipisteet (toteuma,reittipisteet) VALUES (toteumaid, pist);

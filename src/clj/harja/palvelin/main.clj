@@ -112,6 +112,7 @@
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -522,7 +523,13 @@
       :mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
-        [:db :http-palvelin]))))
+        [:db :http-palvelin])
+
+      :urakan-tyotuntimuistutukset
+      (component/using
+        (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
+          (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
+        [:db :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
 
