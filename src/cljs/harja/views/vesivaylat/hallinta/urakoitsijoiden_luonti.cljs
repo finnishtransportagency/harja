@@ -10,7 +10,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt]))
 
 (defn urakan-nimi-ja-pvm [urakat]
   [apply
@@ -34,7 +35,8 @@
                      "Muokkaa urakoitsijaa"
                      "Luo uusi urakoitsija")
           :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu %))
-          :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+          :voi-muokata? (and (oikeudet/hallinta-vesivaylat)
+                              (::o/harjassa-luotu? valittu-urakoitsija))
           :footer-fn (fn [urakoitsija]
                        [napit/tallenna
                         "Tallenna urakoitsija"
@@ -96,7 +98,8 @@
          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
          {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
          {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
-          :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
+          :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}
+         {:otsikko "Luotu Harjassa?" :nimi ::o/harjassa-luotu? :fmt fmt/totuus}]
         haetut-urakoitsijat]])))
 
 (defn vesivaylaurakoitsijoiden-luonti* [e! app]
