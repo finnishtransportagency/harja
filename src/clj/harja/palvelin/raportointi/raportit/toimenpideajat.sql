@@ -30,7 +30,7 @@ SELECT
   COUNT(DISTINCT t.alkanut::date) as lkm
 FROM toteuma t
   JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-  JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+  LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio o ON u.hallintayksikko = o.id
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
