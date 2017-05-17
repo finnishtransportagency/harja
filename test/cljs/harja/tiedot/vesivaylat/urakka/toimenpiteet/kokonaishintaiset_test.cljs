@@ -27,7 +27,7 @@
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
-                                ::to/vikakorjaus true
+                                ::to/vikakorjauksia? true
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 1
                                 ::to/tyolaji :viitat
