@@ -317,8 +317,8 @@ reimari-tilat
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
   (s/keys
+    ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
-    ;; Toimenpiteen hakuparametrit
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::tyolaji ::tyoluokka ::toimenpide]
     ;; Muut hakuparametrit
