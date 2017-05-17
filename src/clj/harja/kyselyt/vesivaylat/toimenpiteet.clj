@@ -13,6 +13,7 @@
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
+            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [clojure.future :refer :all]
             [clojure.set :as set]))
 
@@ -26,6 +27,7 @@
     (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
                    ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
+                   ::vv-toimenpide/turvalaite {::vv-turvalaite/nimi (get-in % [::vv-toimenpide/turvalaite ::vv-turvalaite/r-nimi])}
                    ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
