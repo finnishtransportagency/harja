@@ -325,7 +325,7 @@ reimari-tilat
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikakorjaukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-kokonaishintaiset-toimenpiteet-kysely-vastaus
+(s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::vikakorjaus ::turvalaite])))
