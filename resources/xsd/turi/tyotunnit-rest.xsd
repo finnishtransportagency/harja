@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi" targetNamespace="http://restimport.xml.turi.oikeatoliot.fi"
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit" targetNamespace="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit"
 	elementFormDefault="unqualified" attributeFormDefault="unqualified">
 	<xs:element name="tyoaikajakso">
 		<xs:complexType>
