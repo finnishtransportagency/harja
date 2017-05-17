@@ -37,9 +37,11 @@
 (deftest toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-sopimuksen-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
-                                {::tot/urakka-id urakka-id
-                                 ::toi/sopimus-id sopimus-id})]
+                                kysely-params)]
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (>= (count vastaus) 1))
-    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet vastaus))))
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-vastaus vastaus))))
