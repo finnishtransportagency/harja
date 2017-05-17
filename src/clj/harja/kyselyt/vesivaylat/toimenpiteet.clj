@@ -23,10 +23,10 @@
                               ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
                               ::vv-toimenpide/reimari-tyyppi ::vv-toimenpide/toimenpide
                               ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
-    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
-                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
-                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
-                   :vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
+    (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
+                   ::vv-toimenpide/tuoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
+                   ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
+                   ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
