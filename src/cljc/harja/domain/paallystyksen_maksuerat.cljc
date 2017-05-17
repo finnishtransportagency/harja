@@ -1,7 +1,7 @@
 (ns harja.domain.paallystyksen-maksuerat
   "Päällystyksen maksuerien spec-määritykset"
   (:require
-    [clojure.spec :as s]
+    [clojure.spec.alpha :as s]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka]
     [harja.domain.sopimus :as sopimus]
