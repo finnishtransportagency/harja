@@ -80,7 +80,7 @@
                       "Muokkaa urakkaa"
                       "Luo uusi urakka")
            :muokkaa! #(e! (tiedot/->UrakkaaMuokattu (lomake/ilman-lomaketietoja %)))
-           :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+           :voi-muokata? (oikeudet/hallinta-vesivaylat)
            :footer-fn (fn [urakka]
                         [napit/tallenna
                          "Tallenna urakka"
