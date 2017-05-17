@@ -108,8 +108,8 @@
     :salli-valiotsikoiden-piilotus? true
     :ei-footer-muokkauspaneelia? true
     :valiotsikoiden-alkutila :kaikki-kiinni}
-   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :leveys 10}
-    {:otsikko "Toimenpide" :nimi ::to/toimenpide :leveys 10}
+   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
+    {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
     {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}
