@@ -14,7 +14,7 @@
 
 (defn laheta-muistutukset-urakoille [fim email urakat vuosi kolmannes kuluvan-kolmanneksen-paattymispaiva]
   (doseq [{:keys [id sampoid hallintayksikko nimi]} urakat]
-    (log/debug (format "Lähetetään muistutus urakan työtuntien kirjaamisesta urakalle %s (id: %s)" nimi id))
+    (log/info (format "Lähetetään muistutus urakan työtuntien kirjaamisesta urakalle %s (id: %s)" nimi id))
     (let [paattymispvm (fmt/pvm (pvm/dateksi kuluvan-kolmanneksen-paattymispaiva))
           kuukausivali (cond
                          (= 1 kolmannes) "tammikuu - huhtikuu"
@@ -43,7 +43,7 @@
       (viestinta/laheta-sposti-fim-kayttajarooleille viesti))))
 
 (defn urakan-tyotuntimuistutukset [{:keys [fim sonja-sahkoposti db]} paivittainen-ajoaika]
-  (log/debug "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
+  (log/info "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-ajoaika
     (fn [_]
