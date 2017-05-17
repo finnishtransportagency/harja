@@ -129,19 +129,20 @@
   (process-event [_ app]
     (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
           fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-      (go
-        (try
-          (let [hakuargumentit (muodosta-hakuargumentit (:valinnat app))]
-            (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
-              (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                (if (k/virhe? vastaus)
-                  (fail! vastaus)
-                  (tulos! vastaus)))
-              (do (error "Hakuargumentit eivät ole validit: " (pr-str hakuargumentit))
-                  (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
-          (catch :default e
-            (fail! nil)
-            (throw e))))
+      (when-not (:haku-kaynnissa? app)
+        (go
+          (try
+            (let [hakuargumentit (muodosta-hakuargumentit (:valinnat app))]
+              (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
+                (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
+                  (if (k/virhe? vastaus)
+                    (fail! vastaus)
+                    (tulos! vastaus)))
+                (do (error "Hakuargumentit eivät ole validit: " (pr-str hakuargumentit))
+                    (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+            (catch :default e
+              (fail! nil)
+              (throw e)))))
       (assoc app :haku-kaynnissa? true)))
 
   ToimenpiteetHaettu
