@@ -11,6 +11,11 @@
     (reset! auki-index-atom nil)
     (reset! auki-index-atom index)))
 
+(defn- maarita-alkutila [otsikot-ja-sisallot]
+  (if (= (count (partition 3 otsikot-ja-sisallot)) 1)
+    0 ;; Vain yksi otsikko, avaa se suoraan
+    nil)) ;; Muuten käyttäjä saa avata itse :-)
+
 (defn otsikkopaneeli
   "Optiot on map:
    paneelikomponentit             Vector mappeja, jossa avaimina sijainti ja sisalto.
@@ -19,7 +24,7 @@
 
    otsikot-ja-sisallot            Tunniste, tekstiotsikko ja piirrettävä komponentti funktiona. Voi olla useita."
   [{:keys [paneelikomponentit otsikkoluokat] :as optiot} & otsikot-ja-sisallot]
-  (r/with-let [auki-index-atom (atom nil)]
+  (r/with-let [auki-index-atom (atom (maarita-alkutila otsikot-ja-sisallot))]
     [:div.otsikkopaneeli.klikattava
      (doall
        (map-indexed
