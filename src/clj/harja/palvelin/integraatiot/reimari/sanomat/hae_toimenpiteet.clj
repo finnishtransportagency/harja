@@ -46,6 +46,12 @@
                         :nimi identity
                         :ryhma #(Integer/parseInt %)}))
 
+(defn- lue-komponentti [k]
+  (xml/lue-attribuutit k #(keyword "harja.domain.vesivaylat.komponentti" (name %))
+                       {:tila identity
+                        :nimi identity
+                        :id #(Integer/parseInt %)}))
+
 (defn- lue-vayla [v]
   (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vayla" (name %))
                        {:nro identity
@@ -62,7 +68,8 @@
    (when-let [tl (z/xml1-> toimenpide :turvalaite)]
      {::toimenpide/turvalaite (lue-turvalaite tl)})
    (when-let [v (z/xml1-> toimenpide :vayla)]
-     {::toimenpide/vayla (lue-vayla v)})))
+     {::toimenpide/vayla (lue-vayla v)})
+   {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
   (z/xml-> vastaus-xml

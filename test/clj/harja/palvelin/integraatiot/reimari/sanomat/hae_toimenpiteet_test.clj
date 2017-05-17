@@ -31,14 +31,20 @@
    ::toimenpide/muokattu #inst "2017-04-24T13:30:00.000-00:00"
    ::toimenpide/alus {::alus/tunnus "omapaatti"
                       ::alus/nimi "MS Totally out of Gravitas"}
-   ::toimenpide/luotu #inst "2017-04-24T13:00:00.000-00:00"})
+   ::toimenpide/luotu #inst "2017-04-24T13:00:00.000-00:00"
+   ::toimenpide/komponentit [{:harja.domain.vesivaylat.komponentti/tila "234",
+                              :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",
+                              :harja.domain.vesivaylat.komponentti/id 123}
+                             {:harja.domain.vesivaylat.komponentti/tila "345",
+                              :harja.domain.vesivaylat.komponentti/nimi "Erikoismerkki",
+                              :harja.domain.vesivaylat.komponentti/id 124}]})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
         (-> "resources/xsd/reimari/vastaus.xml"
-            slurp
+            slurpq
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-    (println (s/explain-str ::toimenpide/toimenpide luettu-toimenpide))
+    (println luettu-toimenpide)
     (is (nil? (s/explain-data ::toimenpide/toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))
