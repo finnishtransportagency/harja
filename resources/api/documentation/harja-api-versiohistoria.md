@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 1.0.23</b>  
-<b>Julkaistu: 19.4.2017</b>
+<b>Nykyinen versio: 1.0.25</b>  
+<b>Julkaistu: 15.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.25 Julkaistu: 15.5.2017:
+    - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain
+- Versionumero: 1.0.24 Julkaistu: 5.5.2017:
+    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä 
 - Versionumero: 1.0.23 Julkaistu: 19.4.2017:
     - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
 - Versionumero: 1.0.22 Julkaistu: 18.4.2017:

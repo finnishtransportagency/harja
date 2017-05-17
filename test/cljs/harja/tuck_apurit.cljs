@@ -5,12 +5,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tuck-apurit :refer [vaadi-async-kutsut]]))
 
-(defn e-tila!
-  [event & payload-and-state]
-  "Prosessoi tuck-eventin, käyttäen annettuja payloadia ja tilaa"
-  (tuck/process-event (apply event (butlast payload-and-state)) (last payload-and-state)))
-
 (defn e!
-  [event & payload]
-  "Prosessoi tuck-eventin, käyttäen annettua payloadia ja tyhjä tilaa"
-  (tuck/process-event (apply event payload) {}))
+  "Prosessoi konstruktoidun tuck-eventin, joko tyhjää tai annettua tilaa vasten.
+
+  (tuck-apurit/e! (->Tapahtuma true))
+  (tuck-apurit/e! (->ToinenTapahtuma false 5) {:tosi? true :id 3})"
+  ([event] (e! event {}))
+  ([event tila]
+   (tuck/process-event event tila)))

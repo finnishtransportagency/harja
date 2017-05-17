@@ -1,4 +1,4 @@
-(ns harja.domain.tilannekuva_test
+(ns harja.domain.tilannekuva-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
             [harja.domain.tilannekuva :as tk]))
@@ -48,4 +48,3 @@
         tulos (tk/valittujen-suodattimien-idt suodattimet)]
     (is (= 3 (count tulos)))
     (is (= valitut (into #{} tulos)))))
-

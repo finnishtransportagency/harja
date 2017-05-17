@@ -57,7 +57,8 @@
                                            :toimenpidekuittausjono s/Str
                                            :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
-   (s/optional-key :turi)                 {:url s/Str
+   (s/optional-key :turi)                 {:turvallisuuspoikkeamat-url s/Str
+                                           :urakan-tyotunnit-url s/Str
                                            :kayttajatunnus s/Str
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
@@ -131,6 +132,8 @@
    (s/optional-key :turvalaitteet)          {:geometria-url       s/Str
                                              :paivittainen-tarkistusaika [s/Num]
                                              :paivitysvali-paivissa s/Num}
+
+   (s/optional-key :tyotunti-muistutukset)   {:paivittainen-aika [s/Num]}
 
    })
 

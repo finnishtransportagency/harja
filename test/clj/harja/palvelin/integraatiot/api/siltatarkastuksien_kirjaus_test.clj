@@ -5,16 +5,19 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-siltatarkastukset (component/using
-                                                               (api-siltatarkastukset/->Siltatarkastukset)
-                                                               [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :api-siltatarkastukset (component/using
+                             (api-siltatarkastukset/->Siltatarkastukset)
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :once jarjestelma-fixture)
 

@@ -31,6 +31,7 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
+            [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -211,6 +212,45 @@
         [paivystajalista ur @paivystajat
          (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            #(tallenna-paivystajat ur paivystajat %))]))))
+
+(defn urakan-tyotuntilista [tyotunnit tallenna!]
+  [:div
+   [grid/grid
+    {:otsikko "Työtunnit"
+     :tyhja "Ei työtunteja."
+     :tallenna tallenna!
+     :voi-lisata? false
+     :voi-poistaa? (constantly false)
+     :tunniste :vuosi
+     :piilota-toiminnot? true}
+    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
+     {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
+    tyotunnit]])
+
+(defn urakan-tyotunnit [{:keys [id alkupvm loppupvm]}]
+  (let [vuodet (reverse (mapv #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
+        tyotunnit (atom nil)
+        hae! (fn [urakka-id]
+               (reset! tyotunnit vuodet)
+               (go
+                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
+                   (if (k/virhe? vastaus)
+                     (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                     (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus))))))
+        tallenna! (fn [ur]
+                    [urakan-tyotuntilista @tyotunnit
+                     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                       (fn [uudet]
+                         (go (let [vastaus (<! (urakan-tyotunnit/tallenna-urakan-tyotunnit id uudet))]
+                               (if (k/virhe? vastaus)
+                                 (viesti/nayta! "Urakan työtuntien tallennus epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                                 (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus)))))))])]
+    (hae! id)
+    (komp/luo
+      (komp/kun-muuttuu (comp hae! :id :vuosi))
+      tallenna!)))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
@@ -560,4 +600,6 @@
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat ur])]))))
+           [paivystajat ur])
+         (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+           [urakan-tyotunnit ur])]))))

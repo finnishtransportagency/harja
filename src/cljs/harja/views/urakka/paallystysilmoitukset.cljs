@@ -263,7 +263,13 @@
          :hae (fn [_]
                 (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
          :muokattava? (constantly false)
-         :palstoja 2}
+         :palstoja 1}
+        {:otsikko "Tierekisteriosoite"
+         :nimi :tr-osoite
+         :hae identity
+         :fmt tierekisteri-domain/tierekisteriosoite-tekstina
+         :muokattava? (constantly false)
+         :palstoja 1}
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
          :varoita [tarkista-takuu-pvm]}

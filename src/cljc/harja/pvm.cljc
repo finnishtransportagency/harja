@@ -133,6 +133,12 @@
        (instance? java.sql.Timestamp dt)
        (tc/from-sql-time dt))))
 
+#?(:clj
+   (defn dateksi [dt]
+     (if (instance? java.util.Date dt)
+       dt
+       (tc/to-date dt))))
+
 (defn nyt
   "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
@@ -691,7 +697,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                          (range (inc ensimmainen-vuosi) viimeinen-vuosi))
                    [[(vuoden-eka-pvm viimeinen-vuosi) loppupvm]])))))
 
-
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
 
 #?(:clj
@@ -757,10 +762,15 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (def kayttoonottto (t/local-date 2016 10 1))
 
-#?(:cljs
-   (defn paivat-valissa [alku loppu]
-     (if (jalkeen? alku loppu)
-       nil
-       (lazy-seq
-        (cons alku
-              (paivat-valissa (t/plus alku (t/days 1)) loppu))))))
+(defn- paivat-valissa* [alku loppu]
+  (if (jalkeen? alku loppu)
+    nil
+    (lazy-seq
+      (cons alku
+            (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
+
+(defn paivat-valissa [alku loppu]
+  (paivat-valissa* (d alku) (d loppu)))
+
+(defn vuodet-valissa [alku loppu]
+  (range (vuosi alku) (inc (vuosi loppu))))

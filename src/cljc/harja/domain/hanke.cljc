@@ -1,11 +1,10 @@
 (ns harja.domain.hanke
   "Määrittelee hankkeen specit"
-  #?@(:clj [(:require [clojure.spec :as s]
-                      [harja.domain.specql-db :refer [db]]
+  #?@(:clj [(:require [clojure.spec.alpha :as s]
                       [harja.kyselyt.specql-db :refer [define-tables]]
                       [harja.domain.urakka :as u]
                       [clojure.future :refer :all])]
-      :cljs [(:require [clojure.spec :as s]
+      :cljs [(:require [clojure.spec.alpha :as s]
                [specql.impl.registry]
                [harja.domain.urakka :as u]
                [specql.data-types])

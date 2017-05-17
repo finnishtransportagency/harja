@@ -23,6 +23,7 @@
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
+    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -73,8 +74,8 @@
     [harja.palvelin.palvelut.debug :as debug]
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
-    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
-
+    [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
+    
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
@@ -99,6 +100,7 @@
     [harja.palvelin.integraatiot.api.ping :as api-ping]
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
+    [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -110,6 +112,7 @@
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -406,12 +409,14 @@
                      [:http-palvelin :db])
       :hankkeet (component/using
                    (hankkeet/->Hankkeet)
-                   {:db :db-replica
-                    :http-palvelin :http-palvelin})
+                   [:db :http-palvelin])
       :sopimukset (component/using
                   (sopimukset/->Sopimukset)
-                  {:db :db-replica
-                   :http-palvelin :http-palvelin})
+                  [:db :http-palvelin])
+
+      :urakan-tyotunnit (component/using
+                          (urakan-tyotunnit/->UrakanTyotunnit)
+                          [:db :http-palvelin :turi])
 
       :debug (component/using
                (debug/->Debug)
@@ -453,7 +458,7 @@
                             [:http-palvelin :db :tierekisteri :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
-                               [:http-palvelin :db :integraatioloki])
+                               [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
@@ -492,6 +497,10 @@
                                 (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
                                 [:http-palvelin :db :integraatioloki])
 
+      :api-urakan-tyotunnit (component/using
+                              (api-urakan-tyotunnit/->UrakanTyotunnit)
+                              [:http-palvelin :db :integraatioloki :turi])
+
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
       (component/using
@@ -514,7 +523,13 @@
       :mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
-        [:db :http-palvelin]))))
+        [:db :http-palvelin])
+
+      :urakan-tyotuntimuistutukset
+      (component/using
+        (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
+          (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
+        [:db :sonja-sahkoposti :fim]))))
 
 (defonce harja-jarjestelma nil)
 

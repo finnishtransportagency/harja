@@ -1,18 +1,21 @@
 (ns harja.domain.urakka
   "Määrittelee urakka nimiavaruuden specit, jotta urakan tietoja voi käyttää namespacetuilla
   keywordeilla, esim. {:urakka/id 12}"
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.domain.sopimus :as sopimus]
             #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-                      [clojure.future :refer :all]]))
-    #?(:cljs
-       (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+                      [clojure.future :refer :all]])
+            #?(:clj [specql.rel :as rel]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
   ["urakkatyyppi" ::urakkatyyppi]
   ["urakka" ::urakka
-   {"hanke_sampoid" ::hanke-sampoid
+   {#?@(:clj [::sopimukset (rel/has-many ::id ::sopimus/sopimus ::sopimus/urakka-id)])
+    "hanke_sampoid" ::hanke-sampoid
     "hallintayksikko" ::hallintayksikko-id
     "harjassa_luotu" ::harjassa-luotu?
     "hanke" ::hanke-id
@@ -59,7 +62,11 @@
 
 ;; Muut
 
+(def vesivayla-urakkatyypit #{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
+                              :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
+
+(defn vesivayla-urakkatyyppi? [tyyppi]
+  (boolean (vesivayla-urakkatyypit tyyppi)))
+
 (defn vesivayla-urakka? [urakka]
-  (#{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
-     :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus}
-    (:tyyppi urakka)))
+  (vesivayla-urakkatyyppi? (:tyyppi urakka)))

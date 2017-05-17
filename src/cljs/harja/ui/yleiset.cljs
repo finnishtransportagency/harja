@@ -318,21 +318,36 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn tietoja
   "Tekee geneerisen tietonäkymän.
-Optiot on mäppi, joka tukee seuraavia optioita:
-  :class   asetetaan lisäluokaksi containerille
-  :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
-  [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
-  (let [attrs (if otsikot-omalla-rivilla?
+
+   Optiot on mäppi, joka tukee seuraavia optioita:
+  :class                        Asetetaan lisäluokaksi containerille
+  :kavenna?                     Jos true, jättää tyhjää tilaa tietorivien väliin
+  :jata-kaventamatta            Setti otsikoita, joita ei kavenneta, vaikka 'kavenna?' olisi true
+  :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
+  :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
+  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi"
+  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta]} & otsikot-ja-arvot]
+  (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
+        otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
+        jata-kaventamatta (or jata-kaventamatta #{})
+        attrs (if otsikot-omalla-rivilla?
                 {:style {:display "block"}}
                 {})]
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
          (when arvo
-           ^{:key (str i otsikko)}
-           [:div.tietorivi
-            [:span.tietokentta attrs otsikko]
-            [:span.tietoarvo arvo]]))
+           (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
+                                     {:style {:display "auto"}})]
+             ^{:key (str i otsikko)}
+             [:div.tietorivi (when (and kavenna?
+                                        (not (jata-kaventamatta otsikko)))
+                               {:style {:margin-bottom "0.5em"}})
+              [:span.tietokentta (merge attrs rivin-attribuutit) otsikko]
+              [:span.tietoarvo arvo]
+              (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
@@ -382,22 +397,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [otsikko komp]
   [:span [:h4 otsikko]
    komp])
-
-;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
-;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
-;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
-(def lasipaneeli-tyyli {:display "block"
-                        :position "absolute"
-                        :top 0
-                        :bottom 0
-                        :opacity 0.5
-                        :background-color "black"
-                        :height "expression(parentElement.scrollHeight+'px')"
-                        :width "100%"})
-
-(defn lasipaneeli [& sisalto]
-  [:div {:style lasipaneeli-tyyli}
-   sisalto])
 
 (defn keskita
   "Div-elementti, joka on absoluuttisesti positioitu top 50% left 50%"
@@ -655,7 +654,7 @@ jatkon."
                           [:button {:class hyvaksy-napin-luokka
                                     :type "button"
                                     :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!)
-                                                                    (toiminto-fn))}
+                                                   (modal/piilota!)
+                                                   (toiminto-fn))}
                            [:span hyvaksy-ikoni hyvaksy]]]}
                 sisalto))

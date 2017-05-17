@@ -32,11 +32,17 @@
             [harja.tiedot.urakka.yllapitokohteet-test]
             [harja.ui.kartta.esitettavat-asiat-test]
             [harja.views.urakka.paallystyksen-maksuerat-test]
-            [harja.tiedot.vesivaylat.urakoiden-luonti-test]
-            [harja.tiedot.vesivaylat.urakoitsijoiden-luonti-test]
-            [harja.tiedot.vesivaylat.hankkeiden-luonti-test]
-            [harja.tiedot.vesivaylat.sopimuksien-luonti-test]
-            ;; uusi testi tähän
+            [harja.tiedot.vesivaylat.hallinta.urakoiden-luonti-test]
+            [harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test]
+            [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test]
+            [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test]
+            [harja.tiedot.vesivaylat.urakka.turvalaitteet-test]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
+            [harja.tiedot.hallintayksikot-test]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat]
+            [harja.tiedot.urakka.urakan-tyotunnit]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -71,9 +77,16 @@
            'harja.tiedot.urakka.yllapitokohteet-test
            'harja.ui.kartta.esitettavat-asiat-test
            'harja.views.urakka.paallystyksen-maksuerat-test
-           'harja.tiedot.vesivaylat.urakoiden-luonti-test
-           'harja.tiedot.vesivaylat.urakoitsijoiden-luonti-test
-           'harja.tiedot.vesivaylat.hankkeiden-luonti-test
-           'harja.tiedot.vesivaylat.sopimuksien-luonti-test
+           'harja.tiedot.vesivaylat.hallinta.urakoiden-luonti-test
+           'harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test
+           'harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
+           'harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
+           'harja.tiedot.vesivaylat.urakka.turvalaitteet-test
+           'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
+           'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
+           'harja.tiedot.hallintayksikot-test
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat
+           'harja.tiedot.urakka.urakan-tyotunnit
            ;; uusi testi tähän
            )

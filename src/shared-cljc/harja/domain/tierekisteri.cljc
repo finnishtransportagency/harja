@@ -1,5 +1,5 @@
 (ns harja.domain.tierekisteri
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
             #?@(:clj [[clojure.future :refer :all]])))
@@ -190,7 +190,7 @@
                    (str " / " loppuosa " / " loppuetaisyys)))
             ei-tierekisteriosoitetta)))))
 
-(defn- tieosoitteen-jarjestys
+(defn tieosoitteen-jarjestys
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero
