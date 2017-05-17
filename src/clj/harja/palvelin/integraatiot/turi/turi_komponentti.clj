@@ -15,7 +15,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit]
-            [harja.palvelin.tyokalut.lukot :as lukot])
+            [harja.palvelin.tyokalut.lukot :as lukot]
+            [harja.kyselyt.urakan-tyotunnit :as q])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TuriLahetys
@@ -117,13 +118,13 @@
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "turi" "urakan-tyotunnit" nil
           (fn [konteksti]
-            (let [sampoid (q-urakat/hae-urakan-sampo-id db urakka-id)
+            (let [urakka (first (q-urakan-tyotunnit/hae-urakan-tiedot-lahettavaksi-tyotuntien-kanssa db {:urakkaid urakka-id}))
                   tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
                               db
                               urakka-id
                               vuosi
                               vuosikolmannes)
-                  sanoma (tyotunnit-sanoma/muodosta sampoid vuosi vuosikolmannes tyotunnit)
+                  sanoma (tyotunnit-sanoma/muodosta urakka vuosi vuosikolmannes tyotunnit)
                   {body :body} (integraatiotapahtuma/laheta
                                  konteksti
                                  :http

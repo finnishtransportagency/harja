@@ -7,6 +7,11 @@
 
 (def +xsd-polku+ "xsd/turi/")
 
+(def urakan-vaylamuoto
+  {:tie "Tie"
+   :rautatie "Rautatie"
+   :vesi "Vesiväylä"})
+
 (def poikkeamatyyppi->numero
   {:tyotapaturma 8
    :vaaratilanne 32
@@ -112,11 +117,6 @@
    :kasitelty "Käsitelty"
    :taydennetty "Täydennetty"
    :suljettu "Suljettu"})
-
-(def urakan-vaylamuoto
-  {:tie "Tie"
-   :rautatie "Rautatie"
-   :vesi "Vesiväylä"})
 
 (defn rakenna-lahde [data]
   [:lahde
