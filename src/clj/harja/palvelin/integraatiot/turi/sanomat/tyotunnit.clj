@@ -4,9 +4,23 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tyojakso [sampoid vuosi vuosikolmannes tunnit]
-  [:t:tyoaikajakso
-   {:xmlns:t "http://restimport.xml.turi.oikeatoliot.fi/tyotunnit"}
-   [:lahdejarjestelma "Harja"]
+
+  [:tyot:tyoaikajakso
+   {:xmlns:tyot "http://restimport.xml.turi.oikeatoliot.fi/tyotunnit"}
+   [:sampohankenimi "string"]
+   [:sampohankeid "string"]
+   [:tilaajanvastuuhenkilokayttajatunnus "string"]
+   [:tilaajanvastuuhenkiloetunimi "string"]
+   [:tilaajanvastuuhenkilosukunimi "string"]
+   [:tilaajanvastuuhenkilosposti "string"]
+   [:sampourakkanimi "string"]
+   [:sampourakkaid "string"]
+   [:urakanpaattymispvm "2008-09-29"]
+   [:urakkavaylamuoto "Tie"]
+   [:urakkatyyppi "muut"]
+   [:elyalue "KES ELY"]
+   [:alueurakkanro "string"]
+   [:lahdejarjestelma "string"]
    [:urakkasampoid sampoid]
    [:vuosi vuosi]
    [:vuosikolmannes vuosikolmannes]
