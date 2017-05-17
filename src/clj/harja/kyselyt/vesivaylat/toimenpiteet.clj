@@ -19,13 +19,13 @@
 (def toimenpiteet-xf
   (comp
     (map #(set/rename-keys % {::vv-toimenpide/reimari-tyolaji ::vv-toimenpide/tyolaji
-                             ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
-                             ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
-                             ::vv-toimenpide/reimari-tyyppi ::vv-toimenpide/toimenpide
-                             ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
-    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (:tyolaji %))
-                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (:tyoluokka %))
-                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (:toimenpide %))
+                              ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
+                              ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
+                              ::vv-toimenpide/reimari-tyyppi ::vv-toimenpide/toimenpide
+                              ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
+    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
+                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
+                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
                    :vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
