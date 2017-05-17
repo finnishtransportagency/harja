@@ -47,7 +47,7 @@
                                        (not (lomake/voi-tallentaa? urakoitsija)))
                          :tallennus-kaynnissa? tallennus-kaynnissa?}])}
          [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
-          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9
+          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-min 9 :pituus-max 9
            :validoi [(fn [tunnus] (when-let [urakoitsija (haetut-ytunnukset tunnus)]
                                     (str "Tunnus " tunnus " on käytössa urakoitsijalla " urakoitsija)))]}
           {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
