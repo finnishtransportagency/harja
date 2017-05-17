@@ -35,7 +35,8 @@
                           ::vv-toimenpide/tyoluokka
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
-                          ::vv-toimenpide/turvalaite]))))
+                          ::vv-toimenpide/turvalaite
+                          ::vv-toimenpide/vikakorjauksia?]))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikakorjaukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
