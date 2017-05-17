@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log]]
             [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [cljs.core.async :refer [<!]]
@@ -24,7 +25,7 @@
                     :tyolaji nil
                     :tyoluokka nil
                     :toimenpide nil
-                    :vain-vikailmoituksista-tulleet? false}
+                    :vain-vikailmoitukset? false}
          :nakymassa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
@@ -320,6 +321,22 @@
 (defrecord ToimenpiteetHaettu [hankkeet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
+(defn- muodosta-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+                                        vaylatyyppi vayla
+                                        tyolaji tyoluokka toimenpide
+                                        vain-vikailmoitukset?]}]
+  {::tot/urakka-id urakka-id
+   ::to/sopimus-id sopimus-id
+   ::va/vaylatyyppi vaylatyyppi
+   ::to/vayla-id vayla
+   ::to/tyolaji tyolaji
+   ::to/tyoluokka tyoluokka
+   ::to/toimenpide toimenpide
+   :alku (first aikavali)
+   :loppu (second aikavali)
+   :vikakorjaukseet? vain-vikailmoitukset?
+   :tyyppi :kokonaishintainen})
+
 (extend-protocol tuck/Event
 
   Nakymassa?
@@ -332,7 +349,7 @@
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
                                               :vaylatyyppi :vayla
-                                              :vain-vikailmoituksista-tulleet?
+                                              :vain-vikailmoitukset?
                                               :tyolaji :tyoluokka :toimenpide]))))
 
   ValitseToimenpide
@@ -374,16 +391,15 @@
     (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
           fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
       (go
-        ;; TODO Muodosta valinnat niin kuin spec ne haluaa
         (try
-          (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet {}))]
+          (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet
+                                     (muodosta-hakuargumentit (:valinnat app))))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
           (catch :default e
             (fail! nil)
-            (throw e)))))
-    (assoc app :hankkeiden-haku-kaynnissa? true))
+            (throw e))))))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]

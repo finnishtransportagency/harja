@@ -19,7 +19,7 @@
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet
-                           :vain-vikailmoituksista-tulleet? false}
+                           :vain-vikailmoitukset? false}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -27,7 +27,7 @@
                                 ::to/tyoluokka "Asennus ja huolto"
                                 ::to/toimenpide "Huoltotyö"
                                 ::to/pvm (pvm/nyt)
-                                ::to/vikakorjauksia? true
+                                ::to/vikakorjaus true
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 1
                                 ::to/tyolaji :viitat
@@ -153,7 +153,7 @@
                                                    :tyolaji :polju
                                                    :tyoluokka :asennus-ja-huolto
                                                    :toimenpide :autot-traktorit
-                                                   :vain-vikailmoituksista-tulleet? true})
+                                                   :vain-vikailmoitukset? true})
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
@@ -179,8 +179,8 @@
       (is (= (get-in vanha-tila [:valinnat :toimenpide]) :alukset-ja-veneet))
       (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))
 
-      (is (false? (get-in vanha-tila [:valinnat :vain-vikailmoituksista-tulleet?])))
-      (is (true? (get-in uusi-tila [:valinnat :vain-vikailmoituksista-tulleet?])))))
+      (is (false? (get-in vanha-tila [:valinnat :vain-vikailmoitukset?])))
+      (is (true? (get-in uusi-tila [:valinnat :vain-vikailmoitukset?])))))
 
   (testing "Asetetaan vain yksi valinta"
     (let [vanha-tila {}

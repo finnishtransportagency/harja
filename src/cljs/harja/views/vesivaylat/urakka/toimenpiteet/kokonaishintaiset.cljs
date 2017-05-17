@@ -195,9 +195,9 @@
 
      [kentat/tee-kentta {:tyyppi :checkbox
                          :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
-      (r/wrap (get-in app [:valinnat :vain-vikailmoituksista-tulleet?])
+      (r/wrap (get-in app [:valinnat :vain-vikailmoitukset?])
               (fn [uusi]
-                (e! (tiedot/->PaivitaValinnat {:vain-vikailmoituksista-tulleet? uusi}))))]]]
+                (e! (tiedot/->PaivitaValinnat {:vain-vikailmoitukset? uusi}))))]]]
 
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}

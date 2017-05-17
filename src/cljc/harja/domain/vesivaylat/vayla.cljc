@@ -33,7 +33,7 @@
     99))
 
 (defn tyyppi-fmt [tyyppi]
-  (case tyyppi
+  (case tyyppi 
     :kauppamerenkulku "Kauppamerenkulku"
     :muu "Muu vesiliikenne"
     ;; Formatoidaan sinne päin
