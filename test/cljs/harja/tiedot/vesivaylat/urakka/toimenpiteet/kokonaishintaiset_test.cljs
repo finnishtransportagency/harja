@@ -197,3 +197,18 @@
              ::va/id 1}
             {::va/nimi "Varkaus, Kuopion väylä"
              ::va/id 2}]))))
+
+(deftest hakemisen-aloitus
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+
+    (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet)))))))
+
+(deftest hakemisen-valmistuminen
+  (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
+    (is (false? (:haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:toimenpiteet tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
+    (is (false? (:haku-kaynnissa? tulos)))))

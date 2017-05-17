@@ -27,6 +27,7 @@
                     :toimenpide nil
                     :vain-vikailmoitukset? false}
          :nakymassa? false
+         :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
          ;; TODO Testidataa vain
          :toimenpiteet [{::to/id 0
@@ -318,7 +319,7 @@
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
 (defrecord HaeToimenpiteet [])
-(defrecord ToimenpiteetHaettu [hankkeet])
+(defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
 (defn- muodosta-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
@@ -399,12 +400,15 @@
               (tulos! vastaus)))
           (catch :default e
             (fail! nil)
-            (throw e))))))
+            (throw e))))
+      (assoc app :haku-kaynnissa? true)))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :toimenpiteet toimenpiteet))
+    (assoc app :toimenpiteet toimenpiteet
+               :haku-kaynnissa? false))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
-    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)))
+    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
+    (assoc app :haku-kaynnissa? false)))
