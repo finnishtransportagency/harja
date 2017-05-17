@@ -42,9 +42,9 @@
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
         (-> "resources/xsd/reimari/vastaus.xml"
-            slurpq
+            slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-    (println luettu-toimenpide)
+    ;; (println luettu-toimenpide)
     (is (nil? (s/explain-data ::toimenpide/toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))
