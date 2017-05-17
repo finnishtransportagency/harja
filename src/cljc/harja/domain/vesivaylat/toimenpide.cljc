@@ -328,4 +328,4 @@ reimari-tilat
 (s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::vikakorjaus ::turvalaite])))
+                           ::turvalaite])))
