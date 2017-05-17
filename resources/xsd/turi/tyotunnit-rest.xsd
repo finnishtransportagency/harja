@@ -180,18 +180,6 @@
 						</xs:restriction>
 					</xs:simpleType>
 				</xs:element>
-				<xs:element name="urakkasampoid" minOccurs="1" maxOccurs="1">
-					<xs:annotation>
-						<xs:documentation>
-							Urakan tunniste Sampo-järjestelmässä.
-						</xs:documentation>
-					</xs:annotation>
-					<xs:simpleType>
-						<xs:restriction base="xs:string">
-							<xs:maxLength value="32" />
-						</xs:restriction>
-					</xs:simpleType>
-				</xs:element>
 				<xs:element name="vuosi" minOccurs="1" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>

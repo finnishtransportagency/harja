@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<t:tyoaikajakso xmlns:t="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit">
+<tyot:tyoaikajakso xmlns:tyot="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit">
     <sampohankenimi>string</sampohankenimi>
     <sampohankeid>string</sampohankeid>
     <tilaajanvastuuhenkilokayttajatunnus>string</tilaajanvastuuhenkilokayttajatunnus>
@@ -14,8 +13,7 @@
     <elyalue>KES ELY</elyalue>
     <alueurakkanro>string</alueurakkanro>
     <lahdejarjestelma>string</lahdejarjestelma>
-    <urakkasampoid>string</urakkasampoid>
-    <vuosi>2017</vuosi>
-    <vuosikolmannes>1</vuosikolmannes>
-    <tyotunnit>123</tyotunnit>
-</t:tyoaikajakso>
+    <vuosi>1900</vuosi>
+    <vuosikolmannes>3</vuosikolmannes>
+    <tyotunnit>3</tyotunnit>
+</tyot:tyoaikajakso>
