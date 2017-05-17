@@ -254,9 +254,10 @@ reimari-tilat
 (s/def ::tyoluokka (set (vals reimari-tyoluokat)))
 (s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
 (s/def ::pvm inst?)
-(s/def ::turvalaite (s/keys :opt [::vv-turvalaite/r-nimi
-                                  ::vv-turvalaite/r-nro
-                                  ::vv-turvalaite/r-ryhma]))
+(s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
+                                  ::vv-turvalaite/nro
+                                  ::vv-turvalaite/ryhma]))
+(s/def ::vikakorjauksia? boolean?)
 
 (def reimari-kentat
   #{::reimari-id
@@ -340,4 +341,4 @@ reimari-tilat
 (s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite])))
+                           ::turvalaite ::vikakorjauksia?])))
