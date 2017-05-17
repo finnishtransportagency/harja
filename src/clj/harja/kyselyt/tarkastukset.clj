@@ -71,7 +71,7 @@
         id (if (nil? id)
              (luo-tarkastus* db user urakka-id tarkastus urakoitsija?)
              (paivita-tarkastus* db user urakka-id tarkastus urakoitsija?))]
-    (paivita-tarkastuksen-yllapitokohde! id yllapitokohde)
+    (paivita-tarkastuksen-yllapitokohde! db id yllapitokohde)
     id))
 
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
