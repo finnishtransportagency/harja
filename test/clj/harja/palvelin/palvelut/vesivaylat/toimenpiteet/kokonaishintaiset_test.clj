@@ -36,7 +36,7 @@
 
 (deftest toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-        sopimus-id (hae-helsingin-vesivaylaurakan-sopimuksen-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::tot/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -45,3 +45,25 @@
     (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (>= (count vastaus) 1))
     (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-vastaus vastaus))))
+
+(deftest toimenpiteiden-haku-toimii-urakkafiltterilla
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                kysely-params)]
+    (is (= (count vastaus) 0)
+        "Ei vesiväyläjuttuja Muhoksen urakassa")))
+
+(deftest toimenpiteiden-haku-toimii-sopimusfiltterilla
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-sivusopimuksen-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                kysely-params)]
+    (is (= (count vastaus) 0)
+        "Ei vesiväyläjuttuja sivusopimuksella")))

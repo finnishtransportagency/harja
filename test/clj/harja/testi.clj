@@ -299,11 +299,15 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
-(defn hae-helsingin-vesivaylaurakan-sopimuksen-id []
+(defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  urakka IN (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
-                   LIMIT  1;"))))
+                   WHERE  nimi = 'Helsingin väyläyksikön pääsopimus'"))))
+
+(defn hae-helsingin-vesivaylaurakan-sivusopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Helsingin väyläyksikön sivusopimus'"))))
 
 (defn hae-oulujoen-sillan-id []
   (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Oulujoen silta';"))))
