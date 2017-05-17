@@ -43,7 +43,7 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
-    (is (>= (count vastaus) 1))
+    (is (>= (count vastaus) 4))
     (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-vastaus vastaus))))
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
