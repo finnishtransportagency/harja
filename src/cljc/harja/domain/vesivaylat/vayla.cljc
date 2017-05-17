@@ -35,7 +35,7 @@
 (defn tyyppi-fmt [tyyppi]
   (case tyyppi
     :kauppamerenkulku "Kauppamerenkulku"
-    :muu "Muu"
+    :muu "Muu vesiliikenne"
     ;; Formatoidaan sinne päin
     (str/capitalize (name tyyppi))))
 
