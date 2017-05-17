@@ -19,5 +19,5 @@ $$ LANGUAGE plpgsql;
 ALTER TABLE reimari_toimenpide
 ADD COLUMN "reimari-komponentit" toimenpidehaun_komponentti[]
       NOT NULL
-      CHECK (toimenpidehaun_komponentit_ok(komponentit))
+      CHECK (toimenpidehaun_komponentit_ok("reimari-komponentit"))
       DEFAULT '{}';
