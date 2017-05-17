@@ -30,7 +30,9 @@
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite]))
-    (map #(assoc % :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (:toimenpide %))))))
+    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (:tyolaji %))
+                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (:tyoluokka %))
+                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (:toimenpide %))))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikakorjaukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
