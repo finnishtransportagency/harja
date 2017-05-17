@@ -128,5 +128,14 @@ E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen poltto�
 
 -- Vesiväylät
 
+COMMENT ON TABLE vv_vayla IS
+E'Väylä on vedessä oleva reitti, jonka varressa on turvalaitteita. Väylillä on nimi, tyyppi, ja sijainti. Tyyppi voi olla kauppamerenkulku tai muu. Koska turvalaitteiden pitää aina liittyä väylään, tyyppeihin voidaan joutua lisäämään myös "Virtuaaliväylä", joka ei ole oikeasti väylä. Tällaiset turvalaitteet ovat avomerellä.';
+
+COMMENT ON TABLE vv_turvalaite IS
+E'Turvalaitteet ovat vedessä olevia poijuja, viittoja, ja muita asioita. Kaikki vesiväylien toimenpiteet liittyvät aina turvalaitteisiin. Turvalaitteissa voi olla komponentteja, kuten aurinkopaneeleita, akkuja, jne. Turvlaaitteet liittyvät aina väylään.';
+
+COMMENT ON TABLE vv_vikailmoitus IS
+E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata tietyn ajan sisällä. Vikakorjaus tulee Harjaan toimenpiteenä.';
+
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
