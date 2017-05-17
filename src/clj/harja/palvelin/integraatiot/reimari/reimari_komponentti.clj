@@ -8,16 +8,16 @@
 
 
 (defprotocol HaeToimenpiteet
-  (hae-toimenpiteet [this jarjestelma]))
+  (hae-toimenpiteet [this]))
 
 (defrecord Reimari [pohja-url]
-  (component/Lifecycle
-    (start [this]
-           (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url))
-    (stop [this]
-          (log/debug "Sammutetaan Reimari-komponentti")
-          this)
+  component/Lifecycle
+  (start [this]
+    (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url))
+  (stop [this]
+    (log/debug "Sammutetaan Reimari-komponentti")
+    this)
 
-    HaeToimenpiteet
-    (hae-toimenpiteet [jarjestelma]
-                      (toimenpidehaku/hae-toimenpiteet (:db jarjestelma) (:integraatioloki jarjestelma)))))
+  HaeToimenpiteet
+  (hae-toimenpiteet [this]
+    (toimenpidehaku/hae-toimenpiteet (:db this) (:integraatioloki this))))
