@@ -12,7 +12,7 @@ WHERE NOT exists(SELECT ut.id
                        ut.vuosi = :vuosi AND
                        ut.vuosikolmannes = :vuosikolmannes);
 
--- hae-urakan-tiedot-lahettavaksi-tyotuntien-kanssa
+-- name: hae-urakan-tiedot-lahettavaksi-tyotuntien-kanssa
 SELECT
   u.urakkanro        AS alueurakkanro,
   u.sampoid          AS "urakka-sampoid",

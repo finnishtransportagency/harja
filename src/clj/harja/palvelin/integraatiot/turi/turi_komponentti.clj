@@ -118,7 +118,7 @@
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "turi" "urakan-tyotunnit" nil
           (fn [konteksti]
-            (let [urakka (q/hae-urakan-tiedot-lahettavaksi-tyotuntien-kanssa db urakka-id)
+            (let [urakka (first (q-urakan-tyotunnit/hae-urakan-tiedot-lahettavaksi-tyotuntien-kanssa db {:urakkaid urakka-id}))
                   tyotunnit (q-urakan-tyotunnit/hae-urakan-vuosikolmanneksen-tyotunnit
                               db
                               urakka-id

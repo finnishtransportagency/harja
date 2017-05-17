@@ -1,8 +1,12 @@
 (ns harja.palvelin.integraatiot.turi.sanomat.tyotunnit
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml])
-  (:use [slingshot.slingshot :only [throw+]]
-        [harja.palvelin.integraatiot.turi.sanomat.tyokalut :refer [urakan-vaylamuoto]]))
+  (:use [slingshot.slingshot :only [throw+]]))
+
+(defn vaylamuoto [urakka-tyyppi]
+  (if (.contains (name urakka-tyyppi) "vesivayla")
+    "Vesiväylä"
+    "Tie"))
 
 (defn tyojakso [{:keys [hanke-nimi
                         hanke-sampoid
@@ -13,7 +17,6 @@
                         urakka-nimi
                         urakka-sampoid
                         urakka-loppupvm
-                        vaylamuoto
                         urakka-tyyppi
                         urakka-ely
                         alueurakkanro]}
@@ -31,7 +34,7 @@
    [:sampourakkanimi urakka-nimi]
    [:sampourakkaid urakka-sampoid]
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
-   [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
+   [:urakkavaylamuoto (vaylamuoto urakka-tyyppi)]
    [:urakkatyyppi urakka-tyyppi]
    (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
