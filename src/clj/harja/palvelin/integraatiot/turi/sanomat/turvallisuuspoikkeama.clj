@@ -3,7 +3,8 @@
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]]
+        [harja.palvelin.integraatiot.turi.sanomat.tyokalut :refer [urakan-vaylamuoto]]))
 
 (def +xsd-polku+ "xsd/turi/")
 
@@ -112,11 +113,6 @@
    :kasitelty "Käsitelty"
    :taydennetty "Täydennetty"
    :suljettu "Suljettu"})
-
-(def urakan-vaylamuoto
-  {:tie "Tie"
-   :rautatie "Rautatie"
-   :vesi "Vesiväylä"})
 
 (defn rakenna-lahde [data]
   [:lahde
