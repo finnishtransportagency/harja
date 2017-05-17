@@ -326,7 +326,7 @@ reimari-tilat
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
 
-;; Haut
+;; Palvelut
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
   (s/keys

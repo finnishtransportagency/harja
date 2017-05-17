@@ -17,10 +17,12 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db :as this}]
-    (julkaise-palvelu http
+    (julkaise-palvelu
+      http
       :hae-vaylat
       (fn [user tiedot]
-        (hae-vaylat db user)))
+        (hae-vaylat db user))
+      {:vastaus-spec ::vay/hae-kokonaishintaiset-toimenpiteet-vastaus})
     this)
 
   (stop [this]

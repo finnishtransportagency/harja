@@ -33,7 +33,7 @@
     99))
 
 (defn tyyppi-fmt [tyyppi]
-  (case tyyppi 
+  (case tyyppi
     :kauppamerenkulku "Kauppamerenkulku"
     :muu "Muu vesiliikenne"
     ;; Formatoidaan sinne päin
@@ -57,3 +57,8 @@
   (clojure.set/union
     perustiedot
     viittaukset))
+
+;; Palvelut
+
+(s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
+  (s/coll-of (s/keys :req [::id ::nimi ::tyyppi])))

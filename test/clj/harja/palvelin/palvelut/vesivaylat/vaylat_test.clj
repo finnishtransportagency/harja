@@ -11,7 +11,7 @@
             [harja.domain.vesivaylat.toimenpide :as toi]
             [clojure.string :as str]
             [harja.palvelin.palvelut.vesivaylat.vaylat :as va]
-            [harja.domain.toteuma :as tot]
+            [harja.domain.vesivaylat.vayla :as va-d]
             [clojure.spec.alpha :as s]))
 
 (defn jarjestelma-fixture [testit]
@@ -37,4 +37,5 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-vaylat +kayttaja-jvh+
                                 {})]
-    (is (>= (count vastaus) 2))))
+    (is (>= (count vastaus) 2))
+    (is (s/valid? ::va-d/hae-kokonaishintaiset-toimenpiteet-vastaus vastaus))))
