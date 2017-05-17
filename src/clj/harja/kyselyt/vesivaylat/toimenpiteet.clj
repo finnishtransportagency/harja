@@ -23,16 +23,17 @@
                              ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
                              ::vv-toimenpide/reimari-tyyppi ::vv-toimenpide/toimenpide
                              ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
+    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (:tyolaji %))
+                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (:tyoluokka %))
+                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (:toimenpide %))
+                   :vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
                           ::vv-toimenpide/tyoluokka
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
-                          ::vv-toimenpide/turvalaite]))
-    (map #(assoc % :tyolaji (get vv-toimenpide/reimari-tyolajit (:tyolaji %))
-                   :tuoluokka (get vv-toimenpide/reimari-tyoluokat (:tyoluokka %))
-                   :toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (:toimenpide %))))))
+                          ::vv-toimenpide/turvalaite]))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikakorjaukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
