@@ -64,9 +64,10 @@
   [db user urakka-id {:keys [id yllapitokohde sijainti nayta-urakoitsijalle] :as tarkastus}]
   (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde)
-  (let [sijainti (if (instance? PGgeometry sijainti)
-                   sijainti
-                   (and sijainti (geo/geometry (geo/clj->pg sijainti))))
+  (let [tarkastus (update tarkastus :sijainti
+                          #(if (instance? PGgeometry %)
+                             %
+                             (and % (geo/geometry (geo/clj->pg %)))))
         urakoitsija? (= (roolit/osapuoli user) :urakoitsija)
         id (if (nil? id)
              (luo-tarkastus* db user urakka-id tarkastus urakoitsija?)
