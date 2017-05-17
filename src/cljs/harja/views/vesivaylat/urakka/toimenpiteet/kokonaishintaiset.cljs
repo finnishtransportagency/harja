@@ -203,7 +203,7 @@
      #(log "Painoit nappia")
      {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
-(defn- sisalto [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}]
+(defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}]
   (cond (or haku-kaynnissa? (nil? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -241,7 +241,7 @@
       [:div
        [debug app]
        [suodattimet-ja-toiminnot e! app (:urakka tiedot)]
-       [sisalto e!]])))
+       [toimenpiteet-listaus e! app]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app tiedot]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
