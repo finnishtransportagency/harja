@@ -133,6 +133,8 @@
                                              :paivittainen-tarkistusaika [s/Num]
                                              :paivitysvali-paivissa s/Num}
 
+   (s/optional-key :tyotunti-muistutukset)   {:paivittainen-aika [s/Num]}
+
    })
 
 (def oletusasetukset

@@ -133,7 +133,7 @@
                                   :salasana salasana
                                   :otsikot {"Content-Type" "text/xml"}}
                                  sanoma)]
-              (log/error (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtunnit lähetetty onnistuneesti TURI:n. TURI:n vastaus: %s."
+              (log/debug (format "Urakan (urakka-id: %s) vuoden %s kolmanneksen %s työtunnit lähetetty onnistuneesti TURI:n. TURI:n vastaus: %s."
                                  urakka-id
                                  vuosi
                                  vuosikolmannes

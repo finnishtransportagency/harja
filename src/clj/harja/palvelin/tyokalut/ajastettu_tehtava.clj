@@ -9,16 +9,18 @@
   (:import (org.joda.time DateTimeZone)))
 
 (defn ajasta-paivittain [[tunti minuutti sekuntti] tehtava]
-  (chime-at (periodic-seq
-              (.. (t/now)
-                  (withZone (DateTimeZone/forID "Europe/Helsinki"))
-                  (withTime tunti minuutti sekuntti 0))
-              (t/days 1))
-            tehtava))
+  (when (and tunti minuutti sekuntti)
+    (chime-at (periodic-seq
+               (.. (t/now)
+                   (withZone (DateTimeZone/forID "Europe/Helsinki"))
+                   (withTime tunti minuutti sekuntti 0))
+               (t/days 1))
+             tehtava)))
 
 (defn ajasta-minuutin-valein [minuutit tehtava]
-  (chime-at (periodic-seq
-              (.. (t/now)
-                  (withZone (DateTimeZone/forID "Europe/Helsinki")))
-              (t/minutes minuutit))
-            tehtava))
+  (when minuutit
+    (chime-at (periodic-seq
+               (.. (t/now)
+                   (withZone (DateTimeZone/forID "Europe/Helsinki")))
+               (t/minutes minuutit))
+             tehtava)))
