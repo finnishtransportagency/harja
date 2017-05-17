@@ -16,8 +16,8 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    "suorittajan_ytunnus" ::o/ytunnus
-    "suorittajan_nimi" ::o/nimi
+    "suorittajan_ytunnus" ::suorittajan-ytunnus
+    "suorittajan_nimi" ::suorittajan-nimi
     "ulkoinen_id " ::ulkoinen-id
     "tr_numero" ::tr/numero
     "tr_alkuosa" ::tr/alkuosa
