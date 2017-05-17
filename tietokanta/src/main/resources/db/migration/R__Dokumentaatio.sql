@@ -129,4 +129,4 @@ E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen poltto�
 -- Vesiväylät
 
 COMMENT ON TABLE reimari_toimenpide IS
-E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin.';
+E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
