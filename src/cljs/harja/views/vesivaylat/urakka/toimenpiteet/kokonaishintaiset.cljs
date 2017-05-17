@@ -101,9 +101,6 @@
 (defn- paneelin-sisalto [e! toimenpiteet]
   [grid/grid
    {:tunniste ::to/id
-    :tyhja (if (nil? toimenpiteet)
-             [ajax-loader "Haetaan toimenpiteitä"]
-             "Ei toimenpiteitä")
     :infolaatikon-tila-muuttui (fn [nakyvissa?]
                                  (e! (tiedot/->AsetaInfolaatikonTila nakyvissa?)))
     :rivin-infolaatikko (fn [rivi data]
@@ -206,11 +203,37 @@
      #(log "Painoit nappia")
      {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
+(defn- sisalto [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}]
+  (cond (or haku-kaynnissa? (nil? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
+        (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
+
+        :default
+        (into [otsikkopaneeli
+               {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+                :paneelikomponentit
+                [{:sijainti otsikoiden-checkbox-sijainti
+                  :sisalto
+                  (fn [{:keys [tunniste]}]
+                    (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
+                          kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
+                          mitaan-ei-valittu? (every? (comp not true?)
+                                                     (map :valittu? tyolajin-toimenpiteet))]
+                      [kentat/tee-kentta
+                       {:tyyppi :checkbox}
+                       (r/wrap (cond kaikki-valittu? true
+                                     mitaan-ei-valittu? false
+                                     :default ::kentat/indeterminate)
+                               (fn [uusi]
+                                 (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                               :valinta uusi}))))]))}]}]
+              (luo-otsikkorivit e! toimenpiteet))))
+
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->HaeToimenpiteet))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])
                                                           :sopimus-id (first (:sopimus tiedot))
                                                           :aikavali (:aikavali tiedot)})))
@@ -219,32 +242,9 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
-       [:div {:style {:padding "10px"}}
-        [:img {:src "images/harja_favicon.png"}]
-        [:div {:style {:color "orange"}} "Työmaa"]]
        [debug app]
-
        [suodattimet-ja-toiminnot e! app (:urakka tiedot)]
-
-       (into [otsikkopaneeli
-              {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
-               :paneelikomponentit
-               [{:sijainti otsikoiden-checkbox-sijainti
-                 :sisalto
-                 (fn [{:keys [tunniste]}]
-                   (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
-                         kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
-                         mitaan-ei-valittu? (every? (comp not true?)
-                                                    (map :valittu? tyolajin-toimenpiteet))]
-                     [kentat/tee-kentta
-                      {:tyyppi :checkbox}
-                      (r/wrap (cond kaikki-valittu? true
-                                    mitaan-ei-valittu? false
-                                    :default ::kentat/indeterminate)
-                              (fn [uusi]
-                                (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                              :valinta uusi}))))]))}]}]
-             (luo-otsikkorivit e! toimenpiteet))])))
+       [sisalto e!]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app tiedot]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
