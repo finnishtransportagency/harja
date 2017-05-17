@@ -228,22 +228,26 @@
                                                                :valinta uusi}))))]))}]}]
               (luo-otsikkorivit e! toimenpiteet))))
 
-(defn- kokonaishintaiset-toimenpiteet-nakyma [e! app tiedot]
+(defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))
                                     (e! (tiedot/->HaeToimenpiteet))))
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
+                                                          :sopimus-id (first (:sopimus valinnat))
+                                                          :aikavali (:aikavali valinnat)}))
+                           (e! (tiedot/->HaeToimenpiteet)))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
        [debug app]
-       [suodattimet-ja-toiminnot e! app (:urakka tiedot)]
+       [suodattimet-ja-toiminnot e! app (:urakka valinnat)]
        [toimenpiteet-listaus e! app]])))
 
-(defn- kokonaishintaiset-toimenpiteet* [e! app tiedot]
+(defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
                                                  :sopimus @u/valittu-sopimusnumero
                                                  :aikavali @u/valittu-aikavali}])
