@@ -233,10 +233,10 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeToimenpiteet))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in tiedot [:urakka :id])
                                                           :sopimus-id (first (:sopimus tiedot))
-                                                          :aikavali (:aikavali tiedot)})))
+                                                          :aikavali (:aikavali tiedot)}))
+                           (e! (tiedot/->HaeToimenpiteet)))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
