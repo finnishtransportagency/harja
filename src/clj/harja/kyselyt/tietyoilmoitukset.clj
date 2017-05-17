@@ -166,13 +166,13 @@
 
 (defn intersects? [threshold geometry]
   (reify op/Op
-    (to-sql [this value-accessor col-info]
+    (to-sql [this value-accessor _]
       [(str "ST_Intersects(ST_Buffer(?,?), " value-accessor ")")
        [geometry threshold]])))
 
 (defn intersects-envelope? [{:keys [xmin ymin xmax ymax]}]
   (reify op/Op
-    (to-sql [this val col-info]
+    (to-sql [this val _]
       [(str "ST_Intersects(" val ", ST_MakeEnvelope(?,?,?,?))")
        [xmin ymin xmax ymax]])))
 
@@ -183,7 +183,7 @@
 
 (defn interval? [start interval]
   (reify op/Op
-    (to-sql [this value col-info]
+    (to-sql [this value _]
       [(str "(? - " value " < ?::INTERVAL)")
        [start interval]])))
 

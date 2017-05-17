@@ -6,13 +6,12 @@
     [harja.domain.tierekisteri :as tr-domain]
     [clojure.spec.alpha :as s]
     #?@(:clj
-        [
-    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [clojure.future :refer :all]
-    [harja.pvm :as pvm]
-    [clj-time.core :as t]
-    [taoensso.timbre :as log]
-    [clj-time.coerce :as c]])))
+        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+         [clojure.future :refer :all]
+         [harja.pvm :as pvm]
+         [clj-time.core :as t]
+         [taoensso.timbre :as log]
+         [clj-time.coerce :as c]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero string?)
