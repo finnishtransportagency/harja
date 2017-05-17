@@ -5,10 +5,13 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [cljs.core.async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.protokollat :as protokollat])
+            [harja.ui.protokollat :as protokollat]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -313,6 +316,10 @@
 (defrecord PaivitaValinnat [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
+(defrecord HaeToimenpiteet [])
+(defrecord ToimenpiteetHaettu [hankkeet])
+(defrecord ToimenpiteetEiHaettu [virhe])
+
 (extend-protocol tuck/Event
 
   Nakymassa?
@@ -359,4 +366,29 @@
 
   AsetaInfolaatikonTila
   (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila)))
+    (assoc app :infolaatikko-nakyvissa? uusi-tila))
+
+
+  HaeToimenpiteet
+  (process-event [_ app]
+    (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+          fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
+      (go
+        ;; TODO Muodosta valinnat niin kuin spec ne haluaa
+        (try
+          (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet {}))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    (assoc app :hankkeiden-haku-kaynnissa? true))
+
+  ToimenpiteetHaettu
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (assoc app :toimenpiteet toimenpiteet))
+
+  ToimenpiteetEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)))
