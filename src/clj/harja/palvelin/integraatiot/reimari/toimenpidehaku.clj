@@ -5,6 +5,8 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-toimenpiteet :as sanoma]
+            [harja.pvm :as pvm]
+            [clojure.string :as s]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.tyokalut.lukot :as lukko]))
 
@@ -25,18 +27,24 @@
 
 
 
+(defn- formatoi-aika [muutosaika]
+  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
+    (if (s/ends-with? aika-ilman-vyohyketta "Z")
+      aika-ilman-vyohyketta
+      (str aika-ilman-vyohyketta "Z"))))
+
 (defn kysely-sanoma [muutosaika]
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
      [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika muutosaika}]]
+      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
      ]]))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db]
   ;; tähän kysely joka katsoo integraatiotapahtumat-tauusta edellisen
   ;; haetoimenpiteet-tapahtuman alkuajan
-  "2017-05-01")
+  #inst "2017-05-01")
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db)]
