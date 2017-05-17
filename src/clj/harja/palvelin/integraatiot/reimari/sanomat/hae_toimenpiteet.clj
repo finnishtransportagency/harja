@@ -13,7 +13,6 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]))
 
-
 (defn- aikaleima [text]
   (when-not (str/blank? text)
     (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
