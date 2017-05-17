@@ -246,6 +246,18 @@ reimari-tilat
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
          ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
 
+
+(s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
+                             ::vv-vayla/id
+                             ::vv-vayla/nimi]))
+(s/def ::tyolaji (set (vals reimari-tyolajit)))
+(s/def ::tyoluokka (set (vals reimari-tyoluokat)))
+(s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
+(s/def ::pvm inst?)
+(s/def ::turvalaite (s/keys :opt [::vv-turvalaite/r-nimi
+                                  ::vv-turvalaite/r-nro
+                                  ::vv-turvalaite/r-ryhma]))
+
 (def reimari-kentat
   #{::reimari-id
     ::reimari-tyolaji
