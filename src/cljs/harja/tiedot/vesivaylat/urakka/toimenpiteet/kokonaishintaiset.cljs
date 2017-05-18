@@ -62,6 +62,8 @@
                                        vaylatyyppi vayla
                                        tyolaji tyoluokka toimenpide
                                        vain-vikailmoitukset?] :as valinnat}]
+  ;; TODO Työlaji / työluokka / toimenpide avain voi mäppäytyä useaan koodiin,
+  ;; tällöin pitää voida lähettää kaikki setissä
   (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
