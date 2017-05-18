@@ -216,9 +216,9 @@
              ::to/sopimus-id 777
              ::va/vaylatyyppi :muu
              ::to/vayla-id 1
-             ::to/tyolaji (to/reimari-tyolaji-avain->koodi :polju)
-             ::to/tyoluokka (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
-             ::to/toimenpide (to/reimari-toimenpide-avain->koodi :autot-traktorit)
+             ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :polju)
+             ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
+             ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi :autot-traktorit)
              :alku (t/now)
              :loppu (t/now)
              :vikailmoitukset? true
