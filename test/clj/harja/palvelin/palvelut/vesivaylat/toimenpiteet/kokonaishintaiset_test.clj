@@ -135,3 +135,9 @@
                                   kysely-params)]
       (is (is (= (count vastaus) 0))
           "Ei toimenpiteitä tällä väylätyypillä"))))
+
+(deftest toimenpiteiden-haku-ei-toimi-virheellisilla-argumenteilla
+  (let [kysely-params {}]
+    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                                kysely-params)))))
