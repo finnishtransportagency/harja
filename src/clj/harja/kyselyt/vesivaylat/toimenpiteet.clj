@@ -80,6 +80,6 @@
                                (when (and tyoluokka (not toimenpide))
                                  {::vv-toimenpide/reimari-tyoluokka tyoluokka})
                                (when toimenpide
-                                 {::vv-toimenpide/reimari-toimenpide toimenpide})))
+                                 {::vv-toimenpide/reimari-tyyppi toimenpide})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
     (into [] toimenpiteet-xf fetchattu)))

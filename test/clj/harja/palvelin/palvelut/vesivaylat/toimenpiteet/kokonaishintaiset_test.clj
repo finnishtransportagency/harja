@@ -206,6 +206,73 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (= (count vastaus) 0))))
+
+  (testing "Työluokalla suodatus toimii"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyoluokka "1022541905"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 4)))
+
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyoluokka "1022541666"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (= (count vastaus) 0))))
+
+  (testing "Toimenpiteellä suodatus toimii"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/toimenpide "1022542001"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 4)))
+
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/toimenpide "1022542666"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (= (count vastaus) 0))))
+
+  (testing "Työlajilla, työluokka ja & toimenpiteellä suodatus toimii"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyolaji "1022541802"
+                         ::toi/toimenpide "1022542001"
+                         ::toi/tyoluokka "1022541905"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 4)))
+
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyolaji "1022541666"
+                         ::toi/toimenpide "1022542666"
+                         ::toi/tyoluokka "102254166"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
       (is (= (count vastaus) 0)))))
 
 (deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
