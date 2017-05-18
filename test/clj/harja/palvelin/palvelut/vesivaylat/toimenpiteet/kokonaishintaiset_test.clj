@@ -98,6 +98,22 @@
                                   kysely-params)]
       (is (>= (count vastaus) 4))))
 
+  (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä"
+    ;; Käytännössä tällaista tilannetta ei pitäisi tulla, UI:lta voidaan valita vain
+    ;; annetun väylätyypin mukaisia väyliä filtteriksi.
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          vayla-id (hae-vayla-hietarasaari) ;; Tyyppiä kauppamerenkulku
+          vaylatyyppi :muu
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/vayla-id vayla-id
+                         ::va/vaylatyyppi vaylatyyppi}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (= (count vastaus) 0))))
+
   (testing "Väyläfiltteri suodattaa toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
