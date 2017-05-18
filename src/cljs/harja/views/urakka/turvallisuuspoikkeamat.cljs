@@ -355,10 +355,10 @@
                   (lomake/ryhma {:rivi? true}
                                 {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
                                  :tyyppi :positiivinen-numero :kokonaisluku? true
-                                 :validoi [[:rajattu-numero nil 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                                 :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
                                 {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                                  :tyyppi :positiivinen-numero :kokonaisluku? true
-                                 :validoi [[:rajattu-numero nil 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                                 :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
                                 {:nimi :sairauspoissaolojatkuu
                                  :palstoja 1
                                  :tyyppi :checkbox

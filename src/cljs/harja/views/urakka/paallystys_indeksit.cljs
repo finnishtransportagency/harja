@@ -49,8 +49,8 @@
 
           {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero
            :leveys 1
-           :validoi [[:rajattu-numero-tai-tyhja nil 2000 2030 "Anna vuosiluku"]]}
+           :validoi [[:rajattu-numero-tai-tyhja 2000 2030 "Anna vuosiluku"]]}
           {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotason-kuukausi :tyyppi :positiivinen-numero
            :leveys 1
-           :validoi [[:rajattu-numero-tai-tyhja nil 1 12 "Anna kuukausi"]]}]
+           :validoi [[:rajattu-numero-tai-tyhja 1 12 "Anna kuukausi"]]}]
          @urakka/paallystysurakan-indeksitiedot]))))
