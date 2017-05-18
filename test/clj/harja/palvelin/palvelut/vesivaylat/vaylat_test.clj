@@ -34,8 +34,20 @@
                       urakkatieto-fixture))
 
 (deftest vaylien-haku-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [params {}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-vaylat +kayttaja-jvh+
                                 {})]
+    (is (s/valid? ::va-d/hae-vaylat-kysely params))
     (is (>= (count vastaus) 2))
-    (is (s/valid? ::va-d/hae-kokonaishintaiset-toimenpiteet-vastaus vastaus))))
+    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))))
+
+(deftest vaylien-haku-toimii-hakutekstilla
+  (let [params {:hakuteksti "hie"}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-vaylat +kayttaja-jvh+
+                                params)]
+    (is (s/valid? ::va-d/hae-vaylat-kysely params))
+    (is (= (count vastaus) 1))
+    (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))
+    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))))

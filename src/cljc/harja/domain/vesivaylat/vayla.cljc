@@ -60,5 +60,10 @@
 
 ;; Palvelut
 
-(s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
+(s/def ::hakuteksti string?)
+
+(s/def ::hae-vaylat-kysely
+  (s/keys :op-un [::hakuteksti]))
+
+(s/def ::hae-vaylat-vastaus
   (s/coll-of (s/keys :req [::id ::nimi ::tyyppi])))
