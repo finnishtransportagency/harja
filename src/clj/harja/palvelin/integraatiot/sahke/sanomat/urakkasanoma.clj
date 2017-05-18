@@ -7,7 +7,7 @@
                              tyyppi
                              alkupvm
                              loppupvm
-                             alueurakkanumero
+                             urakkanumero
                              nimi
                              hanke-id
                              yhteyshenkilo-id
@@ -23,7 +23,7 @@
      :vv_corporate_id urakoitsija-y-tunnus
      :schedule_finish (xml/formatoi-aikaleima loppupvm)
      :name nimi
-     :vv_alueurakkanro (str (urakkatyyppi/rakenna-sampon-tyyppi tyyppi) "-" alueurakkanumero)
+     :vv_alueurakkanro (str (urakkatyyppi/rakenna-sampon-tyyppi tyyppi) "-" urakkanumero)
      :resourceId (str "HAR-" yhteyshenkilo-id)
      :schedule_start (xml/formatoi-aikaleima alkupvm)
      :company_name urakoitsijanimi
