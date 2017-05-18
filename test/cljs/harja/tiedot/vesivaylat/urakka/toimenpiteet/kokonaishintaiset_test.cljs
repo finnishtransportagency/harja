@@ -230,7 +230,7 @@
                                                          :sopimus-id 777})]
       (is (= hakuargumentit {::tot/urakka-id 666
                              ::to/sopimus-id 777
-                             :tyyppi :kokonaishintaine}))
+                             :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest hakemisen-aloitus
