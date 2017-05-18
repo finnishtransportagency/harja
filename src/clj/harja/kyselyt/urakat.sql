@@ -745,7 +745,7 @@ SELECT
   u.loppupvm,
   u.indeksi,
   u.takuu_loppupvm,
-  u.urakkanro AS urakkanumero,
+  u.urakkanro,
   u.hanke     AS "hanke-id",
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus,
