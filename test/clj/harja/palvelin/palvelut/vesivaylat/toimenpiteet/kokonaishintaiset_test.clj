@@ -13,7 +13,9 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.toteuma :as tot]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -38,7 +40,9 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::tot/urakka-id urakka-id
-                       ::toi/sopimus-id sopimus-id}
+                       ::toi/sopimus-id sopimus-id
+                       :alku (c/to-date (t/date-time 2017 1 1))
+                       :loppu (c/to-date (t/date-time 2018 1 1))}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
@@ -67,3 +71,16 @@
                                 kysely-params)]
     (is (= (count vastaus) 0)
         "Ei vesiväyläjuttuja sivusopimuksella")))
+
+(deftest toimenpiteiden-haku-toimii-aikafiltterilla
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id
+                       :alku (c/to-date (t/date-time 2016 1 1))
+                       :loppu (c/to-date (t/date-time 2017 1 1))}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                kysely-params)]
+    (is (= (count vastaus) 0)
+        "Ei vesiväyläjuttuja tällä aikavälillä")))
