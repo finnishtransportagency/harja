@@ -43,7 +43,8 @@
 (def vaylahaku
   (reify protokollat/Haku
     (hae [_ teksti]
-      (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti}))]
+      (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti
+                                                  :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
 (defrecord Nakymassa? [nakymassa?])
