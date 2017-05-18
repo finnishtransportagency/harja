@@ -43,11 +43,8 @@
 (def vaylahaku
   (reify protokollat/Haku
     (hae [_ teksti]
-      ;; TODO Hae palvelimelta
-      (go [{::va/nimi "Kuopio, Iisalmen väylä"
-            ::va/id 1}
-           {::va/nimi "Varkaus, Kuopion väylä"
-            ::va/id 2}]))))
+      (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti}))]
+            vastaus)))))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
