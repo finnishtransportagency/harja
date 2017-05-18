@@ -1,9 +1,13 @@
-ALTER TABLE vv_vikailmoitus DROP COLUMN "toteuma-id";
-ALTER TABLE vv_vikailmoitus ADD COLUMN "toimenpide-id" INTEGER REFERENCES reimari_toimenpide(id);
+-- Muuta ylläpitokohde omaksi linkkitauluksi
 
--- Sopparin nimessä tai sampoid:ssä ei saa olle merkkejä, joita käytetään SQL-parsinnassa
-ALTER TABLE sopimus ADD CONSTRAINT sallittu_sampoid CHECK (nimi NOT LIKE '%=%');
-ALTER TABLE sopimus ADD CONSTRAINT sallittu_nimi CHECK (nimi NOT LIKE '%=%');
+CREATE TABLE tarkastus_yllapitokohde (
+  tarkastus integer PRIMARY KEY, -- ei voi olla viiteavain, koska tarkastus taulu shardattu
+  yllapitokohde integer REFERENCES yllapitokohde (id)
+);
 
--- Toimenpidekoodissa sama homma, kielletään SQL-parsinnassa käytetyt merkit
-ALTER TABLE toimenpidekoodi ADD CONSTRAINT sallittu_nimi CHECK (nimi NOT LIKE '%^%');
+CREATE INDEX tarkastus_yllapitokohde_ypk_idx ON tarkastus_yllapitokohde (yllapitokohde);
+
+INSERT INTO tarkastus_yllapitokohde (tarkastus, yllapitokohde)
+  SELECT id, yllapitokohde FROM tarkastus
+   WHERE yllapitokohde IS NOT NULL AND
+         yllapitokohde IN (SELECT id FROM yllapitokohde);

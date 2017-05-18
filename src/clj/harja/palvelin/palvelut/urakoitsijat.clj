@@ -14,7 +14,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 (declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat
-         tallenna-urakoitsija!)
+         tallenna-urakoitsija! hae-kaikki-urakoitsijat)
 
 
 (defrecord Urakoitsijat []
@@ -23,6 +23,9 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-urakoitsijat (fn [user _]
                                           (hae-urakoitsijat (:db this) user)))
+    (julkaise-palvelu (:http-palvelin this) :hae-kaikki-urakoitsijat
+                      (fn [user _]
+                        (hae-kaikki-urakoitsijat (:db this) user)))
     (julkaise-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat
                       (fn [user urakkatyyppi]
                         (urakkatyypin-urakoitsijat (:db this) user urakkatyyppi)))
@@ -42,6 +45,7 @@
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :hae-kaikki-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :vesivayla-urakoitsijat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakoitsija)
@@ -52,8 +56,18 @@
   "Palvelu, joka palauttaa kaikki urakoitsijat urakkatyypistä riippumatta."
   [db user]
   (oikeudet/ei-oikeustarkistusta!)
-  (-> (q/listaa-urakoitsijat db)
-      vec))
+  (vec (q/listaa-urakoitsijat db)))
+
+(defn hae-kaikki-urakoitsijat [db user]
+  (oikeudet/ei-oikeustarkistusta!)
+  (let [urakoitsijat (konv/sarakkeet-vektoriin
+                       (into []
+                             (map #(konv/alaviiva->rakenne %))
+                             (q/hae-kaikki-urakoitsijat db))
+                       {:urakka :urakat})]
+    (log/debug (pr-str urakoitsijat))
+    (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
+                               :inner {:urakat {:ns :harja.domain.urakka}}})))
 
 
 (defn urakkatyypin-urakoitsijat [db user urakkatyyppi]

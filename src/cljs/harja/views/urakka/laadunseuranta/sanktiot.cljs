@@ -222,7 +222,7 @@
                {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
                 :hae #(when (:summa %) (Math/abs (:summa %)))
                 :pakollinen? true :uusi-rivi? true :yksikko "€"
-                :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero nil 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+                :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
              (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
                {:otsikko "Indeksi" :nimi :indeksi :leveys 2

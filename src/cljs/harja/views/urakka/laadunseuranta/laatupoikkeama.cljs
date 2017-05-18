@@ -161,7 +161,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             :tyyppi      :numero
             :nimi        :summa
             :leveys      1
-            :validoi     [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero nil 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
+            :validoi     [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
             :muokattava? sanktio-domain/sakko?}
 
            (when (urakka/indeksi-kaytossa?)
