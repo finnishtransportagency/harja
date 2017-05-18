@@ -24,7 +24,8 @@
       :hae-vaylat
       (fn [user tiedot]
         (hae-vaylat db user tiedot))
-      {:vastaus-spec ::vay/hae-vaylat-kysely})
+      {:kysely-spec ::vay/hae-vaylat-kysely
+       :vastaus-spec ::vay/hae-vaylat-vastaus})
     this)
 
   (stop [this]
