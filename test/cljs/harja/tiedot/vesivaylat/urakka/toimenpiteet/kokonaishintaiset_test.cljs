@@ -146,51 +146,55 @@
 
 (deftest valintojen-paivittaminen
   (testing "Asetetaan uudet valinnat"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666
-                                                   :sopimus-id 777
-                                                   :aikavali [(t/now) (t/now)]
-                                                   :vaylatyyppi :muu
-                                                   :vayla 1
-                                                   :tyolaji :polju
-                                                   :tyoluokka :asennus-ja-huolto
-                                                   :toimenpide :autot-traktorit
-                                                   :vain-vikailmoitukset? true})
-                        vanha-tila)]
-      (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
-      (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
+    (vaadi-async-kutsut
+      #{tiedot/->HaeToimenpiteet}
+      (let [vanha-tila testitila
+           uusi-tila (e! (tiedot/->PaivitaValinnat {:urakka-id 666
+                                                    :sopimus-id 777
+                                                    :aikavali [(t/now) (t/now)]
+                                                    :vaylatyyppi :muu
+                                                    :vayla 1
+                                                    :tyolaji :polju
+                                                    :tyoluokka :asennus-ja-huolto
+                                                    :toimenpide :autot-traktorit
+                                                    :vain-vikailmoitukset? true})
+                         vanha-tila)]
+       (is (nil? (get-in vanha-tila [:valinnat :urakka-id])))
+       (is (= (get-in uusi-tila [:valinnat :urakka-id]) 666))
 
-      (is (= (get-in vanha-tila [:valinnat :aikavali]) [nil nil]))
-      (is (not= (get-in uusi-tila [:valinnat :aikavali]) [nil nil]))
+       (is (= (get-in vanha-tila [:valinnat :aikavali]) [nil nil]))
+       (is (not= (get-in uusi-tila [:valinnat :aikavali]) [nil nil]))
 
-      (is (nil? (get-in vanha-tila [:valinnat :sopimus-id])))
-      (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
+       (is (nil? (get-in vanha-tila [:valinnat :sopimus-id])))
+       (is (= (get-in uusi-tila [:valinnat :sopimus-id]) 777))
 
-      (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
-      (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
+       (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
+       (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-      (is (nil? (get-in vanha-tila [:valinnat :vayla])))
-      (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
+       (is (nil? (get-in vanha-tila [:valinnat :vayla])))
+       (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
 
-      (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
-      (is (= (get-in uusi-tila [:valinnat :tyolaji]) :polju))
+       (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
+       (is (= (get-in uusi-tila [:valinnat :tyolaji]) :polju))
 
-      (is (= (get-in vanha-tila [:valinnat :tyoluokka]) :kuljetuskaluston-huolto-ja-kunnossapito))
-      (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))
+       (is (= (get-in vanha-tila [:valinnat :tyoluokka]) :kuljetuskaluston-huolto-ja-kunnossapito))
+       (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))
 
-      (is (= (get-in vanha-tila [:valinnat :toimenpide]) :alukset-ja-veneet))
-      (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))
+       (is (= (get-in vanha-tila [:valinnat :toimenpide]) :alukset-ja-veneet))
+       (is (= (get-in uusi-tila [:valinnat :toimenpide]) :autot-traktorit))
 
-      (is (false? (get-in vanha-tila [:valinnat :vain-vikailmoitukset?])))
-      (is (true? (get-in uusi-tila [:valinnat :vain-vikailmoitukset?])))))
+       (is (false? (get-in vanha-tila [:valinnat :vain-vikailmoitukset?])))
+       (is (true? (get-in uusi-tila [:valinnat :vain-vikailmoitukset?]))))))
 
   (testing "Asetetaan vain yksi valinta"
-    (let [vanha-tila {}
-          uusi-tila (e! (tiedot/->PaivitaValinnat {:vaylatyyppi :muu
-                                                   :foo :bar})
-                        vanha-tila)]
-      (is (nil? (:valinnat vanha-tila)))
-      (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu})))))
+    (vaadi-async-kutsut
+      #{tiedot/->HaeToimenpiteet}
+      (let [vanha-tila {}
+           uusi-tila (e! (tiedot/->PaivitaValinnat {:vaylatyyppi :muu
+                                                    :foo :bar})
+                         vanha-tila)]
+       (is (nil? (:valinnat vanha-tila)))
+       (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu}))))))
 
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
