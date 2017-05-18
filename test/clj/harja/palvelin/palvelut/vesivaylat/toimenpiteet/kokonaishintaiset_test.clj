@@ -96,7 +96,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (is (>= (count vastaus) 4)))))
+      (is (>= (count vastaus) 4))))
 
   (testing "Väyläfiltteri suodattaa toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -107,7 +107,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (is (= (count vastaus) 0))
+      (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylällä"))))
 
 (deftest toimenpiteiden-haku-toimii-vaylatyyppifiltterilla
@@ -121,7 +121,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (is (>= (count vastaus) 4)))))
+      (is (>= (count vastaus) 4))))
 
   (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -133,7 +133,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (is (= (count vastaus) 0))
+      (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylätyypillä"))))
 
 (deftest toimenpiteiden-haku-ei-toimi-virheellisilla-argumenteilla
