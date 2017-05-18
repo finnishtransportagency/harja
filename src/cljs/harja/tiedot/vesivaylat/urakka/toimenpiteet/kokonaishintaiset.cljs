@@ -139,19 +139,19 @@
           tulos! (tuck/send-async! ->ToimenpiteetHaettu)
           fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
       (when-not (:haku-kaynnissa? app)
-        (go
-          (try
-            (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-              (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
+        (try
+          (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
+            (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
+              (go
                 (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                  (if (k/virhe? vastaus)
-                    (fail! vastaus)
-                    (tulos! vastaus)))
-                (do (error "Hakuargumentit eivät ole validit: " (pr-str hakuargumentit))
-                    (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
-            (catch :default e
-              (fail! nil)
-              (throw e)))))
+                 (if (k/virhe? vastaus)
+                   (fail! vastaus)
+                   (tulos! vastaus))))
+              (do (error "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))
+                  (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+          (catch :default e
+            (fail! nil)
+            (throw e))))
       (assoc app :haku-kaynnissa? true)))
 
   ToimenpiteetHaettu
