@@ -58,6 +58,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä Muhoksen urakassa")))
 
@@ -69,6 +70,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä sivusopimuksella")))
 
@@ -82,6 +84,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä tällä aikavälillä")))
 
@@ -96,6 +99,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4))))
 
   (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä"
@@ -112,6 +116,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0))))
 
   (testing "Väyläfiltteri suodattaa toimenpiteet"
@@ -123,6 +128,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylällä"))))
 
@@ -137,6 +143,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4))))
 
   (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
@@ -149,6 +156,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylätyypillä"))))
 
@@ -162,6 +170,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 1))))
 
   (testing "Vikailmoituksettomat löytyy"
@@ -173,6 +182,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 3))))
 
   (testing "Vikailmoituksettomat löytyy"
@@ -184,6 +194,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 3)))))
 
 (deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
@@ -261,6 +272,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+      (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -280,6 +292,7 @@
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::tot/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}]
+    (is (s/valid? ::toi/hae-kokonaishintaiset-toimenpiteet-kysely kysely-params))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kokonaishintaiset-toimenpiteet +kayttaja-ulle+
                                            kysely-params)))))
