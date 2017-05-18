@@ -21,7 +21,7 @@
                 "Muokkaa hanketta"
                 "Luo uusi hanke")
      :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))
-     :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+     :voi-muokata? (oikeudet/hallinta-vesivaylat)
      :footer-fn (fn [hanke]
                   [napit/tallenna
                    "Tallenna hanke"

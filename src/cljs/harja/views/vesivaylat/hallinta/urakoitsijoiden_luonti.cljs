@@ -10,7 +10,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt]))
 
 (defn urakan-nimi-ja-pvm [urakat]
   [apply
@@ -20,53 +21,60 @@
      (map ::u/nimi urakat)
      (map tiedot/urakan-aikavali-str urakat))])
 
-(defn luontilomake [e! {:keys [valittu-urakoitsija tallennus-kaynnissa?] :as app}]
-  (let [urakat (tiedot/urakoitsijan-urakat valittu-urakoitsija)]
-    [:div
-    [napit/takaisin "Takaisin luetteloon"
-     #(e! (tiedot/->ValitseUrakoitsija nil))
-     {:disabled tallennus-kaynnissa?}]
-    [lomake/lomake
-     {:otsikko (if (::o/id valittu-urakoitsija)
-                 "Muokkaa urakoitsijaa"
-                 "Luo uusi urakoitsija")
-      :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu (lomake/ilman-lomaketietoja %)))
-      :voi-muokata? #(oikeudet/hallinta-vesivaylat)
-      :footer-fn (fn [urakoitsija]
-                   [napit/tallenna
-                    "Tallenna urakoitsija"
-                    #(e! (tiedot/->TallennaUrakoitsija (lomake/ilman-lomaketietoja urakoitsija)))
-                    {:ikoni (ikonit/tallenna)
-                     :disabled (or tallennus-kaynnissa?
-                                   (not (oikeudet/hallinta-vesivaylat))
-                                   (not (lomake/voi-tallentaa? urakoitsija)))
-                     :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-     [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
-      {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9}
-      {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
-      {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
-      (when (some not-empty (vals urakat))
-        (lomake/ryhma
-         {:otsikko "Urakat"}
-         (when (not-empty (:alkava urakat))
-           {:otsikko "Alkavat urakat"
-           :nimi :alkavat-urakat
-           :tyyppi :komponentti
-           :palstoja 2
-           :komponentti (fn [_] [urakan-nimi-ja-pvm (:alkava urakat)])})
-         (when (not-empty (:kaynnissa urakat))
-           {:otsikko "Käynnissä olevat urakat"
-           :nimi :kaynnissa-urakat
-           :tyyppi :komponentti
-           :palstoja 2
-           :komponentti (fn [_] [urakan-nimi-ja-pvm (:kaynnissa urakat)])})
-         (when (not-empty (:paattynyt urakat))
-           {:otsikko "Päättyneet urakat"
-           :nimi :paattyneet-urakat
-           :tyyppi :komponentti
-           :palstoja 2
-           :komponentti (fn [_] [urakan-nimi-ja-pvm (:paattynyt urakat)])})))]
-     valittu-urakoitsija]]))
+(defn luontilomake [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tiedot/->HaeLomakevaihtoehdot)))
+    (fn [e! {:keys [valittu-urakoitsija tallennus-kaynnissa? haetut-ytunnukset] :as app}]
+      (let [urakat (tiedot/urakoitsijan-urakat valittu-urakoitsija)]
+       [:div
+        [napit/takaisin "Takaisin luetteloon"
+         #(e! (tiedot/->ValitseUrakoitsija nil))
+         {:disabled tallennus-kaynnissa?}]
+        [lomake/lomake
+         {:otsikko (if (::o/id valittu-urakoitsija)
+                     "Muokkaa urakoitsijaa"
+                     "Luo uusi urakoitsija")
+          :muokkaa! #(e! (tiedot/->UrakoitsijaaMuokattu %))
+          :voi-muokata? (and (oikeudet/hallinta-vesivaylat)
+                              (::o/harjassa-luotu? valittu-urakoitsija))
+          :footer-fn (fn [urakoitsija]
+                       [napit/tallenna
+                        "Tallenna urakoitsija"
+                        #(e! (tiedot/->TallennaUrakoitsija (lomake/ilman-lomaketietoja urakoitsija)))
+                        {:ikoni (ikonit/tallenna)
+                         :disabled (or tallennus-kaynnissa?
+                                       (not (oikeudet/hallinta-vesivaylat))
+                                       (not (lomake/voi-tallentaa? urakoitsija)))
+                         :tallennus-kaynnissa? tallennus-kaynnissa?}])}
+         [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
+          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9
+           :validoi [(fn [tunnus] (when-let [urakoitsija (haetut-ytunnukset tunnus)]
+                                    (str "Tunnus " tunnus " on käytössa urakoitsijalla " urakoitsija)))
+                     [:ytunnus]]}
+          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
+          {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
+          (when (some not-empty (vals urakat))
+            (lomake/ryhma
+              {:otsikko "Urakat"}
+              (when (not-empty (:alkava urakat))
+                {:otsikko "Alkavat urakat"
+                 :nimi :alkavat-urakat
+                 :tyyppi :komponentti
+                 :palstoja 2
+                 :komponentti (fn [_] [urakan-nimi-ja-pvm (:alkava urakat)])})
+              (when (not-empty (:kaynnissa urakat))
+                {:otsikko "Käynnissä olevat urakat"
+                 :nimi :kaynnissa-urakat
+                 :tyyppi :komponentti
+                 :palstoja 2
+                 :komponentti (fn [_] [urakan-nimi-ja-pvm (:kaynnissa urakat)])})
+              (when (not-empty (:paattynyt urakat))
+                {:otsikko "Päättyneet urakat"
+                 :nimi :paattyneet-urakat
+                 :tyyppi :komponentti
+                 :palstoja 2
+                 :komponentti (fn [_] [urakan-nimi-ja-pvm (:paattynyt urakat)])})))]
+         valittu-urakoitsija]]))))
 
 (defn urakoitsijagrid [e! app]
   (komp/luo
@@ -91,7 +99,8 @@
          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
          {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
          {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
-          :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}]
+          :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}
+         {:otsikko "Luotu Harjassa?" :nimi ::o/harjassa-luotu? :fmt fmt/totuus}]
         haetut-urakoitsijat]])))
 
 (defn vesivaylaurakoitsijoiden-luonti* [e! app]

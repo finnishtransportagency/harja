@@ -40,9 +40,11 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.hallintayksikot-test]
-            [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot]
-            [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat]
-            [harja.tiedot.urakka.urakan-tyotunnit-test]))
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot-test]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat-test]
+            [harja.tiedot.urakka.urakan-tyotunnit-test]
+            [harja.ui.validointi-test]
+            ))
 
 (doo-tests 'harja.pvm-test
            'harja.ui.dom-test
@@ -84,8 +86,9 @@
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.hallintayksikot-test
-           'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot
-           'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot-test
+           'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat-test
            'harja.tiedot.urakka.urakan-tyotunnit-test
+           'harja.ui.validointi-test
            ;; uusi testi tähän
            )
