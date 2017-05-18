@@ -202,7 +202,7 @@
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-    (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet)))))))
+    (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]

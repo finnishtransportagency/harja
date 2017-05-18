@@ -53,7 +53,7 @@
 (defrecord PaivitaValinnat [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
-(defrecord HaeToimenpiteet [])
+(defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
@@ -80,13 +80,18 @@
     (assoc app :nakymassa? nakymassa?))
 
   PaivitaValinnat
+  ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
+  ;; jotta näkymä pysyy synkassa valintojen kanssa
   (process-event [{tiedot :tiedot} app]
-    (assoc app :valinnat (merge (:valinnat app)
+    (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
                                               :vaylatyyppi :vayla
                                               :vain-vikailmoitukset?
-                                              :tyolaji :tyoluokka :toimenpide]))))
+                                              :tyolaji :tyoluokka :toimenpide]))
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (haku uudet-valinnat)
+      (assoc app :valinnat uudet-valinnat)))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
@@ -123,13 +128,17 @@
 
 
   HaeToimenpiteet
-  (process-event [_ app]
-    (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
+  (process-event [{valinnat :valinnat} app]
+    (let [valinnat (if (empty? valinnat)
+                     (:valinnat app)
+                     valinnat)
+          tulos! (tuck/send-async! ->ToimenpiteetHaettu)
           fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
       (when-not (:haku-kaynnissa? app)
         (go
           (try
-            (let [hakuargumentit (muodosta-hakuargumentit (:valinnat app))]
+            (let [hakuargumentit (muodosta-hakuargumentit valinnat)]
               (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
                 (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
                   (if (k/virhe? vastaus)
