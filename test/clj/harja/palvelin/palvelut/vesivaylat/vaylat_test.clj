@@ -22,8 +22,8 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :vv-vaylat (component/using
-                                                (va/->Vaylat)
-                                                [:db :http-palvelin])))))
+                                     (va/->Vaylat)
+                                     [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -39,8 +39,9 @@
                                 :hae-vaylat +kayttaja-jvh+
                                 {})]
     (is (s/valid? ::va-d/hae-vaylat-kysely params))
-    (is (>= (count vastaus) 2))
-    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))))
+    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))
+
+    (is (>= (count vastaus) 2))))
 
 (deftest vaylien-haku-toimii-hakutekstilla
   (let [params {:hakuteksti "hie"}
@@ -48,6 +49,39 @@
                                 :hae-vaylat +kayttaja-jvh+
                                 params)]
     (is (s/valid? ::va-d/hae-vaylat-kysely params))
+    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))
+
     (is (= (count vastaus) 1))
-    (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))
-    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))))
+    (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))))
+
+(deftest vaylien-haku-toimii-vaylatyypilla
+  (let [params {:vaylatyyppi :kauppamerenkulku}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-vaylat +kayttaja-jvh+
+                                params)]
+    (is (s/valid? ::va-d/hae-vaylat-kysely params))
+    (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))
+
+    (is (>= (count vastaus) 2))))
+
+(deftest vaylien-haku-toimii-hakutekstilla-ja-vaylatyypilla
+  (testing "Väylä ja väylätyyppi ovat oikein"
+    (let [params {:hakuteksti "hie"
+                  :vaylatyyppi :kauppamerenkulku}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-vaylat +kayttaja-jvh+
+                                  params)]
+      (is (s/valid? ::va-d/hae-vaylat-kysely params))
+      (is (s/valid? ::va-d/hae-vaylat-vastaus vastaus))
+
+      (is (= (count vastaus) 1))
+      (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))))
+
+  (testing "Väylätyyppi on eri kuin haettava väylä"
+    (let [params {:hakuteksti "hie"
+                  :vaylatyyppi :muu}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-vaylat +kayttaja-jvh+
+                                  params)]
+      (is (= (count vastaus) 0))
+      (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä")))))
