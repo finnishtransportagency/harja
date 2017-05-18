@@ -119,7 +119,8 @@
 
       (when (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
         (let [kohteen-tiedot (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                      db {:idt [kohde-id]}))]
+                                      db {:idt [kohde-id]}))
+              kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
           (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
             {:fim fim :email email :kohteen-tiedot kohteen-tiedot
              :tiemerkintapvm tiemerkintapvm
