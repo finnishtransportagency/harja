@@ -15,6 +15,7 @@
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.napit :as napit]
+
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
@@ -92,8 +93,9 @@
                                         (not (lomake/voi-tallentaa? urakka)))
                           :tallennus-kaynnissa? tallennus-kaynnissa?
                           }])}
-          [{:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string
-            :pakollinen? true}
+          [(lomake/rivi
+             {:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string :pakollinen? true}
+             {:otsikko "Urakkanumero" :nimi ::u/urakkanro :tyyppi :string :pakollinen? true})
            (lomake/rivi
              {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true}
              {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
