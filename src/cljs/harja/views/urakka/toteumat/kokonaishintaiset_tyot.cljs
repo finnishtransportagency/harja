@@ -211,7 +211,8 @@
              :nimi :suorittajan-ytunnus
              :hae (comp :ytunnus :suorittaja)
              :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
-             :pituus-max 256
+             :pituus-max 9
+             :validoi [[:ytunnus]]
              :tyyppi :string
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
             (lomake/ryhma
