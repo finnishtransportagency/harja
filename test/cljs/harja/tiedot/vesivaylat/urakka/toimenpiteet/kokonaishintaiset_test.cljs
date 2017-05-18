@@ -24,7 +24,7 @@
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
                                             ::va/id 1}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/vikakorjaus true
@@ -33,7 +33,7 @@
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
                                             ::va/id 1}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
@@ -42,7 +42,7 @@
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
                                             ::va/id 1}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
@@ -50,7 +50,7 @@
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/id 2}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
@@ -58,7 +58,7 @@
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/id 2}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
@@ -66,7 +66,7 @@
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/id 2}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
@@ -74,7 +74,7 @@
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
                                             ::va/id 2}
-                                ::to/:asennus-ja-huolto
+                                ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
