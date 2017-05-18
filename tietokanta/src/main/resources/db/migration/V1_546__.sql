@@ -1,4 +1,4 @@
-CREATE TYPE toimenpidehaun_komponentti AS (id INTEGER, tila TEXT);
+CREATE TYPE toimenpidehaun_komponentti AS (id INTEGER, nimi TEXT, tila TEXT);
 CREATE OR REPLACE FUNCTION toimenpidehaun_komponentit_ok(komponentit toimenpidehaun_komponentti[])
 RETURNS BOOLEAN AS $$
   DECLARE komponentti toimenpidehaun_komponentti;

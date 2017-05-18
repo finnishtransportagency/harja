@@ -14,14 +14,13 @@
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [clojure.future :refer :all]))
 
-
-
 (define-tables
   ["reimari_urakoitsija" ::vv-urakoitsija/urakoitsija]
   ["reimari_sopimus" ::vv-sopimus/sopimus]
   ["reimari_turvalaite" ::vv-turvalaite/turvalaite]
   ["reimari_alus" ::vv-alus/alus]
   ["reimari_vayla" ::vv-vayla/vayla]
+  ["toimenpidehaun_komponentti" ::vv-toimenpide/toimenpidehaun-komponentti]
   ["reimari_toimenpide" ::vv-toimenpide/toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -29,6 +28,12 @@
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu? ;; FIXME: poistettu on TIMESTAMP tietyöilmoituksessa
     "poistaja" ::m/poistaja-id}])
+
+(s/def ::vv-toimenpide/toimenpidehaun-komponentti ;; fixme: ilman käsin määrittelyä tahtoo mapin ::toimenpide/{id,nimi,tila} avaimilla tässä?
+  (s/keys :opt [:harja.domain.vesivaylat.komponentti/id
+                :harja.domain.vesivaylat.komponentti/tila
+                :harja.domain.vesivaylat.komponentti/nimi]))
+
 
 (def kaikki-toimenpiteen-kentat
   #{::vv-toimenpide/id
@@ -44,12 +49,12 @@
     ::vv-toimenpide/reimari-muokattu
     ::vv-toimenpide/reimari-asiakas
     ::vv-toimenpide/reimari-vastuuhenkilo
-
     ::vv-toimenpide/reimari-alus
     ::vv-toimenpide/reimari-urakoitsija
     ::vv-toimenpide/reimari-sopimus
     ::vv-toimenpide/reimari-turvalaite
     ::vv-toimenpide/reimari-vayla
+    ::vv-toimenpide/reimari-komponentit
 
     ::m/muokattu
     ::m/muokkaaja-id

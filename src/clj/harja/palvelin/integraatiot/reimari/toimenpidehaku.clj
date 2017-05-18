@@ -12,7 +12,26 @@
             [specql.core :as specql]
             [clojure.string :as s]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.tyokalut.lukot :as lukko]))
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [clojure.set :refer [rename-keys]]))
+
+(def avainmuunnokset {::toimenpide/id ::toimenpide/reimari-id
+
+                      ::toimenpide/luotu ::toimenpide/reimari-luotu
+                      ::toimenpide/muokattu ::toimenpide/reimari-muokattu
+                      ::toimenpide/urakoitsija ::toimenpide/reimari-urakoitsija
+                      ::toimenpide/sopimus ::toimenpide/reimari-sopimus
+                      ::toimenpide/turvalaite ::toimenpide/reimari-turvalaite
+                      ::toimenpide/alus ::toimenpide/reimari-alus
+                      ::toimenpide/vayla ::toimenpide/reimari-vayla
+                      ::toimenpide/tyolaji ::toimenpide/reimari-tyolaji
+                      ::toimenpide/tyoluokka ::toimenpide/reimari-tyoluokka
+                      ::toimenpide/tyyppi ::toimenpide/reimari-tyyppi
+                      ::toimenpide/tila ::toimenpide/reimari-tila
+                      ::toimenpide/asiakas ::toimenpide/reimari-asiakas
+                      ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
+                      ::toimenpide/komponentit ::toimenpide/reimari-komponentit
+                      })
 
 (defn kasittele-vastaus [db vastaus-xml]
   (log/debug "kasittele-vastaus" vastaus-xml)
@@ -20,11 +39,10 @@
 
     (log/debug "sanoman-tiedot:" sanoman-tiedot)
     (doseq [toimenpide-tiedot sanoman-tiedot]
-      (def *tp toimenpide-tiedot)
-      (specql/upsert! db ::toimenpide/toimenpide {::toimenpide/reimari-id (:id toimenpide-tiedot)
-                                                  ::toimenpide/suoritettu (::toimenpide/suoritettu toimenpide-tiedot)
-                                                  ;; jne
-                                                  }))))
+
+      (clojure.pprint/pprint (rename-keys toimenpide-tiedot avainmuunnokset))
+      (specql/upsert! db ::toimenpide/toimenpide
+                      (rename-keys toimenpide-tiedot avainmuunnokset)))))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
 
@@ -37,7 +55,6 @@
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
     (kasittele-vastaus body)))
-
 
 
 (defn- formatoi-aika [muutosaika]
