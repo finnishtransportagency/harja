@@ -49,9 +49,9 @@
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
-        tyolaji (::vv-toimenpide/tyolaji tiedot)
-        tyoluokka (::vv-toimenpide/tyoluokka tiedot)
-        toimenpide (::vv-toimenpide/toimenpide tiedot)
+        tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
+        tyoluokka (::vv-toimenpide/reimari-tyoluokka tiedot)
+        toimenpide (::vv-toimenpide/reimari-toimenpide tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/toimenpide (clojure.set/union
                                                              vv-toimenpide/perustiedot
                                                              vv-toimenpide/viittaukset

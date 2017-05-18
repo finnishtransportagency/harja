@@ -66,9 +66,9 @@
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
-                                   ::to/tyolaji (to/reimari-tyolaji-avain->koodi tyolaji)
-                                   ::to/tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka)
-                                   ::to/toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
+                                   ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi tyolaji)
+                                   ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka)
+                                   ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?

@@ -203,7 +203,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyolaji "1022541802"}
+                         ::toi/reimari-tyolaji "1022541802"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -213,7 +213,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyolaji "1022541666"}
+                         ::toi/reimari-tyolaji "1022541807"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -224,7 +224,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyoluokka "1022541905"}
+                         ::toi/reimari-tyoluokka "1022541905"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -234,7 +234,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyoluokka "1022541666"}
+                         ::toi/reimari-tyoluokka "1022541920"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -245,7 +245,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/toimenpide "1022542001"}
+                         ::toi/reimari-toimenpide "1022542001"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -255,7 +255,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/toimenpide "1022542666"}
+                         ::toi/reimari-toimenpide "1022542046"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -266,9 +266,9 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyolaji "1022541802"
-                         ::toi/toimenpide "1022542001"
-                         ::toi/tyoluokka "1022541905"}
+                         ::toi/reimari-tyolaji "1022541802"
+                         ::toi/reimari-toimenpide "1022542001"
+                         ::toi/reimari-tyoluokka "1022541905"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -279,9 +279,9 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/tyolaji "1022541666"
-                         ::toi/toimenpide "1022542666"
-                         ::toi/tyoluokka "102254166"}
+                         ::toi/reimari-tyolaji "1022541807"
+                         ::toi/reimari-toimenpide "1022542046"
+                         ::toi/reimari-tyoluokka "1022541920"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
