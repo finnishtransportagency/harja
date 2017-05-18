@@ -59,7 +59,7 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (= (count vastaus) 0)
-        "Ei vesiväyläjuttuja Muhoksen urakassa")))
+        "Ei toimenpiteitä Muhoksen urakassa")))
 
 (deftest toimenpiteiden-haku-toimii-sopimusfiltterilla
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -70,7 +70,7 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (= (count vastaus) 0)
-        "Ei vesiväyläjuttuja sivusopimuksella")))
+        "Ei toimenpiteitä sivusopimuksella")))
 
 (deftest toimenpiteiden-haku-toimii-aikafiltterilla
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -83,4 +83,29 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (= (count vastaus) 0)
-        "Ei vesiväyläjuttuja tällä aikavälillä")))
+        "Ei toimenpiteitä tällä aikavälillä")))
+
+(deftest toimenpiteiden-haku-toimii-vaylafiltterilla
+  (testing "Väyläfiltteri löytää toimenpiteet"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          vayla-id (hae-vayla-hietarasaari)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/vayla-id vayla-id}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (is (>= (count vastaus) 4)))))
+
+  (testing "Väyläfiltteri suodattaa toimenpiteet"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/vayla-id -1}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (is (= (count vastaus) 0))
+          "Ei toimenpiteitä tällä väylällä"))))

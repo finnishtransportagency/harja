@@ -304,6 +304,11 @@
                    FROM   sopimus
                    WHERE  nimi = 'Helsingin väyläyksikön pääsopimus'"))))
 
+(defn hae-vayla-hietarasaari []
+  (ffirst (q (str "SELECT id
+                   FROM   vv_vayla
+                   WHERE  nimi = 'Hietasaaren läntinen rinnakkaisväylä'"))))
+
 (defn hae-helsingin-vesivaylaurakan-sivusopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
