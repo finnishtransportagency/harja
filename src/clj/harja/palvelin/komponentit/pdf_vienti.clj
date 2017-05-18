@@ -14,7 +14,8 @@
             [taoensso.timbre :as log]
             [ring.util.io :refer [piped-input-stream]]
             [harja.palvelin.komponentit.vienti :as vienti]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clojure.string :as str])
   (:import javax.xml.transform.sax.SAXResult
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
@@ -65,7 +66,8 @@
   (->PdfVienti (atom {}) (luo-fop-factory)))
 
 (defn- escape [hiccup]
-  (walk/postwalk #(if (string? %)
+  (walk/postwalk #(if (and (string? %)
+                           (not (str/starts-with? % "<![CDATA[")))
                     (h %)
                     %) hiccup))
 
