@@ -58,7 +58,7 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
-(defn- muodosta-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+(defn- kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                         vaylatyyppi vayla
                                         tyolaji tyoluokka toimenpide
                                         vain-vikailmoitukset?] :as valinnat}]
@@ -139,7 +139,7 @@
       (when-not (:haku-kaynnissa? app)
         (go
           (try
-            (let [hakuargumentit (muodosta-hakuargumentit valinnat)]
+            (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
               (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
                 (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
                   (if (k/virhe? vastaus)
