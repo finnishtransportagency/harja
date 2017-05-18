@@ -11,7 +11,7 @@
 
 (defn hae-vaylat [db user {:keys [hakuteksti] :as tiedot}]
   ;; FIXME Kuka saa lukea kaikki väylät?
-  (vec (fetch (:db harja.palvelin.main/harja-jarjestelma) ::vay/vayla vay/perustiedot
+  (vec (fetch db ::vay/vayla vay/perustiedot
               (when hakuteksti
                 {::vay/nimi (op/ilike (str hakuteksti "%"))}))))
 
