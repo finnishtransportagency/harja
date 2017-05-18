@@ -228,7 +228,9 @@
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
                                                          :sopimus-id 777})]
-      (is (= hakuargumentit {::tot/urakka-id 666 ::to/sopimus-id 777}))
+      (is (= hakuargumentit {::tot/urakka-id 666
+                             ::to/sopimus-id 777
+                             :tyyppi :kokonaishintaine}))
       (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest hakemisen-aloitus
