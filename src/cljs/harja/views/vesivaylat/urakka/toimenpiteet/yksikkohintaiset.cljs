@@ -21,7 +21,8 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def otsikoiden-checkbox-sijainti "94.3%")
