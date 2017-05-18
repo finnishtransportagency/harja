@@ -102,7 +102,7 @@
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
   (when (and (contains? @setti-atom data) (neg? (:id rivi)))
-    (or viesti "Arvon pitää löytyä joukosta " (clojure.string/join ", " @setti-atom))))
+    (or viesti (str "Arvon pitää löytyä joukosta " (clojure.string/join ", " @setti-atom)))))
 
 (defmethod validoi-saanto :ei-tyhja [_ _ data _ _ & [viesti]]
   (when (str/blank? data)
