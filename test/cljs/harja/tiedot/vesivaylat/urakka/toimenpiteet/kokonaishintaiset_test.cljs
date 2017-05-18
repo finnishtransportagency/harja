@@ -4,10 +4,12 @@
             [harja.loki :refer [log]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
+            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [cljs.spec.alpha :as s]))
 
 (def testitila {:nakymassa? true
                 :infolaatikko-nakyvissa? false
@@ -197,6 +199,37 @@
              ::va/id 1}
             {::va/nimi "Varkaus, Kuopion väylä"
              ::va/id 2}]))))
+
+(deftest hakuargumenttien-muodostus
+  (testing "Hakuargumenttien muodostus toimii"
+    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+                                                         :sopimus-id 777
+                                                         :aikavali [(t/now) (t/now)]
+                                                         :vaylatyyppi :muu
+                                                         :vayla 1
+                                                         :tyolaji :polju
+                                                         :tyoluokka :asennus-ja-huolto
+                                                         :toimenpide :autot-traktorit
+                                                         :vain-vikailmoitukset? true})]
+      (is (= hakuargumentit
+            {::tot/urakka-id 666
+             ::to/sopimus-id 777
+             ::va/vaylatyyppi :muu
+             ::to/vayla-id 1
+             ::to/tyolaji :polju
+             ::to/tyoluokka :asennus-ja-huolto
+             ::to/toimenpide :autot-traktorit
+             :alku (t/now)
+             :loppu (t/now)
+             :vikailmoitukset? true
+             :tyyppi :kokonaishintainen}))
+      (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+
+  (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
+    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+                                                         :sopimus-id 777})]
+      (is (= hakuargumentit {::tot/urakka-id 666 ::to/sopimus-id 777}))
+      (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest hakemisen-aloitus
   (vaadi-async-kutsut

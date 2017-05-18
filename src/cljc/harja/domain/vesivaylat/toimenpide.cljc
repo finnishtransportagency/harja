@@ -33,6 +33,10 @@
    "1022541804" :vesiliikennemerkit
    "1022540501" :kiintea-turvalaite})
 
+(defn reimari-tyolaji-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyolajit %) avain)
+                 (keys reimari-tyolajit))))
+
 (defn reimari-tyolaji-fmt [tyyppi]
   (case tyyppi
     :tukityot "Tukityöt"
@@ -78,6 +82,10 @@
    "1022541924" :luotsitoiminnan-palvelut
    "1022541907" :telematiikkalaitteet
    "1022541910" :telematiikkalaitteet})
+
+(defn reimari-tyoluokka-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyoluokat %) avain)
+                 (keys reimari-tyoluokat))))
 
 (defn reimari-tyoluokka-fmt [tyoluokka]
   (case tyoluokka
@@ -169,6 +177,10 @@ reimari-toimenpidetyypit
    "1022542055" :luotsiajo
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
+
+(defn reimari-toimenpide-avain->koodi [avain]
+  (first (filter #(= (get reimari-toimenpidetyypit %) avain)
+                 (keys reimari-toimenpidetyypit))))
 
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide

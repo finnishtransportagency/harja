@@ -58,7 +58,7 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
-(defn- kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                        vaylatyyppi vayla
                                        tyolaji tyoluokka toimenpide
                                        vain-vikailmoitukset?] :as valinnat}]
@@ -66,9 +66,9 @@
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
-                                   ::to/tyolaji tyolaji
-                                   ::to/tyoluokka tyoluokka
-                                   ::to/toimenpide toimenpide
+                                   ::to/tyolaji (to/reimari-tyolaji-avain->koodi tyolaji)
+                                   ::to/tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka)
+                                   ::to/toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?
