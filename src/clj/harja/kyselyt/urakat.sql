@@ -347,12 +347,10 @@ VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: u
         :sopimustyyppi :: sopimustyyppi, :urakkanumero);
 
 -- name: luo-harjassa-luotu-urakka<!
-INSERT INTO urakka (nimi, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
+INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
                     harjassa_luotu, luotu, luoja)
-    VALUES (:nimi, :alkupvm, :loppupvm,
-                   :alue, :hallintayksikko,
-                   :urakoitsija, :hanke, 'vesivayla-hoito', TRUE,
-                   NOW(), :kayttaja);
+VALUES (:nimi, :urakkanro, :alkupvm, :loppupvm, :alue, :hallintayksikko, :urakoitsija, :hanke, 'vesivayla-hoito',
+        TRUE, NOW(), :kayttaja);
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
@@ -372,14 +370,15 @@ WHERE id = :id;
 -- name: paivita-harjassa-luotu-urakka<!
 -- Päivittää Harjassa luotua (vesiväylä)urakkaa
 UPDATE urakka
-  SET nimi = :nimi,
-    alkupvm = :alkupvm,
-    loppupvm = :loppupvm,
-    alue = :alue,
-    hallintayksikko = :hallintayksikko,
-    urakoitsija = :urakoitsija,
-    muokattu = NOW(),
-    muokkaaja = :kayttaja
+SET nimi          = :nimi,
+  urakkanro       = :urakkanro,
+  alkupvm         = :alkupvm,
+  loppupvm        = :loppupvm,
+  alue            = :alue,
+  hallintayksikko = :hallintayksikko,
+  urakoitsija     = :urakoitsija,
+  muokattu        = NOW(),
+  muokkaaja       = :kayttaja
 WHERE id = :id AND harjassa_luotu IS TRUE;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
@@ -748,7 +747,7 @@ SELECT
   u.loppupvm,
   u.indeksi,
   u.takuu_loppupvm,
-  u.urakkanro AS alueurakkanumero,
+  u.urakkanro,
   u.hanke     AS "hanke-id",
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus,
