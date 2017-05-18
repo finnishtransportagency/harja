@@ -186,6 +186,28 @@
                                   kysely-params)]
       (is (>= (count vastaus) 3)))))
 
+(deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
+  (testing "Työlajilla suodatus toimii"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyolaji "1022541802"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 4)))
+
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/tyolaji "1022541666"}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (= (count vastaus) 0)))))
+
 (deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
