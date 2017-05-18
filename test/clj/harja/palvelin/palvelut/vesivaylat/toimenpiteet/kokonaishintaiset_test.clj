@@ -141,3 +141,12 @@
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                                 kysely-params)))))
+
+(deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-kokonaishintaiset-toimenpiteet +kayttaja-ulle+
+                                           kysely-params)))))
