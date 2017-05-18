@@ -228,6 +228,7 @@
       db
       {:id (::u/id urakka)
        :nimi (::u/nimi urakka)
+       :urakkanro (::u/urakkanro urakka)
        :alkupvm (::u/alkupvm urakka)
        :loppupvm (::u/loppupvm urakka)
        :alue (::u/alue urakka)
@@ -245,6 +246,7 @@
     (q/luo-harjassa-luotu-urakka<!
       db
       {:nimi (::u/nimi urakka)
+       :urakkanro (::u/urakkanro urakka)
        :alkupvm (::u/alkupvm urakka)
        :loppupvm (::u/loppupvm urakka)
        :alue (::u/alue urakka)
