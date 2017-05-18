@@ -8,12 +8,13 @@
              :refer
              [julkaise-palvelu poista-palvelu]]
             [harja.transit :as t]
-            [hiccup.core :refer [html]]
+            [hiccup.core :refer [html h]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
             [taoensso.timbre :as log]
             [ring.util.io :refer [piped-input-stream]]
-            [harja.palvelin.komponentit.vienti :as vienti])
+            [harja.palvelin.komponentit.vienti :as vienti]
+            [clojure.walk :as walk])
   (:import javax.xml.transform.sax.SAXResult
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
@@ -63,10 +64,15 @@
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))
 
+(defn- escape [hiccup]
+  (walk/postwalk #(if (string? %)
+                    (h %)
+                    %) hiccup))
+
 (defn- hiccup->pdf [fop-factory hiccup out]
   (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
         xform (.newTransformer (TransformerFactory/newInstance))
-        src (StreamSource. (java.io.StringReader. (html hiccup)))
+        src (StreamSource. (java.io.StringReader. (html (escape hiccup))))
         res (SAXResult. (.getDefaultHandler fop))]
     (.transform xform src res)))
 
