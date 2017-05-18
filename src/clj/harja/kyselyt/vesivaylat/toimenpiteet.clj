@@ -42,7 +42,7 @@
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
   (let [urakka-id (::tot/urakka-id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
-        vaylatyyppi (::vv-toimenpide/vaylatyyppi tiedot)
+        vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
         tyolaji (::vv-toimenpide/tyolaji tiedot)
         tyoluokka (::vv-toimenpide/tyoluokka tiedot)
