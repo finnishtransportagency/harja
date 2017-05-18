@@ -152,6 +152,40 @@
       (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylätyypillä"))))
 
+(deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
+  (testing "Vikailmoituksellit löytyy"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         :vikailmoitukset? true}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (= (count vastaus) 1))))
+
+  (testing "Vikailmoituksettomat löytyy"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         :vikailmoitukset? false}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 3))))
+
+  (testing "Vikailmoituksettomat löytyy"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         :vikailmoitukset? nil}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (>= (count vastaus) 3)))))
+
 (deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)

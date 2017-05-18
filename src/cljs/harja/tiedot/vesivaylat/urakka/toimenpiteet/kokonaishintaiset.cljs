@@ -71,7 +71,7 @@
                                    ::to/toimenpide toimenpide
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
-                                   :vikakorjaukseet? vain-vikailmoitukset?
+                                   :vikailmoitukset? vain-vikailmoitukset?
                                    :tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event

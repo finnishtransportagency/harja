@@ -336,7 +336,7 @@ reimari-tilat
           ::tyolaji ::tyoluokka ::toimenpide]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
-             ::vikakorjaukset? ::tyyppi ::urakoitsija-id]))
+             ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
