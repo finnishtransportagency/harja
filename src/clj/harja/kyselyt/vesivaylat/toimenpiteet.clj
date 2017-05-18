@@ -68,7 +68,7 @@
                                   (when (and alku loppu)
                                     {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
                                   (when (and vaylatyyppi (not vayla-id))
-                                    {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
+                                    {::vv-toimenpide/vayla {::vv-vayla/tyyppi (name vaylatyyppi)}})
                                   (when vayla-id
                                     {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
                                   (when (and tyolaji (not tyoluokka) (not toimenpide))

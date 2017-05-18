@@ -109,3 +109,29 @@
                                   kysely-params)]
       (is (is (= (count vastaus) 0))
           "Ei toimenpiteitä tällä väylällä"))))
+
+(deftest toimenpiteiden-haku-toimii-vaylatyyppifiltterilla
+  (testing "Väylätyyppifiltteri löytää toimenpiteet"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          vaylatyyppi :kauppamerenkulku
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::va/vaylatyyppi vaylatyyppi}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (is (>= (count vastaus) 4)))))
+
+  (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          vaylatyyppi :muu
+          kysely-params {::tot/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::va/vaylatyyppi vaylatyyppi}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (is (= (count vastaus) 0))
+          "Ei toimenpiteitä tällä väylätyypillä"))))
