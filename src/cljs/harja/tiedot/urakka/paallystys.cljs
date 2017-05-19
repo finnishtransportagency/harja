@@ -127,7 +127,7 @@
 (def raekoko-grid-skeema
   {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
    :tasaa :oikea
-   :validoi [[:rajattu-numero nil 0 99]]})
+   :validoi [[:rajattu-numero 0 99]]})
 
 (def tyomenetelma-grid-skeema
   {:otsikko "Pääll. työ\u00ADmenetelmä"

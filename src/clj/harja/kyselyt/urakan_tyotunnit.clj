@@ -3,9 +3,12 @@
     [harja.kyselyt.specql-db :refer [define-tables]]
     [harja.domain.urakan-tyotunnit :as ut]
     [specql.core :refer [fetch update! insert! upsert!]]
+    [jeesql.core :refer [defqueries]]
     [specql.op :as op]
     [harja.pvm :as pvm]
     [harja.kyselyt.konversio :as konv]))
+
+(defqueries "harja/kyselyt/urakan_tyotunnit.sql")
 
 (defn tallenna-urakan-tyotunnit [db tyotunnit]
   (upsert! db ::ut/urakan-tyotunnit #{::ut/urakka-id ::ut/vuosi ::ut/vuosikolmannes} tyotunnit))

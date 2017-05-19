@@ -601,4 +601,5 @@
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat ur])
-         [urakan-tyotunnit ur]]))))
+         (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+           [urakan-tyotunnit ur])]))))

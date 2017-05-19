@@ -4,7 +4,8 @@
             [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu jvh-fixture]]
             [harja.testutils.shared-testutils :as u]
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
-            [harja.domain.urakan-tyotunnit :as ut])
+            [harja.domain.urakan-tyotunnit :as ut]
+            [harja.loki :refer [log]])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -19,30 +20,30 @@
                       :ensimmainen-vuosikolmannes 444
                       :toinen-vuosikolmannes 555
                       :kolmas-vuosikolmannes 666}]
-        odotetut [{:ut/urakka-id 666
-                   :ut/vuosi 2017
-                   :ut/vuosikolmannes 1
-                   :ut/tyotunnit 111}
-                  {:ut/urakka-id 666
-                   :ut/vuosi 2017
-                   :ut/vuosikolmannes 2
-                   :ut/tyotunnit 222}
-                  {:ut/urakka-id 666
-                   :ut/vuosi 2017
-                   :ut/vuosikolmannes 3
-                   :ut/tyotunnit 222}
-                  {:ut/urakka-id 666
-                   :ut/vuosi 2016
-                   :ut/vuosikolmannes 1
-                   :ut/tyotunnit 444}
-                  {:ut/urakka-id 666
-                   :ut/vuosi 2016
-                   :ut/vuosikolmannes 2
-                   :ut/tyotunnit 555}
-                  {:ut/urakka-id 666
-                   :ut/vuosi 2016
-                   :ut/vuosikolmannes 3
-                   :ut/tyotunnit 555}]
+        odotetut [{::ut/urakka-id 666
+                   ::ut/vuosi 2017
+                   ::ut/vuosikolmannes 1
+                   ::ut/tyotunnit 111}
+                  {::ut/urakka-id 666
+                   ::ut/vuosi 2017
+                   ::ut/vuosikolmannes 2
+                   ::ut/tyotunnit 222}
+                  {::ut/urakka-id 666
+                   ::ut/vuosi 2017
+                   ::ut/vuosikolmannes 3
+                   ::ut/tyotunnit 222}
+                  {::ut/urakka-id 666
+                   ::ut/vuosi 2016
+                   ::ut/vuosikolmannes 1
+                   ::ut/tyotunnit 444}
+                  {::ut/urakka-id 666
+                   ::ut/vuosi 2016
+                   ::ut/vuosikolmannes 2
+                   ::ut/tyotunnit 555}
+                  {::ut/urakka-id 666
+                   ::ut/vuosi 2016
+                   ::ut/vuosikolmannes 3
+                   ::ut/tyotunnit 555}]
         tallennettavat (urakan-tyotunnit/tyotunnit-tallennettavana 666 naytettavat)]
     (is (= odotetut tallennettavat))))
 
@@ -50,12 +51,12 @@
   (let [vuodet [{:vuosi 2017}
                 {:vuosi 2016}
                 {:vuosi 2015}]
-        palvelusta [{:ut/tyotunnit 666
-                     :ut/id 27
-                     :ut/vuosi 2017
-                     :ut/lahetys-onnistunut false
-                     :ut/vuosikolmannes 2
-                     :ut/urakka-id 4}]
+        palvelusta [{::ut/tyotunnit 666
+                     ::ut/id 27
+                     ::ut/vuosi 2017
+                     ::ut/lahetys-onnistunut false
+                     ::ut/vuosikolmannes 2
+                     ::ut/urakka-id 4}]
         naytettavat (urakan-tyotunnit/tyotunnit-naytettavana vuodet palvelusta)
         odotetut [{:kolmas-vuosikolmannes nil
                    :vuosi 2017

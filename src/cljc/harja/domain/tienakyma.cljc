@@ -1,6 +1,6 @@
 (ns harja.domain.tienakyma
   "Tienäkymän tietojen spec-määritykset"
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.infopaneeli :as infopaneeli]
             #?@(:clj [[clojure.future :refer :all]])

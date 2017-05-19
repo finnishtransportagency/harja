@@ -91,43 +91,44 @@
 (defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
   viesti)
 
-(defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
-  (when
-    (and (tr/validi-osoite? data)
-         (or (= 0 (:numero data)) (not (get-in taulukko reittipolku))))
-    viesti))
+(defmethod validoi-saanto :validi-tr [_ _ data rivi _ & [viesti reittipolku]]
+  (let [osoite (tr/normalisoi data)]
+    (when
+     (and (tr/validi-osoite? data)
+          (or (= 0 (::tr/tie osoite)) (not (get-in rivi reittipolku))))
+      (or viesti "Tarkasta tr-osoite"))))
 
-(defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
+(defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi _ & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))
   (when (and (contains? @setti-atom data) (neg? (:id rivi)))
-    viesti))
+    (or viesti (str "Arvon pitää löytyä joukosta " (clojure.string/join ", " @setti-atom)))))
 
-(defmethod validoi-saanto :ei-tyhja [_ nimi data _ _ & [viesti]]
+(defmethod validoi-saanto :ei-tyhja [_ _ data _ _ & [viesti]]
   (when (str/blank? data)
-    viesti))
+    (or viesti "Anna arvo")))
 
-(defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ nimi data rivi _ & [avain arvo viesti]]
+(defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ _ data rivi _ & [avain arvo viesti]]
   (when (and (= (avain rivi) arvo)
              (< data 0))
-    viesti))
+    (or viesti "Arvon pitää olla yli nolla")))
 
 (defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
-  [_ nimi data rivi _ & [toinen-avain viesti]]
+  [_ _ data rivi _ & [toinen-avain viesti]]
   (when (and (str/blank? data)
              (not (toinen-avain rivi)))
-    viesti))
+    (or viesti "Anna arvo")))
 
-(defmethod validoi-saanto :ei-tulevaisuudessa [_ nimi data _ _ & [viesti]]
+(defmethod validoi-saanto :ei-tulevaisuudessa [_ _ data _ _ & [viesti]]
   (when (and data (t/after? data (pvm/nyt)))
-    viesti))
+    (or viesti "Päivämäärä ei voi olla tulevaisuudessa")))
 
-(defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
+(defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ _ data rivi _ & [viesti]]
   (when (and (or (= data :suljettu) (= data :kasitelty))
-             (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
-    viesti))
+             (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet rivi))))
+    (or viesti "Avoimia korjaavia toimenpiteitä")))
 
-(defmethod validoi-saanto :joku-naista [_ _ data rivi _ & avaimet-ja-viesti]
+(defmethod validoi-saanto :joku-naista [_ _ _ rivi _ & avaimet-ja-viesti]
   (let [avaimet (if (string? (last avaimet-ja-viesti)) (butlast avaimet-ja-viesti) avaimet-ja-viesti)
         viesti (if (string? (last avaimet-ja-viesti))
                  (last avaimet-ja-viesti)
@@ -142,24 +143,24 @@
     ;; Data on uniikkia jos sama arvo esiintyy taulukossa vain kerran
     (when (and (not (nil? data))
                (> (count (get rivit-arvoittain data)) 1))
-      viesti)))
+      (or viesti "Arvon pitää olla uniikki"))))
 
 (defmethod validoi-saanto :pvm-kentan-jalkeen [_ _ data rivi _ & [avain viesti]]
   (when (and
           (avain rivi)
           (pvm/ennen? data (avain rivi)))
-    viesti))
+    (or viesti (str "Päivämäärän pitää olla " (pvm/pvm (avain rivi)) " jälkeen"))))
 
-(defmethod validoi-saanto :pvm-toisen-pvmn-jalkeen [_ _ data rivi _ & [vertailtava-pvm viesti]]
+(defmethod validoi-saanto :pvm-toisen-pvmn-jalkeen [_ _ data _ _ & [vertailtava-pvm viesti]]
   (when (and
           vertailtava-pvm
           (pvm/ennen? data vertailtava-pvm))
-    viesti))
+    (or viesti (str "Päivämäärän pitää olla " (pvm/pvm vertailtava-pvm) " jälkeen"))))
 
-(defmethod validoi-saanto :pvm-ennen [_ _ data rivi _ & [vertailtava-pvm viesti]]
+(defmethod validoi-saanto :pvm-ennen [_ _ data _ _ & [vertailtava-pvm viesti]]
   (when (and data vertailtava-pvm
              (not (pvm/ennen? data vertailtava-pvm)))
-    viesti))
+    (or viesti (str "Päivämäärän pitää olla " (pvm/pvm vertailtava-pvm) " ennen"))))
 
 (defmethod validoi-saanto :aika-jalkeen [_ _ data rivi _ & [vertailtava-aika-tai-kentan-nimi viesti]]
   (let [vertailtava-aika (if (keyword? vertailtava-aika-tai-kentan-nimi)
@@ -167,42 +168,58 @@
                            vertailtava-aika-tai-kentan-nimi)]
     (when (and data vertailtava-aika
                (not (pvm/aika-jalkeen? data vertailtava-aika)))
-      viesti)))
+      (or viesti "Tarkasta aika"))))
 
 (defmethod validoi-saanto :toinen-arvo-annettu-ensin [_ _ data rivi _ & [avain viesti]]
   (when (and
           data
           (nil? (avain rivi)))
-    viesti))
+    (or viesti "Molempia arvoja ei voi syöttää")))
 
 (defmethod validoi-saanto :ei-tyhja-jos-toinen-arvo-annettu [_ _ data rivi _ & [avain viesti]]
   (when (and
           (nil? data)
           (some? (avain rivi)))
-    viesti))
+    (or viesti "Syötä molemmat arvot")))
 
-(defmethod validoi-saanto :ainakin-toinen-annettu [_ _ data rivi _ & [[avain1 avain2] viesti]]
+(defmethod validoi-saanto :ainakin-toinen-annettu [_ _ _ rivi _ & [[avain1 avain2] viesti]]
   (when-not (or (avain1 rivi)
                 (avain2 rivi))
-    viesti))
+    (or viesti "Syötä ainakin toinen arvo")))
 
-(defmethod validoi-saanto :yllapitoluokka [_ _ data rivi _ _ & [viesti]]
+(defmethod validoi-saanto :yllapitoluokka [_ _ data _ _ & [viesti]]
   (when-not (or (nil? data) (= data 1) (= data 2) (= data 3))
     (or viesti "Anna ylläpitoluokka välillä 1 \u2014 3")))
 
-(defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
+(defmethod validoi-saanto :lampotila [_ _ data _ _ & [viesti]]
   (when-not (<= -55 data 55)
     (or viesti "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")))
 
-(defmethod validoi-saanto :rajattu-numero [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+(defmethod validoi-saanto :rajattu-numero [_ _ data _ _ & [min-arvo max-arvo viesti]]
   (when-not (<= min-arvo data max-arvo)
     (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo ""))))
 
-(defmethod validoi-saanto :rajattu-numero-tai-tyhja [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+(defmethod validoi-saanto :rajattu-numero-tai-tyhja [_ _ data _ _ & [min-arvo max-arvo viesti]]
   (and
     data
     (when-not (<= min-arvo data max-arvo)
       (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo "")))))
+
+(defmethod validoi-saanto :ytunnus [_ _ data _ _ & [viesti]]
+  (and
+    data
+    (let [ ;; Halkaistaan tunnus välimerkin kohdalta
+          [tunnus tarkastusmerkki :as halkaistu] (str/split data #"-")
+          ;; Kun pudotetaan pois numerot, pitäisi tulos olla ["" "-" nil]
+          [etuosa valimerkki loppuosa] (str/split data #"\d+")]
+      (when-not (and (= 9 (count data))
+                     (= 2 (count halkaistu))
+                     (= 7 (count tunnus))
+                     (= 1 (count tarkastusmerkki))
+                     (empty? etuosa)
+                     (= "-" valimerkki)
+                     (nil? loppuosa))
+       (or viesti "Y-tunnuksen pitää olla 7 numeroa, väliviiva, ja tarkastusnumero.")))))
 
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."

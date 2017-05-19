@@ -1,8 +1,19 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<t:tyoaikajakso xmlns:t="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit">
+<tyot:tyoaikajakso xmlns:tyot="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit">
+    <sampohankenimi>string</sampohankenimi>
+    <sampohankeid>string</sampohankeid>
+    <tilaajanvastuuhenkilokayttajatunnus>string</tilaajanvastuuhenkilokayttajatunnus>
+    <tilaajanvastuuhenkiloetunimi>string</tilaajanvastuuhenkiloetunimi>
+    <tilaajanvastuuhenkilosukunimi>string</tilaajanvastuuhenkilosukunimi>
+    <tilaajanvastuuhenkilosposti>string</tilaajanvastuuhenkilosposti>
+    <sampourakkanimi>string</sampourakkanimi>
+    <sampourakkaid>string</sampourakkaid>
+    <urakanpaattymispvm>2008-09-29</urakanpaattymispvm>
+    <urakkavaylamuoto>Tie</urakkavaylamuoto>
+    <urakkatyyppi>muut</urakkatyyppi>
+    <elyalue>KES ELY</elyalue>
+    <alueurakkanro>string</alueurakkanro>
     <lahdejarjestelma>string</lahdejarjestelma>
-    <urakkasampoid>string</urakkasampoid>
     <vuosi>1900</vuosi>
-    <vuosikolmannes>1</vuosikolmannes>
+    <vuosikolmannes>3</vuosikolmannes>
     <tyotunnit>3</tyotunnit>
-</t:tyoaikajakso>
+</tyot:tyoaikajakso>
