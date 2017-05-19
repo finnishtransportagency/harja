@@ -12,6 +12,7 @@
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [taoensso.timbre :as log]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as t-pdf]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch]]
@@ -172,6 +173,19 @@
                                 1)]
 
     (is (s/valid? ::t/ilmoitus vastaus))))
+
+(defn poimi [predikaatti tiedot]
+  (let [osuma (atom nil)
+        edellinen (atom nil)]
+    (clojure.walk/postwalk (fn [x]
+                             (when (predikaatti x) (reset! osuma x)) x) tiedot)
+    @osuma))
+
+(deftest pdf-kentat
+  (let [pdf-puu-str (-> mock-ilmoitus t-pdf/tietyoilmoitus-pdf str)]
+    (is (sisaltaa "alkaa" "2017"))))
+
+
 
 ;; TODO Lisää testit:
 ;; :hae-urakan-tiedot-tietyoilmoitukselle

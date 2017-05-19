@@ -8,15 +8,24 @@
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
+              ;; :portti 7731
               :yhteyspoolin-koko 16
+              ;; :kayttaja "harja"
+              ;; :salasana "s_harja"
               :kayttaja "harja"
-              :salasana ""}
+              :salasana ""
+              }
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      :portti 5432
+                      ;; :portti 5432
+                      ;; :portti 7731
                       :yhteyspoolin-koko 16
+                      ;; :kayttaja "harja"
+                      ;; :salasana "s_harja"
                       :kayttaja "harja"
-                      :salasana ""}
+                      :salasana ""
+
+                      }
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -39,7 +48,7 @@
        }
 
  :sonja
- {:url "tcp://localhost:61616"
+ {:url "tcp://harja-c7-dev.lxd:61616"
   :kayttaja "harja"
   :salasana "harjaxx"
   :tyyppi :activemq}

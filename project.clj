@@ -13,6 +13,7 @@
                  [prismatic/schema "1.1.6"]
                  [org.clojure/core.async "0.2.395"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
+                 ;; [com.cognitect/transit-cljs "0.8.225"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  [com.cognitect/transit-clj "0.8.297"]
 
@@ -76,7 +77,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.8"]
-                 [figwheel "0.5.9"]
+                 [figwheel "0.5.10"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
@@ -125,7 +126,7 @@
                  [dk.ative/docjure "1.11.0"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [figwheel-sidecar "0.5.8"]
+                 [figwheel-sidecar "0.5.10"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
@@ -139,9 +140,15 @@
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [org.clojure/test.check "0.9.0"]]
+                                  [org.clojure/test.check "0.9.0"]
+                                  [binaryage/devtools "0.9.2"]
+                                  [figwheel-sidecar "0.5.10"]
+                                  [com.cemerick/piggieback "0.2.1"]
+                                  ]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.1.0"]]
+                             [test2junit "1.1.0"]
+                             [cider/cider-nrepl "0.15.0-SNAPSHOT"]
+                             ]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
@@ -158,7 +165,7 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.9"]
+            [lein-figwheel "0.5.10"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
@@ -170,7 +177,8 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-                :figwheel true
+                :figwheel {:websocket-host "harja-dev2.lxd"
+                           }
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -213,7 +221,7 @@
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-                :figwheel true
+                :figwheel {:websocket-host "harja-dev2.lxd"}
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
@@ -283,14 +291,21 @@
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)
+                 :init (do
+                         (set! *print-length* 50)
+                         (harja.palvelin.main/-main)
+                         )
+                 :host "0.0.0.0"
                  :port 4005
                  :timeout 120000
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false}
+             :server-ip "0.0.0.0"
+             :reload-clj-files false
+             ;; :nrepl-port 6922
+             :nrepl-host "0.0.0.0"}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
