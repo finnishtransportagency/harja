@@ -48,12 +48,7 @@
             vastaus)))))
 
 (defrecord Nakymassa? [nakymassa?])
-(defrecord ValitseToimenpide [tiedot])
-(defrecord ValitseTyolaji [tiedot])
-(defrecord ValitseVayla [tiedot])
 (defrecord PaivitaValinnat [tiedot])
-(defrecord AsetaInfolaatikonTila [uusi-tila])
-
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
@@ -95,39 +90,6 @@
           haku (tuck/send-async! ->HaeToimenpiteet)]
       (haku uudet-valinnat)
       (assoc app :valinnat uudet-valinnat)))
-
-  ValitseToimenpide
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (let [toimenpide-id (:id tiedot)
-          valinta (:valinta tiedot)
-          paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
-                                    (assoc :valittu? valinta))]
-      (assoc app :toimenpiteet (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                     toimenpiteet))))
-
-  ValitseTyolaji
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (let [tyolaji (:tyolaji tiedot)
-          valinta (:valinta tiedot)
-          paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
-                                           (assoc % :valittu? valinta)
-                                           %)
-                                        toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
-
-  ValitseVayla
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (let [vayla-id (:vayla-id tiedot)
-          valinta (:valinta tiedot)
-          paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla ::va/id]) vayla-id)
-                                           (assoc % :valittu? valinta)
-                                           %)
-                                        toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
-
-  AsetaInfolaatikonTila
-  (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila))
 
 
   HaeToimenpiteet
