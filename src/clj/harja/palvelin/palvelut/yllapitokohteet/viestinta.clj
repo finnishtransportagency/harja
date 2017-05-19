@@ -33,7 +33,8 @@
 
 (defn- viesti-kohde-valmis-merkintaan [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                tiemerkintapvm ilmoittaja
-                                               tiemerkintaurakka-nimi]}]
+                                               tiemerkintaurakka-nimi
+                                               pituus]}]
   (html
     [:div
      [:p (format "Kohde '%s' on valmis tiemerkintään %s."
@@ -43,6 +44,7 @@
                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                              kohde-osoite
                                              {:teksti-tie? false})]
+                              ["Pituus" pituus]
                               ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
                               ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
                               ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
@@ -145,7 +147,7 @@
   [{:keys [fim email kohteen-tiedot tiemerkintapvm ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
-                tiemerkintaurakka-nimi]} kohteen-tiedot
+                tiemerkintaurakka-nimi pituus]} kohteen-tiedot
         kohde-osoite {:tr-numero tr-numero
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
@@ -164,6 +166,7 @@
          :viesti-body (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
                                                        :kohde-nimi kohde-nimi
                                                        :kohde-osoite kohde-osoite
+                                                       :pituus pituus
                                                        :tiemerkintapvm tiemerkintapvm
                                                        :ilmoittaja ilmoittaja
                                                        :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})}))))
