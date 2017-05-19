@@ -142,16 +142,17 @@
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
             (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
-              (go
-                (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                 (if (k/virhe? vastaus)
-                   (fail! vastaus)
-                   (tulos! vastaus))))
+              (do
+                (go
+                 (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
+                   (if (k/virhe? vastaus)
+                     (fail! vastaus)
+                     (tulos! vastaus))))
+                (assoc app :haku-kaynnissa? true))
               (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
-            (throw e))))
-      (assoc app :haku-kaynnissa? true)))
+            (throw e))))))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
