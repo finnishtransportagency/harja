@@ -5,13 +5,15 @@
   ks. resources/xsd/reimari/harja.xsd"
   (:require [harja.tyokalut.xml :as xml]
             [clojure.data.zip.xml :as z]
+            [taoensso.timbre :as log]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.vesivaylat.sopimus :as sopimus]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
             [harja.domain.vesivaylat.vayla :as vayla]
             [clojure.string :as str]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.set :as set]))
 
 
 (defn- aikaleima [text]
@@ -53,22 +55,26 @@
 
 (defn- lue-toimenpide [toimenpide]
   (merge
-   (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide" (name %))
-                        toimenpide-attribuutit)
-   (when-let [a (z/xml1-> toimenpide :alus)]
-     {::toimenpide/alus (lue-alus a)})
-   (when-let [s (z/xml1-> toimenpide :sopimus)]
-     {::toimenpide/sopimus (lue-sopimus s)})
-   (when-let [tl (z/xml1-> toimenpide :turvalaite)]
-     {::toimenpide/turvalaite (lue-turvalaite tl)})
-   (when-let [v (z/xml1-> toimenpide :vayla)]
-     {::toimenpide/vayla (lue-vayla v)})))
+    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide" (name %))
+                         toimenpide-attribuutit)
+    (when-let [a (z/xml1-> toimenpide :alus)]
+      {::toimenpide/alus (lue-alus a)})
+    (when-let [s (z/xml1-> toimenpide :sopimus)]
+      {::toimenpide/sopimus (lue-sopimus s)})
+    (when-let [tl (z/xml1-> toimenpide :turvalaite)]
+      {::toimenpide/turvalaite (lue-turvalaite tl)})
+    (when-let [v (z/xml1-> toimenpide :vayla)]
+      {::toimenpide/vayla (lue-vayla v)})))
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
-  (z/xml-> vastaus-xml
-           :HaeToimenpiteetResponse
-           :toimenpide
-           lue-toimenpide))
+  (let [muunnetut (z/xml-> vastaus-xml
+                           :HaeToimenpiteetResponse
+                           :toimenpide
+                           lue-toimenpide)]
+    (mapv #(set/rename-keys % {::toimenpide/toimenpide ::toimenpide/reimari-toimenpidetyyppi
+                               ::toimenpide/tyolaji ::toimenpide/reimari-tyolaji
+                               ::toimenpide/tyoluokka ::toimenpide/reimari-tyoluokka})
+          muunnetut)))
 
 (defn lue-hae-toimenpiteet-vastaus [xml]
   (hae-toimenpiteet-vastaus (xml/lue xml "UTF-8")))
