@@ -56,6 +56,11 @@
                        {:nro identity
                         :nimi identity}))
 
+(defn- lue-urakoitsija [v]
+  (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.urakoitsija" (name %))
+                       {:id #(Integer/parseInt %)
+                        :nimi identity}))
+
 (defn- lue-toimenpide [toimenpide]
   (merge
    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide" (name %))
@@ -68,6 +73,8 @@
      {::toimenpide/turvalaite (lue-turvalaite tl)})
    (when-let [v (z/xml1-> toimenpide :vayla)]
      {::toimenpide/vayla (lue-vayla v)})
+   (when-let [v (z/xml1-> toimenpide :urakoitsija)]
+     {::toimenpide/urakoitsija (lue-urakoitsija v)})
    {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
