@@ -152,7 +152,7 @@
                                                    :aikavali [(t/now) (t/now)]
                                                    :vaylatyyppi :muu
                                                    :vayla 1
-                                                   :tyolaji :polju
+                                                   :tyolaji :poijut
                                                    :tyoluokka :asennus-ja-huolto
                                                    :toimenpide :autot-traktorit
                                                    :vain-vikailmoitukset? true})
@@ -173,7 +173,7 @@
       (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
 
       (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
-      (is (= (get-in uusi-tila [:valinnat :tyolaji]) :polju))
+      (is (= (get-in uusi-tila [:valinnat :tyolaji]) :poijut))
 
       (is (= (get-in vanha-tila [:valinnat :tyoluokka]) :kuljetuskaluston-huolto-ja-kunnossapito))
       (is (= (get-in uusi-tila [:valinnat :tyoluokka]) :asennus-ja-huolto))
@@ -207,7 +207,7 @@
                                                          :aikavali [(t/now) (t/now)]
                                                          :vaylatyyppi :muu
                                                          :vayla 1
-                                                         :tyolaji :polju
+                                                         :tyolaji :poijut
                                                          :tyoluokka :asennus-ja-huolto
                                                          :toimenpide :autot-traktorit
                                                          :vain-vikailmoitukset? true})]
@@ -216,7 +216,7 @@
              ::to/sopimus-id 777
              ::va/vaylatyyppi :muu
              ::to/vayla-id 1
-             ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :polju)
+             ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
              ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
              ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi :autot-traktorit)
              :alku (t/now)
