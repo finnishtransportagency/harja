@@ -73,16 +73,16 @@
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     ;; TODO Osa tiedoista puuttuu
-    "Urakoitsija" "-"
-    "Sopimusnumero" "-"
+    "Urakoitsija" "?"
+    "Sopimusnumero" "?"
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)
     "Toimenpide" (::to/toimenpide toimenpide)
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
-    "Urakoitsijan vastuuhenkilö" "-"
-    "Henkilölukumaara" "-"]
+    "Urakoitsijan vastuuhenkilö" "?"
+    "Henkilölukumaara" "?"]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Käytetyt komponentit"]
     [:table
@@ -94,9 +94,9 @@
      [:tbody
       [:tr
        ;; TODO Komponenttitiedot puuttuu
-       [:td "-"]
-       [:td "-"]
-       [:td "-"]]]]]])
+       [:td "?"]
+       [:td "?"]
+       [:td "?"]]]]]])
 
 (defn- paneelin-sisalto [e! toimenpiteet]
   [grid/grid
