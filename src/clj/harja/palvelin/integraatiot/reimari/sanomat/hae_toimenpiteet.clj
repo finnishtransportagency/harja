@@ -57,7 +57,7 @@
   (merge
     (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
                                               (name (case %
-                                                      :tyyppi :eimari-toimenpidetyyppi
+                                                      :tyyppi :reimari-toimenpidetyyppi
                                                       :tyolaji :reimari-tyolaji
                                                       :tyoluokka :reimari-tyoluokka
                                                       %)))
