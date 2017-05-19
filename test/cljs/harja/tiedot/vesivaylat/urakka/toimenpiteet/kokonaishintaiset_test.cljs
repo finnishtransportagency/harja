@@ -252,12 +252,13 @@
 
       (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
 
-  (testing "Haku on jo käynnissä"
+  (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
 
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})
-                                       {:haku-kaynnissa? true})))))))
+      (let [tila {:foo :bar :id 1}]
+        (is (= tila (e! (tiedot/HaeToimenpiteet tila))))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
