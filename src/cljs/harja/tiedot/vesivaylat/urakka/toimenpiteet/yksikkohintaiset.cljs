@@ -14,7 +14,8 @@
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.spec-apurit :as spec-apurit]
-            [cljs.spec.alpha :as s])
+            [cljs.spec.alpha :as s]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -79,10 +80,7 @@
   ;; jotta näkymä pysyy synkassa valintojen kanssa
   (process-event [{tiedot :tiedot} app]
     (let [uudet-valinnat (merge (:valinnat app)
-                                (select-keys tiedot
-                                             [:urakka-id :sopimus-id :aikavali
-                                              :vaylatyyppi :vayla
-                                              :tyolaji :tyoluokka :toimenpide]))
+                                (select-keys tiedot jaettu/valintojen-avaimet))
           haku (tuck/send-async! ->HaeToimenpiteet)]
       (haku uudet-valinnat)
       (assoc app :valinnat uudet-valinnat)))

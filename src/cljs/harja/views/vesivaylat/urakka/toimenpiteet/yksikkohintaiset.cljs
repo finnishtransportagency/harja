@@ -31,7 +31,7 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
-       [jaettu/suodattimet e! app (:urakka valinnat) tiedot/vaylahaku (toolbar-napit e! app)]
+       [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku (toolbar-napit e! app)]
        [jaettu/listaus e! app [{:otsikko "Hinta" :hae (constantly "TODO") :leveys 10}]]])))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]

@@ -33,7 +33,9 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
-       [jaettu/suodattimet e! app (:urakka valinnat)
+       [jaettu/suodattimet e!
+        tiedot/->PaivitaValinnat
+        app (:urakka valinnat)
         tiedot/vaylahaku
         [[kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}

@@ -53,7 +53,7 @@
        [:td "-"]
        [:td "-"]]]]]])
 
-(defn- suodattimet-ja-toiminnot [e! app urakka vaylahaku lisasuodattimet toolbar-napit]
+(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]
   [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
@@ -63,7 +63,7 @@
      [valinnat/vaylatyyppi
       (r/wrap (get-in app [:valinnat :vaylatyyppi])
               (fn [uusi]
-                (e! (tiedot/->PaivitaValinnat {:vaylatyyppi uusi}))))
+                (e! (PaivitaValinnatKonstruktori {:vaylatyyppi uusi}))))
       (sort-by va/tyyppien-jarjestys (into [nil] va/tyypit))
       #(if % (va/tyyppi-fmt %) "Kaikki")]
 
@@ -73,29 +73,29 @@
                                                       :lahde vaylahaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
                                                          (fn [uusi]
-                                                           (e! (tiedot/->PaivitaValinnat {:vayla (::va/id uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:vayla (::va/id uusi)}))))}]]
 
     (into
       [:div
       [valinnat/tyolaji
        (r/wrap (get-in app [:valinnat :tyolaji])
                (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:tyolaji uusi}))))
-       (to/jarjesta-reimari-tyolajit (into [nil] (distinct (vals to/reimari-tyolajit))))
+                 (e! (PaivitaValinnatKonstruktori {:tyolaji uusi}))))
+       (to/jarjesta-reimari-tyolajit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyolajit))
        #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
 
       [valinnat/tyoluokka
        (r/wrap (get-in app [:valinnat :tyoluokka])
                (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:tyoluokka uusi}))))
-       (to/jarjesta-reimari-tyoluokat (into [nil] (distinct (vals to/reimari-tyoluokat))))
+                 (e! (PaivitaValinnatKonstruktori {:tyoluokka uusi}))))
+       (to/jarjesta-reimari-tyoluokat (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyoluokat))
        #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
 
       [valinnat/toimenpide
        (r/wrap (get-in app [:valinnat :toimenpide])
                (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:toimenpide uusi}))))
-       (to/jarjesta-reimari-toimenpidetyypit (into [nil] (distinct (vals to/reimari-toimenpidetyypit))))
+                 (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
+       (to/jarjesta-reimari-toimenpidetyypit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-toimenpidetyypit))
        #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]]
 
       lisasuodattimet)]
@@ -107,12 +107,12 @@
       toolbar-napit))])
 
 (defn suodattimet
-  ([e! app urakka vaylahaku toolbar-napit]
-    (suodattimet e! app urakka vaylahaku [] toolbar-napit))
-  ([e! app urakka vaylahaku lisasuodattimet toolbar-napit]
+  ([e! PaivitaValinnatKonstruktori app urakka vaylahaku toolbar-napit]
+    (suodattimet e! PaivitaValinnatKonstruktori app urakka vaylahaku [] toolbar-napit))
+  ([e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]
    [:div
     [debug app]
-    [suodattimet-ja-toiminnot e! app urakka vaylahaku lisasuodattimet toolbar-napit]]))
+    [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]]))
 
 ;;;;;;;;;;;;;;;;;
 ;; GRID / LISTAUS
@@ -122,41 +122,39 @@
 ;; FIXME Tämä ei aina osu täysin samalle Y-akselille gridissä olevien checkboksien kanssa
 ;; Ilmeisesti mahdoton määrittää arvoa, joka toimisi aina?
 
-(defn- toimenpiteet-tyolajilla [toimenpiteet tyolajit]
-  (filterv #(= (::to/tyolaji %) tyolajit) toimenpiteet))
+(defn vaylaotsikko [e! vaylan-toimenpiteet vayla]
+  (grid/otsikko
+    (grid/otsikkorivin-tiedot
+      (::va/nimi vayla)
+      (count vaylan-toimenpiteet))
+    {:id (::va/id vayla)
+     :otsikkokomponentit
+     [{:sijainti otsikoiden-checkbox-sijainti
+       :sisalto
+       (fn [_]
+         [kentat/tee-kentta
+          {:tyyppi :checkbox}
+          (r/wrap (tiedot/valinnan-tila vaylan-toimenpiteet)
+                  (fn [uusi]
+                    (e! (tiedot/->ValitseVayla {:vayla-id (::va/id vayla)
+                                                :valinta uusi}))))])}]}))
+
+(defn vaylaotsikko-ja-sisalto [e! toimenpiteet-vaylittain]
+  (fn [vayla]
+    (cons
+      ;; Väylän otsikko
+      (vaylaotsikko e! (get toimenpiteet-vaylittain vayla) vayla)
+      ;; Väylän toimenpiderivit
+      (get toimenpiteet-vaylittain vayla))))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet]
-  (let [vaylalla-ryhmiteltyna (group-by ::to/vayla toimenpiteet)
-        vaylat (keys vaylalla-ryhmiteltyna)]
-    (vec (mapcat (fn [vayla]
-                   (cons (grid/otsikko
-                           (grid/otsikkorivin-tiedot
-                             (::va/nimi vayla)
-                             (count (to/toimenpiteet-vaylalla toimenpiteet (::va/id vayla))))
-                           {:id (::va/id vayla)
-                            :otsikkokomponentit
-                            [{:sijainti otsikoiden-checkbox-sijainti
-                              :sisalto
-                              (fn [{:keys [id]}]
-                                (let [vayla-id id
-                                      vaylan-toimenpiteet (to/toimenpiteet-vaylalla toimenpiteet vayla-id)
-                                      kaikki-valittu? (every? true? (map :valittu? vaylan-toimenpiteet))
-                                      mitaan-ei-valittu? (every? (comp not true?)
-                                                                 (map :valittu? vaylan-toimenpiteet))]
-                                  [kentat/tee-kentta
-                                   {:tyyppi :checkbox}
-                                   (r/wrap (cond kaikki-valittu? true
-                                                 mitaan-ei-valittu? false
-                                                 :default ::kentat/indeterminate)
-                                           (fn [uusi]
-                                             (e! (tiedot/->ValitseVayla {:vayla-id vayla-id
-                                                                         :valinta uusi}))))]))}]})
-                         (get vaylalla-ryhmiteltyna vayla)))
-                 vaylat))))
+  (let [toimenpiteet-vaylittain (group-by ::to/vayla toimenpiteet)
+        vaylat (keys toimenpiteet-vaylittain)]
+    (vec (mapcat (vaylaotsikko-ja-sisalto e! toimenpiteet-vaylittain) vaylat))))
 
 (defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [e! toimenpiteet tyolaji]
   (-> toimenpiteet
-      (toimenpiteet-tyolajilla tyolaji)
+      (tiedot/toimenpiteet-tyolajilla tyolaji)
       (->> (ryhmittele-toimenpiteet-vaylalla e!))))
 
 (defn valinta-checkbox [e! app]
@@ -201,7 +199,7 @@
            (fn [tyolaji]
              [tyolaji
               (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
-                                        (count (toimenpiteet-tyolajilla
+                                        (count (tiedot/toimenpiteet-tyolajilla
                                                  toimenpiteet
                                                  tyolaji)))
               [paneelin-sisalto
@@ -224,15 +222,10 @@
                 [{:sijainti otsikoiden-checkbox-sijainti
                   :sisalto
                   (fn [{:keys [tunniste]}]
-                    (let [tyolajin-toimenpiteet (toimenpiteet-tyolajilla toimenpiteet tunniste)
-                          kaikki-valittu? (every? true? (map :valittu? tyolajin-toimenpiteet))
-                          mitaan-ei-valittu? (every? (comp not true?)
-                                                     (map :valittu? tyolajin-toimenpiteet))]
+                    (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
                       [kentat/tee-kentta
                        {:tyyppi :checkbox}
-                       (r/wrap (cond kaikki-valittu? true
-                                     mitaan-ei-valittu? false
-                                     :default ::kentat/indeterminate)
+                       (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
                                (fn [uusi]
                                  (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                                :valinta uusi}))))]))}]}]
