@@ -248,7 +248,14 @@
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1}))))))))
+      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
+
+  (testing "Haku on jo käynnissä"
+    (vaadi-async-kutsut
+      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+
+      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})
+                                       {:haku-kaynnissa? true})))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
