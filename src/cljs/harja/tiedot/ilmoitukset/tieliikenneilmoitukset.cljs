@@ -122,6 +122,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         optiot))))
 
 (def ^:const ilmoitushaun-viive-ms 3000)
+(def ^:const taustahaun-viive 60000)
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan.
@@ -191,7 +192,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                          (map :ilmoitusid (:ilmoitukset tulokset)))
                                  valittu
                                  nil))
-           60000
+           taustahaun-viive
            true)))
 
   v/ValitseIlmoitus
