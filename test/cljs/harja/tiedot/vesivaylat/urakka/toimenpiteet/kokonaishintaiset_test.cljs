@@ -257,8 +257,8 @@
       ;; Ei saa aloittaa uusia hakuja
       #{}
 
-      (let [tila {:foo :bar :id 1}]
-        (is (= tila (e! (tiedot/HaeToimenpiteet tila))))))))
+      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
+        (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]

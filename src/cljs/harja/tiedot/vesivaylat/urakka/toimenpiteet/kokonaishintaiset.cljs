@@ -133,26 +133,28 @@
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
-    (let [valinnat (if (empty? valinnat)
-                     (:valinnat app)
-                     valinnat)
-          tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-          fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-      (when-not (:haku-kaynnissa? app)
+    (if-not (:haku-kaynnissa? app)
+      (let [valinnat (if (empty? valinnat)
+                       (:valinnat app)
+                       valinnat)
+            tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
             (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
               (do
                 (go
-                 (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                   (if (k/virhe? vastaus)
-                     (fail! vastaus)
-                     (tulos! vastaus))))
+                  (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
+                    (if (k/virhe? vastaus)
+                      (fail! vastaus)
+                      (tulos! vastaus))))
                 (assoc app :haku-kaynnissa? true))
               (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
-            (throw e))))))
+            (throw e))))
+
+      app))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
