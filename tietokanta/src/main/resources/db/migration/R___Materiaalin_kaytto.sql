@@ -83,7 +83,7 @@ BEGIN
       EXIT;
     END IF;
     RAISE NOTICE 'Päivitetään materiaalin käyttö hoitoluokittain: %', pvm;
-    SELECT paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm);
+    PERFORM paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm);
     pvm := pvm + 1;
  END LOOP;
  RETURN;
