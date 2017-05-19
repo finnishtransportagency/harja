@@ -224,7 +224,7 @@
               ::to/vayla-id 1
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
-              ::to/reimari-toimenpiteet (to/reimari-toimenpide-avain->koodi :autot-traktorit)
+              ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
               :vikailmoitukset? true
               :tyyppi :kokonaishintainen}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))

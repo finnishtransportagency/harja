@@ -39,6 +39,6 @@
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-    (println (s/explain-str ::toimenpide/toimenpide luettu-toimenpide))
-    (is (nil? (s/explain-data ::toimenpide/toimenpide luettu-toimenpide)))
+    (println (s/explain-str ::toimenpide/reimari-toimenpide luettu-toimenpide))
+    (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))

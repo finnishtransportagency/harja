@@ -245,7 +245,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/reimari-toimenpiteet #{"1022542001"}}
+                         ::toi/reimari-toimenpidetyypit #{"1022542001"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -255,7 +255,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/reimari-toimenpiteet #{"1022542046"}}
+                         ::toi/reimari-toimenpidetyypit #{"1022542046"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
@@ -267,7 +267,7 @@
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541802"
-                         ::toi/reimari-toimenpiteet #{"1022542001"}
+                         ::toi/reimari-toimenpidetyypit #{"1022542001"}
                          ::toi/reimari-tyoluokat #{"1022541905"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
@@ -280,7 +280,7 @@
           kysely-params {::tot/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541807"
-                         ::toi/reimari-toimenpiteet #{"1022542046"}
+                         ::toi/reimari-toimenpidetyypit #{"1022542046"}
                          ::toi/reimari-tyoluokat #{"1022541920"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+

@@ -178,7 +178,7 @@ reimari-toimenpidetyypit
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
 
-(defn reimari-toimenpide-avain->koodi [avain]
+(defn reimari-toimenpidetyyppi-avain->koodi [avain]
   (set (filter #(= (get reimari-toimenpidetyypit %) avain)
                (keys reimari-toimenpidetyypit))))
 
@@ -242,7 +242,7 @@ reimari-tilat
    "1022541203" :peruttu})
 
 (define-tables
-  ["reimari_toimenpide" ::toimenpide
+  ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
     "luotu" ::m/luotu
@@ -258,18 +258,20 @@ reimari-tilat
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
          ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
 
+;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
+(s/def ::tyolaji (set (vals reimari-tyolajit)))
+(s/def ::tyoluokka (set (vals reimari-tyoluokat)))
+(s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
+;; Reimarin työlaji/-luokka/toimenpide ovat tiettyjä string-koodiarvoja
+(s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
+(s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
+(s/def ::reimari-tyoluokat (s/and set? (s/every ::reimari-tyoluokka)))
+(s/def ::reimari-toimenpidetyyppi (set (keys reimari-toimenpidetyypit)))
+(s/def ::reimari-toimenpidetyypit (s/and set? (s/every ::reimari-toimenpidetyyppi)))
 
 (s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
                              ::vv-vayla/id
                              ::vv-vayla/nimi]))
-(s/def ::tyolaji (set (vals reimari-tyolajit)))
-(s/def ::tyoluokka (set (vals reimari-tyoluokat)))
-(s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
-(s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
-(s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
-(s/def ::reimari-tyoluokat (s/and set? (s/every ::reimari-tyoluokka)))
-(s/def ::reimari-toimenpide (set (keys reimari-toimenpidetyypit)))
-(s/def ::reimari-toimenpiteet (s/and set? (s/every ::reimari-toimenpide)))
 (s/def ::pvm inst?)
 (s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
                                   ::vv-turvalaite/nro
@@ -280,7 +282,7 @@ reimari-tilat
   #{::reimari-id
     ::reimari-tyolaji
     ::reimari-tyoluokka
-    ::reimari-tyyppi
+    ::reimari-toimenpidetyyppi
     ::reimari-tila
     ::reimari-luotu
     ::reimari-muokattu
@@ -350,7 +352,7 @@ reimari-tilat
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
-          ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpiteet]
+          ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))

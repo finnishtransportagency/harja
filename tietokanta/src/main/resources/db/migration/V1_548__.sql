@@ -1,5 +1,9 @@
+-- Vikailmoitus
 ALTER TABLE vv_vikailmoitus DROP COLUMN "toteuma-id";
 ALTER TABLE vv_vikailmoitus ADD COLUMN "toimenpide-id" INTEGER REFERENCES reimari_toimenpide(id);
+
+-- reimari_toimenpide taulun "tyyppi" -> "toimenpidetyyppi". Vastaa paremmin sitä millä nimellä me sitä kutsumme
+ALTER TABLE reimari_toimenpide RENAME COLUMN "reimari-tyyppi" TO  "reimari-toimenpidetyyppi";
 
 -- Sopparin nimessä tai sampoid:ssä ei saa olle merkkejä, joita käytetään SQL-parsinnassa
 ALTER TABLE sopimus ADD CONSTRAINT sallittu_sampoid CHECK (nimi NOT LIKE '%=%');
