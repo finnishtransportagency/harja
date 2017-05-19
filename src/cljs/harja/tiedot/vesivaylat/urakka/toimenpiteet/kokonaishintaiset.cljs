@@ -62,15 +62,13 @@
                                        vaylatyyppi vayla
                                        tyolaji tyoluokka toimenpide
                                        vain-vikailmoitukset?] :as valinnat}]
-  ;; TODO Työlaji / työluokka / toimenpide avain voi mäppäytyä useaan koodiin,
-  ;; tällöin pitää voida lähettää kaikki setissä
   (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
-                                   ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi tyolaji)
-                                   ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka)
-                                   ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
+                                   ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
+                                   ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
+                                   ::to/reimari-toimenpiteet (when toimenpide (to/reimari-toimenpide-avain->koodi toimenpide))
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?

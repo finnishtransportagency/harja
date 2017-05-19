@@ -84,8 +84,8 @@
    "1022541910" :telematiikkalaitteet})
 
 (defn reimari-tyoluokka-avain->koodi [avain]
-  (first (filter #(= (get reimari-tyoluokat %) avain)
-                 (keys reimari-tyoluokat))))
+  (set (filter #(= (get reimari-tyoluokat %) avain)
+               (keys reimari-tyoluokat))))
 
 (defn reimari-tyoluokka-fmt [tyoluokka]
   (case tyoluokka
@@ -179,8 +179,8 @@ reimari-toimenpidetyypit
    "1022542026" :kaukovalvontalaitetyot})
 
 (defn reimari-toimenpide-avain->koodi [avain]
-  (first (filter #(= (get reimari-toimenpidetyypit %) avain)
-                 (keys reimari-toimenpidetyypit))))
+  (set (filter #(= (get reimari-toimenpidetyypit %) avain)
+               (keys reimari-toimenpidetyypit))))
 
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide
@@ -267,7 +267,7 @@ reimari-tilat
 (s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
 (s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
 (s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
-(s/def ::reimari-tyoluokat  (s/and set? (s/every ::reimari-tyoluokka)))
+(s/def ::reimari-tyoluokat (s/and set? (s/every ::reimari-tyoluokka)))
 (s/def ::reimari-toimenpide (set (keys reimari-toimenpidetyypit)))
 (s/def ::reimari-toimenpiteet (s/and set? (s/every ::reimari-toimenpide)))
 (s/def ::pvm inst?)
