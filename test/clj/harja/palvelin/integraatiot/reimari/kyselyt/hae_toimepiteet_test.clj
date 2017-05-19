@@ -19,7 +19,3 @@
 (use-fixtures :once (compose-fixtures
                      jarjestelma-fixture
                      ht/urakkatieto-fixture))
-
-
-(deftest hae-toimenpiteet-kysely
-  (is (= 1 (count (q/hae-toimenpiteet ht/ds {:urakka-id 27})))))
