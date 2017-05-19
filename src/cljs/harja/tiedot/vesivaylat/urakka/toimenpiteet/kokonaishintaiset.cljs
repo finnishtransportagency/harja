@@ -147,8 +147,7 @@
                  (if (k/virhe? vastaus)
                    (fail! vastaus)
                    (tulos! vastaus))))
-              (do (error "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))
-                  (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
             (throw e))))
