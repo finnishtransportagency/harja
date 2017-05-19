@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
+            [harja.kyselyt.vesivaylat :as vv-q] ;; tämän ns:n lataaminen määrittelee specit joita käytetään
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -35,14 +36,11 @@
 
 (defn kasittele-vastaus [db vastaus-xml]
   (log/debug "kasittele-vastaus" vastaus-xml)
-  (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)]
-
-    (log/debug "sanoman-tiedot:" sanoman-tiedot)
-    (doseq [toimenpide-tiedot sanoman-tiedot]
-
-      (clojure.pprint/pprint (rename-keys toimenpide-tiedot avainmuunnokset))
-      (specql/upsert! db ::toimenpide/toimenpide
-                      (rename-keys toimenpide-tiedot avainmuunnokset)))))
+  (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
+        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
+                          (specql/upsert! db ::toimenpide/toimenpide
+                                          (rename-keys toimenpide-tiedot avainmuunnokset)))]
+    (vec kanta-tiedot)))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
 
