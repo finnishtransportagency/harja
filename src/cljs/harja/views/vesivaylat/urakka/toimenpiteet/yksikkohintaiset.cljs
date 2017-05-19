@@ -113,7 +113,6 @@
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
-    {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
      :komponentti (fn [rivi]
                     ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
@@ -194,7 +193,7 @@
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}
     ^{:key "siirto"}
-    [napit/yleinen-ensisijainen "Siirrä valitut kokonaishintaisiin"
+    [napit/yleinen-ensisijainen "Siirrä valitut yksikköhintaisiin"
      #(log "Painoit nappia")
      {:disabled (not (some :valittu? (:toimenpiteet app)))}]]])
 
@@ -227,12 +226,12 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))
-                                    (e! (tiedot/->HaeToimenpiteet))))
+                                    (e! (tiedot/->HaeToimenpiteet {}))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
                                                           :sopimus-id (first (:sopimus valinnat))
                                                           :aikavali (:aikavali valinnat)}))
-                           (e! (tiedot/->HaeToimenpiteet)))
+                           (e! (tiedot/->HaeToimenpiteet {})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet infolaatikko-nakyvissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
