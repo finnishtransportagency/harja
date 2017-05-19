@@ -20,7 +20,7 @@
   ["reimari_turvalaite" ::vv-turvalaite/turvalaite]
   ["reimari_alus" ::vv-alus/alus]
   ["reimari_vayla" ::vv-vayla/vayla]
-  ["toimenpidehaun_komponentti" ::vv-toimenpide/toimenpidehaun-komponentti]
+  ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
   ["reimari_toimenpide" ::vv-toimenpide/toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -28,12 +28,6 @@
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu? ;; FIXME: poistettu on TIMESTAMP tietyöilmoituksessa
     "poistaja" ::m/poistaja-id}])
-
-(s/def ::vv-toimenpide/toimenpidehaun-komponentti ;; fixme: ilman käsin määrittelyä tahtoo mapin ::toimenpide/{id,nimi,tila} avaimilla tässä?
-  (s/keys :opt [:harja.domain.vesivaylat.komponentti/id
-                :harja.domain.vesivaylat.komponentti/tila
-                :harja.domain.vesivaylat.komponentti/nimi]))
-
 
 (def kaikki-toimenpiteen-kentat
   #{::vv-toimenpide/id
