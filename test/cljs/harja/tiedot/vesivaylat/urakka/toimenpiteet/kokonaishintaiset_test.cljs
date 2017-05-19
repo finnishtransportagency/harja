@@ -238,10 +238,17 @@
       (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest hakemisen-aloitus
-  (vaadi-async-kutsut
-    #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+  (testing "Haku ei lähde koska spec failaa"
+    (vaadi-async-kutsut
+     #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-    (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
+     (is (not (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
+
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+
+      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1}))))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
