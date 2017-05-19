@@ -33,6 +33,10 @@
    "1022541804" :vesiliikennemerkit
    "1022540501" :kiintea-turvalaite})
 
+(defn reimari-tyolaji-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyolajit %) avain)
+                 (keys reimari-tyolajit))))
+
 (defn reimari-tyolaji-fmt [tyyppi]
   (case tyyppi
     :tukityot "Tukityöt"
@@ -78,6 +82,10 @@
    "1022541924" :luotsitoiminnan-palvelut
    "1022541907" :telematiikkalaitteet
    "1022541910" :telematiikkalaitteet})
+
+(defn reimari-tyoluokka-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyoluokat %) avain)
+                 (keys reimari-tyoluokat))))
 
 (defn reimari-tyoluokka-fmt [tyoluokka]
   (case tyoluokka
@@ -170,6 +178,10 @@ reimari-toimenpidetyypit
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
 
+(defn reimari-toimenpide-avain->koodi [avain]
+  (first (filter #(= (get reimari-toimenpidetyypit %) avain)
+                 (keys reimari-toimenpidetyypit))))
+
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide
     :alukset-ja-veneet "Alukset ja veneet"
@@ -253,6 +265,9 @@ reimari-tilat
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
 (s/def ::tyoluokka (set (vals reimari-tyoluokat)))
 (s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
+(s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
+(s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
+(s/def ::reimari-toimenpide (set (keys reimari-toimenpidetyypit)))
 (s/def ::pvm inst?)
 (s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
                                   ::vv-turvalaite/nro
@@ -333,10 +348,10 @@ reimari-tilat
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
-          ::tyolaji ::tyoluokka ::toimenpide]
+          ::reimari-tyolaji ::reimari-tyoluokka ::reimari-toimenpide]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
-             ::vikakorjaukset? ::tyyppi ::urakoitsija-id]))
+             ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
 (s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla

@@ -9,9 +9,14 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.vesivaylat.vayla :as vay]))
 
-(defn hae-vaylat [db user]
+(defn hae-vaylat [db user {:keys [vaylatyyppi hakuteksti] :as tiedot}]
   ;; FIXME Kuka saa lukea kaikki väylät?
-  (vec (fetch db ::vay/vayla vay/perustiedot {})))
+  (vec (fetch db ::vay/vayla vay/perustiedot
+              (op/and
+                (when hakuteksti
+                  {::vay/nimi (op/ilike (str hakuteksti "%"))})
+                (when vaylatyyppi
+                  {::vay/tyyppi vaylatyyppi})))))
 
 (defrecord Vaylat []
   component/Lifecycle
@@ -21,8 +26,9 @@
       http
       :hae-vaylat
       (fn [user tiedot]
-        (hae-vaylat db user))
-      {:vastaus-spec ::vay/hae-kokonaishintaiset-toimenpiteet-vastaus})
+        (hae-vaylat db user tiedot))
+      {:kysely-spec ::vay/hae-vaylat-kysely
+       :vastaus-spec ::vay/hae-vaylat-vastaus})
     this)
 
   (stop [this]

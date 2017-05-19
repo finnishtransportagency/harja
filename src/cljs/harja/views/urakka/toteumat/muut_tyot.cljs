@@ -363,7 +363,7 @@
               :aseta (fn [rivi arvo] (assoc-in rivi [:suorittajan :nimi] arvo))
               :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?)) :pituus-max 256}
              {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 9
-              :validoi [:ytunnus]
+              :validoi [[:ytunnus]]
               :hae #(if (get-in @muokattu [:suorittajan :ytunnus])
                       (get-in @muokattu [:suorittajan :ytunnus])
                       (:ytunnus @u/urakan-organisaatio))

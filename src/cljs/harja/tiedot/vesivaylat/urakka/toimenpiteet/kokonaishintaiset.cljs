@@ -43,11 +43,9 @@
 (def vaylahaku
   (reify protokollat/Haku
     (hae [_ teksti]
-      ;; TODO Hae palvelimelta
-      (go [{::va/nimi "Kuopio, Iisalmen väylä"
-            ::va/id 1}
-           {::va/nimi "Varkaus, Kuopion väylä"
-            ::va/id 2}]))))
+      (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti
+                                                  :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
+            vastaus)))))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord ValitseToimenpide [tiedot])
@@ -56,24 +54,26 @@
 (defrecord PaivitaValinnat [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 
-(defrecord HaeToimenpiteet [])
+(defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
-(defn- muodosta-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
-                                        vaylatyyppi vayla
-                                        tyolaji tyoluokka toimenpide
-                                        vain-vikailmoitukset?] :as valinnat}]
+(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+                                       vaylatyyppi vayla
+                                       tyolaji tyoluokka toimenpide
+                                       vain-vikailmoitukset?] :as valinnat}]
+  ;; TODO Työlaji / työluokka / toimenpide avain voi mäppäytyä useaan koodiin,
+  ;; tällöin pitää voida lähettää kaikki setissä
   (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
-                                   ::to/tyolaji tyolaji
-                                   ::to/tyoluokka tyoluokka
-                                   ::to/toimenpide toimenpide
+                                   ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi tyolaji)
+                                   ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka)
+                                   ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
-                                   :vikakorjaukseet? vain-vikailmoitukset?
+                                   :vikailmoitukset? vain-vikailmoitukset?
                                    :tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event
@@ -83,13 +83,18 @@
     (assoc app :nakymassa? nakymassa?))
 
   PaivitaValinnat
+  ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
+  ;; jotta näkymä pysyy synkassa valintojen kanssa
   (process-event [{tiedot :tiedot} app]
-    (assoc app :valinnat (merge (:valinnat app)
+    (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys tiedot
                                              [:urakka-id :sopimus-id :aikavali
                                               :vaylatyyppi :vayla
                                               :vain-vikailmoitukset?
-                                              :tyolaji :tyoluokka :toimenpide]))))
+                                              :tyolaji :tyoluokka :toimenpide]))
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (haku uudet-valinnat)
+      (assoc app :valinnat uudet-valinnat)))
 
   ValitseToimenpide
   (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
@@ -126,24 +131,30 @@
 
 
   HaeToimenpiteet
-  (process-event [_ app]
-    (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-          fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-      (when-not (:haku-kaynnissa? app)
-        (go
-          (try
-            (let [hakuargumentit (muodosta-hakuargumentit (:valinnat app))]
-              (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
-                (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                  (if (k/virhe? vastaus)
-                    (fail! vastaus)
-                    (tulos! vastaus)))
-                (do (error "Hakuargumentit eivät ole validit: " (pr-str hakuargumentit))
-                    (s/explain ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
-            (catch :default e
-              (fail! nil)
-              (throw e)))))
-      (assoc app :haku-kaynnissa? true)))
+  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
+  (process-event [{valinnat :valinnat} app]
+    (if-not (:haku-kaynnissa? app)
+      (let [valinnat (if (empty? valinnat)
+                       (:valinnat app)
+                       valinnat)
+            tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
+        (try
+          (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
+            (if (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit)
+              (do
+                (go
+                  (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
+                    (if (k/virhe? vastaus)
+                      (fail! vastaus)
+                      (tulos! vastaus))))
+                (assoc app :haku-kaynnissa? true))
+              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
