@@ -71,7 +71,7 @@
                            :HaeToimenpiteetResponse
                            :toimenpide
                            lue-toimenpide)]
-    (mapv #(set/rename-keys % {::toimenpide/toimenpide ::toimenpide/reimari-toimenpidetyyppi
+    (mapv #(set/rename-keys % {::toimenpide/tyyppi ::toimenpide/reimari-toimenpidetyyppi
                                ::toimenpide/tyolaji ::toimenpide/reimari-tyolaji
                                ::toimenpide/tyoluokka ::toimenpide/reimari-tyoluokka})
           muunnetut)))
