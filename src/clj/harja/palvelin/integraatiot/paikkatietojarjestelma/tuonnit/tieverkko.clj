@@ -15,9 +15,9 @@
    (line-string-seq 0 (.getNumGeometries multilinestring) multilinestring))
   ([i n multilinestring]
    (lazy-seq
-    (cons (.getGeometryN multilinestring i)
-          (when (< i (dec n))
-            (line-string-seq (inc i) n multilinestring))))))
+     (cons (.getGeometryN multilinestring i)
+           (when (< i (dec n))
+             (line-string-seq (inc i) n multilinestring))))))
 
 (defn- ensimmainen-piste [g]
   (let [arr (.getCoordinates g)]
@@ -29,7 +29,7 @@
 
 (defn luo-line-string [pisteet]
   (LineString. (CoordinateArraySequence.
-                (into-array Coordinate pisteet))
+                 (into-array Coordinate pisteet))
                (GeometryFactory.)))
 
 (defn luo-multi-line-string [line-strings]
@@ -49,25 +49,25 @@
   (let [line-strings
         (mapv luo-line-string
               (reduce
-               (fn [viivat ls]
-                 (let [viimeinen-viiva (last viivat)
-                       koordinaatit (seq (.getCoordinates ls))]
-                   (if-not viimeinen-viiva
-                     ;; Ensimmäinen viiva
-                     [(vec koordinaatit)]
+                (fn [viivat ls]
+                  (let [viimeinen-viiva (last viivat)
+                        koordinaatit (seq (.getCoordinates ls))]
+                    (if-not viimeinen-viiva
+                      ;; Ensimmäinen viiva
+                      [(vec koordinaatit)]
 
-                     ;; Yritä yhdistää edelliseen, jos se alkaa samalla kuin
-                     ;; edellinen loppuu
-                     (let [viimeinen-piste (last viimeinen-viiva)]
-                       (if (= viimeinen-piste (first koordinaatit))
-                         ;; Voidaan jatkaa samaa linestringiä
-                         (conj (vec (butlast viivat))
-                               (vec (concat viimeinen-viiva (drop 1 koordinaatit))))
+                      ;; Yritä yhdistää edelliseen, jos se alkaa samalla kuin
+                      ;; edellinen loppuu
+                      (let [viimeinen-piste (last viimeinen-viiva)]
+                        (if (= viimeinen-piste (first koordinaatit))
+                          ;; Voidaan jatkaa samaa linestringiä
+                          (conj (vec (butlast viivat))
+                                (vec (concat viimeinen-viiva (drop 1 koordinaatit))))
 
-                         ;; Tehdään uusi linestring
-                         (conj viivat
-                               (vec koordinaatit)))))))
-               [] lines))]
+                          ;; Tehdään uusi linestring
+                          (conj viivat
+                                (vec koordinaatit)))))))
+                [] lines))]
     (if (= 1 (count line-strings))
       (first line-strings)
       (luo-multi-line-string line-strings))))
@@ -227,6 +227,7 @@
   ;; fallbackia joka ottaa aina lähimmän palan jatkoksi ja muodostaa multilinestringin.
   ;; Tämä kattaa loput noin vajaa 0,5% tapauksista.
   ;;
+  ;; Tieosan pituus otetaan ensimmäisen ajoradan pituudesta.
   (let [ajoradat (into {}
                        (map (juxt :ajorata identity))
                        osan-geometriat)
@@ -237,10 +238,12 @@
         vasen (or (keraa-geometriat tie osa (ajoradat 0) (ajoradat 2)
                                     (luo-fallback (ajoradat 1)) false)
                   (keraa-geometriat tie osa (ajoradat 0) (ajoradat 2)
-                                    (luo-fallback (ajoradat 1)) true))]
+                                    (luo-fallback (ajoradat 1)) true))
+        pituus (:tr_pituus (first osan-geometriat))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
-    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})))
+    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})
+    (k/luo-tieosan-pituus! db {:tie tie :osa osa :pituus pituus})))
 
 (defn vie-tieverkko-kantaan [db shapefile]
   (if shapefile
@@ -248,12 +251,13 @@
       (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
         (k/tuhoa-tien-osien-ajoradat! db)
+        (k/tuhoa-tieosien-pituudet! db)
         (shapefile/tuo-ryhmiteltyna
-         shapefile :tie
-         (fn [tien-geometriat]
-           (let [tie (:tie (first tien-geometriat))]
-             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
-               (vie-tieosa db tie osa geometriat))))))
+          shapefile :tie
+          (fn [tien-geometriat]
+            (let [tie (:tie (first tien-geometriat))]
+              (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+                (vie-tieosa db tie osa geometriat))))))
 
       (k/paivita-paloiteltu-tieverkko db)
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
