@@ -121,7 +121,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            uusien-kyselyjen-maara)
         optiot))))
 
-(def ^:const ilmoitushaun-aloitusviive-ms 1000)
+(def ^:const ilmoitushaun-aloitusviive-ms 3000)
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
