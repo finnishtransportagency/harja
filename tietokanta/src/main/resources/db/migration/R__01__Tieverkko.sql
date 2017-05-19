@@ -398,14 +398,6 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
 DECLARE
 BEGIN
-  -- Poista vanhat pituudet
-  DELETE FROM tr_osien_pituudet;
-  -- Laske uudet pituudet
-  INSERT INTO tr_osien_pituudet
-    SELECT tie, osa, ST_Length(geom) AS pituus
-      FROM tr_osan_ajorata
-     WHERE ajorata=1 AND geom IS NOT NULL
-    ORDER BY tie,osa;
   -- Päivitä osien envelopet
   UPDATE tr_osan_ajorata SET envelope = ST_Expand(ST_Envelope(geom), 250);
 END;
