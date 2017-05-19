@@ -55,7 +55,12 @@
 
 (defn- lue-toimenpide [toimenpide]
   (merge
-    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide" (name %))
+    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
+                                              (name (case %
+                                                      :tyyppi :eimari-toimenpidetyyppi
+                                                      :tyolaji :reimari-tyolaji
+                                                      :tyoluokka :reimari-tyoluokka
+                                                      %)))
                          toimenpide-attribuutit)
     (when-let [a (z/xml1-> toimenpide :alus)]
       {::toimenpide/alus (lue-alus a)})
@@ -67,14 +72,10 @@
       {::toimenpide/vayla (lue-vayla v)})))
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
-  (let [muunnetut (z/xml-> vastaus-xml
-                           :HaeToimenpiteetResponse
-                           :toimenpide
-                           lue-toimenpide)]
-    (mapv #(set/rename-keys % {::toimenpide/tyyppi ::toimenpide/reimari-toimenpidetyyppi
-                               ::toimenpide/tyolaji ::toimenpide/reimari-tyolaji
-                               ::toimenpide/tyoluokka ::toimenpide/reimari-tyoluokka})
-          muunnetut)))
+  (vec (z/xml-> vastaus-xml
+                :HaeToimenpiteetResponse
+                :toimenpide
+                lue-toimenpide)))
 
 (defn lue-hae-toimenpiteet-vastaus [xml]
   (hae-toimenpiteet-vastaus (xml/lue xml "UTF-8")))
