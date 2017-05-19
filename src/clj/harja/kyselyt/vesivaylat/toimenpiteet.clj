@@ -50,8 +50,8 @@
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
-        tyoluokka (::vv-toimenpide/reimari-tyoluokka tiedot)
-        toimenpide (::vv-toimenpide/reimari-toimenpide tiedot)
+        tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
+        toimenpiteet (::vv-toimenpide/reimari-toimenpiteet tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/toimenpide (clojure.set/union
                                                              vv-toimenpide/perustiedot
                                                              vv-toimenpide/viittaukset
@@ -75,11 +75,11 @@
                                  {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
                                (when vayla-id
                                  {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
-                               (when (and tyolaji (not tyoluokka) (not toimenpide))
+                               (when tyolaji
                                  {::vv-toimenpide/reimari-tyolaji tyolaji})
-                               (when (and tyoluokka (not toimenpide))
-                                 {::vv-toimenpide/reimari-tyoluokka tyoluokka})
-                               (when toimenpide
-                                 {::vv-toimenpide/reimari-tyyppi toimenpide})))
+                               (when tyoluokat
+                                 {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
+                               (when toimenpiteet
+                                 {::vv-toimenpide/reimari-tyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
     (into [] toimenpiteet-xf fetchattu)))

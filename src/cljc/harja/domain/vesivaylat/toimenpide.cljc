@@ -267,7 +267,9 @@ reimari-tilat
 (s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
 (s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
 (s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
+(s/def ::reimari-tyoluokat  (s/and set? (s/every ::reimari-tyoluokka)))
 (s/def ::reimari-toimenpide (set (keys reimari-toimenpidetyypit)))
+(s/def ::reimari-toimenpiteet (s/and set? (s/every ::reimari-toimenpide)))
 (s/def ::pvm inst?)
 (s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
                                   ::vv-turvalaite/nro
@@ -348,7 +350,7 @@ reimari-tilat
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
-          ::reimari-tyolaji ::reimari-tyoluokka ::reimari-toimenpide]
+          ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpiteet]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
