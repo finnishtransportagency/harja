@@ -105,7 +105,6 @@
                                                           :loppuosa losa
                                                           :loppuetaisyys let}))}
        kaikki-ok? (every? true? (vals tulos))]
-      (println "--->>>" tulos)
       {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) (str "Alkuosaa " aosa " ei ole olemassa")
                                   (not (:losa-olemassa? tulos)) (str "Loppuosaa " losa " ei ole olemassa")
                                   (not (:alkuosan-ajorata-olemassa? tulos)) (str "Alkuosan " aosa " ajorataa " ajorata " ei ole olemassa")
