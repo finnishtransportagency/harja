@@ -69,19 +69,19 @@
       [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
      ]]))
 
-(defn edellisen-integraatiotapahtuman-alkuaika [db nimi]
+(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   ;; tähän kysely joka katsoo integraatiotapahtumat-tauusta edellisen
   ;; haetoimenpiteet-tapahtuman alkuajan
-  (last (sort-by :integraatiotapahtuma/alkanut
-                 (specql/fetch db :integraatiotapahtuma/tapahtuma
-                               #{:integraatiotapahtuma/id :integraatiotapahtuma/alkanut
-                                 [:integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
+  (last (sort-by ::integraatiotapahtuma/alkanut
+                 (specql/fetch db ::integraatiotapahtuma/tapahtuma
+                               #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
+                                 [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
                                                                       :harja.palvelin.integraatiot/jarjestelma}] }
-                               {:integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma "reimari"
+                               {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
                                                                    :harja.palvelin.integraatiot/nimi nimi}}))))
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet")]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet" "reimari")]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
