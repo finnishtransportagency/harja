@@ -47,11 +47,11 @@
   Jos osat ovat eri teilla, palauttaa nil."
   [tie1 tie2]
   (let [tie1 (normalisoi tie1)
-        tie2 (normalisoi tie2)])
-  (when (samalla-tiella? tie1 tie2)
-    (or (< (::aosa tie1) (::aosa tie2))
-        (and (= (::aosa tie1) (::aosa tie2))
-             (< (::aet tie1) (::aet tie2))))))
+        tie2 (normalisoi tie2)]
+    (when (samalla-tiella? tie1 tie2)
+      (or (< (::aosa tie1) (::aosa tie2))
+          (and (= (::aosa tie1) (::aosa tie2))
+               (< (::aet tie1) (::aet tie2)))))))
 
 (defn alku
   "Palauttaa annetun tien alkuosan ja alkuetäisyyden vektorina"
