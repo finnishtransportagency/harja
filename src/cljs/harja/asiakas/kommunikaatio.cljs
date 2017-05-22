@@ -293,9 +293,11 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (<! (timeout 10000))
       (when-not (empty? @yhteyskatkokset)
         (log "Lähetetään yhteysvirheet")
-        ;; TODO Entä jos epäonnistuu tämäkin!?
-        (<! (post! :pois-kytketyt-ominaisuudet {:yhteyskatkokset @yhteyskatkokset})))
-      (recur)))
+        (let [vastaus (<! (post! :pois-kytketyt-ominaisuudet {:yhteyskatkokset @yhteyskatkokset}))]
+          (when-not (virhe? vastaus)
+            (log "Yhteyskatkostiedot lähetetty!")
+            (reset! yhteyskatkokset []))))
+      (recur))))
 
 (defn url-parametri
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
