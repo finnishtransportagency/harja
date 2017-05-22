@@ -4,7 +4,7 @@
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.otsikkopaneeli :refer [otsikkopaneeli]]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.valinnat :as valinnat]
@@ -205,15 +205,17 @@
    toimenpiteet])
 
 (defn- luo-otsikkorivit
-  [e! toimenpiteet gridin-sarakkeet]
+  [e! toimenpiteet haku-kaynnissa? gridin-sarakkeet]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
              [tyolaji
-              (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
-                                        (count (tiedot/toimenpiteet-tyolajilla
-                                                 toimenpiteet
-                                                 tyolaji)))
+              [:span
+               (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
+                                         (count (tiedot/toimenpiteet-tyolajilla
+                                                  toimenpiteet
+                                                  tyolaji)))
+               (when haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
               [paneelin-sisalto
                e!
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
@@ -224,7 +226,7 @@
            tyolajit))))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app} gridin-sarakkeet]
-  (cond (or haku-kaynnissa? (nil? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
+  (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
         :default
@@ -241,7 +243,7 @@
                                (fn [uusi]
                                  (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                                :valinta uusi}))))]))}]}]
-              (luo-otsikkorivit e! toimenpiteet gridin-sarakkeet))))
+              (luo-otsikkorivit e! toimenpiteet haku-kaynnissa? gridin-sarakkeet))))
 
 (defn listaus
   ([e! app] (listaus e! app []))
