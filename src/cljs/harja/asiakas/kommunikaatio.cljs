@@ -28,7 +28,7 @@
 
 (defn- tallenna-yhteyskatkos! [palvelu]
   (when (< (count @yhteyskatkokset) sailyta-max-katkosta)
-    (swap! yhteyskatkokset conj {:aika (pvm/pvm (pvm/nyt))
+    (swap! yhteyskatkokset conj {:aika (pvm/nyt)
                                  :palvelu palvelu})))
 
 (def +polku+ (let [host (.-host js/location)]
@@ -248,7 +248,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn- kasittele-yhteyskatkos [palvelu vastaus]
   (log "Yhteys katkesi kutsuttaessa palvelua " (pr-str palvelu) ". Vastaus: " (pr-str vastaus))
-  (tallenna-yhteyskatkos! palvelu)
+  (when palvelu (tallenna-yhteyskatkos! palvelu))
   (reset! yhteys-katkennut? true)
   (reset! nykyinen-pingausvali-millisekunteina
           yhteys-katkennut-pingausvali-millisekunteina)
@@ -265,7 +265,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
-  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos :offline nil)))
+  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil nil)))
 
 (defn kaynnista-palvelimen-pingaus []
   (when-not @pingaus-kaynnissa?
