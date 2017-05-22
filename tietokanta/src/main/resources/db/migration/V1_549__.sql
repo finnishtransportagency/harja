@@ -1,9 +1,9 @@
 -- Poista reimari_toimenpide taulusta toteuma-linkki
 
-CREATE TYPE toimenpide_hintatyyppi AS ENUM ('kokonaishintainen', 'yksikkohintainen');
+CREATE TYPE vv_toimenpide_hintatyyppi AS ENUM ('kokonaishintainen', 'yksikkohintainen');
 
 ALTER TABLE reimari_toimenpide
-    ADD COLUMN hintatyyppi toimenpide_hintatyyppi;
+    ADD COLUMN hintatyyppi vv_toimenpide_hintatyyppi;
 
 UPDATE reimari_toimenpide
   SET hintatyyppi = CASE WHEN (SELECT tyyppi FROM toteuma t JOIN reimari_toimenpide r ON t.id = r."toteuma-id") = 'vv-kokonaishintainen'
