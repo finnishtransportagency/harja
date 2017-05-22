@@ -45,5 +45,6 @@
           :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
           :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
           :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
-          :turvalaitteiden-geometriahaku :mobiili-laadunseuranta}
+          :turvalaitteiden-geometriahaku :mobiili-laadunseuranta :vv-vaylat :vv-kokonaishintaiset
+          :vv-yksikkohintaiset}
         (keys jarjestelma))))
