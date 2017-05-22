@@ -239,11 +239,20 @@
                                     (luo-fallback (ajoradat 1)) false)
                   (keraa-geometriat tie osa (ajoradat 0) (ajoradat 2)
                                     (luo-fallback (ajoradat 1)) true))
-        pituus (:tr_pituus (first osan-geometriat))]
+        tallenna-ajoradan-pituus (fn [ajorata]
+                                   (when (ajoradat ajorata)
+                                     (k/luo-ajoradan-pituus!
+                                       db
+                                       {:tie tie
+                                        :osa osa
+                                        :ajorata ajorata
+                                        :pituus (:tr_pituus (ajoradat ajorata))})))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})
-    (k/luo-tieosan-pituus! db {:tie tie :osa osa :pituus pituus})))
+    (tallenna-ajoradan-pituus 0)
+    (tallenna-ajoradan-pituus 1)
+    (tallenna-ajoradan-pituus 2)))
 
 (defn vie-tieverkko-kantaan [db shapefile]
   (if shapefile
@@ -251,7 +260,7 @@
       (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
         (k/tuhoa-tien-osien-ajoradat! db)
-        (k/tuhoa-tieosien-pituudet! db)
+        (k/tuhoa-ajoratojen-pituudet! db)
         (shapefile/tuo-ryhmiteltyna
           shapefile :tie
           (fn [tien-geometriat]

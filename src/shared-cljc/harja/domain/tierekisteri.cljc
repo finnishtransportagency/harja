@@ -141,10 +141,12 @@
   [osa osien-pituudet]
   (number? (get osien-pituudet osa)))
 
-(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet]
+(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet toleranssi]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
   (if-let [osan-pituus (get osien-pituudet osa)]
-    (and (<= etaisyys osan-pituus)
+    (and (or
+           (and toleranssi (<= etaisyys (+ osan-pituus toleranssi)))
+           (<= etaisyys osan-pituus))
          (>= etaisyys 0))
     false))
 
@@ -153,10 +155,10 @@
     (number? (:tienumero kohde))
     (number? (:tienumero kohdeosa))
     (= (:tienumero kohdeosa) (:tienumero kohde))
-       (>= (:aosa kohdeosa) (:aosa kohde))
-       (>= (:aet kohdeosa) (:aet kohde))
-       (<= (:losa kohdeosa) (:losa kohde))
-       (<= (:let kohdeosa) (:let kohde))))
+    (>= (:aosa kohdeosa) (:aosa kohde))
+    (>= (:aet kohdeosa) (:aet kohde))
+    (<= (:losa kohdeosa) (:losa kohde))
+    (<= (:let kohdeosa) (:let kohde))))
 
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
