@@ -31,12 +31,14 @@
   [koodi]
   (:nimi (first (filter #(= (:koodi %) koodi) +paallystetyypit-ja-nil+))))
 
-(defn hae-apin-paallyste-koodilla [koodi]
+(defn hae-apin-paallyste-koodilla
   "Hakee API:n päällysteen arvon koodilla"
+  [koodi]
   (:api-arvo (first (filter #(= (:koodi %) koodi) +paallystetyypit-ja-nil+))))
 
-(defn hae-koodi-apin-paallysteella [koodi]
+(defn hae-koodi-apin-paallysteella
   "Hakee koodin API:n päällysteellä"
+  [koodi]
   (:koodi (first (filter #(= (:api-arvo %) koodi) +paallystetyypit-ja-nil+))))
 
 (defn kuvaile-paatostyyppi [paatos]
