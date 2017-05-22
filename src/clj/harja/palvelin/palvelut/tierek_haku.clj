@@ -86,18 +86,17 @@
        ajoratojen-pituudet (hae-ajoratojen-pituudet db {:tie tienumero
                                                         :aosa aosa
                                                         :losa losa})
-       ajorata-olemassa? (fn [osa]
+       ajorata-olemassa? (fn [osa ajorata]
                            (or (not ajorata)
-                               (some #(and (= osa (:osa %)) (= ajorata (:ajorata %)))
-                                     ajoratojen-pituudet)))
+                               (some #(and (= osa (:osa %)) (= ajorata (:ajorata %))) ajoratojen-pituudet)))
        tulos {:aosa-olemassa? (tr-domain/osa-olemassa-verkolla? aosa osien-pituudet)
               :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
-              :alkuosan-ajorata-olemassa? (ajorata-olemassa? aosa)
-              :loppuosan-ajorata-olemassa? (ajorata-olemassa? losa)
+              :alkuosan-ajorata-olemassa? (ajorata-olemassa? aosa ajorata)
+              :loppuosan-ajorata-olemassa? (ajorata-olemassa? losa ajorata)
               :aosa-pituus-validi? (if ajorata
                                      (tr-domain/ajoradan-pituus-sopiva-verkolla? aosa ajorata aet ajoratojen-pituudet)
                                      (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet))
-              :losa-pituus-validi? (if
+              :losa-pituus-validi? (if ajorata
                                      (tr-domain/ajoradan-pituus-sopiva-verkolla? losa ajorata let ajoratojen-pituudet)
                                      (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet))
               :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
@@ -106,10 +105,11 @@
                                                           :loppuosa losa
                                                           :loppuetaisyys let}))}
        kaikki-ok? (every? true? (vals tulos))]
+      (println "--->>>" tulos)
       {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) (str "Alkuosaa " aosa " ei ole olemassa")
                                   (not (:losa-olemassa? tulos)) (str "Loppuosaa " losa " ei ole olemassa")
-                                  (not (:alkuosan-ajorata-olemassa? tulos)) (str "Alkuosan" aosa " ajorataa ei ole olemassa")
-                                  (not (:loppuosan-ajorata-olemassa? tulos)) (str "Loppuosan" losa " ajorataa ei ole olemassa")
+                                  (not (:alkuosan-ajorata-olemassa? tulos)) (str "Alkuosan " aosa " ajorataa " ajorata " ei ole olemassa")
+                                  (not (:loppuosan-ajorata-olemassa? tulos)) (str "Loppuosan " losa " ajorataa " ajorata " ei ole olemassa")
                                   (not (:aosa-pituus-validi? tulos)) (str "Alkuosan pituus " aet " ei kelpaa")
                                   (not (:losa-pituus-validi? tulos)) (str "Loppuosan pituus " let " ei kelpaa")
                                   (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
