@@ -43,7 +43,7 @@
             ^{:key (str "ip-toiminto-" i)}
             [yleiset/wrap-if tooltip
              [yleiset/tooltip {} :% tooltip]
-             [napit/yleinen teksti #(toiminto data) {:ikoni ikoni
+             [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
                                                      :luokka "ip-toiminto btn-xs"}]])
           (if (vector? linkit)
             linkit [linkit])))])
@@ -57,7 +57,7 @@
 (defn sulje-nappi [piilota-fn!]
   (when piilota-fn!
     [:div
-     [napit/sulje piilota-fn!]]))
+     [napit/sulje-ruksi piilota-fn!]]))
 
 (defn infopaneeli-komponentti [{:keys [haetaan? avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]} asiat]
   [:span

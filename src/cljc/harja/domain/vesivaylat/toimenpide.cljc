@@ -1,4 +1,24 @@
-(ns harja.domain.vesivaylat.toimenpide)
+(ns harja.domain.vesivaylat.toimenpide
+  (:require [clojure.spec.alpha :as s]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.toteuma :as t]
+            [harja.domain.organisaatio :as o]
+            [harja.domain.sopimus :as sopimus]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
+            [harja.domain.vesivaylat.alus :as vv-alus]
+            [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.vesivaylat.sopimus :as vv-sopimus]
+            [clojure.string :as str]
+            [harja.domain.toteuma :as to]
+            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
+            [harja.domain.vesivaylat.vayla :as vv-vayla]
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]
+            [specql.rel :as rel]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (def
   ^{:doc "Reimarin työlajit."}
@@ -12,6 +32,27 @@
    "1022541808" :muut-palvelut
    "1022541804" :vesiliikennemerkit
    "1022540501" :kiintea-turvalaite})
+
+(defn reimari-tyolaji-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyolajit %) avain)
+                 (keys reimari-tyolajit))))
+
+(defn reimari-tyolaji-fmt [tyyppi]
+  (case tyyppi
+    :tukityot "Tukityöt"
+    :kiinteat-turvalaitteet "Kiinteät turvalaitteet"
+    :poijut "Poijut"
+    :viitat "Viitat"
+    :muut-vaylatyot "Muut väylätyöt"
+    :rakennus-ja-kuljetuspalvelut "Rakennus- ja kuljetuspalvelut"
+    :muut-palvelut "Muut palvelut"
+    :vesiliikennemerkit "Vesiliikennemerkit"
+    :kiintea-turvalaite "Kiinteä turvalaite"
+    ;; Formatoidaan sinne päin
+    (some-> tyyppi name str/capitalize)))
+
+(defn jarjesta-reimari-tyolajit [tyolajit]
+  (sort-by reimari-tyolaji-fmt tyolajit))
 
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
@@ -42,8 +83,38 @@
    "1022541907" :telematiikkalaitteet
    "1022541910" :telematiikkalaitteet})
 
+(defn reimari-tyoluokka-avain->koodi [avain]
+  (set (filter #(= (get reimari-tyoluokat %) avain)
+               (keys reimari-tyoluokat))))
+
+(defn reimari-tyoluokka-fmt [tyoluokka]
+  (case tyoluokka
+    :kuljetuskaluston-huolto-ja-kunnossapito "Kuljetuskaluston huolto ja kunnossapito"
+    :toimistotyot "Toimistotyöt"
+    :valo-ja-energialaitteet "Valo- ja energialaitteet"
+    :turvalaitteiden-tukikohtatyot "Turvalaitteiden tukikohtatyöt"
+    :asennus-ja-huolto "Asennus ja huolto"
+    :tukikohtatyot "Tukikohtatyöt"
+    :tarkastustyot "Tarkastustyöt"
+    :muut-tukikohtatyot "Muut tukikohtatyöt"
+    :ymparistotyot "Ympäristötyöt"
+    :navi "Ravi"
+    :rakennuspalvelut "Rakennuspalvelut"
+    :muut-tyot "Muut työt"
+    :kuljetuspalvelut "Kuljetuspalvelut"
+    :vts-tyot "VTS-työt"
+    :rakenteet "Rakenteet"
+    :pienehkot-vaylatyot "Pienehköt väylätyöt"
+    :telematiikkalaitteet "Telematiikkalaitteet"
+    :luotsitoiminnan-palvelut "Luotsitoiminnan palvelut"
+    ;; Formatoidaan sinne päin
+    (some-> tyoluokka name str/capitalize)))
+
+(defn jarjesta-reimari-tyoluokat [tyoluokat]
+  (sort-by reimari-tyoluokka-fmt tyoluokat))
+
 (def ^{:doc "Reimarin toimenpidetyypit."}
-  reimari-toimenpidetyypit
+reimari-toimenpidetyypit
   {"1022542046" :alukset-ja-veneet
    "1022542040" :toimistotyot
    "1022542048" :muu-kuljetuskalusto
@@ -89,7 +160,7 @@
    "1022542012" :siirto
    "1022542027" :tarkastus-huolto-ja-korjaus
    "1022542031" :kivien-ym-esteiden-poisto
-   "1022540608" :Sektorin-tarkastus
+   "1022540608" :sektorin-tarkastus
    "1022542037" :uittorakenteet
    "1022542035" :satamarakenteet
    "1022542016" :sijoittajatyot
@@ -107,11 +178,160 @@
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
 
+(defn reimari-toimenpidetyyppi-avain->koodi [avain]
+  (set (filter #(= (get reimari-toimenpidetyypit %) avain)
+               (keys reimari-toimenpidetyypit))))
+
+(defn reimari-toimenpidetyyppi-fmt [toimenpide]
+  (case toimenpide
+    :alukset-ja-veneet "Alukset ja veneet"
+    :toimistotyot "Toimistötyöt"
+    :muu-kuljetuskalusto "Muu kuljetuskalusto"
+    :valo-ja-energialaitetyot "Valo ja energialaitetyöt"
+    :poiju-ja-viittakorjaustyot "Polju- ja viittakorjaustyöt"
+    :sijaintitarkastus "Sijaintitarkastus"
+    :asennus-tarkastus-ja-vaihto "Asennus, tarkastus ja vaihto"
+    :autot-traktorit "Autot, traktorit"
+    :T&K "T&K"
+    :kiinteistojen-yllapito-ja-huolto "Kiinteistöjen ylläpito ja huolto"
+    :asennus "Asennus"
+    :tarkastustyot "Tarkastustyöt"
+    :muut-tukityot "Muut tukityöt"
+    :muun-kaluston-kunnossapito "Muun kaluston kunnossapito"
+    :muut-turvalaitetyot "Muut turvalaitetyöt"
+    :raivaus-ja-ymparistonhoito "Raivaus ja ympäristönhoito"
+    :koulutus "Koulutus"
+    :varasto-ja-hankintatyot "Varasto- ja hankintatyöt"
+    :ankkuripainojen-tyot "Ankkuripainojen työt"
+    :navityot "Navityöt"
+    :kiinteistot "Kiinteistöt"
+    :muut-palvelut "Muut palvelut"
+    :sijoittajatyot "Sijoittajatyöt"
+    :aluskalustolla "Aluskalustolla"
+    :sektorien-tarkastus-ja-saato "Sektorien tarkastus ja säätö"
+    :auto-tai-muulla-kalustolla "Auto tai muulla kalustolla"
+    :huoltotyo "Huoltotyö"
+    :uudisrakentaminen "Uudisrakentaminen"
+    :VTS-tyot "VTS-työt"
+    :tutkamajakkatyot "Tutkamajakkatyöt"
+    :siirto "Siirto"
+    :tarkastus-huolto-ja-korjaus "Tarkastus, huolto ja korjaus"
+    :kivien-ym-esteiden-poisto "Kivien ym. esteiden poisto"
+    :sektorin-tarkastus "Sektorien tarkastus"
+    :uittorakenteet "Uittorakenteet"
+    :satamarakenteet "Satamarakenteet"
+    :pelastustoimintapalvelut "Pelastustoimintapalvelut"
+    :kanavarakenteet "Kanavarakenteet"
+    :peruskorjaus "Peruskorjaus"
+    :kaukovalvontalaitetyot "Kaukovalvontalaitetyöt"
+    :poisto "Poisto"
+    :ankkurointityot "Ankkurityöt"
+    :jaanmurtopalvelut "Jäänmurtopalvelut"
+    :tutkintoajo "Tutkintoajo"
+    :luotsiajo "Luotsiajo"
+    ;; Formatoidaan sinne päin
+    (some-> toimenpide name str/capitalize)))
+
+(defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
+  (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
+
 (def ^{:doc "Reimarin toimenpiteen tilat"}
-  reimari-tilat
+reimari-tilat
   {"1022541202" :suoritettu
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
+
+(define-tables
+  ["reimari_toimenpide" ::reimari-toimenpide
+   {"muokattu" ::m/muokattu
+    "muokkaaja" ::m/muokkaaja-id
+    "luotu" ::m/luotu
+    "luoja" ::m/luoja-id
+    "poistettu" ::m/poistettu?
+    "poistaja" ::m/poistaja-id
+    "lisatyo" ::lisatyo?
+    #?@(:clj
+        [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
+         ::toteuma (rel/has-one ::toteuma-id ::t/toteuma ::t/id)
+         ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+         ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
+         ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
+         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+
+;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
+(s/def ::tyolaji (set (vals reimari-tyolajit)))
+(s/def ::tyoluokka (set (vals reimari-tyoluokat)))
+(s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
+;; Reimarin työlaji/-luokka/toimenpide ovat tiettyjä string-koodiarvoja
+(s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
+(s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
+(s/def ::reimari-tyoluokat (s/and set? (s/every ::reimari-tyoluokka)))
+(s/def ::reimari-toimenpidetyyppi (set (keys reimari-toimenpidetyypit)))
+(s/def ::reimari-toimenpidetyypit (s/and set? (s/every ::reimari-toimenpidetyyppi)))
+
+(s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
+                             ::vv-vayla/id
+                             ::vv-vayla/nimi]))
+(s/def ::pvm inst?)
+(s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
+                                  ::vv-turvalaite/nro
+                                  ::vv-turvalaite/ryhma]))
+(s/def ::vikakorjauksia? boolean?)
+
+(def reimari-kentat
+  #{::reimari-id
+    ::reimari-tyolaji
+    ::reimari-tyoluokka
+    ::reimari-toimenpidetyyppi
+    ::reimari-tila
+    ::reimari-luotu
+    ::reimari-muokattu
+    ::reimari-asiakas
+    ::reimari-vastuuhenkilo
+    ::reimari-alus
+    ::reimari-urakoitsija
+    ::reimari-sopimus
+    ::reimari-turvalaite
+    ::reimari-vayla})
+
+(def metatiedot
+  #{::m/muokattu
+    ::m/muokkaaja-id
+    ::m/luotu
+    ::m/luoja-id
+    ::m/poistettu?
+    ::m/poistaja-id})
+
+(def viittaus-idt
+  #{::toteuma-id
+    ::urakoitsija-id
+    ::sopimus-id
+    ::turvalaite-id
+    ::vayla-id
+    ::luoja
+    ::luoja-id})
+
+(def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
+(def toteuma #{[::toteuma #{::t/id ::t/tyyppi}]})
+(def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
+(def sopimus #{[::sopimus sopimus/perustiedot]})
+(def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
+(def vayla #{[::vayla vv-vayla/perustiedot]})
+
+(def viittaukset
+  (clojure.set/union
+    vikailmoitus
+    toteuma
+    urakoitsija
+    sopimus
+    turvalaite
+    vayla))
+
+(def perustiedot
+  #{::id
+    ::lisatieto
+    ::suoritettu
+    ::lisatyo?})
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
@@ -119,18 +339,25 @@
 (defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
-(def tyolajit (vals reimari-tyolajit))
+(defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
+  (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
 
-(def tyolaji-fmt
-  (merge
-    (into {}
-          (map (juxt identity
-                     (comp
-                       (fn [s] (clojure.string/replace s "-" " "))
-                       clojure.string/capitalize
-                       name))
-               tyolajit))
-    {:kiinteat-turvalaitteet "Kiinteät turvalaitteet"
-     :kiintea-turvalaite "Kiinteä turvalaite"
-     :tukityot "Tukityöt"
-     :muut-vaylatyot "Muut väylätyöt"}))
+(defn toimenpiteiden-vaylat [toimenpiteet]
+  (distinct (map #(::vayla %) toimenpiteet)))
+
+;; Palvelut
+
+(s/def ::hae-kokonaishintaiset-toimenpiteet-kysely
+  (s/keys
+    ;; Toimenpiteen / toteuman hakuparametrit
+    :req [::to/urakka-id]
+    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
+          ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
+    ;; Muut hakuparametrit
+    :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
+             ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
+
+(s/def ::hae-kokonaishintaiset-toimenpiteet-vastaus
+  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+                           ::tyoluokka ::toimenpide ::pvm
+                           ::turvalaite ::vikakorjauksia?])))

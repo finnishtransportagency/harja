@@ -49,7 +49,10 @@
     :sopimukset
     :urakan-tyotuntimuistutukset
     :hankkeet
-    :urakan-tyotunnit})
+    :urakan-tyotunnit
+    :vv-yksikkohintaiset
+    :vv-kokonaishintaiset
+    :vv-vaylat})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
