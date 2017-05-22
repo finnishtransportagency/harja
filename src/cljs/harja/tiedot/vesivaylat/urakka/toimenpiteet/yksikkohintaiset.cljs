@@ -27,7 +27,8 @@
                     :vayla nil
                     :tyolaji nil
                     :tyoluokka nil
-                    :toimenpide nil}
+                    :toimenpide nil
+                    :vain-vikailmoitukset? false}
          :nakymassa? false
          :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
@@ -55,7 +56,8 @@
 
 (defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
-                                      tyolaji tyoluokka toimenpide] :as valinnat}]
+                                      tyolaji tyoluokka toimenpide
+                                      vain-vikailmoitukset?] :as valinnat}]
   ;; TODO Työlaji / työluokka / toimenpide avain voi mäppäytyä useaan koodiin,
   ;; tällöin pitää voida lähettää kaikki setissä
   (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
@@ -67,6 +69,7 @@
                                    ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi toimenpide)
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
+                                   :vikailmoitukset? vain-vikailmoitukset?
                                    :tyyppi :yksikkohintainen}))
 
 (extend-protocol tuck/Event

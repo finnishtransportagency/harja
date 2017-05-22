@@ -10,7 +10,8 @@
 
 (def valintojen-avaimet [:urakka-id :sopimus-id :aikavali
                          :vaylatyyppi :vayla
-                         :tyolaji :tyoluokka :toimenpide])
+                         :tyolaji :tyoluokka :toimenpide
+                         :vain-vikailmoitukset?])
 
 (defn arvot-pudotusvalikko-valinnoiksi [kartta]
   (into [nil] (distinct (vals kartta))))
