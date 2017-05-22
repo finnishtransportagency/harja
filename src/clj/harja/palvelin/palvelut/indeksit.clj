@@ -103,8 +103,9 @@
     (log/debug "hae-paallystysurakan-indeksit: " indeksit)
     indeksit))
 
-(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
+(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan
   "Tarkistaa, että päällystysurakan indeksitieto kuuluu annettuun urakkaan"
+  [db urakka-id paallystysurakan-indeksi-id]
   (assert (and urakka-id paallystysurakan-indeksi-id) "Ei voida suorittaa tarkastusta")
   (let [indeksin-urakka-id-kannasta (:urakka (first (q/hae-paallystysurakan-indeksin-urakka-id db {:id paallystysurakan-indeksi-id})))]
     (when (not= urakka-id indeksin-urakka-id-kannasta)
