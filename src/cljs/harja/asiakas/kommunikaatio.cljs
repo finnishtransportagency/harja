@@ -233,6 +233,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (def yhteys-katkennut? (r/atom false))
 (def istunto-vanhentunut? (r/atom false))
 (def pingaus-kaynnissa? (r/atom false))
+(def yhteysvirheiden-lahetys-kaynnissa? (r/atom false))
 (def normaali-pingausvali-millisekunteina (* 1000 20))
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (r/atom normaali-pingausvali-millisekunteina))
@@ -283,6 +284,18 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                                      (kasittele-onnistunut-pingaus)))
           sallittu-viive ([_] (kasittele-yhteyskatkos :ping nil)))
         (recur)))))
+
+(defn kaynnista-yhteysvirheiden-raportointi []
+  (when-not @yhteysvirheiden-lahetys-kaynnissa?
+    (log "Käynnistetään yhteysvirheiden lähetys")
+    (reset! yhteysvirheiden-lahetys-kaynnissa? true)
+    (go-loop []
+      (<! (timeout 10000))
+      (when-not (empty? @yhteyskatkokset)
+        (log "Lähetetään yhteysvirheet")
+        ;; TODO Entä jos epäonnistuu tämäkin!?
+        (<! (post! :pois-kytketyt-ominaisuudet {:yhteyskatkokset @yhteyskatkokset})))
+      (recur)))
 
 (defn url-parametri
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"

@@ -47,13 +47,13 @@
           (error errorObj)
           (k/post! :raportoi-selainvirhe
                    {:url    url
-                    :sijainti (-> js/window .-location .-href)
+                    :sijainti (-> js/window .-location .-hrraportoi-selainvirheef)
                     :viesti errorMsg
                     :rivi   lineNumber
                     :sarake column
                     :selain (.-userAgent (.-navigator js/window))
                     :stack (when errorObj (aget errorObj "stack"))})
-          (v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
+          #_(v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
@@ -62,6 +62,7 @@
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
     (k/kaynnista-palvelimen-pingaus)
+    (k/kaynnista-yhteysvirheiden-raportointi)
     (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
