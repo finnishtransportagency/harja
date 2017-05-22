@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn sanitoi [sisalto]
   (str/replace (str sisalto) "<" "&lt;"))
@@ -22,7 +23,9 @@
    (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
 
 (defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
-  (let [palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
+  (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
+                             yhteyskatkokset)
+        palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
     [:div "Käyttäjä " (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") " raportoi yhteyskatkoksista palveluissa:"
      [:table
       (map (fn [palvelu]
