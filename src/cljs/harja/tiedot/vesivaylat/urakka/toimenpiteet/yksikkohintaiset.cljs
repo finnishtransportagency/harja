@@ -6,7 +6,7 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -85,7 +85,7 @@
     (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys tiedot jaettu/valintojen-avaimet))
           haku (tuck/send-async! ->HaeToimenpiteet)]
-      (haku uudet-valinnat)
+      (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
 
@@ -93,10 +93,7 @@
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (let [valinnat (if (empty? valinnat)
-                       (:valinnat app)
-                       valinnat)
-            tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
             fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
