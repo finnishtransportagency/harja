@@ -64,7 +64,13 @@
                                                              ind_nimi "', '"
                                                              summa "');")))]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
-      (is {:summa 1000M, :korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M} kyselyn-kautta)
+      (tarkista-map-arvot
+       {:summa 1000M,
+        ;;:korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M
+        :korotettuna 1004.07M
+        :korotus 4.07M
+        }
+       kyselyn-kautta)
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
       (is (= 1005.5857006064475000M (second bonarit)) "bonari korotuksen kera")
       (is (= 5.5857006064475000M (nth bonarit 2)) "bonarin korotus")
