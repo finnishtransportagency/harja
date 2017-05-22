@@ -11,7 +11,10 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]
-            [harja.ui.lomake :as lomake]))
+            [goog.events.EventType :as EventType]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -227,8 +230,6 @@
 
    [aikavali valittu-aikavali-atom]])
 
-
-
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
   [ur
    valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
@@ -237,15 +238,25 @@
    urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
 
   [:span
-
    [urakan-sopimus-ja-hoitokausi
     ur
     valittu-sopimusnumero-atom valitse-sopimus-fn
     hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
    [aikavali valittu-aikavali-atom]
-
    [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
+
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali
+  [ur
+   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
+   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
+   valittu-aikavali-atom] ;; hoitokauden-aikavali
+
+  [:span
+   [urakan-sopimus-ja-hoitokausi
+    ur
+    valittu-sopimusnumero-atom valitse-sopimus-fn
+    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [aikavali valittu-aikavali-atom]])
 
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
@@ -280,7 +291,6 @@
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta @valittu-varustetoteumatyyppi-atom
                           :format-fn #(if % (second %) "Kaikki")
-
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
 
@@ -316,3 +326,86 @@
        (lomake/ryhma
          {:rivi? true}
          vakio-aikavalikentta)))))
+
+(defn vaylatyyppi
+  [valittu-vaylatyyppi-atom vaylatyypit format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Väylätyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-vaylatyyppi-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vaylatyyppi-atom %)}
+    vaylatyypit]])
+
+(defn vayla
+  [valittu-vayla-atom vaylat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Väylä"]
+   [livi-pudotusvalikko {:valinta @valittu-vayla-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vayla-atom %)}
+    vaylat]])
+
+(defn tyolaji
+  [valittu-tyolaji-atom tyolajit format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Työlaji"]
+   [livi-pudotusvalikko {:valinta @valittu-tyolaji-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-tyolaji-atom %)}
+    tyolajit]])
+
+(defn tyoluokka
+  [valittu-tyoluokka-atom tyoluokat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Työluokka"]
+   [livi-pudotusvalikko {:valinta @valittu-tyoluokka-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-tyoluokka-atom %)}
+    tyoluokat]])
+
+(defn toimenpide
+  [valittu-toimenpide-atom toimenpiteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Toimenpide"]
+   [livi-pudotusvalikko {:valinta @valittu-toimenpide-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-toimenpide-atom %)}
+    toimenpiteet]])
+
+(defn urakkavalinnat [optiot & sisalto]
+  [:div.urakkavalinnat sisalto])
+
+(defn urakkatoiminnot [{:keys [sticky?] :as optiot} & sisalto]
+  (let [naulattu? (atom false)
+        elementin-etaisyys-ylareunaan (atom nil)
+        maarita-sticky! (fn []
+                          (if (and
+                                sticky?
+                                (> (dom/scroll-sijainti-ylareunaan) (+ @elementin-etaisyys-ylareunaan 20)))
+                            (reset! naulattu? true)
+                            (reset! naulattu? false)))
+        kasittele-scroll-event (fn [this _]
+                                 (maarita-sticky!))
+        kasittele-resize-event (fn [this _]
+                                 (maarita-sticky!))]
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL kasittele-scroll-event
+                           EventType/RESIZE kasittele-resize-event)
+      (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                          (maarita-sticky!)))
+      (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
+                               (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                 (r/dom-node %))))
+      (fn [optiot & sisalto]
+        [:div.urakkatoiminnot {:class (when @naulattu? "urakkatoiminnot-naulattu ")}
+         sisalto]))))
+
+(defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
+  [:div.row
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma1]
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma2]
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma3]])

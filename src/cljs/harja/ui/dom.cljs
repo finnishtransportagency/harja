@@ -126,6 +126,11 @@
         etaisyys (.-top r)]
     etaisyys))
 
+(defn elementin-etaisyys-dokumentin-ylareunaan
+  [solmu]
+  (+ (scroll-sijainti-ylareunaan)
+     (elementin-etaisyys-viewportin-ylareunaan solmu)))
+
 (defn elementin-etaisyys-viewportin-oikeaan-reunaan
   [solmu]
   (let [r (.getBoundingClientRect solmu)

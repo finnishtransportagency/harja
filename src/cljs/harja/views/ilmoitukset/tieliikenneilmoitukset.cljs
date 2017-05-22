@@ -186,7 +186,7 @@
       [virkaapupyynnot-korostettu]
 
       (when-not kuittaa-monta-nyt
-        [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
+        [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
          {:luokka "pull-right kuittaa-monta"}])
 
       (when kuittaa-monta-nyt

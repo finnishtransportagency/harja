@@ -1121,7 +1121,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (assert (and paalle-teksti pois-teksti)
           "Määrittele :paalle-teksti ja :pois-teksti kentät!")
   (let [arvo-nyt @data]
-    [napit/yleinen (if arvo-nyt
+    [napit/yleinen-toissijainen (if arvo-nyt
                      pois-teksti
                      paalle-teksti)
      (or toggle! #(swap! data not))

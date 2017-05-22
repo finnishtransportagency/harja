@@ -124,9 +124,11 @@ SELECT
   k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-    THEN '*'
+                            THEN '*'
                             ELSE '' END),
-                           id, '=', sampoid))
+                            id,
+                            '=',
+                            COALESCE (sampoid, nimi)))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
 

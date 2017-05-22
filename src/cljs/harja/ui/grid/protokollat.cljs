@@ -5,7 +5,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [cljs.core.async :refer [<! put! chan]]
-            [schema.core :as s :include-macros true]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -19,13 +18,23 @@
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
 
-(defrecord Otsikko [teksti])
+(defrecord Otsikko [teksti optiot])
 
 (defn otsikko
-  "Luo otsikon annetulla tekstillä."
-  [teksti]
-  (assert (not (nil? teksti)) "Anna otsikolle teksti.")
-  (->Otsikko teksti))
+  "Luo otsikon annetulla tekstillä.
+
+  Optiot on map, jossa voi olla:
+  :id                             Otsikkorivin yksilöivä id (vaaditaan jos otsikkorivit halutaan piilottaa gridissä)
+                                  Jos ei anneta, generoidaan uniikki id.
+  :otsikkokomponentit             Vector mappeja, jossa avaimina sijainti ja sisalto.
+                                  Sijainti annetaan prosentteina X-akselilla ja sisalto on funktio,
+                                  joka palauttaa komponentin."
+  ([teksti] (otsikko teksti {}))
+  ([teksti optiot]
+   (assert (not (nil? teksti)) "Anna otsikolle teksti.")
+   (let [id (or (:id optiot)
+                (str (str "harja-grid-valiotsikko-" (gensym))))]
+     (->Otsikko teksti (merge {:id id} optiot)))))
 
 (defn otsikko? [x]
   (instance? Otsikko x))
