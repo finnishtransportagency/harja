@@ -294,9 +294,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (when-not (empty? @yhteyskatkokset)
         (log "Lähetetään yhteysvirheet")
         (let [vastaus (<! (post! :pois-kytketyt-ominaisuudet {:yhteyskatkokset @yhteyskatkokset}))]
-          (when-not (virhe? vastaus)
-            (log "Yhteyskatkostiedot lähetetty!")
-            (reset! yhteyskatkokset []))))
+          (if-not (virhe? vastaus)
+            (do (log "Yhteyskatkostiedot lähetetty!")
+                (reset! yhteyskatkokset []))
+            (log "Yhteysvirheitä ei voitu lähettää. Yritetään kohta uudelleen."))))
       (recur))))
 
 (defn url-parametri
