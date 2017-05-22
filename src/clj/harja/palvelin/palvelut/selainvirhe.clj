@@ -6,7 +6,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm]))
 
 (defn sanitoi [sisalto]
   (str/replace (str sisalto) "<" "&lt;"))
@@ -32,8 +33,12 @@
              [:tr
               [:td {:valign "top"} [:b (str palvelu)]]
               [:td [:pre (str "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl, "
-                              "ensimmäinen: " (first (sort t/after? (get palvelulla-ryhmiteltyna palvelu)))
-                              "viimeinen: " (last (sort t/after? (get palvelulla-ryhmiteltyna palvelu))))]]])
+                              "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                   (sort t/after?)
+                                                   (first))
+                              "viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                 (sort t/after?)
+                                                 (last)))]]])
            (keys palvelulla-ryhmiteltyna))]]))
 
 (defn raportoi-selainvirhe
@@ -47,7 +52,8 @@
   [user katkostiedot]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (log/debug "Vastaanotettu yhteyskatkostiedot: " (pr-str katkostiedot))
-  (log/warn (formatoi-yhteyskatkos user katkostiedot)))
+  (log/warn (formatoi-yhteyskatkos user katkostiedot))
+  {:ok? true})
 
 
 (defrecord Selainvirhe []

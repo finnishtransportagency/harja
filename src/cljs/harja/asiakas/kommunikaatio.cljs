@@ -290,7 +290,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (log "Käynnistetään yhteysvirheiden lähetys")
     (reset! yhteysvirheiden-lahetys-kaynnissa? true)
     (go-loop []
-      (<! (timeout 10000))
       (when-not (empty? @yhteyskatkokset)
         (log "Lähetetään yhteysvirheet: " (count @yhteyskatkokset) " kpl.")
         (let [vastaus (<! (post! :raportoi-yhteyskatkos {:yhteyskatkokset @yhteyskatkokset}))]
@@ -298,6 +297,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
             (do (log "Yhteyskatkostiedot lähetetty!")
                 (reset! yhteyskatkokset []))
             (log "Yhteysvirheitä ei voitu lähettää. Yritetään kohta uudelleen."))))
+      (<! (timeout 10000))
       (recur))))
 
 (defn url-parametri
