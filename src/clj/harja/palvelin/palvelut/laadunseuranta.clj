@@ -117,8 +117,9 @@
       (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
                                       sanktiotyypin-id))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan [db urakka-id sanktio-id]
+(defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
+  [db urakka-id sanktio-id]
   (when (id-olemassa? sanktio-id)
     (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
       (when-not (= sanktion-urakka urakka-id)
