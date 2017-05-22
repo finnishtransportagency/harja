@@ -21,8 +21,8 @@
    [:tr [:td {:valign "top"} [:b "Käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
    (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
 
-(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} katkostiedot]
-  (let [palvelulla-ryhmiteltyna (group-by :palvelu katkostiedot)]
+(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
+  (let [palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
     [:div "Käyttäjä " (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") " raportoi yhteyskatkoksista palveluissa:"
      [:table
       (map (fn [palvelu]
@@ -43,6 +43,7 @@
   "Logittaa yksittäisen käyttäjän raportoimat selainvirheet"
   [user katkostiedot]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (log/debug "Vastaanotettu yhteyskatkostiedot: " (pr-str katkostiedot))
   (log/warn (formatoi-yhteyskatkos user katkostiedot)))
 
 
