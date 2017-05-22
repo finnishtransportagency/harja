@@ -22,7 +22,7 @@
     (map #(set/rename-keys % {::vv-toimenpide/reimari-tyolaji ::vv-toimenpide/tyolaji
                               ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
                               ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
-                              ::vv-toimenpide/reimari-tyyppi ::vv-toimenpide/toimenpide
+                              ::vv-toimenpide/reimari-toimenpidetyyppi ::vv-toimenpide/toimenpide
                               ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
     (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
@@ -50,13 +50,14 @@
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
-        tyoluokka (::vv-toimenpide/reimari-tyoluokka tiedot)
-        toimenpide (::vv-toimenpide/reimari-toimenpide tiedot)
-        fetchattu (-> (fetch db ::vv-toimenpide/toimenpide (clojure.set/union
-                                                             vv-toimenpide/perustiedot
-                                                             vv-toimenpide/viittaukset
-                                                             vv-toimenpide/reimari-kentat
-                                                             vv-toimenpide/metatiedot)
+        tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
+        toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
+        fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
+                             (clojure.set/union
+                               vv-toimenpide/perustiedot
+                               vv-toimenpide/viittaukset
+                               vv-toimenpide/reimari-kentat
+                               vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
                                {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka-id urakka-id}}
@@ -75,11 +76,11 @@
                                  {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
                                (when vayla-id
                                  {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
-                               (when (and tyolaji (not tyoluokka) (not toimenpide))
+                               (when tyolaji
                                  {::vv-toimenpide/reimari-tyolaji tyolaji})
-                               (when (and tyoluokka (not toimenpide))
-                                 {::vv-toimenpide/reimari-tyoluokka tyoluokka})
-                               (when toimenpide
-                                 {::vv-toimenpide/reimari-tyyppi toimenpide})))
+                               (when tyoluokat
+                                 {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
+                               (when toimenpiteet
+                                 {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
     (into [] toimenpiteet-xf fetchattu)))

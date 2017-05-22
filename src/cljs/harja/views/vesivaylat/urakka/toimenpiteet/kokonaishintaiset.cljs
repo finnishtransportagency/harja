@@ -6,12 +6,9 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
-            [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [reagent.core :as r]
-            [harja.ui.kentat :as kentat])
+            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn urakkatoiminnot [e! app]

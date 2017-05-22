@@ -1,5 +1,5 @@
 (ns harja.kyselyt.specql
-  "Määritellään yleisiä clojure.spec.alpha tyyppejä."
+  "Määritellään yleisiä clojure.spec tyyppejä."
   (:require [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.data-types :as d]
             [harja.domain.tietyoilmoitukset :as t]

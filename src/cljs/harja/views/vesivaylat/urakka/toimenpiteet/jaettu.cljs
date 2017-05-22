@@ -14,7 +14,8 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]))
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
+            [harja.fmt :as fmt]))
 
 ;;;;;;;;;;;;;;
 ;; SUODATTIMET
@@ -28,16 +29,16 @@
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     ;; TODO Osa tiedoista puuttuu
-    "Urakoitsija" "-"
-    "Sopimusnumero" "-"
+    "Urakoitsija" "?"
+    "Sopimusnumero" "?"
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)
     "Toimenpide" (::to/toimenpide toimenpide)
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
-    "Urakoitsijan vastuuhenkilö" "-"
-    "Henkilölukumaara" "-"]
+    "Urakoitsijan vastuuhenkilö" "?"
+    "Henkilölukumaara" "?"]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Käytetyt komponentit"]
     [:table
@@ -49,9 +50,9 @@
      [:tbody
       [:tr
        ;; TODO Komponenttitiedot puuttuu
-       [:td "-"]
-       [:td "-"]
-       [:td "-"]]]]]])
+       [:td "?"]
+       [:td "?"]
+       [:td "?"]]]]]])
 
 (defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
@@ -189,7 +190,8 @@
   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
    {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
    {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-   {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}])
+   {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
+   {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}])
 
 (defn- paneelin-sisalto [e! toimenpiteet sarakkeet]
   [grid/grid

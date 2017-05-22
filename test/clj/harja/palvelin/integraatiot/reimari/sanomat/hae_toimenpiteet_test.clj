@@ -23,11 +23,11 @@
    ::toimenpide/sopimus {::sopimus/nro -666
                          ::sopimus/tyyppi "1022542301"
                          ::sopimus/nimi "Hoitosopimus"}
-   ::toimenpide/tyyppi "1022542001"
+   ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun"
-   ::toimenpide/tyoluokka "1022541905"
+   ::toimenpide/reimari-tyoluokka "1022541905"
    ::toimenpide/tila "1022541202"
-   ::toimenpide/tyolaji "1022541802"
+   ::toimenpide/reimari-tyolaji "1022541802"
    ::toimenpide/muokattu #inst "2017-04-24T13:30:00.000-00:00"
    ::toimenpide/alus {::alus/tunnus "omapaatti"
                       ::alus/nimi "MS Totally out of Gravitas"}
@@ -39,6 +39,6 @@
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-    (println (s/explain-str ::toimenpide/toimenpide luettu-toimenpide))
-    (is (nil? (s/explain-data ::toimenpide/toimenpide luettu-toimenpide)))
+    (println (s/explain-str ::toimenpide/reimari-toimenpide luettu-toimenpide))
+    (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))

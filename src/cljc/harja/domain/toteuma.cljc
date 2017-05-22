@@ -19,8 +19,12 @@
     "suorittajan_ytunnus" ::suorittajan-ytunnus
     "suorittajan_nimi" ::suorittajan-nimi
     "ulkoinen_id " ::ulkoinen-id
-    "tr_numero" ::tr/numero
-    "tr_alkuosa" ::tr/alkuosa
-    "tr_alkuetaisyys" ::tr/alkuetaisyys
-    "tr_loppuosa" ::tr/loppuosa
-    "tr_loppuetaisyys" ::tr/loppuetaisyys}])
+    ;; PENDING Tässä olisi hyvä käyttää harja.domain.tierekisteri:stä löytyviä speccejä,
+    ;; mutta toteuman tr-kentät ovat sallivampia kuin mitä tierekisteri-domainissa on
+    ;; määritetty (toteuman tr-kentät voivat olla null). Pitäisi jotenkin yhtenäistää
+    ;; tr-speccaus.
+    "tr_numero" ::tr-numero
+    "tr_alkuosa" ::tr-alkuosa
+    "tr_alkuetaisyys" ::tr-alkuetaisyys
+    "tr_loppuosa" ::tr-loppuosa
+    "tr_loppuetaisyys" ::tr-loppuetaisyys}])
