@@ -54,21 +54,8 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
-(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
-                                       vaylatyyppi vayla
-                                       tyolaji tyoluokka toimenpide
-                                       vain-vikailmoitukset?] :as valinnat}]
-  (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
-                                   ::to/sopimus-id sopimus-id
-                                   ::va/vaylatyyppi vaylatyyppi
-                                   ::to/vayla-id vayla
-                                   ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
-                                   ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
-                                   ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
-                                   :alku (first aikavali)
-                                   :loppu (second aikavali)
-                                   :vikailmoitukset? vain-vikailmoitukset?
-                                   :tyyppi :kokonaishintainen}))
+(defn kyselyn-hakuargumentit [valinnat]
+  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event
 

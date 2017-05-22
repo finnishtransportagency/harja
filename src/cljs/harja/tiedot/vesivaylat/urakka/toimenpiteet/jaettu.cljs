@@ -3,8 +3,11 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
-            [cljs.core.async :refer [<!]])
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [cljs.core.async :refer [<!]]
+            [harja.tyokalut.spec-apurit :as spec-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -30,6 +33,21 @@
   (cond (kaikki-valittu? tyolajin-toimenpiteet) true
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
+
+(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+                                      vaylatyyppi vayla
+                                      tyolaji tyoluokka toimenpide
+                                      vain-vikailmoitukset?] :as valinnat}]
+  (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
+                                   ::to/sopimus-id sopimus-id
+                                   ::va/vaylatyyppi vaylatyyppi
+                                   ::to/vayla-id vayla
+                                   ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
+                                   ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
+                                   ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
+                                   :alku (first aikavali)
+                                   :loppu (second aikavali)
+                                   :vikailmoitukset? vain-vikailmoitukset?}))
 
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
