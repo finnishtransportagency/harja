@@ -6,25 +6,16 @@ ALTER TABLE reimari_toimenpide
     ADD COLUMN hintatyyppi vv_toimenpide_hintatyyppi;
 
 UPDATE reimari_toimenpide
-  SET hintatyyppi = CASE WHEN (SELECT tyyppi FROM toteuma t JOIN reimari_toimenpide r ON t.id = r."toteuma-id") = 'vv-kokonaishintainen'
-    THEN 'kokonaishintainen' ELSE 'yksikkohintainen';
+  SET hintatyyppi = (SELECT
+                       CASE WHEN tyyppi = 'vv-kokonaishintainen' THEN 'kokonaishintainen' ELSE 'yksikkohintainen' END
+                     FROM toteuma t JOIN reimari_toimenpide r ON t.id = r."toteuma-id")::vv_toimenpide_hintatyyppi;
 
 ALTER TABLE reimari_toimenpide
     DROP COLUMN "toteuma-id";
 
--- Päivitä toteumatyyppiä, poista vesiväylä-enumit
-
-CREATE TYPE toteumatyyppi_new AS ENUM ('kokonaishintainen', 'yksikkohintainen', 'akillinen-hoitotyo', 'lisatyo', 'muutostyo', 'vahinkojen-korjaukset', 'materiaali');
+-- Poista toteumataulusta vesiväylätoteumat
 
 DELETE FROM toteuma WHERE tyyppi = 'vv-kokonaishintainen' OR tyyppi = 'vv-yksikkohintainen';
-
-ALTER TABLE toteuma
-  ALTER COLUMN tyyppi TYPE toteumatyyppi_new
-  USING (tyyppi::text::toteumatyyppi_new);
-
-DROP TYPE toteumatyyppi;
-
-ALTER TYPE toteumatyyppi_new RENAME TO toteumatyyppi;
 
 -- Lisää hinnoittelutaulut
 
@@ -49,8 +40,7 @@ CREATE TABLE vv_hinnoittelu_toimenpide
 (
   "toimenpide-id"  INTEGER REFERENCES reimari_toimenpide (id),
   "hinnoittelu-id" INTEGER REFERENCES vv_hinnoittelu (id),
-  UNIQUE("toimenpide-id", "hinnoittelu-id");
-  -- TODO unique
+  UNIQUE("toimenpide-id", "hinnoittelu-id")
 );
 
 CREATE TABLE vv_hinta
