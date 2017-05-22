@@ -11,8 +11,25 @@
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
             [cljs-time.core :as time]
-            [goog.string :as gstr])
+            [goog.string :as gstr]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
+
+(defonce ^{:doc
+           "Tähän atomiin tallennetaan tieto katkenneista yhteyksistä ja lähetetään
+            palvelimelle logitettavaksi, kunhan yhteys palautuu."}
+         yhteyskatkokset
+  (local-storage/local-storage-atom
+    :yhteyskatkokset
+    []
+    nil))
+
+(def sailyta-max-katkosta 1000)
+
+(defn- tallenna-yhteyskatkos! [palvelu]
+  (when (< (count @yhteyskatkokset) sailyta-max-katkosta)
+    (swap! yhteyskatkokset conj {:aika (pvm/pvm (pvm/nyt))
+                                 :palvelu palvelu})))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (or (gstr/startsWith host "10.")
@@ -56,13 +73,8 @@
     (tapahtumat/julkaise! {:aihe :ei-oikeutta
                            :viesti (str "Puutteelliset oikeudet kutsuttaessa palvelua " (pr-str palvelu))}))
 
-  (if (= 0 (:status vastaus))
-    ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
-    ;; PENDING: tässä tilanteessa voisimme jättää requestin pendaamaan ja yrittää sitä uudelleen
-    ;; kun verkkoyhteys on taas saatu takaisin.
-    (kasittele-yhteyskatkos vastaus)
-
-    ;; muuten, logita virhe
+  (if (= 0 (:status vastaus)) ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
+    (kasittele-yhteyskatkos palvelu vastaus)
     (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
   (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
 
@@ -101,18 +113,18 @@
               (>! chan testivastaus)
               (close! chan))
             (close! chan)))
-        (ajax-request {:uri             (str (polku) (name palvelu))
-                       :method          metodi
-                       :params          parametrit
-                       :headers         {"X-CSRF-Token" (<! (csrf-token))}
-                       :format          (transit-request-format transit/write-optiot)
+        (ajax-request {:uri (str (polku) (name palvelu))
+                       :method metodi
+                       :params parametrit
+                       :headers {"X-CSRF-Token" (<! (csrf-token))}
+                       :format (transit-request-format transit/write-optiot)
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                                  :raw    true})
-                       :handler         cb
+                                                                  :raw true})
+                       :handler cb
 
-                       :error-handler   (fn [[resp error]]
-                                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                          (close! chan))})))
+                       :error-handler (fn [[resp error]]
+                                        (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                        (close! chan))})))
     chan))
 
 
@@ -170,7 +182,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                       (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                       (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
                 500 (let [txt (.-responseText request)]
-                      (log "Liitelähetys epäonnistui: "  txt)
+                      (log "Liitelähetys epäonnistui: " txt)
                       (put! ch {:error :liitteen-lahetys-epaonnistui
                                 :viesti (if (= txt "Virus havaittu")
                                           txt
@@ -233,8 +245,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
             normaali-pingausvali-millisekunteina)
     (reset! yhteys-katkennut? false)))
 
-(defn- kasittele-yhteyskatkos [vastaus]
-  (log "Yhteys katkesi! Vastaus: " (pr-str vastaus))
+(defn- kasittele-yhteyskatkos [palvelu vastaus]
+  (log "Yhteys katkesi kutsuttaessa palvelua " (pr-str palvelu) ". Vastaus: " (pr-str vastaus))
+  (tallenna-yhteyskatkos! palvelu)
   (reset! yhteys-katkennut? true)
   (reset! nykyinen-pingausvali-millisekunteina
           yhteys-katkennut-pingausvali-millisekunteina)
@@ -251,7 +264,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
-  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))
+  (.addEventListener js/window "offline" #(kasittele-yhteyskatkos :offline nil)))
 
 (defn kaynnista-palvelimen-pingaus []
   (when-not @pingaus-kaynnissa?
@@ -259,17 +272,17 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (lisaa-kuuntelija-selaimen-verkkotilalle)
     (reset! pingaus-kaynnissa? true)
     (go-loop []
-             (when @yhteys-palautui-hetki-sitten
-               (<! (timeout 3000))
-               (reset! yhteys-palautui-hetki-sitten false))
-             (<! (timeout @nykyinen-pingausvali-millisekunteina))
-             (let [pingauskanava (pingaa-palvelinta)
-                   sallittu-viive (timeout 10000)]
-               (alt!
-                 pingauskanava ([vastaus] (when (= vastaus :pong)
-                                            (kasittele-onnistunut-pingaus)))
-                 sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
-               (recur)))))
+      (when @yhteys-palautui-hetki-sitten
+        (<! (timeout 3000))
+        (reset! yhteys-palautui-hetki-sitten false))
+      (<! (timeout @nykyinen-pingausvali-millisekunteina))
+      (let [pingauskanava (pingaa-palvelinta)
+            sallittu-viive (timeout 10000)]
+        (alt!
+          pingauskanava ([vastaus] (when (= vastaus :pong)
+                                     (kasittele-onnistunut-pingaus)))
+          sallittu-viive ([_] (kasittele-yhteyskatkos :ping nil)))
+        (recur)))))
 
 (defn url-parametri
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
