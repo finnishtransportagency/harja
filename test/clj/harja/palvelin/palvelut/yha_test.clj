@@ -182,7 +182,7 @@
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
-      (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
+      (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen)))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

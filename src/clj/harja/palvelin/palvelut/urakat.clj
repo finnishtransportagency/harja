@@ -95,10 +95,13 @@
 
         (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
 
-        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "*3=8H05228/10"] ja
-        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
+        ;; Sopimukset kannasta vectorina, jossa 1. elementti on id ja
+        ;; 2. elementti on sopimuksen tekstikuvaus (sampoid tai nimi):
+        ;; ["2=8H05228/01" "*3=8H05228/10"]
+        ;; Pääsopimus on se, joka alkaa '*' merkillä.
+
+        ;; Tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
         ;;                          :paasopimus 3}
-        ;; jossa pääsopimus on se, joka alkaa '*' merkilla
         (map pura-sopimukset)
 
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
