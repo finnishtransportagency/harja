@@ -27,10 +27,10 @@
    [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
    [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
    [:tr [:td {:valign "top"} [:b "URL:"]] [:td [:pre (sanitoi url)]]]
-   [:tr [:td {:valign "top"} [:b "selain: "]] [:td [:pre (sanitoi selain)]]]
-   [:tr [:td {:valign "top"} [:b "rivi: "]] [:td [:pre (sanitoi rivi)]]]
-   [:tr [:td {:valign "top"} [:b "sarake: "]] [:td [:pre (sanitoi sarake)]]]
-   [:tr [:td {:valign "top"} [:b "käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
+   [:tr [:td {:valign "top"} [:b "Selain: "]] [:td [:pre (sanitoi selain)]]]
+   [:tr [:td {:valign "top"} [:b "Rivi: "]] [:td [:pre (sanitoi rivi)]]]
+   [:tr [:td {:valign "top"} [:b "Sarake: "]] [:td [:pre (sanitoi sarake)]]]
+   [:tr [:td {:valign "top"} [:b "Käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
    (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
 
 (defn raportoi-selainvirhe
