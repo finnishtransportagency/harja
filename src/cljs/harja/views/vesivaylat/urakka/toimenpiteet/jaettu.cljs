@@ -53,7 +53,7 @@
        [:td "-"]
        [:td "-"]]]]]])
 
-(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]
+(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
@@ -96,23 +96,35 @@
                (fn [uusi]
                  (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
        (to/jarjesta-reimari-toimenpidetyypit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-toimenpidetyypit))
-       #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]]
+       #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
+
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
+        (r/wrap (get-in app [:valinnat :vain-vikailmoitukset?])
+                (fn [uusi]
+                  (e! (PaivitaValinnatKonstruktori {:vain-vikailmoitukset? uusi}))))]]
 
       lisasuodattimet)]
 
-   (when-not (empty? toolbar-napit)
+   (when-not (empty? urakkatoiminto-napit)
      (into
       ^{:key "urakkatoiminnot"}
       [valinnat/urakkatoiminnot {:sticky? true}]
-      toolbar-napit))])
+      urakkatoiminto-napit))])
 
 (defn suodattimet
-  ([e! PaivitaValinnatKonstruktori app urakka vaylahaku toolbar-napit]
-    (suodattimet e! PaivitaValinnatKonstruktori app urakka vaylahaku [] toolbar-napit))
-  ([e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]
-   [:div
-    [debug app]
-    [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet toolbar-napit]]))
+  [e! PaivitaValinnatKonstruktori app urakka vaylahaku {:keys [lisasuodattimet urakkatoiminnot]}]
+  [:div
+   [debug app]
+   [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku
+    (or lisasuodattimet [])
+    (or urakkatoiminnot [])]])
+
+(defn siirtonappi [e! app otsikko toiminto]
+  [napit/yleinen-ensisijainen otsikko
+  toiminto
+  {:disabled (not (some :valittu? (:toimenpiteet app)))}])
+
 
 ;;;;;;;;;;;;;;;;;
 ;; GRID / LISTAUS

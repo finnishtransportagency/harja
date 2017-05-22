@@ -10,11 +10,9 @@
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn toolbar-napit [e! app]
+(defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [napit/yleinen-ensisijainen "Siirrä valitut kokonaishintaisiin"
-   #(log "Painoit nappia")
-   {:disabled (not (some :valittu? (:toimenpiteet app)))}]])
+   [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(log "Painoit nappia")]])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -31,7 +29,8 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
-       [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku (toolbar-napit e! app)]
+       [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
+        {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app [{:otsikko "Hinta" :hae (constantly "TODO") :leveys 10}]]])))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]

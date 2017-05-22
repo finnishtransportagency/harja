@@ -12,11 +12,9 @@
             [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn toolbar-napit [e! app]
+(defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [napit/yleinen-ensisijainen "Siirrä valitut yksikköhintaisiin"
-   #(log "Painoit nappia")
-   {:disabled (not (some :valittu? (:toimenpiteet app)))}]])
+   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(log "Painoit nappia")]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -37,12 +35,7 @@
         tiedot/->PaivitaValinnat
         app (:urakka valinnat)
         tiedot/vaylahaku
-        [[kentat/tee-kentta {:tyyppi :checkbox
-                             :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
-          (r/wrap (get-in app [:valinnat :vain-vikailmoitukset?])
-                  (fn [uusi]
-                    (e! (tiedot/->PaivitaValinnat {:vain-vikailmoitukset? uusi}))))]]
-        (toolbar-napit e! app)]
+        {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
