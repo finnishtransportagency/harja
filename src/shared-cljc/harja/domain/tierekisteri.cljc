@@ -141,8 +141,9 @@
   [osa osien-pituudet]
   (number? (get osien-pituudet osa)))
 
-(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet]
+(defn osan-pituus-sopiva-verkolla?
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
+  [osa etaisyys osien-pituudet]
   (if-let [osan-pituus (get osien-pituudet osa)]
     (and (<= etaisyys osan-pituus)
          (>= etaisyys 0))
