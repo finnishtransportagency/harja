@@ -151,6 +151,7 @@
 
 (defn ajoradan-pituus-sopiva-verkolla? [osa ajorata etaisyys ajoratojen-pituudet]
   "Tarkistaa, onko annetun tieosan ajoradan alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
+  (println "--->>>> " ajoratojen-pituudet)
   (if-let [ajoradan-pituus (:pituus
                          (first (filter #(and (= osa (:osa %))
                                               (= ajorata (:ajorata %)))

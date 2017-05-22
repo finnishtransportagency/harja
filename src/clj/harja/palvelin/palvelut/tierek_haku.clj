@@ -86,8 +86,14 @@
        ajoratojen-pituudet (hae-ajoratojen-pituudet db {:tie tienumero
                                                         :aosa aosa
                                                         :losa losa})
+       ajorata-olemassa? (fn [osa]
+                           (or (not ajorata)
+                               (some #(and (= osa (:osa %)) (= ajorata (:ajorata %)))
+                                     ajoratojen-pituudet)))
        tulos {:aosa-olemassa? (tr-domain/osa-olemassa-verkolla? aosa osien-pituudet)
               :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
+              :alkuosan-ajorata-olemassa? (ajorata-olemassa? aosa)
+              :loppuosan-ajorata-olemassa? (ajorata-olemassa? losa)
               :aosa-pituus-validi? (if ajorata
                                      (tr-domain/ajoradan-pituus-sopiva-verkolla? aosa ajorata aet ajoratojen-pituudet)
                                      (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet))
@@ -102,6 +108,8 @@
        kaikki-ok? (every? true? (vals tulos))]
       {:ok? kaikki-ok? :syy (cond (not (:aosa-olemassa? tulos)) (str "Alkuosaa " aosa " ei ole olemassa")
                                   (not (:losa-olemassa? tulos)) (str "Loppuosaa " losa " ei ole olemassa")
+                                  (not (:alkuosan-ajorata-olemassa? tulos)) (str "Alkuosan" aosa " ajorataa ei ole olemassa")
+                                  (not (:loppuosan-ajorata-olemassa? tulos)) (str "Loppuosan" losa " ajorataa ei ole olemassa")
                                   (not (:aosa-pituus-validi? tulos)) (str "Alkuosan pituus " aet " ei kelpaa")
                                   (not (:losa-pituus-validi? tulos)) (str "Loppuosan pituus " let " ei kelpaa")
                                   (not (:geometria-validi? tulos)) "Osoitteelle ei saada muodostettua geometriaa"
