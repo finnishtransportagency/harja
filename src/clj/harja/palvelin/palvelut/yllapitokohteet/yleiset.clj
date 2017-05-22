@@ -49,9 +49,10 @@
       ;; muille urakkatyypeille ei tarkisteta
       nil)))
 
-(defn vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa [db urakka-id yllapitokohde-id]
+(defn vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
+  [db urakka-id yllapitokohde-id]
   (assert urakka-id "Urakka-id puuttuu")
   (when (id/id-olemassa? yllapitokohde-id)
     (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
@@ -64,9 +65,10 @@
                                         urakka-id " vaan urakkaan " kohteen-urakka
                                         ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka")))))))
 
-(defn vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan [db urakka-id yllapitokohde-id]
+(defn vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan
   "Tarkistaa, että ylläpitokohde on osoitettu annetulle tiemerkintäurakka-id:lle suoritettavaksi.
    Jos ei ole, heittää poikkeuksen."
+  [db urakka-id yllapitokohde-id]
   (assert urakka-id "Urakka-id puuttuu")
   (when (id/id-olemassa? yllapitokohde-id)
     (let [kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
@@ -78,8 +80,8 @@
                                         kohteen-suorittava-tiemerkintaurakka)))))))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan
-  [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
+  [db urakka-id yllapitokohde-id]
   (assert urakka-id "Urakka-id puuttuu")
   (when (id/id-olemassa? yllapitokohde-id)
     (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]

@@ -62,8 +62,9 @@
         (map (juxt :osa :pituus))
         (tv/hae-osien-pituudet db params)))
 
-(defn hae-tieosan-ajoradat [db params]
+(defn hae-tieosan-ajoradat
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
+  [db params]
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
 
 (defn validoi-tr-osoite-tieverkolla
