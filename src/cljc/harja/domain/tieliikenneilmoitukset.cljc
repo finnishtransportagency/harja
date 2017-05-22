@@ -152,7 +152,7 @@
         sp (:sahkoposti henkilo)
         tulos (when henkilo
                 (str
-                  (or puhelin)
+                  puhelin
                   (when (and puhelin sp) ", ")
                   (when sp (str sp))))]
     (if (empty? tulos) nil tulos)))
