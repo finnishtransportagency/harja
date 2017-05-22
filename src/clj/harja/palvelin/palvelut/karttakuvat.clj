@@ -143,7 +143,7 @@
                (merge p
                       (when transit-parametri
                         (some-> parametrit (get transit-parametri)
-                                java.net.URLDecoder/decode
+                                (java.net.URLDecoder/decode "UTF-8")
                                 transit/lue-transit-string)))))
       (do
         (log/info "Yritettiin hakea karttakuvan asioita tuntemattomalle lähteelle: " lahteen-nimi)
