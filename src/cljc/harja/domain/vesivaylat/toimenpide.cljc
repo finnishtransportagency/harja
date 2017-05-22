@@ -243,6 +243,7 @@ reimari-tilat
 
 (define-tables
   ["reimari_toimenpide" ::reimari-toimenpide
+   "vv_toimenpide_hintatyyppi" ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
     "luotu" ::m/luotu
@@ -252,7 +253,6 @@ reimari-tilat
     "lisatyo" ::lisatyo?
     #?@(:clj
         [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
-         ::toteuma (rel/has-one ::toteuma-id ::t/toteuma ::t/id)
          ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
          ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
@@ -312,7 +312,6 @@ reimari-tilat
     ::luoja-id})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
-(def toteuma #{[::toteuma #{::t/id ::t/tyyppi}]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
@@ -321,7 +320,6 @@ reimari-tilat
 (def viittaukset
   (clojure.set/union
     vikailmoitus
-    toteuma
     urakoitsija
     sopimus
     turvalaite
@@ -331,7 +329,8 @@ reimari-tilat
   #{::id
     ::lisatieto
     ::suoritettu
-    ::lisatyo?})
+    ::lisatyo?
+    ::hintatyyppi})
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))

@@ -66,9 +66,9 @@
                                (when urakoitsija-id
                                  {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
                                (when (= :kokonaishintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-kokonaishintainen"}})
+                                 {::vv-toimenpide/hintatyyppi :kokonaishintainen})
                                (when (= :yksikkohintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-yksikkohintainen"}})
+                                 {::vv-toimenpide/hintatyyppi :yksikkohintainen})
                                (when sopimus-id {::vv-toimenpide/sopimus-id sopimus-id})
                                (when (and alku loppu)
                                  {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
