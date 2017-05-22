@@ -271,8 +271,8 @@
                                         :toteutunut_hinta toteutunut-hinta
                                         :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
                                         :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                                        :vuodet (konv/seq->array [vuosi])})
-          _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})])))
+                                        :vuodet (konv/seq->array [vuosi])})]
+      (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)}))))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
