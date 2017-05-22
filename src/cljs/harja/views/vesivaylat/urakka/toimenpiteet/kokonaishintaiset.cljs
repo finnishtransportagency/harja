@@ -2,6 +2,8 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as yks-hint]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
@@ -42,4 +44,4 @@
                                                  :aikavali @u/valittu-aikavali}])
 
 (defn kokonaishintaiset-toimenpiteet []
-  [tuck tiedot/tila kokonaishintaiset-toimenpiteet*])
+  [tuck (jaettu-tiedot/yhdista-tilat! tiedot/tila yks-hint/tila) kokonaishintaiset-toimenpiteet*])

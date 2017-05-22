@@ -31,6 +31,10 @@
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
 
+(defn yhdista-tilat! [mun-tila sen-tila]
+  (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
+  mun-tila)
+
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseTyolaji [tiedot])
 (defrecord ValitseVayla [tiedot])
