@@ -184,5 +184,20 @@
       (is (false? (tiedot/valinnan-tila mitaan-ei-valittu)))
       (is (= indeterminate (tiedot/valinnan-tila osa-valittu))))))
 
+(deftest tilan-yhdistaminen
+
+  (testing "Tilan yhdistäminen muuttaa vain valintoja"
+    (let [a (atom {:id 1 :foo :bar})
+         b (atom {:id 2 :baz :barbaz})]
+     (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
+     (is (= @a @(tiedot/yhdista-tilat! a b)) "Sisältö ei muuttunut kutsun aikana")))
+
+  (testing "Tilan yhdistäminen yhdistää :valinnat mäpin"
+    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
+          b (atom {:id 2 :baz {:urakka 2 :organisaatio 2}})]
+      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
+      (is (= {:id 1 :valinnat {:sopimus 1 :urakka 2 :organisaatio 2}}
+             @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
+
 
 
