@@ -33,7 +33,8 @@
         app (:urakka valinnat)
         tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
-       [jaettu/listaus e! app]])))
+       [jaettu/listaus e! app
+        {:jaottelu [{:otsikko "Kokonaishintaiset toimenpiteet" :jaottelu-fn identity}]}]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
