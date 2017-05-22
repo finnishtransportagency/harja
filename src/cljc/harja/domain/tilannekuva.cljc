@@ -228,8 +228,9 @@
       :else
       (recur t loput))))
 
-(defn valitut-kentat [valinnat]
+(defn valitut-kentat
   "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
+  [valinnat]
   (valitut-kentat* [] valinnat))
 
 (defn valittujen-suodattimien-idt [valinnat]
