@@ -21,7 +21,7 @@
     nil))
 
 (defn paattele-ilmoittaja-tyyppi [tyyppi]
-  (if (= "vägtrafikant")
+  (if (= "vägtrafikant" tyyppi)
     "tienkayttaja"
     tyyppi))
 
