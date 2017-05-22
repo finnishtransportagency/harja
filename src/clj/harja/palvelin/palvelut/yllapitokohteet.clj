@@ -31,7 +31,6 @@
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.roolit :as roolit])
-  (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id] :as tiedot}]
