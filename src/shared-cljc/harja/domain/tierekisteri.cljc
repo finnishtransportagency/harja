@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
-    #?@(:clj [[clojure.future :refer :all]])))
+    #?@(:clj [
+            [clojure.future :refer :all]])))
 
 ;; Osan tiedot
 (s/def ::osa (s/and pos-int? #(< % 1000)))
@@ -10,7 +11,7 @@
 
 ;; Tien tiedot
 (s/def ::numero (s/and pos-int? #(< % 100000)))
-(s/def ::alkuosa  ::osa)
+(s/def ::alkuosa ::osa)
 (s/def ::alkuetaisyys ::etaisyys)
 (s/def ::loppuosa ::osa)
 (s/def ::loppuetaisyys ::etaisyys)
@@ -145,6 +146,17 @@
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
   (if-let [osan-pituus (get osien-pituudet osa)]
     (and (<= etaisyys osan-pituus)
+         (>= etaisyys 0))
+    false))
+
+(defn ajoradan-pituus-sopiva-verkolla? [osa ajorata etaisyys ajoratojen-pituudet]
+  "Tarkistaa, onko annetun tieosan ajoradan alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
+  (if-let [ajoradan-pituus (:pituus
+                         (first (filter #(and (= osa (:osa %))
+                                              (= ajorata (:ajorata %)))
+                                        ajoratojen-pituudet)))]
+
+    (and (<= etaisyys ajoradan-pituus)
          (>= etaisyys 0))
     false))
 

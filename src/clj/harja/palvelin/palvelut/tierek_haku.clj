@@ -62,6 +62,13 @@
         (map (juxt :osa :pituus))
         (tv/hae-osien-pituudet db params)))
 
+(defn hae-ajoratojen-pituudet
+  "Hakee tierekisteriosien pituudet annetun tien osien ajoradoille.
+   Params mäpissä tulee olla :tie, :aosa ja :losa.
+   Palauttaa pituuden metreinä."
+  [db params]
+  (tv/hae-ajoratojen-pituudet db params))
+
 (defn hae-tieosan-ajoradat [db params]
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
@@ -70,16 +77,23 @@
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
   :ok?      Oliko TR-osoite validi (true / false)
   :syy      Tekstimuotoinen selitys siitä, miksi ei ole validi (voi olla myös null)"
-  [db {:keys [tienumero aosa aet losa let] :as tieosoite}]
+  [db {:keys [tienumero aosa aet losa let ajorata] :as tieosoite}]
   (try
     (clojure.core/let
       [osien-pituudet (hae-osien-pituudet db {:tie tienumero
                                               :aosa aosa
                                               :losa losa})
+       ajoratojen-pituudet (hae-ajoratojen-pituudet db {:tie tienumero
+                                                        :aosa aosa
+                                                        :losa losa})
        tulos {:aosa-olemassa? (tr-domain/osa-olemassa-verkolla? aosa osien-pituudet)
               :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
-              :aosa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet)
-              :losa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet)
+              :aosa-pituus-validi? (if ajorata
+                                     (tr-domain/ajoradan-pituus-sopiva-verkolla? aosa ajorata aet ajoratojen-pituudet)
+                                     (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet))
+              :losa-pituus-validi? (if
+                                     (tr-domain/ajoradan-pituus-sopiva-verkolla? losa ajorata let ajoratojen-pituudet)
+                                     (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet))
               :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
                                                           :alkuosa aosa
                                                           :alkuetaisyys aet
