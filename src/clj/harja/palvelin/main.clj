@@ -123,7 +123,12 @@
      :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
-    [harja.palvelin.komponentit.metriikka :as metriikka])
+    [harja.palvelin.komponentit.metriikka :as metriikka]
+
+    ;; Vesiväylät
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as vv-kokonaishintaiset]
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
+    [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat])
 
   (:gen-class))
 
@@ -285,6 +290,15 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat :tierekisteri])
+      :vv-kokonaishintaiset (component/using
+                              (vv-kokonaishintaiset/->KokonaishintaisetToimenpiteet)
+                              [:http-palvelin :db])
+      :vv-vaylat (component/using
+                              (vv-vaylat/->Vaylat)
+                              [:http-palvelin :db])
+      :vv-yksikkohintaiset (component/using
+                             (vv-yksikkohintaiset/->YksikkohintaisetToimenpiteet)
+                             [:http-palvelin :db])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])

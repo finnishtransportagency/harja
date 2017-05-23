@@ -35,7 +35,7 @@
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
     :footer-fn (fn [data]
                  [:span
-                  [napit/yleinen
+                  [napit/yleinen-toissijainen
                    "Hae"
                    #(e! (tiedot/->Hae))
                    {:ikoni (ikonit/livicon-search)

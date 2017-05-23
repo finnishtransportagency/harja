@@ -216,3 +216,11 @@
       u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
       u/valittu-aikavali
       u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali [ur]
+  (fn [ur]
+    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+      ur
+      u/valittu-sopimusnumero u/valitse-sopimusnumero!
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      u/valittu-aikavali)))

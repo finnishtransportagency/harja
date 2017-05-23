@@ -29,7 +29,7 @@
       :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
       :footer-fn (fn [rivi]
                    [:div
-                    [napit/yleinen "Hae Tierekisteristä"
+                    [napit/yleinen-toissijainen "Hae Tierekisteristä"
                      #(e! (v/->HaeVarusteita))
                      {:disabled (or (:haku-kaynnissa? hakuehdot)
                                     (and (not (tr-ok? tr-osoite))

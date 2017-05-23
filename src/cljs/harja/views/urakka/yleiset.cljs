@@ -360,7 +360,7 @@
            (ikonit/livicon-wrench)
            " "]
           (when @auki?
-            [napit/yleinen "Poista indeksi käytöstä"
+            [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
                (modal/nayta! {}
                              [:div
@@ -377,8 +377,8 @@
                                                                                 assoc :indeksi nil)
                                                     (modal/piilota!)
                                                     (reset! auki? false))}]
-                               [napit/yleinen "Peruuta" #(do (modal/piilota!)
-                                                             (reset! auki? false))
+                               [napit/yleinen-toissijainen "Peruuta" #(do (modal/piilota!)
+                                                                          (reset! auki? false))
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
