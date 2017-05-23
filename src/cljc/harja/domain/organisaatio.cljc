@@ -17,6 +17,9 @@
     "luoja" ::luoja-id
     "muokkaaja" ::muokkaaja-id}])
 
+(def urakoitsijan-perustiedot
+  #{::id ::nimi ::ytunnus})
+
 ;; Haut
 
 (s/def ::vesivayla-urakoitsijat-vastaus

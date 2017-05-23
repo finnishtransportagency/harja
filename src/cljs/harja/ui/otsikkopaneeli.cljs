@@ -11,6 +11,11 @@
     (reset! auki-index-atom nil)
     (reset! auki-index-atom index)))
 
+(defn- maarita-alkutila [otsikot-ja-sisallot]
+  (if (= (count (partition 3 otsikot-ja-sisallot)) 1)
+    0 ;; Vain yksi otsikko, avaa se suoraan
+    nil)) ;; Muuten käyttäjä saa avata itse :-)
+
 (defn otsikkopaneeli
   "Optiot on map:
    paneelikomponentit             Vector mappeja, jossa avaimina sijainti ja sisalto.
@@ -19,7 +24,7 @@
 
    otsikot-ja-sisallot            Tunniste, tekstiotsikko ja piirrettävä komponentti funktiona. Voi olla useita."
   [{:keys [paneelikomponentit otsikkoluokat] :as optiot} & otsikot-ja-sisallot]
-  (r/with-let [auki-index-atom (atom 0)]
+  (r/with-let [auki-index-atom (atom (maarita-alkutila otsikot-ja-sisallot))]
     [:div.otsikkopaneeli.klikattava
      (doall
        (map-indexed
@@ -34,13 +39,17 @@
                                                         (ikonit/livicon-minus)
                                                         (ikonit/livicon-plus))]
                [:div.otsikkopaneeli-otsikkoteksti otsikko]
-               (for [{:keys [sijainti sisalto]} paneelikomponentit]
-                 ^{:key (hash sisalto)}
-                 [:div.otsikkopaneeli-custom-paneelikomponentti {:style {:top -2 :left sijainti}}
-                  [sisalto {:index index
-                            :tunniste tunniste
-                            :otsikko otsikko
-                            :sisalto sisalto}]])]
+
+               (map-indexed
+                 (fn [i {:keys [sijainti sisalto]}]
+                      ^{:key i}
+                      [:div.otsikkopaneeli-custom-paneelikomponentti {:style {:top -2 :left sijainti}}
+                       [sisalto {:index index
+                                 :tunniste tunniste
+                                 :otsikko otsikko
+                                 :sisalto sisalto}]])
+                 paneelikomponentit)]
+
               (when auki?
                 [:div.otsikkopaneeli-sisalto sisalto])]))
          (partition 3 otsikot-ja-sisallot)))]))
