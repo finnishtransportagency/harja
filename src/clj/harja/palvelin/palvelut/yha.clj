@@ -100,7 +100,7 @@
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                                                           yllapitoluokka
-                                                          keskimaarainen_vuorokausiliikenne
+                                                          keskimaarainen-vuorokausiliikenne
                                                           nykyinen-paallyste
                                                           nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
@@ -119,7 +119,7 @@
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
                  :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
                  :yllapitoluokka yllapitoluokka
-                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                 :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                  :nykyinen_paallyste nykyinen-paallyste
                  :nimi nimi
                  :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
