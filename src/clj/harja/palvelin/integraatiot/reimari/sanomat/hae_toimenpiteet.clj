@@ -80,7 +80,8 @@
     (when-let [v (z/xml1-> toimenpide :vayla)]
       {::toimenpide/vayla (lue-vayla v)})
     (when-let [v (z/xml1-> toimenpide :urakoitsija)]
-      {::toimenpide/urakoitsija (lue-urakoitsija v)})))
+      {::toimenpide/urakoitsija (lue-urakoitsija v)})
+    {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
 
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
