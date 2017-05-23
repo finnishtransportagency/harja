@@ -150,18 +150,32 @@
                                                          :vayla 1
                                                          :tyolaji :poijut
                                                          :tyoluokka :asennus-ja-huolto
-                                                         :toimenpide :autot-traktorit})]
+                                                         :toimenpide :autot-traktorit
+                                                         :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
              {::tot/urakka-id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
               ::to/vayla-id 1
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
-              ::to/reimari-tyoluokka (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
-              ::to/reimari-toimenpide (to/reimari-toimenpide-avain->koodi :autot-traktorit)
+              ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
+              ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
+              :vikailmoitukset? true
               :tyyppi :yksikkohintainen}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+
+  (testing "Kaikki-valinta toimii"
+    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+                                                         :sopimus-id 777
+                                                         :tyolaji nil
+                                                         :tyoluokka nil
+                                                         :toimenpide nil})]
+      (is (= hakuargumentit
+             {::tot/urakka-id 666
+              ::to/sopimus-id 777
+              :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
