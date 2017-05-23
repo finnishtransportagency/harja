@@ -53,7 +53,7 @@
                     :sarake column
                     :selain (.-userAgent (.-navigator js/window))
                     :stack (when errorObj (aget errorObj "stack"))})
-          #_(v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
+          (v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)
