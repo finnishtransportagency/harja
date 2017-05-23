@@ -182,7 +182,7 @@
              {::tot/urakka-id 666
               ::to/sopimus-id 777
               :tyyppi :kokonaishintainen}))
-      (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
