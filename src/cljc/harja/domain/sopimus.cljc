@@ -21,6 +21,14 @@
     "urakka" ::urakka-id
     "muokkaaja" ::muokkaaja-id}])
 
+(def perustiedot
+  #{::id
+    ::nimi
+    ::paasopimus-id
+    ::alkupvm
+    ::loppupvm
+    ::sampoid})
+
 (defn paasopimus? [sopimukset sopimus]
   (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
                                 sopimukset)]

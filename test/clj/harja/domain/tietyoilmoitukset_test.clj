@@ -1,7 +1,8 @@
 (ns harja.domain.tietyoilmoitukset-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]))
+            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]))
 
 (def urakoitsijakayttaja {:organisaatio {:tyyppi "urakoitsija" :id 1} :id 1})
 (def tilaajakayttaja {:organisaatio {:tyyppi "liikennevirasto" :id 2} :id 2})
@@ -37,7 +38,7 @@
 
   (is (tietyoilmoitukset/voi-tallentaa? urakoitsijakayttaja
                                         kayttajan-urakat
-                                        {::tietyoilmoitukset/muokkaustiedot/luoja-id (:id urakoitsijakayttaja)})
+                                        {::muokkaustiedot/luoja-id (:id urakoitsijakayttaja)})
       "Urakoitsija saa päivittää urakattoman ilmoituksen, jonka on itse luonut")
 
   (is (tietyoilmoitukset/voi-tallentaa? urakoitsijakayttaja
@@ -49,7 +50,7 @@
   (is (nil? (tietyoilmoitukset/voi-tallentaa? urakoitsijakayttaja
                                               kayttajan-urakat
                                               {::tietyoilmoitukset/id 1
-                                               ::tietyoilmoitukset/muokkaustiedot/luoja-id 666}))
+                                               ::muokkaustiedot/luoja-id 666}))
       "Urakoitsija ei saa päivittää urakatonta ilmoitusta, jota ei ole itse luonut tai luotu hänen organisaatiostaan
       tai hänen urakkaansa")
 
@@ -57,5 +58,3 @@
                                              kayttajan-urakat
                                              {::tietyoilmoitukset/urakka-id 666})
       "Tilaaja saa luoda uuden tietyöilmoituksen urakkan, joka ei ole listattu hänelle"))
-
-

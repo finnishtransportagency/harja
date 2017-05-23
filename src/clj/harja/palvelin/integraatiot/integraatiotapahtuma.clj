@@ -13,7 +13,6 @@
 
 (define-tables
   ["integraatiotapahtuma" ::tapahtuma
-
    {"integraatio" ::integraatio-id
     ::integraatio (rel/has-one ::integraatio-id :harja.palvelin.integraatiot/integraatio :harja.palvelin.integraatiot/id)}])
 

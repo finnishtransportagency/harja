@@ -50,7 +50,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.6-alpha16"]
+                 [specql "0.6-alpha20"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -64,7 +64,7 @@
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
 
-                 [namespacefy "0.2.4"]
+                 [namespacefy "0.3"]
 
                  ;; Sähköposti lähetys
                  [com.draines/postal "2.0.2"]
@@ -167,7 +167,7 @@
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.10"]
             [codox "0.8.11"]
-            [jonase/eastwood "0.2.3"]
+            [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.6"]]

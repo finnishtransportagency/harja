@@ -74,7 +74,7 @@
                                      (tiedot/valitse-paivakohtainen-tehtava!
                                       (:pvm %) (:toimenpidekoodi %)))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
-       :mahdollista-rivin-valinta true
+       :mahdollista-rivin-valinta? true
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste tunniste
