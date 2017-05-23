@@ -1,12 +1,60 @@
 (ns harja.palvelin.palvelut.selainvirhe
   "Palvelu, jolla voi tallentaa logiin selain virheen"
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm]))
 
-(declare raportoi-selainvirhe)
+(defn sanitoi [sisalto]
+  (str/replace (str sisalto) "<" "&lt;"))
+
+(defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
+  [:table
+   [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
+   [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
+   [:tr [:td {:valign "top"} [:b "URL:"]] [:td [:pre (sanitoi url)]]]
+   [:tr [:td {:valign "top"} [:b "Selain: "]] [:td [:pre (sanitoi selain)]]]
+   [:tr [:td {:valign "top"} [:b "Rivi: "]] [:td [:pre (sanitoi rivi)]]]
+   [:tr [:td {:valign "top"} [:b "Sarake: "]] [:td [:pre (sanitoi sarake)]]]
+   [:tr [:td {:valign "top"} [:b "Käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
+   (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
+
+(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
+  (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
+                             yhteyskatkokset)
+        palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
+    [:div "Käyttäjä " (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") " raportoi yhteyskatkoksista palveluissa:"
+     [:table
+      (map (fn [palvelu]
+             [:tr
+              [:td {:valign "top"} [:b (str palvelu)]]
+              [:td [:pre (str "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl, "
+                              "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                   (sort t/after?)
+                                                   (first))
+                              "viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                 (sort t/after?)
+                                                 (last)))]]])
+           (keys palvelulla-ryhmiteltyna))]]))
+
+(defn raportoi-selainvirhe
+  "Logittaa yksittäisen selainvirheen"
+  [user virhetiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (log/error (formatoi-selainvirhe user virhetiedot)))
+
+(defn raportoi-yhteyskatkos
+  "Logittaa yksittäisen käyttäjän raportoimat selainvirheet"
+  [user katkostiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (log/debug "Vastaanotettu yhteyskatkostiedot: " (pr-str katkostiedot))
+  (log/warn (formatoi-yhteyskatkos user katkostiedot))
+  {:ok? true})
+
 
 (defrecord Selainvirhe []
   component/Lifecycle
@@ -14,27 +62,11 @@
     (julkaise-palvelu (:http-palvelin this)
                       :raportoi-selainvirhe (fn [user virhe]
                                               (raportoi-selainvirhe user virhe)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :raportoi-yhteyskatkos (fn [user virhe]
+                                               (raportoi-yhteyskatkos user virhe)))
     this)
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :raportoi-selainvirhe)
+    (poista-palvelut (:http-palvelin this) :raportoi-selainvirhe
+                     :raportoi-yhteyskatkos)
     this))
-
-(defn sanitoi [sisalto]
-  (str/replace (str sisalto) "<" "&lt;"))
-
-(defn formatoi-virhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
-  [:table
-   [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
-   [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
-   [:tr [:td {:valign "top"} [:b "URL:"]] [:td [:pre (sanitoi url)]]]
-   [:tr [:td {:valign "top"} [:b "selain: "]] [:td [:pre (sanitoi selain)]]]
-   [:tr [:td {:valign "top"} [:b "rivi: "]] [:td [:pre (sanitoi rivi)]]]
-   [:tr [:td {:valign "top"} [:b "sarake: "]] [:td [:pre (sanitoi sarake)]]]
-   [:tr [:td {:valign "top"} [:b "käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
-   (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
-
-(defn raportoi-selainvirhe
-  "Logittaa yksittäisen selainvirheen"
-  [user virhe]
-  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (log/error (formatoi-virhe user virhe)))
