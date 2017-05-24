@@ -49,6 +49,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (atom {:ilmoitusnakymassa? false
          :valittu-ilmoitus nil
          :uusi-kuittaus-auki? false
+         :ensimmainen-haku-tehty? false
          :ilmoitushaku-id nil ;; ilmoitushaun timeout
          :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
          :ilmoitukset nil ;; haetut ilmoitukset
@@ -121,11 +122,19 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            uusien-kyselyjen-maara)
         optiot))))
 
-(def ^:const ilmoitushaun-aloitusviive-ms 1000)
+(def ^:const ilmoitushaun-viive-ms 3000)
+(def ^:const taustahaun-viive-ms 60000)
+(def ^:const ensimmaisen-haun-viive-ms 5000)
+
+(defn- maarita-hakuviive [app]
+  (if (:ensimmainen-haku-tehty? app)
+    ilmoitushaun-viive-ms
+    ensimmaisen-haun-viive-ms))
 
 (defn- hae
-  "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
-  ([app] (hae app ilmoitushaun-aloitusviive-ms))
+  "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan.
+   Viivettä käytetään, jotteivät useat peräkkäiset muutokset turhaan aiheuttaisi hakua palvelimelta."
+  ([app] (hae app (maarita-hakuviive app)))
   ([app timeout] (hae app timeout false))
   ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
    (if-not (:voi-hakea? valinnat)
@@ -138,7 +147,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
            (assoc :ilmoitushaku-id (.setTimeout js/window
                                                 (t/send-async! v/->HaeIlmoitukset)
                                                 timeout))
-           (assoc :taustahaku? taustahaku?))))))
+           (assoc :taustahaku? taustahaku?)
+           (assoc :ensimmainen-haku-tehty? true))))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -190,7 +200,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                          (map :ilmoitusid (:ilmoitukset tulokset)))
                                  valittu
                                  nil))
-           60000
+           taustahaun-viive-ms
            true)))
 
   v/ValitseIlmoitus
