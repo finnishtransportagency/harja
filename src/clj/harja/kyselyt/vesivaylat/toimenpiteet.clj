@@ -55,12 +55,13 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-                               vv-toimenpide/viittaukset
+                               (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
+                               vv-toimenpide/hinnoittelu
                                vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
-                               {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka-id urakka-id}}
+                               {::vv-toimenpide/urakka-id urakka-id}
                                (when (and luotu-alku luotu-loppu)
                                  {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id

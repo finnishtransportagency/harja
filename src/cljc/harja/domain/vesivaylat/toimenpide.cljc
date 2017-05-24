@@ -7,6 +7,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.alus :as vv-alus]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
@@ -242,8 +243,8 @@ reimari-tilat
    "1022541203" :peruttu})
 
 (define-tables
+  ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["reimari_toimenpide" ::reimari-toimenpide
-   "vv_toimenpide_hintatyyppi" ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
     "luotu" ::m/luotu
@@ -254,9 +255,14 @@ reimari-tilat
     #?@(:clj
         [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
          ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+         ::urakka (rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
          ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+         ::hinnoittelu-linkit (rel/has-many
+                                ::id
+                                ::h/hinnoittelu<->toimenpide
+                                ::h/toimenpide-id)])}])
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
@@ -306,16 +312,23 @@ reimari-tilat
   #{::toteuma-id
     ::urakoitsija-id
     ::sopimus-id
+    ::urakka-id
     ::turvalaite-id
     ::vayla-id
     ::luoja
     ::luoja-id})
+
+(def hinnoittelu
+  #{[::hinnoittelu-linkit #{[::h/hinnoittelut #{::h/nimi ::h/hintanippu?
+                                                [::h/hinnat #{:harja.domain.vesivaylat.hinta/maara}]}]}
+     #_h/toimenpiteen-hinnoittelut]})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
+(def urakka #{[::urakka #{}]})
 
 (def viittaukset
   (clojure.set/union
@@ -323,6 +336,7 @@ reimari-tilat
     urakoitsija
     sopimus
     turvalaite
+    urakka
     vayla))
 
 (def perustiedot
