@@ -21,7 +21,6 @@
                       ::toimenpide/luotu ::toimenpide/reimari-luotu
                       ::toimenpide/muokattu ::toimenpide/reimari-muokattu
                       ::toimenpide/urakoitsija ::toimenpide/reimari-urakoitsija
-                      ::toimenpide/sopimus ::toimenpide/reimari-sopimus
                       ::toimenpide/turvalaite ::toimenpide/reimari-turvalaite
                       ::toimenpide/alus ::toimenpide/reimari-alus
                       ::toimenpide/vayla ::toimenpide/reimari-vayla
@@ -38,8 +37,8 @@
   (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                          (specql/upsert! db ::toimenpide/toimenpide
-                                          (rename-keys toimenpide-tiedot avainmuunnokset)))]
+                       (specql/upsert! db ::toimenpide/reimari-toimenpide
+                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
