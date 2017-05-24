@@ -9,7 +9,7 @@
   (ht/laajenna-integraatiojarjestelmafixturea
    "yit"
    :reimari (component/using
-           (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana")
+           (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil)
            [:db :integraatioloki])))
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
@@ -20,7 +20,7 @@
     #inst "2017-04-24T09:42:04.000-00:00",
     :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
     :harja.domain.vesivaylat.toimenpide/reimari-tila "1022541202",
-    :harja.domain.vesivaylat.toimenpide/lisatyo false,
+    :harja.domain.vesivaylat.toimenpide/lisatyo? false,
     :harja.domain.vesivaylat.toimenpide/reimari-vayla
     {:harja.domain.vesivaylat.vayla/nro "12345",
      :harja.domain.vesivaylat.vayla/nimi "Joku väylä"},
