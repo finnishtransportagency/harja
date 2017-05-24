@@ -232,6 +232,8 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
+
+
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
   (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
@@ -242,6 +244,7 @@ reimari-toimenpidetyypit
    "1022541203" :peruttu})
 
 (define-tables
+  ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -257,6 +260,7 @@ reimari-toimenpidetyypit
          ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
          ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
