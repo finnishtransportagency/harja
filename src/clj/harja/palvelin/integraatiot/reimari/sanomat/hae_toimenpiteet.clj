@@ -64,17 +64,18 @@
 
 (defn- lue-toimenpide [toimenpide]
   (merge
-    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
-                                              (name (case %
-                                                      :tyyppi :reimari-toimenpidetyyppi
-                                                      :tyolaji :reimari-tyolaji
-                                                      :tyoluokka :reimari-tyoluokka
-                                                      %)))
-                         toimenpide-attribuutit)
+   (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
+                                             (name (case %
+                                                     :tyyppi :reimari-toimenpidetyyppi
+                                                     :lisatyo :lisatyo?
+                                                     :tyolaji :reimari-tyolaji
+                                                     :tyoluokka :reimari-tyoluokka
+                                                     %)))
+                        toimenpide-attribuutit)
     (when-let [a (z/xml1-> toimenpide :alus)]
       {::toimenpide/alus (lue-alus a)})
     (when-let [s (z/xml1-> toimenpide :sopimus)]
-      {::toimenpide/sopimus (lue-sopimus s)})
+      {::toimenpide/reimari-sopimus (lue-sopimus s)})
     (when-let [tl (z/xml1-> toimenpide :turvalaite)]
       {::toimenpide/turvalaite (lue-turvalaite tl)})
     (when-let [v (z/xml1-> toimenpide :vayla)]
