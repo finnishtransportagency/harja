@@ -28,8 +28,8 @@
       :hae-kokonaishintaiset-toimenpiteet
       (fn [user tiedot]
         (hae-kokonaishintaiset-toimenpiteet db user tiedot))
-      {:kysely-spec ::to/hae-kokonaishintaiset-toimenpiteet-kysely
-       :vastaus-spec ::to/hae-kokonaishintaiset-toimenpiteet-vastaus})
+      {:kysely-spec ::to/hae-vesivaylien-toimenpiteet-kyselyt
+       :vastaus-spec ::to/hae-vesivayilien-toimenpiteet-vastaukset})
     this)
 
   (stop [this]
