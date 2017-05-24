@@ -7,14 +7,54 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.ui.kentat :as kentat]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn hinnoittelu-vaihtoehdot [e! {:keys [toimenpiteet] :as app}]
+  [yleiset/livi-pudotusvalikko
+   {:valitse-fn #(log "Painoit ryhmää")
+    :valinta "Valittu hintaryhmä"
+    :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
+   (tiedot/hintaryhmien-nimet app)])
+
+(defn lisaysnappi [e! {:keys [toimenpiteet] :as app}]
+  [napit/yleinen-ensisijainen
+   "Lisää"
+   #(log "Painoit nappia")
+   {:disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}])
+
+(defn ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma] :as app}]
+  (if uuden-hintaryhman-lisays?
+    [:span
+     [kentat/tee-kentta {:tyyppi :string
+                         :placeholder "Ryhmän nimi"
+                         :pituus-max 160}
+      (r/wrap
+        uusi-hintaryhma
+        #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
+     [napit/yleinen-ensisijainen "Luo" #(log "Painoit nappia")]
+     [napit/yleinen-ensisijainen "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
+
+    [napit/yleinen-ensisijainen
+     "Luo uusi ryhmä"
+     #(e! (tiedot/->UudenHintaryhmanLisays? true))]))
+
+(defn hinnoittelu [e! app]
+  [:span
+   [hinnoittelu-vaihtoehdot e! app]
+   [lisaysnappi e! app]
+   [ryhman-luonti e! app]])
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-   [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(log "Painoit nappia")]])
+  [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(log "Painoit nappia")]
+   ^{:key "hinnoittelu"}
+   [hinnoittelu e! app]])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -36,8 +76,8 @@
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
-                                                 :sopimus @u/valittu-sopimusnumero
-                                                 :aikavali @u/valittu-aikavali}])
+                                                :sopimus @u/valittu-sopimusnumero
+                                                :aikavali @u/valittu-aikavali}])
 
 (defn yksikkohintaiset-toimenpiteet []
   [tuck (jaettu-tiedot/yhdista-tilat! tiedot/tila kok-hint/tila) yksikkohintaiset-toimenpiteet*])

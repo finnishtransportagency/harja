@@ -49,6 +49,9 @@
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))
 
+(defn joku-valittu? [toimenpiteet]
+  (some :valittu? toimenpiteet))
+
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
   mun-tila)

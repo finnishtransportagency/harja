@@ -6,6 +6,8 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -32,6 +34,8 @@
          :nakymassa? false
          :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
+         :uuden-hintaryhman-lisays? false
+         :uusi-hintaryhma ""
          :toimenpiteet nil}))
 
 (def valinnat
@@ -48,11 +52,16 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
+(defn hintaryhmien-nimet [tila]
+  ["Poijujen korjaus" "Muutos- ja lisätyöt"])
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord UudenHintaryhmanLisays? [lisays-auki?])
+(defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -105,4 +114,12 @@
   ToimenpiteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    (assoc app :haku-kaynnissa? false)))
+    (assoc app :haku-kaynnissa? false))
+
+  UudenHintaryhmanLisays?
+  (process-event [{lisays-auki? :lisays-auki?} app]
+    (assoc app :uuden-hintaryhman-lisays? lisays-auki?))
+
+  UudenHintaryhmanNimeaPaivitetty
+  (process-event [{nimi :nimi} app]
+    (assoc app :uusi-hintaryhma nimi)))

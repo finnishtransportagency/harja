@@ -124,7 +124,7 @@
 (defn siirtonappi [e! app otsikko toiminto]
   [napit/yleinen-ensisijainen otsikko
   toiminto
-  {:disabled (not (some :valittu? (:toimenpiteet app)))}])
+   {:disabled (not (tiedot/joku-valittu? (:toimenpiteet app)))}])
 
 
 ;;;;;;;;;;;;;;;;;
