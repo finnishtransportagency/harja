@@ -15,11 +15,17 @@
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
-    (assoc this
-           :ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain paivittainen-tphakuaika (fn [& args] (hae-toimenpiteet this)))))
+    (if paivittainen-tphakuaika
+      (assoc this
+             :ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
+                                   paivittainen-tphakuaika
+                                   (fn [& args] (hae-toimenpiteet this))))
+      ;; else
+      this))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
-    (apply (:ajastus-peruutus-fn this) [])
+    (when paivittainen-tphakuaika
+      (apply (:ajastus-peruutus-fn this) []))
     this)
 
   HaeToimenpiteet
