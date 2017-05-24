@@ -25,7 +25,7 @@
                                ::id)])}]
   ["vv_hinnoittelu" ::hinnoittelu
    {"muokattu" ::m/muokattu
-    "hintanippu" ::hintanippu?
+    "hintaryhma" ::hintaryhma?
     "muokkaaja" ::m/muokkaaja-id
     "luotu" ::m/luotu
     "luoja" ::m/luoja-id
@@ -41,7 +41,7 @@
                          ::h/hinnoittelu-id)])}])
 
 (def perustiedot
-  #{::nimi ::hintanippu?})
+  #{::nimi ::hintaryhma?})
 
 (def hinnat
   #{[::hinnat h/perustiedot]})

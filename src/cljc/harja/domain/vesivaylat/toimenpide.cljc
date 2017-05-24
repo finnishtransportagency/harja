@@ -319,7 +319,7 @@ reimari-tilat
     ::luoja-id})
 
 (def hinnoittelu
-  #{[::hinnoittelu-linkit #{[::h/hinnoittelut #{::h/nimi ::h/hintanippu?
+  #{[::hinnoittelu-linkit #{[::h/hinnoittelut #{::h/nimi ::h/hintaryhma?
                                                 [::h/hinnat #{:harja.domain.vesivaylat.hinta/maara}]}]}
      #_h/toimenpiteen-hinnoittelut]})
 

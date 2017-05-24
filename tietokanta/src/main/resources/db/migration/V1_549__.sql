@@ -33,8 +33,8 @@ WHERE tyyppi = 'vv-kokonaishintainen' OR tyyppi = 'vv-yksikkohintainen';
 CREATE TABLE vv_hinnoittelu
 (
   id         SERIAL PRIMARY KEY,
-  nimi       VARCHAR CONSTRAINT nipulla_oltava_nimi CHECK (hintanippu IS FALSE OR nimi IS NOT NULL),
-  hintanippu BOOLEAN                          NOT NULL DEFAULT FALSE,
+  nimi       VARCHAR CONSTRAINT nipulla_oltava_nimi CHECK (hintaryhma IS FALSE OR nimi IS NOT NULL),
+  hintaryhma BOOLEAN                          NOT NULL DEFAULT FALSE,
 
   muokkaaja  INTEGER REFERENCES kayttaja (id),
   muokattu   TIMESTAMP,
