@@ -852,7 +852,7 @@ SELECT
   o.ytunnus                      AS yTunnus
 FROM varustetoteuma vt
   JOIN kayttaja k ON vt.luoja = k.id
-  JOIN organisaatio o ON yh.organisaatio = o.id
+  JOIN organisaatio o ON k.organisaatio = o.id
 WHERE vt.id = :id;
 
 -- name: hae-varustetoteuma-toteumalla
