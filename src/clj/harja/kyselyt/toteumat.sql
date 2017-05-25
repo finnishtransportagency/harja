@@ -752,6 +752,7 @@ SELECT
   tunniste,
   toimenpide,
   tietolaji,
+  vt.luotu,
   vt.tr_numero        AS tierekisteriosoite_numero,
   vt.tr_alkuosa       AS tierekisteriosoite_alkuosa,
   vt.tr_alkuetaisyys  AS tierekisteriosoite_alkuetaisyys,
@@ -791,7 +792,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
-ORDER BY t.alkanut DESC
+ORDER BY vt.luotu DESC
 LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
