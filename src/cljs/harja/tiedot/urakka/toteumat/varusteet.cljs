@@ -150,9 +150,11 @@
     :tierekisteriosoite (varusteen-osoite varuste)}))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
-  (if valittu-toimenpide
-    (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-    toteumat))
+  (reverse
+    (sort-by :luotu
+             (if valittu-toimenpide
+               (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+               toteumat))))
 
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                     {uusi-tr :tierekisteriosoite}
