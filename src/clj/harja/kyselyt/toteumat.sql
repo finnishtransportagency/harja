@@ -847,11 +847,11 @@ SELECT
   vt.tr_ajorata,
   vt.tr_puoli,
   vt.luotu,
-  yh.etunimi || ' ' || yh.sukunimi AS henkilo,
-  o.nimi                           AS organisaatio,
-  o.ytunnus                        AS yTunnus
+  k.etunimi || ' ' || k.sukunimi AS henkilo,
+  o.nimi                         AS organisaatio,
+  o.ytunnus                      AS yTunnus
 FROM varustetoteuma vt
-  JOIN yhteyshenkilo yh ON vt.luoja = yh.id
+  JOIN kayttaja k ON vt.luoja = k.id
   JOIN organisaatio o ON yh.organisaatio = o.id
 WHERE vt.id = :id;
 
