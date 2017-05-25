@@ -16,7 +16,8 @@
             [harja.tyokalut.functor :as functor]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -116,7 +117,9 @@
                  :tietolaji tietolaji
                  :toiminto toiminto
                  :urakka-id @nav/valittu-urakka-id
-                 :kuntoluokitus (when (:kuntoluokitus arvot) (js/parseInt (:kuntoluokitus arvot)))
+                 :kuntoluokitus (when (and (:kuntoluokitus arvot)
+                                           (not (str/blank? (:kuntoluokitus arvot))))
+                                  (js/parseInt (:kuntoluokitus arvot)))
                  :alkupvm alkupvm
                  :loppupvm loppupvm}
         hakuehdot {:urakka-id urakka-id
@@ -150,9 +153,11 @@
     :tierekisteriosoite (varusteen-osoite varuste)}))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
-  (if valittu-toimenpide
-    (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-    toteumat))
+  (reverse
+    (sort-by :luotu
+             (if valittu-toimenpide
+               (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+               toteumat))))
 
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                     {uusi-tr :tierekisteriosoite}
