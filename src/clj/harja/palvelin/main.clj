@@ -24,6 +24,7 @@
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
+    [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -441,6 +442,11 @@
                (let [{:keys [lahetysjono uudelleenlahetysaika]} (:sahke asetukset)]
                  (sahke/->Sahke lahetysjono uudelleenlahetysaika))
                [:db :integraatioloki :sonja])
+
+      :vkm (component/using
+             (let [{url :url} (:vkm asetukset)]
+               (vkm/->VKM url))
+             [:db :integraatioloki])
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)

@@ -51,10 +51,10 @@
       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
         false))))
 
-(defrecord VKM [asetukset]
+(defrecord VKM [url]
   component/Lifecycle
   (start [this]
-    (assoc this :url (:url asetukset)))
+    (assoc this :url url))
   (stop [this]
     this)
 
