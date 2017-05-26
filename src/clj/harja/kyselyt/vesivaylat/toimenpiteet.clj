@@ -1,6 +1,6 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
   (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch]]
+            [specql.core :refer [fetch update!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec.alpha :as s]
@@ -44,9 +44,9 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  (log/debug "SIIRTELE: " toimenpide-idt uusi-tyyppi)
-  ;; TODO
-  )
+  (update! db ::tot/toteuma
+           {::tot/tyyppi (name uusi-tyyppi)}
+           {::vv-toimenpide/id (op/in toimenpide-idt)}))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
