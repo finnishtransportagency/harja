@@ -34,9 +34,10 @@
    {:tunniste :id ;; TODO namespaceta
     :ei-footer-muokkauspaneelia? true}
    [{:otsikko "Pvm ja aika" :nimi :pvm}
-    {:otsikko "Tyyppi" :nimi :tyyppi}
     {:otsikko "Turvalaite" :nimi :turvalaite}
-    {:otsikko "Havainnot" :nimi :havainnot}]
+    {:otsikko "Kuvaus" :nimi :kuvaus}
+    {:otsikko "Tekijä" :nimi :tekija}
+    {:otsikko "Päätös" :nimi :paatos}]
    laatupoikkeamat])
 
 (defn- luo-otsikkorivit
