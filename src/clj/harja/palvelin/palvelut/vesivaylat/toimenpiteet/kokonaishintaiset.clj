@@ -24,7 +24,7 @@
 
 (defn siirra-toimenpiteet-yksikkohintaisiin [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::to/urakka-id tiedot)]
+    (let [urakka-id (::tot/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user (::tot/urakka-id tiedot))
