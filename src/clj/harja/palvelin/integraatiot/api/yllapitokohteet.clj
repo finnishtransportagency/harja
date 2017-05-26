@@ -68,7 +68,8 @@
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -125,7 +126,11 @@
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
 
-(defn paivita-yllapitokohde [db kayttaja {:keys [urakka-id kohde-id]} data]
+(defn muunna-tieosoitteet [vkm kohde]
+  (println "--->" kohde)
+  kohde)
+
+(defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
@@ -133,7 +138,7 @@
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-        kohde (assoc (:yllapitokohde data) :id kohde-id)
+        kohde (muunna-tieosoitteet vkm (assoc (:yllapitokohde data) :id kohde-id))
         kohteen-sijainti (:sijainti kohde)
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
         alikohteet (mapv #(-> (:alikohde %)
@@ -458,7 +463,7 @@
                         "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
       (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
 
-(defn palvelut [{:keys [fim email liitteiden-hallinta]}]
+(defn palvelut [{:keys [fim email liitteiden-hallinta vkm]}]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
@@ -471,7 +476,7 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (paivita-yllapitokohde db kayttaja parametrit data))}
+                    (paivita-yllapitokohde vkm db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
@@ -556,8 +561,10 @@
            integraatioloki :integraatioloki
            fim :fim
            email :sonja-sahkoposti
-           liitteiden-hallinta :liitteiden-hallinta :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email
+           liitteiden-hallinta :liitteiden-hallinta
+           vkm :vkm
+           :as this}]
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email :vkm vkm
                                                           :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]

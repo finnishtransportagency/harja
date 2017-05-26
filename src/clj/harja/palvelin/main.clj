@@ -314,7 +314,7 @@
                   [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (yllapitokohteet/->Yllapitokohteet)
-                         [:http-palvelin :db :fim :sonja-sahkoposti])
+                         [:http-palvelin :db :fim :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])
