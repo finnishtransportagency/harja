@@ -15,7 +15,6 @@
 (defprotocol Tieosoitemuunnos
   (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle]))
 
-
 (defn alkuosan-vkm-tunniste [tunniste]
   (str tunniste "-alku"))
 
