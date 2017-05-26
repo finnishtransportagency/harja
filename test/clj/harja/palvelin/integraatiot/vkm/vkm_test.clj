@@ -5,7 +5,7 @@
             [harja.pvm :as pvm]))
 
 (deftest vkm-parametrit
-  (let [parametrit (vkm/vkm-parametrit [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :tunniste "666" :ajorata 1}]
+  (let [parametrit (vkm/vkm-parametrit [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
                                        (pvm/luo-pvm 2017 1 1)
                                        (pvm/luo-pvm 2017 5 25))
         odotetut {:in "tieosoite"
@@ -17,13 +17,13 @@
     (is (= odotetut parametrit) "VKM:n Parametrit muodostettu oikein")))
 
 (deftest pura-tieosoitteet
-  (let [puretut (vkm/pura-tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :tunniste "666" :ajorata 1}])
+  (let [puretut (vkm/pura-tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}])
         odotetut [{:tunniste "666-alku", :tie 4, :osa 1, :ajorata 1, :etaisyys 0}
                   {:tunniste "666-loppu", :tie 4, :osa 3, :ajorata 1, :etaisyys 1000}]]
     (is (= odotetut puretut) "Tieosoitteet on purettu oikein VKM:ää varten")))
 
 (deftest tieosoitteet-vkm-vastauksesta
-  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :tunniste "666" :ajorata 1}]
+  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
         onnistunut-vkm-vastaus {"tieosoitteet" [{"ajorata" 1
                                                  "palautusarvo" 1
                                                  "osa" 2
@@ -49,7 +49,7 @@
                                            "tie" 4
                                            "tunniste" "666-loppu"}]}
 
-        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :tunniste "666" :ajorata 1}]]
+        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :id "666" :ajorata 1}]]
     (is (= odotetut (vkm/osoitteet-vkm-vastauksesta tieosoitteet onnistunut-vkm-vastaus))
         "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
     (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))

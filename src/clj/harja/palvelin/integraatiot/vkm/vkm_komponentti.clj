@@ -42,9 +42,9 @@
 
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
   (let [vkm-osoitteet (get vastaus "tieosoitteet")]
-    (mapv (fn [{:keys [tunniste] :as tieosoite}]
-            (let [alkuosanhakutunnus (alkuosan-vkm-tunniste tunniste)
-                  loppuosanhakutunnus (loppuosan-vkm-tunniste tunniste)
+    (mapv (fn [{:keys [id] :as tieosoite}]
+            (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
+                  loppuosanhakutunnus (loppuosan-vkm-tunniste id)
                   alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
                   loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
                   virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
@@ -54,9 +54,9 @@
 
 (defn pura-tieosoitteet [tieosoitteet]
   (reduce into []
-          (map (fn [{:keys [tie aosa aet losa let ajorata tunniste]}]
-                 [{:tunniste (alkuosan-vkm-tunniste tunniste) :tie tie :osa aosa :ajorata ajorata :etaisyys aet}
-                  {:tunniste (loppuosan-vkm-tunniste tunniste) :tie tie :osa losa :ajorata ajorata :etaisyys let}])
+          (map (fn [{:keys [tie aosa aet losa let ajorata id]}]
+                 [{:tunniste (alkuosan-vkm-tunniste id) :tie tie :osa aosa :ajorata ajorata :etaisyys aet}
+                  {:tunniste (loppuosan-vkm-tunniste id) :tie tie :osa losa :ajorata ajorata :etaisyys let}])
                tieosoitteet)))
 
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]
