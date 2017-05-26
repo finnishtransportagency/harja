@@ -5,6 +5,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.views.vesivaylat.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.views.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat]
             [harja.views.vesivaylat.urakka.laadunseuranta.sanktiot :as sanktiot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -18,12 +20,12 @@
        "Tarkastukset" :vesivayla-tarkastukset
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id)) ; TODO OIKEUS!
-         [viat/viat])
+         [tarkastukset/tarkastukset])
 
        "Laatupoikkeamat" :vesivayla-laatupoikkeamat
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
-         [viat/viat])
+         [laatupoikkeamat/laatupoikkeamat])
 
        "Vikaseuranta" :vesivayla-viat
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
