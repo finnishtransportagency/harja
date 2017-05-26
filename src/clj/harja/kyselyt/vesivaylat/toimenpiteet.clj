@@ -43,6 +43,10 @@
         (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
         :default toimenpiteet))
 
+(defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
+  ;; TODO Tee...
+  )
+
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
   (let [urakka-id (::tot/urakka-id tiedot)

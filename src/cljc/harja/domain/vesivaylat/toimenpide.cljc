@@ -277,7 +277,7 @@ reimari-tilat
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::vikakorjauksia? boolean?)
-(s/def ::toimenpide-idt (set ::id))
+(s/def ::toimenpide-idt (s/coll-of ::id))
 
 (def reimari-kentat
   #{::reimari-id
@@ -364,10 +364,10 @@ reimari-tilat
                            ::turvalaite]
                      :opt [::vikakorjauksia?])))
 
-(s/def :siirra-toimenpiteet-yksikkohintaisiin-kysely
+(s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::to/:toimenpide-idt]))
+    :req [::to/urakka-id ::toimenpide-idt]))
 
-(s/def :siirra-toimenpiteet-kokonaishintaisiin-kysely
+(s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::to/:toimenpide-idt]))
+    :req [::to/urakka-id ::toimenpide-idt]))
