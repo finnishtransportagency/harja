@@ -24,9 +24,11 @@
 
 (defn siirra-toimenpiteet-kokonaishintaisiin [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                    user (::tot/urakka-id tiedot))
-    (q/paivita-toimenpiteiden-tyyppi db (::to/toimenpide-idt tiedot) :kokonaishintainen)))
+    (let [urakka-id (::tot/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                      user urakka-id)
+      (q/paivita-toimenpiteiden-tyyppi db (::to/toimenpide-idt tiedot) :kokonaishintainen))))
 
 (defrecord YksikkohintaisetToimenpiteet []
   component/Lifecycle
