@@ -197,8 +197,10 @@
   (testing "Siirron aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/ToimenpiteetEiSiirretty}
-      (e! (tiedot/->SiirraValitutYksikkohintaisiin)
-          testitila))))
+      (let [vanha-tila testitila
+            uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
+                          vanha-tila)]
+        (is (= vanha-tila uusi-tila))))))
 
 (deftest yksikkohintaiset-siirretty
   (let [vanha-tila testitila
