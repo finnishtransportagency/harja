@@ -52,6 +52,7 @@
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
+(defrecord SiirraValitutYksikkohintaisiin [])
 (defrecord ToimenpiteetEiHaettu [virhe])
 
 (defn kyselyn-hakuargumentit [valinnat]
@@ -72,6 +73,17 @@
           haku (tuck/send-async! ->HaeToimenpiteet)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
+
+  SiirraValitutYksikkohintaisiin
+  (process-event [_ app]
+    (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
+              vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
+                                   {:urakka-id (get-in app [:valinnat :urakka-id])
+                                    :toimenpiteet valitut}))]
+          (when-not (k/virhe? vastaus)
+            ;; TODO Tee... jotain...
+            )))
+    app)
 
 
   HaeToimenpiteet

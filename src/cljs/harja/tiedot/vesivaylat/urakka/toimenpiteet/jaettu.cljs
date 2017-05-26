@@ -29,6 +29,9 @@
   (every? (comp not true?)
           (map :valittu? tyolajin-toimenpiteet)))
 
+(defn valitut-toimenpiteet [toimenpiteet]
+  (filter :valittu? toimenpiteet))
+
 (defn valinnan-tila [tyolajin-toimenpiteet]
   (cond (kaikki-valittu? tyolajin-toimenpiteet) true
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
