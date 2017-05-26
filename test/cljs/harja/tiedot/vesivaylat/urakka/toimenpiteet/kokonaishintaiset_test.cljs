@@ -202,7 +202,7 @@
                           vanha-tila)]
         (is (= vanha-tila uusi-tila))))))
 
-(deftest yksikkohintaiset-siirretty
+(deftest yksikkohintaisiin-siirretty
   (let [vanha-tila testitila
         siirretyt #{1 2 3}
         toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
