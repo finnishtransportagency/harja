@@ -7,7 +7,8 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [cljs.core.async :refer [<!]]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -60,6 +61,7 @@
 (defrecord ValitseTyolaji [tiedot])
 (defrecord ValitseVayla [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
+(defrecord ToimenpiteetEiSiirretty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -93,4 +95,9 @@
 
   AsetaInfolaatikonTila
   (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila)))
+    (assoc app :infolaatikko-nakyvissa? uusi-tila))
+
+  ToimenpiteetEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
+    app))

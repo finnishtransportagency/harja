@@ -52,8 +52,9 @@
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
-(defrecord SiirraValitutYksikkohintaisiin [])
 (defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord SiirraValitutYksikkohintaisiin [])
+(defrecord ToimenpiteetSiirretty [toimenpiteet])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
@@ -76,15 +77,22 @@
 
   SiirraValitutYksikkohintaisiin
   (process-event [_ app]
-    (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
-              vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
-                                   {::tot/urakka-id (get-in app [:valinnat :urakka-id])
-                                    ::to/toimenpide-idt valitut}))]
-          (when-not (k/virhe? vastaus)
-            ;; TODO Tee... jotain...
-            )))
+    (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
+          fail! (tuck/send-async! jaettu/->ToimenpiteetEiSiirretty)]
+      (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
+                vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
+                                     {::tot/urakka-id (get-in app [:valinnat :urakka-id])
+                                      ::to/toimenpide-idt valitut}))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))))
     app)
 
+  ToimenpiteetSiirretty
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    ;; TODO Poista siirretyt näkymästä
+    (viesti/nayta! (str (count toimenpiteet) " toimenpidettä siirretty.") :success)
+    app)
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
