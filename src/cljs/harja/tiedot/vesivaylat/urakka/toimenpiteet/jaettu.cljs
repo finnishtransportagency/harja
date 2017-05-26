@@ -33,6 +33,9 @@
 (defn valitut-toimenpiteet [toimenpiteet]
   (filter :valittu? toimenpiteet))
 
+(defn poista-toimenpiteet [toimenpiteet poistettavat-toimenpide-idt]
+  (filter #(not (poistettavat-toimenpide-idt (::to/id %))) toimenpiteet))
+
 (defn valinnan-tila [tyolajin-toimenpiteet]
   (cond (kaikki-valittu? tyolajin-toimenpiteet) true
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false

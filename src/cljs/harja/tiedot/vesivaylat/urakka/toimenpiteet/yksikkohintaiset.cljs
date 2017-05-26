@@ -90,9 +90,8 @@
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
-    ;; TODO Poista siirretyt näkymästä
     (viesti/nayta! (str (count toimenpiteet) " toimenpidettä siirretty.") :success)
-    app)
+    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
