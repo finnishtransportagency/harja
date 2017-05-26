@@ -4,7 +4,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tila
-  (atom {:nakymassa? false}))
+  (atom {:nakymassa? false
+         :tarkastukset []}))
 
 (defrecord Nakymassa? [nakymassa?])
 

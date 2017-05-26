@@ -3,9 +3,10 @@
             [tuck.core :refer [tuck]]
             [harja.ui.komponentti :as komp]
             [harja.ui.otsikkopaneeli :refer [otsikkopaneeli]]
-            [harja.tiedot.vesivaylat.urakka.laadunseuranta.tarkastukset :as tiedot]
+            [harja.tiedot.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as tiedot]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.valinnat :as valinnat]
+            [harja.domain.vesivaylat.vayla :as va]
             [harja.loki :refer [log]]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
@@ -45,10 +46,12 @@
   (let [vaylat (keys (group-by :vayla laatupoikkeamat))] ;; TODO namespaceta
     (vec (mapcat
            (fn [vayla]
-             [vayla
+             [(::va/id vayla)
+
               [:span
-               (grid/otsikkorivin-tiedot "Väylä" 0) ; TODO Väylän nimi ja rivien määrä tähän
+               (grid/otsikkorivin-tiedot (::va/nimi vayla) 0) ; TODO Väylän rivien määrä tähän
                (when haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
+
               [paneelin-sisalto
                e!
                laatupoikkeamat ;; TODO Suodata väylällä
@@ -56,7 +59,7 @@
            vaylat))))
 
 (defn- laatupoikkeamat-listaus [e! app]
-  (into [otsikkopaneeli]
+  (into [otsikkopaneeli {}]
         (luo-otsikkorivit e! (:laatupoikkeamat app) (:haku-kaynnissa? app))))
 
 (defn laatupoikkeamat* [e! app]

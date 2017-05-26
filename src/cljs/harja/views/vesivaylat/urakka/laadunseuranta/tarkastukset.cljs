@@ -56,7 +56,7 @@
            vaylat))))
 
 (defn- tarkastukset-listaus [e! app]
-  (into [otsikkopaneeli]
+  (into [otsikkopaneeli {}]
         (luo-otsikkorivit e! (:laatupoikkeamat app) (:haku-kaynnissa? app))))
 
 (defn tarkastukset* [e! app]
