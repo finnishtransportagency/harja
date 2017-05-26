@@ -1,5 +1,5 @@
 (ns harja.tiedot.vesivaylat.urakka.laadunseuranta.tarkastukset-test
-  (:require [harja.tiedot.vesivaylat.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+  (:require [harja.tiedot.vesivaylat.urakka.laadunseuranta.tarkastukset :as tedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
