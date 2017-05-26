@@ -1,5 +1,6 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
@@ -191,6 +192,26 @@
                              ::to/sopimus-id 777
                              :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
+
+(deftest yksikkohintaisiin-siirto
+  (testing "Siirron aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/ToimenpiteetEiSiirretty}
+      (e! (tiedot/->SiirraValitutYksikkohintaisiin)
+          testitila))))
+
+(deftest yksikkohintaiset-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hakemisen-aloitus
   (testing "Haku ei lähde koska spec failaa"
