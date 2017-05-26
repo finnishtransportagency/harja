@@ -44,9 +44,14 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  (update! db ::tot/toteuma
-           {::tot/tyyppi (name uusi-tyyppi)}
-           {::vv-toimenpide/id (op/in toimenpide-idt)}))
+  ;; TODO Saisiko tätä tehtyä yhdellä kyselyllä kuten SQL:ssä?
+  (let [toimenpiteiden-toteuma-idt (map ::vv-toimenpide/toteuma-id
+                                        (fetch db ::vv-toimenpide/reimari-toimenpide
+                                               #{::vv-toimenpide/toteuma-id}
+                                               {::vv-toimenpide/id (op/in toimenpide-idt)}))]
+    (update! db ::tot/toteuma
+             {::tot/tyyppi (name uusi-tyyppi)}
+             {::tot/id (op/in toimenpiteiden-toteuma-idt)})))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
