@@ -41,6 +41,11 @@
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
 
+(defn viesti-siirto-tehty [siirrettyjen-lkm]
+  (str siirrettyjen-lkm " "
+       (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
+       " siirretty."))
+
 (defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide

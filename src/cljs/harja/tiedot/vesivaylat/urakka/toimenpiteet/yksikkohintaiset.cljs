@@ -90,7 +90,7 @@
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! (str (count toimenpiteet) " toimenpidettä siirretty.") :success)
+    (viesti/nayta! (jaettu/viesti-siirto-tehty (count toimenpiteet)) :success)
     (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)))
 
   HaeToimenpiteet
