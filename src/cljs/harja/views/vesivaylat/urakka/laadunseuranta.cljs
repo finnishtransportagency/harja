@@ -15,7 +15,17 @@
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
 
-       "Viat" :vesivayla-viat
+       "Tarkastukset" :vesivayla-tarkastukset
+       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id)) ; TODO OIKEUS!
+         [viat/viat])
+
+       "Laatupoikkeamat" :vesivayla-laatupoikkeamat
+       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
+         [viat/viat])
+
+       "Vikaseuranta" :vesivayla-viat
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (oikeudet/urakat-vesivaylalaadunseuranta-viat id))
          [viat/viat])
