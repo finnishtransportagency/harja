@@ -196,7 +196,7 @@
 (deftest yksikkohintaisiin-siirto
   (testing "Siirron aloittaminen"
     (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/ToimenpiteetEiSiirretty}
+      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
       (let [vanha-tila testitila
             uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
                           vanha-tila)]
