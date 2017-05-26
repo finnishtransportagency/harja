@@ -14,14 +14,49 @@
 (defprotocol Tieosoitemuunnos
   (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle kun-valmis]))
 
-(defn tierekisteriosoite-vkm-vastauksesta [tieosoitteet vastaus]
-  )
+
+(defn alkuosan-vkm-tunniste [tunniste]
+  (str tunniste "-alku"))
+
+(defn loppuosan-vkm-tunniste [tunniste]
+  (str tunniste "-loppu"))
+
+(defn vkm-virhe? [hakutunnus vkm-kohteet]
+  (some #(and (= hakutunnus (get % "tunniste"))
+              (not (= 1 (get % "palautusarvo"))))
+        vkm-kohteet))
+
+(defn hae-vkm-osoite [vkm-kohteet hakutunnus]
+  (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
+
+(defn paivita-osoite [{:keys [tie aosa aet losa let ajorata] :as tieosoite} alkuosanosoite loppuosanosoite virhe?]
+  (if virhe?
+    tieosoite
+    (-> tieosoite
+        (assoc :tie (get alkuosanosoite "tie" tie))
+        (assoc :ajorata (get alkuosanosoite "ajorata" ajorata))
+        (assoc :aosa (get alkuosanosoite "osa" aosa))
+        (assoc :aet (get alkuosanosoite "etaisyys" aet))
+        (assoc :losa (get loppuosanosoite "osa" losa))
+        (assoc :let (get loppuosanosoite "etaisyys" let)))))
+
+(defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
+  (let [vkm-osoitteet (get vastaus "tieosoitteet")]
+    (mapv (fn [{:keys [tunniste] :as tieosoite}]
+            (let [alkuosanhakutunnus (alkuosan-vkm-tunniste tunniste)
+                  loppuosanhakutunnus (loppuosan-vkm-tunniste tunniste)
+                  alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
+                  loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
+                  virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
+                             (vkm-virhe? loppuosanhakutunnus vkm-osoitteet))]
+              (paivita-osoite tieosoite alkuosanosoite loppuosanosoite virhe?)))
+          tieosoitteet)))
 
 (defn pura-tieosoitteet [tieosoitteet]
   (reduce into []
           (map (fn [{:keys [tie aosa aet losa let ajorata tunniste]}]
-                 [{:tunniste (str tunniste "-alku") :tie tie :osa aosa :ajorata ajorata :etaisyys aet}
-                  {:tunniste (str tunniste "-loppu") :tie tie :osa losa :ajorata ajorata :etaisyys let}])
+                 [{:tunniste (alkuosan-vkm-tunniste tunniste) :tie tie :osa aosa :ajorata ajorata :etaisyys aet}
+                  {:tunniste (loppuosan-vkm-tunniste tunniste) :tie tie :osa losa :ajorata ajorata :etaisyys let}])
                tieosoitteet)))
 
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]

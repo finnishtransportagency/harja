@@ -2,7 +2,6 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
-            [clj-time.core :as t]
             [harja.pvm :as pvm]))
 
 (deftest vkm-parametrit
@@ -22,5 +21,38 @@
         odotetut [{:tunniste "666-alku", :tie 4, :osa 1, :ajorata 1, :etaisyys 0}
                   {:tunniste "666-loppu", :tie 4, :osa 3, :ajorata 1, :etaisyys 1000}]]
     (is (= odotetut puretut) "Tieosoitteet on purettu oikein VKM:ää varten")))
+
+(deftest tieosoitteet-vkm-vastauksesta
+  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :tunniste "666" :ajorata 1}]
+        onnistunut-vkm-vastaus {"tieosoitteet" [{"ajorata" 1
+                                                 "palautusarvo" 1
+                                                 "osa" 2
+                                                 "etaisyys" 0
+                                                 "tie" 4
+                                                 "tunniste" "666-alku"}
+                                                {"ajorata" 1
+                                                 "palautusarvo" 1
+                                                 "osa" 3
+                                                 "etaisyys" 800
+                                                 "tie" 4
+                                                 "tunniste" "666-loppu"}]}
+        vkm-virhevastaus {"tieosoitteet" [{"ajorata" 1
+                                           "palautusarvo" 0
+                                           "osa" 2
+                                           "etaisyys" 0
+                                           "tie" 4
+                                           "tunniste" "666-alku"}
+                                          {"ajorata" 1
+                                           "palautusarvo" 0
+                                           "osa" 3
+                                           "etaisyys" 800
+                                           "tie" 4
+                                           "tunniste" "666-loppu"}]}
+
+        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :tunniste "666" :ajorata 1}]]
+    (is (= odotetut (vkm/osoitteet-vkm-vastauksesta tieosoitteet onnistunut-vkm-vastaus))
+        "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
+    (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
+        "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
 
 
