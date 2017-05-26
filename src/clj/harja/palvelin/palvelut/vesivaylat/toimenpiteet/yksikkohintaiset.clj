@@ -28,8 +28,8 @@
       :hae-yksikkohintaiset-toimenpiteet
       (fn [user tiedot]
         (hae-yksikkohintaiset-toimenpiteet db user tiedot))
-      {:kysely-spec ::to/hae-vesivaylien-toimenpiteet-kyselyt
-       :vastaus-spec ::to/hae-vesivayilien-toimenpiteet-vastaukset})
+      {:kysely-spec ::to/hae-vesivaylien-toimenpiteet-kysely
+       :vastaus-spec ::to/hae-vesivayilien-toimenpiteet-vastaus})
     this)
 
   (stop [this]

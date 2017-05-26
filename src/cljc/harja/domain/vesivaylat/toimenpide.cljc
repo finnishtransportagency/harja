@@ -347,7 +347,7 @@ reimari-tilat
 
 ;; Palvelut
 
-(s/def ::hae-vesivaylien-toimenpiteet-kyselyt
+(s/def ::hae-vesivaylien-toimenpiteet-kysely
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
@@ -357,7 +357,7 @@ reimari-tilat
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-vesivayilien-toimenpiteet-vastaukset
+(s/def ::hae-vesivayilien-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]

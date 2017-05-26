@@ -94,7 +94,7 @@
             fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit)
+            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)
               (do
                 (go
                   (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
@@ -102,7 +102,7 @@
                       (fail! vastaus)
                       (tulos! vastaus))))
                 (assoc app :haku-kaynnissa? true))
-              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
             (throw e))))

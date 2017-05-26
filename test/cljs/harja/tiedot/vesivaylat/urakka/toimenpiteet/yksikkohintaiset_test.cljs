@@ -164,7 +164,7 @@
               :tyyppi :yksikkohintainen}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
@@ -176,7 +176,7 @@
              {::tot/urakka-id 666
               ::to/sopimus-id 777
               :tyyppi :yksikkohintainen}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
@@ -184,7 +184,7 @@
       (is (= hakuargumentit {::tot/urakka-id 666
                              ::to/sopimus-id 777
                              :tyyppi :yksikkohintainen}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit)))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest hakemisen-aloitus
   (testing "Haku ei lähde koska spec failaa"
