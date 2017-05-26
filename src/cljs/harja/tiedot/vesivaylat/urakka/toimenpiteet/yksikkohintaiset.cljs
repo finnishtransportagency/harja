@@ -78,8 +78,8 @@
   (process-event [_ app]
     (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
               vastaus (<! (k/post! :siirra-toimenpiteet-kokonaishintaisiin
-                                   {:urakka-id (get-in app [:valinnat :urakka-id])
-                                    :toimenpiteet valitut}))]
+                                   {::tot/urakka-id (get-in app [:valinnat :urakka-id])
+                                    ::to/toimenpide-idt valitut}))]
           (when-not (k/virhe? vastaus)
             ;; TODO Tee... jotain...
             )))
