@@ -369,11 +369,11 @@ reimari-tilat
     :req [::to/urakka-id ::toimenpide-idt]))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
-  ::toimenpide-idt)
+  ::toimenpide-idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
   (s/keys
     :req [::to/urakka-id ::toimenpide-idt]))
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
-  ::toimenpide-idt)
+  ::toimenpide-idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
