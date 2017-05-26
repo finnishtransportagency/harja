@@ -44,7 +44,8 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  ;; TODO Tee...
+  (log/debug "SIIRTELE: " toimenpide-idt uusi-tyyppi)
+  ;; TODO
   )
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?

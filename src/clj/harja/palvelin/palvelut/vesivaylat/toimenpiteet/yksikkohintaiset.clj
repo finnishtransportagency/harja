@@ -17,7 +17,7 @@
 
 (defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::tot/urakkaid tiedot)]
+    (let [urakka-id (::tot/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/hae-toimenpiteet db tiedot))))
