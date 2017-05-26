@@ -86,12 +86,13 @@
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))))
-    app)
+    (assoc app :siirto-kaynnissa? true))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
     (viesti/nayta! (jaettu/viesti-siirto-tehty (count toimenpiteet)) :success)
-    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)))
+    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
+               :siirto-kaynnissa? false))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.

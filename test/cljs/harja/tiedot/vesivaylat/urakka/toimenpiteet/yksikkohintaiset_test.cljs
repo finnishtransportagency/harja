@@ -194,7 +194,7 @@
       (let [vanha-tila testitila
             uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
                           vanha-tila)]
-        (is (= vanha-tila uusi-tila))))))
+        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
 
 (deftest kokonaishintaisiin-siirretty
   (let [vanha-tila testitila
