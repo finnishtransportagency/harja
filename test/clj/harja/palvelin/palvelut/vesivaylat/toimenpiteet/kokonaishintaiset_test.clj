@@ -47,8 +47,8 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-    (is (>= (count vastaus) 4))
-    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaus vastaus))))
+    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaus vastaus))
+    (is (>= (count vastaus) 4))))
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -296,3 +296,31 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kokonaishintaiset-toimenpiteet +kayttaja-ulle+
                                            kysely-params)))))
+
+(defn- hae-kokonaishintaiset-toimenpide-idt []
+  (set (map :id
+            (q-map "SELECT id FROM reimari_toimenpide
+                    WHERE \"toteuma-id\" IN
+                    (SELECT id FROM toteuma WHERE tyyppi = 'vv-kokonaishintainen')"))))
+
+(defn- hae-toimenpiteiden-tyyppi [idt]
+  (set (map :tyyppi
+            (q-map "SELECT tyyppi FROM toteuma
+                    WHERE id IN (SELECT \"toteuma-id\" FROM reimari_toimenpide WHERE id IN (" (str/join ", " idt) "));"))))
+
+(deftest yksikkohintaisiin-siirto
+  (let [kokonaishintaiset-toimenpide-idt (hae-kokonaishintaiset-toimenpide-idt)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/idt kokonaishintaiset-toimenpide-idt}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+
+                                kysely-params)
+        nykyiset-kokonaishintaiset-toimenpide-idt (hae-kokonaishintaiset-toimenpide-idt)
+        siirrettyjen-uudet-tyypit (hae-toimenpiteiden-tyyppi kokonaishintaiset-toimenpide-idt)]
+    (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-kysely kysely-params))
+    (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-vastaus vastaus))
+
+    (is (= vastaus kokonaishintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
+    (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
+    (is (every? #(= % "vv-yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
