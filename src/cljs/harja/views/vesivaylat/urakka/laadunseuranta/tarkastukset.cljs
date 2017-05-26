@@ -22,7 +22,7 @@
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}
     ^{:key "siirtonappi"}
-    [napit/yleinen-ensisijainen "Siirrä yksikköhintaisiin" #(log "Painoit nappia")]]])
+    [napit/uusi "Lisää uusi tarkastus" #(log "Painoit nappia")]]])
 
 (defn tarkastukset* [e! app]
   (komp/luo
