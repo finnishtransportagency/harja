@@ -82,7 +82,7 @@
       (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
                 vastaus (<! (k/post! :siirra-toimenpiteet-kokonaishintaisiin
                                      {::tot/urakka-id (get-in app [:valinnat :urakka-id])
-                                      ::to/toimenpide-idt valitut}))]
+                                      ::to/idt valitut}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))))

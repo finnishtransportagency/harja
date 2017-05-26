@@ -277,7 +277,7 @@ reimari-tilat
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::vikakorjauksia? boolean?)
-(s/def ::toimenpide-idt (s/coll-of ::id))
+(s/def ::idt (s/coll-of ::id))
 
 (def reimari-kentat
   #{::reimari-id
@@ -366,14 +366,14 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::toimenpide-idt]))
+    :req [::to/urakka-id ::idt]))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
-  ::toimenpide-idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::toimenpide-idt]))
+    :req [::to/urakka-id ::idt]))
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
-  ::toimenpide-idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
