@@ -4,15 +4,16 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.core.async :as async]
             [harja.pvm :as pvm]
             [cheshire.core :as cheshire])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (java.net URLEncoder)))
 ;; curl -X GET "https://testioag.liikennevirasto.fi/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%0A%5B%7B%22tunniste%22%3A%22666%22%2C%22tie%22%3A4%2C%22osa%22%3A101%2C%22etaisyys%22%3A100%2C%22ajorata%22%3A1%7D%0A%5D%0A%7D"
+;; curl -X GET "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%0A%5B%7B%22tunniste%22%3A%22666%22%2C%22tie%22%3A4%2C%22osa%22%3A101%2C%22etaisyys%22%3A100%2C%22ajorata%22%3A1%7D%0A%5D%0A%7D"
+;; curl -X GET "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%5B%7B%22tunniste%22%3A%22666-alku%22%2C%22tie%22%3A4%2C%22osa%22%3A1%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A0%7D%2C%7B%22tunniste%22%3A%22666-loppu%22%2C%22tie%22%3A4%2C%22osa%22%3A3%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A1000%7D%5D%7D"
 
 (defprotocol Tieosoitemuunnos
-  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle kun-valmis]))
+  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle]))
 
 
 (defn alkuosan-vkm-tunniste [tunniste]
@@ -65,9 +66,10 @@
    :callback "jsonp"
    :tilannepvm (pvm/pvm paivan-verkolta)
    :kohdepvm (pvm/pvm paivan-verkolle)
+   ;; todo: tässä tapahtuu jotain omituista. vkm ilmoittaa, että json olisi virheellistä
    :json (URLEncoder/encode (cheshire/encode {:tieosoitteet (pura-tieosoitteet tieosoitteet)}))})
 
-(defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet paivan-verkolta paivan-verkolle kun-valmis]
+(defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet paivan-verkolta paivan-verkolle]
   (when url
     (log/debug (format "Muunnetaan tieosoitteet: %s päivän: %s verkolta päivän: %s verkolle"
                        tieosoitteet
@@ -82,7 +84,7 @@
                                 :url url
                                 :parametrit parametrit}
                 {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-            (tierekisteriosoite-vkm-vastauksesta tieosoitteet vastaus))))
+            (osoitteet-vkm-vastauksesta tieosoitteet vastaus))))
       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
         false))))
 
@@ -94,5 +96,5 @@
     this)
 
   Tieosoitemuunnos
-  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle kun-valmis]
-    (muunna-tieosoitteet-verkolta-toiselle this tieosoite paivan-verkolta paivan-verkolle kun-valmis)))
+  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle]
+    (muunna-tieosoitteet-verkolta-toiselle this tieosoite paivan-verkolta paivan-verkolle)))
