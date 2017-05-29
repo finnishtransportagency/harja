@@ -78,26 +78,26 @@
 
     (into
       [:div
-      [valinnat/tyolaji
-       (r/wrap (get-in app [:valinnat :tyolaji])
-               (fn [uusi]
-                 (e! (PaivitaValinnatKonstruktori {:tyolaji uusi}))))
-       (to/jarjesta-reimari-tyolajit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyolajit))
-       #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
+       [valinnat/tyolaji
+        (r/wrap (get-in app [:valinnat :tyolaji])
+                (fn [uusi]
+                  (e! (PaivitaValinnatKonstruktori {:tyolaji uusi}))))
+        (to/jarjesta-reimari-tyolajit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyolajit))
+        #(if % (to/reimari-tyolaji-fmt %) "Kaikki")]
 
-      [valinnat/tyoluokka
-       (r/wrap (get-in app [:valinnat :tyoluokka])
-               (fn [uusi]
-                 (e! (PaivitaValinnatKonstruktori {:tyoluokka uusi}))))
-       (to/jarjesta-reimari-tyoluokat (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyoluokat))
-       #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
+       [valinnat/tyoluokka
+        (r/wrap (get-in app [:valinnat :tyoluokka])
+                (fn [uusi]
+                  (e! (PaivitaValinnatKonstruktori {:tyoluokka uusi}))))
+        (to/jarjesta-reimari-tyoluokat (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-tyoluokat))
+        #(if % (to/reimari-tyoluokka-fmt %) "Kaikki")]
 
-      [valinnat/toimenpide
-       (r/wrap (get-in app [:valinnat :toimenpide])
-               (fn [uusi]
-                 (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
-       (to/jarjesta-reimari-toimenpidetyypit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-toimenpidetyypit))
-       #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
+       [valinnat/toimenpide
+        (r/wrap (get-in app [:valinnat :toimenpide])
+                (fn [uusi]
+                  (e! (PaivitaValinnatKonstruktori {:toimenpide uusi}))))
+        (to/jarjesta-reimari-toimenpidetyypit (tiedot/arvot-pudotusvalikko-valinnoiksi to/reimari-toimenpidetyypit))
+        #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
 
        [kentat/tee-kentta {:tyyppi :checkbox
                            :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
@@ -109,9 +109,9 @@
 
    (when-not (empty? urakkatoiminto-napit)
      (into
-      ^{:key "urakkatoiminnot"}
-      [valinnat/urakkatoiminnot {:sticky? true}]
-      urakkatoiminto-napit))])
+       ^{:key "urakkatoiminnot"}
+       [valinnat/urakkatoiminnot {:sticky? true}]
+       urakkatoiminto-napit))])
 
 (defn suodattimet
   [e! PaivitaValinnatKonstruktori app urakka vaylahaku {:keys [lisasuodattimet urakkatoiminnot]}]
@@ -122,9 +122,12 @@
     (or urakkatoiminnot [])]])
 
 (defn siirtonappi [e! app otsikko toiminto]
-  [napit/yleinen-ensisijainen otsikko
-  toiminto
-   {:disabled (not (tiedot/joku-valittu? (:toimenpiteet app)))}])
+  [napit/yleinen-ensisijainen (str otsikko
+                                   (when-not (empty? (tiedot/valitut-toimenpiteet (:toimenpiteet app)))
+                                     (str " (" (count (tiedot/valitut-toimenpiteet (:toimenpiteet app))) ")")))
+   toiminto
+   {:disabled (or {:disabled (not (tiedot/joku-valittu? (:toimenpiteet app)))}
+                  (:siirto-kaynnissa? app))}])
 
 
 ;;;;;;;;;;;;;;;;;
@@ -172,19 +175,19 @@
 
 (defn valinta-checkbox [e! app]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-  :komponentti (fn [rivi]
-                 ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
-                 ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
-                 ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
-                 ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
-                 ;; Ja entäs otsikkorivit?
-                 [kentat/tee-kentta
-                  {:tyyppi :checkbox}
-                  (r/wrap (:valittu? rivi)
-                          (fn [uusi]
-                            (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                             :valinta uusi}))))])
-  :leveys 5})
+   :komponentti (fn [rivi]
+                  ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
+                  ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
+                  ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
+                  ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
+                  ;; Ja entäs otsikkorivit?
+                  [kentat/tee-kentta
+                   {:tyyppi :checkbox}
+                   (r/wrap (:valittu? rivi)
+                           (fn [uusi]
+                             (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                              :valinta uusi}))))])
+   :leveys 5})
 
 (def oletussarakkeet
   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}

@@ -7,7 +7,8 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [cljs.core.async :refer [<!]]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -29,10 +30,21 @@
   (every? (comp not true?)
           (map :valittu? tyolajin-toimenpiteet)))
 
+(defn valitut-toimenpiteet [toimenpiteet]
+  (filter :valittu? toimenpiteet))
+
+(defn poista-toimenpiteet [toimenpiteet poistettavat-toimenpide-idt]
+  (filter #(not (poistettavat-toimenpide-idt (::to/id %))) toimenpiteet))
+
 (defn valinnan-tila [tyolajin-toimenpiteet]
   (cond (kaikki-valittu? tyolajin-toimenpiteet) true
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
+
+(defn viesti-siirto-tehty [siirrettyjen-lkm]
+  (str siirrettyjen-lkm " "
+       (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
+       " siirretty."))
 
 (defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
@@ -60,6 +72,7 @@
 (defrecord ValitseTyolaji [tiedot])
 (defrecord ValitseVayla [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
+(defrecord ToimenpiteetEiSiirretty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -93,4 +106,9 @@
 
   AsetaInfolaatikonTila
   (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila)))
+    (assoc app :infolaatikko-nakyvissa? uusi-tila))
+
+  ToimenpiteetEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
+    app))
