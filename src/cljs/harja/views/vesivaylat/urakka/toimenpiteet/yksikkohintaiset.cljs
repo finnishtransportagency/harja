@@ -72,7 +72,9 @@
        [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :hae (constantly "TODO") :leveys 10}]
-                               :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]}]])))
+                               :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
+                               :paneelin-checkbox-sijainti "94.3%"
+                               :vaylan-checkbox-sijainti "94.3%"}]])))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

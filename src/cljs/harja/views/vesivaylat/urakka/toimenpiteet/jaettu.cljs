@@ -134,18 +134,14 @@
 ;; GRID / LISTAUS
 ;;;;;;;;;;;;;;;;;
 
-(def otsikoiden-checkbox-sijainti "94.3%")
-;; FIXME Tämä ei aina osu täysin samalle Y-akselille gridissä olevien checkboksien kanssa
-;; Ilmeisesti mahdoton määrittää arvoa, joka toimisi aina?
-
-(defn vaylaotsikko [e! vaylan-toimenpiteet vayla]
+(defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
     (grid/otsikkorivin-tiedot
       (::va/nimi vayla)
       (count vaylan-toimenpiteet))
     {:id (::va/id vayla)
      :otsikkokomponentit
-     [{:sijainti otsikoiden-checkbox-sijainti
+     [{:sijainti vaylan-checkbox-sijainti
        :sisalto
        (fn [_]
          [kentat/tee-kentta
@@ -155,23 +151,23 @@
                     (e! (tiedot/->ValitseVayla {:vayla-id (::va/id vayla)
                                                 :valinta uusi}))))])}]}))
 
-(defn vaylaotsikko-ja-sisalto [e! toimenpiteet-vaylittain]
+(defn vaylaotsikko-ja-sisalto [e! toimenpiteet-vaylittain vaylan-checkbox-sijainti]
   (fn [vayla]
     (cons
       ;; Väylän otsikko
-      (vaylaotsikko e! (get toimenpiteet-vaylittain vayla) vayla)
+      (vaylaotsikko e! (get toimenpiteet-vaylittain vayla) vayla vaylan-checkbox-sijainti)
       ;; Väylän toimenpiderivit
       (get toimenpiteet-vaylittain vayla))))
 
-(defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet]
+(defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet vaylan-checkbox-sijainti]
   (let [toimenpiteet-vaylittain (group-by ::to/vayla toimenpiteet)
         vaylat (keys toimenpiteet-vaylittain)]
-    (vec (mapcat (vaylaotsikko-ja-sisalto e! toimenpiteet-vaylittain) vaylat))))
+    (vec (mapcat (vaylaotsikko-ja-sisalto e! toimenpiteet-vaylittain vaylan-checkbox-sijainti) vaylat))))
 
-(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [e! toimenpiteet tyolaji]
-  (-> toimenpiteet
-      (tiedot/toimenpiteet-tyolajilla tyolaji)
-      (->> (ryhmittele-toimenpiteet-vaylalla e!))))
+(defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [e! toimenpiteet tyolaji vaylan-checkbox-sijainti]
+  (as-> toimenpiteet $
+        (tiedot/toimenpiteet-tyolajilla $ tyolaji)
+        (ryhmittele-toimenpiteet-vaylalla e! $ vaylan-checkbox-sijainti)))
 
 (defn valinta-checkbox [e! app]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
@@ -210,7 +206,7 @@
    toimenpiteet])
 
 (defn- luo-otsikkorivit
-  [e! toimenpiteet haku-kaynnissa? gridin-sarakkeet]
+  [e! toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -226,12 +222,14 @@
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  e!
                  toimenpiteet
-                 tyolaji)
+                 tyolaji
+                 vaylan-checkbox-sijainti)
                gridin-sarakkeet]])
            tyolajit))))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
-                             gridin-sarakkeet jaottelut]
+                             gridin-sarakkeet jaottelut
+                             paneelin-checkbox-sijainti vaylan-checkbox-sijainti]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -245,7 +243,7 @@
             (into [otsikkopaneeli
                    {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
                     :paneelikomponentit
-                    [{:sijainti otsikoiden-checkbox-sijainti
+                    [{:sijainti paneelin-checkbox-sijainti
                       :sisalto
                       (fn [{:keys [tunniste]}]
                         (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
@@ -255,11 +253,14 @@
                                    (fn [uusi]
                                      (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                                    :valinta uusi}))))]))}]}]
-                  (luo-otsikkorivit e! toimenpiteet haku-kaynnissa? gridin-sarakkeet))])]))
+                  (luo-otsikkorivit e! toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti))])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
-  ([e! app {:keys [lisa-sarakkeet jaottelu]}]
+  ([e! app {:keys [lisa-sarakkeet jaottelu paneelin-checkbox-sijainti vaylan-checkbox-sijainti]}]
+   (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet []))) (valinta-checkbox e! app))
-    (or jaottelu [{:otsikko nil :jaottelu-fn identity}])]))
+    (or jaottelu [{:otsikko nil :jaottelu-fn identity}])
+    paneelin-checkbox-sijainti
+    vaylan-checkbox-sijainti]))
