@@ -20,7 +20,7 @@
     [urakka-valinnat/aikavali (get-in app [:valinnat :urakka-id])]
 
     ^{:key "ryhma2"}
-    [:div [:p "TODO Tee väylätyypin ja väylän valinnasta yleinen valintakomponentti"]]
+    [:div ] ;; TODO Tee väylätyypin ja väylän valinnasta yleinen valintakomponentti
     ;; TODO pitäisikö väylätyyppi / väylä olla yleinen valinta-atomi, kun sitä on nyt useassa näkymässä?
     ^{:key "ryhma3"}
     [:div]]
