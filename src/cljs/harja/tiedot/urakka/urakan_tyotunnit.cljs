@@ -44,9 +44,7 @@
   (k/post! :hae-urakan-tyotunnit {::ut/urakka-id urakka-id}))
 
 (defn tallenna-urakan-tyotunnit [urakka-id tyotunnit-vuosittain]
-  (log "--->>>> " (pr-str tyotunnit-vuosittain))
   (let [urakan-tyotunnit (tyotunnit-tallennettavana urakka-id tyotunnit-vuosittain)]
-    (log "--->>>> " (pr-str urakan-tyotunnit))
     (k/post! :tallenna-urakan-tyotunnit {::ut/urakka-id urakka-id
                                          ::ut/urakan-tyotunnit-vuosikolmanneksittain urakan-tyotunnit})))
 
