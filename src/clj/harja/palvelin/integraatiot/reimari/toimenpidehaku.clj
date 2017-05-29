@@ -41,6 +41,12 @@
                                        (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
+(defn- formatoi-aika [muutosaika]
+  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
+    (if (s/ends-with? aika-ilman-vyohyketta "Z")
+      aika-ilman-vyohyketta
+      (str aika-ilman-vyohyketta "Z"))))
+
 (defn kysely-sanoma [muutosaika]
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
@@ -59,13 +65,6 @@
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
     (kasittele-vastaus body)))
-
-
-(defn- formatoi-aika [muutosaika]
-  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
-    (if (s/ends-with? aika-ilman-vyohyketta "Z")
-      aika-ilman-vyohyketta
-      (str aika-ilman-vyohyketta "Z"))))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (last (sort-by ::integraatiotapahtuma/alkanut
