@@ -30,7 +30,7 @@
                (when toinen-vuosikolmannes
                  (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 2 toinen-vuosikolmannes))
                (when kolmas-vuosikolmannes
-                 (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 3 toinen-vuosikolmannes))]))
+                 (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 3 kolmas-vuosikolmannes))]))
           tyotunnit-vuosittain))
 
 (defn tyotunnit-naytettavana [vuodet tyotunnit]
@@ -44,7 +44,9 @@
   (k/post! :hae-urakan-tyotunnit {::ut/urakka-id urakka-id}))
 
 (defn tallenna-urakan-tyotunnit [urakka-id tyotunnit-vuosittain]
+  (log "--->>>> " (pr-str tyotunnit-vuosittain))
   (let [urakan-tyotunnit (tyotunnit-tallennettavana urakka-id tyotunnit-vuosittain)]
+    (log "--->>>> " (pr-str urakan-tyotunnit))
     (k/post! :tallenna-urakan-tyotunnit {::ut/urakka-id urakka-id
                                          ::ut/urakan-tyotunnit-vuosikolmanneksittain urakan-tyotunnit})))
 
