@@ -70,7 +70,11 @@
       [:div
 
        [valinnat e! app]
-       [laatupoikkeamat-listaus e! app]])))
+       [laatupoikkeamat-listaus e! app]
+
+       [:div {:style {:padding "10px"}}
+        [:img {:src "images/harja_favicon.png"}]
+        [:div {:style {:color "orange"}} "Työmaa"]]])))
 
 (defn laatupoikkeamat []
   [tuck tiedot/tila laatupoikkeamat*])
