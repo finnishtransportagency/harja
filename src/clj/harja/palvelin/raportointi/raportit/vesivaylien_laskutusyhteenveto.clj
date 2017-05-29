@@ -13,14 +13,17 @@
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
 
 (defn- muodosta-raportin-rivit [toimenpiteet]
-  (mapv (fn [toimenpide]
-          [(->> (:reimari-toimenpidetyyppi toimenpide)
-               (get to/reimari-toimenpidetyypit)
-               to/reimari-toimenpidetyyppi-fmt)])
-        toimenpiteet))
+  [{:otsikko "Kokonaishintaiset: kauppamerenkulku"}
+   ["TODO"]
+   {:otsikko "Kokonaishintaiset: muut"}
+   ["TODO"]
+   {:otsikko "Yksikköhintaiset: kauppamerenkulku"}
+   ["TODO"]
+   {:otsikko "Yksikköhintaiset: muut"}
+   ["TODO"]])
 
 (defn- raportin-sarakkeet []
-  [{:leveys 1 :otsikko "Toimenpide / Maksuerä"}
+  [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
    {:leveys 1 :otsikko "Tilausvaltuus [t €]"}
@@ -44,16 +47,10 @@
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
         raportin-rivit (muodosta-raportin-rivit raportin-tiedot)
-        raportin-nimi "Laskutusyhteenveto"
-        otsikko (raportin-otsikko
-                  (case konteksti
-                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    :koko-maa "KOKO MAA")
-                  "laskutusyhteenveto" alkupvm loppupvm)]
+        raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
+     [:taulukko {:otsikko "Projekti"
                  :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       (raportin-sarakkeet)
