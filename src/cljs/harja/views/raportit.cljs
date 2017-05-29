@@ -13,7 +13,7 @@
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.views.kartta :as kartta]
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.ui.raportti :as raportti]
