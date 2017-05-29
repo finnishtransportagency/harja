@@ -32,7 +32,7 @@
        [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :hae (constantly "TODO") :leveys 10}]
-                               :jaottelu [{:otsikko "Yksikköhintaiset" :jaottelu-fn identity}]}]])))
+                               :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]}]])))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

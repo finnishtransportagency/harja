@@ -22,7 +22,7 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
