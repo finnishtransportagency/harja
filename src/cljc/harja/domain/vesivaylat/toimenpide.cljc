@@ -1,7 +1,6 @@
 (ns harja.domain.vesivaylat.toimenpide
   (:require [clojure.spec.alpha :as s]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.toteuma :as t]
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
@@ -11,7 +10,6 @@
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
-            [harja.domain.toteuma :as to]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
     #?@(:clj [
@@ -364,7 +362,7 @@ reimari-tilat
 (s/def ::hae-vesivaylien-toimenpiteet-kysely
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
-    :req [::to/urakka-id]
+    :req [::urakka/id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
@@ -379,14 +377,14 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::idt]))
+    :req [::urakka/id ::idt]))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
   (s/keys
-    :req [::to/urakka-id ::idt]))
+    :req [::urakka/id ::idt]))
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)

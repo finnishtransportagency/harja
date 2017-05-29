@@ -121,13 +121,15 @@
     (or lisasuodattimet [])
     (or urakkatoiminnot [])]])
 
-(defn siirtonappi [e! app otsikko toiminto]
-  [napit/yleinen-ensisijainen (str otsikko
-                                   (when-not (empty? (tiedot/valitut-toimenpiteet (:toimenpiteet app)))
-                                     (str " (" (count (tiedot/valitut-toimenpiteet (:toimenpiteet app))) ")")))
+(defn siirtonappi [e! {:keys [siirto-kaynnissa? toimenpiteet]} otsikko toiminto]
+  [napit/yleinen-ensisijainen (if siirto-kaynnissa?
+                                [ajax-loader-pieni "Siirretään.."]
+                                (str otsikko
+                                    (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
+                                      (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
    toiminto
-   {:disabled (or {:disabled (not (tiedot/joku-valittu? (:toimenpiteet app)))}
-                  (:siirto-kaynnissa? app))}])
+   {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
+                  siirto-kaynnissa?)}])
 
 
 ;;;;;;;;;;;;;;;;;

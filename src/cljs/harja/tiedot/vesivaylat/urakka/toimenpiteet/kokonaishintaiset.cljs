@@ -3,9 +3,9 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.urakka :as ur]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -54,7 +54,6 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
-(defrecord ToimenpiteetSiirretty [toimenpiteet])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
@@ -77,22 +76,7 @@
 
   SiirraValitutYksikkohintaisiin
   (process-event [_ app]
-    (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
-          fail! (tuck/send-async! jaettu/->ToimenpiteetEiSiirretty)]
-      (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
-                vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
-                                     {::tot/urakka-id (get-in app [:valinnat :urakka-id])
-                                      ::to/idt valitut}))]
-            (if (k/virhe? vastaus)
-              (fail! vastaus)
-              (tulos! vastaus)))))
-    (assoc app :siirto-kaynnissa? true))
-
-  ToimenpiteetSiirretty
-  (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! (jaettu/viesti-siirto-tehty (count toimenpiteet)) :success)
-    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
-               :siirto-kaynnissa? false))
+    (jaettu/siirra-valitut! :siirra-toimenpiteet-yksikkohintaisiin app))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.

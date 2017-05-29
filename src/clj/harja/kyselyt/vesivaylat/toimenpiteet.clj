@@ -9,11 +9,12 @@
             [harja.kyselyt.specql-db :refer [define-tables]]
 
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.urakka :as ur]
+
             [clojure.future :refer :all]
             [clojure.set :as set]))
 
@@ -44,18 +45,13 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  ;; TODO Saisiko tätä tehtyä yhdellä kyselyllä kuten SQL:ssä?
-  (let [toimenpiteiden-toteuma-idt (map ::vv-toimenpide/toteuma-id
-                                        (fetch db ::vv-toimenpide/reimari-toimenpide
-                                               #{::vv-toimenpide/toteuma-id}
-                                               {::vv-toimenpide/id (op/in toimenpide-idt)}))]
-    (update! db ::tot/toteuma
-             {::tot/tyyppi (name uusi-tyyppi)}
-             {::tot/id (op/in toimenpiteiden-toteuma-idt)})))
+  (update! db ::vv-toimenpide/reimari-toimenpide
+           {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
+           {::vv-toimenpide/id (op/in toimenpide-idt)}))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
-  (let [urakka-id (::tot/urakka-id tiedot)
+  (let [urakka-id (::ur/id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
