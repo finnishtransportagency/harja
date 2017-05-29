@@ -54,6 +54,7 @@
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
@@ -126,8 +127,17 @@
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
 
-(defn muunna-tieosoitteet [vkm kohde]
-  (println "--->" kohde)
+(defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
+  (if (:karttapvm sijainti)
+    (let [harjan-verkon-vpm (q-geometriapaivitykset/hae-karttapvm db)
+          _ (println "-->>>  LÄHTEE")
+          muunnettu-sijainti (vkm/muunna-osoite-verkolta-toiselle
+                               vkm
+                               (:karttapvm sijainti)
+                               harjan-verkon-vpm
+                               (assoc sijainti :id 1))
+          sijainti (merge sijainti (dissoc :id muunnettu-sijainti))]
+      (assoc kohde :sijainti sijainti)))
   kohde)
 
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
@@ -138,7 +148,7 @@
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-        kohde (muunna-tieosoitteet vkm (assoc (:yllapitokohde data) :id kohde-id))
+        kohde (muunna-tieosoitteet vkm db (assoc (:yllapitokohde data) :id kohde-id))
         kohteen-sijainti (:sijainti kohde)
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
         alikohteet (mapv #(-> (:alikohde %)
@@ -220,7 +230,7 @@
                               :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                              (:tiemerkinta-valmis aikataulu))}
         nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                          db {:idt [kohde-id]})))
+                                                  db {:idt [kohde-id]})))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                [nykyinen-kohde-kannassa]
                                [kohteen-uudet-tiedot])]

@@ -23,7 +23,7 @@
     (is (= odotetut puretut) "Tieosoitteet on purettu oikein VKM:ää varten")))
 
 (deftest tieosoitteet-vkm-vastauksesta
-  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
+  (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1 :joku "muu arvo"}]
         onnistunut-vkm-vastaus {"tieosoitteet" [{"ajorata" 1
                                                  "palautusarvo" 1
                                                  "osa" 2
@@ -49,7 +49,7 @@
                                            "tie" 4
                                            "tunniste" "666-loppu"}]}
 
-        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :id "666" :ajorata 1}]]
+        odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :id "666" :ajorata 1 :joku "muu arvo"}]]
     (is (= odotetut (vkm/osoitteet-vkm-vastauksesta tieosoitteet onnistunut-vkm-vastaus))
         "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
     (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
