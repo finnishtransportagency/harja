@@ -45,11 +45,11 @@
 
   (let [otsikot {"Content-Type" "application/xml; charset=utf-8"}
         http-asetukset {:metodi :POST
-                        :url (str pohja-url "/hae-toimenpiteet")
+                        :url pohja-url
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
-        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
     (kasittele-vastaus body)))
 
