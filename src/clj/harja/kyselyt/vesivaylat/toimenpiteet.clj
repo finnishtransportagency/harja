@@ -1,6 +1,6 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
   (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch]]
+            [specql.core :refer [fetch update!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec.alpha :as s]
@@ -42,6 +42,16 @@
   (cond (true? vikailmoitukset?)
         (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
         :default toimenpiteet))
+
+(defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
+  ;; TODO Saisiko tätä tehtyä yhdellä kyselyllä kuten SQL:ssä?
+  (let [toimenpiteiden-toteuma-idt (map ::vv-toimenpide/toteuma-id
+                                        (fetch db ::vv-toimenpide/reimari-toimenpide
+                                               #{::vv-toimenpide/toteuma-id}
+                                               {::vv-toimenpide/id (op/in toimenpide-idt)}))]
+    (update! db ::tot/toteuma
+             {::tot/tyyppi (name uusi-tyyppi)}
+             {::tot/id (op/in toimenpiteiden-toteuma-idt)})))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]

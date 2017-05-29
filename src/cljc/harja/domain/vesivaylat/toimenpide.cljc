@@ -281,6 +281,7 @@ reimari-toimenpidetyypit
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::vikakorjauksia? boolean?)
+(s/def ::idt (s/coll-of ::id))
 
 (def reimari-kentat
   #{::reimari-id
@@ -351,7 +352,7 @@ reimari-toimenpidetyypit
 
 ;; Palvelut
 
-(s/def ::hae-vesivaylien-toimenpiteet-kyselyt
+(s/def ::hae-vesivaylien-toimenpiteet-kysely
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::to/urakka-id]
@@ -361,8 +362,22 @@ reimari-toimenpidetyypit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-vesivayilien-toimenpiteet-vastaukset
+(s/def ::hae-vesivayilien-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
                      :opt [::vikakorjauksia?])))
+
+(s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
+  (s/keys
+    :req [::to/urakka-id ::idt]))
+
+(s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+
+(s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
+  (s/keys
+    :req [::to/urakka-id ::idt]))
+
+(s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)

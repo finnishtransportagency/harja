@@ -27,7 +27,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
