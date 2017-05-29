@@ -20,7 +20,15 @@
         toimenpiteet))
 
 (defn- raportin-sarakkeet []
-  [{:leveys 2 :otsikko "Toimenpide"}])
+  [{:leveys 1 :otsikko "Toimenpide / Maksuerä"}
+   {:leveys 1 :otsikko "Maksuerät"}
+   {:leveys 1 :otsikko "Tunnus"}
+   {:leveys 1 :otsikko "Tilausvaltuus [t €]"}
+   {:leveys 1 :otsikko "Suunnitellut [t €]"}
+   {:leveys 1 :otsikko "Toteutunut [t €]"}
+   {:leveys 1 :otsikko "Yhteensä (S+T) [t €]"}
+   {:leveys 1 :otsikko "Jäljellä [€]"}
+   {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
 
 (defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   (hae-vesivaylien-laskutusyhteenveto db {:urakkaid urakka-id
