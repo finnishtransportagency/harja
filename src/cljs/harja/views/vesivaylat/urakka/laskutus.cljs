@@ -26,7 +26,7 @@
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                   (:id ur)
-                  :laskutus-vesivaylat
+                  :vesivaylien-laskutusyhteenveto
                   {:alkupvm  alkupvm
                    :loppupvm loppupvm})))))
 
