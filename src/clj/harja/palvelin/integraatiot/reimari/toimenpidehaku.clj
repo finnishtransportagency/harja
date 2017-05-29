@@ -56,9 +56,11 @@
      ]]))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
-  (let [otsikot {"Content-Type" "application/xml; charset=utf-8"}
+  (let [otsikot {"Content-Type" "text/xml"
+                 "SOAPAction" "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeToimenpiteet"}
         http-asetukset {:metodi :POST
                         :url pohja-url
+                        :otsikot otsikot
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
