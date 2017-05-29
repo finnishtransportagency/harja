@@ -69,8 +69,6 @@
      ]]))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  ;; tähän kysely joka katsoo integraatiotapahtumat-tauusta edellisen
-  ;; haetoimenpiteet-tapahtuman alkuajan
   (last (sort-by ::integraatiotapahtuma/alkanut
                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
