@@ -73,7 +73,7 @@
              #(e! (tiedot/->PaivitaTienPinnat (vals %) avain)))]))
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  [muokkaus-grid {:otsikok ""
+  [muokkaus-grid {:otsikko ""
                   :voi-muokata? (constantly true)
                   :voi-poistaa? (constantly true)
                   :piilota-toiminnot? false
@@ -415,6 +415,7 @@
                     {:tyyppi :komponentti
                      :nimi :kokorajoitukset
                      :komponentti #(kokorajoitukset-komponentti e! ilmoitus)
+
                      }
                     {:otsikko "Tien pinta työmaalla"
                      :nimi ::t/tienpinnat
@@ -439,7 +440,6 @@
                                      "loivatMutkat" "Loivat mutkat"
                                      "jyrkatMutkat" "Jyrkät mutkat (erkanee yli 45° kulmassa)"}
                      }
-
                     {:otsikko "Liikenteen ohjaaja"
                      :tyyppi :valinta
                      :uusi-rivi? true
