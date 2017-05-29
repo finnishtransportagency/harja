@@ -38,8 +38,8 @@
 (def sopimus-avainmuunnos
   {:harja.domain.vesivaylat.sopimus/nro :harja.domain.vesivaylat.sopimus/r-nro
    :harja.domain.vesivaylat.sopimus/tyyppi :harja.domain.vesivaylat.sopimus/r-tyyppi
-   :harja.domain.vesivaylat.sopimus/nimi :harja.domain.vesivaylat.sopimus/r-nimi}
-  )
+   :harja.domain.vesivaylat.sopimus/nimi :harja.domain.vesivaylat.sopimus/r-nimi})
+
 (defn- lue-sopimus [s]
   (rename-keys (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
                                     {:nro #(Integer/parseInt %)
@@ -47,11 +47,16 @@
                                      :nimi identity})
                sopimus-avainmuunnos))
 
+(def turvalaite-avainmuunnos
+  {:harja.domain.vesivaylat.turvalaite/nro :harja.domain.vesivaylat.turvalaite/r-nro
+   :harja.domain.vesivaylat.turvalaite/nimi :harja.domain.vesivaylat.turvalaite/r-nimi
+   :harja.domain.vesivaylat.turvalaite/ryhma :harja.domain.vesivaylat.turvalaite/r-ryhma})
 (defn- lue-turvalaite [tl]
-  (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
-                       {:nro identity
-                        :nimi identity
-                        :ryhma #(Integer/parseInt %)}))
+  (rename-keys (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
+                                    {:nro identity
+                                     :nimi identity
+                                     :ryhma #(Integer/parseInt %)})
+               turvalaite-avainmuunnos))
 
 (defn- lue-komponentti [k]
   (xml/lue-attribuutit k #(keyword "harja.domain.vesivaylat.komponentti" (name %))

@@ -52,7 +52,7 @@
     {:harja.domain.vesivaylat.alus/tunnus "omapaatti",
      :harja.domain.vesivaylat.alus/nimi "MS Totally out of Gravitas"},
     :harja.domain.vesivaylat.toimenpide/reimari-turvalaite
-    {:harja.domain.vesivaylat.turvalaite/nro "904",
-     :harja.domain.vesivaylat.turvalaite/nimi
+    {:harja.domain.vesivaylat.turvalaite/r-nro "904",
+     :harja.domain.vesivaylat.turvalaite/r-nimi
      "Glosholmsklacken pohjoinen",
-     :harja.domain.vesivaylat.turvalaite/ryhma 514}}])))
+     :harja.domain.vesivaylat.turvalaite/r-ryhma 514}}])))

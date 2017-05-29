@@ -12,9 +12,9 @@
              [harja.kyselyt.vesivaylat.toimenpiteet]))
 
 (def toimenpide
-  {::toimenpide/turvalaite {::turvalaite/nro "904"
-                            ::turvalaite/nimi "Glosholmsklacken pohjoinen"
-                            ::turvalaite/ryhma 514}
+  {::toimenpide/turvalaite {::turvalaite/r-nro "904"
+                            ::turvalaite/r-nimi "Glosholmsklacken pohjoinen"
+                            ::turvalaite/r-ryhma 514}
    ::toimenpide/vayla {::vayla/r-nro "12345"
                                ::vayla/r-nimi "Joku väylä"}
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.000-00:00"
