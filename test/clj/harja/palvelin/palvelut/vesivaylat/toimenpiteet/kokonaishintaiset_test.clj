@@ -11,6 +11,7 @@
             [harja.domain.vesivaylat.toimenpide :as toi]
             [clojure.string :as str]
             [harja.domain.vesivaylat.vayla :as va]
+            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
             [harja.domain.toteuma :as tot]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]
             [clojure.spec.alpha :as s]
@@ -46,9 +47,9 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
-    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
-    (is (>= (count vastaus) 4))
-    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaukset vastaus))))
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaus vastaus))
+    (is (>= (count vastaus) 4))))
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -58,7 +59,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
-    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä Muhoksen urakassa")))
 
@@ -70,7 +71,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
-    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä sivusopimuksella")))
 
@@ -84,7 +85,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
-    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (= (count vastaus) 0)
         "Ei toimenpiteitä tällä aikavälillä")))
 
@@ -99,7 +100,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4))))
 
   (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä"
@@ -116,7 +117,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0))))
 
   (testing "Väyläfiltteri suodattaa toimenpiteet"
@@ -128,7 +129,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylällä"))))
 
@@ -143,7 +144,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4))))
 
   (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
@@ -156,7 +157,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0)
           "Ei toimenpiteitä tällä väylätyypillä"))))
 
@@ -170,7 +171,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 1))))
 
   (testing "Vikailmoituksettomat löytyy"
@@ -182,7 +183,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 3))))
 
   (testing "Vikailmoituksettomat löytyy"
@@ -194,7 +195,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 3)))))
 
 (deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
@@ -272,7 +273,7 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 4)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -292,7 +293,25 @@
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::tot/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}]
-    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kyselyt kysely-params))
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kokonaishintaiset-toimenpiteet +kayttaja-ulle+
                                            kysely-params)))))
+
+
+(deftest yksikkohintaisiin-siirto
+  (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::tot/urakka-id urakka-id
+                       ::toi/idt kokonaishintaiset-toimenpide-idt}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+
+                                kysely-params)
+        nykyiset-kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
+        siirrettyjen-uudet-tyypit (apurit/hae-toimenpiteiden-tyyppi kokonaishintaiset-toimenpide-idt)]
+    (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-kysely kysely-params))
+    (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-vastaus vastaus))
+
+    (is (= vastaus kokonaishintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
+    (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
+    (is (every? #(= % "vv-yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
