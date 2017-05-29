@@ -41,8 +41,15 @@
                                        (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
-(defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
+(defn kysely-sanoma [muutosaika]
+  (xml/tee-xml-sanoma
+   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
+    [:soap:Body
+     [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
+     ]]))
 
+(defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
   (let [otsikot {"Content-Type" "application/xml; charset=utf-8"}
         http-asetukset {:metodi :POST
                         :url pohja-url
@@ -59,14 +66,6 @@
     (if (s/ends-with? aika-ilman-vyohyketta "Z")
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
-
-(defn kysely-sanoma [muutosaika]
-  (xml/tee-xml-sanoma
-   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-    [:soap:Body
-     [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
-     ]]))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (last (sort-by ::integraatiotapahtuma/alkanut
