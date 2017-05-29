@@ -31,7 +31,7 @@
                   {::ut/urakka-id 666
                    ::ut/vuosi 2017
                    ::ut/vuosikolmannes 3
-                   ::ut/tyotunnit 222}
+                   ::ut/tyotunnit 333}
                   {::ut/urakka-id 666
                    ::ut/vuosi 2016
                    ::ut/vuosikolmannes 1
@@ -43,7 +43,7 @@
                   {::ut/urakka-id 666
                    ::ut/vuosi 2016
                    ::ut/vuosikolmannes 3
-                   ::ut/tyotunnit 555}]
+                   ::ut/tyotunnit 666}]
         tallennettavat (urakan-tyotunnit/tyotunnit-tallennettavana 666 naytettavat)]
     (is (= odotetut tallennettavat))))
 
