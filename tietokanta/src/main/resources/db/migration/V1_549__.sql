@@ -33,7 +33,9 @@ WHERE tyyppi = 'vv-kokonaishintainen' OR tyyppi = 'vv-yksikkohintainen';
 CREATE TABLE vv_hinnoittelu
 (
   id         SERIAL PRIMARY KEY,
+  "urakka-id" INTEGER REFERENCES urakka(id),
   nimi       VARCHAR CONSTRAINT nipulla_oltava_nimi CHECK (hintaryhma IS FALSE OR nimi IS NOT NULL),
+  UNIQUE("urakka-id", nimi),
   hintaryhma BOOLEAN                          NOT NULL DEFAULT FALSE,
 
   muokkaaja  INTEGER REFERENCES kayttaja (id),
@@ -43,9 +45,6 @@ CREATE TABLE vv_hinnoittelu
   poistettu  BOOLEAN                          NOT NULL DEFAULT FALSE,
   poistaja   INTEGER REFERENCES kayttaja (id)
 );
-
-ALTER TABLE reimari_toimenpide
-  ADD COLUMN "hinnoittelu-id" INTEGER REFERENCES vv_hinnoittelu (id);
 
 CREATE TABLE vv_hinnoittelu_toimenpide
 (
@@ -69,3 +68,15 @@ CREATE TABLE vv_hinta
   poistettu          BOOLEAN                          NOT NULL DEFAULT FALSE,
   poistaja           INTEGER REFERENCES kayttaja (id)
 );
+
+-- Lisää oletusryhmät luoduille urakoille
+DO $$DECLARE u INTEGER;
+BEGIN
+  FOR u IN
+  SELECT id FROM urakka WHERE tyyppi = 'vesivayla-hoito'
+  LOOP
+    INSERT INTO vv_hinnoittelu ("urakka-id",nimi, hintaryhma, luoja) VALUES
+      (u, 'Muutos- ja lisätyöt', TRUE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'harja' OR kayttajanimi = 'tero')),
+      (u, 'Erikseen tilatut työt', TRUE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'harja' OR kayttajanimi = 'tero'));
+  END LOOP;
+END$$;
