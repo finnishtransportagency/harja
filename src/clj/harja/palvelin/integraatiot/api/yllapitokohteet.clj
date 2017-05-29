@@ -129,13 +129,13 @@
 
 (defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
   (if (:karttapvm sijainti)
-    (let [harjan-verkon-vpm (q-geometriapaivitykset/hae-karttapvm db)
-          _ (println "-->>>  LÄHTEE")
+    (let [harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db)
+                                (pvm/nyt))
           muunnettu-sijainti (vkm/muunna-osoite-verkolta-toiselle
                                vkm
-                               (:karttapvm sijainti)
+                               (assoc sijainti :id 1)
                                harjan-verkon-vpm
-                               (assoc sijainti :id 1))
+                               (:karttapvm sijainti))
           sijainti (merge sijainti (dissoc :id muunnettu-sijainti))]
       (assoc kohde :sijainti sijainti)))
   kohde)
