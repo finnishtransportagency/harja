@@ -129,16 +129,16 @@
 
 
 (defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
-  (if-let [karttapvm(:karttapvm sijainti)]
+  (if-let [karttapvm (:karttapvm sijainti)]
     (let [karttapvm (parametrit/pvm-aika karttapvm)
           harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db)
                                 (pvm/nyt))
-          muunnettu-sijainti (vkm/muunna-osoitteet-verkolta-toiselle
-                               vkm
-                               (assoc sijainti :id 1)
-                               harjan-verkon-vpm
-                               karttapvm)
-          sijainti (merge sijainti (dissoc :id muunnettu-sijainti))]
+          muunnettu-sijainti (first (vkm/muunna-tieosoitteet-verkolta-toiselle
+                                      vkm
+                                      [(assoc sijainti :id 1)]
+                                      harjan-verkon-vpm
+                                      karttapvm))
+          sijainti (merge sijainti (dissoc muunnettu-sijainti :id))]
       (assoc kohde :sijainti sijainti)))
   kohde)
 
@@ -149,10 +149,13 @@
                      kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
-        urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-        kohde (muunna-tieosoitteet vkm db [(assoc (:yllapitokohde data) :id kohde-id)])
-        kohteen-sijainti (:sijainti kohde)
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
+        urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
+        kohde (-> (:yllapitokohde data)
+                  (assoc :id kohde-id)
+                  (assoc-in [:sijainti :tie] kohteen-tienumero))
+        kohde (muunna-tieosoitteet vkm db kohde)
+        kohteen-sijainti (:sijainti kohde)
         alikohteet (mapv #(-> (:alikohde %)
                               (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
                               (assoc-in [:sijainti :numero] kohteen-tienumero))

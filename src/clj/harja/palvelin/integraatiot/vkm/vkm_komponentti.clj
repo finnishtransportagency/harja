@@ -30,7 +30,6 @@
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
 (defn paivita-osoite [{:keys [tie aosa aet losa let ajorata] :as tieosoite} alkuosanosoite loppuosanosoite virhe?]
-
   (if (or virhe? (not alkuosanosoite) (not loppuosanosoite))
     tieosoite
     (-> tieosoite
@@ -42,23 +41,25 @@
         (assoc :let (get loppuosanosoite "etaisyys" let)))))
 
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
-  (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
-        vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
-    (mapv (fn [{:keys [id] :as tieosoite}]
-            (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
-                  loppuosanhakutunnus (loppuosan-vkm-tunniste id)
-                  alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
-                  loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
-                  virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
-                             (vkm-virhe? loppuosanhakutunnus vkm-osoitteet))]
-              (paivita-osoite tieosoite alkuosanosoite loppuosanosoite virhe?)))
-          tieosoitteet)))
+  (if (and vastaus (.contains vastaus "json("))
+    (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
+         vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
+     (mapv (fn [{:keys [id] :as tieosoite}]
+             (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
+                   loppuosanhakutunnus (loppuosan-vkm-tunniste id)
+                   alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
+                   loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
+                   virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
+                              (vkm-virhe? loppuosanhakutunnus vkm-osoitteet))]
+               (paivita-osoite tieosoite alkuosanosoite loppuosanosoite virhe?)))
+           tieosoitteet))
+    tieosoitteet))
 
 (defn pura-tieosoitteet [tieosoitteet]
   (reduce into []
-          (map (fn [{:keys [tie aosa aet losa let ajorata id]}]
-                 [{:tunniste (alkuosan-vkm-tunniste id) :tie tie :osa aosa :ajorata ajorata :etaisyys aet}
-                  {:tunniste (loppuosan-vkm-tunniste id) :tie tie :osa losa :ajorata ajorata :etaisyys let}])
+          (map (fn [{:keys [tie aosa aet losa let ajr id]}]
+                 [{:tunniste (alkuosan-vkm-tunniste id) :tie tie :osa aosa :ajorata ajr :etaisyys aet}
+                  {:tunniste (loppuosan-vkm-tunniste id) :tie tie :osa losa :ajorata ajr :etaisyys let}])
                tieosoitteet)))
 
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]
