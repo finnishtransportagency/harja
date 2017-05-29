@@ -30,7 +30,7 @@
                (when toinen-vuosikolmannes
                  (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 2 toinen-vuosikolmannes))
                (when kolmas-vuosikolmannes
-                 (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 3 toinen-vuosikolmannes))]))
+                 (urakan-tyotunnit-vuosikolmanneksella urakka-id vuosi 3 kolmas-vuosikolmannes))]))
           tyotunnit-vuosittain))
 
 (defn tyotunnit-naytettavana [vuodet tyotunnit]
