@@ -57,7 +57,7 @@
                                vv-toimenpide/perustiedot
                                (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
-                               vv-toimenpide/hinnoittelu
+                               #_vv-toimenpide/hinnoittelu
                                vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
