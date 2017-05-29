@@ -13,7 +13,7 @@
 ;; curl -X GET "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%5B%7B%22tunniste%22%3A%22666-alku%22%2C%22tie%22%3A4%2C%22osa%22%3A1%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A0%7D%2C%7B%22tunniste%22%3A%22666-loppu%22%2C%22tie%22%3A4%2C%22osa%22%3A3%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A1000%7D%5D%7D"
 
 (defprotocol Tieosoitemuunnos
-  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle]))
+  (muunna-osoitteet-verkolta-toiselle [this tieosoiteet paivan-verkolta paivan-verkolle]))
 
 (defn alkuosan-vkm-tunniste [tunniste]
   (str tunniste "-alku"))
@@ -30,7 +30,8 @@
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
 (defn paivita-osoite [{:keys [tie aosa aet losa let ajorata] :as tieosoite} alkuosanosoite loppuosanosoite virhe?]
-  (if virhe?
+
+  (if (or virhe? (not alkuosanosoite) (not loppuosanosoite))
     tieosoite
     (-> tieosoite
         (assoc :tie (get alkuosanosoite "tie" tie))
@@ -41,7 +42,8 @@
         (assoc :let (get loppuosanosoite "etaisyys" let)))))
 
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
-  (let [vkm-osoitteet (get vastaus "tieosoitteet")]
+  (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
+        vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
     (mapv (fn [{:keys [id] :as tieosoite}]
             (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
                   loppuosanhakutunnus (loppuosan-vkm-tunniste id)
@@ -62,11 +64,10 @@
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]
   {:in "tieosoite"
    :out "tieosoite"
-   :callback "jsonp"
+   :callback "json"
    :tilannepvm (pvm/pvm paivan-verkolta)
    :kohdepvm (pvm/pvm paivan-verkolle)
-   ;; todo: tässä tapahtuu jotain omituista. vkm ilmoittaa, että json olisi virheellistä
-   :json (URLEncoder/encode (cheshire/encode {:tieosoitteet (pura-tieosoitteet tieosoitteet)}))})
+   :json (cheshire/encode {:tieosoitteet (pura-tieosoitteet tieosoitteet)})})
 
 (defn muunna-tieosoitteet-verkolta-toiselle [{:keys [db integraatioloki url]} tieosoitteet paivan-verkolta paivan-verkolle]
   (when url
@@ -79,7 +80,7 @@
         db integraatioloki "vkm" "osoitemuunnos" nil
         (fn [konteksti]
           (let [parametrit (vkm-parametrit tieosoitteet paivan-verkolta paivan-verkolle)
-                http-asetukset {:metodi :GET
+                http-asetukset {:metodi :POST
                                 :url url
                                 :parametrit parametrit}
                 {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
@@ -95,5 +96,5 @@
     this)
 
   Tieosoitemuunnos
-  (muunna-osoite-verkolta-toiselle [this tieosoite paivan-verkolta paivan-verkolle]
-    (muunna-tieosoitteet-verkolta-toiselle this tieosoite paivan-verkolta paivan-verkolle)))
+  (muunna-osoitteet-verkolta-toiselle [this tieosoitteet paivan-verkolta paivan-verkolle]
+    (muunna-tieosoitteet-verkolta-toiselle this tieosoitteet paivan-verkolta paivan-verkolle)))

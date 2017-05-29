@@ -70,7 +70,8 @@
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm])
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -128,14 +129,15 @@
 
 
 (defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
-  (if (:karttapvm sijainti)
-    (let [harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db)
+  (if-let [karttapvm(:karttapvm sijainti)]
+    (let [karttapvm (parametrit/pvm-aika karttapvm)
+          harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db)
                                 (pvm/nyt))
-          muunnettu-sijainti (vkm/muunna-osoite-verkolta-toiselle
+          muunnettu-sijainti (vkm/muunna-osoitteet-verkolta-toiselle
                                vkm
                                (assoc sijainti :id 1)
                                harjan-verkon-vpm
-                               (:karttapvm sijainti))
+                               karttapvm)
           sijainti (merge sijainti (dissoc :id muunnettu-sijainti))]
       (assoc kohde :sijainti sijainti)))
   kohde)
@@ -148,7 +150,7 @@
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-        kohde (muunna-tieosoitteet vkm db (assoc (:yllapitokohde data) :id kohde-id))
+        kohde (muunna-tieosoitteet vkm db [(assoc (:yllapitokohde data) :id kohde-id)])
         kohteen-sijainti (:sijainti kohde)
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
         alikohteet (mapv #(-> (:alikohde %)
