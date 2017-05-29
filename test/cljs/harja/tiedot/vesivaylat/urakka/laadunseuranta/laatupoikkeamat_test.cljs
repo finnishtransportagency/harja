@@ -1,5 +1,5 @@
-(ns harja.tiedot.vesivaylat.urakka.laadunseuranta.laadunseuranta-test
-  (:require [harja.tiedot.vesivaylat.urakka.laadunseuranta.laadunseuranta :as tiedot]
+(ns harja.tiedot.vesivaylat.urakka.laadunseuranta.laatupoikkeamat-test
+  (:require [harja.tiedot.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
