@@ -66,7 +66,7 @@
                         :muutosaika muutosaika}
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
-    (kasittele-vastaus body)))
+    (kasittele-vastaus db body)))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (last (sort-by ::integraatiotapahtuma/alkanut
