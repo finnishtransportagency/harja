@@ -6,7 +6,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [cljs.core.async :refer [<!]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]

@@ -351,9 +351,10 @@
   [pvm]
   (formatoi kokovuosi-ja-kuukausi-fmt pvm))
 
-(defn ->pvm-aika [teksti]
+(defn ->pvm-aika
   "Jäsentää tekstistä d.M.yyyy H:mm tai d.M.yyyy H muodossa olevan päivämäärän ja ajan.
   Jos teksti ei ole oikeaa muotoa, palauta nil."
+  [teksti]
   (let [teksti-kellonaika-korjattu (if (not= -1 (.indexOf teksti ":"))
                                      teksti
                                      (str teksti ":00"))]
@@ -363,12 +364,14 @@
                 :clj  Exception) e
         nil))))
 
-(defn ->pvm-aika-sek [teksti]
+(defn ->pvm-aika-sek
   "Jäsentää tekstistä dd.MM.yyyy HH:mm:ss muodossa olevan päivämäärän ja ajan. Tämä on koneellisesti formatoitua päivämäärää varten, älä käytä ihmisen syöttämän tekstin jäsentämiseen!"
+  [teksti]
   (parsi fi-pvm-aika-sek teksti))
 
-(defn ->pvm [teksti]
+(defn ->pvm
   "Jäsentää tekstistä dd.MM.yyyy muodossa olevan päivämäärän. Jos teksti ei ole oikeaa muotoa, palauta nil."
+  [teksti]
   (try
     (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error

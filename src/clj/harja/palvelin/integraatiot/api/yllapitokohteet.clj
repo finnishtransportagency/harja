@@ -190,12 +190,12 @@
         {:takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
          :muokkaaja (:id kayttaja)
          :kohde_id kohde-id}))
-
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
             vanha-tiemerkintapvm
             (json/pvm-string->joda-date (:valmis-tiemerkintaan aikataulu)))
       (let [kohteen-tiedot (first (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                    db {:idt [kohde-id]}))]
+                                    db {:idt [kohde-id]}))
+            kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
         (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
           {:fim fim :email email :kohteen-tiedot kohteen-tiedot
            :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
@@ -215,7 +215,7 @@
                               :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                              (:tiemerkinta-valmis aikataulu))}
         nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                  db {:idt [kohde-id]})))
+                          db {:idt [kohde-id]})))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                [nykyinen-kohde-kannassa]
                                [kohteen-uudet-tiedot])]

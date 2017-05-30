@@ -43,3 +43,49 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Päivitä kaikki materiaalin käyttö päivämäärälle
+CREATE OR REPLACE FUNCTION paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm_ DATE)
+  RETURNS VOID AS $$
+DECLARE
+  rivi RECORD;
+BEGIN
+  DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE pvm = pvm_;
+  FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi,
+                     sum(mat.maara) as maara
+      	        FROM toteuma t
+                     JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+                     JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                     JOIN LATERAL unnest(rp.materiaalit) mat ON true
+               WHERE t.alkanut::date = pvm_
+            GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi
+  LOOP
+    INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
+                (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
+         VALUES (pvm_,
+	         rivi.materiaalikoodi,
+		 COALESCE(rivi.talvihoitoluokka, 0),
+		 rivi.urakka,
+		 rivi.maara);
+  END LOOP;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION paivita_materiaalin_kaytto_hoitoluokittain_aikavalille(alku DATE, loppu DATE)
+  RETURNS VOID AS $$
+DECLARE
+  pvm DATE;
+BEGIN
+  pvm := alku;
+  LOOP
+    IF pvm > loppu THEN
+      EXIT;
+    END IF;
+    RAISE NOTICE 'Päivitetään materiaalin käyttö hoitoluokittain: %', pvm;
+    PERFORM paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm);
+    pvm := pvm + 1;
+ END LOOP;
+ RETURN;
+END;
+$$ LANGUAGE plpgsql;

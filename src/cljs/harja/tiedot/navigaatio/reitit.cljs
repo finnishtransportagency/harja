@@ -17,7 +17,7 @@
          :hallinta :indeksit
          :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
-         :laadunseuranta-vesivaylat :vesivayla-viat
+         :laadunseuranta-vesivaylat :vesivayla-tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
          :raportit nil

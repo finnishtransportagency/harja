@@ -270,7 +270,7 @@
               {:otsikko "Paikan kuvaus"
                :nimi :paikan-kuvaus
                :tyyppi :string
-               :pituus-max 2048
+               :pituus-max 200
                :palstoja 1}
               {:uusi-rivi? true
                :otsikko "Tila"
