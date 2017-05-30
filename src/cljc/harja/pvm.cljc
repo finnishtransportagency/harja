@@ -29,7 +29,7 @@
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
 
-(defn fmt-kuukausi [kk]
+(defn kk-fmt [kk]
   (get +kuukaudet+ (dec kk)))
 
 #?(:cljs

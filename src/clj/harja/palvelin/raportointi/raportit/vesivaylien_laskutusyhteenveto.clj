@@ -14,33 +14,6 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
 
-(defn- hinnoittelurivi [tiedot]
-  [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
-
-(defn- hinnoittelurivit [tiedot]
-  (apply concat
-         [
-          [{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
-          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
-          [{:otsikko "Kokonaishintaiset: muut"}]
-          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
-          [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
-          ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
-          ;; tehty kauppamerenkulkua
-          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
-                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
-                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
-                                                                                (:vaylatyyppi %))))
-                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))
-          [{:otsikko "Yksikköhintaiset: muut"}]
-          ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joissa
-          ;; työstetty väylätyyppiä "muu"
-          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
-                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
-                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
-                                                                                (:vaylatyyppi %))))
-                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))]))
-
 (def hinnoittelusarakkeet
   [{:leveys 3 :otsikko "Hinnoittelu"}
    {:leveys 1 :otsikko "Maksuerät"}
@@ -67,7 +40,33 @@
    {:leveys 1 :otsikko "Maksuerän tunnus"}
    {:leveys 1 :otsikko "Laskut. summa"}])
 
-(defn hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
+(defn- hinnoittelurivi [tiedot]
+  [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
+
+(defn- hinnoittelurivit [tiedot]
+  (apply concat
+         [[{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
+          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
+          [{:otsikko "Kokonaishintaiset: muut"}]
+          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
+          [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
+          ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
+          ;; tehty kauppamerenkulkua
+          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
+                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
+                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
+                                                                                (:vaylatyyppi %))))
+                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))
+          [{:otsikko "Yksikköhintaiset: muut"}]
+          ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joissa
+          ;; työstetty väylätyyppiä "muu"
+          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
+                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
+                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
+                                                                                (:vaylatyyppi %))))
+                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))]))
+
+(defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset-hintaryhmattomat
    (hae-yksikkohintaiset-ryhmattomat-toimenpiteet db {:urakkaid urakka-id
                                                       :alkupvm alkupvm
@@ -79,30 +78,45 @@
                                                             :alkupvm alkupvm
                                                             :loppupvm loppupvm}))})
 
+(defn- kk-kasittelyrivi [tiedot]
+  ["" "" "" "" "" "" (:kk tiedot)])
+
+(defn- kk-erittelyrivit [alkupvm loppupvm]
+  (let [kk-valit (pvm/aikavalin-kuukausivalit [(c/from-date alkupvm)
+                                               (c/from-date loppupvm)])
+        kk-valit-formatoitu (mapv
+                              #(-> {:kk (str (pvm/kk-fmt (t/month (first %)))
+                                             " "
+                                             (t/year (first %)))})
+                              kk-valit)]
+    (mapv kk-kasittelyrivi kk-valit-formatoitu)))
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
-                                              :urakka-id urakka-id
-                                              :alkupvm alkupvm
-                                              :loppupvm loppupvm})
-        raportin-rivit (hinnoittelurivit raportin-tiedot)
+                                            :urakka-id urakka-id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm})
+        hinnoittelu (hinnoittelurivit raportin-tiedot)
+        kk-erittely (kk-erittelyrivit alkupvm loppupvm)
+        toimenpiteiden-erittely []
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
 
      [:taulukko {:otsikko "Hinnoittelu"
-                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
+                 :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       hinnoittelusarakkeet
-      raportin-rivit]
+      hinnoittelu]
 
      [:taulukko {:otsikko "Kuukausierittely"
-                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
+                 :tyhja (if (empty? kk-erittely) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       erittelysarakkeet
-      []]
+      kk-erittely]
 
      [:taulukko {:otsikko "Toimenpiteiden erittely"
-                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
+                 :tyhja (if (empty? toimenpiteiden-erittely) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      erittelysarakkeet
+      toimenpiteiden-erittely
       []]]))
