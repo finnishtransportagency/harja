@@ -21,7 +21,7 @@
 
 (defonce laskutuksen-parametrit
   (reaction (let [ur @nav/valittu-urakka
-                  [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
+                  [alkupvm loppupvm] (or @u/valittu-hoitokauden-kuukausi @u/valittu-hoitokausi)
                   nakymassa? @laskutus-nakyvissa?]
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
@@ -47,8 +47,7 @@
             tiedot @laskutus-tiedot
             valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
-         [valinnat/urakan-hoitokausi ur]
-         [valinnat/hoitokauden-kuukausi]
+         [valinnat/urakan-hoitokausi-ja-kuukausi ur]
 
          (when-let [p @laskutuksen-parametrit]
            [upotettu-raportti/raportin-vientimuodot p])
