@@ -12,15 +12,23 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
 
-(defn- muodosta-raportin-rivit [toimenpiteet]
-  [{:otsikko "Kokonaishintaiset: kauppamerenkulku"}
-   ["TODO"]
-   {:otsikko "Kokonaishintaiset: muut"}
-   ["TODO"]
-   {:otsikko "Yksikköhintaiset: kauppamerenkulku"}
-   ["TODO"]
-   {:otsikko "Yksikköhintaiset: muut"}
-   ["TODO"]])
+(defn- raportin-rivi [tiedot]
+  (log/debug "RIVI: " (pr-str tiedot))
+  [(:hinnoittelu tiedot) "" "" "" (:summa tiedot)])
+
+(defn- muodosta-raportin-rivit [tiedot]
+  (apply concat
+         [
+          [{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
+          [["TODO"]]
+          [{:otsikko "Kokonaishintaiset: muut"}]
+          [["TODO"]]
+          [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
+          (mapv raportin-rivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
+                                      (:yksikkohintaiset-hintaryhmattomat tiedot)))
+          [{:otsikko "Yksikköhintaiset: muut"}]
+          (mapv raportin-rivi (filter #(not= (:vaylatyyppi %) "kauppamerenkulku")
+                                      (:yksikkohintaiset-hintaryhmattomat tiedot)))]))
 
 (defn- raportin-sarakkeet []
   [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
@@ -34,15 +42,16 @@
    {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
 
 (defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  (hae-vesivaylien-laskutusyhteenveto db {:urakkaid urakka-id
-                                          :alkupvm alkupvm
-                                          :loppupvm loppupvm}))
+  (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
+                                         :alkupvm alkupvm
+                                         :loppupvm loppupvm}))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [raportin-tiedot (hae-raportin-tiedot {:db db
-                                              :urakka-id urakka-id
-                                              :alkupvm alkupvm
-                                              :loppupvm loppupvm})
+  (let [raportin-tiedot {:yksikkohintaiset-hintaryhmattomat
+                         (hae-raportin-tiedot {:db db
+                                               :urakka-id urakka-id
+                                               :alkupvm alkupvm
+                                               :loppupvm loppupvm})}
         raportin-rivit (muodosta-raportin-rivit raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
