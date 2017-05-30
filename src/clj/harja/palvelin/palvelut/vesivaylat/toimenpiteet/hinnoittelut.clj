@@ -24,11 +24,7 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-      (log/debug "TAllennettaan: " (pr-str tiedot))
-      (let [tulos (q/luo-hinnoittelu! db user tiedot)]
-        (log/debug "Tallennettiin " (pr-str tulos))
-
-        tulos))))
+      (q/luo-hinnoittelu! db user tiedot))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
