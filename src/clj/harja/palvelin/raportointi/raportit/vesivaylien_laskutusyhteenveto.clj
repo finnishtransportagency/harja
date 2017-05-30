@@ -27,8 +27,9 @@
           (mapv raportin-rivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
                                       (:yksikkohintaiset-hintaryhmattomat tiedot)))
           [{:otsikko "Yksikköhintaiset: muut"}]
-          (mapv raportin-rivi (filter #(not= (:vaylatyyppi %) "kauppamerenkulku")
-                                      (:yksikkohintaiset-hintaryhmattomat tiedot)))]))
+          (concat (mapv raportin-rivi (filter #(not= (:vaylatyyppi %) "kauppamerenkulku")
+                                       (:yksikkohintaiset-hintaryhmattomat tiedot)))
+                  (mapv raportin-rivi (:yksikkohintaiset-hintaryhmalliset tiedot)))]))
 
 (defn- raportin-sarakkeet []
   [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
@@ -42,16 +43,20 @@
    {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
 
 (defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
-                                         :alkupvm alkupvm
-                                         :loppupvm loppupvm}))
+  {:yksikkohintaiset-hintaryhmattomat
+   (hae-yksikkohintaiset-ryhmattomat-toimenpiteet db {:urakkaid urakka-id
+                                                      :alkupvm alkupvm
+                                                      :loppupvm loppupvm})
+   :yksikkohintaiset-hintaryhmalliset
+   (hae-yksikkohintaiset-ryhmalliset-toimenpiteet db {:urakkaid urakka-id
+                                                      :alkupvm alkupvm
+                                                      :loppupvm loppupvm})})
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [raportin-tiedot {:yksikkohintaiset-hintaryhmattomat
-                         (hae-raportin-tiedot {:db db
-                                               :urakka-id urakka-id
-                                               :alkupvm alkupvm
-                                               :loppupvm loppupvm})}
+  (let [raportin-tiedot (hae-raportin-tiedot {:db db
+                                              :urakka-id urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})
         raportin-rivit (muodosta-raportin-rivit raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
