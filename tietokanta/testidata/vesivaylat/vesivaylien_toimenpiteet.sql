@@ -388,9 +388,20 @@ VALUES
    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 INSERT INTO vv_hinnoittelu
-(nimi, hintaryhma, luoja)
+(nimi, "urakka-id", hintaryhma, luoja)
 VALUES
-  ('Hietasaaren poijujen korjaus', true, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+  ('Hietasaaren poijujen korjaus ryhmä', (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), true, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinnoittelu
+(nimi, "urakka-id", hintaryhma, luoja)
+VALUES
+  ('Hietasaaren poijujen korjaus', (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), false, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja)
+VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus ryhmä'),
+   'Tilaus', 300, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -403,6 +414,18 @@ INSERT INTO vv_hinnoittelu_toimenpide
 VALUES
   ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
    (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id")
+VALUES
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus ryhmä'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id")
+VALUES
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'),
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus ryhmä'));
 -- ***********************************************
 
 
