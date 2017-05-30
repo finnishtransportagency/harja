@@ -67,7 +67,7 @@
    {:leveys 1 :otsikko "Maksuerän tunnus"}
    {:leveys 1 :otsikko "Laskut. summa"}])
 
-(defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
+(defn hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset-hintaryhmattomat
    (hae-yksikkohintaiset-ryhmattomat-toimenpiteet db {:urakkaid urakka-id
                                                       :alkupvm alkupvm
@@ -80,7 +80,7 @@
                                                             :loppupvm loppupvm}))})
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
-  (let [raportin-tiedot (hae-raportin-tiedot {:db db
+  (let [raportin-tiedot (hinnoittelutiedot {:db db
                                               :urakka-id urakka-id
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
