@@ -8,24 +8,15 @@
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
-              ;; :portti 7731
               :yhteyspoolin-koko 16
-              ;; :kayttaja "harja"
-              ;; :salasana "s_harja"
               :kayttaja "harja"
-              :salasana ""
-              }
+              :salasana ""}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      ;; :portti 5432
-                      ;; :portti 7731
+                      :portti 5432
                       :yhteyspoolin-koko 16
-                      ;; :kayttaja "harja"
-                      ;; :salasana "s_harja"
                       :kayttaja "harja"
-                      :salasana ""
-
-                      }
+                      :salasana ""}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -159,7 +150,6 @@
            :kayttajatunnus "reimaritunnus"
            :salasana "reimarisalasana"
            :paivittainen-toimenpidehaku [16 18 00]}
-
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
                  :paivittainen-tarkistusaika [11 00 00]
