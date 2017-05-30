@@ -17,7 +17,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.domain.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -35,8 +36,14 @@
          :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
          :uuden-hintaryhman-lisays? false
+         :valittu-hintaryhma nil
          :uusi-hintaryhma ""
-         :toimenpiteet nil}))
+         :hintaryhman-tallennus-kaynnissa? false
+         :hintaryhmat nil
+         :hintaryhmien-haku-kaynnissa? false
+         :foobar? true
+         :toimenpiteet nil
+         :hintaryhmien-liittaminen-kaynnissa? false}))
 
 (def valinnat
   (reaction
@@ -52,9 +59,6 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
-(defn hintaryhmien-nimet [tila]
-  ["Poijujen korjaus" "Muutos- ja lisätyöt"])
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
@@ -63,6 +67,16 @@
 (defrecord UudenHintaryhmanLisays? [lisays-auki?])
 (defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
 (defrecord SiirraValitutKokonaishintaisiin [])
+(defrecord LuoHintaryhma [nimi])
+(defrecord HintaryhmaLuotu [vastaus])
+(defrecord HintaryhmaEiLuotu [virhe])
+(defrecord HaeHintaryhmat [])
+(defrecord HintaryhmatHaettu [vastaus])
+(defrecord HintaryhmatEiHaettu [virhe])
+(defrecord ValitseHintaryhma [hintaryhma])
+(defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
+(defrecord ValitutLiitetty [vastaus])
+(defrecord ValitutEiLiitetty [virhe])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -95,15 +109,12 @@
             fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)
-              (do
-                (go
-                  (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
-                    (if (k/virhe? vastaus)
-                      (fail! vastaus)
-                      (tulos! vastaus))))
-                (assoc app :haku-kaynnissa? true))
-              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
+            (go
+              (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
+                (if (k/virhe? vastaus)
+                  (fail! vastaus)
+                  (tulos! vastaus))))
+            (assoc app :haku-kaynnissa? true))
           (catch :default e
             (fail! nil)
             (throw e))))
@@ -126,4 +137,103 @@
 
   UudenHintaryhmanNimeaPaivitetty
   (process-event [{nimi :nimi} app]
-    (assoc app :uusi-hintaryhma nimi)))
+    (assoc app :uusi-hintaryhma nimi))
+
+  LuoHintaryhma
+  (process-event [{nimi :nimi} app]
+    (if-not (:hintaryhman-tallennus-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->HintaryhmaLuotu)
+            fail! (tuck/send-async! ->HintaryhmaEiLuotu)
+            parametrit {::h/nimi nimi
+                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :luo-hinnoittelu parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hintaryhman-tallennus-kaynnissa? true)
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  HintaryhmaLuotu
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+        (update :hintaryhmat conj vastaus)
+        (assoc :hintaryhman-tallennus-kaynnissa? false
+               :uusi-hintaryhma nil
+               :uuden-hintaryhman-lisays? false)))
+
+  HintaryhmaEiLuotu
+  (process-event [_ app]
+    (viesti/nayta! "Hintaryhmän tallennus epäonnistui!" :danger)
+    (assoc app :hintaryhman-tallennus-kaynnissa? false
+               :uusi-hintaryhma nil
+               :uuden-hintaryhman-lisays? false))
+
+  HaeHintaryhmat
+  (process-event [_ app]
+    (if-not (:hintaryhmien-haku-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
+            fail! (tuck/send-async! ->HintaryhmatEiHaettu)
+            parametrit {::urakka/id (get-in app [:valinnat :urakka-id])}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hintaryhmien-haku-kaynnissa? true)
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  HintaryhmatHaettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :hintaryhmat vastaus
+               :hintaryhmien-haku-kaynnissa? false))
+
+  HintaryhmatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Hintaryhmien haku epäonnistui!" :danger)
+    (assoc app :hintaryhmien-haku-kaynnissa? false))
+
+  ValitseHintaryhma
+  (process-event [{hintaryhma :hintaryhma} app]
+    (assoc app :valittu-hintaryhma hintaryhma))
+
+  LiitaValitutHintaryhmaan
+  (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
+    (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->ValitutLiitetty)
+            fail! (tuck/send-async! ->ValitutEiLiitetty)
+            parametrit {}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :liita-toimenpiteet-hinnoitteluun parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hintaryhmien-liittaminen-kaynnissa? true)
+
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  ValitutLiitetty
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :toimenpiteet (:toimenpiteet vastaus)
+               :hintaryhmien-liittaminen-kaynnissa? false))
+
+  ValitutEiLiitetty
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
+    (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
+

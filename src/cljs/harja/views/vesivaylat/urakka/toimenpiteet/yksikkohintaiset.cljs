@@ -1,5 +1,5 @@
 (ns harja.views.vesivaylat.urakka.toimenpiteet.yksikkohintaiset
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :as r :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
@@ -12,15 +12,16 @@
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.ui.kentat :as kentat]
-            [reagent.core :as r])
+            [harja.domain.vesivaylat.hinnoittelu :as h])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn hinnoittelu-vaihtoehdot [e! {:keys [toimenpiteet] :as app}]
+(defn hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
   [yleiset/livi-pudotusvalikko
-   {:valitse-fn #(log "Painoit ryhmää")
-    :valinta "Valittu hintaryhmä"
+   {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
+    :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+    :valinta valittu-hintaryhma
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
-   (tiedot/hintaryhmien-nimet app)])
+   hintaryhmat])
 
 (defn lisaysnappi [e! {:keys [toimenpiteet] :as app}]
   [napit/yleinen-ensisijainen
@@ -28,7 +29,8 @@
    #(log "Painoit nappia")
    {:disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}])
 
-(defn ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma] :as app}]
+(defn ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
+                                hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
      [kentat/tee-kentta {:tyyppi :string
@@ -37,7 +39,10 @@
       (r/wrap
         uusi-hintaryhma
         #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
-     [napit/yleinen-ensisijainen "Luo" #(log "Painoit nappia")]
+     [napit/yleinen-ensisijainen
+      (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."]  "Luo")
+      #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
+      {:disabled hintaryhman-tallennus-kaynnissa?}]
      [napit/yleinen-ensisijainen "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
     [napit/yleinen-ensisijainen
@@ -61,6 +66,7 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->HaeHintaryhmat))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
                                                           :sopimus-id (first (:sopimus valinnat))
                                                           :aikavali (:aikavali valinnat)})))
