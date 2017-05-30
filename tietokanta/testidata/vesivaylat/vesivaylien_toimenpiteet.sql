@@ -524,6 +524,12 @@ INSERT INTO vv_hinnoittelu_toimenpide
 VALUES
   ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta taas'),
    (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus ryhmä'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id")
+VALUES
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta taas'),
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Poijujen korjausta jossain ihan muualla'));
 -- ***********************************************
 
 
