@@ -154,7 +154,7 @@
                          (reset! drag
                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
                                         :avain avain)))
-          :drag-move! (fn [alku-x x->paiva]
+          :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
                           (when @drag
@@ -169,7 +169,7 @@
                                     y (- cy svg-y)
                                     paiva (x->paiva x)
                                     tooltip-x (+ alku-x x)
-                                    tooltip-y (+ y 24)]
+                                    tooltip-y (hover-y y)]
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
@@ -212,6 +212,12 @@
             paivia (count paivat)
             paivan-leveys (/ (- leveys alku-x) paivia)
             rivin-y #(+ alku-y (* rivin-korkeus %))
+            hover-y (fn [y]
+                      (let [rivi (int (/ (- y alku-y) rivin-korkeus))
+                            y (rivin-y rivi)]
+                        (if (> (+ y 50) korkeus)
+                          (- y 15)
+                          (+ y 30))))
             paiva-x #(+ alku-x (* (- leveys alku-x)
                                   ((if (pvm/ennen? % min-aika)
                                      - +)
@@ -225,7 +231,7 @@
           :viewBox (str "0 0 " leveys " " korkeus)
           :on-mouse-up drag-stop!
           :on-mouse-move (when drag-move!
-                           (drag-move! alku-x x->paiva))
+                           (drag-move! alku-x hover-y x->paiva))
           :style {:cursor (when drag "ew-resize")}}
 
          #?(:cljs
@@ -269,7 +275,7 @@
                              :stroke reuna
                              :rx 3 :ry 3
                              :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                                             :y (+ y 30)
+                                                             :y (hover-y y)
                                                              :text teksti})
                              :on-mouse-out hide-tooltip!
                              }]
