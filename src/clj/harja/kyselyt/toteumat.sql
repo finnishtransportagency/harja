@@ -752,6 +752,7 @@ SELECT
   tunniste,
   toimenpide,
   tietolaji,
+  vt.luotu,
   vt.tr_numero        AS tierekisteriosoite_numero,
   vt.tr_alkuosa       AS tierekisteriosoite_alkuosa,
   vt.tr_alkuetaisyys  AS tierekisteriosoite_alkuetaisyys,
@@ -791,7 +792,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
-ORDER BY t.alkanut DESC
+ORDER BY vt.luotu DESC
 LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
@@ -847,12 +848,12 @@ SELECT
   vt.tr_ajorata,
   vt.tr_puoli,
   vt.luotu,
-  yh.etunimi || ' ' || yh.sukunimi AS henkilo,
-  o.nimi                           AS organisaatio,
-  o.ytunnus                        AS yTunnus
+  k.etunimi || ' ' || k.sukunimi AS henkilo,
+  o.nimi                         AS organisaatio,
+  o.ytunnus                      AS yTunnus
 FROM varustetoteuma vt
-  JOIN yhteyshenkilo yh ON vt.luoja = yh.id
-  JOIN organisaatio o ON yh.organisaatio = o.id
+  JOIN kayttaja k ON vt.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
 WHERE vt.id = :id;
 
 -- name: hae-varustetoteuma-toteumalla

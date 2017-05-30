@@ -35,7 +35,7 @@
     #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]

@@ -53,6 +53,8 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord SiirraValitutYksikkohintaisiin [])
+(defrecord ToimenpiteetSiirretty [toimenpiteet])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
@@ -73,6 +75,24 @@
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
+  SiirraValitutYksikkohintaisiin
+  (process-event [_ app]
+    (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
+          fail! (tuck/send-async! jaettu/->ToimenpiteetEiSiirretty)]
+      (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
+                vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
+                                     {::tot/urakka-id (get-in app [:valinnat :urakka-id])
+                                      ::to/idt valitut}))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))))
+    (assoc app :siirto-kaynnissa? true))
+
+  ToimenpiteetSiirretty
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (viesti/nayta! (jaettu/viesti-siirto-tehty (count toimenpiteet)) :success)
+    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
+               :siirto-kaynnissa? false))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
@@ -82,7 +102,7 @@
             fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit)
+            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)
               (do
                 (go
                   (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
@@ -90,7 +110,7 @@
                       (fail! vastaus)
                       (tulos! vastaus))))
                 (assoc app :haku-kaynnissa? true))
-              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
             (throw e))))
