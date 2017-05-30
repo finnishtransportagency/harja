@@ -732,7 +732,7 @@
             {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                      kayttaja-paallystys portti
                                                      payload)]
-        (is (= 200 status))
+        (is (= 200 status) "Kutsu tehtiin onnistuneesti")
 
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
               oletettu-tr-osoite {:numero 20
@@ -742,6 +742,10 @@
                                   :loppuet 100
                                   :ajorata 1
                                   :kaista 1}
+              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
+              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
               alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)]
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-          (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl"))))))
+          (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
+          (is (= odotettu-1-alikohteen-osoite (first alikohteiden-tr-osoitteet)))
+          (is (= odotettu-2-alikohteen-osoite (second alikohteiden-tr-osoitteet))))))))
