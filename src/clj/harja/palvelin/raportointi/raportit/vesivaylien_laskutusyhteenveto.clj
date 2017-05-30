@@ -42,7 +42,7 @@
                                                 (:yksikkohintaiset-hintaryhmalliset tiedot))))]))
 
 (def hinnoittelusarakkeet
-  [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
+  [{:leveys 3 :otsikko "Hinnoittelu"}
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
    {:leveys 1 :otsikko "Tilausvaltuus [t €]" :fmt :raha}
@@ -95,7 +95,13 @@
       hinnoittelusarakkeet
       raportin-rivit]
 
-     [:taulukko {:otsikko "Tilausten / laskujen erittely"
+     [:taulukko {:otsikko "Kuukausierittely"
+                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
+                 :sheet-nimi raportin-nimi}
+      erittelysarakkeet
+      []]
+
+     [:taulukko {:otsikko "Toimenpiteiden erittely"
                  :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       erittelysarakkeet
