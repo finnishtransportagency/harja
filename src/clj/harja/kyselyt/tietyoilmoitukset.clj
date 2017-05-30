@@ -214,8 +214,8 @@
                                  {::t/id op/not-null?})
                                {::t/urakka-id
                                 (if urakattomat?
-                                  (op/or op/null? (op/in urakat))
-                                  (op/in urakat))})))]
+                                  (op/or op/null? (op/in (map :id urakat)))
+                                  (op/in (map :id urakat)))})))]
     ilmoitukset))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
