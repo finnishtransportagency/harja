@@ -6,7 +6,6 @@
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
             [clojure.future :refer :all]
-            [harja.kyselyt.specql-db :refer [define-tables]]
 
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
