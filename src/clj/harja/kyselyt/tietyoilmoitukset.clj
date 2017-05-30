@@ -196,6 +196,7 @@
                                   organisaatio
                                   kayttaja-id
                                   sijainti]}]
+
   (let [ilmoitukset (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                            (op/and
                              (merge {::t/paatietyoilmoitus op/null?}
@@ -214,8 +215,8 @@
                                  {::t/id op/not-null?})
                                {::t/urakka-id
                                 (if urakattomat?
-                                  (op/or op/null? (op/in (map :id urakat)))
-                                  (op/in (map :id urakat)))})))]
+                                  (op/or op/null? (op/in urakat))
+                                  (op/in urakat))})))]
     ilmoitukset))
 
 (defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
