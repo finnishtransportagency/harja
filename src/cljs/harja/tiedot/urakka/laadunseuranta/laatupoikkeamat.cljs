@@ -7,7 +7,7 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as u])
