@@ -79,24 +79,27 @@
         kohteen-tienumero (:tr-numero kohde)]
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
-(defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
+(defn tallenna-paallystysilmoitus [vkm db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero kohde)
-        kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero) (:alikohteet paallystysilmoitus))]
+        paivitettava-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero (:yllapitokohde paallystysilmoitus))
+        kohteen-sijainti (:sijainti paivitettava-kohde)
+        alikohteet (map #(-> %
+                             (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
+                             (assoc-in [:sijainti :numero] kohteen-tienumero))
+                        (:alikohteet paivitettava-kohde))]
     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))
 
-(defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
+(defn kirjaa-paallystysilmoitus [vkm db kayttaja urakka-id kohde-id data]
   (jdbc/with-db-transaction
     [db db]
     (let [purettu-paallystysilmoitus (pura-paallystysilmoitus data)
           valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde
-                                          purettu-paallystysilmoitus valmis-kasiteltavaksi)]
+          id (tallenna-paallystysilmoitus
+               vkm db kayttaja urakka-id kohde purettu-paallystysilmoitus valmis-kasiteltavaksi)]
       id)))
