@@ -71,7 +71,7 @@
         "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
 
 (deftest muunna-osoitteet-paivan-verkolta-toiselle
-  (with-fake-http [+testi-vkm+ (slurp "test/resurssit/vkm/vkm-vastaus.txt")]
+  (with-fake-http [+testi-vkm+ (.replace (slurp "test/resurssit/vkm/vkm-vastaus.txt") "[KOHDEID]" "666")]
     (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
           muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
                          (:vkm jarjestelma)

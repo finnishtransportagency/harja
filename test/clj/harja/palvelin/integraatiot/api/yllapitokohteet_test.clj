@@ -723,49 +723,25 @@
 
 
 (deftest osoitteiden-muunnos-vkmn-kanssa
-  (let [vkm-vastaus (slurp "test/resurssit/vkm/vkm-vastaus.txt")]
-    (with-fake-http
-      [+testi-vkm+ vkm-vastaus
-       #".*api\/urakat.*" :allow]
-
-      (let [urakka (hae-muhoksen-paallystysurakan-id)
-            kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
-            payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        vkm-vastaus (.replace (slurp "test/resurssit/vkm/vkm-vastaus.txt") "[KOHDEID]" (str kohde-id))]
+    (with-fake-http [+testi-vkm+ vkm-vastaus
+                     #".*api\/urakat.*" :allow]
+      (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
             {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                      kayttaja-paallystys portti
                                                      payload)]
         (is (= 200 status))
 
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-              oletettu-tr-osoite {:aet 1
+              oletettu-tr-osoite {:numero 20
+                                  :aosa 1
+                                  :aet 0
+                                  :losa 4
+                                  :loppuet 100
                                   :ajorata 1
-                                  :aosa 14
-                                  :kaista 1
-                                  :loppuet 1
-                                  :losa 17
-                                  :numero 20}
-              alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
-              oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
-                                                         :ajorata 1
-                                                         :aosa 14
-                                                         :kaista 1
-                                                         :loppuet 666
-                                                         :losa 14
-                                                         :numero 20}
-              oletettu-toisen-alikohteen-tr-osoite {:aet 666
-                                                    :ajorata 1
-                                                    :aosa 14
-                                                    :kaista 1
-                                                    :loppuet 1
-                                                    :losa 17
-                                                    :numero 20}]
+                                  :kaista 1}
+              alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)]
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-          (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
-          (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
-              "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
-          (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
-              "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
-
-          (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
-            (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
-                "Kaikilla alikohteilla on sijainti & tienumero")))))))
+          (is (= 1 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl"))))))

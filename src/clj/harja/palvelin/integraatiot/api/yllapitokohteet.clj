@@ -128,18 +128,19 @@
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
 (defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
+
   (if-let [karttapvm (:karttapvm sijainti)]
     (let [karttapvm (parametrit/pvm-aika karttapvm)
           harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db)
                                 (pvm/nyt))
           muunnettu-sijainti (first (vkm/muunna-tieosoitteet-verkolta-toiselle
                                       vkm
-                                      [(assoc sijainti :id 1)]
+                                      [(assoc sijainti :id (:id kohde))]
                                       harjan-verkon-vpm
                                       karttapvm))
           sijainti (merge sijainti (dissoc muunnettu-sijainti :id))]
-      (assoc kohde :sijainti sijainti)))
-  kohde)
+      (assoc kohde :sijainti sijainti))
+    kohde))
 
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"

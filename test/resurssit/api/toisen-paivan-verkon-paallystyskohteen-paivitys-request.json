@@ -20,7 +20,8 @@
       "losa": 3,
       "let": 100,
       "ajr": 1,
-      "kaista": 1
+      "kaista": 1,
+      "karttapvm": "2017-01-01T00:00:00+03"
     },
     "alikohteet": [
       {
@@ -37,7 +38,8 @@
             "losa": 3,
             "let": 100,
             "ajr": 1,
-            "kaista": 1
+            "kaista": 1 ,
+            "karttapvm": "2017-01-01T00:00:00+03"
           },
           "toimenpide": "testitoimenpide"
         }
