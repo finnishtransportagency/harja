@@ -15,7 +15,7 @@
 
 (defn- raportin-rivi [tiedot]
   (log/debug "RIVI: " (pr-str tiedot))
-  [(:hinnoittelu tiedot) "" "" "" (:summa tiedot)])
+  [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
 
 (defn- muodosta-raportin-rivit [tiedot]
   (apply concat
