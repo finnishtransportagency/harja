@@ -485,6 +485,7 @@
                      :nimi ::t/vaikutussuunta
                      :valinnat (into [nil] (keys t/vaikutussuunta-vaihtoehdot-map))
                      :valinta-nayta #(or (t/vaikutussuunta-vaihtoehdot-map %) "- Valitse -")
+                     :pakollinen? true
                      :validoi [[:ei-tyhja]]})
       (lomake/ryhma "Muuta"
                     {:otsikko "Lisätietoja"
