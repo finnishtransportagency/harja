@@ -30,10 +30,14 @@
                              :luotu aikaleima
                              :muokattu aikaleima})
 
+(def alus-avainmuunnos
+  {:harja.domain.vesivaylat.alus/tunnus :harja.domain.vesivaylat.alus/r-tunnus
+   :harja.domain.vesivaylat.alus/nimi :harja.domain.vesivaylat.alus/r-nimi})
 (defn- lue-alus [a]
-  (xml/lue-attribuutit a #(keyword "harja.domain.vesivaylat.alus" (name %))
-                       {:tunnus identity
-                        :nimi identity}))
+  (rename-keys (xml/lue-attribuutit a #(keyword "harja.domain.vesivaylat.alus" (name %))
+                                    {:tunnus identity
+                                     :nimi identity})
+               alus-avainmuunnos))
 
 (def sopimus-avainmuunnos
   {:harja.domain.vesivaylat.sopimus/nro :harja.domain.vesivaylat.sopimus/r-nro

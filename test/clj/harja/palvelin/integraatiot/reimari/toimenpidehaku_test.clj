@@ -52,8 +52,8 @@
       :harja.domain.vesivaylat.komponentti/nimi "Erikoismerkki",
       :harja.domain.vesivaylat.komponentti/id 124}],
     :harja.domain.vesivaylat.toimenpide/reimari-alus
-    {:harja.domain.vesivaylat.alus/tunnus "omapaatti",
-     :harja.domain.vesivaylat.alus/nimi "MS Totally out of Gravitas"},
+    {:harja.domain.vesivaylat.alus/r-tunnus "omapaatti",
+     :harja.domain.vesivaylat.alus/r-nimi "MS Totally out of Gravitas"},
     :harja.domain.vesivaylat.toimenpide/reimari-turvalaite
     {:harja.domain.vesivaylat.turvalaite/r-nro "904",
      :harja.domain.vesivaylat.turvalaite/r-nimi

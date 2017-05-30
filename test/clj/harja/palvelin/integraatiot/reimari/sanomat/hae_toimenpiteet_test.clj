@@ -30,8 +30,8 @@
    ::toimenpide/tila "1022541202"
    ::toimenpide/reimari-tyolaji "1022541802"
    ::toimenpide/muokattu #inst "2017-04-24T13:30:00.000-00:00"
-   ::toimenpide/alus {::alus/tunnus "omapaatti"
-                      ::alus/nimi "MS Totally out of Gravitas"}
+   ::toimenpide/alus {::alus/r-tunnus "omapaatti"
+                      ::alus/r-nimi "MS Totally out of Gravitas"}
    ::toimenpide/luotu #inst "2017-04-24T13:00:00.000-00:00"
    ::toimenpide/komponentit [{:harja.domain.vesivaylat.komponentti/tila "234",
                               :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",

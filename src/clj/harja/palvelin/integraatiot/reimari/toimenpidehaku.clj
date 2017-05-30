@@ -1,9 +1,9 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
-            [harja.kyselyt.vesivaylat :as vv-q] ;; tämän ns:n lataaminen määrittelee specit joita käytetään
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
