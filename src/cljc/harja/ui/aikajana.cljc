@@ -34,6 +34,8 @@
 
 (s/def ::paivat (s/every ::date))
 
+(s/def ::optiot (s/keys :opt [::alku ::loppu]))
+
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
   (loop [min nil
          max nil
@@ -202,7 +204,13 @@
         kaikki-ajat (mapcat ::ajat rivit)
         alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
         loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
+
+        ;; Otetaan alku ja loppu aikajanoista (+/- 14 päivää).
+        ;; Ylikirjoitetaan optioista otetuilla arvoilla, jos annettu.
         [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
+        min-aika (or (::alku optiot) min-aika)
+        max-aika (or (::loppu optiot) max-aika)
+
         text-y-offset 8
         bar-y-offset 3
         taustapalkin-korkeus (- rivin-korkeus 6)
@@ -224,7 +232,11 @@
                                    (/ (pvm/paivia-valissa % min-aika) paivia))))
             x->paiva #(t/plus min-aika
                               (t/days (/ % paivan-leveys)))
-            kuukaudet (kuukaudet paivat)]
+            kuukaudet (kuukaudet paivat)
+
+            rajaa-nakyvaan-alueeseen (fn [x width]
+                                       [(Math/max alku-x x)
+                                        (Math/min (- leveys alku-x) width)])]
         [:svg#aikajana
          {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
@@ -259,6 +271,7 @@
                         x (inc (paiva-x alku))
                         width (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
 
+                        [x width] (rajaa-nakyvaan-alueeseen x width)
                         ;; Vähennä väritetyn korkeutta 2px
                         y (if vari (inc y) y)
                         korkeus (if vari (- jana-korkeus 2) jana-korkeus)
