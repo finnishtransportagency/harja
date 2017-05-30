@@ -235,8 +235,9 @@
             kuukaudet (kuukaudet paivat)
 
             rajaa-nakyvaan-alueeseen (fn [x width]
-                                       [(Math/max alku-x x)
-                                        (Math/min (- leveys alku-x) width)])]
+                                       (let [x1 (Math/max alku-x x)
+                                             x2 (+ x width)]
+                                         [x1 (Math/min (- x2 x1) (- leveys alku-x))]))]
         [:svg#aikajana
          {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
