@@ -78,18 +78,20 @@
                                                             :alkupvm alkupvm
                                                             :loppupvm loppupvm}))})
 
-(defn- kk-kasittelyrivi [tiedot]
-  ["" "" "" "" "" "" (:kk tiedot)])
+(defn- kk-kasittelyrivit [tiedot]
+  [["Kauppamerenkulku" "" "" "" "" "" (:kk tiedot)]
+   ["Muu" "" "" "" "" "" (:kk tiedot)]])
 
 (defn- kk-erittelyrivit [alkupvm loppupvm]
-  (let [kk-valit (pvm/aikavalin-kuukausivalit [(c/from-date alkupvm)
-                                               (c/from-date loppupvm)])
+  (let [kk-valit (pvm/aikavalin-kuukausivalit [(pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))
+                                               (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm))])
         kk-valit-formatoitu (mapv
                               #(-> {:kk (str (pvm/kk-fmt (t/month (first %)))
                                              " "
                                              (t/year (first %)))})
                               kk-valit)]
-    (mapv kk-kasittelyrivi kk-valit-formatoitu)))
+    (apply concat
+           (mapv kk-kasittelyrivit kk-valit-formatoitu))))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
