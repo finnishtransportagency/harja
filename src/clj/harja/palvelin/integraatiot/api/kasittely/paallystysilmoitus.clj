@@ -12,7 +12,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
@@ -79,8 +80,9 @@
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
-  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
+  (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
+        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero kohde)
+        kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero) (:alikohteet paallystysilmoitus))]
     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)

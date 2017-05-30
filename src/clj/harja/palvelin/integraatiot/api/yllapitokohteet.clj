@@ -54,7 +54,6 @@
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
-            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
@@ -69,9 +68,7 @@
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -127,34 +124,6 @@
       {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
-(defn muunna-tieosoitteet [vkm db kohteen-tienumero {:keys [id sijainti alikohteet] :as kohde}]
-  (if-let [karttapvm (:karttapvm sijainti)]
-    (let [karttapvm (parametrit/pvm-aika karttapvm)
-          harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db) (pvm/nyt))
-          muunnettavat-sijainnit (conj
-                                   (mapv (fn [{{:keys [tunniste sijainti]} :alikohde}]
-                                           (assoc sijainti :id (:id tunniste) :tie kohteen-tienumero))
-                                         alikohteet)
-                                   (assoc sijainti :id id :tie kohteen-tienumero))
-          muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
-                                vkm
-                                muunnettavat-sijainnit
-                                harjan-verkon-vpm
-                                karttapvm)
-          muunnettu-kohteen-sijainti (if (some #(= id (:id %)) muunnetut-sijainnit)
-                                       (merge sijainti (first (filter #(= id (:id %)) muunnetut-sijainnit)))
-                                       sijainti)
-          muunnetut-alikohteet (mapv (fn [{{:keys [tunniste sijainti] :as alikohde} :alikohde}]
-                                       (if (some #(= (:id tunniste) (:id %)) muunnetut-sijainnit)
-                                         (assoc
-                                           alikohde
-                                           :sijainti
-                                           (merge sijainti (first (filter #(= (:id tunniste) (:id %)) muunnetut-sijainnit))))
-                                         alikohde))
-                                     alikohteet)]
-      (assoc kohde :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet))
-    kohde))
-
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
                      urakka-id
@@ -166,7 +135,7 @@
         kohde (-> (:yllapitokohde data)
                   (assoc :id kohde-id)
                   (assoc-in [:sijainti :tie] kohteen-tienumero))
-        kohde (muunna-tieosoitteet vkm db kohteen-tienumero kohde)
+        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero kohde)
         alikohteet (mapv #(-> %
                               (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
                               (assoc-in [:sijainti :numero] kohteen-tienumero))
