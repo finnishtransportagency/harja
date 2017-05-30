@@ -8,7 +8,8 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
 
@@ -24,12 +25,23 @@
           [{:otsikko "Kokonaishintaiset: muut"}]
           [["TODO"]]
           [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
-          (mapv raportin-rivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
-                                      (:yksikkohintaiset-hintaryhmattomat tiedot)))
+          ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joiden
+          ;; kaikki toimenpiteet ovat kauppamerenkulkua
+          (concat (mapv raportin-rivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
+                                              (:yksikkohintaiset-hintaryhmattomat tiedot)))
+                  (mapv raportin-rivi (filter #(= #{"kauppamerenkulku"} (:vaylatyyppi %))
+                                              (:yksikkohintaiset-hintaryhmalliset tiedot))))
           [{:otsikko "Yksikköhintaiset: muut"}]
-          (concat (mapv raportin-rivi (filter #(not= (:vaylatyyppi %) "kauppamerenkulku")
-                                       (:yksikkohintaiset-hintaryhmattomat tiedot)))
-                  (mapv raportin-rivi (:yksikkohintaiset-hintaryhmalliset tiedot)))]))
+          ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joiden
+          ;; kaikki toimenpiteet ovat väylätyyppiä "muu"
+          (concat (mapv raportin-rivi (filter #(= (:vaylatyyppi %) "muu")
+                                              (:yksikkohintaiset-hintaryhmattomat tiedot)))
+                  (mapv raportin-rivi (filter #(= #{"muu"} (:vaylatyyppi %))
+                                              (:yksikkohintaiset-hintaryhmalliset tiedot))))
+          [{:otsikko "Yksikköhintaiset: useita väylätyyppejä sisältävät"}]
+          ;; Hintaryhmälliset, joissa useita eri väylätyyppejä edustettuna
+          (mapv raportin-rivi (filter #(> (count (:vaylatyyppi %)) 1)
+                                      (:yksikkohintaiset-hintaryhmalliset tiedot)))]))
 
 (defn- raportin-sarakkeet []
   [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
@@ -48,9 +60,11 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm})
    :yksikkohintaiset-hintaryhmalliset
-   (hae-yksikkohintaiset-ryhmalliset-toimenpiteet db {:urakkaid urakka-id
-                                                      :alkupvm alkupvm
-                                                      :loppupvm loppupvm})})
+   (into []
+         (map #(konv/array->set % :vaylatyyppi))
+         (hae-yksikkohintaiset-ryhmalliset-toimenpiteet db {:urakkaid urakka-id
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm}))})
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hae-raportin-tiedot {:db db
