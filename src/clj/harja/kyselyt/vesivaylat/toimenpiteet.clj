@@ -6,16 +6,14 @@
             [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
             [clojure.future :refer :all]
+            [clojure.set :as set]
 
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
-            [harja.domain.urakka :as ur]
-
-            [clojure.future :refer :all]
-            [clojure.set :as set]))
+            [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
   (comp
