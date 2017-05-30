@@ -204,11 +204,11 @@
 
           ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
           (pvm/ennen? (pvm/nyt) (first hk))
-          (first (pvm/hoitokauden-kuukausivalit hk))
+          (first (pvm/aikavalin-kuukausivalit hk))
 
           ;; fallback on hoitokauden viimeinen kuukausi
           :default
-          (last (pvm/hoitokauden-kuukausivalit hk)))))))
+          (last (pvm/aikavalin-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
