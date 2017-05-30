@@ -262,7 +262,7 @@ reimari-toimenpidetyypit
          ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
 
 
-(s/def ::toimenpide/reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
+(s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
