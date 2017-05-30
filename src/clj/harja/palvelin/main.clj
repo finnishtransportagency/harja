@@ -128,7 +128,8 @@
     ;; Vesiväylät
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as vv-kokonaishintaiset]
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
-    [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat])
+    [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut])
 
   (:gen-class))
 
@@ -299,6 +300,9 @@
       :vv-yksikkohintaiset (component/using
                              (vv-yksikkohintaiset/->YksikkohintaisetToimenpiteet)
                              [:http-palvelin :db])
+      :vv-hinnoittelut (component/using
+                         (vv-hinnoittelut/->Hinnoittelut)
+                         [:http-palvelin :db])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])
