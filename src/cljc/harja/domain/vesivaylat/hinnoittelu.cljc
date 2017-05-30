@@ -5,6 +5,8 @@
     [specql.transform :as xf]
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.vesivaylat.hinta :as h]
+    [harja.domain.urakka :as ur]
+
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]
@@ -41,7 +43,9 @@
                          ::h/hinnoittelu-id)])}])
 
 (def perustiedot
-  #{::nimi ::hintaryhma?})
+  #{::nimi
+    ::hintaryhma?
+    ::id})
 
 (def hinnat
   #{[::hinnat h/perustiedot]})
@@ -52,4 +56,14 @@
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})
 
+(s/def ::hae-hinnoittelut-kysely
+  (s/keys
+    :req [::ur/id]))
 
+(s/def ::hae-hinnoittelut-vastaus
+  (s/coll-of
+    (s/keys :req [::id ::nimi ::hintaryhma?])))
+
+(s/def ::luo-hinnoittelu-kysely
+  (s/keys
+    :req [::nimi ::ur/id]))
