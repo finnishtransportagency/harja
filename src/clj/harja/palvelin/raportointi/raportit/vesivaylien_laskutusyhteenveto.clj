@@ -41,7 +41,7 @@
                                                                                 (:vaylatyyppi %))))
                                                 (:yksikkohintaiset-hintaryhmalliset tiedot))))]))
 
-(defn- hinnoittelusarakkeet []
+(def hinnoittelusarakkeet
   [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
@@ -51,6 +51,21 @@
    {:leveys 1 :otsikko "Yhteensä (S+T) [t €]"}
    {:leveys 1 :otsikko "Jäljellä [€]"}
    {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
+
+(def erittelysarakkeet
+  [{:leveys 3 :otsikko "Työ"}
+   {:leveys 1 :otsikko "Kuvaus / Erä"}
+   {:leveys 1 :otsikko "Tarjousp. V-kirje"}
+   {:leveys 1 :otsikko "Pvm"}
+   {:leveys 1 :otsikko "Suunnitellut kust. [€]"}
+   {:leveys 1 :otsikko "Tilaus V-kirje"}
+   {:leveys 1 :otsikko "Pvm"}
+   {:leveys 1 :otsikko "Suunniteltu valmistumispvm"}
+   {:leveys 1 :otsikko "Valmistusmispvm"}
+   {:leveys 1 :otsikko "Laskun n:o"}
+   {:leveys 1 :otsikko "Laskutus pvm"}
+   {:leveys 1 :otsikko "Maksuerän tunnus"}
+   {:leveys 1 :otsikko "Laskut. summa"}])
 
 (defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset-hintaryhmattomat
@@ -73,8 +88,15 @@
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
+
      [:taulukko {:otsikko "Hinnoittelu"
                  :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      (hinnoittelusarakkeet)
-      raportin-rivit]]))
+      hinnoittelusarakkeet
+      raportin-rivit]
+
+     [:taulukko {:otsikko "Tilausten / laskujen erittely"
+                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
+                 :sheet-nimi raportin-nimi}
+      erittelysarakkeet
+      []]]))
