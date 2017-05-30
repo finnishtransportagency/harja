@@ -4,8 +4,15 @@
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def nayta-aikajana?
+  (local-storage/local-storage-atom :paivystajat-aikajana false nil))
+
+(defn toggle-nayta-aikajana! []
+  (swap! nayta-aikajana? not))
 
 (def yhteyshenkilotyypit-kaikille-urakoille
   (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"])))
