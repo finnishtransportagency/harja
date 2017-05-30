@@ -139,3 +139,9 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
+
+COMMENT ON TABLE vv_hinnoittelu IS
+E'Hinnoittelu voi olla joko ryhmä (hintaryhmä flag true) tai yksittäinen hinnoittelu. Jos on ryhmä, samaan hinnoitteluun voi liittyä useita Reimarin toimenpiteitä, muuten liittyy vain yksi. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä.';
+
+COMMENT ON TABLE vv_hinta IS
+E'Hinta liittyy aina hinnoitteluun';
