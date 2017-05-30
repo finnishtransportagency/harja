@@ -141,7 +141,7 @@ COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
 COMMENT ON TABLE vv_hinnoittelu IS
-E'Hinnoittelu voi olla joko ryhmä (hintaryhmä flag true) tai yksittäinen hinnoittelu. Jos on ryhmä, samaan hinnoitteluun voi liittyä useita Reimarin toimenpiteitä, muuten liittyy vain yksi. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä.';
+E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun kautta. Jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä. Tällaisenkin toimenpiteen pitää kuitenkin kuulua hinnoitteluun, joka on hintaryhmä. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä. Esimerkiksi, voi olla hinnoittelu (joka on hintaryhmä) *Skikkebön majakan korjaus*, ja tälle hinnoittelulle on suoraan määritelty hinta "Työ 60k e". Siihen ryhmään kuuluu toimenpiteitä, ja yhdelle toimenpiteelle on määritelty lisäksi oma hinta "Komponentti 15k"';
 
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun';
