@@ -52,31 +52,22 @@
           [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
           ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
           ;; tehty kauppamerenkulkua
-          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
-                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
-                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
-                                                                                (:vaylatyyppi %))))
-                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))
+          (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
+                                                                        (:vaylatyyppi %))))
+                                        tiedot))
           [{:otsikko "Yksikköhintaiset: muut"}]
           ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joissa
           ;; työstetty väylätyyppiä "muu"
-          (concat (mapv hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
-                                                (:yksikkohintaiset-hintaryhmattomat tiedot)))
-                  (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
-                                                                                (:vaylatyyppi %))))
-                                                (:yksikkohintaiset-hintaryhmalliset tiedot))))]))
+          (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
+                                                                        (:vaylatyyppi %))))
+                                        tiedot))]))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  {:yksikkohintaiset-hintaryhmattomat
-   (hae-yksikkohintaiset-ryhmattomat-toimenpiteet db {:urakkaid urakka-id
-                                                      :alkupvm alkupvm
-                                                      :loppupvm loppupvm})
-   :yksikkohintaiset-hintaryhmalliset
-   (into []
-         (map #(konv/array->set % :vaylatyyppi))
-         (hae-yksikkohintaiset-ryhmalliset-toimenpiteet db {:urakkaid urakka-id
-                                                            :alkupvm alkupvm
-                                                            :loppupvm loppupvm}))})
+  (into []
+        (map #(konv/array->set % :vaylatyyppi))
+        (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
+                                               :alkupvm alkupvm
+                                               :loppupvm loppupvm})))
 
 (defn- kk-kasittelyrivit [tiedot]
   [["Kauppamerenkulku" "" "" "" "" "" (:kk tiedot)]
