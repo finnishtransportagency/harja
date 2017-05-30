@@ -22,9 +22,9 @@
   (apply concat
          [
           [{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
-          [["TODO"]]
+          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
           [{:otsikko "Kokonaishintaiset: muut"}]
-          [["TODO"]]
+          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
           [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
           ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
           ;; tehty kauppamerenkulkua
