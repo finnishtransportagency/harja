@@ -1,18 +1,23 @@
 (ns harja.palvelin.integraatiot.vkm.vkm-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
             [harja.pvm :as pvm]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [org.httpkit.fake :refer [with-fake-http]]))
 
+(def kayttaja "jvh")
 (def +testi-vkm+ "https://localhost:666/vkm/muunnos")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-    kayttaja-paallystys
+    kayttaja
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)
            [:db :integraatioloki])))
+
+(use-fixtures :once (compose-fixtures tietokanta-fixture
+                                      jarjestelma-fixture))
 
 (deftest vkm-parametrit
   (let [parametrit (vkm/vkm-parametrit [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
@@ -65,14 +70,16 @@
     (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
         "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
 
-
 (deftest muunna-osoitteet-paivan-verkolta-toiselle
-  (with (vkm/muunna-tieosoitteet-verkolta-toiselle
-     (:vkm jarjestelma)
-     {:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}
-     (pvm/luo-pvm 2017 1 1)
-     (pvm/luo-pvm 2017 5 1)))
-  )
+  (with-fake-http [+testi-vkm+ (slurp "test/resurssit/vkm/vkm-vastaus.txt")]
+    (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
+          muunnetut (vkm/muunna-tieosoitteet-verkolta-toiselle
+                         (:vkm jarjestelma)
+                         tieosoitteet
+                         (pvm/luo-pvm 2017 1 1)
+                         (pvm/luo-pvm 2017 5 1))
+          odotetut [{:tie 20, :aosa 1, :aet 1, :losa 4, :let 100, :id "666", :ajorata 1}]]
+      (is (= odotetut muunnetut) "VKM-muunnos tehtiin odotusten mukaisesti"))))
 
 
 
