@@ -39,10 +39,7 @@
                                           :loppupvm loppupvm}))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :koko-maa)
-        raportin-tiedot (hae-raportin-tiedot {:db db
+  (let [raportin-tiedot (hae-raportin-tiedot {:db db
                                               :urakka-id urakka-id
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
