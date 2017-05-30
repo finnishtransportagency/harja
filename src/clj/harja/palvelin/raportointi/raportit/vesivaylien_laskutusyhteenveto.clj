@@ -59,14 +59,10 @@
           (mapv yks-hint-hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
                                                  (:kokonaishintaiset tiedot)))
           [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
-          ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
-          ;; tehty kauppamerenkulkua
           (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
                                                                                  (:vaylatyyppi %))))
                                                  (:yksikkohintaiset tiedot)))
           [{:otsikko "Yksikköhintaiset: muut"}]
-          ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joissa
-          ;; työstetty väylätyyppiä "muu"
           (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
                                                                                  (:vaylatyyppi %))))
                                                  (:yksikkohintaiset tiedot)))]))
