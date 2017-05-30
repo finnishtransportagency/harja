@@ -45,11 +45,11 @@
   [{:leveys 3 :otsikko "Toimenpide / Maksuerä"}
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
-   {:leveys 1 :otsikko "Tilausvaltuus [t €]"}
-   {:leveys 1 :otsikko "Suunnitellut [t €]"}
-   {:leveys 1 :otsikko "Toteutunut [t €]"}
-   {:leveys 1 :otsikko "Yhteensä (S+T) [t €]"}
-   {:leveys 1 :otsikko "Jäljellä [€]"}
+   {:leveys 1 :otsikko "Tilausvaltuus [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Suunnitellut [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Toteutunut [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Yhteensä (S+T) [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Jäljellä [€]" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
 
 (def erittelysarakkeet
@@ -57,7 +57,7 @@
    {:leveys 1 :otsikko "Kuvaus / Erä"}
    {:leveys 1 :otsikko "Tarjousp. V-kirje"}
    {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunnitellut kust. [€]"}
+   {:leveys 1 :otsikko "Suunnitellut kust. [€]" :fmt :raha}
    {:leveys 1 :otsikko "Tilaus V-kirje"}
    {:leveys 1 :otsikko "Pvm"}
    {:leveys 1 :otsikko "Suunniteltu valmistumispvm"}
