@@ -725,7 +725,7 @@
 (deftest osoitteiden-muunnos-vkmn-kanssa
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
-        vkm-vastaus (.replace (slurp "test/resurssit/vkm/vkm-vastaus.txt") "[KOHDEID]" (str kohde-id))]
+        vkm-vastaus (.replace (slurp "test/resurssit/vkm/vkm-vastaus-alikohteiden-kanssa.txt") "[KOHDEID]" (str kohde-id))]
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
       (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
@@ -737,11 +737,11 @@
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
               oletettu-tr-osoite {:numero 20
                                   :aosa 1
-                                  :aet 0
+                                  :aet 1
                                   :losa 4
                                   :loppuet 100
                                   :ajorata 1
                                   :kaista 1}
               alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)]
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-          (is (= 1 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl"))))))
+          (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl"))))))
