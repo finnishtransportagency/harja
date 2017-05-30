@@ -33,7 +33,7 @@ WHERE tyyppi = 'vv-kokonaishintainen' OR tyyppi = 'vv-yksikkohintainen';
 CREATE TABLE vv_hinnoittelu
 (
   id         SERIAL PRIMARY KEY,
-  "urakka-id" INTEGER REFERENCES urakka(id),
+  "urakka-id" INTEGER REFERENCES urakka(id) NOT NULL,
   nimi       VARCHAR CONSTRAINT nipulla_oltava_nimi CHECK (hintaryhma IS FALSE OR nimi IS NOT NULL),
   UNIQUE("urakka-id", nimi),
   hintaryhma BOOLEAN                          NOT NULL DEFAULT FALSE,

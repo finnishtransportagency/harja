@@ -388,9 +388,11 @@ VALUES
    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 INSERT INTO vv_hinnoittelu
-(nimi, hintaryhma, luoja)
+(nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Hietasaaren poijujen korjaus', true, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+  ('Hietasaaren poijujen korjaus', true,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
