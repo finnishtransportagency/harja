@@ -1,16 +1,15 @@
 (ns harja.domain.vesivaylat.toimenpide
   (:require [clojure.spec.alpha :as s]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.toteuma :as t]
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.alus :as vv-alus]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
-            [harja.domain.toteuma :as to]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
     #?@(:clj [
@@ -242,6 +241,7 @@ reimari-tilat
    "1022541203" :peruttu})
 
 (define-tables
+  ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -252,11 +252,15 @@ reimari-tilat
     "lisatyo" ::lisatyo?
     #?@(:clj
         [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
-         ::toteuma (rel/has-one ::toteuma-id ::t/toteuma ::t/id)
          ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+         ::urakka (rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
          ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+         ::hinnoittelu-linkit (rel/has-many
+                                ::id
+                                ::h/hinnoittelu<->toimenpide
+                                ::h/toimenpide-id)])}])
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
@@ -277,6 +281,7 @@ reimari-tilat
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::vikakorjauksia? boolean?)
+(s/def ::idt (s/coll-of ::id))
 
 (def reimari-kentat
   #{::reimari-id
@@ -306,32 +311,39 @@ reimari-tilat
   #{::toteuma-id
     ::urakoitsija-id
     ::sopimus-id
+    ::urakka-id
     ::turvalaite-id
     ::vayla-id
     ::luoja
     ::luoja-id})
 
+(def hinnoittelu
+  #{[::hinnoittelu-linkit #{[::h/hinnoittelut #{::h/nimi ::h/hintaryhma?
+                                                [::h/hinnat #{:harja.domain.vesivaylat.hinta/maara}]}]}
+     #_h/toimenpiteen-hinnoittelut]})
+
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
-(def toteuma #{[::toteuma #{::t/id ::t/tyyppi}]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
+(def urakka #{[::urakka #{}]})
 
 (def viittaukset
   (clojure.set/union
     vikailmoitus
-    toteuma
     urakoitsija
     sopimus
     turvalaite
+    urakka
     vayla))
 
 (def perustiedot
   #{::id
     ::lisatieto
     ::suoritettu
-    ::lisatyo?})
+    ::lisatyo?
+    ::hintatyyppi})
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
@@ -347,18 +359,32 @@ reimari-tilat
 
 ;; Palvelut
 
-(s/def ::hae-vesivaylien-toimenpiteet-kyselyt
+(s/def ::hae-vesivaylien-toimenpiteet-kysely
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
-    :req [::to/urakka-id]
+    :req [::urakka/id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-vesivayilien-toimenpiteet-vastaukset
+(s/def ::hae-vesivayilien-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
                      :opt [::vikakorjauksia?])))
+
+(s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
+  (s/keys
+    :req [::urakka/id ::idt]))
+
+(s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+
+(s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
+  (s/keys
+    :req [::urakka/id ::idt]))
+
+(s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
+  ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)

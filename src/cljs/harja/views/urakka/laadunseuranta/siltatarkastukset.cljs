@@ -215,9 +215,10 @@
                                 tulos (:tulos sarake-arvo)
                                 liitteet (:liitteet sarake-arvo)]
                             [tarkastustulos-ja-liitteet tulos liitteet]))})
-        muut-tarkastukset))
+        (reverse (sort-by :tarkastusaika muut-tarkastukset))))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
+  (log "Muut tarkastukset onpi: " (pr-str muut-tarkastukset))
   (into []
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3}

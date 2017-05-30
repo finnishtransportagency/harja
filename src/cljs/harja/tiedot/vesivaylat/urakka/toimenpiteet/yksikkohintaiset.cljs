@@ -3,9 +3,11 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.toteuma :as tot]
+            [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -32,6 +34,8 @@
          :nakymassa? false
          :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
+         :uuden-hintaryhman-lisays? false
+         :uusi-hintaryhma ""
          :toimenpiteet nil}))
 
 (def valinnat
@@ -48,11 +52,17 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
+(defn hintaryhmien-nimet [tila]
+  ["Poijujen korjaus" "Muutos- ja lisätyöt"])
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord UudenHintaryhmanLisays? [lisays-auki?])
+(defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
+(defrecord SiirraValitutKokonaishintaisiin [])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -73,6 +83,9 @@
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
+  SiirraValitutKokonaishintaisiin
+  (process-event [_ app]
+    (jaettu/siirra-valitut! :siirra-toimenpiteet-kokonaishintaisiin app))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
@@ -82,7 +95,7 @@
             fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
         (try
           (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit)
+            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)
               (do
                 (go
                   (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
@@ -90,7 +103,7 @@
                       (fail! vastaus)
                       (tulos! vastaus))))
                 (assoc app :haku-kaynnissa? true))
-              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
           (catch :default e
             (fail! nil)
             (throw e))))
@@ -105,4 +118,12 @@
   ToimenpiteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    (assoc app :haku-kaynnissa? false)))
+    (assoc app :haku-kaynnissa? false))
+
+  UudenHintaryhmanLisays?
+  (process-event [{lisays-auki? :lisays-auki?} app]
+    (assoc app :uuden-hintaryhman-lisays? lisays-auki?))
+
+  UudenHintaryhmanNimeaPaivitetty
+  (process-event [{nimi :nimi} app]
+    (assoc app :uusi-hintaryhma nimi)))

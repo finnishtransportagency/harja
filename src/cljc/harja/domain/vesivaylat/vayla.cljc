@@ -21,7 +21,7 @@
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["vv_vayla" ::vayla
    {
-    #?@(:clj [::turvalaite (rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)])}])
+    #?@(:clj [::turvalaitteet (rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)])}])
 
 (def tyypit (s/describe ::tyyppi))
 
@@ -49,9 +49,9 @@
     ::nimi
     ::tyyppi})
 
-(def turvalaite #{[::turvalaite #{:harja.domain.vesivaylat.turvalaite/id}]})
+(def turvalaitteet #{[::turvalaitteet #{:harja.domain.vesivaylat.turvalaite/id}]})
 
-(def viittaukset (clojure.set/union turvalaite))
+(def viittaukset (clojure.set/union turvalaitteet))
 
 (def kaikki-kentat
   (clojure.set/union

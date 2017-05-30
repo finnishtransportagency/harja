@@ -1,6 +1,6 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
   (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch]]
+            [specql.core :refer [fetch update!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec.alpha :as s]
@@ -9,11 +9,12 @@
             [harja.kyselyt.specql-db :refer [define-tables]]
 
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.urakka :as ur]
+
             [clojure.future :refer :all]
             [clojure.set :as set]))
 
@@ -43,9 +44,14 @@
         (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
         :default toimenpiteet))
 
+(defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
+  (update! db ::vv-toimenpide/reimari-toimenpide
+           {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
+           {::vv-toimenpide/id (op/in toimenpide-idt)}))
+
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
-  (let [urakka-id (::tot/urakka-id tiedot)
+  (let [urakka-id (::ur/id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
@@ -55,20 +61,21 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-                               vv-toimenpide/viittaukset
+                               (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
+                               #_vv-toimenpide/hinnoittelu
                                vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
-                               {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka-id urakka-id}}
+                               {::vv-toimenpide/urakka-id urakka-id}
                                (when (and luotu-alku luotu-loppu)
                                  {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id
                                  {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
                                (when (= :kokonaishintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-kokonaishintainen"}})
+                                 {::vv-toimenpide/hintatyyppi :kokonaishintainen})
                                (when (= :yksikkohintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-yksikkohintainen"}})
+                                 {::vv-toimenpide/hintatyyppi :yksikkohintainen})
                                (when sopimus-id {::vv-toimenpide/sopimus-id sopimus-id})
                                (when (and alku loppu)
                                  {::vv-toimenpide/reimari-luotu (op/between alku loppu)})

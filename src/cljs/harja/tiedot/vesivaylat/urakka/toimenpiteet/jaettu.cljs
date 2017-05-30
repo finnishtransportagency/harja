@@ -3,11 +3,13 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.toteuma :as tot]
+            [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [cljs.core.async :refer [<!]]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -29,16 +31,27 @@
   (every? (comp not true?)
           (map :valittu? tyolajin-toimenpiteet)))
 
+(defn valitut-toimenpiteet [toimenpiteet]
+  (filter :valittu? toimenpiteet))
+
+(defn poista-toimenpiteet [toimenpiteet poistettavat-toimenpide-idt]
+  (filter #(not (poistettavat-toimenpide-idt (::to/id %))) toimenpiteet))
+
 (defn valinnan-tila [tyolajin-toimenpiteet]
   (cond (kaikki-valittu? tyolajin-toimenpiteet) true
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
 
+(defn viesti-siirto-tehty [siirrettyjen-lkm]
+  (str siirrettyjen-lkm " "
+       (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
+       " siirretty."))
+
 (defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide
                                       vain-vikailmoitukset?] :as valinnat}]
-  (spec-apurit/poista-nil-avaimet {::tot/urakka-id urakka-id
+  (spec-apurit/poista-nil-avaimet {::ur/id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
@@ -49,6 +62,9 @@
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))
 
+(defn joku-valittu? [toimenpiteet]
+  (some :valittu? toimenpiteet))
+
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
   mun-tila)
@@ -57,6 +73,8 @@
 (defrecord ValitseTyolaji [tiedot])
 (defrecord ValitseVayla [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
+(defrecord ToimenpiteetSiirretty [toimenpiteet])
+(defrecord ToimenpiteetEiSiirretty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -90,4 +108,27 @@
 
   AsetaInfolaatikonTila
   (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila)))
+    (assoc app :infolaatikko-nakyvissa? uusi-tila))
+
+  ToimenpiteetSiirretty
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (viesti/nayta! (viesti-siirto-tehty (count toimenpiteet)) :success)
+    (assoc app :toimenpiteet (poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
+               :siirto-kaynnissa? false))
+
+  ToimenpiteetEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
+    app))
+
+(defn siirra-valitut! [palvelu app]
+  (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
+        fail! (tuck/send-async! ->ToimenpiteetEiSiirretty)]
+    (go (let [valitut (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))
+              vastaus (<! (k/post! palvelu
+                                   {::ur/id (get-in app [:valinnat :urakka-id])
+                                    ::to/idt valitut}))]
+          (if (k/virhe? vastaus)
+            (fail! vastaus)
+            (tulos! vastaus)))))
+  (assoc app :siirto-kaynnissa? true))

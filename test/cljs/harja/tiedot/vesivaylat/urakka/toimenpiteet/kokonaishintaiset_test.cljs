@@ -1,5 +1,6 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
             [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
@@ -170,7 +171,7 @@
               :tyyppi :kokonaishintainen}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
@@ -182,7 +183,7 @@
              {::tot/urakka-id 666
               ::to/sopimus-id 777
               :tyyppi :kokonaishintainen}))
-      (is (s/valid? ::to/hae-kokonaishintaiset-toimenpiteet-kysely hakuargumentit))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
@@ -190,7 +191,29 @@
       (is (= hakuargumentit {::tot/urakka-id 666
                              ::to/sopimus-id 777
                              :tyyppi :kokonaishintainen}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kyselyt hakuargumentit)))))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
+
+(deftest yksikkohintaisiin-siirto
+  (testing "Siirron aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      (let [vanha-tila testitila
+            uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
+                          vanha-tila)]
+        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
+
+(deftest yksikkohintaisiin-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hakemisen-aloitus
   (testing "Haku ei lähde koska spec failaa"

@@ -13,7 +13,7 @@
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(log "Painoit nappia")]])
+   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -33,7 +33,10 @@
         app (:urakka valinnat)
         tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
-       [jaettu/listaus e! app]])))
+       [jaettu/listaus e! app
+        {:jaottelu [{:otsikko "Kokonaishintaiset toimenpiteet" :jaottelu-fn identity}]
+         :paneelin-checkbox-sijainti "94.3%"
+         :vaylan-checkbox-sijainti "94.3%"}]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
