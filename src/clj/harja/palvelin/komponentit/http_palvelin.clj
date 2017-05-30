@@ -133,7 +133,7 @@
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
              (catch Throwable e
-               (log/warn e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
+               (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
                {:virhe (.getMessage e)}))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")

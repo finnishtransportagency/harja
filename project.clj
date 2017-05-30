@@ -87,7 +87,7 @@
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.13.0"]
-                 [com.andrewmcveigh/cljs-time "0.3.14"] ;; TODO Voisi päivittää, mutta tämän uusi versio aiheuttaa vertailuongelmia(?!)
+                 [com.andrewmcveigh/cljs-time "0.5.0"]
 
                  [cljsjs/openlayers "3.15.1"]
 

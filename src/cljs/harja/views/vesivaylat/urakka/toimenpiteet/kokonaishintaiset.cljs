@@ -13,7 +13,7 @@
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(log "Painoit nappia")]])
+   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
