@@ -127,7 +127,6 @@
       {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
-
 (defn muunna-tieosoitteet [vkm db {:keys [sijainti] :as kohde}]
   (if-let [karttapvm (:karttapvm sijainti)]
     (let [karttapvm (parametrit/pvm-aika karttapvm)
@@ -150,7 +149,6 @@
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
-        urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
         kohde (-> (:yllapitokohde data)
                   (assoc :id kohde-id)
                   (assoc-in [:sijainti :tie] kohteen-tienumero))
@@ -178,8 +176,7 @@
   (jdbc/with-db-transaction
     [db db]
     (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))]
+          kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
 

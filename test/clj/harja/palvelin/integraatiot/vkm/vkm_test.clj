@@ -2,7 +2,17 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [com.stuartsierra.component :as component]))
+
+(def +testi-vkm+ "https://localhost:666/vkm/muunnos")
+
+(def jarjestelma-fixture
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja-paallystys
+    :vkm (component/using
+           (vkm/->VKM +testi-vkm+)
+           [:db :integraatioloki])))
 
 (deftest vkm-parametrit
   (let [parametrit (vkm/vkm-parametrit [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}]
@@ -54,5 +64,15 @@
         "Alkuosa ja loppuetäisyys on päivitetty oikein VKM:n vastauksesta")
     (is (= tieosoitteet (vkm/osoitteet-vkm-vastauksesta tieosoitteet vkm-virhevastaus))
         "Jos vastauksessa on virheitä, osoitteisiin ei ole koskettu")))
+
+
+(deftest muunna-osoitteet-paivan-verkolta-toiselle
+  (with (vkm/muunna-tieosoitteet-verkolta-toiselle
+     (:vkm jarjestelma)
+     {:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :id "666" :ajorata 1}
+     (pvm/luo-pvm 2017 1 1)
+     (pvm/luo-pvm 2017 5 1)))
+  )
+
 
 

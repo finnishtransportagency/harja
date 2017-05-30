@@ -9,6 +9,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.walk :as walk]
@@ -18,7 +19,8 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm])
   (:use org.httpkit.fake))
 
 (def kayttaja-paallystys "skanska")
@@ -30,6 +32,9 @@
     :fim (component/using
            (fim/->FIM +testi-fim+)
            [:db :integraatioloki])
+    :vkm (component/using
+           (vkm/->VKM +testi-vkm+)
+           [:db :integraatioloki])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
@@ -40,7 +45,7 @@
                         [:sonja :db :integraatioloki])
     :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet)
                                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta
-                                           :fim :sonja-sahkoposti])))
+                                           :fim :vkm :sonja-sahkoposti])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -715,3 +720,52 @@
       (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
       (is (.contains (:body vastaus) "Toteumat poistettu onnistuneesti. Poistettiin: 1 toteumaa."))
       (is poistettu? "Toteuma on merkitty poistetuksi onnistuneesti."))))
+
+
+(deftest osoitteiden-muunnos-vkmn-kanssa
+  (let [vkm-vastaus ]
+    (with-fake-http
+     [+testi-vkm+ vkm-vastaus
+      #".*api\/urakat.*" :allow]
+
+     (let [urakka (hae-muhoksen-paallystysurakan-id)
+           kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+           payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
+           {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                    kayttaja-paallystys portti
+                                                    payload)]
+       (is (= 200 status))
+
+       (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
+             oletettu-tr-osoite {:aet 1
+                                 :ajorata 1
+                                 :aosa 14
+                                 :kaista 1
+                                 :loppuet 1
+                                 :losa 17
+                                 :numero 20}
+             alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
+             oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
+                                                        :ajorata 1
+                                                        :aosa 14
+                                                        :kaista 1
+                                                        :loppuet 666
+                                                        :losa 14
+                                                        :numero 20}
+             oletettu-toisen-alikohteen-tr-osoite {:aet 666
+                                                   :ajorata 1
+                                                   :aosa 14
+                                                   :kaista 1
+                                                   :loppuet 1
+                                                   :losa 17
+                                                   :numero 20}]
+         (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
+         (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
+         (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
+             "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
+         (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
+             "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
+
+         (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
+           (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+               "Kaikilla alikohteilla on sijainti & tienumero")))))))

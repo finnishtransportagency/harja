@@ -6,11 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.pvm :as pvm]
             [cheshire.core :as cheshire])
-  (:use [slingshot.slingshot :only [throw+ try+]])
-  (:import (java.net URLEncoder)))
-;; curl -X GET "https://testioag.liikennevirasto.fi/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%0A%5B%7B%22tunniste%22%3A%22666%22%2C%22tie%22%3A4%2C%22osa%22%3A101%2C%22etaisyys%22%3A100%2C%22ajorata%22%3A1%7D%0A%5D%0A%7D"
-;; curl -X GET "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%0A%5B%7B%22tunniste%22%3A%22666%22%2C%22tie%22%3A4%2C%22osa%22%3A101%2C%22etaisyys%22%3A100%2C%22ajorata%22%3A1%7D%0A%5D%0A%7D"
-;; curl -X GET "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos?in=tieosoite&out=tieosoite&callback=jsonp&tilannepvm=1.1.2017&kohdepvm=1.3.2017&json=%7B%22tieosoitteet%22%3A%5B%7B%22tunniste%22%3A%22666-alku%22%2C%22tie%22%3A4%2C%22osa%22%3A1%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A0%7D%2C%7B%22tunniste%22%3A%22666-loppu%22%2C%22tie%22%3A4%2C%22osa%22%3A3%2C%22ajorata%22%3A1%2C%22etaisyys%22%3A1000%7D%5D%7D"
+  (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol Tieosoitemuunnos
   (muunna-osoitteet-verkolta-toiselle [this tieosoiteet paivan-verkolta paivan-verkolle]))
@@ -43,16 +39,16 @@
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
   (if (and vastaus (.contains vastaus "json("))
     (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
-         vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
-     (mapv (fn [{:keys [id] :as tieosoite}]
-             (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
-                   loppuosanhakutunnus (loppuosan-vkm-tunniste id)
-                   alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
-                   loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
-                   virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
-                              (vkm-virhe? loppuosanhakutunnus vkm-osoitteet))]
-               (paivita-osoite tieosoite alkuosanosoite loppuosanosoite virhe?)))
-           tieosoitteet))
+          vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
+      (mapv (fn [{:keys [id] :as tieosoite}]
+              (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
+                    loppuosanhakutunnus (loppuosan-vkm-tunniste id)
+                    alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
+                    loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
+                    virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
+                               (vkm-virhe? loppuosanhakutunnus vkm-osoitteet))]
+                (paivita-osoite tieosoite alkuosanosoite loppuosanosoite virhe?)))
+            tieosoitteet))
     tieosoitteet))
 
 (defn pura-tieosoitteet [tieosoitteet]
