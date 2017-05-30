@@ -40,34 +40,46 @@
    {:leveys 1 :otsikko "Maksuerän tunnus"}
    {:leveys 1 :otsikko "Laskut. summa"}])
 
-(defn- hinnoittelurivi [tiedot]
+(defn- kok-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
+
+(defn- yks-hint-hinnoittelurivi [tiedot]
+  [(str (to/reimari-toimenpidetyyppi-fmt
+          (get to/reimari-toimenpidetyypit (:koodi tiedot)))
+        " ("
+        (:maara tiedot)
+        "kpl)") "" "" "" "" ""])
 
 (defn- hinnoittelurivit [tiedot]
   (apply concat
          [[{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
-          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
+          (mapv yks-hint-hinnoittelurivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
+                                                 (:kokonaishintaiset tiedot)))
           [{:otsikko "Kokonaishintaiset: muut"}]
-          [["TODO mitä tähän tulee kun kok. hint. ei hinnoitella Harjassa?"]]
+          (mapv yks-hint-hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
+                                                 (:kokonaishintaiset tiedot)))
           [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
           ;; Hintaryhmättömät. jotka ovat kauppamerenkulkua sekä hintaryhmälliset, joissa
           ;; tehty kauppamerenkulkua
-          (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
-                                                                        (:vaylatyyppi %))))
-                                        tiedot))
+          (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
+                                                                                 (:vaylatyyppi %))))
+                                                 (:yksikkohintaiset tiedot)))
           [{:otsikko "Yksikköhintaiset: muut"}]
           ;; Hintaryhmättömät. jotka ovat väylätyyppiä "muu" sekä hintaryhmälliset, joissa
           ;; työstetty väylätyyppiä "muu"
-          (mapv hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
-                                                                        (:vaylatyyppi %))))
-                                        tiedot))]))
+          (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
+                                                                                 (:vaylatyyppi %))))
+                                                 (:yksikkohintaiset tiedot)))]))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  (into []
-        (map #(konv/array->set % :vaylatyyppi))
-        (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
-                                               :alkupvm alkupvm
-                                               :loppupvm loppupvm})))
+  {:yksikkohintaiset (into []
+                           (map #(konv/array->set % :vaylatyyppi))
+                           (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm}))
+   :kokonaishintaiset (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm})})
 
 (defn- kk-kasittelyrivit [tiedot]
   [["Kauppamerenkulku" "" "" "" "" "" (:kk tiedot)]

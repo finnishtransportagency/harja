@@ -21,3 +21,22 @@ WHERE "urakka-id" = :urakkaid
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
                                   WHERE "hinnoittelu-id" = hinnoittelu.id));
+
+-- name: hae-kokonaishintaiset-toimenpiteet
+SELECT
+  "reimari-toimenpidetyyppi" AS koodi,
+  (SELECT COUNT(id)
+   FROM reimari_toimenpide
+   WHERE "urakka-id" = :urakkaid
+         AND suoritettu >= :alkupvm
+         AND suoritettu <= :loppupvm
+         AND hintatyyppi = 'kokonaishintainen'
+         AND "reimari-toimenpidetyyppi" = rt."reimari-toimenpidetyyppi") as maara,
+  vayla.tyyppi as vaylatyyppi
+FROM reimari_toimenpide rt
+  LEFT JOIN vv_vayla vayla ON rt."vayla-id" = vayla.id
+WHERE "urakka-id" = :urakkaid
+      AND suoritettu >= :alkupvm
+      AND suoritettu <= :loppupvm
+      AND hintatyyppi = 'kokonaishintainen'
+GROUP BY koodi, vayla.tyyppi;
