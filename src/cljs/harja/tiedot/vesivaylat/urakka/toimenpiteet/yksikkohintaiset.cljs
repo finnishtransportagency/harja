@@ -41,7 +41,6 @@
          :hintaryhman-tallennus-kaynnissa? false
          :hintaryhmat nil
          :hintaryhmien-haku-kaynnissa? false
-         :foobar? true
          :toimenpiteet nil
          :hintaryhmien-liittaminen-kaynnissa? false}))
 
