@@ -17,7 +17,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.aikajana :as aikajana]
-            [harja.ui.debug :as debug])
+            [harja.ui.on-off-valinta :as on-off])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
@@ -44,12 +44,6 @@
           (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
           (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
               true)))))
-
-(defn- nayta-aikajana []
-  [kentat/tee-kentta {:tyyppi :toggle
-                      :paalle-teksti "Näytä aikajana"
-                      :pois-teksti "Piilota aikajana"
-                      :toggle! yht/toggle-nayta-aikajana!} yht/nayta-aikajana?])
 
 (defn paivystajalista
   [ur paivystajat tallenna!]
@@ -109,11 +103,13 @@
   "Muunna päivystäjälista aikajanriveiksi. Ryhmitellään tiedot nimen ja organisaation mukaan,
   joten yhdelle päivystäjälle tulee vain yksi uimarata, vaikka hänellä olisi useita
   eri päivystysvuoroja."
-  [paivystajat]
+  [paivystajat vain-urakoitsijat?]
   (let [ryhmitellyt-paivystykset (->> paivystajat
                                       (group-by (juxt :etunimi :sukunimi :organisaatio))
                                       (sort-by first))]
-    (for [[[etunimi sukunimi org] paivystykset] ryhmitellyt-paivystykset]
+    (for [[[etunimi sukunimi org] paivystykset] ryhmitellyt-paivystykset
+          :when (or (not vain-urakoitsijat?)
+                    (= :urakoitsija (:tyyppi org)))]
       {::aikajana/otsikko (str etunimi " " sukunimi)
        ::aikajana/ajat (for [{:keys [alku loppu varahenkilo vastuuhenkilo]} paivystykset]
                          {::aikajana/alku alku
@@ -123,15 +119,28 @@
                           ::aikajana/vari (cond varahenkilo "yellow"
                                                 vastuuhenkilo "green"
                                                 :default "gray")})})))
+
+(defn- aikajana-valinnat []
+  [:div
+   [kentat/tee-kentta {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! yht/toggle-nayta-aikajana!} yht/nayta-aikajana?]
+
+   (when @yht/nayta-aikajana?
+     [on-off/on-off "Kaikki" "Vain urakoitsijan henkilöt"
+      @yht/aikajana-vain-urakoitsijat? yht/toggle-aikajana-vain-urakoitsijat!])])
+
 (defn- aikajana [paivystajat]
   [:div.paivystys-aikajana
-   [nayta-aikajana]
+   [aikajana-valinnat]
+
    (when @yht/nayta-aikajana?
      [:div.paivystajat-aikajana
       [aikajana/aikajana
        {::aikajana/alku (pvm/paivaa-sitten 14)
         ::aikajana/loppu (pvm/paivaa-sitten -60)}
-       (aikajanariveiksi paivystajat)]])])
+       (aikajanariveiksi paivystajat @yht/aikajana-vain-urakoitsijat?)]])])
 
 (defn paivystajat [ur]
   (let [paivystajat (r/atom nil)
