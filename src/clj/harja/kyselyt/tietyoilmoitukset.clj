@@ -196,6 +196,7 @@
                                   organisaatio
                                   kayttaja-id
                                   sijainti]}]
+
   (let [ilmoitukset (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                            (op/and
                              (merge {::t/paatietyoilmoitus op/null?}

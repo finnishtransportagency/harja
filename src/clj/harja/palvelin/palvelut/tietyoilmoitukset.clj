@@ -62,7 +62,7 @@
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
                           :urakat (if urakka
-                                    [urakka]
+                                    #{(:id urakka)}
                                     kayttajan-urakat)
                           :urakattomat? (nil? urakka)
                           :luojaid (when vain-kayttajan-luomat (:id user))
