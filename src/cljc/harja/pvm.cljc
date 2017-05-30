@@ -28,6 +28,10 @@
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
+
+(defn fmt-kuukausi [kk]
+  (get +kuukaudet+ (dec kk)))
+
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])
