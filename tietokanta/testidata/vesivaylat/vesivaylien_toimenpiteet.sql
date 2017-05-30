@@ -387,6 +387,104 @@ VALUES
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
+INSERT INTO reimari_toimenpide
+(hintatyyppi,
+ "urakka-id",
+ "reimari-id",
+ "reimari-urakoitsija",
+ "urakoitsija-id",
+ "reimari-sopimus",
+ "sopimus-id",
+ "reimari-turvalaite",
+ "turvalaite-id",
+ lisatieto,
+ lisatyo,
+ suoritettu,
+ luotu,
+ luoja,
+ "reimari-luotu",
+ "reimari-alus",
+ "reimari-tila",
+ "reimari-toimenpidetyyppi",
+ "reimari-tyolaji",
+ "reimari-tyoluokka",
+ "reimari-vayla",
+ "vayla-id")
+VALUES
+  ('yksikkohintainen',
+    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+    72,
+    '(23, Pohjanmeren venepojat)',
+    (SELECT id
+     FROM organisaatio
+     WHERE nimi = 'Pohjanmeren venepojat'),
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+    '(62, Hietasaaren pienempi poiju, 555)',
+    (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
+    'Poijujen korjausta taas',
+    FALSE,
+    '2017-05-08T23:23Z',
+    '2017-05-08',
+    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+    '2017-05-08',
+    '(MBKE24524, MS Piggy)',
+    '1022541202',
+    '1022542001',
+    '1022541802',
+    '1022541905',
+    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+
+INSERT INTO reimari_toimenpide
+(hintatyyppi,
+ "urakka-id",
+ "reimari-id",
+ "reimari-urakoitsija",
+ "urakoitsija-id",
+ "reimari-sopimus",
+ "sopimus-id",
+ "reimari-turvalaite",
+ "turvalaite-id",
+ lisatieto,
+ lisatyo,
+ suoritettu,
+ luotu,
+ luoja,
+ "reimari-luotu",
+ "reimari-alus",
+ "reimari-tila",
+ "reimari-toimenpidetyyppi",
+ "reimari-tyolaji",
+ "reimari-tyoluokka",
+ "reimari-vayla",
+ "vayla-id")
+VALUES
+  ('yksikkohintainen',
+    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+    72,
+    '(23, Pohjanmeren venepojat)',
+    (SELECT id
+     FROM organisaatio
+     WHERE nimi = 'Pohjanmeren venepojat'),
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+    '(62, Hietasaaren pienempi poiju, 555)',
+    (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
+    'Poijujen korjausta jossain ihan muualla',
+    FALSE,
+    '2017-05-08T23:23Z',
+    '2017-05-08',
+    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+    '2017-05-08',
+    '(MBKE24524, MS Piggy)',
+    '1022541202',
+    '1022542001',
+    '1022541802',
+    '1022541905',
+    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+   (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
+
 INSERT INTO vv_hinnoittelu
 (nimi, "urakka-id", hintaryhma, luoja)
 VALUES
@@ -424,7 +522,7 @@ VALUES
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id")
 VALUES
-  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'),
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta taas'),
    (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus ryhmä'));
 -- ***********************************************
 
