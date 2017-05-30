@@ -110,8 +110,9 @@
   joten yhdelle päivystäjälle tulee vain yksi uimarata, vaikka hänellä olisi useita
   eri päivystysvuoroja."
   [paivystajat]
-  (let [ryhmitellyt-paivystykset (group-by (juxt :etunimi :sukunimi :organisaatio)
-                                           paivystajat)]
+  (let [ryhmitellyt-paivystykset (->> paivystajat
+                                      (group-by (juxt :etunimi :sukunimi :organisaatio))
+                                      (sort-by first))]
     (for [[[etunimi sukunimi org] paivystykset] ryhmitellyt-paivystykset]
       {::aikajana/otsikko (str etunimi " " sukunimi)
        ::aikajana/ajat (for [{:keys [alku loppu varahenkilo vastuuhenkilo]} paivystykset]
@@ -127,7 +128,10 @@
    [nayta-aikajana]
    (when @yht/nayta-aikajana?
      [:div.paivystajat-aikajana
-      [aikajana/aikajana (aikajanariveiksi paivystajat)]])])
+      [aikajana/aikajana
+       {::aikajana/alku (pvm/paivaa-sitten 14)
+        ::aikajana/loppu (pvm/paivaa-sitten -60)}
+       (aikajanariveiksi paivystajat)]])])
 
 (defn paivystajat [ur]
   (let [paivystajat (r/atom nil)
