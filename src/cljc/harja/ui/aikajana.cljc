@@ -262,7 +262,7 @@
                        :width (- leveys alku-x)
                        :height taustapalkin-korkeus
                        :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
-               (map-indexed
+               (keep-indexed
                 (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                         teksti ::teksti :as jana}]
                   (let [[alku loppu] (if (and drag (= (::drag drag)
@@ -277,34 +277,35 @@
                         y (if vari (inc y) y)
                         korkeus (if vari (- jana-korkeus 2) jana-korkeus)
                         voi-raahata? (some? (::drag jana))]
-                    ^{:key j}
-                    [:g
-                     [:rect {:x x :y y
-                             :width width
-                             :height korkeus
-                             :fill (or vari "white")
-                             ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                             ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                             :fill-opacity (if vari 1.0 0.0)
-                             :stroke reuna
-                             :rx 3 :ry 3
-                             :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                                             :y (hover-y y)
-                                                             :text teksti})
-                             :on-mouse-out hide-tooltip!
-                             }]
-                     ;; kahvat draggaamiseen
-                     (when voi-raahata?
-                       [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                               :style {:fill "white" :opacity 0.0
-                                       :cursor "ew-resize"}
-                               :on-mouse-down #(drag-start! % jana ::alku)}])
-                     (when voi-raahata?
-                       [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
-                               :style {:fill "white" :opacity 0.0
-                                       :cursor "ew-resize"}
-                               :on-mouse-down #(drag-start! % jana ::loppu)}])
-                     ]))
+                    (when (pos? width)
+                      ^{:key j}
+                      [:g
+                       [:rect {:x x :y y
+                               :width width
+                               :height korkeus
+                               :fill (or vari "white")
+                               ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                               ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                               :fill-opacity (if vari 1.0 0.0)
+                               :stroke reuna
+                               :rx 3 :ry 3
+                               :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                                               :y (hover-y y)
+                                                               :text teksti})
+                               :on-mouse-out hide-tooltip!
+                               }]
+                       ;; kahvat draggaamiseen
+                       (when voi-raahata?
+                         [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::alku)}])
+                       (when voi-raahata?
+                         [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::loppu)}])
+                       ])))
                 ajat)
                [:text {:x 0 :y (+ text-y-offset y)
                        :font-size 10}
