@@ -5,10 +5,10 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [clojure.set]
+    [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]
-    [specql.rel :as rel]]
+    [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -20,8 +20,7 @@
     "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["vv_vayla" ::vayla
-   {
-    #?@(:clj [::turvalaitteet (rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)])}])
+   {::turvalaitteet (rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)}])
 
 (def tyypit (s/describe ::tyyppi))
 

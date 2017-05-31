@@ -12,10 +12,10 @@
             [clojure.string :as str]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
+            [specql.rel :as rel]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]
-            [specql.rel :as rel]]))
+            [clojure.future :refer :all]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -250,17 +250,16 @@ reimari-tilat
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
     "lisatyo" ::lisatyo?
-    #?@(:clj
-        [::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
-         ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
-         ::urakka (rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
-         ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
-         ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-         ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
-         ::hinnoittelu-linkit (rel/has-many
-                                ::id
-                                ::h/hinnoittelu<->toimenpide
-                                ::h/toimenpide-id)])}])
+    ::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
+    ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+    ::urakka (rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
+    ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
+    ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
+    ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::hinnoittelu-linkit (rel/has-many
+                           ::id
+                           ::h/hinnoittelu<->toimenpide
+                           ::h/toimenpide-id)}])
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
