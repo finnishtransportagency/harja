@@ -1,4 +1,4 @@
-(ns harja.domain.laadunseuranta.tarkastukset)
+(ns harja.domain.laadunseuranta.tarkastus)
 
 (def +tarkastustyyppi->nimi+
   {:tiesto "Tiestötarkastus"
