@@ -250,6 +250,7 @@
          Kohteet on kuitenkin tallennettu Harjaan."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
+           ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
      (when-not (empty? epaonnistuneet-tallennukset)
        [:div
@@ -257,6 +258,7 @@
          "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
          (for [kohde epaonnistuneet-tallennukset]
+           ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
 
      [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))

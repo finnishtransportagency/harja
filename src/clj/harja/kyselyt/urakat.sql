@@ -350,7 +350,7 @@ VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: u
 INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
                     harjassa_luotu, luotu, luoja, sampoid)
 VALUES (:nimi, :urakkanro, :alkupvm, :loppupvm, :alue, :hallintayksikko, :urakoitsija, :hanke, 'vesivayla-hoito',
-               TRUE, NOW(), :kayttaja, (SELECT 'HAR-' || currval(pg_get_serial_sequence('urakka', 'id'))));
+               TRUE, NOW(), :kayttaja, (SELECT 'PRHAR' || LPAD(currval(pg_get_serial_sequence('urakka', 'id'))::text, 5, '0')));
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
