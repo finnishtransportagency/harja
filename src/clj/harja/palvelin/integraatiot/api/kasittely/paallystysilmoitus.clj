@@ -67,17 +67,17 @@
     (:id muokattu-paallystysilmoitus)))
 
 (defn pura-paallystysilmoitus [vkm db kohteen-tienumero data]
-  (let [paallystysilmoitus (-> (:paallystysilmoitus data)
-                               (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
-                               (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))))
-        kohde (update (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero (:yllapitokohde paallystysilmoitus))
-                      :alikohteet
-                      #(map (fn [a]
-                              (-> a
-                                  (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
-                                  (assoc-in [:sijainti :numero] kohteen-tienumero)))
-                            %))]
-    (assoc paallystysilmoitus :yllapitokohde kohde)))
+  (let [paallystysilmoitus (:paallystysilmoitus data)
+        alustatoimenpiteet (mapv :alustatoimenpide (:alustatoimenpiteet paallystysilmoitus))
+        alikohteet (mapv #(assoc-in (:alikohde %) [:sijainti :numero] kohteen-tienumero)
+                         (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
+        _ (println "--->>> alikohteet" alikohteet)
+        muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
+                              (assoc-in [:sijainti :numero] kohteen-tienumero)
+                              (assoc :alikohteet alikohteet))
+        muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero muunnettava-kohde)]
+    (println "--->>> muunnettu-kohde" muunnettu-kohde)
+    (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde :alustatoimenpiteet alustatoimenpiteet)))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
@@ -102,7 +102,6 @@
     (let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
           purettu-paallystysilmoitus (pura-paallystysilmoitus vkm db kohteen-tienumero data)
-          _ (println "--->>> purettu-paallystysilmoitus" purettu-paallystysilmoitus)
           valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
           _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
           id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde purettu-paallystysilmoitus valmis-kasiteltavaksi)]

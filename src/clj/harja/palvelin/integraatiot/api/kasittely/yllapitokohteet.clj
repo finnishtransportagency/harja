@@ -36,6 +36,7 @@
 
 (defn paivita-alikohteet-paallystysilmoituksesta [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+  (println "---->>>" alikohteet)
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)

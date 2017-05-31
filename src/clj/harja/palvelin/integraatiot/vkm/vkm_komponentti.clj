@@ -9,7 +9,10 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol Tieosoitemuunnos
-  (muunna-osoitteet-verkolta-toiselle [this tieosoiteet paivan-verkolta paivan-verkolle]))
+  (muunna-osoitteet-verkolta-toiselle
+    [this tieosoiteet paivan-verkolta paivan-verkolle]
+    "Muuntaa annetut tieosoitteet päivän verkolta toiselle. Jokaisella tieosoitteella täytyy olla mäpissä :vkm-id avain
+    kohdistamista varten."))
 
 (defn alkuosan-vkm-tunniste [tunniste]
   (str tunniste "-alku"))
@@ -40,9 +43,9 @@
   (if (and vastaus (.contains vastaus "json("))
     (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
           vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
-      (mapv (fn [{:keys [id] :as tieosoite}]
-              (let [alkuosanhakutunnus (alkuosan-vkm-tunniste id)
-                    loppuosanhakutunnus (loppuosan-vkm-tunniste id)
+      (mapv (fn [{:keys [vkm-id] :as tieosoite}]
+              (let [alkuosanhakutunnus (alkuosan-vkm-tunniste vkm-id)
+                    loppuosanhakutunnus (loppuosan-vkm-tunniste vkm-id)
                     alkuosanosoite (hae-vkm-osoite vkm-osoitteet alkuosanhakutunnus)
                     loppuosanosoite (hae-vkm-osoite vkm-osoitteet loppuosanhakutunnus)
                     virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-osoitteet)
@@ -53,9 +56,9 @@
 
 (defn pura-tieosoitteet [tieosoitteet]
   (reduce into []
-          (map (fn [{:keys [tie aosa aet losa let ajr id]}]
-                 [{:tunniste (alkuosan-vkm-tunniste id) :tie tie :osa aosa :ajorata ajr :etaisyys aet}
-                  {:tunniste (loppuosan-vkm-tunniste id) :tie tie :osa losa :ajorata ajr :etaisyys let}])
+          (map (fn [{:keys [tie aosa aet losa let ajr vkm-id]}]
+                 [{:tunniste (alkuosan-vkm-tunniste vkm-id) :tie tie :osa aosa :ajorata ajr :etaisyys aet}
+                  {:tunniste (loppuosan-vkm-tunniste vkm-id) :tie tie :osa losa :ajorata ajr :etaisyys let}])
                tieosoitteet)))
 
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]

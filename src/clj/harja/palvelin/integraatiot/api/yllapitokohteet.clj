@@ -136,8 +136,8 @@
                   (assoc :id kohde-id)
                   (assoc-in [:sijainti :tie] kohteen-tienumero))
         kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero kohde)
-        alikohteet (mapv #(-> %
-                              (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
+        alikohteet (mapv #(-> (:alikohde %)
+                              (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
                               (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))
         kohteen-sijainti (:sijainti kohde)]
