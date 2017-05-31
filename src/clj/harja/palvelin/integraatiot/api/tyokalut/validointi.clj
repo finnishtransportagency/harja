@@ -111,7 +111,6 @@
 
 (defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
-    (println "---->>> " kohteen-sijainti alikohteet)
     (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))

@@ -40,8 +40,7 @@
                                              (dissoc :vkm-id))
                                          (dissoc alikohde :vkm-id)))
                                      muunnettavat-alikohteet)]
-      (do
-        (-> kohde
-           (assoc :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet)
-           (dissoc :vkm-id))))
+      (-> kohde
+          (assoc :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet)
+          (dissoc :vkm-id)))
     kohde))
