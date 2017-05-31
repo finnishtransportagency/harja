@@ -10,11 +10,23 @@
 (defn- hae-sijainti [osoitteet vkm-id]
   (first (filter #(= vkm-id (:vkm-id %)) osoitteet)))
 
-(defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero {:keys [sijainti alikohteet] :as kohde}]
-  (if-let [karttapvm (:karttapvm sijainti)]
+(defn harjan-verkon-pvm [db]
+  (or (q-geometriapaivitykset/hae-karttapvm db) (pvm/nyt)))
+
+(defn yhdista-osoitteet [alkuperaiset muunnetut-sijainnit]
+  (mapv (fn [{:keys [sijainti vkm-id] :as a}]
+          (if (sisaltaa-sijainnin? muunnetut-sijainnit vkm-id)
+            (-> a
+                (assoc :sijainti (dissoc
+                                   (merge sijainti (hae-sijainti muunnetut-sijainnit vkm-id))
+                                   :vkm-id))
+                (dissoc :vkm-id))
+            (dissoc a :vkm-id)))
+        alkuperaiset))
+
+(defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
+  (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
-          karttapvm (parametrit/pvm-aika karttapvm)
-          harjan-verkon-vpm (or (q-geometriapaivitykset/hae-karttapvm db) (pvm/nyt))
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
                                                  (assoc alikohde
                                                    :vkm-id (str "alikohde-" i)
@@ -26,21 +38,29 @@
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettavat-sijainnit
-                                harjan-verkon-vpm
+                                (harjan-verkon-pvm db)
                                 karttapvm)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
                                        sijainti)
-          muunnetut-alikohteet (mapv (fn [{:keys [sijainti vkm-id] :as alikohde}]
-                                       (if (sisaltaa-sijainnin? muunnetut-sijainnit vkm-id)
-                                         (-> alikohde
-                                             (assoc :sijainti (dissoc
-                                                                (merge sijainti (hae-sijainti muunnetut-sijainnit vkm-id))
-                                                                :vkm-id))
-                                             (dissoc :vkm-id))
-                                         (dissoc alikohde :vkm-id)))
-                                     muunnettavat-alikohteet)]
+          muunnetut-alikohteet (yhdista-osoitteet muunnettavat-alikohteet muunnetut-sijainnit)]
       (-> kohde
           (assoc :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet)
           (dissoc :vkm-id)))
     kohde))
+
+(defn muunna-alustatoimenpiteiden-tieosoitteet [vkm db kohteen-tienumero karttapvm alustatoimenpiteet]
+  (if karttapvm
+    (let [muunnettevat-alustatoimenpiteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
+                                                         (assoc alikohde
+                                                           :vkm-id (str "alustatoimenpide-" i)
+                                                           :sijainti (assoc sijainti :tie kohteen-tienumero)))
+                                                       alustatoimenpiteet)
+          muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
+                                vkm
+                                muunnettevat-alustatoimenpiteet
+                                (harjan-verkon-pvm db)
+                                karttapvm)
+          muunnetut-alustatoimenpiteet (yhdista-osoitteet muunnettevat-alustatoimenpiteet muunnetut-sijainnit)]
+      muunnetut-alustatoimenpiteet)
+    alustatoimenpiteet))

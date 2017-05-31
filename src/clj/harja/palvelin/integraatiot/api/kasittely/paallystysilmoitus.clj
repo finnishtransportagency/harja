@@ -13,7 +13,8 @@
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
-            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet])
+            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
@@ -68,14 +69,29 @@
 
 (defn pura-paallystysilmoitus [vkm db kohteen-tienumero data]
   (let [paallystysilmoitus (:paallystysilmoitus data)
-        alustatoimenpiteet (mapv :alustatoimenpide (:alustatoimenpiteet paallystysilmoitus))
+        alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero] kohteen-tienumero)
+                                 (:alustatoimenpiteet paallystysilmoitus))
         alikohteet (mapv #(assoc-in (:alikohde %) [:sijainti :numero] kohteen-tienumero)
                          (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
         muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
                               (assoc-in [:sijainti :numero] kohteen-tienumero)
                               (assoc :alikohteet alikohteet))
-        muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero muunnettava-kohde)]
-    (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde :alustatoimenpiteet alustatoimenpiteet)))
+        karttapvm (parametrit/pvm-aika (get-in muunnettava-kohde [:sijainti :karttapvm]))
+        muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet
+                          vkm
+                          db
+                          kohteen-tienumero
+                          karttapvm muunnettava-kohde)
+        muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
+                                       vkm
+                                       db
+                                       kohteen-tienumero
+                                       karttapvm
+                                       alustatoimenpiteet)
+        _ (println "----->>>>> muunnetut-alustatoimenpiteet" muunnetut-alustatoimenpiteet)
+        ]
+    (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde
+                              :alustatoimenpiteet muunnetut-alustatoimenpiteet)))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))

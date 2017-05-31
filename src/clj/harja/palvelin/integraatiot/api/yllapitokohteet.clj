@@ -68,7 +68,8 @@
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet])
+            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -140,8 +141,8 @@
                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
                                       (:alikohteet kohde))
         muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero muunnettava-kohde)
-        _ (println "--->>>" kohde)
+        karttapvm (parametrit/pvm-aika (get-in muunnettava-kohde [:sijainti :karttapvm]))
+        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
         kohteen-sijainti (:sijainti kohde)
         alikohteet (:alikohteet kohde)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
