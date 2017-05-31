@@ -211,7 +211,9 @@
     (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
       (let [tulos! (tuck/send-async! ->ValitutLiitetty)
             fail! (tuck/send-async! ->ValitutEiLiitetty)
-            parametrit {}]
+            parametrit {::to/idt (map ::to/id valitut)
+                        ::h/id (::h/id hintaryhma)
+                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
         (try
           (go
             (let [vastaus (<! (k/post! :liita-toimenpiteet-hinnoitteluun parametrit))]
