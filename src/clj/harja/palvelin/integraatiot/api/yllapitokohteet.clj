@@ -69,7 +69,8 @@
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]       
+            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -80,14 +81,15 @@
                        (:kayttajanimi kayttaja)
                        (:id kayttaja)))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [yllapitokohteet (into []
+    (let [karttapvm (q-geometriapaivitykset/hae-karttapvm db)
+          yllapitokohteet (into []
                                 (map konv/alaviiva->rakenne)
                                 (q-yllapitokohteet/hae-kaikki-urakan-yllapitokohteet db {:urakka urakka-id}))
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
                             :id)]
-      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
+      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet karttapvm))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
   (when (and (some? (:paallystys-valmis aikataulu))

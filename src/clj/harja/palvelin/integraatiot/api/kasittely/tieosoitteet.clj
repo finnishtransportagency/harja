@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.api.kasittely.tieosoitteet
-  (:require [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+  (:require [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.pvm :as pvm]))
 
