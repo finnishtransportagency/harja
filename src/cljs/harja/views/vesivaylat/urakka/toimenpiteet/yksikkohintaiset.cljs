@@ -23,11 +23,17 @@
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
    hintaryhmat])
 
-(defn lisaysnappi [e! {:keys [toimenpiteet] :as app}]
+(defn lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
+                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
-   "Lisää"
-   #(log "Painoit nappia")
-   {:disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}])
+   (if hintaryhmien-liittaminen-kaynnissa?
+     [yleiset/ajax-loader-pieni "Liitetään.."]
+     "Liitä")
+   #(e! (tiedot/->LiitaValitutHintaryhmaan
+          valittu-hintaryhma
+          (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
+   {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
+                  hintaryhmien-liittaminen-kaynnissa?)}])
 
 (defn ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
                                 hintaryhman-tallennus-kaynnissa?] :as app}]
@@ -40,7 +46,7 @@
         uusi-hintaryhma
         #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
      [napit/yleinen-ensisijainen
-      (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."]  "Luo")
+      (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."] "Luo")
       #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
       {:disabled hintaryhman-tallennus-kaynnissa?}]
      [napit/yleinen-ensisijainen "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
