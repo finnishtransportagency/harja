@@ -24,7 +24,7 @@ SELECT
                 WHERE "hinnoittelu-id" = hinnoittelu.id)
    ORDER BY suoritettu
    LIMIT 1)
-                                            AS ensimmainen_toimenpide,
+                                            AS "ensimmainen-toimenpide",
   (SELECT suoritettu
    FROM reimari_toimenpide
    WHERE id IN (SELECT "toimenpide-id"
@@ -32,7 +32,7 @@ SELECT
                 WHERE "hinnoittelu-id" = hinnoittelu.id)
    ORDER BY suoritettu DESC
    LIMIT 1)
-                                            AS viimeinen_toimenpide
+                                            AS "viimeinen-toimenpide"
 FROM vv_hinnoittelu hinnoittelu
 WHERE "urakka-id" = :urakkaid
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä

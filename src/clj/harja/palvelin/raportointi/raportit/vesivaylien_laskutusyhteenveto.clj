@@ -38,7 +38,7 @@
    {:leveys 1 :otsikko "Laskun n:o"}
    {:leveys 1 :otsikko "Laskutus pvm"}
    {:leveys 1 :otsikko "Maksuerän tunnus"}
-   {:leveys 1 :otsikko "Laskut. summa"}])
+   {:leveys 1 :otsikko "Laskut. summa" :fmt :raha}])
 
 (defn- kok-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
@@ -69,29 +69,47 @@
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset (into []
-                           (map #(konv/array->set % :vaylatyyppi))
+                           (comp
+                             (map #(konv/array->set % :vaylatyyppi))
+                             (map #(assoc % :ensimmainen-toimenpide (c/from-date (:ensimmainen-toimenpide %))))
+                             (map #(assoc % :viimeinen-toimenpide (c/from-date (:viimeinen-toimenpide %)))))
                            (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                   :alkupvm alkupvm
                                                                   :loppupvm loppupvm}))
-   :kokonaishintaiset (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
-                                                              :alkupvm alkupvm
-                                                              :loppupvm loppupvm})})
+   :kokonaishintaiset (vec (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                                   :alkupvm alkupvm
+                                                                   :loppupvm loppupvm}))})
 
-(defn- kk-kasittelyrivit [tiedot]
-  [["Kauppamerenkulku" "" "" "" "" "" (:kk-vali-tekstina tiedot)]
-   ["Muu" "" "" "" "" "" (:kk-vali-tekstina tiedot)]])
+(defn- kk-kasittelyrivit [raportin-tiedot kk-vali]
+  (let [hinta (fn [hinnoittelut vaylatyyppi kk-vali]
+                (let [osuvat-rivit (filter #(and (or (not (empty? (set/intersection #{vaylatyyppi}
+                                                                                    (:vaylatyyppi %))))
+                                                     (= (:vaylatyyppi %) vaylatyyppi))
+                                                 (or (pvm/valissa? (:ensimmainen-toimenpide %)
+                                                                   (first (:kk-vali kk-vali))
+                                                                   (second (:kk-vali kk-vali)))
+                                                     (pvm/valissa? (:viimeinen-toimenpide %)
+                                                                   (first (:kk-vali kk-vali))
+                                                                   (second (:kk-vali kk-vali)))))
+                                           hinnoittelut)]
+                  (reduce + 0 (map :summa osuvat-rivit))))
+        kauppamerenkulku-hinta (hinta (:yksikkohintaiset raportin-tiedot) "kauppamerenkulku" kk-vali)
+        muu-hinta (hinta (:yksikkohintaiset raportin-tiedot) "muu" kk-vali)]
+    [["Kauppamerenkulku" "" "" "" "" "" (:kk-tekstina kk-vali) "" "" "" "" "" kauppamerenkulku-hinta]
+     ["Muu" "" "" "" "" "" (:kk-tekstina kk-vali) "" "" "" "" "" muu-hinta]]))
 
-(defn- kk-erittelyrivit [alkupvm loppupvm]
+(defn- kk-erittelyrivit [raportin-tiedot alkupvm loppupvm]
   (let [kk-valit (pvm/aikavalin-kuukausivalit [(pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))
                                                (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm))])
-        kk-valit-formatoitu (mapv
-                              #(-> {:kk-vali %
-                                    :kk-vali-tekstina (str (pvm/kk-fmt (t/month (first %)))
-                                                           " "
-                                                           (t/year (first %)))})
-                              kk-valit)]
+        kk-valit (mapv
+                   #(-> {:kk-vali %
+                         :kk (t/month (first %))
+                         :kk-tekstina (str (pvm/kk-fmt (t/month (first %)))
+                                           " "
+                                           (t/year (first %)))})
+                   kk-valit)]
     (apply concat
-           (mapv kk-kasittelyrivit kk-valit-formatoitu))))
+           (mapv (partial kk-kasittelyrivit raportin-tiedot) kk-valit))))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
@@ -99,7 +117,7 @@
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
         hinnoittelu (hinnoittelurivit raportin-tiedot)
-        kk-erittely (kk-erittelyrivit alkupvm loppupvm)
+        kk-erittely (kk-erittelyrivit raportin-tiedot alkupvm loppupvm)
         toimenpiteiden-erittely []
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
