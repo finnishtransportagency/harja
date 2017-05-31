@@ -87,9 +87,7 @@
                                        db
                                        kohteen-tienumero
                                        karttapvm
-                                       alustatoimenpiteet)
-        _ (println "----->>>>> muunnetut-alustatoimenpiteet" muunnetut-alustatoimenpiteet)
-        ]
+                                       alustatoimenpiteet)]
     (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde
                               :alustatoimenpiteet muunnetut-alustatoimenpiteet)))
 
