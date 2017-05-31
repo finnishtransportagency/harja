@@ -71,12 +71,10 @@
         alustatoimenpiteet (mapv :alustatoimenpide (:alustatoimenpiteet paallystysilmoitus))
         alikohteet (mapv #(assoc-in (:alikohde %) [:sijainti :numero] kohteen-tienumero)
                          (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
-        _ (println "--->>> alikohteet" alikohteet)
         muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
                               (assoc-in [:sijainti :numero] kohteen-tienumero)
                               (assoc :alikohteet alikohteet))
         muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero muunnettava-kohde)]
-    (println "--->>> muunnettu-kohde" muunnettu-kohde)
     (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde :alustatoimenpiteet alustatoimenpiteet)))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]

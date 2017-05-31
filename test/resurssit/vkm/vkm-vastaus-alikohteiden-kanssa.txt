@@ -7,7 +7,7 @@ json(
           "osa": 1,
           "etaisyys": 1,
           "tie": 20,
-          "tunniste": "[KOHDEID]-alku"
+          "tunniste": "paakohde-alku"
         },
         {
           "ajorata": 1,
@@ -15,7 +15,7 @@ json(
           "osa": 4,
           "etaisyys": 100,
           "tie": 20,
-          "tunniste": "[KOHDEID]-loppu"
+          "tunniste": "paakohde-loppu"
         },
         {
           "ajorata": 1,
@@ -23,7 +23,7 @@ json(
           "osa": 1,
           "etaisyys": 1,
           "tie": 20,
-          "tunniste": "1-alku"
+          "tunniste": "alikohde-0-alku"
         },
         {
           "ajorata": 1,
@@ -31,7 +31,7 @@ json(
           "osa": 1,
           "etaisyys": 100,
           "tie": 20,
-          "tunniste": "1-loppu"
+          "tunniste": "alikohde-0-loppu"
         },
         {
           "ajorata": 1,
@@ -39,7 +39,7 @@ json(
           "osa": 1,
           "etaisyys": 100,
           "tie": 20,
-          "tunniste": "2-alku"
+          "tunniste": "alikohde-1-alku"
         },
         {
           "ajorata": 1,
@@ -47,7 +47,7 @@ json(
           "osa": 4,
           "etaisyys": 100,
           "tie": 20,
-          "tunniste": "2-loppu"
+          "tunniste": "alikohde-1-loppu"
         }
       ]
     }
