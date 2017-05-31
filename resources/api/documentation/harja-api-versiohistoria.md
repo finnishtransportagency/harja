@@ -3,7 +3,7 @@
 
 <b>Versiohistoria:</b>
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:
-    - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle.
+    - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle. Samoin ylläpitokohteiden mukana välitetään tieto, minkä päivän verkolla ylläpitokohteet ovat Harjassa.
 - Versionumero: 1.0.25 Julkaistu: 15.5.2017:
     - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain
 - Versionumero: 1.0.24 Julkaistu: 5.5.2017:
