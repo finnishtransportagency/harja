@@ -15,11 +15,11 @@
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
 
 (def hinnoittelusarakkeet
-  [{:leveys 3 :otsikko "Hinnoittelu"}
+  [{:leveys 3 :otsikko "Hinnoit\u00ADtelu"}
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
-   {:leveys 1 :otsikko "Tilausvaltuus [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Suunnitellut [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Tilaus\u00ADvaltuus [t €]" :fmt :raha}
+   {:leveys 1 :otsikko "Suunni\u00ADtellut [t €] HOX PITÄISIKÖ OLLA KPL?" :fmt :raha}
    {:leveys 1 :otsikko "Toteutunut [t €]" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä (S+T) [t €]" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä [€]" :fmt :raha}
@@ -30,11 +30,11 @@
    {:leveys 1 :otsikko "Kuvaus / Erä"}
    {:leveys 1 :otsikko "Tarjousp. V-kirje"}
    {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunnitellut kust. [€]" :fmt :raha}
+   {:leveys 1 :otsikko "Suunni\u00ADtellut kust. [€]" :fmt :raha}
    {:leveys 1 :otsikko "Tilaus V-kirje"}
    {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunniteltu valmistumispvm"}
-   {:leveys 1 :otsikko "Valmistusmispvm"}
+   {:leveys 1 :otsikko "Suunni\u00ADteltu valmis\u00ADtumispvm"}
+   {:leveys 1 :otsikko "Valmistu\u00ADmispvm"}
    {:leveys 1 :otsikko "Laskun n:o"}
    {:leveys 1 :otsikko "Laskutus pvm"}
    {:leveys 1 :otsikko "Maksuerän tunnus"}
@@ -96,7 +96,10 @@
                                                                   :loppupvm loppupvm}))
    :kokonaishintaiset (vec (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                    :alkupvm alkupvm
-                                                                   :loppupvm loppupvm}))})
+                                                                   :loppupvm loppupvm}))
+   :toimenpiteet (vec (hae-toimenpiteet db {:urakkaid urakka-id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm}))})
 
 (defn- kk-kasittelyrivi [kk kauppamerenkulku-hinta hinta-muu]
   [["Kauppamerenkulku"
@@ -156,6 +159,33 @@
     (apply concat
            (mapv (partial kk-kasittelyrivit raportin-tiedot) kk-valit))))
 
+(defn- hinnoittelun-toimenpiteet [hinnoittelu toimenpiteet]
+  (apply concat
+         [[{:otsikko (or hinnoittelu "Muut")}]
+          (mapv (fn [toimenpide]
+                  [(to/reimari-toimenpidetyyppi-fmt
+                     (get to/reimari-toimenpidetyypit (:toimenpide toimenpide)))
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   (pvm/pvm-opt (:suoritettu toimenpide))
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
+                toimenpiteet)]))
+
+(defn- toimenpiteiden-erittelyrivit [raportin-tiedot]
+  (let [hinnoittelulla-ryhmiteltyna (group-by :hinnoittelu-id
+                                              (:toimenpiteet raportin-tiedot))]
+    (vec (mapcat (fn [hinnoittelu-id]
+                   (let [hinnoittelun-nimi (:hinnoittelu (first (get hinnoittelulla-ryhmiteltyna hinnoittelu-id)))]
+                     (hinnoittelun-toimenpiteet hinnoittelun-nimi (get hinnoittelulla-ryhmiteltyna hinnoittelu-id))))
+                 (reverse (sort (keys hinnoittelulla-ryhmiteltyna)))))))
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
                                             :urakka-id urakka-id
@@ -163,7 +193,7 @@
                                             :loppupvm loppupvm})
         hinnoittelu (hinnoittelurivit raportin-tiedot)
         kk-erittely (kk-erittelyrivit raportin-tiedot alkupvm loppupvm)
-        toimenpiteiden-erittely []
+        toimenpiteiden-erittely (toimenpiteiden-erittelyrivit raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
@@ -183,5 +213,5 @@
      [:taulukko {:otsikko "Toimenpiteiden erittely"
                  :tyhja (if (empty? toimenpiteiden-erittely) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      toimenpiteiden-erittely
-      []]]))
+      erittelysarakkeet
+      toimenpiteiden-erittely]]))

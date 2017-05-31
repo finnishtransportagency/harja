@@ -64,3 +64,17 @@ WHERE "urakka-id" = :urakkaid
       AND suoritettu <= :loppupvm
       AND hintatyyppi = 'kokonaishintainen'
 GROUP BY koodi, vayla.tyyppi;
+
+-- name: hae-toimenpiteet
+SELECT
+  rt.id as "toimenpide-id",
+  "reimari-toimenpidetyyppi" as toimenpide,
+  hinnoittelu.nimi as "hinnoittelu",
+  hinnoittelu.id as "hinnoittelu-id",
+  rt.suoritettu
+FROM reimari_toimenpide rt
+  lEFT JOIN vv_hinnoittelu_toimenpide vht ON vht."toimenpide-id" = rt.id
+  LEFT JOIN vv_hinnoittelu hinnoittelu ON vht."hinnoittelu-id" = hinnoittelu.id
+WHERE rt."urakka-id" = :urakkaid
+      AND suoritettu >= :alkupvm
+      AND suoritettu <= :loppupvm
