@@ -147,7 +147,7 @@
                 (get-in data [:siltatarkastus :sillantarkastuskohteet])
                 siltatarkastus-id)
               (tee-kirjausvastauksen-body {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"})))
-          (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+          (throw+ {:type virheet/+viallinen-kutsu+
                    :virheet [{:koodi virheet/+tuntematon-silta+
                               :viesti (str "Siltaa ei löydy tunnuksella: " siltatunnus)}]}))))))
 
