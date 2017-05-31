@@ -78,16 +78,17 @@
                                                               :loppupvm loppupvm})})
 
 (defn- kk-kasittelyrivit [tiedot]
-  [["Kauppamerenkulku" "" "" "" "" "" (:kk tiedot)]
-   ["Muu" "" "" "" "" "" (:kk tiedot)]])
+  [["Kauppamerenkulku" "" "" "" "" "" (:kk-vali-tekstina tiedot)]
+   ["Muu" "" "" "" "" "" (:kk-vali-tekstina tiedot)]])
 
 (defn- kk-erittelyrivit [alkupvm loppupvm]
   (let [kk-valit (pvm/aikavalin-kuukausivalit [(pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))
                                                (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm))])
         kk-valit-formatoitu (mapv
-                              #(-> {:kk (str (pvm/kk-fmt (t/month (first %)))
-                                             " "
-                                             (t/year (first %)))})
+                              #(-> {:kk-vali %
+                                    :kk-vali-tekstina (str (pvm/kk-fmt (t/month (first %)))
+                                                           " "
+                                                           (t/year (first %)))})
                               kk-valit)]
     (apply concat
            (mapv kk-kasittelyrivit kk-valit-formatoitu))))
