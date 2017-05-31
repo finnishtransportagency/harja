@@ -34,11 +34,13 @@
                       })
 
 (defn kasittele-vastaus [db vastaus-xml]
-  (log/debug "kasittele-vastaus" vastaus-xml)
+  ;; (log/debug "kasittele-vastaus" vastaus-xml)
+
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
+                       (do  (println "upsertoidaan" (rename-keys toimenpide-tiedot avainmuunnokset))
+                            (specql/upsert! db ::toimenpide/reimari-toimenpide
+                                            (rename-keys toimenpide-tiedot avainmuunnokset))))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
@@ -66,6 +68,7 @@
                         :muutosaika muutosaika}
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
+    (def *b body)
     (kasittele-vastaus db body)))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
@@ -79,6 +82,24 @@
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet" "reimari")]
+    (if-not muutosaika
+      (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
+      (lukko/yrita-ajaa-lukon-kanssa
+       db "reimari-hae-toimenpiteet"
+       (fn []
+         (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "reimari" "hae-toimenpiteet"
+          #(hae-toimenpiteet* % db pohja-url kayttajatunnus salasana muutosaika)))))))
+
+#_(defn hae-toimenpiteet-test []
+  (let [;; muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet" "reimari")
+        muutosaika #inst "2017-05-28"
+        db (:db harja.palvelin.main/harja-jarjestelma)
+        integraatioloki (:integraatioloki harja.palvelin.main/harja-jarjestelma)
+        kayttajatunnus "harja"
+        salasana *ss
+        pohja-url "https://testioag.liikennevirasto.fi/Reimari/HarjaWebservice"
+        ]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
