@@ -22,3 +22,6 @@ ADD COLUMN "reimari-komponentit" toimenpidehaun_komponentti[]
       NOT NULL
       CHECK (toimenpidehaun_komponentit_ok("reimari-komponentit"))
       DEFAULT '{}';
+
+ALTER TABLE reimari_toimenpide
+DROP CONSTRAINT "reimari_toimenpide_reimari-alus_check";
