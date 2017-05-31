@@ -41,14 +41,32 @@
    {:leveys 1 :otsikko "Laskut. summa" :fmt :raha}])
 
 (defn- kok-hint-hinnoittelurivi [tiedot]
-  [(:hinnoittelu tiedot) "" "" "" "" (:summa tiedot)])
+  [(:hinnoittelu tiedot)
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   (:summa tiedot)
+   (:summa tiedot)
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
   [(str (to/reimari-toimenpidetyyppi-fmt
           (get to/reimari-toimenpidetyypit (:koodi tiedot)))
         " ("
         (:maara tiedot)
-        "kpl)") "" "" "" "" ""])
+        "kpl)")
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
 
 (defn- hinnoittelurivit [tiedot]
   (apply concat
@@ -80,6 +98,34 @@
                                                                    :alkupvm alkupvm
                                                                    :loppupvm loppupvm}))})
 
+(defn- kk-kasittelyrivi [kk kauppamerenkulku-hinta hinta-muu]
+  [["Kauppamerenkulku"
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    kk
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    kauppamerenkulku-hinta]
+   ["Muu"
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    kk
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    hinta-muu]])
+
 (defn- kk-kasittelyrivit [raportin-tiedot kk-vali]
   (let [hinta (fn [hinnoittelut vaylatyyppi kk-vali]
                 (let [osuvat-rivit (filter #(and (or (not (empty? (set/intersection #{vaylatyyppi}
@@ -95,8 +141,7 @@
                   (reduce + 0 (map :summa osuvat-rivit))))
         kauppamerenkulku-hinta (hinta (:yksikkohintaiset raportin-tiedot) "kauppamerenkulku" kk-vali)
         muu-hinta (hinta (:yksikkohintaiset raportin-tiedot) "muu" kk-vali)]
-    [["Kauppamerenkulku" "" "" "" "" "" (:kk-tekstina kk-vali) "" "" "" "" "" kauppamerenkulku-hinta]
-     ["Muu" "" "" "" "" "" (:kk-tekstina kk-vali) "" "" "" "" "" muu-hinta]]))
+    (kk-kasittelyrivi (:kk-tekstina kk-vali) kauppamerenkulku-hinta muu-hinta)))
 
 (defn- kk-erittelyrivit [raportin-tiedot alkupvm loppupvm]
   (let [kk-valit (pvm/aikavalin-kuukausivalit [(pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))
