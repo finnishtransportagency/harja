@@ -6,8 +6,8 @@ SELECT
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
   (SELECT ARRAY(SELECT DISTINCT(tyyppi) FROM vv_vayla WHERE id IN
-                                                            (SELECT "vayla-id" FROM reimari_toimenpide WHERE id IN
-                                                                                                             (SELECT "toimenpide-id" FROM vv_hinnoittelu_toimenpide WHERE "hinnoittelu-id" = hinnoittelu.id))))
+                 (SELECT "vayla-id" FROM reimari_toimenpide WHERE id IN
+                   (SELECT "toimenpide-id" FROM vv_hinnoittelu_toimenpide WHERE "hinnoittelu-id" = hinnoittelu.id))))
     as vaylatyyppi
 FROM vv_hinnoittelu hinnoittelu
 WHERE "urakka-id" = :urakkaid
