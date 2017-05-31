@@ -15,9 +15,10 @@
             [clojure.set :refer [rename-keys]]
             [harja.pvm :as pvm]))
 
+
 (defn- aikaleima [text]
   (when-not (str/blank? text)
-    (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
+    (.toDate (xml/parsi-xsd-datetime-ms-aikaleimalla text))))
 
 (def toimenpide-attribuutit {:id #(Integer/parseInt %)
                              :tyolaji identity
