@@ -4,43 +4,45 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.vesivaylat.hinta :as h]
+    [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
+    [specql.rel :as rel]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]
-    [specql.rel :as rel]]
+    [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
   ["vv_hinnoittelu_toimenpide" ::hinnoittelu<->toimenpide
-   {#?@(:clj [::toimenpiteet (rel/has-one
-                               ::toimenpide-id
-                               :harja.domain.toimenpide/toimenpide
-                               :harja.domain.toimenpide/id)
-              ::hinnoittelut (rel/has-one
-                               ::hinnoittelu-id
-                               ::hinnoittelu
-                               ::id)])}]
+   (merge
+     m/muokkaustiedot
+     m/poistaja-sarake
+     m/poistettu?-sarake
+     {::toimenpiteet (rel/has-one
+                       ::toimenpide-id
+                       :harja.domain.toimenpide/toimenpide
+                       :harja.domain.toimenpide/id)
+      ::hinnoittelut (rel/has-one
+                       ::hinnoittelu-id
+                       ::hinnoittelu
+                       ::id)})]
   ["vv_hinnoittelu" ::hinnoittelu
-   {"muokattu" ::m/muokattu
-    "hintaryhma" ::hintaryhma?
-    "muokkaaja" ::m/muokkaaja-id
-    "luotu" ::m/luotu
-    "luoja" ::m/luoja-id
-    "poistettu" ::m/poistettu?
-    "poistaja" ::m/poistaja-id
-    [::toimenpide-linkit (rel/has-many
-                               ::id
-                               ::hinnoittelu<->toimenpide
-                               ::hinnoittelu-id)
-         ::hinnat (rel/has-many
-                    ::id
-                    ::h/hinta
-                    ::h/hinnoittelu-id)]}])
+   (merge
+     m/muokkaustiedot
+     m/poistaja-sarake
+     m/poistettu?-sarake
+     {"hintaryhma" ::hintaryhma?
+      ::toimenpide-linkit (rel/has-many
+                            ::id
+                            ::hinnoittelu<->toimenpide
+                            ::hinnoittelu-id)
+      ::hinnat (rel/has-many
+                 ::id
+                 ::hinta/hinta
+                 ::hinta/hinnoittelu-id)})])
 
 (def perustiedot
   #{::nimi
@@ -48,7 +50,7 @@
     ::id})
 
 (def hinnat
-  #{[::hinnat h/perustiedot]})
+  #{[::hinnat hinta/perustiedot]})
 
 (def hinnoittelutiedot
   (clojure.set/union perustiedot hinnat))
@@ -88,13 +90,13 @@
 
 #_(s/def ::hinta-elementit
   (s/coll-of
-    (s/keys :req [::h/maara ::h/otsikko ::h/yleiskustannuslisa])))
+    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
 
 (s/def ::anna-hintaryhmalle-hinta-kysely
   (s/keys
     :req [::id ::hinnat ::ur/id]))
 
-(s/def ::anna-hintaryhmalle-hinta-vastaus ::h/hinnoittelu)
+(s/def ::anna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
 
 (s/def ::anna-toimenpiteelle-hinta-kysely
   (s/keys
@@ -102,4 +104,4 @@
           ::hinnat
           ::ur/id]))
 
-(s/def ::anna-toimenpiteelle-hinta-vastaus ::h/hinnoittelu)
+(s/def ::anna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
