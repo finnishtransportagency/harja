@@ -76,7 +76,8 @@
         muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
                               (assoc-in [:sijainti :numero] kohteen-tienumero)
                               (assoc :alikohteet alikohteet))
-        karttapvm (parametrit/pvm-aika (get-in muunnettava-kohde [:sijainti :karttapvm]))
+        karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+                        (when karttapvm (parametrit/pvm-aika karttapvm)))
         muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet
                           vkm
                           db

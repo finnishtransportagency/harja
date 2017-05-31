@@ -141,7 +141,8 @@
                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
                                       (:alikohteet kohde))
         muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-        karttapvm (parametrit/pvm-aika (get-in muunnettava-kohde [:sijainti :karttapvm]))
+        karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+                        (when karttapvm (parametrit/pvm-aika karttapvm)))
         kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
         kohteen-sijainti (:sijainti kohde)
         alikohteet (:alikohteet kohde)]
