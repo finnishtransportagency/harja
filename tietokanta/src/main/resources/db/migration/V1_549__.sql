@@ -50,7 +50,14 @@ CREATE TABLE vv_hinnoittelu_toimenpide
 (
   "toimenpide-id"  INTEGER REFERENCES reimari_toimenpide (id),
   "hinnoittelu-id" INTEGER REFERENCES vv_hinnoittelu (id),
-  UNIQUE ("toimenpide-id", "hinnoittelu-id")
+  UNIQUE ("toimenpide-id", "hinnoittelu-id"),
+
+  muokkaaja  INTEGER REFERENCES kayttaja (id),
+  muokattu   TIMESTAMP,
+  luoja      INTEGER REFERENCES kayttaja (id) NOT NULL,
+  luotu      TIMESTAMP                        NOT NULL DEFAULT NOW(),
+  poistettu  BOOLEAN                          NOT NULL DEFAULT FALSE,
+  poistaja   INTEGER REFERENCES kayttaja (id)
 );
 
 CREATE TABLE vv_hinta

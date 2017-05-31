@@ -401,10 +401,11 @@ VALUES
    'Tilaus', 60000, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinnoittelu_toimenpide
-("toimenpide-id", "hinnoittelu-id")
+("toimenpide-id", "hinnoittelu-id", luoja)
 VALUES
   ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
-   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'));
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'),
+     (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 -- ***********************************************
 
 
