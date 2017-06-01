@@ -73,10 +73,14 @@
    [hinnoittelu e! app]])
 
 (defn- kenttarivi [app e! otsikko tunniste]
-  [otsikko [tee-kentta {:tyyppi :numero}
-            (r/wrap (get-in app [:hinnoittele-toimenpide tunniste])
-                    (fn [uusi]
-                      (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste tunniste :arvo uusi}))))]])
+  [otsikko
+   [:span
+    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+     (r/wrap (get-in app [:hinnoittele-toimenpide tunniste])
+             (fn [uusi]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste tunniste :arvo uusi}))))]
+    [:span " "]
+    "€"]])
 
 (defn- hinnoittele-toimenpide [app e! rivi]
   [:div.vv-toimenpiteen-hinnoittelu
@@ -88,10 +92,10 @@
       [:div.vv-toimenpiteen-hinnoittelutiedot
        {:on-click #(.stopPropagation %)}
        (into [yleiset/tietoja {}] (concat (kenttarivi app e! "Työ" :tyo)
-                                          (kenttarivi app e!  "Komponentit" :komponentit)
-                                          (kenttarivi app e!  "Yleiset materiaalit" :yleiset-materiaalit)
-                                          (kenttarivi app e!  "Matkat" :matkat)
-                                          (kenttarivi app e!  "Muut kulut" :muut-kulut)))
+                                          (kenttarivi app e! "Komponentit" :komponentit)
+                                          (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
+                                          (kenttarivi app e! "Matkat" :matkat)
+                                          (kenttarivi app e! "Muut kulut" :muut-kulut)))
        [napit/yleinen-ensisijainen
         "Valmis"
         #(log "Painoit valmis") ;; TODO Ja sitten itse action
