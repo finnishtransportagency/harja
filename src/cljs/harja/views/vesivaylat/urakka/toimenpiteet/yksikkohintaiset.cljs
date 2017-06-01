@@ -19,10 +19,10 @@
   [yleiset/livi-pudotusvalikko
    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
-    :class "livi-alasveto-250"
+    :class "livi-alasveto-250 livi-alasveto-inline-block"
     :valinta valittu-hintaryhma
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
-    hintaryhmat])
+   hintaryhmat])
 
 (defn lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
                               hintaryhmien-liittaminen-kaynnissa?] :as app}]
@@ -58,13 +58,15 @@
 
 (defn hinnoittelu [e! app]
   [:span
+   [:span {:style {:margin-right "10px"}} "Siirrä valitut ryhmään"]
    [hinnoittelu-vaihtoehdot e! app]
    [lisaysnappi e! app]
    [ryhman-luonti e! app]])
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]
+  [:span {:style {:margin-right "10px"}}
+   [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]]
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
