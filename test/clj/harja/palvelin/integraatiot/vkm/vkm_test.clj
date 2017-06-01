@@ -38,30 +38,30 @@
 
 (deftest tieosoitteet-vkm-vastauksesta
   (let [tieosoitteet [{:tie 4 :aosa 1 :aet 0 :losa 3 :let 1000 :ajorata 1 :joku "muu arvo" :vkm-id "666"}]
-        onnistunut-vkm-vastaus "json({\"tieosoitteet\": [{\"ajorata\": 1,
-                                                         \"palautusarvo\": 1 ,
-                                                         \"osa\": 2,
-                                                         \"etaisyys\": 0,
-                                                         \"tie\": 4,
-                                                         \"tunniste\": \"666-alku\"},
-                                                        {\"ajorata\": 1,
-                                                         \"palautusarvo\": 1,
-                                                         \"osa\": 3,
-                                                         \"etaisyys\": 800,
-                                                         \"tie\": 4,
-                                                         \"tunniste\": \"666-loppu\"}]})"
-        vkm-virhevastaus "json({\"tieosoitteet\": [{\"ajorata\": 1,
-                                                    \"palautusarvo\": 0,
-                                                    \"osa\": 2,
-                                                    \"etaisyys\": 0,
-                                                    \"tie\": 4,
-                                                    \"tunniste\": \"666-alku\"},
-                                                   {\"ajorata\": 1,
-                                                    \"palautusarvo\": 0,
-                                                    \"osa\": 3,
-                                                    \"etaisyys\": 800,
-                                                    \"tie\": 4,
-                                                    \"tunniste\": \"666-loppu\"}]})"
+        onnistunut-vkm-vastaus "{\"tieosoitteet\": [{\"ajorata\": 1,
+                                                     \"palautusarvo\": 1 ,
+                                                     \"osa\": 2,
+                                                     \"etaisyys\": 0,
+                                                     \"tie\": 4,
+                                                     \"tunniste\": \"666-alku\"},
+                                                    {\"ajorata\": 1,
+                                                     \"palautusarvo\": 1,
+                                                     \"osa\": 3,
+                                                     \"etaisyys\": 800,
+                                                     \"tie\": 4,
+                                                     \"tunniste\": \"666-loppu\"}]}"
+        vkm-virhevastaus "{\"tieosoitteet\": [{\"ajorata\": 1,
+                                               \"palautusarvo\": 0,
+                                               \"osa\": 2,
+                                               \"etaisyys\": 0,
+                                               \"tie\": 4,
+                                               \"tunniste\": \"666-alku\"},
+                                              {\"ajorata\": 1,
+                                               \"palautusarvo\": 0,
+                                               \"osa\": 3,
+                                               \"etaisyys\": 800,
+                                               \"tie\": 4,
+                                               \"tunniste\": \"666-loppu\"}]}"
 
         odotetut [{:tie 4 :aosa 2 :aet 0 :losa 3 :let 800 :vkm-id "666" :ajorata 1 :joku "muu arvo"}]]
     (is (= odotetut (vkm/osoitteet-vkm-vastauksesta tieosoitteet onnistunut-vkm-vastaus))
