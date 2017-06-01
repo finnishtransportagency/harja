@@ -7,7 +7,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [clojure.set :as set])
   (:import (java.util Date)))
 
 (defn jarjestelma-fixture [testit]
@@ -49,23 +50,30 @@
            :aloituskuittauksen-ajankohta :kaikki
            :hakuehto nil}))))
 
+(def hae-ilmoitukset-parametrit
+  {:hallintayksikko nil
+   :urakka nil
+   :hoitokausi nil
+   :aikavali [(Date. 0 0 0) (Date.)]
+   :tyypit +ilmoitustyypit+
+   :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+   :aloituskuittauksen-ajankohta :kaikki
+   :hakuehto ""
+   :urakkatyyppi :hoito})
+
+(defn hae [parametrit]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-ilmoitukset +kayttaja-jvh+ parametrit))
+
 (deftest hae-ilmoituksia
-  (let [parametrit {:hallintayksikko nil
-                    :urakka nil
-                    :hoitokausi nil
-                    :aikavali [(Date. 0 0 0) (Date.)]
-                    :tyypit +ilmoitustyypit+
-                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
-                    :aloituskuittauksen-ajankohta :kaikki
-                    :hakuehto ""}
+  (let [parametrit hae-ilmoitukset-parametrit
         ilmoitusten-maara-suoraan-kannasta (ffirst (q
                                                      (str "SELECT count(*) FROM ilmoitus;")))
         kuittausten-maara-suoraan-kannasta (ffirst (q
                                                      (str "SELECT count(*) FROM ilmoitustoimenpide;")))
         ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta
         (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitusid = 12347;")))
-        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :hae-ilmoitukset +kayttaja-jvh+ parametrit)
+        ilmoitukset-palvelusta (hae parametrit)
         kuittaukset-palvelusta (mapv :kuittaukset ilmoitukset-palvelusta)
         kuittaukset-palvelusta-lkm (apply + (map count kuittaukset-palvelusta))
         ilmoitusid-12348 (first (filter #(= 12348 (:ilmoitusid %)) ilmoitukset-palvelusta))
@@ -82,6 +90,26 @@
     (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
+
+(deftest hae-ilmoitukset-tyypin-mukaan
+  (let [hoito-ilmoitukset (hae hae-ilmoitukset-parametrit)
+        paallystys-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
+                                           :urakkatyyppi :paallystys))
+        kaikki-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
+                                       :urakkatyyppi :kaikki))
+
+        idt #(into #{} (map :id) %)]
+
+    ;; urakkatyypitön ilmoitus tulee aina, joten näitä on 2
+    (is (= 2 (count paallystys-ilmoitukset)))
+
+    (is (< (count paallystys-ilmoitukset)
+           (count hoito-ilmoitukset)
+           (count kaikki-ilmoitukset)))
+
+    (is (= (set/union (idt hoito-ilmoitukset)
+                      (idt paallystys-ilmoitukset))
+           (idt kaikki-ilmoitukset)))))
 
 (deftest tallenna-ilmoitustoimenpide
   (let [parametrit [{:ilmoittaja-sukunimi "Vastaava"
