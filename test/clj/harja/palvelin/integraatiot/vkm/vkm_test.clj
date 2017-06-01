@@ -25,7 +25,6 @@
                                        (pvm/luo-pvm 2017 5 25))
         odotetut {:in "tieosoite"
                   :out "tieosoite"
-                  :callback "json"
                   :tilannepvm "01.02.2017"
                   :kohdepvm "25.06.2017"
                   :json "{\"tieosoitteet\":[{\"tunniste\":\"666-alku\",\"tie\":4,\"osa\":1,\"ajorata\":null,\"etaisyys\":0},{\"tunniste\":\"666-loppu\",\"tie\":4,\"osa\":3,\"ajorata\":null,\"etaisyys\":1000}]}"}]
