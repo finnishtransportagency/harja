@@ -160,7 +160,7 @@
                                                          :toimenpide :autot-traktorit
                                                          :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
-             {::tot/urakka-id 666
+             {::to/urakka-id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
               ::to/vayla-id 1
@@ -180,7 +180,7 @@
                                                          :tyoluokka nil
                                                          :toimenpide nil})]
       (is (= hakuargumentit
-             {::tot/urakka-id 666
+             {::to/urakka-id 666
               ::to/sopimus-id 777
               :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
@@ -188,7 +188,7 @@
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
                                                          :sopimus-id 777})]
-      (is (= hakuargumentit {::tot/urakka-id 666
+      (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777
                              :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
