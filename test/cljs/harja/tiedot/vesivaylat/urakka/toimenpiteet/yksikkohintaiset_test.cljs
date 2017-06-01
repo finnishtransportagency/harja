@@ -22,6 +22,12 @@
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
+                :hinnoittele-toimenpide {::to/id nil
+                                         :tyo 0
+                                         :komponentit 0
+                                         :yleiset-materiaalit 0
+                                         :matkat 0
+                                         :muut-kulut 0}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -229,6 +235,13 @@
 
       (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
+
+(deftest toimenpiteen-hinnoittelu
+  (testing "Aloita toimenpiteen hinnoittelu"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpide 1))]
+    (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
+    (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::to/id]) 1)))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
