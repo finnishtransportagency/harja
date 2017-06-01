@@ -79,7 +79,12 @@
       "Hinta: 0€"
       [:div.vv-toimenpiteen-hinnoittelutiedot
        {:on-click #(.stopPropagation %)}
-       "Hinnoitellaan"]]
+       [yleiset/tietoja {}
+        "Työ:" 0
+        "Komponentit:" 0
+        "Yleiset materiaalit:" 0
+        "Matkat:" 0
+        "Muut kulut:" 0]]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
