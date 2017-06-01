@@ -90,7 +90,7 @@
                                                  :komponentti (fn []
                                                                 [napit/yleinen-ensisijainen
                                                                  "Hinnoittele"
-                                                                 #()
+                                                                 #(log "Painoit hinnoittelua")
                                                                  {:luokka "nappi-grid"}])}]
                                :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
                                :paneelin-checkbox-sijainti "94.3%"
