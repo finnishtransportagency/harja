@@ -77,8 +77,9 @@
 
 (defn- hinnoittele-toimenpide [app e! rivi]
   [:div.vv-toimenpiteen-hinnoittelu
-   (if (and (:hinnoittele-toimenpide-id app)
-            (= (:hinnoittele-toimenpide-id app) (::to/id rivi)))
+   (if (and (get-in app [:hinnoittele-toimenpide ::to/id])
+            (= (get-in app [:hinnoittele-toimenpide ::to/id])
+               (::to/id rivi)))
      [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
       "Hinta: 0€"
       [:div.vv-toimenpiteen-hinnoittelutiedot

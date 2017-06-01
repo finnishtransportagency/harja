@@ -43,7 +43,12 @@
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
          :hintaryhmien-liittaminen-kaynnissa? false
-         :hinnoittele-toimenpide-id nil}))
+         :hinnoittele-toimenpide {::to/id nil
+                                  :tyo 0
+                                  :komponentit 0
+                                  :yleiset-materiaalit 0
+                                  :matkat 0
+                                  :muut-kulut 0}}))
 
 (def valinnat
   (reaction
@@ -243,5 +248,5 @@
 
   HinnoitteleToimenpide
   (process-event [{toimenpide-id :toimenpide-id} app]
-    (assoc app :hinnoittele-toimenpide-id toimenpide-id)))
+    (assoc-in app [:hinnoittele-toimenpide ::to/id] toimenpide-id)))
 
