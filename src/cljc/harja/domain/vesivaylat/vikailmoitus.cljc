@@ -11,10 +11,10 @@
 
 (define-tables
   ["vv_vikailmoitus" ::vikailmoitus
-   {::toimenpide (rel/has-one ::toimenpide-id
+   {::toimenpide (specql.rel/has-one ::toimenpide-id
                                  :harja.domain.vesivaylat.toimenpide/toimenpide
                                  :harja.domain.vesivaylat.toimenpide/id)
-    ::turvalaite (rel/has-one ::turvalaite-id
+    ::turvalaite (specql.rel/has-one ::turvalaite-id
                               :harja.domain.vesivaylat.turvalaite/turvalaite
                               :harja.domain.vesivaylat.turvalaite/id)}])
 

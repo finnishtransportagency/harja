@@ -19,7 +19,7 @@
     "ryhma" ::r-ryhma}]
   ["vv_turvalaite" ::turvalaite
    {"vayla" ::vayla-id
-    ::vayla (rel/has-one ::vayla-id ::v/vayla ::v/id)}])
+    ::vayla (specql.rel/has-one ::vayla-id ::v/vayla ::v/id)}])
 
 (def tyypit (s/describe ::tyyppi))
 

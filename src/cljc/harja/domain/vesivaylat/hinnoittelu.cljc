@@ -21,11 +21,11 @@
      m/muokkaustiedot
      m/poistaja-sarake
      m/poistettu?-sarake
-     {::toimenpiteet (rel/has-one
+     {::toimenpiteet (specql.rel/has-one
                        ::toimenpide-id
                        :harja.domain.toimenpide/toimenpide
                        :harja.domain.toimenpide/id)
-      ::hinnoittelut (rel/has-one
+      ::hinnoittelut (specql.rel/has-one
                        ::hinnoittelu-id
                        ::hinnoittelu
                        ::id)})]
@@ -35,11 +35,11 @@
      m/poistaja-sarake
      m/poistettu?-sarake
      {"hintaryhma" ::hintaryhma?
-      ::toimenpide-linkit (rel/has-many
+      ::toimenpide-linkit (specql.rel/has-many
                             ::id
                             ::hinnoittelu<->toimenpide
                             ::hinnoittelu-id)
-      ::hinnat (rel/has-many
+      ::hinnat (specql.rel/has-many
                  ::id
                  ::hinta/hinta
                  ::hinta/hinnoittelu-id)})])
