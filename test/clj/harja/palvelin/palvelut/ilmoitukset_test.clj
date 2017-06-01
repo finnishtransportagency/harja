@@ -58,8 +58,7 @@
    :tyypit +ilmoitustyypit+
    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
    :aloituskuittauksen-ajankohta :kaikki
-   :hakuehto ""
-   :urakkatyyppi :hoito})
+   :hakuehto ""})
 
 (defn hae [parametrit]
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -92,7 +91,8 @@
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
 (deftest hae-ilmoitukset-tyypin-mukaan
-  (let [hoito-ilmoitukset (hae hae-ilmoitukset-parametrit)
+  (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
+                                      :urakkatyyppi :hoito))
         paallystys-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
                                            :urakkatyyppi :paallystys))
         kaikki-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
