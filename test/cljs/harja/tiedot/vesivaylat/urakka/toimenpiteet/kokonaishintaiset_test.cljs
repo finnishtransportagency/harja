@@ -216,12 +216,6 @@
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hakemisen-aloitus
-  (testing "Haku ei lähde koska spec failaa"
-    (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
-
-      (is (not (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
-
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
