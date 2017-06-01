@@ -238,6 +238,13 @@
     (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
     (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::to/id]) 1)))))
 
+(deftest toimenpiteen-kentan-hinnoittelu
+  (testing "Hinnoittele kenttiä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste :materiaalit :arvo 5}))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide :materiaalit])))
+      (is (= (get-in uusi-tila [:hinnoittele-toimenpide :materiaalit]) 5)))))
+
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
     (is (false? (:haku-kaynnissa? tulos)))

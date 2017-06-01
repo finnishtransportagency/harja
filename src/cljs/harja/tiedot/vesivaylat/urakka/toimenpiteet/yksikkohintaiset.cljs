@@ -251,7 +251,7 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     (assoc-in app [:hinnoittele-toimenpide ::to/id] toimenpide-id))
 
-  HinnoitteleToimenpideKentta ;; TODO Yksikkötesti tälle
+  HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide (:tunniste tiedot)] (:arvo tiedot))))
 
