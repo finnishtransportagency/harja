@@ -77,7 +77,9 @@
             (= (:hinnoittele-toimenpide-id app) (::to/id rivi)))
      [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
       "Hinta: 0€"
-      [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]]
+      [:div.vv-toimenpiteen-hinnoittelutiedot
+       {:on-click #(.stopPropagation %)}
+       "Hinnoitellaan"]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
