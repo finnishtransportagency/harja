@@ -17,32 +17,30 @@
 
 (define-tables
   ["vv_hinnoittelu_toimenpide" ::hinnoittelu<->toimenpide
-   (merge
-     m/muokkaustiedot
-     m/poistaja-sarake
-     m/poistettu?-sarake
-     {::toimenpiteet (specql.rel/has-one
-                       ::toimenpide-id
-                       :harja.domain.toimenpide/toimenpide
-                       :harja.domain.toimenpide/id)
-      ::hinnoittelut (specql.rel/has-one
-                       ::hinnoittelu-id
-                       ::hinnoittelu
-                       ::id)})]
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistaja-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   {::toimenpiteet (specql.rel/has-one
+                     ::toimenpide-id
+                     :harja.domain.toimenpide/toimenpide
+                     :harja.domain.toimenpide/id)
+    ::hinnoittelut (specql.rel/has-one
+                     ::hinnoittelu-id
+                     ::hinnoittelu
+                     ::id)}]
   ["vv_hinnoittelu" ::hinnoittelu
-   (merge
-     m/muokkaustiedot
-     m/poistaja-sarake
-     m/poistettu?-sarake
-     {"hintaryhma" ::hintaryhma?
-      ::toimenpide-linkit (specql.rel/has-many
-                            ::id
-                            ::hinnoittelu<->toimenpide
-                            ::hinnoittelu-id)
-      ::hinnat (specql.rel/has-many
-                 ::id
-                 ::hinta/hinta
-                 ::hinta/hinnoittelu-id)})])
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistaja-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   {"hintaryhma" ::hintaryhma?
+    ::toimenpide-linkit (specql.rel/has-many
+                          ::id
+                          ::hinnoittelu<->toimenpide
+                          ::hinnoittelu-id)
+    ::hinnat (specql.rel/has-many
+               ::id
+               ::hinta/hinta
+               ::hinta/hinnoittelu-id)}])
 
 (def perustiedot
   #{::nimi
@@ -89,8 +87,8 @@
           ::ur/id]))
 
 #_(s/def ::hinta-elementit
-  (s/coll-of
-    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
+    (s/coll-of
+      (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
 
 (s/def ::anna-hintaryhmalle-hinta-kysely
   (s/keys

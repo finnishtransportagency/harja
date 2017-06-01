@@ -250,13 +250,13 @@ reimari-tilat
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
     "lisatyo" ::lisatyo?
-    ::vikailmoitukset (rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
-    ::urakoitsija (rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
-    ::urakka (rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
-    ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
-    ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-    ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
-    ::hinnoittelu-linkit (rel/has-many
+    ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
+    ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+    ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
+    ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
+    ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
+    ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
                            ::h/toimenpide-id)}])
