@@ -40,8 +40,8 @@
         (assoc :let (get loppuosanosoite "etaisyys" let)))))
 
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
-  (if (and vastaus (.contains vastaus "json("))
-    (let [osoitteet-vastauksesta (cheshire/decode (apply str (drop-last (.replace vastaus "json(" ""))))
+  (if vastaus
+    (let [osoitteet-vastauksesta (cheshire/decode vastaus)
           vkm-osoitteet (get osoitteet-vastauksesta "tieosoitteet")]
       (mapv (fn [{:keys [vkm-id] :as tieosoite}]
               (let [alkuosanhakutunnus (alkuosan-vkm-tunniste vkm-id)
@@ -64,7 +64,6 @@
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]
   {:in "tieosoite"
    :out "tieosoite"
-   :callback "json"
    :tilannepvm (pvm/pvm paivan-verkolta)
    :kohdepvm (pvm/pvm paivan-verkolle)
    :json (cheshire/encode {:tieosoitteet (pura-tieosoitteet tieosoitteet)})})
