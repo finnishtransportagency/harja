@@ -203,7 +203,9 @@
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
-                            #(e! (v/->ValitseKuitattavaIlmoitus %)))]
+                            #(e! (v/->ValitseKuitattavaIlmoitus %)))
+        pikakuittaus-ilmoitus-id (when pikakuittaus
+                                   (get-in pikakuittaus [:ilmoitus :id]))]
     [:span.ilmoitukset
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -233,7 +235,9 @@
                              #(e! (v/->ValitseIlmoitus %))))
         :piilota-toiminnot true
         :max-rivimaara 500
-        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
+        :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
+                         "ilmoitusrivi-fade")}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "
