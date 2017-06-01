@@ -15,6 +15,12 @@
   (is (thrown-with-msg?
         Exception
         #"Kentän arvon: kenttänen pitää olla vähintään: 1"
-        (tietolajit/validoi-arvoalue "-1" "tl666" "kenttänen" :numeerinen 1 10))))
+        (tietolajit/validoi-arvoalue "-1" "tl666" "kenttänen" :numeerinen 1 10)))
+  (is (nil? (tietolajit/validoi-arvoalue "foo" "tl666" "kenttänen" :merkkijono 1 10))
+      "Tekstikenttiä ei validoida")
+  (is (nil? (tietolajit/validoi-arvoalue "" "tl666" "kenttänen" :numeerinen 1 10))
+      "Tyhjää arvoa ei validoida")
+  (is (nil? (tietolajit/validoi-arvoalue nil "tl666" "kenttänen" :numeerinen 1 10))
+      "Nilliä arvoa ei validoida"))
 
 
