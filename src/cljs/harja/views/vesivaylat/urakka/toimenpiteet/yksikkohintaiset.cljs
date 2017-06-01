@@ -93,8 +93,8 @@
                                                                  #(log "Painoit hinnoittelua")
                                                                  {:luokka "nappi-grid"}])}]
                                :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
-                               :paneelin-checkbox-sijainti "94.3%"
-                               :vaylan-checkbox-sijainti "94.3%"}]])))
+                               :paneelin-checkbox-sijainti "95.2%"
+                               :vaylan-checkbox-sijainti "95.2%"}]])))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
