@@ -75,7 +75,9 @@
     (fn []
       [:div.vv-toimenpiteen-hinnoittelu
        (if @hinnoitellaan?
-         [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]
+         [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
+          "Hinta: 0€"
+          [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]]
          [napit/yleinen-ensisijainen
           "Hinnoittele"
           #(swap! hinnoitellaan? not)
