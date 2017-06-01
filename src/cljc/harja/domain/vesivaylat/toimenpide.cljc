@@ -361,7 +361,7 @@ reimari-tilat
 (s/def ::hae-vesivaylien-toimenpiteet-kysely
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
-    :req [::urakka/id]
+    :req [::urakka-id]
     :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
@@ -376,14 +376,14 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
-    :req [::urakka/id ::idt]))
+    :req [::urakka-id ::idt]))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-kysely
   (s/keys
-    :req [::urakka/id ::idt]))
+    :req [::urakka-id ::idt]))
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)

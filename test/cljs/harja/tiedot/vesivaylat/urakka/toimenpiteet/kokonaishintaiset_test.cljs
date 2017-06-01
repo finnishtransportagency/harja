@@ -196,7 +196,7 @@
 (deftest yksikkohintaisiin-siirto
   (testing "Siirron aloittaminen"
     (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
       (let [vanha-tila testitila
             uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
                           vanha-tila)]
@@ -206,7 +206,7 @@
   (let [vanha-tila testitila
         siirretyt #{1 2 3}
         toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (tiedot/->ToimenpiteetSiirretty siirretyt)
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
                       vanha-tila)
         toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
 

@@ -17,14 +17,14 @@
 
 (defn hae-kokonaishintaiset-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::ur/id tiedot)]
+    (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/hae-toimenpiteet db tiedot))))
 
 (defn siirra-toimenpiteet-yksikkohintaisiin [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::ur/id tiedot)]
+    (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user urakka-id)

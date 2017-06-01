@@ -42,7 +42,7 @@
 (deftest toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id
                        :alku (c/to-date (t/date-time 2017 1 1))
                        :loppu (c/to-date (t/date-time 2018 1 1))}
@@ -56,7 +56,7 @@
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
@@ -68,7 +68,7 @@
 (deftest toimenpiteiden-haku-toimii-sopimusfiltterilla
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-sivusopimuksen-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
@@ -80,7 +80,7 @@
 (deftest toimenpiteiden-haku-toimii-aikafiltterilla
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id
                        :alku (c/to-date (t/date-time 2016 1 1))
                        :loppu (c/to-date (t/date-time 2017 1 1))}
@@ -96,7 +96,7 @@
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vayla-id (hae-vayla-hietarasaari)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/vayla-id vayla-id}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -112,7 +112,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vayla-id (hae-vayla-hietarasaari) ;; Tyyppiä kauppamerenkulku
           vaylatyyppi :muu
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/vayla-id vayla-id
                          ::va/vaylatyyppi vaylatyyppi}
@@ -125,7 +125,7 @@
   (testing "Väyläfiltteri suodattaa toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/vayla-id -1}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -140,7 +140,7 @@
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylatyyppi :kauppamerenkulku
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::va/vaylatyyppi vaylatyyppi}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -153,7 +153,7 @@
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylatyyppi :muu
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::va/vaylatyyppi vaylatyyppi}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -167,7 +167,7 @@
   (testing "Vikailmoituksellit löytyy"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          :vikailmoitukset? true}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -179,7 +179,7 @@
   (testing "Vikailmoituksettomat löytyy"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          :vikailmoitukset? false}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -191,7 +191,7 @@
   (testing "Vikailmoituksettomat löytyy"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          :vikailmoitukset? nil}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -204,7 +204,7 @@
   (testing "Työlajilla suodatus toimii"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541802"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -214,7 +214,7 @@
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541807"}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -225,7 +225,7 @@
   (testing "Työluokalla suodatus toimii"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyoluokat #{"1022541905"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -235,7 +235,7 @@
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyoluokat #{"1022541920"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -246,7 +246,7 @@
   (testing "Toimenpiteellä suodatus toimii"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-toimenpidetyypit #{"1022542001"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -256,7 +256,7 @@
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-toimenpidetyypit #{"1022542046"}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -267,7 +267,7 @@
   (testing "Työlajilla, työluokka ja & toimenpide toimivat yhdessä"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541802"
                          ::toi/reimari-toimenpidetyypit #{"1022542001"}
@@ -280,7 +280,7 @@
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          kysely-params {::u/id urakka-id
+          kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
                          ::toi/reimari-tyolaji "1022541807"
                          ::toi/reimari-toimenpidetyypit #{"1022542046"}
@@ -293,7 +293,7 @@
 (deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}]
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -303,7 +303,7 @@
 (deftest yksikkohintaisiin-siirto
   (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt kokonaishintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+

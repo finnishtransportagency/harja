@@ -51,7 +51,7 @@
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide
                                       vain-vikailmoitukset?] :as valinnat}]
-  (spec-apurit/poista-nil-avaimet {::ur/id urakka-id
+  (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vayla-id vayla
@@ -126,7 +126,7 @@
         fail! (tuck/send-async! ->ToimenpiteetEiSiirretty)]
     (go (let [valitut (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))
               vastaus (<! (k/post! palvelu
-                                   {::ur/id (get-in app [:valinnat :urakka-id])
+                                   {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                     ::to/idt valitut}))]
           (if (k/virhe? vastaus)
             (fail! vastaus)

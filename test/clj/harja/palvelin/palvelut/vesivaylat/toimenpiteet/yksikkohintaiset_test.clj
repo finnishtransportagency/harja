@@ -40,7 +40,7 @@
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
-        kysely-params {::u/id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
