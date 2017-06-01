@@ -67,6 +67,10 @@
    :fmt tr/tierekisteriosoite-tekstina
    :leveys 1})
 
+(defn parsi-luku [s]
+  #?(:cljs (js/parseInt s)
+     :clj  (Integer/parseInt s)))
+
 (defmulti varusteominaisuus->skeema
           "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
           Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
@@ -114,8 +118,8 @@
          {:tyyppi :string
           :regex (re-pattern (str "-?\\d*"))
           :validoi [#(cond
-                       (and alaraja (not (str/blank? %)) (< (js/parseInt %) alaraja)) (str "Arvon pitää olla vähintään: " alaraja)
-                       (and ylaraja (not (str/blank? %)) (> (js/parseInt %) ylaraja)) (str "Arvon pitää olla vähemmän kuin: " ylaraja)
+                       (and alaraja (not (str/blank? %)) (< (parsi-luku %) alaraja)) (str "Arvon pitää olla vähintään: " alaraja)
+                       (and ylaraja (not (str/blank? %)) (> (parsi-luku %) ylaraja)) (str "Arvon pitää olla vähemmän kuin: " ylaraja)
                        :default nil)]
           :leveys 1}))
 
