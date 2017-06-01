@@ -47,9 +47,9 @@
 (defn validoi-arvoalue [arvo tietolaji kenttatunniste tietotyyppi alaraja ylaraja]
   (when (and arvo (not (str/blank? arvo)) (= :numeerinen tietotyyppi))
     (let [arvo (Integer/parseInt arvo)]
-      (when (< arvo alaraja)
+      (when (and alaraja (< arvo alaraja))
         (heita-validointipoikkeus tietolaji (format "Kentän arvon: %s pitää olla vähintään: %s" kenttatunniste alaraja)))
-      (when (> arvo ylaraja)
+      (when (and ylaraja (> arvo ylaraja))
         (heita-validointipoikkeus tietolaji (format "Kentän arvon: %s pitää olla vähemmän kuin: %s" kenttatunniste ylaraja))))))
 
 (defn validoi-arvo

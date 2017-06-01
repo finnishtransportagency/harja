@@ -21,6 +21,8 @@
   (is (nil? (tietolajit/validoi-arvoalue "" "tl666" "kenttänen" :numeerinen 1 10))
       "Tyhjää arvoa ei validoida")
   (is (nil? (tietolajit/validoi-arvoalue nil "tl666" "kenttänen" :numeerinen 1 10))
-      "Nilliä arvoa ei validoida"))
+      "Nilliä arvoa ei validoida")
+  (is (nil? (tietolajit/validoi-arvoalue "2" "tl666" "kenttänen" :numeerinen nil nil))
+      "Validointia ei tehdä, jos arvoaluetta ei ole"))
 
 
