@@ -44,16 +44,21 @@
   (when (and pakollinen (not arvo))
     (heita-validointipoikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
 
+(defn validoi-arvoalue [arvo tietoalji kenttätunniste tietotyyppi alaraja ylaraja]
+  (when (and arvo (= :numeerinen tietotyyppi)
+             )))
+
 (defn validoi-arvo
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset.
    Jos vaatimuksia ei täytetä, heittää poikkeuksen, muuten palauttaa nil."
-  [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto] :as kentan-kuvaus} tietolaji]
+  [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto alaraja ylaraja] :as kentan-kuvaus} tietolaji]
   (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (when arvo
     (validoi-pituus arvo tietolaji kenttatunniste pituus)
-    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
+    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)
+    (validoi-arvoalue arvo tietoalji kenttätunniste tietotyyppi alaraja ylaraja)))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
