@@ -38,7 +38,8 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -68,20 +69,33 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
+(comment
+  (defn kuittauslista [{kuittaukset :kuittaukset}]
+    [:div.kuittauslista
+     (map-indexed
+      (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
+        ^{:key i}
+        [yleiset/tooltip {}
+         [:div.kuittaus {:class (name kuittaustyyppi)}
+          (kuittaustyypin-lyhenne kuittaustyyppi)]
+         [:div
+          (kuittaustyypin-selite kuittaustyyppi)
+          [:br]
+          (pvm/pvm-aika kuitattu)
+          [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
+      (remove domain/valitysviesti? kuittaukset))]))
+
 (defn kuittauslista [{kuittaukset :kuittaukset}]
-  [:div.kuittauslista
-   (map-indexed
-     (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
-       ^{:key i}
-       [yleiset/tooltip {}
-        [:div.kuittaus {:class (name kuittaustyyppi)}
-         (kuittaustyypin-lyhenne kuittaustyyppi)]
-        [:div
-         (kuittaustyypin-selite kuittaustyyppi)
-         [:br]
-         (pvm/pvm-aika kuitattu)
-         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
-     (remove domain/valitysviesti? kuittaukset))])
+  (let [kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)]
+    [:div.kuittauslista
+     (for*
+      [kuittaustyyppi domain/kuittaustyypit]
+      [:div.kuittaus {:class (str (name kuittaustyyppi)
+                                  (when-not (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)
+                                    " ei-kuittausta"))}
+       (kuittaustyypin-lyhenne kuittaustyyppi)
+
+       ])]))
 
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
@@ -240,9 +254,9 @@
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
          :komponentti kuittauslista
-         :leveys 6}
+         :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
                 (assoc % :lihavoi true)
                 %)
