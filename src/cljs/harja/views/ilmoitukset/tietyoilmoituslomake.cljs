@@ -368,11 +368,16 @@
         :tyyppi :string}
        {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
         :tyyppi :string}
-       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true}
+       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true
+        :varoita [[:pvm-sama (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))
+                    (str "Kohteen aloitus merkitty aikatauluun "
+                              (pvm/pvm (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))))]]}
        {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true
+        :varoita [[:pvm-sama (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))
+                   (str "Kohteen päällystyksen valmistuminen merkitty aikatauluun "
+                        (pvm/pvm (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))))]]
         :validoi [[:pvm-toisen-pvmn-jalkeen (::t/alku ilmoitus)
                    "Lopetuksen pitää olla alun jälkeen"]]})
-
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
