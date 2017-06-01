@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body> -->
+<HaeKomponenttiTyypit xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+  <HaeKomponenttiTyypitResponse>
+      <komponenttityyppi id="4242"
+                         nimi="Punainen lamppu"
+                         lisatiedot="hyvä kampe"
+                         luokan-id="283748923"
+                         luokan-nimi="lamput"
+                         luokan-lisatiedot="sähköllä toimivat"
+                         luokan-paivitysaika="2017-04-24T09:42:04Z"
+                         luokan-luontiaika="2012-02-24T09:42:04Z"
+                         merk-cod="234"
+                         luontiaika="2012-03-24T09:11:04Z"
+                         muokattu="2017-04-29T00:00:00Z"
+                         alkupvm="2011-04-25T00:00:00Z"
+                         loppupvm="2017-08-25T00:00:00Z"/>
+  </HaeKomponenttiTyypitResponse>
+</HaeKomponenttiTyypit>
+
+<!-- </S:Body></S:Envelope> -->
