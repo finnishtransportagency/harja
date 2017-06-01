@@ -8,6 +8,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.urakka :as u]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]))
@@ -160,7 +161,7 @@
                                                          :toimenpide :autot-traktorit
                                                          :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
-             {::tot/urakka-id 666
+             {::u/id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
               ::to/vayla-id 1
@@ -180,7 +181,7 @@
                                                          :tyoluokka nil
                                                          :toimenpide nil})]
       (is (= hakuargumentit
-             {::tot/urakka-id 666
+             {::u/id 666
               ::to/sopimus-id 777
               :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
@@ -188,7 +189,7 @@
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
                                                          :sopimus-id 777})]
-      (is (= hakuargumentit {::tot/urakka-id 666
+      (is (= hakuargumentit {::u/id 666
                              ::to/sopimus-id 777
                              :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
