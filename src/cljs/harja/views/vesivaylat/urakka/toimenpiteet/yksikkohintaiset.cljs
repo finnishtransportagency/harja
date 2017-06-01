@@ -8,6 +8,7 @@
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :refer [tee-kentta]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
@@ -41,9 +42,9 @@
                                  hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
-     [kentat/tee-kentta {:tyyppi :string
-                         :placeholder "Ryhmän nimi"
-                         :pituus-max 160}
+     [tee-kentta {:tyyppi :string
+                  :placeholder "Ryhmän nimi"
+                  :pituus-max 160}
       (r/wrap
         uusi-hintaryhma
         #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
@@ -71,6 +72,9 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
+(defn- kenttarivi [otsikko]
+  [otsikko [tee-kentta {:tyyppi :numero} (atom 0)]])
+
 (defn- hinnoittele-toimenpide [app e! rivi]
   [:div.vv-toimenpiteen-hinnoittelu
    (if (and (:hinnoittele-toimenpide-id app)
@@ -79,12 +83,11 @@
       "Hinta: 0€"
       [:div.vv-toimenpiteen-hinnoittelutiedot
        {:on-click #(.stopPropagation %)}
-       [yleiset/tietoja {}
-        "Työ:" 0
-        "Komponentit:" 0
-        "Yleiset materiaalit:" 0
-        "Matkat:" 0
-        "Muut kulut:" 0]]]
+       (into [yleiset/tietoja {}] (concat (kenttarivi "Työ")
+                                          (kenttarivi "Komponentit")
+                                          (kenttarivi "Yleiset materiaalit")
+                                          (kenttarivi "Matkat")
+                                          (kenttarivi "Muut kulut")))]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
