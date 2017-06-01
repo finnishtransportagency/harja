@@ -19,9 +19,10 @@
   [yleiset/livi-pudotusvalikko
    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+    :class "livi-alasveto-250"
     :valinta valittu-hintaryhma
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
-   hintaryhmat])
+    hintaryhmat])
 
 (defn lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
                               hintaryhmien-liittaminen-kaynnissa?] :as app}]
@@ -83,7 +84,12 @@
       [:div
        [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
-       [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :hae (constantly "TODO") :leveys 10}]
+       [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                                 :komponentti (fn []
+                                                                [napit/yleinen-ensisijainen
+                                                                 "Hinnoittele"
+                                                                 #()
+                                                                 {:luokka "nappi-grid"}])}]
                                :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
                                :paneelin-checkbox-sijainti "94.3%"
                                :vaylan-checkbox-sijainti "94.3%"}]])))
