@@ -243,3 +243,14 @@
                          (.querySelector elt alipolku)
                          elt)]
           (.focus elt)))))))
+
+(defn skrollaa-nakyviin-absolute
+  "Skrollaa absoluuttisesti (ikkunan koordinaateissa olevan) komponentin näkyviin piirron jälkeen"
+  []
+  (piirretty
+   (fn [this]
+     (let [node (r/dom-node this)
+           [_ y _ h] (dom/sijainti node)
+           korkeus @dom/korkeus]
+       (when (> (+ y h) korkeus)
+         (.scrollBy js/window 0 (- (+ y h) korkeus)))))))
