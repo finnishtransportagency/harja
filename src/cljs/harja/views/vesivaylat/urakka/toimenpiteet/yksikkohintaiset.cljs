@@ -88,7 +88,11 @@
                                           (kenttarivi "Komponentit")
                                           (kenttarivi "Yleiset materiaalit")
                                           (kenttarivi "Matkat")
-                                          (kenttarivi "Muut kulut")))]]
+                                          (kenttarivi "Muut kulut")))
+       [napit/yleinen-ensisijainen
+        "Valmis"
+        #(log "Painoit valmis") ;; TODO Ja sitten itse action
+        ]]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
