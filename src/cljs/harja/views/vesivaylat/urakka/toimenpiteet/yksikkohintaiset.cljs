@@ -15,7 +15,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
+(defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
   [yleiset/livi-pudotusvalikko
    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
@@ -24,8 +24,8 @@
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
    hintaryhmat])
 
-(defn lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
+(defn- lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
+                               hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
@@ -36,8 +36,8 @@
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   hintaryhmien-liittaminen-kaynnissa?)}])
 
-(defn ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
-                                hintaryhman-tallennus-kaynnissa?] :as app}]
+(defn- ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
+                                 hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
      [kentat/tee-kentta {:tyyppi :string
@@ -56,19 +56,30 @@
      "Luo uusi ryhmä"
      #(e! (tiedot/->UudenHintaryhmanLisays? true))]))
 
-(defn hinnoittelu [e! app]
+(defn- hinnoittelu [e! app]
   [:span
    [:span {:style {:margin-right "10px"}} "Siirrä valitut ryhmään"]
    [hinnoittelu-vaihtoehdot e! app]
    [lisaysnappi e! app]
    [ryhman-luonti e! app]])
 
-(defn urakkatoiminnot [e! app]
+(defn- urakkatoiminnot [e! app]
   [^{:key "siirto"}
   [:span {:style {:margin-right "10px"}}
    [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]]
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
+
+(defn- hinnoittele-toimenpide []
+  (let [hinnoitellaan? (atom false)]
+    (fn []
+      [:div.vv-toimenpiteen-hinnoittelu
+       (if @hinnoitellaan?
+         [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]
+         [napit/yleinen-ensisijainen
+          "Hinnoittele"
+          #(swap! hinnoitellaan? not)
+          {:luokka "nappi-grid"}])])))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -88,10 +99,7 @@
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                                  :komponentti (fn []
-                                                                [napit/yleinen-ensisijainen
-                                                                 "Hinnoittele"
-                                                                 #(log "Painoit hinnoittelua")
-                                                                 {:luokka "nappi-grid"}])}]
+                                                                [hinnoittele-toimenpide])}]
                                :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
                                :paneelin-checkbox-sijainti "95.2%"
                                :vaylan-checkbox-sijainti "95.2%"}]])))
