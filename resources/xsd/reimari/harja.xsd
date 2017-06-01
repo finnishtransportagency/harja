@@ -112,8 +112,8 @@
     <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
-  <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut toimenpiteet
-       sekä niihin linkitetyt tiedot. -->
+  <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut komponenttityypit
+       sekä niihin linkitetyt komponenttiluokat. -->
   <xs:complexType name="HaeKomponenttiTyypitResponseType">
     <xs:sequence>
       <xs:element name="komponenttityyppi" type="KomponenttiTyyppiType" minOccurs="0" maxOccurs="unbounded"/>
@@ -138,14 +138,39 @@
 
   <!-- HaeTurvalaiteKomponentit -->
 
-  <!-- <xs:element name="HaeTurvalaiteKomponentit" type="HaeTurvalaiteKomponentitPayload"/> -->
+  <xs:element name="HaeTurvalaiteKomponentit" type="HaeTurvalaiteKomponentitPayload"/>
 
-  <!-- <xs:complexType name="HaeTurvalaiteKomponentitPayload"> -->
-  <!--   <xs:choice> -->
-  <!--     <xs:element name="HaeTurvalaiteKomponentitRequest" type="HaeTurvalaiteKomponentitRequestType"/> -->
-  <!--     <xs:element name="HaeTurvalaiteKomponentitResponse" type="HaeTurvalaiteKomponentitResponseType"/> -->
-  <!--   </xs:choice> -->
-  <!-- </xs:complexType> -->
+  <xs:complexType name="HaeTurvalaiteKomponentitPayload">
+      <xs:choice>
+          <xs:element name="HaeTurvalaiteKomponentitRequest" type="HaeTurvalaiteKomponentitRequestType"/>
+          <xs:element name="HaeTurvalaiteKomponentitResponse" type="HaeTurvalaiteKomponentitResponseType"/>
+      </xs:choice>
+  </xs:complexType>
 
+  <!-- HaeTurvalaiteKomponentitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
+       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <xs:complexType name="HaeTurvalaiteKomponentitRequestType">
+    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+  </xs:complexType>
 
+  <xs:complexType name="HaeTurvalaiteKomponentitResponseType">
+    <xs:sequence>
+      <xs:element name="turvalaitekomponentti" type="TurvalaiteKomponenttiType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteKomponenttiType">
+    <xs:attribute type="xs:token" name="id" use="required"/> <!-- SDCOMP_ID -->
+    <xs:attribute type="xs:string" name="lisatiedot" use="required"/> <!-- SDCOMP_MEM -->
+    <xs:attribute type="xs:token" name="turvalaitenro" use="required"/>
+    <xs:attribute type="xs:token" name="komponentti-id" use="required"/> <!-- COMPONENT_ID -->
+    <xs:attribute type="xs:string" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:string" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:string" name="sarjanumero" use="required"/> <!-- SERIAL_CHR -->
+    <xs:attribute type="xs:token" name="muokattu" use="required"/> <!-- UTS -->
+    <xs:attribute type="xs:token" name="luontiaika" use="required"/> <!-- CTS -->
+    <xs:attribute type="xs:string" name="luoja" use="required"/> <!-- CUI -->
+    <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
+    <xs:attribute type="xs:boolean" name="valiaikainen" use="required"/> <!-- SDCOMP_TEMPORARY -->
+  </xs:complexType>
 </xs:schema>
