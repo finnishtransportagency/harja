@@ -64,4 +64,21 @@
             :teksti-ei-tr-osoitetta? false})
          "20")))
 
+(deftest tarkista-ajoradan-pituuden-validointi
+  (let [pituudet [{:osa 101, :ajorata 1, :pituus 7809}
+                  {:osa 101, :ajorata 2, :pituus 7809}
+                  {:osa 102, :ajorata 1, :pituus 4353}
+                  {:osa 102, :ajorata 2, :pituus 4353}
+                  {:osa 103, :ajorata 1, :pituus 4770}
+                  {:osa 103, :ajorata 2, :pituus 4770}]]
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 700 pituudet))
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 1 pituudet))
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 7809 pituudet))
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 2 7809 pituudet))
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 0 pituudet))
+    (is (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 2 0 pituudet))
+    (is (not (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 7810 pituudet)))
+    (is (not (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 2 7810 pituudet)))
+    (is (not (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 1 -1 pituudet)))
+    (is (not (tierekisteri/ajoradan-pituus-sopiva-verkolla? 101 2 -1 pituudet)))))
 
