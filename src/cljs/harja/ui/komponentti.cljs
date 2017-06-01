@@ -231,3 +231,15 @@
   [nimi kontrollit]
   (sisaan-ulos #(kartta-tiedot/nayta-kartan-kontrollit! nimi kontrollit)
                #(kartta-tiedot/poista-kartan-kontrollit! nimi)))
+
+(defn fokusoi
+  "Fokusoi komponentin tai annetun CSS-selektorin sen alta piirron jälkeen"
+  ([] (fokusoi nil))
+  ([alipolku]
+   (piirretty
+    (fn [this]
+      (let [elt (r/dom-node this)]
+        (when-let [elt (if alipolku
+                         (.querySelector elt alipolku)
+                         elt)]
+          (.focus elt)))))))
