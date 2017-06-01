@@ -3,7 +3,7 @@
 -- yhteen. ST_Reverse kääntää vain pisteet, mutta ei osia, piirtäessä
 -- loppunuoli jää ensimmäisen palan loppuun, jos osien järjestystä ei käännä.
 CREATE OR REPLACE FUNCTION kaanna_multilinestring(geom GEOMETRY)
-RETURNS GEOMETRY AS $$
+  RETURNS GEOMETRY AS $$
 DECLARE
   i INTEGER;
   tulos GEOMETRY[];
@@ -43,9 +43,9 @@ $$ LANGUAGE plpgsql;
 
 -- Tatun uusi yritys tieosista
 CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
-    tie_ INTEGER,
-    aosa_ INTEGER, aet_ INTEGER,
-    losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
+  tie_ INTEGER,
+  aosa_ INTEGER, aet_ INTEGER,
+  losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
 DECLARE
   osan_pituus FLOAT;
   ajorata_ INTEGER; -- 1 on oikea ajorata tien kasvusuuntaan, 2 on vasen
@@ -85,8 +85,8 @@ BEGIN
   FOR osa_ IN aosa..losa LOOP
     -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
     SELECT geom FROM tr_osan_ajorata toa
-     WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
-      INTO osan_geometria;
+    WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
+    INTO osan_geometria;
     IF osan_geometria IS NULL THEN
       CONTINUE;
     END IF;
@@ -112,8 +112,8 @@ BEGIN
         tulos := tulos || osan_patka;
       ELSIF ajorata_ = 2 THEN
         IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
-	  osan_patka = kaanna_multilinestring(osan_patka);
-	END IF;
+          osan_patka = kaanna_multilinestring(osan_patka);
+        END IF;
         tulos := ST_Reverse(osan_patka) || tulos;
       END IF;
     END IF;
@@ -146,16 +146,16 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER) RETURNS geometry AS $$
 DECLARE
- osan_geometria GEOMETRY;
- osan_kohta FLOAT;
- tulos GEOMETRY;
+  osan_geometria GEOMETRY;
+  osan_kohta FLOAT;
+  tulos GEOMETRY;
 BEGIN
   SELECT geom
-    FROM tr_osan_ajorata
-   WHERE tie=tie_ AND osa=aosa_
-   ORDER BY ajorata
-   LIMIT 1
-   INTO osan_geometria;
+  FROM tr_osan_ajorata
+  WHERE tie=tie_ AND osa=aosa_
+  ORDER BY ajorata
+  LIMIT 1
+  INTO osan_geometria;
   osan_kohta := LEAST(1, aet_/ST_Length(osan_geometria));
   tulos := ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
   IF ST_GeometryType(tulos)='ST_GeometryCollection' AND ST_NumGeometries(tulos)=1 THEN
@@ -211,11 +211,11 @@ DECLARE
   kohta tr_osan_kohta;
 BEGIN
   SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
-    FROM tr_osan_ajorata
-   WHERE geom IS NOT NULL AND
-         ST_Intersects(piste, envelope)
-   ORDER BY d ASC LIMIT 1
-   INTO osa_;
+  FROM tr_osan_ajorata
+  WHERE geom IS NOT NULL AND
+        ST_Intersects(piste, envelope)
+  ORDER BY d ASC LIMIT 1
+  INTO osa_;
   -- Jos osa löytyy, ota etäisyys
   IF osa_ IS NULL THEN
     RETURN NULL;
@@ -236,10 +236,10 @@ DECLARE
 BEGIN
   rivit := ARRAY[]::laheinen_osoiterivi[];
   FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
-                FROM tr_osan_ajorata
-               WHERE geom IS NOT NULL AND
-                     ST_Intersects(piste, envelope)
-	      ORDER BY d ASC
+           FROM tr_osan_ajorata
+           WHERE geom IS NOT NULL AND
+                 ST_Intersects(piste, envelope)
+           ORDER BY d ASC
   LOOP
     IF r.d <= tarkkuus THEN
       kohta := laske_tr_osan_kohta(r.geom, piste);
@@ -282,16 +282,16 @@ DECLARE
   tmp_et INTEGER;
 BEGIN
   SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
-         a.geom as alkuosa_geom, b.geom as loppuosa_geom,
-         (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
-    FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
-         ON b.tie=a.tie AND b.ajorata=a.ajorata
-   WHERE a.geom IS NOT NULL AND
-         b.geom IS NOT NULL AND
-	 ST_Intersects(apiste, a.envelope) AND
-         ST_Intersects(bpiste, b.envelope)
-   ORDER BY d ASC LIMIT 1
-   INTO r;
+               a.geom as alkuosa_geom, b.geom as loppuosa_geom,
+               (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
+  FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
+      ON b.tie=a.tie AND b.ajorata=a.ajorata
+  WHERE a.geom IS NOT NULL AND
+        b.geom IS NOT NULL AND
+        ST_Intersects(apiste, a.envelope) AND
+        ST_Intersects(bpiste, b.envelope)
+  ORDER BY d ASC LIMIT 1
+  INTO r;
   IF r IS NULL THEN
     RETURN NULL;
   ELSE
@@ -319,8 +319,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille_max(
-       apiste geometry, bpiste geometry, max_pituus NUMERIC)
-RETURNS tr_osoite AS $$
+  apiste geometry, bpiste geometry, max_pituus NUMERIC)
+  RETURNS tr_osoite AS $$
 DECLARE
   r RECORD;
   aosa INTEGER;
@@ -339,15 +339,15 @@ BEGIN
   -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
   min_pituus := ST_Distance(apiste, bpiste) - 10.0;
   FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
-           	  a.geom as alkuosa_geom, b.geom as loppuosa_geom,
-		  (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
-             FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
-                  ON b.tie=a.tie AND b.ajorata=a.ajorata
-            WHERE a.geom IS NOT NULL AND
-                  b.geom IS NOT NULL AND
-	          ST_Intersects(apiste, a.envelope) AND
-                  ST_Intersects(bpiste, b.envelope)
-                 ORDER BY d ASC
+                        a.geom as alkuosa_geom, b.geom as loppuosa_geom,
+                        (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
+           FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
+               ON b.tie=a.tie AND b.ajorata=a.ajorata
+           WHERE a.geom IS NOT NULL AND
+                 b.geom IS NOT NULL AND
+                 ST_Intersects(apiste, a.envelope) AND
+                 ST_Intersects(bpiste, b.envelope)
+           ORDER BY d ASC
   LOOP
     aosa := r.alkuosa;
     alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
@@ -386,11 +386,11 @@ CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
 DECLARE
   osoite tr_osoite;
 BEGIN
-    osoite := yrita_tierekisteriosoite_pisteille2(alkupiste, loppupiste, treshold);
-    IF osoite IS NULL THEN
-      RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
-    END IF;
-    RETURN osoite;
+  osoite := yrita_tierekisteriosoite_pisteille2(alkupiste, loppupiste, treshold);
+  IF osoite IS NULL THEN
+    RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
+  END IF;
+  RETURN osoite;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -403,8 +403,8 @@ BEGIN
   -- Laske uudet pituudet
   INSERT INTO tr_osien_pituudet
     SELECT tie, osa, ST_Length(geom) AS pituus
-      FROM tr_osan_ajorata
-     WHERE ajorata=1 AND geom IS NOT NULL
+    FROM tr_osan_ajorata
+    WHERE ajorata=1 AND geom IS NOT NULL
     ORDER BY tie,osa;
   -- Päivitä osien envelopet
   UPDATE tr_osan_ajorata SET envelope = ST_Expand(ST_Envelope(geom), 250);
@@ -431,8 +431,8 @@ BEGIN
     loppu := ST_GeometryN(pisteet, i+1);
     --RAISE NOTICE 'alku: %, loppu: %', st_astext(alku), st_astext(loppu);
     RETURN NEXT (alku, loppu,
-    	   	 (SELECT ytp.geometria
-	            FROM yrita_tierekisteriosoite_pisteille2(alku, loppu, threshold) ytp));
+                 (SELECT ytp.geometria
+                  FROM yrita_tierekisteriosoite_pisteille2(alku, loppu, threshold) ytp));
     i := i + 1;
   END LOOP;
 END;
@@ -443,27 +443,27 @@ $$ LANGUAGE plpgsql;
 -- pisteiden välinen aika sekunteina kertaa 30 m/s (108 km/h).
 CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[]) RETURNS SETOF RECORD AS $$
 DECLARE
- alku piste_aika;
- loppu piste_aika;
- alkupiste GEOMETRY;
- loppupiste GEOMETRY;
- aika NUMERIC;
- i INTEGER;
- pisteita INTEGER;
+  alku piste_aika;
+  loppu piste_aika;
+  alkupiste GEOMETRY;
+  loppupiste GEOMETRY;
+  aika NUMERIC;
+  i INTEGER;
+  pisteita INTEGER;
 BEGIN
- i := 1;
- pisteita := array_length(pisteet, 1);
- WHILE i < pisteita LOOP
-  alku := pisteet[i];
-  loppu := pisteet[i+1];
-  aika := EXTRACT(EPOCH FROM age(loppu.aika, alku.aika));
-  alkupiste := ST_MakePoint(alku.x, alku.y);
-  loppupiste := ST_MakePoint(loppu.x, loppu.y);
-  RETURN NEXT (alkupiste, loppupiste,
-               (SELECT ytp.geometria
-	          FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
-  i := i + 1;
- END LOOP;
+  i := 1;
+  pisteita := array_length(pisteet, 1);
+  WHILE i < pisteita LOOP
+    alku := pisteet[i];
+    loppu := pisteet[i+1];
+    aika := EXTRACT(EPOCH FROM age(loppu.aika, alku.aika));
+    alkupiste := ST_MakePoint(alku.x, alku.y);
+    loppupiste := ST_MakePoint(loppu.x, loppu.y);
+    RETURN NEXT (alkupiste, loppupiste,
+                 (SELECT ytp.geometria
+                  FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
+    i := i + 1;
+  END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
