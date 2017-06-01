@@ -83,6 +83,7 @@
 (defrecord ValitutLiitetty [vastaus])
 (defrecord ValitutEiLiitetty [virhe])
 (defrecord HinnoitteleToimenpide [toimenpide-id])
+(defrecord HinnoitteleToimenpideKentta [tiedot])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -248,5 +249,9 @@
 
   HinnoitteleToimenpide
   (process-event [{toimenpide-id :toimenpide-id} app]
-    (assoc-in app [:hinnoittele-toimenpide ::to/id] toimenpide-id)))
+    (assoc-in app [:hinnoittele-toimenpide ::to/id] toimenpide-id))
+
+  HinnoitteleToimenpideKentta ;; TODO Yksikkötesti tälle
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide (:tunniste tiedot)] (:arvo tiedot))))
 
