@@ -7,6 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as toi]
+            [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
@@ -39,7 +40,7 @@
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
-        kysely-params {::tot/urakka-id urakka-id
+        kysely-params {::u/id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
@@ -51,4 +52,4 @@
 
     (is (= vastaus yksikkohintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
-    (is (every? #(= % "vv-kokonaishintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
+    (is (every? #(= % "kokonaishintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
