@@ -69,7 +69,7 @@
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat]
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
-            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]       
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
@@ -152,9 +152,10 @@
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
-    (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-    (kasittely/paivita-alikohteet db kohde alikohteet)
-    (yy/paivita-yllapitourakan-geometria db urakka-id)
+    (jdbc/with-db-transaction [db db]
+      (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
+      (kasittely/paivita-alikohteet db kohde alikohteet)
+      (yy/paivita-yllapitourakan-geometria db urakka-id))
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
 
@@ -163,8 +164,7 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (jdbc/with-db-transaction
-    [db db]
+  (jdbc/with-db-transaction [db db]
     (let [urakka-id (Integer/parseInt urakka-id)
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
