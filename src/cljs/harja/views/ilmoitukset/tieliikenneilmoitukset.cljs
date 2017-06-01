@@ -38,8 +38,7 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.tyokalut.ui :refer [for*]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -69,49 +68,21 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
-(comment
-  (defn kuittauslista [{kuittaukset :kuittaukset}]
-    [:div.kuittauslista
-     (map-indexed
-      (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
-        ^{:key i}
-        [yleiset/tooltip {}
-         [:div.kuittaus {:class (name kuittaustyyppi)}
-          (kuittaustyypin-lyhenne kuittaustyyppi)]
-         ])
-      (remove domain/valitysviesti? kuittaukset))]))
 
-(defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus}]
-  [:div
-   (kuittaustyypin-selite kuittaustyyppi)
-   [:br]
-   (pvm/pvm-aika kuitattu)
-   [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)])
-
-
-(defn kuittauslista [e! pikakuittaus {id :id kuittaukset :kuittaukset :as ilmoitus}]
-  (let [kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)
-        pikakuittaus? (and pikakuittaus (= id (get-in pikakuittaus [:ilmoitus :id])))]
-    [:span
-     (when pikakuittaus?
-       [kuittaukset/pikakuittaus e! pikakuittaus])
-     [:div.kuittauslista
-      (for*
-       [kuittaustyyppi domain/kuittaustyypit
-        :let [kuitattu? (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)]]
+(defn kuittauslista [{kuittaukset :kuittaukset}]
+  [:div.kuittauslista
+   (map-indexed
+     (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
+       ^{:key i}
        [yleiset/tooltip {}
-        [:div.kuittaus {:class (str (name kuittaustyyppi)
-                                    (when-not kuitattu?
-                                      " ei-kuittausta"))
-                        :on-click #(do (.stopPropagation %)
-                                       (.preventDefault %)
-                                       (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
+        [:div.kuittaus {:class (name kuittaustyyppi)}
          (kuittaustyypin-lyhenne kuittaustyyppi)]
-        (if kuitattu?
-          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
-          [:div "Ei " (kuittaustyypin-lyhenne kuittaustyyppi) " kuittausta."
-           [:br]
-           "Klikkaa kuitataksesi."])])]]))
+        [:div
+         (kuittaustyypin-selite kuittaustyyppi)
+         [:br]
+         (pvm/pvm-aika kuitattu)
+         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
+     (remove domain/valitysviesti? kuittaukset))])
 
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
@@ -274,10 +245,10 @@
          :leveys 6}
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
-         :komponentti (partial kuittauslista e! pikakuittaus)
-         :leveys 8}
+         :komponentti kuittauslista
+         :leveys 6}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
                 (assoc % :lihavoi true)
                 %)
