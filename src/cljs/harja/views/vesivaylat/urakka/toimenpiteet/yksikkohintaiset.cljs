@@ -12,7 +12,8 @@
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.ui.kentat :as kentat]
-            [harja.domain.vesivaylat.hinnoittelu :as h])
+            [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.toimenpide :as to])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
@@ -70,18 +71,17 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
-(defn- hinnoittele-toimenpide []
-  (let [hinnoitellaan? (atom false)]
-    (fn []
-      [:div.vv-toimenpiteen-hinnoittelu
-       (if @hinnoitellaan?
-         [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
-          "Hinta: 0€"
-          [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]]
-         [napit/yleinen-ensisijainen
-          "Hinnoittele"
-          #(swap! hinnoitellaan? not)
-          {:luokka "nappi-grid"}])])))
+(defn- hinnoittele-toimenpide [app e! rivi]
+  [:div.vv-toimenpiteen-hinnoittelu
+   (if (and (:hinnoittele-toimenpide-id app)
+            (= (:hinnoittele-toimenpide-id app) (::to/id rivi)))
+     [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
+      "Hinta: 0€"
+      [:div.vv-toimenpiteen-hinnoittelutiedot "Hinnoitellaan"]]
+     [napit/yleinen-ensisijainen
+      "Hinnoittele"
+      #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
+      {:luokka "nappi-grid"}])])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -100,8 +100,8 @@
        [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                                 :komponentti (fn []
-                                                                [hinnoittele-toimenpide])}]
+                                                 :komponentti (fn [rivi]
+                                                                [hinnoittele-toimenpide app e! rivi])}]
                                :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
                                :paneelin-checkbox-sijainti "95.2%"
                                :vaylan-checkbox-sijainti "95.2%"}]])))

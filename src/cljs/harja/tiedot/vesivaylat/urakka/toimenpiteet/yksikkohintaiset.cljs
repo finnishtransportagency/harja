@@ -42,7 +42,8 @@
          :hintaryhmat nil
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
-         :hintaryhmien-liittaminen-kaynnissa? false}))
+         :hintaryhmien-liittaminen-kaynnissa? false
+         :hinnoittele-toimenpide-id nil}))
 
 (def valinnat
   (reaction
@@ -76,6 +77,7 @@
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
 (defrecord ValitutLiitetty [vastaus])
 (defrecord ValitutEiLiitetty [virhe])
+(defrecord HinnoitteleToimenpide [toimenpide-id])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -237,5 +239,9 @@
   ValitutEiLiitetty
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
-    (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
+    (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
+
+  HinnoitteleToimenpide
+  (process-event [{toimenpide-id :toimenpide-id} app]
+    (assoc app :hinnoittele-toimenpide-id toimenpide-id)))
 
