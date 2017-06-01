@@ -77,7 +77,7 @@
                               (assoc-in [:sijainti :numero] kohteen-tienumero)
                               (assoc :alikohteet alikohteet))
         karttapvm (some-> (get-in muunnettava-kohde [:sijainti :karttapvm])
-                          (parametrit/pvm-aika karttapvm))
+                          (parametrit/pvm-aika))
         muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet
                           vkm
                           db
