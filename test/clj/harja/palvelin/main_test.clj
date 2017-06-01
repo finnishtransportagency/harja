@@ -52,7 +52,8 @@
     :urakan-tyotunnit
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
-    :vv-vaylat})
+    :vv-vaylat
+    :vv-hinnoittelut})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
