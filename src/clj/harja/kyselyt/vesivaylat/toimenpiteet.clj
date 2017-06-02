@@ -46,6 +46,15 @@
            {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
            {::vv-toimenpide/id (op/in toimenpide-idt)}))
 
+(defn hinnoittele-toimenpide [db tiedot]
+  (let [toimenpide-id (::vv-toimenpide/id tiedot)
+        hinnoittelutiedot {:tyo (:tyo tiedot)
+                           :komponentit (:komponentit tiedot)
+                           :yleiset-materiaalit (:yleiset-materiaalit tiedot)
+                           :matkat (:matkat tiedot)
+                           :muut-kulut (:muut-kulut tiedot)}]
+    (log/debug "Hinnoitella voisi jos osaisi"))) ;; TODO Hinnoittele
+
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
   (let [urakka-id (::vv-toimenpide/urakka-id tiedot)

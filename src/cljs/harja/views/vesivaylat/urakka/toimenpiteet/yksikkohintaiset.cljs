@@ -98,7 +98,8 @@
                                           (kenttarivi app e! "Muut kulut" :muut-kulut)))
        [napit/yleinen-ensisijainen
         "Valmis"
-        #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))]]]
+        #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
+        {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))

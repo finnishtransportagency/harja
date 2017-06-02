@@ -269,7 +269,8 @@
     (if-not (:hinnoittelun-tallennus-kaynnissa? app)
       (let [tulos! (tuck/send-async! ->HinnoitteluTallennettu)
             fail! (tuck/send-async! ->HinnoitteluEiTallennettu)
-            parametrit (:hinnoittele-toimenpide app)]
+            parametrit (merge {::to/urakka-id (get-in app [:valinnat :urakka-id])}
+                              (:hinnoittele-toimenpide app))]
         (try
           (go
             (let [vastaus (<! (k/post! :hinnoittele-toimenpide parametrit))]

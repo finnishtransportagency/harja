@@ -31,6 +31,16 @@
       (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen))
     (::to/idt tiedot)))
 
+(defn hinnoittele-toimenpide [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::to/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      ;; TODO Tarkista, että toimenpide kuuluu urakkaan!
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                      user urakka-id)
+      (q/hinnoittele-toimenpide db tiedot))
+    (::to/idt tiedot)))
+
 (defrecord YksikkohintaisetToimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -48,6 +58,13 @@
       (fn [user tiedot]
         (siirra-toimenpiteet-kokonaishintaisiin db user tiedot))
       {:kysely-spec ::to/siirra-toimenpiteet-kokonaishintaisiin-kysely})
+    (julkaise-palvelu
+      http
+      :hinnoittele-toimenpide
+      (fn [user tiedot]
+        (hinnoittele-toimenpide db user tiedot))
+      ;; TODO Kysely ja vastaus specit
+      {})
     this)
 
   (stop [this]
