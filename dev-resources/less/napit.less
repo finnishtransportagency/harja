@@ -125,8 +125,15 @@
   width: 26px;
   height: @input-korkeus - 1;
   position: relative;
-  top: -@input-korkeus - 1;
+  top: -@input-korkeus;
   left: -1px;
+}
+
+/* Gridin alla lomakekentät ovat pienempi, pienennetään myös alasvedon hakunappia */
+.livi-grid .nappi-hakualasveto {
+  width: 22px;
+  height: 22px;
+  top: -22px;
 }
 
 .inlinenappi:active {
