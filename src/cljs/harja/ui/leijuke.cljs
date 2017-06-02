@@ -31,8 +31,6 @@
         [x y _ _] (dom/sijainti wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus
-        etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan komponentti-node)
-        etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan komponentti-node)
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan komponentti-node)
         suunta (if (< viewport-korkeus (+ y korkeus))
                  (if (< etaisyys-oikeaan-reunaan leveys)
