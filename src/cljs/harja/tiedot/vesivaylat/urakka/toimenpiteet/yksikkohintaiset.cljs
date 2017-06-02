@@ -89,6 +89,14 @@
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteluTallennettu [vastaus])
 (defrecord HinnoitteluEiTallennettu [virhe])
+(defrecord PeruToimenpiteenHinnoittelu [])
+
+(def alustava-hinnoittelu
+  [{:nimi "Työ" :tunniste :tyo :arvo 0}
+   {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+   {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+   {:nimi "Matkat" :tunniste :matkat :arvo 0}
+   {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -256,12 +264,7 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     (assoc app :hinnoittele-toimenpide
                {::to/id toimenpide-id
-                :hinnoittelutiedot
-                [{:nimi "Työ" :tunniste :tyo :arvo 0}
-                 {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
-                 {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
-                 {:nimi "Matkat" :tunniste :matkat :arvo 0}
-                 {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]}))
+                :hinnoittelutiedot alustava-hinnoittelu}))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
@@ -301,5 +304,11 @@
   HinnoitteluEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
-    (assoc app :hinnoittelun-tallennus-kaynnissa? false)))
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+
+  PeruToimenpiteenHinnoittelu
+  (process-event [_ app]
+    (assoc app :hinnoittele-toimenpide
+               {::to/id nil
+                :hinnoittelutiedot alustava-hinnoittelu})))
 

@@ -262,7 +262,13 @@
               {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
               {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 5}
               {:nimi "Matkat" :tunniste :matkat :arvo 0}
-              {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}])))))
+              {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]))))
+
+  (testing "Peru hinnoittelu"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                        vanha-tila)]
+      (is (= vanha-tila uusi-tila)))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]

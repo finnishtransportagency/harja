@@ -9,6 +9,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.leijuke :refer [leijuke]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
@@ -83,23 +84,25 @@
     "€"]])
 
 (defn- hinnoittele-toimenpide [app e! rivi]
-  [:div.vv-toimenpiteen-hinnoittelu
+  [:div
    (if (and (get-in app [:hinnoittele-toimenpide ::to/id])
             (= (get-in app [:hinnoittele-toimenpide ::to/id])
                (::to/id rivi)))
-     [:div.vv-toimenpiteen-hinnoittelutiedot-wrapper
-      "Hinta: 0€"
-      [:div.vv-toimenpiteen-hinnoittelutiedot
-       {:on-click #(.stopPropagation %)}
-       (into [yleiset/tietoja {}] (concat (kenttarivi app e! "Työ" :tyo)
-                                          (kenttarivi app e! "Komponentit" :komponentit)
-                                          (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
-                                          (kenttarivi app e! "Matkat" :matkat)
-                                          (kenttarivi app e! "Muut kulut" :muut-kulut)))
-       [napit/yleinen-ensisijainen
-        "Valmis"
-        #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
-        {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]
+     [:div
+      [:span "Hinta: 0€"]
+      [leijuke {:sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
+       [:div.vv-toimenpiteen-hinnoittelutiedot
+        {:on-click #(.stopPropagation %)}
+        (into [yleiset/tietoja {}] (concat (kenttarivi app e! "Työ" :tyo)
+                                           (kenttarivi app e! "Komponentit" :komponentit)
+                                           (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
+                                           (kenttarivi app e! "Matkat" :matkat)
+                                           (kenttarivi app e! "Muut kulut" :muut-kulut)))
+        [napit/yleinen-ensisijainen
+         "Valmis"
+         #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
+         {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]]
+
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
