@@ -65,14 +65,15 @@
                           EventType/SCROLL paivita-suunta!
                           EventType/RESIZE paivita-suunta!
                           EventType/KEYUP sulje-esc-napilla!)
-     (fn [optiot sisalto]
+     (fn [{:keys [luokka sulje!] :as optiot} sisalto]
        (let [suunta @suunta]
          [:div.leijuke-wrapper
-          [:div.leijuke {:style
+          [:div.leijuke {:class luokka
+                         :style
                          (if suunta
                            (avautumissuunta-tyyli suunta)
                            (merge
                             (avautumissuunta-tyyli :alas-vasen)
                             {:visibility "hidden"}))}
-           [napit/sulje-ruksi (:sulje! optiot)]
+           [napit/sulje-ruksi sulje!]
            sisalto]])))))
