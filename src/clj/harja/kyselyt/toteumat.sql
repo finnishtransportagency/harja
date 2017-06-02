@@ -780,6 +780,7 @@ SELECT
   alkupvm,
   loppupvm,
   lahetetty,
+  lahetysvirhe,
   tila
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
