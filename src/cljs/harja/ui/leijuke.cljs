@@ -73,7 +73,8 @@
                             (merge
                               (avautumissuunta-tyyli :alas-vasen)
                               {:visibility "hidden"}))}
-            [napit/sulje-ruksi sulje!]
-            [:h4 otsikko]
+            [:header
+             [napit/sulje-ruksi sulje!]
+             [:h4 otsikko]]
             [:div.leijuke-sisalto
              sisalto]]])))))
