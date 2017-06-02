@@ -67,11 +67,6 @@
        (let [suunta @suunta]
          [:div.leijuke-wrapper
           [:div.leijuke {:class luokka
-                         :style
-                         (if suunta
-                           (avautumissuunta-tyyli suunta)
-                           (merge
-                            (avautumissuunta-tyyli :alas-vasen)
-                            {:visibility "hidden"}))}
+                         :style (avautumissuunta-tyyli (or suunta :alas-vasen))}
            [napit/sulje-ruksi sulje!]
            sisalto]])))))
