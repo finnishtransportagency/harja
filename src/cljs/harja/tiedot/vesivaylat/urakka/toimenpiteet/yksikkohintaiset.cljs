@@ -43,6 +43,7 @@
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
          :hintaryhmien-liittaminen-kaynnissa? false
+         :hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide {::to/id nil
                                   :tyo 0
                                   :komponentit 0
@@ -84,6 +85,9 @@
 (defrecord ValitutEiLiitetty [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
+(defrecord HinnoitteleToimenpide [tiedot])
+(defrecord HinnoitteluTallennettu [vastaus])
+(defrecord HinnoitteluEiTallennettu [virhe])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -258,5 +262,35 @@
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide (:tunniste tiedot)] (:arvo tiedot))))
+    (assoc-in app [:hinnoittele-toimenpide (:tunniste tiedot)] (:arvo tiedot)))
+
+  HinnoitteleToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (if-not (:hinnoittelun-tallennus-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->HinnoitteluTallennettu)
+            fail! (tuck/send-async! ->HinnoitteluEiTallennettu)
+            parametrit (:hinnoittele-toimenpide app)]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :hinnoittele-toimenpide parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hinnoittelun-tallennus-kaynnissa? true)
+
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  HinnoitteluTallennettu
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Hinnoittelu tallennettu!" :success)
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+
+  HinnoitteluEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false)))
 
