@@ -24,7 +24,8 @@
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio]
-    [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
+    [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+    [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -94,7 +95,7 @@
 
 (defn laheta-varustetoteuma-tierekisteriin [this varustetoteuma-id]
   (log/debug (format "Lähetetään varustetoteuma (id: %s) Tierekisteriin" varustetoteuma-id))
-  (try
+  (try+
     (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
       (let [toimenpide (:toimenpide varustetoteuma)
             tiedot (varusteen-tiedot varustetoteuma)]
@@ -109,8 +110,11 @@
           vastaus))
       (do
         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" (str/join (map :viesti virheet)) varustetoteuma-id)
+      (log/error (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))
     (catch Exception e
-      (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" varustetoteuma-id)
+      (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "virhe" nil varustetoteuma-id)
       (log/error e (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))))
 
 (defn laheta-varustetoteumat [this]

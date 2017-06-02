@@ -929,7 +929,7 @@ SELECT id,
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
-SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
