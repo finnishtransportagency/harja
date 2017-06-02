@@ -102,7 +102,7 @@
         ]]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
-      #(e! (tiedot/->HinnoitteleToimenpide (::to/id rivi)))
+      #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
       {:luokka "nappi-grid"}])])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]

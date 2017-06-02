@@ -234,7 +234,7 @@
 (deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpide 1))]
+          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1))]
     (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
     (is (= (:hinnoittele-toimenpide uusi-tila)
            {::to/id 1

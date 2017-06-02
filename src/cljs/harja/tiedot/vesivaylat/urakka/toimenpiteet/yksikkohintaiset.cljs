@@ -82,7 +82,7 @@
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
 (defrecord ValitutLiitetty [vastaus])
 (defrecord ValitutEiLiitetty [virhe])
-(defrecord HinnoitteleToimenpide [toimenpide-id])
+(defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 
 (defn kyselyn-hakuargumentit [valinnat]
@@ -247,7 +247,7 @@
     (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
     (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
 
-  HinnoitteleToimenpide
+  AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
     (assoc app :hinnoittele-toimenpide {::to/id toimenpide-id
                                         :tyo 0
