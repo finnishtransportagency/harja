@@ -98,8 +98,7 @@
                                           (kenttarivi app e! "Muut kulut" :muut-kulut)))
        [napit/yleinen-ensisijainen
         "Valmis"
-        #(log "Painoit valmis") ;; TODO Ja sitten itse action
-        ]]]
+        #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))]]]
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
