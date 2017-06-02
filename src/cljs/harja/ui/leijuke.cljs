@@ -47,7 +47,7 @@
 
   :sulje!   funktio, jota kutsutaan kun leijukkeen sulje-raksia tai ESC-näppäintä painetaan
   :luokka   optionaalinen lisäluokka
-  "
+  :otsikko  Leijukkeessa näytettävä otsikko-teksti"
   [optiot sisalto]
   (let [suunta (r/atom nil)
         paivita-suunta! (fn [this _]
@@ -62,10 +62,11 @@
                            EventType/SCROLL paivita-suunta!
                            EventType/RESIZE paivita-suunta!
                            EventType/KEYUP sulje-esc-napilla!)
-      (fn [{:keys [luokka sulje!] :as optiot} sisalto]
+      (fn [{:keys [luokka sulje! otsikko] :as optiot} sisalto]
         (let [suunta @suunta]
           [:div.leijuke-wrapper
            [:div.leijuke {:class luokka
+                          :on-click #(.stopPropagation %)
                           :style
                           (if suunta
                             (avautumissuunta-tyyli suunta)
@@ -73,4 +74,6 @@
                               (avautumissuunta-tyyli :alas-vasen)
                               {:visibility "hidden"}))}
             [napit/sulje-ruksi sulje!]
-            sisalto]])))))
+            [:h4 otsikko]
+            [:div.leijuke-sisalto
+             sisalto]]])))))
