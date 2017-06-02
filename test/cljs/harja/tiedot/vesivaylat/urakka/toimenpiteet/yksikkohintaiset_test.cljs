@@ -236,7 +236,13 @@
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->HinnoitteleToimenpide 1))]
     (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-    (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::to/id]) 1)))))
+    (is (= (:hinnoittele-toimenpide uusi-tila)
+           {::to/id 1
+            :tyo 0
+            :komponentit 0
+            :yleiset-materiaalit 0
+            :matkat 0
+            :muut-kulut 0})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kenttiä"

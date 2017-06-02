@@ -249,7 +249,12 @@
 
   HinnoitteleToimenpide
   (process-event [{toimenpide-id :toimenpide-id} app]
-    (assoc-in app [:hinnoittele-toimenpide ::to/id] toimenpide-id))
+    (assoc app :hinnoittele-toimenpide {::to/id toimenpide-id
+                                        :tyo 0
+                                        :komponentit 0
+                                        :yleiset-materiaalit 0
+                                        :matkat 0
+                                        :muut-kulut 0}))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
