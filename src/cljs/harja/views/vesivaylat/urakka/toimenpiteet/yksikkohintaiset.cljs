@@ -100,7 +100,7 @@
                 :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
        [:div.vv-toimenpiteen-hinnoittelutiedot
         {:on-click #(.stopPropagation %)}
-        (into [yleiset/tietoja {}]
+        (into [yleiset/tietoja {:piirra-viivat? false}]
               (concat (kenttarivi app e! "Työ" :tyo)
                       (kenttarivi app e! "Komponentit" :komponentit)
                       (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
