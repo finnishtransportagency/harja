@@ -24,11 +24,12 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hinnoittele-toimenpide {::to/id nil
-                                         :tyo 0
-                                         :komponentit 0
-                                         :yleiset-materiaalit 0
-                                         :matkat 0
-                                         :muut-kulut 0}
+                                         :hinnoittelutiedot
+                                         [{:nimi "Työ" :tunniste :tyo :arvo 0}
+                                          {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+                                          {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+                                          {:nimi "Matkat" :tunniste :matkat :arvo 0}
+                                          {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -238,18 +239,30 @@
     (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
     (is (= (:hinnoittele-toimenpide uusi-tila)
            {::to/id 1
-            :tyo 0
-            :komponentit 0
-            :yleiset-materiaalit 0
-            :matkat 0
-            :muut-kulut 0})))))
+            :hinnoittelutiedot
+            [{:nimi "Työ" :tunniste :tyo :arvo 0}
+             {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+             {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+             {:nimi "Matkat" :tunniste :matkat :arvo 0}
+             {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kenttiä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste :materiaalit :arvo 5}))]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide :materiaalit])))
-      (is (= (get-in uusi-tila [:hinnoittele-toimenpide :materiaalit]) 5)))))
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste :yleiset-materiaalit :arvo 5})
+                        vanha-tila)]
+      (is (= (get-in vanha-tila [:hinnoittele-toimenpide :hinnoittelutiedot])
+             [{:nimi "Työ" :tunniste :tyo :arvo 0}
+              {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+              {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+              {:nimi "Matkat" :tunniste :matkat :arvo 0}
+              {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]))
+      (is (= (get-in uusi-tila [:hinnoittele-toimenpide :hinnoittelutiedot])
+             [{:nimi "Työ" :tunniste :tyo :arvo 0}
+              {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+              {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 5}
+              {:nimi "Matkat" :tunniste :matkat :arvo 0}
+              {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}])))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
@@ -259,5 +272,3 @@
 (deftest hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
     (is (false? (:haku-kaynnissa? tulos)))))
-
-

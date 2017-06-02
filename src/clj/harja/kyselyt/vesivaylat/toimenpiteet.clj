@@ -1,6 +1,6 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
   (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch update!]]
+            [specql.core :refer [fetch update! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec.alpha :as s]
@@ -13,7 +13,9 @@
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
+            [harja.domain.urakka :as ur]
+            [clojure.java.jdbc :as jdbc]))
 
 (def toimenpiteet-xf
   (comp
@@ -42,9 +44,10 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  (update! db ::vv-toimenpide/reimari-toimenpide
-           {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
-           {::vv-toimenpide/id (op/in toimenpide-idt)}))
+  (jdbc/with-db-transaction [db db]
+    (update! db ::vv-toimenpide/reimari-toimenpide
+             {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
+             {::vv-toimenpide/id (op/in toimenpide-idt)})))
 
 (defn hinnoittele-toimenpide [db tiedot]
   (let [toimenpide-id (::vv-toimenpide/id tiedot)
@@ -53,7 +56,16 @@
                            :yleiset-materiaalit (:yleiset-materiaalit tiedot)
                            :matkat (:matkat tiedot)
                            :muut-kulut (:muut-kulut tiedot)}]
-    (log/debug "Hinnoitella voisi jos osaisi"))) ;; TODO Hinnoittele
+    (log/debug "Hinnoitella voisi jos osaisi")
+
+    ;; TODO jotain tällaista, mutta nimen pitäisi olla uniikki per toimenpide. Onnistuuko specql:llä?
+    #_(jdbc/with-db-transaction [db db]
+      (doseq [hinnoittelu-nimi (keys hinnoittelutiedot)]
+        (upsert! db ::vv-hinnoittelu/hinnoittelu
+                 {::vv-hinnoittelu/urakka-id (::vv-toimenpide/urakka-id tiedot)
+                  ::vv-hinnoittelu/niminil
+                  ::vv-hinnoittelu/luoja mil}
+                 {::vv-hinnoittelu/nimi hinnoittelu-nimi})))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]

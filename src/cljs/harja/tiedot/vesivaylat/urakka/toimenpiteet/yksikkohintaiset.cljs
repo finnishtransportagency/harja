@@ -45,11 +45,12 @@
          :hintaryhmien-liittaminen-kaynnissa? false
          :hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide {::to/id nil
-                                  :tyo 0
-                                  :komponentit 0
-                                  :yleiset-materiaalit 0
-                                  :matkat 0
-                                  :muut-kulut 0}}))
+                                  :hinnoittelutiedot
+                                  [{:nimi "Työ" :tunniste :tyo :arvo 0}
+                                   {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+                                   {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+                                   {:nimi "Matkat" :tunniste :matkat :arvo 0}
+                                   {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]}}))
 
 (def valinnat
   (reaction
@@ -253,16 +254,23 @@
 
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
-    (assoc app :hinnoittele-toimenpide {::to/id toimenpide-id
-                                        :tyo 0
-                                        :komponentit 0
-                                        :yleiset-materiaalit 0
-                                        :matkat 0
-                                        :muut-kulut 0}))
+    (assoc app :hinnoittele-toimenpide
+               {::to/id toimenpide-id
+                :hinnoittelutiedot
+                [{:nimi "Työ" :tunniste :tyo :arvo 0}
+                 {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
+                 {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
+                 {:nimi "Matkat" :tunniste :matkat :arvo 0}
+                 {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]}))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide (:tunniste tiedot)] (:arvo tiedot)))
+    (assoc-in app [:hinnoittele-toimenpide :hinnoittelutiedot]
+              (mapv (fn [hinnoittelu]
+                      (if (= (:tunniste hinnoittelu) (:tunniste tiedot))
+                        (assoc hinnoittelu :arvo (:arvo tiedot))
+                        hinnoittelu))
+                    (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot]))))
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
