@@ -86,6 +86,9 @@
     [:span " "]
     "€"]])
 
+(defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
+  (reduce + 0 (map :arvo hinnoittelutiedot)))
+
 (defn- hinnoittele-toimenpide [app e! rivi]
   [:div
    (if (and (get-in app [:hinnoittele-toimenpide ::to/id])
@@ -97,15 +100,20 @@
                 :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
        [:div.vv-toimenpiteen-hinnoittelutiedot
         {:on-click #(.stopPropagation %)}
-        (into [yleiset/tietoja {}] (concat (kenttarivi app e! "Työ" :tyo)
-                                           (kenttarivi app e! "Komponentit" :komponentit)
-                                           (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
-                                           (kenttarivi app e! "Matkat" :matkat)
-                                           (kenttarivi app e! "Muut kulut" :muut-kulut)))
-        [napit/yleinen-ensisijainen
-         "Valmis"
-         #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
-         {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]]
+        (into [yleiset/tietoja {}]
+              (concat (kenttarivi app e! "Työ" :tyo)
+                      (kenttarivi app e! "Komponentit" :komponentit)
+                      (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
+                      (kenttarivi app e! "Matkat" :matkat)
+                      (kenttarivi app e! "Muut kulut" :muut-kulut)
+                      ["Yhteensä" (str (laske-hinnoittelun-kokonaishinta
+                                         (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot]))
+                                       "€")]))
+        [:footer.vv-toimenpiteen-hinnoittelu-footer
+         [napit/yleinen-ensisijainen
+          "Valmis"
+          #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
+          {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]]]
 
      [napit/yleinen-ensisijainen
       "Hinnoittele"
