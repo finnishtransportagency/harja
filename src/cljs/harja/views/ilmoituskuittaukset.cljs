@@ -21,7 +21,8 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.protokollat :as protokollat]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -209,11 +210,11 @@
   (komp/luo
    (komp/skrollaa-nakyviin-absolute)
    (komp/fokusoi "input.form-control")
-   (komp/klikattu-ulkopuolelle
+   #_(komp/klikattu-ulkopuolelle
     #(e! (v/->PeruutaPikakuittaus)))
    (fn [e! {:keys [kuittaustyyppi] :as pikakuittaus}]
-     [:div.pikakuittaus
-      [napit/sulje-ruksi #(e! (v/->PeruutaPikakuittaus))]
+     [leijuke/leijuke
+      {:sulje! #(e! (v/->PeruutaPikakuittaus))}
       [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
                       :otsikko (apurit/kuittaustyypin-selite kuittaustyyppi)
                       :footer-fn (fn [data]
