@@ -23,6 +23,10 @@
   (is (nil? (tietolajit/validoi-arvoalue nil "tl666" "kenttänen" :numeerinen 1 10))
       "Nilliä arvoa ei validoida")
   (is (nil? (tietolajit/validoi-arvoalue "2" "tl666" "kenttänen" :numeerinen nil nil))
-      "Validointia ei tehdä, jos arvoaluetta ei ole"))
+      "Validointia ei tehdä, jos arvoaluetta ei ole")
+  (is (nil? (tietolajit/validoi-arvoalue "123456789012" "tl666" "kenttänen" :numeerinen 1 123456789015))
+      "Isot numerot osataan käsitellä")
+  (is (nil? (tietolajit/validoi-arvoalue "1.4" "tl666" "kenttänen" :numeerinen 1 123456789015))
+      "Desimaalit osataan käsitellä"))
 
 
