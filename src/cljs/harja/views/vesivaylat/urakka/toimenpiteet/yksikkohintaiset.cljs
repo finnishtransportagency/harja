@@ -77,7 +77,10 @@
   [otsikko
    [:span
     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (get-in app [:hinnoittele-toimenpide tunniste])
+     (r/wrap (->> (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot])
+                  (filter #(= (:tunniste %) tunniste))
+                  (first)
+                  (:arvo))
              (fn [uusi]
                (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste tunniste :arvo uusi}))))]
     [:span " "]
@@ -90,7 +93,8 @@
                (::to/id rivi)))
      [:div
       [:span "Hinta: 0€"]
-      [leijuke {:sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
+      [leijuke {:otsikko "Hinnoittele toimenpide"
+                :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
        [:div.vv-toimenpiteen-hinnoittelutiedot
         {:on-click #(.stopPropagation %)}
         (into [yleiset/tietoja {}] (concat (kenttarivi app e! "Työ" :tyo)
