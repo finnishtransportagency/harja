@@ -92,16 +92,16 @@
       :tallenna-hintaryhmalle-hinta
       (fn [user tiedot]
         (tallenna-hintaryhmalle-hinta! db user tiedot))
-      {:kysely-spec ::h/anna-hintaryhmalle-hinta-kysely
-       :vastaus-spec ::h/anna-hintaryhmalle-hinta-vastaus})
+      {:kysely-spec ::h/tallenna-hintaryhmalle-hinta-kysely
+       :vastaus-spec ::h/tallenna-hintaryhmalle-hinta-vastaus})
 
     (julkaise-palvelu
       http
       :tallenna-toimenpiteelle-hinta
       (fn [user tiedot]
         (tallenna-toimenpiteelle-hinta! db user tiedot))
-      {:kysely-spec ::h/anna-toimenpiteelle-hinta-kysely
-       :vastaus-spec ::h/anna-toimenpiteelle-hinta-vastaus})
+      {:kysely-spec ::h/tallenna-toimenpiteelle-hinta-kysely
+       :vastaus-spec ::h/tallenna-toimenpiteelle-hinta-vastaus})
 
     this)
 
