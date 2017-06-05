@@ -16,7 +16,8 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
-            [harja.domain.vesivaylat.toimenpide :as to])
+            [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
@@ -75,17 +76,26 @@
    [hinnoittelu e! app]])
 
 (defn- kenttarivi [app e! otsikko]
-  [otsikko
-   [:span
-    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
-                  (filter #(= (::hinta/otsikko %) otsikko))
-                  (first)
-                  (::hinta/maara))
-             (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko ::hinta/maara uusi}))))]
-    [:span " "]
-    "€"]])
+  [:tr
+   [:td [:b otsikko]]
+   [:td
+    [:span
+     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+      (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
+                   (filter #(= (::hinta/otsikko %) otsikko))
+                   (first)
+                   (::hinta/maara))
+              (fn [uusi]
+                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko ::hinta/maara uusi}))))]
+     [:span " "]
+     "€"]]
+   [:td
+    (when (= otsikko "Yleiset materiaalit")
+      [tee-kentta {:tyyppi :checkbox}
+       (r/wrap (atom false)
+               (fn [uusi]
+                 ;; TODO Käsittele ja tallenna arvo tuck-tilaan
+                 (log "UUSI ARVO: " (pr-str uusi))))])]])
 
 (defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
   (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
@@ -101,15 +111,27 @@
                 :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
        [:div.vv-toimenpiteen-hinnoittelutiedot
         {:on-click #(.stopPropagation %)}
-        (into [yleiset/tietoja {:piirra-viivat? false}]
-              (concat (kenttarivi app e! "Työ")
-                      (kenttarivi app e! "Komponentit")
-                      (kenttarivi app e! "Yleiset materiaalit")
-                      (kenttarivi app e! "Matkat")
-                      (kenttarivi app e! "Muut kulut")
-                      ["Yhteensä" (str (laske-hinnoittelun-kokonaishinta
-                                         (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))
-                                       "€")]))
+
+        [:table.vv-toimenpiteen-hinnoittelutiedot-grid
+         [:thead
+          [:tr
+           [:th {:style {:width "50%"}}]
+           [:th {:style {:width "25%"}}]
+           [:th {:style {:width "25%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
+         [:tbody
+          (kenttarivi app e! "Työ")
+          (kenttarivi app e! "Komponentit")
+          (kenttarivi app e! "Yleiset materiaalit")
+          (kenttarivi app e! "Matkat")
+          (kenttarivi app e! "Muut kulut")]]
+
+        [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+         [:span
+          [:b "Yhteensä:"]
+          [:span " "]
+          (fmt/euro-opt (laske-hinnoittelun-kokonaishinta
+                          (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])))]]
+
         [:footer.vv-toimenpiteen-hinnoittelu-footer
          [napit/yleinen-ensisijainen
           "Valmis"

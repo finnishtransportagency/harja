@@ -125,6 +125,10 @@
       hinnoittelu)))
 
 (defn anna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
+  (log/debug "ANNA TOIMENPITEELLE HINTA!")
+  (log/debug "TOIMENPIDE-ID " toimenpide-id)
+  (log/debug "HINNAT " hinnat)
+  (log/debug "URKAKA-ID " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [hinnoittelu-id (::h/id
                            (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
