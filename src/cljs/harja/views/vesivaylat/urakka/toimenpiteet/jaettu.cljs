@@ -136,7 +136,7 @@
 ;; GRID / LISTAUS
 ;;;;;;;;;;;;;;;;;
 
-(defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
+(defn vaylaotsikko [e! toimenpiteet vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
     (grid/otsikkorivin-tiedot
       (::va/nimi vayla)
@@ -151,27 +151,28 @@
           (r/wrap (tiedot/valinnan-tila vaylan-toimenpiteet)
                   (fn [uusi]
                     (e! (tiedot/->ValitseVayla {:vayla-id (::va/id vayla)
-                                                :valinta uusi}))))])}]}))
+                                                :valinta uusi}
+                                               toimenpiteet))))])}]}))
 
-(defn vaylaotsikko-ja-sisalto [e! toimenpiteet-vaylittain vaylan-checkbox-sijainti]
+(defn vaylaotsikko-ja-sisalto [e! toimenpiteet toimenpiteet-vaylittain vaylan-checkbox-sijainti]
   (fn [vayla]
     (cons
       ;; Väylän otsikko
-      (vaylaotsikko e! (get toimenpiteet-vaylittain vayla) vayla vaylan-checkbox-sijainti)
+      (vaylaotsikko e! toimenpiteet (get toimenpiteet-vaylittain vayla) vayla vaylan-checkbox-sijainti)
       ;; Väylän toimenpiderivit
       (get toimenpiteet-vaylittain vayla))))
 
 (defn- ryhmittele-toimenpiteet-vaylalla [e! toimenpiteet vaylan-checkbox-sijainti]
   (let [toimenpiteet-vaylittain (group-by ::to/vayla toimenpiteet)
         vaylat (keys toimenpiteet-vaylittain)]
-    (vec (mapcat (vaylaotsikko-ja-sisalto e! toimenpiteet-vaylittain vaylan-checkbox-sijainti) vaylat))))
+    (vec (mapcat (vaylaotsikko-ja-sisalto e! toimenpiteet toimenpiteet-vaylittain vaylan-checkbox-sijainti) vaylat))))
 
 (defn- suodata-ja-ryhmittele-toimenpiteet-gridiin [e! toimenpiteet tyolaji vaylan-checkbox-sijainti]
   (as-> toimenpiteet $
         (tiedot/toimenpiteet-tyolajilla $ tyolaji)
         (ryhmittele-toimenpiteet-vaylalla e! $ vaylan-checkbox-sijainti)))
 
-(defn valinta-checkbox [e! app]
+(defn valinta-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
    :komponentti (fn [rivi]
                   ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
@@ -184,7 +185,8 @@
                    (r/wrap (:valittu? rivi)
                            (fn [uusi]
                              (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                              :valinta uusi}))))])
+                                                              :valinta uusi}
+                                                             toimenpiteet))))])
    :leveys 5})
 
 (def oletussarakkeet
@@ -256,7 +258,8 @@
                            (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
                                    (fn [uusi]
                                      (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                   :valinta uusi}))))]))}]}]
+                                                                   :valinta uusi}
+                                                                  toimenpiteet))))]))}]}]
                   (luo-otsikkorivit
                     {:e! e!
                      :app app
