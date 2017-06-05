@@ -49,24 +49,6 @@
              {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
              {::vv-toimenpide/id (op/in toimenpide-idt)})))
 
-(defn hinnoittele-toimenpide [db tiedot]
-  (let [toimenpide-id (::vv-toimenpide/id tiedot)
-        hinnoittelutiedot {:tyo (:tyo tiedot)
-                           :komponentit (:komponentit tiedot)
-                           :yleiset-materiaalit (:yleiset-materiaalit tiedot)
-                           :matkat (:matkat tiedot)
-                           :muut-kulut (:muut-kulut tiedot)}]
-    (log/debug "Hinnoitella voisi jos osaisi")
-
-    ;; TODO jotain tällaista, mutta nimen pitäisi olla uniikki per toimenpide. Onnistuuko specql:llä?
-    #_(jdbc/with-db-transaction [db db]
-      (doseq [hinnoittelu-nimi (keys hinnoittelutiedot)]
-        (upsert! db ::vv-hinnoittelu/hinnoittelu
-                 {::vv-hinnoittelu/urakka-id (::vv-toimenpide/urakka-id tiedot)
-                  ::vv-hinnoittelu/niminil
-                  ::vv-hinnoittelu/luoja mil}
-                 {::vv-hinnoittelu/nimi hinnoittelu-nimi})))))
-
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
   (let [urakka-id (::vv-toimenpide/urakka-id tiedot)
@@ -94,7 +76,8 @@
                                  {::vv-toimenpide/hintatyyppi :kokonaishintainen})
                                (when (= :yksikkohintainen tyyppi)
                                  {::vv-toimenpide/hintatyyppi :yksikkohintainen})
-                               (when sopimus-id {::vv-toimenpide/sopimus-id sopimus-id})
+                               (when sopimus-id
+                                 {::vv-toimenpide/sopimus-id sopimus-id})
                                (when (and alku loppu)
                                  {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
                                (when vaylatyyppi

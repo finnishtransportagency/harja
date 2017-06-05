@@ -284,7 +284,7 @@
                               (:hinnoittele-toimenpide app))]
         (try
           (go
-            (let [vastaus (<! (k/post! :hinnoittele-toimenpide parametrit))]
+            (let [vastaus (<! (k/post! :anna-toimenpiteelle-hinta parametrit))]
               (if (k/virhe? vastaus)
                 (fail! vastaus)
                 (tulos! vastaus))))
