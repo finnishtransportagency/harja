@@ -68,6 +68,7 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
+
 (defn kuittauslista [{kuittaukset :kuittaukset}]
   [:div.kuittauslista
    (map-indexed
@@ -168,7 +169,8 @@
   [e! {valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
        haetut-ilmoitukset :ilmoitukset
-       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as ilmoitukset}]
+       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
+       pikakuittaus :pikakuittaus :as ilmoitukset}]
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
@@ -186,7 +188,7 @@
       [virkaapupyynnot-korostettu]
 
       (when-not kuittaa-monta-nyt
-        [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
+        [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
          {:luokka "pull-right kuittaa-monta"}])
 
       (when kuittaa-monta-nyt
@@ -196,7 +198,8 @@
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
                  [ajax-loader "Haetaan ilmoituksia"])
-        :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+        :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
+                                  (nil? pikakuittaus))
                          (or valitse-ilmoitus!
                              #(e! (v/->ValitseIlmoitus %))))
         :piilota-toiminnot true

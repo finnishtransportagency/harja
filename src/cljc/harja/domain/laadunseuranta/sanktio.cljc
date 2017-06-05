@@ -1,4 +1,4 @@
-(ns harja.domain.laadunseuranta.sanktiot)
+(ns harja.domain.laadunseuranta.sanktio)
 
 (defn sakko? [sanktio]
   (and (not= :muistutus (:laji sanktio))

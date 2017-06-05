@@ -4,6 +4,8 @@ SELECT
   u.nimi,
   u.alkupvm,
   u.loppupvm,
+  u.sampoid,
+  u.urakkanro,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   urk.id                   AS urakoitsija_id,
@@ -124,9 +126,11 @@ SELECT
   k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-    THEN '*'
+                            THEN '*'
                             ELSE '' END),
-                           id, '=', sampoid))
+                            id,
+                            '=',
+                            COALESCE (sampoid, nimi)))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
 
@@ -346,9 +350,9 @@ VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: u
 
 -- name: luo-harjassa-luotu-urakka<!
 INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
-                    harjassa_luotu, luotu, luoja)
+                    harjassa_luotu, luotu, luoja, sampoid)
 VALUES (:nimi, :urakkanro, :alkupvm, :loppupvm, :alue, :hallintayksikko, :urakoitsija, :hanke, 'vesivayla-hoito',
-        TRUE, NOW(), :kayttaja);
+               TRUE, NOW(), :kayttaja, (SELECT 'PRHAR' || LPAD(currval(pg_get_serial_sequence('urakka', 'id'))::text, 5, '0')));
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
@@ -739,6 +743,7 @@ WHERE k.kayttajanimi = :kayttajanimi
 -- Hakee urakan perustiedot id:llä APIa varten.
 SELECT
   u.id,
+  u.sampoid,
   u.nimi,
   u.tyyppi,
   u.alkupvm,

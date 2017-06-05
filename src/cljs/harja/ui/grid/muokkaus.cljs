@@ -13,7 +13,6 @@
 
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
@@ -321,7 +320,7 @@
             (muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
                               :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet
                               :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
-                              :opts opts :paneelikomponentit paneelikomponentit})
+                              :opts opts :paneelikomponentit paneelikomponentit :peru! peru!})
             [:div.panel-body
              [:table.grid
               [:thead

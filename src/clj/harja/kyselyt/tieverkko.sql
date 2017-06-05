@@ -87,3 +87,20 @@ SELECT ajorata
 FROM tr_osan_ajorata
 WHERE tie = :tie AND osa = :osa
 ORDER BY ajorata ASC;
+
+-- name: tuhoa-ajoratojen-pituudet!
+DELETE FROM tr_ajoratojen_pituudet;
+
+-- name: luo-ajoradan-pituus!
+INSERT INTO tr_ajoratojen_pituudet (tie, osa, ajorata, pituus) VALUES (:tie, :osa, :ajorata, :pituus);
+
+-- name: hae-ajoratojen-pituudet
+SELECT
+  osa,
+  ajorata,
+  pituus
+FROM tr_ajoratojen_pituudet
+WHERE tie = :tie AND
+      ((:aosa::integer IS NULL AND :losa::integer IS NULL)
+       OR
+       (osa BETWEEN :aosa AND :losa));

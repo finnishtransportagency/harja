@@ -120,6 +120,6 @@
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
   [{:keys [tietyoilmoitus-id] :as yllapitokohde}]
   (go
-    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
+    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))

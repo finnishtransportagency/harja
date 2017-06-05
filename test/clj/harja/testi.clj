@@ -1,21 +1,22 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-    [clojure.test :refer :all]
-    [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.http-palvelin :as http]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.liitteet :as liitteet]
-    [com.stuartsierra.component :as component]
-    [clj-time.core :as t]
-    [clj-time.coerce :as tc]
-    [clojure.core.async :as async]
-    [clojure.spec.alpha :as s]
-    [clojure.string :as str])
+   [clojure.test :refer :all]
+   [taoensso.timbre :as log]
+   [harja.kyselyt.urakat :as urk-q]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.http-palvelin :as http]
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [com.stuartsierra.component :as component]
+   [clj-time.core :as t]
+   [clj-time.coerce :as tc]
+   [clojure.core.async :as async]
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -293,6 +294,26 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
+
+(defn hae-helsingin-vesivaylaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
+
+(defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Helsingin väyläyksikön pääsopimus'"))))
+
+(defn hae-vayla-hietarasaari []
+  (ffirst (q (str "SELECT id
+                   FROM   vv_vayla
+                   WHERE  nimi = 'Hietasaaren läntinen rinnakkaisväylä'"))))
+
+(defn hae-helsingin-vesivaylaurakan-sivusopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Helsingin väyläyksikön sivusopimus'"))))
 
 (defn hae-oulujoen-sillan-id []
   (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Oulujoen silta';"))))
@@ -781,3 +802,9 @@
               FROM sanktio s
                    LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
              WHERE s.id = " sanktio-id ";")))
+
+(defn luo-pdf-bytes [fo]
+  (let [ff (#'pdf-vienti/luo-fop-factory)]
+    (with-open [out (java.io.ByteArrayOutputStream.)]
+      (#'pdf-vienti/hiccup->pdf ff fo out)
+      (.toByteArray out))))

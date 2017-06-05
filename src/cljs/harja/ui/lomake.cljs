@@ -197,11 +197,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
-    [:div.form-group {:class (str (or col-luokka
-                                      (case (or palstoja 1)
-                                        1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
-                                        3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
+    [:div.form-group {:class (str (or
+                                   ;; salli skeeman ylikirjoittaa ns-avaimella
+                                   (::col-luokka s)
+                                   col-luokka
+                                   (case (or palstoja 1)
+                                     1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                     2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                     3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)

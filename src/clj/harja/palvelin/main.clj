@@ -24,6 +24,7 @@
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
+    [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -75,7 +76,7 @@
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
-    
+
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
@@ -123,7 +124,12 @@
      :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
-    [harja.palvelin.komponentit.metriikka :as metriikka])
+    [harja.palvelin.komponentit.metriikka :as metriikka]
+
+    ;; Vesiväylät
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as vv-kokonaishintaiset]
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
+    [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat])
 
   (:gen-class))
 
@@ -285,6 +291,15 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat :tierekisteri])
+      :vv-kokonaishintaiset (component/using
+                              (vv-kokonaishintaiset/->KokonaishintaisetToimenpiteet)
+                              [:http-palvelin :db])
+      :vv-vaylat (component/using
+                              (vv-vaylat/->Vaylat)
+                              [:http-palvelin :db])
+      :vv-yksikkohintaiset (component/using
+                             (vv-yksikkohintaiset/->YksikkohintaisetToimenpiteet)
+                             [:http-palvelin :db])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])
@@ -427,6 +442,11 @@
                (let [{:keys [lahetysjono uudelleenlahetysaika]} (:sahke asetukset)]
                  (sahke/->Sahke lahetysjono uudelleenlahetysaika))
                [:db :integraatioloki :sonja])
+
+      :reimari (component/using
+              (let [{:keys [url kayttajatunnus salasana paivittainen-toimenpidehaku]} (:reimari asetukset)]
+                (reimari/->Reimari url kayttajatunnus salasana paivittainen-toimenpidehaku))
+              [:db :integraatioloki])
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
