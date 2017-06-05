@@ -128,12 +128,12 @@
   ;; TODO Vaadi hinta kuuluu toimenpiteeseen?
   (jdbc/with-db-transaction [db db]
     (let [hinnoittelu-id (::h/id
-                           (when-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-                             (assert
-                               (= (count hinnoittelu) 1)
-                               (str "Toimenpiteelle " toimenpide-id " löyty " (count hinnoittelu) " omaa hinnoittelua, pitää olla vain yksi"))
-                             (first hinnoittelu)
-
+                           (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
+                             (do
+                               (assert
+                                 (= (count hinnoittelu) 1)
+                                 (str "Toimenpiteelle " toimenpide-id " löyty " (count hinnoittelu) " omaa hinnoittelua, pitää olla vain yksi"))
+                               (first hinnoittelu))
                              (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
       (doseq [hinta hinnat]
         (if (id-olemassa? (::hinta/id hinta))
