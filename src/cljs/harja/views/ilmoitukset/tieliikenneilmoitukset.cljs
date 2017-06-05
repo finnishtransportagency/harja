@@ -9,7 +9,7 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne
+              kuittaustyypin-selite kuittaustyypin-lyhenne kuittaustyypin-otsikko
               tilan-selite] :as domain]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
@@ -86,7 +86,9 @@
    (kuittaustyypin-selite kuittaustyyppi)
    [:br]
    (pvm/pvm-aika kuitattu)
-   [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)])
+   [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)
+   [:br]
+   "Kuittaa klikkaamalla."])
 
 
 (defn kuittauslista [e! pikakuittaus {id :id kuittaukset :kuittaukset :as ilmoitus}]
@@ -97,21 +99,24 @@
        [kuittaukset/pikakuittaus e! pikakuittaus])
      [:div.kuittauslista
       (for*
-       [kuittaustyyppi domain/kuittaustyypit
-        :let [kuitattu? (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)]]
-       [yleiset/tooltip {}
-        [:div.kuittaus {:class (str (name kuittaustyyppi)
-                                    (when-not kuitattu?
-                                      " ei-kuittausta"))
-                        :on-click #(do (.stopPropagation %)
-                                       (.preventDefault %)
-                                       (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
-         (kuittaustyypin-lyhenne kuittaustyyppi)]
-        (if kuitattu?
-          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
-          [:div "Ei " (kuittaustyypin-lyhenne kuittaustyyppi) " kuittausta."
-           [:br]
-           "Klikkaa kuitataksesi."])])]]))
+        [kuittaustyyppi domain/kuittaustyypit
+         :let [kuitattu? (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)]]
+        [yleiset/tooltip {}
+         [:div.kuittaus {:class (str (name kuittaustyyppi)
+                                     (when-not kuitattu?
+                                       " ei-kuittausta"))
+                         :on-click #(do (.stopPropagation %)
+                                        (.preventDefault %)
+                                        (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
+          (kuittaustyypin-lyhenne kuittaustyyppi)]
+         (if kuitattu?
+           [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
+           [:div
+            (kuittaustyypin-selite kuittaustyyppi)
+            [:br]
+            "Ei tehty."
+            [:br]
+            "Kuittaa klikkaamalla"])])]]))
 
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
