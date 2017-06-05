@@ -41,6 +41,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
+      ;; TODO Vaadi toimenpide kuuluu urakkaan?
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
 
@@ -53,6 +54,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
+      ;; TODO Vaadi toimenpide kuuluu urakkaan?
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/tallenna-toimenpiteelle-hinta! db user
