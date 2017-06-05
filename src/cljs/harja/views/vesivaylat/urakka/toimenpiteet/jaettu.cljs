@@ -194,11 +194,12 @@
    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
    {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}])
 
-(defn- paneelin-sisalto [e! toimenpiteet sarakkeet]
+(defn- paneelin-sisalto [e! app toimenpiteet sarakkeet]
   [grid/grid
    {:tunniste ::to/id
     :infolaatikon-tila-muuttui (fn [nakyvissa?]
                                  (e! (tiedot/->AsetaInfolaatikonTila nakyvissa?)))
+    :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
     :rivin-infolaatikko (fn [rivi data]
                           [toimenpide-infolaatikossa rivi])
     :salli-valiotsikoiden-piilotus? true
@@ -208,7 +209,7 @@
    toimenpiteet])
 
 (defn- luo-otsikkorivit
-  [e! toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]
+  [{:keys [e! app toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]}]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -221,6 +222,7 @@
                (when haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
               [paneelin-sisalto
                e!
+               app
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  e!
                  toimenpiteet
@@ -255,7 +257,13 @@
                                    (fn [uusi]
                                      (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
                                                                    :valinta uusi}))))]))}]}]
-                  (luo-otsikkorivit e! toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti))])]))
+                  (luo-otsikkorivit
+                    {:e! e!
+                     :app app
+                     :toimenpiteet toimenpiteet
+                     :haku-kaynnissa? haku-kaynnissa?
+                     :gridin-sarakkeet gridin-sarakkeet
+                     :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
