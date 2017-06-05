@@ -283,7 +283,25 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/PeruMonenKuittaus
   (process-event [_ app]
-    (assoc app :kuittaa-monta nil)))
+    (assoc app :kuittaa-monta nil))
+
+  v/AloitaPikakuittaus
+  (process-event [{:keys [ilmoitus kuittaustyyppi]} app]
+    (assoc app :pikakuittaus
+           {:ilmoitus ilmoitus
+            :kuittaustyyppi kuittaustyyppi}))
+
+  v/PaivitaPikakuittaus
+  (process-event [{:keys [pikakuittaus]} app]
+    (update app :pikakuittaus merge pikakuittaus))
+
+  v/TallennaPikakuittaus
+  (process-event [_ app]
+    (dissoc app :pikakuittaus))
+
+  v/PeruutaPikakuittaus
+  (process-event [_ app]
+    (dissoc app :pikakuittaus)))
 
 (defonce karttataso-ilmoitukset (atom false))
 

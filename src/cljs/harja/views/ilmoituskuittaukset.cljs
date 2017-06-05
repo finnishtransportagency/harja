@@ -20,7 +20,8 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.protokollat :as protokollat])
+            [harja.ui.protokollat :as protokollat]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -154,6 +155,13 @@
          "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
          "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]]))
 
+(def vakiofraasi-kentta
+  {:otsikko "Vakiofraasi"
+   :tyyppi :haku
+   :hae-kun-yli-n-merkkia 0
+   :lahde fraasihaku
+   :nimi :vakiofraasi})
+
 (defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
                                 :as data}]
   (let [valittuna (count ilmoitukset)]
@@ -172,11 +180,7 @@
           :nimi :tyyppi
           :vihje (when (= :vaara-urakka (:tyyppi data))
                    "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
-         {:otsikko "Vakiofraasi"
-          :tyyppi :haku
-          :hae-kun-yli-n-merkkia 0
-          :lahde fraasihaku
-          :nimi :vakiofraasi}
+         vakiofraasi-kentta
 
          {:otsikko "Vapaateksti"
           :tyyppi :text
@@ -199,3 +203,27 @@
                      (zero? valittuna))}]
      [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
+
+(defn pikakuittaus [e! {:keys [kuittaustyyppi] :as pikakuittaus}]
+  (let [id (str (gensym "pikakuittaus"))])
+  (komp/luo
+   (komp/skrollaa-nakyviin-absolute)
+   (komp/fokusoi "input.form-control")
+   (komp/klikattu-ulkopuolelle
+    #(e! (v/->PeruutaPikakuittaus)))
+   (fn [e! {:keys [kuittaustyyppi] :as pikakuittaus}]
+     [:div.pikakuittaus
+      [napit/sulje-ruksi #(e! (v/->PeruutaPikakuittaus))]
+      [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
+                      :otsikko (apurit/kuittaustyypin-selite kuittaustyyppi)
+                      :footer-fn (fn [data]
+                                   [napit/tallenna "Kuittaa"
+                                    #(e! (v/->TallennaPikakuittaus))])}
+       [{:tyyppi :string
+         :nimi :vapaateksti
+         :otsikko "Vapaateksti" :palstoja 2
+         ::lomake/col-luokka ""}
+        (merge vakiofraasi-kentta
+               {:palstoja 2
+                ::lomake/col-luokka ""})]
+       pikakuittaus]])))
