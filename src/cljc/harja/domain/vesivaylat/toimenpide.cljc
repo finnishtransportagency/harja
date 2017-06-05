@@ -387,3 +387,8 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+
+(s/def ::hinnoittele-toimenpide
+  (s/keys
+    :req [::id]
+    :req-un [::hinnoittelutiedot]))
