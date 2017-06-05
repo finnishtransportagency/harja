@@ -25,6 +25,7 @@
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+    [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -76,7 +77,7 @@
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
-    
+
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
@@ -442,6 +443,11 @@
                (let [{:keys [lahetysjono uudelleenlahetysaika]} (:sahke asetukset)]
                  (sahke/->Sahke lahetysjono uudelleenlahetysaika))
                [:db :integraatioloki :sonja])
+
+      :reimari (component/using
+              (let [{:keys [url kayttajatunnus salasana paivittainen-toimenpidehaku]} (:reimari asetukset)]
+                (reimari/->Reimari url kayttajatunnus salasana paivittainen-toimenpidehaku))
+              [:db :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]

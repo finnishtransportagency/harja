@@ -53,6 +53,7 @@
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
     :vv-vaylat
+    :reimari
     :vkm})
 
 (deftest main-komponentit-loytyy
