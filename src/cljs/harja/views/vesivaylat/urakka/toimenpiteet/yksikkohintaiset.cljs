@@ -158,7 +158,7 @@
                                                           :sopimus-id (first (:sopimus valinnat))
                                                           :aikavali (:aikavali valinnat)})))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! app]
+    (fn [e! {:keys [toimenpiteet] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
@@ -167,7 +167,12 @@
        [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                                  :komponentti (fn [rivi]
                                                                 [hinnoittele-toimenpide app e! rivi])}]
-                               :jaottelu [{:otsikko "Yksikköhintaiset toimenpiteet" :jaottelu-fn identity}]
+                               :jaottelu (mapv
+                                           (fn [[hintaryhma toimenpiteet]]
+                                             {:otsikko (or (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
+                                                           "Kokonaishintaisista siirretyt")
+                                              :jaottelu-fn (constantly toimenpiteet)})
+                                           toimenpiteet)
                                :paneelin-checkbox-sijainti "95.2%"
                                :vaylan-checkbox-sijainti "95.2%"}]])))
 
