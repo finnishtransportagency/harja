@@ -262,7 +262,7 @@
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku e! app]])])
 
-(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste] }]
+(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste]}]
   (when uudet-varustetoteumat
     (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
 
