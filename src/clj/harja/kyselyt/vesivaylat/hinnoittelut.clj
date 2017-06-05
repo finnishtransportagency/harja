@@ -99,7 +99,7 @@
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
   (->
     (specql/fetch db
-                  ::to/toimenpide
+                  ::to/reimari-toimenpide
                   (set/union to/perustiedot to/hinnoittelu)
                   (op/and
                     {::to/id toimenpide-id}
