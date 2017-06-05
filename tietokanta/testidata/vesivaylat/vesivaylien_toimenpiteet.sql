@@ -336,7 +336,9 @@ VALUES
 -- ***********************************************
 
 -- ***********************************************
--- TODO: REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU, KÖNTTÄSUMMALLA HINNOITELTU TOIMENPIDE
+-- REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU, KÖNTTÄSUMMALLA
+-- SEKÄ TARKENNETULLA HINNALLA HINNOITELTU TOIMENPIDE
+-- ***********************************************
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
@@ -387,6 +389,8 @@ VALUES
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
+-- Hintaryhmä
+
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
@@ -398,7 +402,7 @@ INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
 VALUES
   ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'),
-   'Tilaus', 60000, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+   'Muu', 60000, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
@@ -406,8 +410,28 @@ VALUES
   ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
    (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'),
      (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
--- ***********************************************
 
+-- Toimenpiteen hintatiedot
+
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id")
+VALUES
+  ('Tämän ei pitäisi näkyä' , false,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja)
+VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Tämän ei pitäisi näkyä'),
+   'Työ', 600, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id", luoja)
+VALUES
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Tämän ei pitäisi näkyä'),
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 -- ***********************************************
 -- TODO: ERIKSEEN TILATTU YKSIKKÖHINTAINEN TYÖ?
