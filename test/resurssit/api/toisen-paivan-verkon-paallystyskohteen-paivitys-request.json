@@ -1,0 +1,69 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-04-12T23:20+02:00"
+  },
+  "yllapitokohde": {
+    "sijainti": {
+      "numero": 20,
+      "aosa": 1,
+      "aet": 0,
+      "losa": 3,
+      "let": 100,
+      "ajr": 1,
+      "kaista": 1,
+      "karttapvm": "2017-01-01T00:00:00+03"
+    },
+    "alikohteet": [
+      {
+        "alikohde": {
+          "tunniste": {
+            "id": 1
+          },
+          "tunnus": "A",
+          "nimi": "1. Testialikohde",
+          "sijainti": {
+            "numero": 20,
+            "aosa": 1,
+            "aet": 0,
+            "losa": 1,
+            "let": 3000,
+            "ajr": 1,
+            "kaista": 1,
+            "karttapvm": "2017-01-01T00:00:00+03"
+          },
+          "toimenpide": "testitoimenpide"
+        }
+      },
+      {
+        "alikohde": {
+          "tunniste": {
+            "id": 2
+          },
+          "tunnus": "B",
+          "nimi": "2. Testialikohde",
+          "sijainti": {
+            "numero": 20,
+            "aosa": 1,
+            "aet": 3000,
+            "losa": 3,
+            "let": 100,
+            "ajr": 1,
+            "kaista": 1,
+            "karttapvm": "2017-01-01T00:00:00+03"
+          },
+          "toimenpide": "testitoimenpide"
+        }
+      }
+    ]
+  }
+}
