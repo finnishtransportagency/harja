@@ -89,7 +89,7 @@
 
     (julkaise-palvelu
       http
-      :anna-hintaryhmalle-hinta
+      :tallenna-hintaryhmalle-hinta
       (fn [user tiedot]
         (anna-hintaryhmalle-hinta! db user tiedot))
       {:kysely-spec ::h/anna-hintaryhmalle-hinta-kysely
@@ -97,7 +97,7 @@
 
     (julkaise-palvelu
       http
-      :anna-toimenpiteelle-hinta
+      :tallenna-toimenpiteelle-hinta
       (fn [user tiedot]
         (anna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/anna-toimenpiteelle-hinta-kysely
@@ -111,6 +111,6 @@
       :hae-hinnoittelut
       :luo-hinnoittelu
       :liita-toimenpiteet-hinnoitteluun
-      :anna-hintaryhmalle-hinta
-      :anna-toimenpiteelle-hinta)
+      :tallenna-hintaryhmalle-hinta
+      :tallenna-toimenpiteelle-hinta)
     this))

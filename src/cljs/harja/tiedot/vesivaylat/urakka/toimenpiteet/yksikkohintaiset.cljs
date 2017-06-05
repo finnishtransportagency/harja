@@ -295,7 +295,7 @@
                                               (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))}]
         (try
           (go
-            (let [vastaus (<! (k/post! :anna-toimenpiteelle-hinta parametrit))]
+            (let [vastaus (<! (k/post! :tallenna-toimenpiteelle-hinta parametrit))]
               (if (k/virhe? vastaus)
                 (fail! vastaus)
                 (tulos! vastaus))))

@@ -90,16 +90,16 @@
   (s/coll-of
     (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
 
-(s/def ::anna-hintaryhmalle-hinta-kysely
+(s/def ::tallenna-hintaryhmalle-hinta-kysely
   (s/keys
     :req [::id ::hinnat ::ur/id]))
 
-(s/def ::anna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
 
-(s/def ::anna-toimenpiteelle-hinta-kysely
+(s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/id
           ::hinta-elementit
           :harja.domain.vesivaylat.toimenpide/id]))
 
-(s/def ::anna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
+(s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
