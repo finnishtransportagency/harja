@@ -38,9 +38,8 @@
 
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (do  (println "upsertoidaan" (rename-keys toimenpide-tiedot avainmuunnokset))
-                            (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                            (rename-keys toimenpide-tiedot avainmuunnokset))))]
+                       (specql/upsert! db ::toimenpide/reimari-toimenpide
+                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
