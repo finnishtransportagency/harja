@@ -86,9 +86,9 @@
           ::id
           ::ur/id]))
 
-#_(s/def ::hinta-elementit
-    (s/coll-of
-      (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
+(s/def ::hinta-elementit
+  (s/coll-of
+    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
 
 (s/def ::anna-hintaryhmalle-hinta-kysely
   (s/keys
@@ -99,7 +99,7 @@
 (s/def ::anna-toimenpiteelle-hinta-kysely
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/id
-          ::hinnat
-          ::ur/id]))
+          ::hinta-elementit
+          :harja.domain.vesivaylat.toimenpide/id]))
 
 (s/def ::anna-toimenpiteelle-hinta-vastaus ::hinnoittelu)

@@ -22,6 +22,13 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(def alustava-hinnoittelu
+  [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+   {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+   {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+   {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+   {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}])
+
 (defonce tila
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
@@ -45,12 +52,8 @@
          :hintaryhmien-liittaminen-kaynnissa? false
          :hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide {::to/id nil
-                                  :hinnoittelutiedot
-                                  [{:nimi "Työ" :tunniste :tyo :arvo 0}
-                                   {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
-                                   {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
-                                   {:nimi "Matkat" :tunniste :matkat :arvo 0}
-                                   {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}]}}))
+                                  ::h/hinta-elementit
+                                  alustava-hinnoittelu}}))
 
 (def valinnat
   (reaction
@@ -90,13 +93,6 @@
 (defrecord HinnoitteluTallennettu [vastaus])
 (defrecord HinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
-
-(def alustava-hinnoittelu
-  [{:nimi "Työ" :tunniste :tyo :arvo 0}
-   {:nimi "Komponentit" :tunniste :komponentit :arvo 0}
-   {:nimi "Yleiset materiaalit" :tunniste :yleiset-materiaalit :arvo 0}
-   {:nimi "Matkat" :tunniste :matkat :arvo 0}
-   {:nimi "Muut kulut" :tunniste :muut-kulut :arvo 0}])
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -264,16 +260,16 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     (assoc app :hinnoittele-toimenpide
                {::to/id toimenpide-id
-                :hinnoittelutiedot alustava-hinnoittelu}))
+                ::h/hinta-elementit alustava-hinnoittelu}))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide :hinnoittelutiedot]
+    (assoc-in app [:hinnoittele-toimenpide ::h/hinta-elementit]
               (mapv (fn [hinnoittelu]
-                      (if (= (:tunniste hinnoittelu) (:tunniste tiedot))
-                        (assoc hinnoittelu :arvo (:arvo tiedot))
+                      (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko tiedot))
+                        (assoc hinnoittelu ::hinta/maara (::hinta/maara tiedot))
                         hinnoittelu))
-                    (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot]))))
+                    (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))))
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
@@ -310,5 +306,5 @@
   (process-event [_ app]
     (assoc app :hinnoittele-toimenpide
                {::to/id nil
-                :hinnoittelutiedot alustava-hinnoittelu})))
+                ::h/hinta-elementit alustava-hinnoittelu})))
 

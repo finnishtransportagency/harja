@@ -15,6 +15,7 @@
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.ui.kentat :as kentat]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -73,21 +74,21 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
-(defn- kenttarivi [app e! otsikko tunniste]
+(defn- kenttarivi [app e! otsikko]
   [otsikko
    [:span
     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (->> (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot])
-                  (filter #(= (:tunniste %) tunniste))
+     (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
+                  (filter #(= (::hinta/otsikko %) otsikko))
                   (first)
-                  (:arvo))
+                  (::hinta/maara))
              (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {:tunniste tunniste :arvo uusi}))))]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko ::hinta/maara uusi}))))]
     [:span " "]
     "€"]])
 
 (defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
-  (reduce + 0 (map :arvo hinnoittelutiedot)))
+  (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
 
 (defn- hinnoittele-toimenpide [app e! rivi]
   [:div
@@ -101,13 +102,13 @@
        [:div.vv-toimenpiteen-hinnoittelutiedot
         {:on-click #(.stopPropagation %)}
         (into [yleiset/tietoja {:piirra-viivat? false}]
-              (concat (kenttarivi app e! "Työ" :tyo)
-                      (kenttarivi app e! "Komponentit" :komponentit)
-                      (kenttarivi app e! "Yleiset materiaalit" :yleiset-materiaalit)
-                      (kenttarivi app e! "Matkat" :matkat)
-                      (kenttarivi app e! "Muut kulut" :muut-kulut)
+              (concat (kenttarivi app e! "Työ")
+                      (kenttarivi app e! "Komponentit")
+                      (kenttarivi app e! "Yleiset materiaalit")
+                      (kenttarivi app e! "Matkat")
+                      (kenttarivi app e! "Muut kulut")
                       ["Yhteensä" (str (laske-hinnoittelun-kokonaishinta
-                                         (get-in app [:hinnoittele-toimenpide :hinnoittelutiedot]))
+                                         (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))
                                        "€")]))
         [:footer.vv-toimenpiteen-hinnoittelu-footer
          [napit/yleinen-ensisijainen
