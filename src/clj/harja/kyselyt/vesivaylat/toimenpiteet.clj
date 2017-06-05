@@ -77,30 +77,6 @@
         (merge toimenpide (first (hintatiedot-yhdistettyna (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
-(defn- toimenpiteet-hintaryhmissa [db toimenpiteet]
-  (let [hintatiedoilla (toimenpiteet-hintatiedoilla db toimenpiteet)
-        hintaryhmilla-ryhmiteltyna
-        (group-by
-          (fn [h]
-            (first (filter (comp ::vv-hinnoittelu/hintaryhma?
-                                 ::vv-hinnoittelu/hinnoittelut)
-                           (::vv-toimenpide/hinnoittelu-linkit h))))
-          hintatiedoilla)]
-
-    ;; Ilman redundanttia hintaryhmää toimenpiteen hinnoittelutiedoissa
-    (into {}
-          (map
-            (fn [[hintaryhma toimenpiteet]]
-              {hintaryhma
-               (map
-                 (fn [t]
-                   (update t ::vv-toimenpide/hinnoittelu-linkit
-                           #(remove
-                              (comp ::vv-hinnoittelu/hintaryhma?
-                                    ::vv-hinnoittelu/hinnoittelut) %)))
-                 toimenpiteet)})
-            hintaryhmilla-ryhmiteltyna))))
-
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
   (let [yksikkohintaiset? (= :yksikkohintainen tyyppi)
@@ -145,5 +121,5 @@
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
     (cond->> (into [] toimenpiteet-xf fetchattu)
-             yksikkohintaiset? (toimenpiteet-hintaryhmissa db)
+             yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
              kokonaishintaiset? (identity))))

@@ -354,6 +354,29 @@ reimari-tilat
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
 
+(defn toimenpiteet-hintaryhmissa [toimenpiteet]
+  (let [hintaryhmilla-ryhmiteltyna
+        (group-by
+          (fn [h]
+            (first (filter (comp ::h/hintaryhma?
+                                 ::h/hinnoittelut)
+                           (::hinnoittelu-linkit h))))
+          toimenpiteet)]
+
+    ;; Ilman redundanttia hintaryhmää toimenpiteen hinnoittelutiedoissa
+    (into {}
+          (map
+            (fn [[hintaryhma toimenpiteet]]
+              {hintaryhma
+               (map
+                 (fn [t]
+                   (update t ::hinnoittelu-linkit
+                           #(remove
+                              (comp ::h/hintaryhma?
+                                    ::h/hinnoittelut) %)))
+                 toimenpiteet)})
+            hintaryhmilla-ryhmiteltyna))))
+
 ;; Palvelut
 
 (s/def ::hae-vesivaylien-toimenpiteet-kysely
