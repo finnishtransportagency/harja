@@ -46,7 +46,7 @@
 
       (q/tallenna-hintaryhmalle-hinta! db user
                                        (::h/hinnoittelu-id tiedot)
-                                       (::h/hinta-elementit tiedot)
+                                       (::h/hintaelementit tiedot)
                                        urakka-id))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
@@ -57,7 +57,7 @@
                                       user urakka-id)
       (q/tallenna-toimenpiteelle-hinta! db user
                                         (::to/id tiedot)
-                                        (::h/hinta-elementit tiedot)
+                                        (::h/hintaelementit tiedot)
                                         urakka-id))))
 
 (defrecord Hinnoittelut []

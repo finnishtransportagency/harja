@@ -81,7 +81,7 @@
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
+      (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
                    (filter #(= (::hinta/otsikko %) otsikko))
                    (first)
                    (::hinta/maara))
@@ -93,7 +93,7 @@
    [:td
     (when (= otsikko "Yleiset materiaalit")
       [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
+       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
                     (filter #(= (::hinta/otsikko %) otsikko))
                     (first)
                     (::hinta/yleiskustannuslisa))
@@ -134,7 +134,7 @@
           [:b "Yhteensä:"]
           [:span " "]
           (fmt/euro-opt (laske-hinnoittelun-kokonaishinta
-                          (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])))]]
+                          (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
         [:footer.vv-toimenpiteen-hinnoittelu-footer
          [napit/yleinen-ensisijainen

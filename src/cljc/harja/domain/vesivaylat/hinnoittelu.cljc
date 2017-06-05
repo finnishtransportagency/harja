@@ -86,7 +86,7 @@
           ::id
           ::ur/id]))
 
-(s/def ::hinta-elementit
+(s/def ::hintaelementit
   (s/coll-of
     (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
 
@@ -99,7 +99,7 @@
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/id
-          ::hinta-elementit
+          ::hintaelementit
           :harja.domain.vesivaylat.toimenpide/id]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
