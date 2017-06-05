@@ -36,7 +36,6 @@
    "tl512" "Viemärit"
    "tl165" "Välikaistat"
    "tl516" "Hiekkalaatikot"
-   "tl323" "Viheralueet"
    "tl524" "Viherkuviot"})
 
 (def tien-puolet

@@ -33,7 +33,8 @@
             [harja.tiedot.urakat :as urakat]
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
-            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -62,30 +63,7 @@
         (reset! yhteyshenkilot res)
         true)))
 
-(defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
-  (log "tallenna päivystäjät!" (pr-str uudet-paivystajat))
-  (go (let [tallennettavat
-            (into []
-                  ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  (comp (filter #(not (:poistettu %)))
-                        (map #(if-let [nimi (:nimi %)]
-                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                  (assoc %
-                                    :etunimi (str/trim etu)
-                                    :sukunimi (str/trim suku)))
-                                %)))
-                  uudet-paivystajat)
-            poistettavat
-            (into []
-                  (keep #(when (and (:poistettu %)
-                                    (> (:id %) 0))
-                           (:id %)))
-                  uudet-paivystajat)
-            vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-          (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
-              true)))))
+
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
@@ -144,74 +122,9 @@
      []
      kayttajat)])
 
-(defn paivystajalista
-  [ur paivystajat tallenna!]
-  [:div
-   [grid/grid
-    {:otsikko "Päivystystiedot"
-     :tyhja "Ei päivystystietoja."
-     :tallenna tallenna!
-     :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
-                               (< (pvm/nyt) (:loppu %)))
-                      " bold")}
-    [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                              nimi
-                              (str (:etunimi %)
-                                   (when-let [suku (:sukunimi %)]
-                                     (str " " suku))))
-      :aseta (fn [yht arvo]
-               (assoc yht :nimi arvo))
 
 
-      :tyyppi :string :leveys 15
-      :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-     {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
-      :tyyppi :valinta
-      :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-      :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
-     {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
-      :pituus 16}
-     {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
-      :pituus 16}
-     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
-      :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-     {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-      :validoi [[:ei-tyhja "Aseta alkupvm"]
-                (fn [alku rivi]
-                  (let [loppu (:loppu rivi)]
-                    (when (and alku loppu
-                               (t/before? loppu alku))
-                      "Alkupvm ei voi olla lopun jälkeen.")))
-                ]}
-     {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-      :validoi [[:ei-tyhja "Aseta loppupvm"]
-                (fn [loppu rivi]
-                  (let [alku (:alku rivi)]
-                    (when (and alku loppu
-                               (t/before? loppu alku))
-                      "Loppupvm ei voi olla alkua ennen.")))]}
-     {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
-      :leveys 10
-      :fmt fmt/totuus :tasaa :keskita}]
-    paivystajat]
-   [yleiset/vihje "Kaikista ilmoituksista lähetetään aina kaikille vuorossaoleville päivystäjille tieto sähköpostilla.
-   Uusista toimenpidepyynnöistä lähetetään tekstiviesti vain vuorossaoleville vastuuhenkilöille"]])
-
-(defn paivystajat [ur]
-  (let [paivystajat (atom nil)
-        hae! (fn [urakka-id]
-               (reset! paivystajat nil)
-               (go (reset! paivystajat
-                           (reverse (sort-by :loppu
-                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
-    (hae! (:id ur))
-    (komp/luo
-      (komp/kun-muuttuu (comp hae! :id))
-      (fn [ur]
-        [paivystajalista ur @paivystajat
-         (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-           #(tallenna-paivystajat ur paivystajat %))]))))
 
 (defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
@@ -510,6 +423,7 @@
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                     [urakan-indeksi ur])]]))
 
+
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
         yhteyshenkilotyypit (yht/urakkatyypin-mukaiset-yhteyshenkilotyypit (:tyyppi ur))
@@ -600,6 +514,6 @@
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat ur])
+           [paivystajat/paivystajat ur])
          (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
            [urakan-tyotunnit ur])]))))

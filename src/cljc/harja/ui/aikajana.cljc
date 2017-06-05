@@ -34,6 +34,8 @@
 
 (s/def ::paivat (s/every ::date))
 
+(s/def ::optiot (s/keys :opt [::alku ::loppu]))
+
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
   (loop [min nil
          max nil
@@ -154,7 +156,7 @@
                          (reset! drag
                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
                                         :avain avain)))
-          :drag-move! (fn [alku-x x->paiva]
+          :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
                           (when @drag
@@ -169,7 +171,7 @@
                                     y (- cy svg-y)
                                     paiva (x->paiva x)
                                     tooltip-x (+ alku-x x)
-                                    tooltip-y (+ y 24)]
+                                    tooltip-y (hover-y y)]
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
@@ -202,7 +204,13 @@
         kaikki-ajat (mapcat ::ajat rivit)
         alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
         loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
+
+        ;; Otetaan alku ja loppu aikajanoista (+/- 14 päivää).
+        ;; Ylikirjoitetaan optioista otetuilla arvoilla, jos annettu.
         [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
+        min-aika (or (::alku optiot) min-aika)
+        max-aika (or (::loppu optiot) max-aika)
+
         text-y-offset 8
         bar-y-offset 3
         taustapalkin-korkeus (- rivin-korkeus 6)
@@ -212,20 +220,31 @@
             paivia (count paivat)
             paivan-leveys (/ (- leveys alku-x) paivia)
             rivin-y #(+ alku-y (* rivin-korkeus %))
+            hover-y (fn [y]
+                      (let [rivi (int (/ (- y alku-y) rivin-korkeus))
+                            y (rivin-y rivi)]
+                        (if (> (+ y 50) korkeus)
+                          (- y 15)
+                          (+ y 30))))
             paiva-x #(+ alku-x (* (- leveys alku-x)
                                   ((if (pvm/ennen? % min-aika)
                                      - +)
                                    (/ (pvm/paivia-valissa % min-aika) paivia))))
             x->paiva #(t/plus min-aika
                               (t/days (/ % paivan-leveys)))
-            kuukaudet (kuukaudet paivat)]
+            kuukaudet (kuukaudet paivat)
+
+            rajaa-nakyvaan-alueeseen (fn [x width]
+                                       (let [x1 (max alku-x x)
+                                             x2 (+ x width)]
+                                         [x1 (min (- x2 x1) (- leveys alku-x))]))]
         [:svg#aikajana
          {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
           :viewBox (str "0 0 " leveys " " korkeus)
           :on-mouse-up drag-stop!
           :on-mouse-move (when drag-move!
-                           (drag-move! alku-x x->paiva))
+                           (drag-move! alku-x hover-y x->paiva))
           :style {:cursor (when drag "ew-resize")}}
 
          #?(:cljs
@@ -243,7 +262,7 @@
                        :width (- leveys alku-x)
                        :height taustapalkin-korkeus
                        :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
-               (map-indexed
+               (keep-indexed
                 (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                         teksti ::teksti :as jana}]
                   (let [[alku loppu] (if (and drag (= (::drag drag)
@@ -253,38 +272,40 @@
                         x (inc (paiva-x alku))
                         width (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
 
+                        [x width] (rajaa-nakyvaan-alueeseen x width)
                         ;; Vähennä väritetyn korkeutta 2px
                         y (if vari (inc y) y)
                         korkeus (if vari (- jana-korkeus 2) jana-korkeus)
                         voi-raahata? (some? (::drag jana))]
-                    ^{:key j}
-                    [:g
-                     [:rect {:x x :y y
-                             :width width
-                             :height korkeus
-                             :fill (or vari "white")
-                             ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                             ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                             :fill-opacity (if vari 1.0 0.0)
-                             :stroke reuna
-                             :rx 3 :ry 3
-                             :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                                             :y (+ y 30)
-                                                             :text teksti})
-                             :on-mouse-out hide-tooltip!
-                             }]
-                     ;; kahvat draggaamiseen
-                     (when voi-raahata?
-                       [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                               :style {:fill "white" :opacity 0.0
-                                       :cursor "ew-resize"}
-                               :on-mouse-down #(drag-start! % jana ::alku)}])
-                     (when voi-raahata?
-                       [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
-                               :style {:fill "white" :opacity 0.0
-                                       :cursor "ew-resize"}
-                               :on-mouse-down #(drag-start! % jana ::loppu)}])
-                     ]))
+                    (when (pos? width)
+                      ^{:key j}
+                      [:g
+                       [:rect {:x x :y y
+                               :width width
+                               :height korkeus
+                               :fill (or vari "white")
+                               ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                               ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                               :fill-opacity (if vari 1.0 0.0)
+                               :stroke reuna
+                               :rx 3 :ry 3
+                               :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                                               :y (hover-y y)
+                                                               :text teksti})
+                               :on-mouse-out hide-tooltip!
+                               }]
+                       ;; kahvat draggaamiseen
+                       (when voi-raahata?
+                         [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::alku)}])
+                       (when voi-raahata?
+                         [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
+                                 :style {:fill "white" :opacity 0.0
+                                         :cursor "ew-resize"}
+                                 :on-mouse-down #(drag-start! % jana ::loppu)}])
+                       ])))
                 ajat)
                [:text {:x 0 :y (+ text-y-offset y)
                        :font-size 10}

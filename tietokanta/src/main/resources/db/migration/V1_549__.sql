@@ -1,27 +1,7 @@
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-toimenpiteet');
-CREATE TYPE toimenpidehaun_komponentti AS (id INTEGER, nimi TEXT, tila TEXT);
-CREATE OR REPLACE FUNCTION toimenpidehaun_komponentit_ok(komponentit toimenpidehaun_komponentti[])
-RETURNS BOOLEAN AS $$
-  DECLARE komponentti toimenpidehaun_komponentti;
-BEGIN
-  FOREACH komponentti IN ARRAY komponentit
-  LOOP
-    IF komponentti.id IS NULL THEN
-      RETURN FALSE;
-    END IF;
-    IF komponentti.tila IS NULL THEN
-      RETURN FALSE;
-    END IF;
-  END LOOP;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-
-ALTER TABLE reimari_toimenpide
-ADD COLUMN "reimari-komponentit" toimenpidehaun_komponentti[]
-      NOT NULL
-      CHECK (toimenpidehaun_komponentit_ok("reimari-komponentit"))
-      DEFAULT '{}';
-
-ALTER TABLE reimari_toimenpide
-DROP CONSTRAINT "reimari_toimenpide_reimari-alus_check";
+CREATE TABLE tr_ajoratojen_pituudet (
+  tie     INTEGER NOT NULL,
+  osa     INTEGER NOT NULL,
+  ajorata INTEGER NOT NULL CHECK (ajorata >= 0 AND ajorata <= 2),
+  pituus  INTEGER NOT NULL,
+  PRIMARY KEY (tie, osa, ajorata)
+);

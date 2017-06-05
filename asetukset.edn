@@ -149,7 +149,8 @@
  :reimari {:url "https://www.example.com/reimari/"
            :kayttajatunnus "reimaritunnus"
            :salasana "reimarisalasana"
-           :paivittainen-toimenpidehaku [16 18 00]}
+           ;; :paivittainen-toimenpidehaku [16 18 00]
+           }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
                  :paivittainen-tarkistusaika [11 00 00]

@@ -10,7 +10,7 @@
   (when (.-harja_testmode js/window)
     (.log js/console "E2E test mode"))
 
-  (fw/start {:websocket-host "harja-dev2.lxd"
+  (fw/start {:websocket-url   "ws://localhost:3449/figwheel-ws"
              ;;:debug true
              ;:reload-dependents false
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
