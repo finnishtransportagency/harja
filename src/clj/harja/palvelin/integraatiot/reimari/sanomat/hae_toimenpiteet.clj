@@ -12,9 +12,8 @@
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
             [harja.domain.vesivaylat.vayla :as vayla]
             [clojure.string :as str]
-            [harja.pvm :as pvm]
-            [clojure.set :as set]))
-
+            [clojure.set :refer [rename-keys]]
+            [harja.pvm :as pvm]))
 
 (defn- aikaleima [text]
   (when-not (str/blank? text)
@@ -31,45 +30,81 @@
                              :luotu aikaleima
                              :muokattu aikaleima})
 
+(def alus-avainmuunnos
+  {:harja.domain.vesivaylat.alus/tunnus :harja.domain.vesivaylat.alus/r-tunnus
+   :harja.domain.vesivaylat.alus/nimi :harja.domain.vesivaylat.alus/r-nimi})
 (defn- lue-alus [a]
-  (xml/lue-attribuutit a #(keyword "harja.domain.vesivaylat.alus" (name %))
-                       {:tunnus identity
-                        :nimi identity}))
+  (rename-keys (xml/lue-attribuutit a #(keyword "harja.domain.vesivaylat.alus" (name %))
+                                    {:tunnus identity
+                                     :nimi identity})
+               alus-avainmuunnos))
+
+(def sopimus-avainmuunnos
+  {:harja.domain.vesivaylat.sopimus/nro :harja.domain.vesivaylat.sopimus/r-nro
+   :harja.domain.vesivaylat.sopimus/tyyppi :harja.domain.vesivaylat.sopimus/r-tyyppi
+   :harja.domain.vesivaylat.sopimus/nimi :harja.domain.vesivaylat.sopimus/r-nimi})
 
 (defn- lue-sopimus [s]
-  (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
-                       {:nro #(Integer/parseInt %)
-                        :tyyppi identity
-                        :nimi identity}))
+  (rename-keys (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
+                                    {:nro #(Integer/parseInt %)
+                                     :tyyppi identity
+                                     :nimi identity})
+               sopimus-avainmuunnos))
 
+(def turvalaite-avainmuunnos
+  {:harja.domain.vesivaylat.turvalaite/nro :harja.domain.vesivaylat.turvalaite/r-nro
+   :harja.domain.vesivaylat.turvalaite/nimi :harja.domain.vesivaylat.turvalaite/r-nimi
+   :harja.domain.vesivaylat.turvalaite/ryhma :harja.domain.vesivaylat.turvalaite/r-ryhma})
 (defn- lue-turvalaite [tl]
-  (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
-                       {:nro identity
+  (rename-keys (xml/lue-attribuutit tl #(keyword "harja.domain.vesivaylat.turvalaite" (name %))
+                                    {:nro identity
+                                     :nimi identity
+                                     :ryhma #(Integer/parseInt %)})
+               turvalaite-avainmuunnos))
+
+(defn- lue-komponentti [k]
+  (xml/lue-attribuutit k #(keyword "harja.domain.vesivaylat.komponentti" (name %))
+                       {:tila identity
                         :nimi identity
-                        :ryhma #(Integer/parseInt %)}))
+                        :id #(Integer/parseInt %)}))
+
+(def vayla-avainmuunnos
+  {:harja.domain.vesivaylat.vayla/nro :harja.domain.vesivaylat.vayla/r-nro
+   :harja.domain.vesivaylat.vayla/nimi :harja.domain.vesivaylat.vayla/r-nimi})
 
 (defn- lue-vayla [v]
-  (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vayla" (name %))
-                       {:nro identity
+  (rename-keys (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vayla" (name %))
+                                     {:nro identity
+                                      :nimi identity})
+               vayla-avainmuunnos))
+
+(defn- lue-urakoitsija [v]
+  (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.urakoitsija" (name %))
+                       {:id #(Integer/parseInt %)
                         :nimi identity}))
 
 (defn- lue-toimenpide [toimenpide]
   (merge
-    (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
-                                              (name (case %
-                                                      :tyyppi :reimari-toimenpidetyyppi
-                                                      :tyolaji :reimari-tyolaji
-                                                      :tyoluokka :reimari-tyoluokka
-                                                      %)))
-                         toimenpide-attribuutit)
+   (xml/lue-attribuutit toimenpide #(keyword "harja.domain.vesivaylat.toimenpide"
+                                             (name (case %
+                                                     :tyyppi :reimari-toimenpidetyyppi
+                                                     :lisatyo :lisatyo?
+                                                     :tyolaji :reimari-tyolaji
+                                                     :tyoluokka :reimari-tyoluokka
+                                                     %)))
+                        toimenpide-attribuutit)
     (when-let [a (z/xml1-> toimenpide :alus)]
       {::toimenpide/alus (lue-alus a)})
     (when-let [s (z/xml1-> toimenpide :sopimus)]
-      {::toimenpide/sopimus (lue-sopimus s)})
+      {::toimenpide/reimari-sopimus (lue-sopimus s)})
     (when-let [tl (z/xml1-> toimenpide :turvalaite)]
       {::toimenpide/turvalaite (lue-turvalaite tl)})
     (when-let [v (z/xml1-> toimenpide :vayla)]
-      {::toimenpide/vayla (lue-vayla v)})))
+      {::toimenpide/vayla  (lue-vayla v)})
+    (when-let [v (z/xml1-> toimenpide :urakoitsija)]
+      {::toimenpide/urakoitsija (lue-urakoitsija v)})
+    {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
+
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
   (vec (z/xml-> vastaus-xml
