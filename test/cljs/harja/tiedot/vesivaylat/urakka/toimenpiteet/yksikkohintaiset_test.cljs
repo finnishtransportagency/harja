@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.urakka :as u]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]
@@ -250,7 +251,7 @@
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kenttiä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit" :arvo 5})
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 5})
                         vanha-tila)]
       (is (= (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinta-elementit])
              [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
