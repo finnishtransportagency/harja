@@ -70,7 +70,7 @@
         {::h/toimenpide-linkit {::h/toimenpiteet {::to/urakka-id urakka-id}}}
         {::h/id hinnoittelu-id}))))
 
-(defn anna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat urakka-id]
+(defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat urakka-id]
   (jdbc/with-db-transaction [db db]
     (when (hinnoittelu-kuuluu-urakkaan? db hinnoittelu-id urakka-id)
       (doseq [hinta hinnat]
@@ -124,7 +124,7 @@
 
       hinnoittelu)))
 
-(defn anna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
+(defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
   (log/debug "ANNA TOIMENPITEELLE HINTA!")
   (log/debug "TOIMENPIDE-ID " toimenpide-id)
   (log/debug "HINNAT " hinnat)

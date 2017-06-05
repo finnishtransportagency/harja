@@ -44,10 +44,10 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
 
-      (q/anna-hintaryhmalle-hinta! db user
-                                   (::h/hinnoittelu-id tiedot)
-                                   (::h/hinnat tiedot)
-                                   urakka-id))))
+      (q/tallenna-hintaryhmalle-hinta! db user
+                                       (::h/hinnoittelu-id tiedot)
+                                       (::h/hinnat tiedot)
+                                       urakka-id))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -55,10 +55,10 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-      (q/anna-toimenpiteelle-hinta! db user
-                                    (::to/toimenpide-id tiedot)
-                                    (::h/hinnat tiedot)
-                                    urakka-id))))
+      (q/tallenna-toimenpiteelle-hinta! db user
+                                        (::to/toimenpide-id tiedot)
+                                        (::h/hinnat tiedot)
+                                        urakka-id))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
