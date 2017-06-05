@@ -80,7 +80,7 @@
    [:td [:b otsikko]]
    [:td
     [:span
-     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 6}
       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
                    (filter #(= (::hinta/otsikko %) otsikko))
                    (first)
