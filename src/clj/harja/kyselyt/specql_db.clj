@@ -5,5 +5,5 @@
 
 (defmacro define-tables [& tables]
   `(specql/define-tables
-     {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=postgres"}
+     {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=harja"}
      ~@tables))
