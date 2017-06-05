@@ -267,7 +267,12 @@
     (assoc-in app [:hinnoittele-toimenpide ::h/hinta-elementit]
               (mapv (fn [hinnoittelu]
                       (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko tiedot))
-                        (assoc hinnoittelu ::hinta/maara (::hinta/maara tiedot))
+                        (cond-> hinnoittelu
+                                (::hinta/maara tiedot)
+                                (assoc ::hinta/maara (::hinta/maara tiedot))
+
+                                (some? (::hinta/yleiskustannuslisa tiedot))
+                                (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa tiedot)))
                         hinnoittelu))
                     (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))))
 

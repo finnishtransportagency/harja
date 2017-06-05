@@ -86,16 +86,20 @@
                    (first)
                    (::hinta/maara))
               (fn [uusi]
-                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko ::hinta/maara uusi}))))]
+                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                           ::hinta/maara uusi}))))]
      [:span " "]
      "€"]]
    [:td
     (when (= otsikko "Yleiset materiaalit")
       [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (atom false)
+       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
+                    (filter #(= (::hinta/otsikko %) otsikko))
+                    (first)
+                    (::hinta/yleiskustannuslisa))
                (fn [uusi]
-                 ;; TODO Käsittele ja tallenna arvo tuck-tilaan
-                 (log "UUSI ARVO: " (pr-str uusi))))])]])
+                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                            ::hinta/yleiskustannuslisa uusi}))))])]])
 
 (defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
   (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
