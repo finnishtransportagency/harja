@@ -25,11 +25,11 @@
                            :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
                            :harja.domain.vesivaylat.hinnoittelu/id)])}])
 
+;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
+(s/def ::maara number?)
+(s/def ::yleiskustannuslisa number?)
+
 (def perustiedot
   #{::otsikko
     ::maara
     ::yleiskustannuslisa})
-
-;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
-(s/def ::maara number?)
-(s/def ::yleiskustannuslisa number?)
