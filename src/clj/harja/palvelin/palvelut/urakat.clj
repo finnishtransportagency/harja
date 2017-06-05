@@ -398,7 +398,8 @@
     (julkaise-palvelu http
                       :laheta-urakka-sahkeeseen
                       (fn [user urakka-id]
-                        (laheta-urakka-sahkeeseen sahke user urakka-id))))
+                        (laheta-urakka-sahkeeseen sahke user urakka-id)))
+    this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
