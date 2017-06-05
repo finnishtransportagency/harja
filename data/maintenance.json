@@ -1,10 +1,15 @@
 [
-      {
+  {
+    "date": "2017-06-05",
+    "title": "Harja API: Osoitemuunnokset eri päivän verkolta toiselle",
+    "body": "Jatkossa on mahdollista ilmoittaa Harja API:n ylläpitokohteiden osoitteiden mukana lähdejärjestelmän päivän verkko, jonka mukaisesti Harja muuntaa osoitteen uusimman päivän verkolle. Mikäli osoitetta ei anneta oletetaan, että osoite on uusimmalla verkolla ja muunnosta ei tehdä."
+  },
+  {
     "date": "2017-05-11",
     "title": "Linkki roolitaulukkoon",
     "body": "Tieto HARJA:n käyttäjäroolien oikeuksista löytyy tämän linkin takaa: https://github.com/finnishtransportagency/harja/blob/develop/resources/roolit.xlsx"
   },
-    {
+  {
     "date": "2017-05-11",
     "title": "HARJA:n käyttö Paikkausurakoissa alkaa 1.4.2018",
     "body": "HARJA:n käyttö paikkausurakoissa on suunniteltu alkavaksi vuoden päästä 1.4.2018. Palvelun määrittely työ on parhaillaan meneillään ja toteutus alkaa kesälomien jälkeen. Paikkausurakoiden pilotoinnin on arvioitu tapahtuvan syyskuun jälkeen."
