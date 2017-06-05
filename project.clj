@@ -153,7 +153,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [ ;;["osgeo" "http://download.osgeo.org/webdav/geotools/"]
+  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
@@ -171,7 +171,7 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-                :figwheel {:websocket-host "harja-dev2.lxd"}
+                :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -284,17 +284,13 @@
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
-                 :init (do
-                         (set! *print-length* 50)
-                         (harja.palvelin.main/-main))
+                 :init (harja.palvelin.main/-main)
                  :port 4005
                  :timeout 120000
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   ;; Clientin reload ja REPL
-  :figwheel {:server-ip "0.0.0.0"
-             :nrepl-host "0.0.0.0"
-             :server-port 3449
+  :figwheel {:server-port 3449
              :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
