@@ -69,7 +69,6 @@
 
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
-  ;; todo: instrumentoi new reliciin
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
