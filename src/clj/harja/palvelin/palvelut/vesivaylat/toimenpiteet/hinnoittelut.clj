@@ -37,7 +37,7 @@
       (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot) urakka-id)
       (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot) urakka-id))))
 
-(defn anna-hintaryhmalle-hinta! [db user tiedot]
+(defn tallenna-hintaryhmalle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
@@ -49,7 +49,7 @@
                                    (::h/hinnat tiedot)
                                    urakka-id))))
 
-(defn anna-toimenpiteelle-hinta! [db user tiedot]
+(defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
@@ -91,7 +91,7 @@
       http
       :tallenna-hintaryhmalle-hinta
       (fn [user tiedot]
-        (anna-hintaryhmalle-hinta! db user tiedot))
+        (tallenna-hintaryhmalle-hinta! db user tiedot))
       {:kysely-spec ::h/anna-hintaryhmalle-hinta-kysely
        :vastaus-spec ::h/anna-hintaryhmalle-hinta-vastaus})
 
@@ -99,7 +99,7 @@
       http
       :tallenna-toimenpiteelle-hinta
       (fn [user tiedot]
-        (anna-toimenpiteelle-hinta! db user tiedot))
+        (tallenna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/anna-toimenpiteelle-hinta-kysely
        :vastaus-spec ::h/anna-toimenpiteelle-hinta-vastaus})
 
