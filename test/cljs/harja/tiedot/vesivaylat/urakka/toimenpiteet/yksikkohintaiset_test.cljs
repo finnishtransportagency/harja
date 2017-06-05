@@ -249,7 +249,7 @@
              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
-  (testing "Hinnoittele kenttiä"
+  (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 5})
                         vanha-tila)]
@@ -263,6 +263,24 @@
              [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
               {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
               {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 5 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))))
+
+  (testing "Hinnoittele kentän yleiskustannuslisä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Työ"
+                                                               ::hinta/yleiskustannuslisa true})
+                        vanha-tila)]
+      (is (= (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinta-elementit])
+             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))
+      (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::h/hinta-elementit])
+             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa true}
+              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
               {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
               {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))))
 
