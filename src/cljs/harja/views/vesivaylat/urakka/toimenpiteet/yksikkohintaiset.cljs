@@ -80,7 +80,7 @@
    [:td [:b otsikko]]
    [:td
     [:span
-     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 6}
+     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit])
                    (filter #(= (::hinta/otsikko %) otsikko))
                    (first)
@@ -115,9 +115,9 @@
         [:table.vv-toimenpiteen-hinnoittelutiedot-grid
          [:thead
           [:tr
-           [:th {:style {:width "50%"}}]
-           [:th {:style {:width "25%"}}]
-           [:th {:style {:width "25%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
+           [:th {:style {:width "45%"}}]
+           [:th {:style {:width "35%"}}]
+           [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
          [:tbody
           (kenttarivi app e! "Työ")
           (kenttarivi app e! "Komponentit")
