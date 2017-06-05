@@ -109,5 +109,8 @@
     (poista-palvelut
       (:http-palvelin this)
       :hae-hinnoittelut
-      :luo-hinnoittelu)
+      :luo-hinnoittelu
+      :liita-toimenpiteet-hinnoitteluun
+      :anna-hintaryhmalle-hinta
+      :anna-toimenpiteelle-hinta)
     this))
