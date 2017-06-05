@@ -60,6 +60,11 @@
       "id": "urn:harja/sijainti/tie/puoli",
       "type": "integer",
       "minimum": 0
+    },
+    "karttapvm": {
+      "id": "urn:harja/sijainti/tie/karttapvm",
+      "type": "string",
+      "format": "date-time"
     }
   }
 }
