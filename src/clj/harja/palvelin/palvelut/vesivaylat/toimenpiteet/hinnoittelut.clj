@@ -46,7 +46,7 @@
 
       (q/tallenna-hintaryhmalle-hinta! db user
                                        (::h/hinnoittelu-id tiedot)
-                                       (::h/hinnat tiedot)
+                                       (::h/hinta-elementit tiedot)
                                        urakka-id))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
@@ -56,8 +56,8 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/tallenna-toimenpiteelle-hinta! db user
-                                        (::to/toimenpide-id tiedot)
-                                        (::h/hinnat tiedot)
+                                        (::to/id tiedot)
+                                        (::h/hinta-elementit tiedot)
                                         urakka-id))))
 
 (defrecord Hinnoittelut []
