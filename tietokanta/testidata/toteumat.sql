@@ -210,308 +210,141 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
   ROW('2005-11-11 10:09.00',st_makepoint(440820, 7209885) ::POINT, 2, NULL,
       ARRAY[]::reittipiste_tehtava[],
-      ARRAY[]::reittipiste_materiaali)::reittipistedata
+      ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 2'),
  ARRAY[
-   ROW(,
+   ROW('2005-11-11 10:01.00', st_makepoint(440119, 7207499) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:03.51', st_makepoint(440671, 7208695) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:06.00', st_makepoint(440399, 7209119) ::POINT, 2, NULL,
        ARRAY[]::reittipiste_tehtava[],
        ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 2'),
-        '2005-11-11 10:01.00',
-        NOW(),
-        st_makepoint(440119, 7207499) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 2'),
-        '2005-11-11 10:03.51',
-        NOW(),
-        st_makepoint(440671, 7208695) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 2'),
-        '2005-11-11 10:06.00',
-        NOW(),
-        st_makepoint(440399, 7209119) ::POINT, 2);
 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3'),
  ARRAY[
-   ROW(,
+   ROW('2005-11-11 10:01.00', st_makepoint(440119, 7207199) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:03.51', st_makepoint(440171, 7208195) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:06.00', st_makepoint(440899, 7209119) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:09.00', st_makepoint(440520, 7209485) ::POINT, 2, NULL,
        ARRAY[]::reittipiste_tehtava[],
        ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
 
-        INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3'),
-        '2005-11-11 10:01.00',
-        NOW(),
-        st_makepoint(440119, 7207199) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3'),
-        '2005-11-11 10:03.51',
-        NOW(),
-        st_makepoint(440171, 7208195) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3'),
-        '2005-11-11 10:06.00',
-        NOW(),
-        st_makepoint(440899, 7209119) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 3'),
-        '2005-11-11 10:09.00',
-        NOW(),
-        st_makepoint(440520, 7209485) ::POINT, 2);
 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
  ARRAY[
-   ROW(,
+   ROW('2005-11-11 10:01.00',st_makepoint(441119, 7206199) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:03.51', st_makepoint(441171, 7206195) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:06.00', st_makepoint(441899, 7207119) ::POINT, 2, NULL,
+       ARRAY[]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-11 10:09.00', st_makepoint(441520, 7208485) ::POINT, 2, NULL,
        ARRAY[]::reittipiste_tehtava[],
        ARRAY[]::reittipiste_materiaali[])::reittipistedata
  ]::reittipistedata[]);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
-        '2005-11-11 10:01.00',
-        NOW(),
-        st_makepoint(441119, 7206199) ::POINT, 2);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
-        '2005-11-11 10:03.51',
-        NOW(),
-        st_makepoint(441171, 7206195) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
-        '2005-11-11 10:06.00',
-        NOW(),
-        st_makepoint(441899, 7207119) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Kokonaishintainen toteuma 4'),
-        '2005-11-11 10:09.00',
-        NOW(),
-        st_makepoint(441520, 7208485) ::POINT, 2);
-
-INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
- (SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
- ARRAY[
-   ROW(,
-       ARRAY[]::reittipiste_tehtava[],
-       ARRAY[]::reittipiste_materiaali[])::reittipistedata
- ]::reittipistedata[]);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(498919, 7247099) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499271, 7248395) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499399, 7249019) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Tällä kokonaishintaisella toteumalla on sijainti'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499820, 7249885) ::POINT, 3);
 
 INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
  (SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'),
  ARRAY[
-   ROW(,
-       ARRAY[]::reittipiste_tehtava[],
-       ARRAY[]::reittipiste_materiaali[])::reittipistedata
+   ROW('2015-02-01 17:01:00.000000', st_makepoint(430595.76308986434,7198842.856960223) ::POINT, 2, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:02:00.000000', st_makepoint(430672.2001181495,7199683.66427136) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:03:00.000000', st_makepoint(430748.6371464347,7200524.4715824975) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:04:00.000000', st_makepoint(430977.9482312902,7201441.715921919) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:05:00.000000', st_makepoint(430977.9482312902,7202129.649176486) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:06:00.000000', st_makepoint(430825.07417471986,7202894.019459338) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:07:00.000000', st_makepoint(430060.7038918681,7204652.0711098965) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:08:00.000000', st_makepoint(429907.8298352977,7205569.315449319) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:09:00.000000', st_makepoint(429678.5187504422,7206562.996817026) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:10:00.000000', st_makepoint(429525.64469387184,7207403.804128163) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:11:00.000000', st_makepoint(429525.64469387184,7207785.989269589) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:12:00.000000', st_makepoint(429525.64469387184,7208703.233609011) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:13:00.000000', st_makepoint(429602.081722157,7209544.040920148) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:14:00.000000', st_makepoint(429678.5187504422,7210690.596344425) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:15:00.000000', st_makepoint(429754.95577872737,7211760.714740418) ::POINT, 7, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:16:00.000000', st_makepoint(428531.9633261646,7213442.329362692) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:17:00.000000', st_makepoint(427996.90412816836,7213977.388560688) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:18:00.000000', st_makepoint(427614.71898674243,7214588.88478697) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:19:00.000000', st_makepoint(427156.0968170314,7215276.818041536) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:20:00.000000', st_makepoint(426850.3487038907,7215964.751296103) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[]),
+   ROW('2015-02-01 17:21:00.000000', st_makepoint(426773.9116756055,7216270.499409243) ::POINT, 1, null, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])
  ]::reittipistedata[]);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:01:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430595.76308986434,7198842.856960223) ::POINT, 2, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:02:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430672.2001181495,7199683.66427136) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:03:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430748.6371464347,7200524.4715824975) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:04:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430977.9482312902,7201441.715921919) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:05:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430977.9482312902,7202129.649176486) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:06:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430825.07417471986,7202894.019459338) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:07:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(430060.7038918681,7204652.0711098965) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:08:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429907.8298352977,7205569.315449319) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:09:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429678.5187504422,7206562.996817026) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:10:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429525.64469387184,7207403.804128163) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:11:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429525.64469387184,7207785.989269589) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:12:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429525.64469387184,7208703.233609011) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:13:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429602.081722157,7209544.040920148) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:14:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429678.5187504422,7210690.596344425) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:15:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(429754.95577872737,7211760.714740418) ::POINT, 7, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:16:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(428531.9633261646,7213442.329362692) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:17:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(427996.90412816836,7213977.388560688) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:18:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(427614.71898674243,7214588.88478697) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:19:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(427156.0968170314,7215276.818041536) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:20:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(426850.3487038907,7215964.751296103) ::POINT, 1, null);
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pitkä kokonaishintainen reitti'), '2015-02-01 17:21:00.000000', '2015-12-17 08:22:45.049545', st_makepoint(426773.9116756055,7216270.499409243) ::POINT, 1, null);
+
 
 -- Reittipisteet muutostyölle
 -- Tämä paikka on suunnilleen Muhoksella en tarkastanut kartalta kovin tarkasti..
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
-        '2005-11-13 00:03.00',
-        NOW(),
-        st_makepoint(453271, 7188395) ::POINT, 2);
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
+ (SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
+ ARRAY[
+    ROW('2005-11-13 00:03.00',         st_makepoint(453271, 7188395) ::POINT, 2, NULL,
+        ARRAY[ROW(1350, 10)::reittipiste_tehtava]::reittipiste_tehtava[],
+        ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-11-13 00:06.00', st_makepoint(453399, 7189019) ::POINT, 2, NULL,
+        ARRAY[ROW(1350,10)::reittipiste_tehtava]::reittipiste_tehtava[],
+	ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-11-13 00:09.00', st_makepoint(453820, 7189885) ::POINT, 2, NULL,
+        ARRAY[ROW(1350,10)]::reittipiste_tehtava[],
+	ARRAY[]::reittipiste_materiaali[])::reittipistedata
+ ]::reittipistedata[]);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
-        '2005-11-13 00:06.00',
-        NOW(),
-        st_makepoint(453399, 7189019) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö1'),
-        '2005-11-13 00:09.00',
-        NOW(),
-        st_makepoint(453820, 7189885) ::POINT, 2);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:00.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES
-  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:03.00' :: TIMESTAMP ),
-   NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:06.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 00:09.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
 
 -- Toinen muutoshintainen työ
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
-        '2005-11-13 10:00.00',
-        NOW(),
-        st_makepoint(440919, 7207099) ::POINT, 2);
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
+ (SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
+ ARRAY[
+   ROW('2005-11-13 10:00.00', st_makepoint(440919, 7207099) ::POINT, 2, NULL,
+       ARRAY[ROW(1350,10)::reittipiste_tehtava]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-13 10:03.00',st_makepoint(440271, 7208395) ::POINT, 2, NULL,
+       ARRAY[ROW(1350,10)::reittipiste_tehtava]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-13 10:06.00',st_makepoint(440399, 7209019) ::POINT, 2, NULL,
+       ARRAY[ROW(1350,10)::reittipiste_tehtava]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+   ROW('2005-11-13 10:09.00', st_makepoint(440820, 7209885) ::POINT, 2, NULL,
+       ARRAY[ROW(1350,10)::reittipiste_tehtava]::reittipiste_tehtava[],
+       ARRAY[]::reittipiste_materiaali[])::reittipistedata
+ ]::reittipistedata[]);
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
-        '2005-11-13 10:03.00',
-        NOW(),
-        st_makepoint(440271, 7208395) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
-        '2005-11-13 10:06.00',
-        NOW(),
-        st_makepoint(440399, 7209019) ::POINT, 2);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Muutostyö2'),
-        '2005-11-13 10:09.00',
-        NOW(),
-        st_makepoint(440820, 7209885) ::POINT, 2);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:00.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES
-  ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:03.00' :: TIMESTAMP ),
-   NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:06.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2005-11-13 10:09.00' :: TIMESTAMP ),
-        NOW(), 1350, 10);
 
 -- Reittipisteet yksikköhintaiselle työlle
 
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(498919, 7247099) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499271, 7248395) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499399, 7249019) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499820, 7249885) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 2'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(498519, 7247299) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 2'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499371, 7248595) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 2'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499499, 7249319) ::POINT, 3);
-
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka)
-VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 2'),
-'2005-10-10 10:00.00',
-NOW(),
-st_makepoint(499520, 7249685) ::POINT, 3);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:00.00' :: TIMESTAMP ),
-NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES
-((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:03.00' :: TIMESTAMP ),
-NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:06.00' :: TIMESTAMP ),
-NOW(), 1350, 10);
-
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES ((SELECT id FROM reittipiste WHERE aika = '2008-09-09 10:09.00' :: TIMESTAMP ),
-NOW(), 1350, 10);
+INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
+  (SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
+  ARRAY[
+    ROW('2005-10-10 10:00.00', st_makepoint(498919, 7247099) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499271, 7248395) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499399, 7249019) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499820, 7249885) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(498519, 7247299) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499371, 7248595) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499499, 7249319) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:00.00',st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata
+  ]::reittipistedata[]);
 
 
 -- Päivitetään kaikille toteumille reitti reittipisteiden mukaan.
@@ -519,18 +352,13 @@ NOW(), 1350, 10);
 
 UPDATE toteuma t
    SET reitti = (SELECT ST_MakeLine(p.sij)
-                   FROM (SELECT rp.sijainti::geometry as sij FROM reittipiste rp WHERE rp.toteuma = t.id ORDER BY rp.aika) p)
+                   FROM (SELECT rp.sijainti::geometry as sij
+		           FROM toteuman_reittipisteet tr
+			   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
+			   WHERE tr.toteuma = t.id
+			   ORDER BY rp.aika) p)
  WHERE reitti IS NULL;
 
 -- Varmistetaan, että kaikilla toteumilla on käyttäjä
 UPDATE toteuma SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
 UPDATE toteuma_tehtava SET luoja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'destia') WHERE luoja IS NULL;
-
-
--- Luodaan sopimusten käytetyn materiaalin alkutilanne, summataan nykyiset materiaalit
-INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-  SELECT t.sopimus, date_trunc('day', t.alkanut), tm.materiaalikoodi, SUM(tm.maara)
-    FROM toteuma t
-         JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-   WHERE t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE
-GROUP BY t.sopimus, tm.materiaalikoodi, date_trunc('day', t.alkanut);
