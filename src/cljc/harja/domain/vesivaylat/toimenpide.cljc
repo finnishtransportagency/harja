@@ -317,9 +317,7 @@ reimari-tilat
     ::luoja-id})
 
 (def hinnoittelu
-  #{[::hinnoittelu-linkit #{[::h/hinnoittelut #{::h/nimi ::h/hintaryhma?
-                                                [::h/hinnat #{:harja.domain.vesivaylat.hinta/maara}]}]}
-     #_h/toimenpiteen-hinnoittelut]})
+  #{[::hinnoittelu-linkit h/toimenpiteen-hinnoittelut]})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})

@@ -96,18 +96,23 @@
                     h/hinnoittelutiedot
                     {::h/id hinnoittelu-id}))))
 
-(defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (->
+(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
+  (->>
     (specql/fetch db
-                  ::to/reimari-toimenpide
-                  (set/union to/perustiedot to/hinnoittelu)
-                  (op/and
-                    {::to/id toimenpide-id}
-                    {::to/hinnoittelu-linkit
-                     {::h/hinnoittelut
-                      {::h/hintaryhma? false
-                       ::m/poistettu? false}}}))
-    (get-in [::to/hinnoittelu-linkit ::h/hinnoittelut])))
+                 ::to/reimari-toimenpide
+                 (set/union to/perustiedot to/hinnoittelu)
+                 (op/and
+                   {::to/id (op/in toimenpide-idt)}))
+    (remove (comp ::m/poistettu? ::h/hinnoittelut ::to/hinnoittelu-linkit))))
+
+(defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
+  (let [hinnoittelut(->> (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
+             (remove (comp ::h/hintaryhma? ::h/hinnoittelut ::to/hinnoittelu-linkit))
+             (map #(get-in % [::to/hinnoittelu-linkit ::h/hinnoittelut])))]
+    (assert (#{0 1} (count hinnoittelut))
+            "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu, toimenpiteellä voi olla vain yksi hinnoittelu")
+
+    (first hinnoittelut)))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu [db user toimenpide-id urakka-id]
   (jdbc/with-db-transaction [db db]
@@ -129,12 +134,9 @@
   (jdbc/with-db-transaction [db db]
     (let [hinnoittelu-id (::h/id
                            (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-                             (do
-                               (assert
-                                 (= (count hinnoittelu) 1)
-                                 (str "Toimenpiteelle " toimenpide-id " löyty " (count hinnoittelu) " omaa hinnoittelua, pitää olla vain yksi"))
-                               (first hinnoittelu))
-                             (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
+                             hinnoittelu
+
+                            (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
       (doseq [hinta hinnat]
         (if (id-olemassa? (::hinta/id hinta))
           (specql/update! db

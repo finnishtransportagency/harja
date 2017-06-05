@@ -1,12 +1,15 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as s]
+            [clojure.set :as set]
+            [clojure.future :refer :all]
+            [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
-            [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
-            [clojure.future :refer :all]
-            [clojure.set :as set]
+
+            [harja.kyselyt.vesivaylat.hinnoittelut :as h-q]
 
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
@@ -14,8 +17,7 @@
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
-            [harja.domain.urakka :as ur]
-            [clojure.java.jdbc :as jdbc]))
+            [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
   (comp
@@ -49,9 +51,61 @@
              {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
              {::vv-toimenpide/id (op/in toimenpide-idt)})))
 
+(defn toimenpiteiden-hinnoittelut-yhdistettyna [hintatiedot]
+  (into {}
+        (map
+          (fn [[toimenpide-id tiedot]]
+            {toimenpide-id
+             (reduce (fn [hinnoittelu1 hinnoittelu2]
+                       (update hinnoittelu1
+                               ::vv-toimenpide/hinnoittelu-linkit
+                               concat
+                               (::vv-toimenpide/hinnoittelu-linkit hinnoittelu2)))
+                     tiedot)})
+          hintatiedot)))
+
+(defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
+  (let [ ;; {1 [{:toimenpide-id 1 :hinnoittelu-linkit [{:id 2}]} {:id 1 :hinnoittelu-linkit [{:id 3}]}]}
+        hintatiedot (group-by ::vv-toimenpide/id
+                            (h-q/hae-hinnoittelutiedot-toimenpiteille
+                              db
+                              (into #{} (map ::vv-toimenpide/id toimenpiteet))))
+        ;; {1 [{:toimenpide-id 1 :hinnoittelu-linkit [{:id 2} {:id 3}]}]}]}
+        hintatiedot-yhdistettyna (toimenpiteiden-hinnoittelut-yhdistettyna hintatiedot)]
+    (map
+      (fn [toimenpide]
+        (merge toimenpide (first (hintatiedot-yhdistettyna (::vv-toimenpide/id toimenpide)))))
+      toimenpiteet)))
+
+(defn- toimenpiteet-hintaryhmissa [db toimenpiteet]
+  (let [hintatiedoilla (toimenpiteet-hintatiedoilla db toimenpiteet)
+        hintaryhmilla-ryhmiteltyna
+        (group-by
+          (fn [h]
+            (first (filter (comp ::vv-hinnoittelu/hintaryhma?
+                                 ::vv-hinnoittelu/hinnoittelut)
+                           (::vv-toimenpide/hinnoittelu-linkit h))))
+          hintatiedoilla)]
+
+    ;; Ilman redundanttia hintaryhmää toimenpiteen hinnoittelutiedoissa
+    (into {}
+          (map
+            (fn [[hintaryhma toimenpiteet]]
+              {hintaryhma
+               (map
+                 (fn [t]
+                   (update t ::vv-toimenpide/hinnoittelu-linkit
+                           #(remove
+                              (comp ::vv-hinnoittelu/hintaryhma?
+                                    ::vv-hinnoittelu/hinnoittelut) %)))
+                 toimenpiteet)})
+            hintaryhmilla-ryhmiteltyna))))
+
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
-  (let [urakka-id (::vv-toimenpide/urakka-id tiedot)
+  (let [yksikkohintaiset? (= :yksikkohintainen tyyppi)
+        kokonaishintaiset? (= :kokonaishintainen tyyppi)
+        urakka-id (::vv-toimenpide/urakka-id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
@@ -63,7 +117,6 @@
                                vv-toimenpide/perustiedot
                                (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
-                               #_vv-toimenpide/hinnoittelu
                                vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
@@ -72,9 +125,9 @@
                                  {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id
                                  {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
-                               (when (= :kokonaishintainen tyyppi)
+                               (when kokonaishintaiset?
                                  {::vv-toimenpide/hintatyyppi :kokonaishintainen})
-                               (when (= :yksikkohintainen tyyppi)
+                               (when yksikkohintaiset?
                                  {::vv-toimenpide/hintatyyppi :yksikkohintainen})
                                (when sopimus-id
                                  {::vv-toimenpide/sopimus-id sopimus-id})
@@ -91,4 +144,6 @@
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
-    (into [] toimenpiteet-xf fetchattu)))
+    (cond->> (into [] toimenpiteet-xf fetchattu)
+             yksikkohintaiset? (toimenpiteet-hintaryhmissa db)
+             kokonaishintaiset? (identity))))

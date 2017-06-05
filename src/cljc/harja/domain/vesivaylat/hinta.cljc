@@ -32,4 +32,5 @@
 (def perustiedot
   #{::otsikko
     ::maara
-    ::yleiskustannuslisa})
+    ::yleiskustannuslisa
+    ::id})
