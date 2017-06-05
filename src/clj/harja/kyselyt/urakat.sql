@@ -4,6 +4,8 @@ SELECT
   u.nimi,
   u.alkupvm,
   u.loppupvm,
+  u.sampoid,
+  u.urakkanro,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   urk.id                   AS urakoitsija_id,

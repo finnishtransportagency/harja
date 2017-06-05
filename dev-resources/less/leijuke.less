@@ -1,0 +1,30 @@
+/* Contentin päällä leijuva UI-elementti, esim pieniin lomakkeisiin, jotka aukeavat
+ * tietyn komponentin lähelle. */
+
+.leijuke-wrapper {
+  position: relative;
+}
+
+.leijuke {
+  position: absolute;
+  z-index: 99;
+
+  background-color: @harjan-taustavari;
+  padding: 0.3em;
+  border: solid 1px black;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  //border-radius: 5px;
+
+
+  /* Leijukkeessa olevat lomakkeet näytetään ilman borderia ja pienemmillä
+   * margineilla. Tämä yhtenäistää leijukkeissa käytettävien lomakkeiden ulkoasua. */
+  .lomake {
+    border: none;
+    .lomake-otsikko {
+      margin-left: 0px;
+    }
+    .lomake-footer {
+      margin-top: 0px;
+    }
+  }
+}
