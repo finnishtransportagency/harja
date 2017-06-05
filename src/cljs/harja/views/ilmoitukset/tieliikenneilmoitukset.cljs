@@ -38,8 +38,7 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.tyokalut.ui :refer [for*]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -69,33 +68,21 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
-(comment
-  (defn kuittauslista [{kuittaukset :kuittaukset}]
-    [:div.kuittauslista
-     (map-indexed
-      (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
-        ^{:key i}
-        [yleiset/tooltip {}
-         [:div.kuittaus {:class (name kuittaustyyppi)}
-          (kuittaustyypin-lyhenne kuittaustyyppi)]
-         [:div
-          (kuittaustyypin-selite kuittaustyyppi)
-          [:br]
-          (pvm/pvm-aika kuitattu)
-          [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
-      (remove domain/valitysviesti? kuittaukset))]))
 
 (defn kuittauslista [{kuittaukset :kuittaukset}]
-  (let [kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)]
-    [:div.kuittauslista
-     (for*
-      [kuittaustyyppi domain/kuittaustyypit]
-      [:div.kuittaus {:class (str (name kuittaustyyppi)
-                                  (when-not (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)
-                                    " ei-kuittausta"))}
-       (kuittaustyypin-lyhenne kuittaustyyppi)
-
-       ])]))
+  [:div.kuittauslista
+   (map-indexed
+     (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
+       ^{:key i}
+       [yleiset/tooltip {}
+        [:div.kuittaus {:class (name kuittaustyyppi)}
+         (kuittaustyypin-lyhenne kuittaustyyppi)]
+        [:div
+         (kuittaustyypin-selite kuittaustyyppi)
+         [:br]
+         (pvm/pvm-aika kuitattu)
+         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
+     (remove domain/valitysviesti? kuittaukset))])
 
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
@@ -182,7 +169,8 @@
   [e! {valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
        haetut-ilmoitukset :ilmoitukset
-       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as ilmoitukset}]
+       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
+       pikakuittaus :pikakuittaus :as ilmoitukset}]
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
@@ -210,7 +198,8 @@
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
                  [ajax-loader "Haetaan ilmoituksia"])
-        :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+        :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
+                                  (nil? pikakuittaus))
                          (or valitse-ilmoitus!
                              #(e! (v/->ValitseIlmoitus %))))
         :piilota-toiminnot true
@@ -232,10 +221,13 @@
                                                     (not kirjoitusoikeus?))
                                       :checked (valitut-ilmoitukset rivi)}]]))
            :leveys 1})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+        {:otsikko "Id" :nimi :ilmoitusid :leveys 3}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
-        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
+        {:otsikko "Otsikko" :nimi :otsikko :leveys 7
+         :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
+        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7
          :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
         {:otsikko "Ilmoitettu" :nimi :ilmoitettu
          :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
@@ -254,9 +246,9 @@
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
          :komponentti kuittauslista
-         :leveys 8}
+         :leveys 6}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
                 (assoc % :lihavoi true)
                 %)
