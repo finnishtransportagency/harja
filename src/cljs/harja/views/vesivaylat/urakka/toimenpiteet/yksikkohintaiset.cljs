@@ -118,7 +118,8 @@
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-      {:luokka "nappi-grid"}])])
+      {:luokka "nappi-grid"
+       :disabled (:infolaatikko-nakyvissa? app)}])])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
