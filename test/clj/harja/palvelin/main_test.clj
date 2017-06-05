@@ -53,7 +53,8 @@
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
     :vv-vaylat
-    :reimari})
+    :reimari
+    :vkm})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

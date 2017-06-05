@@ -105,6 +105,8 @@ logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 * Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
 * ActiveMQ: docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
 
+Kantaimagen päivitys: docker pull solita/harjadb
+
 ## Dokumentaatio
 
 ### Tietokanta
