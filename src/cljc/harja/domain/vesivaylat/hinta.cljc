@@ -29,3 +29,7 @@
   #{::otsikko
     ::maara
     ::yleiskustannuslisa})
+
+;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
+(s/def ::maara number?)
+(s/def ::yleiskustannuslisa number?)
