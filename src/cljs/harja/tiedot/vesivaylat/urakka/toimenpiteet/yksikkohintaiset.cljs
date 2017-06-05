@@ -22,6 +22,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+(def yleiskustannuslisa 12)
+
 (def alustava-hinnoittelu
   [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
    {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
@@ -281,8 +283,16 @@
     (if-not (:hinnoittelun-tallennus-kaynnissa? app)
       (let [tulos! (tuck/send-async! ->HinnoitteluTallennettu)
             fail! (tuck/send-async! ->HinnoitteluEiTallennettu)
-            parametrit (merge {::to/urakka-id (get-in app [:valinnat :urakka-id])}
-                              (:hinnoittele-toimenpide app))]
+            parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                        ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+                        ::h/hinta-elementit (mapv
+                                              (fn [hinnoittelu]
+                                                (assoc hinnoittelu
+                                                  ::hinta/yleiskustannuslisa
+                                                  (if (::hinta/yleiskustannuslisa hinnoittelu)
+                                                    yleiskustannuslisa
+                                                    0)))
+                                              (get-in app [:hinnoittele-toimenpide ::h/hinta-elementit]))}]
         (try
           (go
             (let [vastaus (<! (k/post! :anna-toimenpiteelle-hinta parametrit))]
