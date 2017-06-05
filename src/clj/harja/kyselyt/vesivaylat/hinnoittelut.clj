@@ -115,19 +115,18 @@
     (first hinnoittelut)))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu [db user toimenpide-id urakka-id]
-  (jdbc/with-db-transaction [db db]
-    (let [hinnoittelu (specql/insert! db
-                                      ::h/hinnoittelu
-                                      {::h/urakka-id urakka-id
-                                       ::h/hintaryhma? false
-                                       ::m/luoja-id (:id user)})]
-      (specql/insert! db
-                      ::h/hinnoittelu<->toimenpide
-                      {::h/hinnoittelu-id (::h/id hinnoittelu)
-                       ::h/toimenpide-id toimenpide-id
-                       ::m/luoja-id (:id user)})
+  (let [hinnoittelu (specql/insert! db
+                                    ::h/hinnoittelu
+                                    {::h/urakka-id urakka-id
+                                     ::h/hintaryhma? false
+                                     ::m/luoja-id (:id user)})]
+    (specql/insert! db
+                    ::h/hinnoittelu<->toimenpide
+                    {::h/hinnoittelu-id (::h/id hinnoittelu)
+                     ::h/toimenpide-id toimenpide-id
+                     ::m/luoja-id (:id user)})
 
-      hinnoittelu)))
+    hinnoittelu))
 
 (defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
   ;; TODO Vaadi hinta kuuluu toimenpiteeseen?
