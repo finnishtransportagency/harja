@@ -69,18 +69,6 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
-(comment
-  (defn kuittauslista [{kuittaukset :kuittaukset}]
-    [:div.kuittauslista
-     (map-indexed
-      (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
-        ^{:key i}
-        [yleiset/tooltip {}
-         [:div.kuittaus {:class (name kuittaustyyppi)}
-          (kuittaustyypin-lyhenne kuittaustyyppi)]
-         ])
-      (remove domain/valitysviesti? kuittaukset))]))
-
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus}]
   [:div
    (kuittaustyypin-selite kuittaustyyppi)
