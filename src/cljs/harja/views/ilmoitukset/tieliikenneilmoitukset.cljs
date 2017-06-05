@@ -96,7 +96,11 @@
                          :on-click #(do (.stopPropagation %)
                                         (.preventDefault %)
                                         (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
-          (kuittaustyypin-lyhenne kuittaustyyppi)]
+          [:span
+           (str (kuittaustyypin-lyhenne kuittaustyyppi) " ")
+           (if kuitattu?
+             (ikonit/livicon-check)
+             (ikonit/livicon-minus))]]
          (if kuitattu?
            [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
            [:div
