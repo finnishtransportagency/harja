@@ -592,10 +592,12 @@
    (map #(konv/string->keyword % :toimenpide))
    (map #(konv/string->keyword % :toteumatyyppi))
    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-   (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
-                          tierekisteri
-                          (:arvot %)
-                          (:tietolaji %))))
+   (if (nil? tierekisteri)
+     (map identity)
+     (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
+                            tierekisteri
+                            (:arvot %)
+                            (:tietolaji %)))))
    (map konv/alaviiva->rakenne)))
 
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
