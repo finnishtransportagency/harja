@@ -135,7 +135,8 @@
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]
-  (when (not muokattava?)
+  (when (or (not muokattava?)
+            (:lahetysvirhe varustetoteuma))
     (lomake/ryhma
       ""
       {:nimi :toimenpide
