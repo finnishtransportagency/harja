@@ -780,6 +780,7 @@ SELECT
   alkupvm,
   loppupvm,
   lahetetty,
+  lahetysvirhe,
   tila
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
@@ -929,7 +930,7 @@ SELECT id,
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
-SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset

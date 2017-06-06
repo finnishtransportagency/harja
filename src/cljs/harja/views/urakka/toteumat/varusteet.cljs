@@ -155,6 +155,11 @@
          :tyyppi :komponentti
          :muokattava? (constantly false)
          :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
+      (when (:lahetysvirhe varustetoteuma)
+        {:nimi :lahetysvirhe
+         :otsikko "Lähetysvirhe"
+         :tyyppi :string
+         :muokattava? (constantly false)})
       (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
         {:nimi :varustekortti
          :otsikko "Varustekortti"
