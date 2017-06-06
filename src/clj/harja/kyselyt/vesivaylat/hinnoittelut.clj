@@ -97,18 +97,25 @@
                     {::h/id hinnoittelu-id}))))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (->>
-    (specql/fetch db
-                  ::to/reimari-toimenpide
-                  (set/union to/perustiedot to/hinnoittelu)
-                  (op/and
-                    {::to/id (op/in toimenpide-idt)}))
-    (remove (comp ::m/poistettu? ::h/hinnoittelut ::to/hinnoittelu-linkit))))
+  (let [hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
+                           (let [sopivat-hintaryhmat (filter
+                                                       #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
+                                                       hinnoittelu-linkit)]
+                             (mapv #(::h/hinnoittelut %) sopivat-hintaryhmat)))]
+    (->> (specql/fetch db
+                       ::to/reimari-toimenpide
+                       (set/union to/perustiedot to/hinnoittelu)
+                       (op/and
+                         {::to/id (op/in toimenpide-idt)}))
+         (map #(assoc % ::to/oma-hinnoittelu (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) false))))
+         (map #(assoc % ::to/hintaryhma (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) true))))
+         (map #(dissoc % ::to/hinnoittelu-linkit)))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
   (let [hinnoittelut (->> (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
                           (remove (comp ::h/hintaryhma? ::h/hinnoittelut ::to/hinnoittelu-linkit))
-                          (map #(get-in % [::to/hinnoittelu-linkit ::h/hinnoittelut])))]
+                          (map #(get-in % [::to/hinnoittelu-linkit])))
+        hinnoittelut (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})]
     (assert (#{0 1} (count hinnoittelut))
             "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu,
              toimenpiteellä voi olla vain yksi hinnoittelu")
