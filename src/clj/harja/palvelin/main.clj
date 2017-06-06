@@ -83,7 +83,7 @@
 
 
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
-    [harja.palvelin.palvelut.tierekisteri :as tierekisteri-haku]
+    [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
 
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]

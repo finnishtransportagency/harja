@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.tierekisteri
+(ns harja.palvelin.palvelut.tierekisteri-haku
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]

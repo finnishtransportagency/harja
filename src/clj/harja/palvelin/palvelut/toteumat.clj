@@ -15,7 +15,7 @@
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.geometriapaivitykset :as geometriat-q]
-            [harja.palvelin.palvelut.tierekisteri :as tr-q]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [harja.geo :as geo]
