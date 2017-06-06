@@ -633,7 +633,8 @@
 
 (defn tallenna-varustetoteuma [tierekisteri db user
                                hakuehdot
-                               {:keys [urakka-id
+                               {:keys [id
+                                       urakka-id
                                        arvot
                                        sijainti
                                        puoli
@@ -647,6 +648,7 @@
                                        kuntoluokitus] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
+  (println "--->>> id" id)
   (let [varustetoteuma-id
         (jdbc/with-db-transaction [db db]
           (let [nyt (pvm/nyt)
@@ -680,7 +682,8 @@
                                   sijainti
                                   nil nil nil nil nil
                                   "harja-ui"))
-                varustetoteuma {:tunniste tunniste
+                varustetoteuma {:id id
+                                :tunniste tunniste
                                 :toteuma toteuma-id
                                 :toimenpide toiminto
                                 :tietolaji tietolaji
@@ -700,7 +703,9 @@
                                 :tr_puoli puoli
                                 :tr_ajorata ajorata
                                 :sijainti sijainti}]
-            (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
+            (if id
+              (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
+              (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))))]
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
 
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
