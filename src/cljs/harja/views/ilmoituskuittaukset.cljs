@@ -21,7 +21,8 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.protokollat :as protokollat]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -204,26 +205,26 @@
      [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
 
-(defn pikakuittaus [e! {:keys [kuittaustyyppi] :as pikakuittaus}]
-  (let [id (str (gensym "pikakuittaus"))])
+(defn- pikakuittauslomake [e! pikakuittaus]
   (komp/luo
-   (komp/skrollaa-nakyviin-absolute)
    (komp/fokusoi "input.form-control")
-   (komp/klikattu-ulkopuolelle
-    #(e! (v/->PeruutaPikakuittaus)))
-   (fn [e! {:keys [kuittaustyyppi] :as pikakuittaus}]
-     [:div.pikakuittaus
-      [napit/sulje-ruksi #(e! (v/->PeruutaPikakuittaus))]
-      [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
-                      :otsikko (apurit/kuittaustyypin-selite kuittaustyyppi)
-                      :footer-fn (fn [data]
-                                   [napit/tallenna "Kuittaa"
-                                    #(e! (v/->TallennaPikakuittaus))])}
-       [{:tyyppi :string
-         :nimi :vapaateksti
-         :otsikko "Vapaateksti" :palstoja 2
-         ::lomake/col-luokka ""}
-        (merge vakiofraasi-kentta
-               {:palstoja 2
-                ::lomake/col-luokka ""})]
-       pikakuittaus]])))
+   (fn [e! {:keys [tyyppi tallennus-kaynnissa?] :as pikakuittaus}]
+     [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
+                     :otsikko (apurit/kuittaustyypin-selite tyyppi)
+                     :footer-fn (fn [data]
+                                  [napit/tallenna "Kuittaa"
+                                   #(e! (v/->TallennaPikakuittaus))
+                                   {:disabled tallennus-kaynnissa?}])}
+      [{:tyyppi :string
+        :nimi :vapaateksti
+        :otsikko "Vapaateksti" :palstoja 2
+        ::lomake/col-luokka ""}
+       (merge vakiofraasi-kentta
+              {:palstoja 2
+               ::lomake/col-luokka ""})]
+      pikakuittaus])))
+
+(defn pikakuittaus [e! pikakuittaus]
+  [leijuke/leijuke
+   {:sulje! #(e! (v/->PeruutaPikakuittaus))}
+   [pikakuittauslomake e! pikakuittaus]])
