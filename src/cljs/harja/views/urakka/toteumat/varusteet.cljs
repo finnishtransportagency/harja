@@ -231,6 +231,10 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
+     [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+      [:a {:href "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c"
+           :target "_blank"}
+       "Tietolajien sisältöjen kuvaukset"]]
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
