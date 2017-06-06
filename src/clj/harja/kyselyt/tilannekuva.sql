@@ -596,7 +596,8 @@ SELECT t.id,
        vt.kuntoluokka,
        vt.tietolaji,
        vt.alkupvm, vt.loppupvm, vt.toimenpide,
-       vt.arvot
+       vt.arvot,
+       u.id AS "urakka-id"
   FROM varustetoteuma vt
        JOIN toteuma t ON vt.toteuma = t.id
        JOIN urakka u ON t.urakka = u.id
