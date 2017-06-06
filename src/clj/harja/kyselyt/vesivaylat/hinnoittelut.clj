@@ -110,7 +110,8 @@
                           (remove (comp ::h/hintaryhma? ::h/hinnoittelut ::to/hinnoittelu-linkit))
                           (map #(get-in % [::to/hinnoittelu-linkit ::h/hinnoittelut])))]
     (assert (#{0 1} (count hinnoittelut))
-            "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu, toimenpiteellä voi olla vain yksi hinnoittelu")
+            "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu,
+             toimenpiteellä voi olla vain yksi hinnoittelu")
 
     (first hinnoittelut)))
 
@@ -130,34 +131,31 @@
 
 (defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
   ;; TODO Vaadi hinta kuuluu toimenpiteeseen?
-  ;; TODO Pitäisi ajaa transaktiossa, mutta specql sulkee yhteyden.
-  ;; Vaatii korjauksen specql:ään, sitä odotellessa ajetaan epäturvallisesti.
-  (jdbc/with-db-transaction [db db])
+  (jdbc/with-db-transaction [db db]
+    (let [hinnoittelu-id (::h/id
+                           (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
+                             hinnoittelu
+                             (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
+      (doseq [hinta hinnat]
+        (if (id-olemassa? (::hinta/id hinta))
+          (specql/update! db
+                          ::hinta/hinta
+                          (merge
+                            hinta
+                            ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
+                            (if ((some-fn nil? zero?) (::hinta/maara hinta))
+                              {::m/poistettu? true
+                               ::m/poistaja-id (:id user)}
+                              {::m/muokattu (pvm/nyt)
+                               ::m/muokkaaja-id (:id user)}))
+                          {::hinta/id (::hinta/id hinta)})
 
-  (let [hinnoittelu-id (::h/id
-                         (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-                           hinnoittelu
-                           (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
-    (doseq [hinta hinnat]
-      (if (id-olemassa? (::hinta/id hinta))
-        (specql/update! db
-                        ::hinta/hinta
-                        (merge
-                          hinta
-                          ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
-                          (if ((some-fn nil? zero?) (::hinta/maara hinta))
-                            {::m/poistettu? true
-                             ::m/poistaja-id (:id user)}
-                            {::m/muokattu (pvm/nyt)
-                             ::m/muokkaaja-id (:id user)}))
-                        {::hinta/id (::hinta/id hinta)})
+          (specql/insert! db
+                          ::hinta/hinta
+                          (merge
+                            hinta
+                            {::m/luotu (pvm/nyt)
+                             ::m/luoja-id (:id user)
+                             ::hinta/hinnoittelu-id hinnoittelu-id})))))
 
-        (specql/insert! db
-                        ::hinta/hinta
-                        (merge
-                          hinta
-                          {::m/luotu (pvm/nyt)
-                           ::m/luoja-id (:id user)
-                           ::hinta/hinnoittelu-id hinnoittelu-id})))))
-
-  (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))
+    (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
