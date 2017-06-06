@@ -349,12 +349,7 @@ reimari-tilat
   (distinct (map #(::vayla %) toimenpiteet)))
 
 (defn toimenpiteet-hintaryhmissa [toimenpiteet]
-  (group-by
-    (fn [h]
-      (first (filter (comp ::h/hintaryhma?
-                           ::h/hinnoittelut)
-                     (::hinnoittelu-linkit h))))
-    toimenpiteet))
+  (group-by ::hintaryhma toimenpiteet))
 
 ;; Palvelut
 
