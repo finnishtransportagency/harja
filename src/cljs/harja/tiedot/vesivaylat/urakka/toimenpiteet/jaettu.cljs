@@ -69,42 +69,52 @@
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
   mun-tila)
 
-(defrecord ValitseToimenpide [tiedot])
-(defrecord ValitseTyolaji [tiedot])
-(defrecord ValitseVayla [tiedot])
+(defn toimenpiteet-aikajarjestyksessa [toimenpiteet]
+  (sort-by ::to/pvm toimenpiteet))
+
+(defrecord ValitseToimenpide [tiedot toimenpiteet])
+(defrecord ValitseTyolaji [tiedot toimenpiteet])
+(defrecord ValitseVayla [tiedot toimenpiteet])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+  (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
     (let [toimenpide-id (:id tiedot)
           valinta (:valinta tiedot)
-          paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
+          paivitetty-toimenpide (-> (to/toimenpide-idlla listan-toimenpiteet toimenpide-id)
                                     (assoc :valittu? valinta))]
-      (assoc app :toimenpiteet (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                     toimenpiteet))))
+      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
+                                 (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
+                                      toimenpiteet)))))
 
   ValitseTyolaji
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+  (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
     (let [tyolaji (:tyolaji tiedot)
           valinta (:valinta tiedot)
           paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
                                            (assoc % :valittu? valinta)
                                            %)
-                                        toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
+                                        listan-toimenpiteet)
+          paivitetyt-idt (into #{} (map ::to/id paivitetyt-toimenpiteet))
+          paivittamattomat (remove (comp paivitetyt-idt ::to/id) toimenpiteet)]
+      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
+                                 (concat paivitetyt-toimenpiteet paivittamattomat)))))
 
   ValitseVayla
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
+  (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
     (let [vayla-id (:vayla-id tiedot)
           valinta (:valinta tiedot)
           paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla ::va/id]) vayla-id)
                                            (assoc % :valittu? valinta)
                                            %)
-                                        toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
+                                        listan-toimenpiteet)
+          paivitetyt-idt (into #{} (map ::to/id paivitetyt-toimenpiteet))
+          paivittamattomat (remove (comp paivitetyt-idt ::to/id) toimenpiteet)]
+      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
+                                 (concat paivitetyt-toimenpiteet paivittamattomat)))))
 
   AsetaInfolaatikonTila
   (process-event [{uusi-tila :uusi-tila} app]
@@ -113,7 +123,8 @@
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
     (viesti/nayta! (viesti-siirto-tehty (count toimenpiteet)) :success)
-    (assoc app :toimenpiteet (poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
+    (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
+                               (poista-toimenpiteet (:toimenpiteet app) toimenpiteet))
                :siirto-kaynnissa? false))
 
   ToimenpiteetEiSiirretty
