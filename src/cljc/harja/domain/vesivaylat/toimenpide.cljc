@@ -8,6 +8,7 @@
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.vesivaylat.alus :as vv-alus]
             [clojure.string :as str]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.sopimus :as sopimus]
