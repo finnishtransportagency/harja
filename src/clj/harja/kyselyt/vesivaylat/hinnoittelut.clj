@@ -1,21 +1,57 @@
 (ns harja.kyselyt.vesivaylat.hinnoittelut
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as s]
+            [clojure.future :refer :all]
+            [clojure.set :as set]
+            [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
             [specql.rel :as rel]
-            [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
-            [clojure.future :refer :all]
-            [clojure.set :as set]
+
             [harja.id :refer [id-olemassa?]]
+            [harja.pvm :as pvm]
+
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
 
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
-            [harja.domain.muokkaustiedot :as m]
-            [clojure.java.jdbc :as jdbc]
-            [harja.pvm :as pvm]))
+            [harja.domain.muokkaustiedot :as m]))
+
+(defn hinnoittelut-kuuluvat-urakkaan? [db hinnoittelu-idt urakka-id]
+  (boolean
+    (->> (specql/fetch
+           db
+           ::h/hinnoittelu
+           (set/union h/perustiedot)
+           {::h/id (op/in hinnoittelu-idt)})
+         (keep ::h/urakka-id)
+         (every? (partial = urakka-id)))))
+
+(defn hinnat-kuuluvat-toimenpiteeseen? [db hinta-idt toimenpide-id]
+  (boolean
+    (->> (specql/fetch
+           db
+           ::to/toimenpide
+           (set/union to/perustiedot)
+           {::to/hinnoittelu-linkit
+            {::h/hinnoittelut
+             {::h/hinnat
+              {::hinta/id (op/in hinta-idt)}}}})
+         (keep ::to/id)
+         (every? (partial = toimenpide-id)))))
+
+(defn hinnat-kuuluvat-hinnoitteluun? [db hinta-idt hinnoittelu-id]
+  (boolean
+    (->> (specql/fetch
+           db
+           ::h/hinnoittelu
+           (set/union h/hinnat)
+           {::h/hinnat {::hinta/id (op/in hinta-idt)}})
+         (keep ::h/id)
+         (every? (partial = hinnoittelu-id)))))
 
 (defn hae-hinnoittelut [db tiedot]
   (let
@@ -23,7 +59,9 @@
     (specql/fetch db
                   ::h/hinnoittelu
                   h/perustiedot
-                  {::h/urakka-id urakka-id})))
+                  {::h/urakka-id urakka-id
+                   ::h/hintaryhma? true
+                   ::m/poistettu? false})))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let
@@ -36,43 +74,34 @@
                      ::h/hintaryhma? true
                      ::m/luoja-id (:id user)})))
 
-(defn toimenpiteet-kuuluu-urakkaan? [urakka-id]
-  {::h/toimenpiteet {::to/urakka-id urakka-id}})
-
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt urakka-id]
   (specql/update! db
                   ::h/hinnoittelu<->toimenpide
                   {::m/poistettu? true
                    ::m/poistaja-id (:id user)}
-                  (op/and
-                    {::h/toimenpide-id (op/in toimenpide-idt)}
-                    (toimenpiteet-kuuluu-urakkaan? urakka-id)
-                    {::h/hinnoittelut {::h/hintaryhma? true}})))
+                  {::h/toimenpide-id (op/in toimenpide-idt)
+                   ::h/toimenpiteet {::to/urakka-id urakka-id}
+                   ::h/hinnoittelut {::h/hintaryhma? true}}))
+
+
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu urakka-id]
-  (doseq [id toimenpide-idt]
-    (specql/insert! db
-                    ::h/hinnoittelu<->toimenpide
-                    (op/and
-                      {::h/toimenpide-id id
-                       ::h/hinnoittelu-id hinnoittelu
-                       ::m/luoja-id (:id user)}
-                      (toimenpiteet-kuuluu-urakkaan? urakka-id)))))
-
-(defn hinnoittelu-kuuluu-urakkaan? [db hinnoittelu-id urakka-id]
-  (not-empty
-    (specql/fetch
-      db
-      ::h/hinnoittelu
-      (set/union h/perustiedot
-                 h/hinnoittelun-toimenpiteet)
-      (op/and
-        {::h/toimenpide-linkit {::h/toimenpiteet {::to/urakka-id urakka-id}}}
-        {::h/id hinnoittelu-id}))))
+  (jdbc/with-db-transaction [db db]
+    (when
+      (and (to-q/toimenpiteet-kuuluvat-urakkaan? db toimenpide-idt urakka-id)
+           (hinnoittelut-kuuluvat-urakkaan? db #{hinnoittelu} urakka-id))
+      (doseq [id toimenpide-idt]
+        (specql/insert! db
+                        ::h/hinnoittelu<->toimenpide
+                        {::h/toimenpide-id id
+                         ::h/hinnoittelu-id hinnoittelu
+                         ::m/luoja-id (:id user)})))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat urakka-id]
   (jdbc/with-db-transaction [db db]
-    (when (hinnoittelu-kuuluu-urakkaan? db hinnoittelu-id urakka-id)
+    (when
+      (and (hinnoittelut-kuuluvat-urakkaan? db #{hinnoittelu-id} urakka-id)
+           (hinnat-kuuluvat-hinnoitteluun? db (map ::hinta/id hinnat) hinnoittelu-id))
       (doseq [hinta hinnat]
         (if (id-olemassa? (::hinta/id hinta))
           (specql/update! db
@@ -96,36 +125,8 @@
                     h/hinnoittelutiedot
                     {::h/id hinnoittelu-id}))))
 
-(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (let [hinnoittelu-ilman-poistettuja-hintoja
-        (fn [hinnoittelu]
-          (assoc hinnoittelu ::h/hinnat (remove ::m/poistettu? (::h/hinnat hinnoittelu))))
-        hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
-                           (let [sopivat-hintaryhmat
-                                 (filter
-                                   #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
-                                   hinnoittelu-linkit)]
-                             (->> (map #(hinnoittelu-ilman-poistettuja-hintoja (::h/hinnoittelut %))
-                                    sopivat-hintaryhmat)
-                                 (filterv (comp not ::m/poistettu?)))))]
-    (->> (specql/fetch db
-                       ::to/reimari-toimenpide
-                       (set/union to/perustiedot to/hinnoittelu)
-                       (op/and
-                         {::to/id (op/in toimenpide-idt)}))
-         (map #(if-let [h (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) false))]
-                 (assoc % ::to/oma-hinnoittelu h)
-                 (identity %)))
-         (map #(if-let [h (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) true))]
-                 (assoc % ::to/hintaryhma h)
-                 (identity %)))
-         (map #(dissoc % ::to/hinnoittelu-linkit))
-         (group-by ::to/id)
-         vals
-         (map (partial apply merge)))))
-
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (::to/oma-hinnoittelu (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
+  (::to/oma-hinnoittelu (to-q/hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu [db user toimenpide-id urakka-id]
   (let [hinnoittelu (specql/insert! db
@@ -142,32 +143,34 @@
     hinnoittelu))
 
 (defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
-  ;; TODO Vaadi hinta kuuluu toimenpiteeseen?
   (jdbc/with-db-transaction [db db]
-    (let [hinnoittelu-id (::h/id
-                           (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-                             hinnoittelu
-                             (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
-      (doseq [hinta hinnat]
-        (if (id-olemassa? (::hinta/id hinta))
-          (specql/update! db
-                          ::hinta/hinta
-                          (merge
-                            hinta
-                            ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
-                            (if ((some-fn nil? zero?) (::hinta/maara hinta))
-                              {::m/poistettu? true
-                               ::m/poistaja-id (:id user)}
-                              {::m/muokattu (pvm/nyt)
-                               ::m/muokkaaja-id (:id user)}))
-                          {::hinta/id (::hinta/id hinta)})
+    (when
+      (and (to-q/toimenpiteet-kuuluvat-urakkaan? db #{toimenpide-id} urakka-id)
+           (hinnat-kuuluvat-toimenpiteeseen? db (map ::hinta/id hinnat) toimenpide-id))
+      (let [hinnoittelu-id (::h/id
+                            (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
+                              hinnoittelu
+                              (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
+       (doseq [hinta hinnat]
+         (if (id-olemassa? (::hinta/id hinta))
+           (specql/update! db
+                           ::hinta/hinta
+                           (merge
+                             hinta
+                             ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
+                             (if ((some-fn nil? zero?) (::hinta/maara hinta))
+                               {::m/poistettu? true
+                                ::m/poistaja-id (:id user)}
+                               {::m/muokattu (pvm/nyt)
+                                ::m/muokkaaja-id (:id user)}))
+                           {::hinta/id (::hinta/id hinta)})
 
-          (specql/insert! db
-                          ::hinta/hinta
-                          (merge
-                            hinta
-                            {::m/luotu (pvm/nyt)
-                             ::m/luoja-id (:id user)
-                             ::hinta/hinnoittelu-id hinnoittelu-id})))))
+           (specql/insert! db
+                           ::hinta/hinta
+                           (merge
+                             hinta
+                             {::m/luotu (pvm/nyt)
+                              ::m/luoja-id (:id user)
+                              ::hinta/hinnoittelu-id hinnoittelu-id}))))))
 
     (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
