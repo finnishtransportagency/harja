@@ -6,6 +6,7 @@
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
+    [clojure.set :as set]
     [specql.rel :as rel]
 
     #?@(:clj  [
@@ -50,10 +51,10 @@
 (def metatiedot m/muokkauskentat)
 
 (def hinnat
-  #{[::hinnat hinta/perustiedot hinta/metatiedot]})
+  #{[::hinnat (set/union hinta/perustiedot hinta/metatiedot)]})
 
 (def hinnoittelutiedot
-  (clojure.set/union perustiedot hinnat))
+  (set/union perustiedot hinnat))
 
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})

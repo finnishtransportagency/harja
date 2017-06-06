@@ -114,10 +114,8 @@
          (map #(dissoc % ::to/hinnoittelu-linkit)))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (let [hinnoittelut (->> (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
-                          (remove (comp ::h/hintaryhma? ::h/hinnoittelut ::to/hinnoittelu-linkit))
-                          (map #(get-in % [::to/hinnoittelu-linkit])))
-        hinnoittelut (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})]
+  (let [hinnoittelut (->> (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id}))]
+    ;; TODO Tämä on vielä rikki nyt...
     (assert (#{0 1} (count hinnoittelut))
             "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu,
              toimenpiteellä voi olla vain yksi hinnoittelu")
