@@ -151,8 +151,7 @@
           (r/wrap (tiedot/valinnan-tila vaylan-toimenpiteet)
                   (fn [uusi]
                     (e! (tiedot/->ValitseVayla {:vayla-id (::va/id vayla)
-                                                :valinta uusi}
-                                               toimenpiteet))))])}]}))
+                                                :valinta uusi}))))])}]}))
 
 (defn vaylaotsikko-ja-sisalto [e! toimenpiteet toimenpiteet-vaylittain vaylan-checkbox-sijainti]
   (fn [vayla]
@@ -185,8 +184,7 @@
                    (r/wrap (:valittu? rivi)
                            (fn [uusi]
                              (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                              :valinta uusi}
-                                                             toimenpiteet))))])
+                                                              :valinta uusi}))))])
    :leveys 5})
 
 (def oletussarakkeet
@@ -255,8 +253,7 @@
                          (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
                                  (fn [uusi]
                                    (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                 :valinta uusi}
-                                                                toimenpiteet))))]))}]}]
+                                                                 :valinta uusi}))))]))}]}]
                 (luo-otsikkorivit
                   {:e! e!
                    :app app
@@ -276,4 +273,6 @@
     vaylan-checkbox-sijainti]))
 
 (defn listaus* [optiot e! app]
-  [listaus e! app optiot])
+  [:div
+   [debug app]
+   [listaus e! app optiot]])

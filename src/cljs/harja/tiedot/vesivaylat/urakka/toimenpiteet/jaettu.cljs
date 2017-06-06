@@ -69,16 +69,16 @@
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
   mun-tila)
 
-(defrecord ValitseToimenpide [tiedot toimenpiteet])
-(defrecord ValitseTyolaji [tiedot toimenpiteet])
-(defrecord ValitseVayla [tiedot toimenpiteet])
+(defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseTyolaji [tiedot])
+(defrecord ValitseVayla [tiedot])
 (defrecord AsetaInfolaatikonTila [uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
-  (process-event [{tiedot :tiedot toimenpiteet :toimenpiteet} app]
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
     (let [toimenpide-id (:id tiedot)
           valinta (:valinta tiedot)
           paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
@@ -87,7 +87,7 @@
                                      toimenpiteet))))
 
   ValitseTyolaji
-  (process-event [{tiedot :tiedot toimenpiteet :toimenpiteet} app]
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
     (let [tyolaji (:tyolaji tiedot)
           valinta (:valinta tiedot)
           paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
@@ -97,7 +97,7 @@
       (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
 
   ValitseVayla
-  (process-event [{tiedot :tiedot toimenpiteet :toimenpiteet} app]
+  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
     (let [vayla-id (:vayla-id tiedot)
           valinta (:valinta tiedot)
           paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla ::va/id]) vayla-id)
