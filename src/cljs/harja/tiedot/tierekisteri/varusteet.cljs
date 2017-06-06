@@ -40,7 +40,7 @@
        (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
        (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
        (assoc-in [:tierekisterin-varusteet :listaus-skeema]
-                 (into [varusteet/varusteen-osoite-skeema]
+                 (into varusteet/varusteen-perustiedot-skeema
                        (comp (filter varusteet/kiinnostaa-listauksessa?)
                              (map varusteet/varusteominaisuus->skeema))
                        (:ominaisuudet tietolaji)))

@@ -71,12 +71,21 @@
     (and (not (#{"x" "y" "z" "urakka"} tunniste))
          (not (re-matches #".*tunn" tunniste)))))
 
-(def varusteen-osoite-skeema
-  {:otsikko "Tieosoite"
-   :tyyppi :tierekisteriosoite
-   :hae (comp :tie :sijainti :tietue :varuste)
-   :fmt tr/tierekisteriosoite-tekstina
-   :leveys 1})
+(def varusteen-perustiedot-skeema
+  [{:otsikko "Tietolaji"
+    :tyyppi :tunniste
+    :hae #(let [tietolaji (get-in % [:varuste :tietue :tietolaji :tunniste])]
+            (str (tietolaji->selitys tietolaji) " (" tietolaji ")"))
+    :leveys 1}
+   {:otsikko "Tunniste"
+    :tyyppi :tunniste
+    :hae (comp :tunniste :varuste)
+    :leveys 1}
+   {:otsikko "Tieosoite"
+    :tyyppi :tierekisteriosoite
+    :hae (comp :tie :sijainti :tietue :varuste)
+    :fmt tr/tierekisteriosoite-tekstina
+    :leveys 2}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)
