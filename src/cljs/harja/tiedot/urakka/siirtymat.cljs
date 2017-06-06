@@ -16,7 +16,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
-  (k/post! :siirry-kokonaishintainen-toteuma toteuma-id))
+  (k/post! :siirry-toteuma toteuma-id))
 
 (defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id]}]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id

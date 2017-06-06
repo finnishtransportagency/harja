@@ -870,9 +870,9 @@
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
         (hae-toteuman-reitti-ja-tr-osoite db user tiedot))
-      :siirry-kokonaishintainen-toteuma
+      :siirry-toteuma
       (fn [user toteuma-id]
-        (siirry-kokonaishintainen-toteuma db user toteuma-id)))
+        (siirry-toteuma db user toteuma-id)))
     this)
 
   (stop [this]
@@ -894,6 +894,6 @@
       :hae-kokonaishintaisen-toteuman-tiedot
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite
-      :siirry-kokonaishintainen-toteuma
+      :siirry-toteuma
       :tallenna-varustetoteuma)
     this))
