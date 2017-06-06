@@ -97,6 +97,7 @@
                     {::h/id hinnoittelu-id}))))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
+  ;; TODO Palauta jokainen toimenpide vain kerran yhdessä mapissa
   (let [hinnoittelu-ilman-poistettuja-hintoja
         (fn [hinnoittelu]
           (assoc hinnoittelu ::h/hinnat (filterv (comp not ::m/poistettu?)
