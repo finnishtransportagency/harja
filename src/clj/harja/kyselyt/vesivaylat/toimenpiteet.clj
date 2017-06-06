@@ -42,7 +42,7 @@
   (boolean
     (->> (fetch
            db
-           ::vv-toimenpide/toimenpide
+           ::vv-toimenpide/reimari-toimenpide
            (set/union vv-toimenpide/perustiedot)
            {::vv-toimenpide/id (op/in toimenpide-idt)})
          (keep ::vv-toimenpide/urakka-id)
