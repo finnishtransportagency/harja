@@ -31,17 +31,16 @@
          (every? (partial = urakka-id)))))
 
 (defn hinnat-kuuluvat-toimenpiteeseen? [db hinta-idt toimenpide-id]
-  (boolean
-    (->> (specql/fetch
-           db
-           ::to/toimenpide
-           (set/union to/perustiedot)
-           {::to/hinnoittelu-linkit
-            {::h/hinnoittelut
-             {::h/hinnat
-              {::hinta/id (op/in hinta-idt)}}}})
-         (keep ::to/id)
-         (every? (partial = toimenpide-id)))))
+  (let [toimenpiteen-hinnat (->> (specql/fetch
+                                   db
+                                   ::to/reimari-toimenpide
+                                   (set/union to/perustiedot)
+                                   {::to/id toimenpide-id})
+                                 (mapcat ::to/hinnoittelu-linkit)
+                                 (mapcat (comp ::h/hinnat ::h/hinnoittelut))
+                                 (map ::hinta/id)
+                                 (into #{}))]
+    (set/subset? (into #{} hinta-idt) toimenpiteen-hinnat)))
 
 (defn hinnat-kuuluvat-hinnoitteluun? [db hinta-idt hinnoittelu-id]
   (boolean
@@ -50,6 +49,7 @@
            ::h/hinnoittelu
            (set/union h/hinnat)
            {::h/hinnat {::hinta/id (op/in hinta-idt)}})
+
          (keep ::h/id)
          (every? (partial = hinnoittelu-id)))))
 
@@ -75,13 +75,12 @@
                      ::m/luoja-id (:id user)})))
 
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt urakka-id]
-  (specql/update! db
-                  ::h/hinnoittelu<->toimenpide
-                  {::m/poistettu? true
-                   ::m/poistaja-id (:id user)}
-                  {::h/toimenpide-id (op/in toimenpide-idt)
-                   ::h/toimenpiteet {::to/urakka-id urakka-id}
-                   ::h/hinnoittelut {::h/hintaryhma? true}}))
+  (when (to-q/toimenpiteet-kuuluvat-urakkaan? db toimenpide-idt urakka-id)
+    (specql/update! db
+                   ::h/hinnoittelu<->toimenpide
+                   {::m/poistettu? true
+                    ::m/poistaja-id (:id user)}
+                   {::h/toimenpide-id (op/in toimenpide-idt)})))
 
 
 
