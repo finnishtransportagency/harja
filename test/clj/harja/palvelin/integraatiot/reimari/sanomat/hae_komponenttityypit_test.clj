@@ -10,8 +10,9 @@
              [harja.pvm :as pvm]
              [clojure.spec.alpha :as s]))
 
-(def komponenttityyppit
-  nil)
+(def komponenttityyppi
+  {::komponenttityyppi/id "4242"
+   ::komponenttityyppi/nimi "Punainen lamppu"})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-komponenttityyppi
@@ -19,6 +20,6 @@
             slurp
             hae-komponenttityypit/lue-hae-komponenttityypit-vastaus
             first)]
-    (println (s/explain-str ::komponenttityyppi/reimari-komponenttityyppi luettu-komponenttityyppi))
-    (is (nil? (s/explain-data ::komponenttityyppi/reimari-komponenttityyppi luettu-komponenttityyppi)))
+    (println (s/explain-str ::komponenttityyppi/komponenttityyppi luettu-komponenttityyppi))
+    (is (nil? (s/explain-data ::komponenttityyppi/komponenttityyppi luettu-komponenttityyppi)))
     (testi/tarkista-map-arvot komponenttityyppi luettu-komponenttityyppi)))

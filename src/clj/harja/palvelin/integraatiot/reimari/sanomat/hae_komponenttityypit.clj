@@ -20,6 +20,7 @@
     (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
 
 (def komponenttityyppi-attribuutit {:id identity
+                                    :nimi identity
                                     :lisatiedot identity
                                     :luokan-id identity
                                     :luokan-nimi identity
@@ -32,12 +33,10 @@
                                     :alkupvm aikaleima
                                     :loppupvm aikaleima})
 
-
 (defn- lue-komponenttityyppi [komponenttityyppi]
   (xml/lue-attribuutit komponenttityyppi #(keyword "harja.domain.vesivaylat.komponenttityyppi"
                                                    (name %))
                        komponenttityyppi-attribuutit))
-
 
 (defn hae-komponenttityypit-vastaus [vastaus-xml]
   (vec (z/xml-> vastaus-xml
