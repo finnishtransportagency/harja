@@ -98,9 +98,11 @@
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
   (let [hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
-                           (let [sopivat-hintaryhmat (filter
-                                                       #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
-                                                       hinnoittelu-linkit)]
+                           (let [sopivat-hintaryhmat
+                                 (filter
+                                   #(and (= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
+                                         (not (get-in % [::h/hinnoittelut ::m/poistettu?])))
+                                   hinnoittelu-linkit)]
                              (mapv #(::h/hinnoittelut %) sopivat-hintaryhmat)))]
     (->> (specql/fetch db
                        ::to/reimari-toimenpide
