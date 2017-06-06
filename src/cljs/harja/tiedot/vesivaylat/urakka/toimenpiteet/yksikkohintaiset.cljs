@@ -141,7 +141,7 @@
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :toimenpiteet (to/toimenpiteet-hintaryhmissa toimenpiteet)
+    (assoc app :toimenpiteet toimenpiteet
                :haku-kaynnissa? false))
 
   ToimenpiteetEiHaettu

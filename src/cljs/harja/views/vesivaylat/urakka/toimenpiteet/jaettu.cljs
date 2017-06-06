@@ -234,46 +234,46 @@
            tyolajit))))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
-                             gridin-sarakkeet jaottelut
+                             gridin-sarakkeet otsikko
                              paneelin-checkbox-sijainti vaylan-checkbox-sijainti]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
         :default
         [:div
-         (for [{:keys [otsikko jaottelu-fn]} jaottelut
-               :let [toimenpiteet (jaottelu-fn toimenpiteet)]]
-           ^{:key (str "toimenpiteen-listaus-" otsikko)}
-           [:div
-            (when otsikko [:h1 otsikko])
-            (into [otsikkopaneeli
-                   {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
-                    :paneelikomponentit
-                    [{:sijainti paneelin-checkbox-sijainti
-                      :sisalto
-                      (fn [{:keys [tunniste]}]
-                        (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
-                          [kentat/tee-kentta
-                           {:tyyppi :checkbox}
-                           (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
-                                   (fn [uusi]
-                                     (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                   :valinta uusi}
-                                                                  toimenpiteet))))]))}]}]
-                  (luo-otsikkorivit
-                    {:e! e!
-                     :app app
-                     :toimenpiteet toimenpiteet
-                     :haku-kaynnissa? haku-kaynnissa?
-                     :gridin-sarakkeet gridin-sarakkeet
-                     :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))])]))
+         [:div
+          (when otsikko [:h1 otsikko])
+          (into [otsikkopaneeli
+                 {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+                  :paneelikomponentit
+                  [{:sijainti paneelin-checkbox-sijainti
+                    :sisalto
+                    (fn [{:keys [tunniste]}]
+                      (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
+                        [kentat/tee-kentta
+                         {:tyyppi :checkbox}
+                         (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
+                                 (fn [uusi]
+                                   (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                                 :valinta uusi}
+                                                                toimenpiteet))))]))}]}]
+                (luo-otsikkorivit
+                  {:e! e!
+                   :app app
+                   :toimenpiteet toimenpiteet
+                   :haku-kaynnissa? haku-kaynnissa?
+                   :gridin-sarakkeet gridin-sarakkeet
+                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))]]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
-  ([e! app {:keys [lisa-sarakkeet jaottelu paneelin-checkbox-sijainti vaylan-checkbox-sijainti]}]
+  ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet []))) (valinta-checkbox e! app))
-    (or jaottelu [{:otsikko nil :jaottelu-fn identity}])
+    otsikko
     paneelin-checkbox-sijainti
     vaylan-checkbox-sijainti]))
+
+(defn listaus* [optiot e! app]
+  [listaus e! app optiot])

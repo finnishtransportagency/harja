@@ -20,6 +20,9 @@
             [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+;;;;;;;
+;; Urakkatoiminnot: Hintaryhmän valitseminen
+
 (defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
   [yleiset/livi-pudotusvalikko
    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
@@ -75,13 +78,16 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
-(defn- kenttarivi [app e! otsikko]
+;;;;;;;;;;;;
+;; Hinnan antamisen leijuke
+
+(defn- kenttarivi [app* e! otsikko]
   [:tr
    [:td [:b otsikko]]
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
+      (r/wrap (->> (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                    (filter #(= (::hinta/otsikko %) otsikko))
                    (first)
                    (::hinta/maara))
@@ -93,7 +99,7 @@
    [:td
     (when (= otsikko "Yleiset materiaalit")
       [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (->> (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
+       (r/wrap (->> (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                     (filter #(= (::hinta/otsikko %) otsikko))
                     (first)
                     (::hinta/yleiskustannuslisa))
@@ -104,10 +110,10 @@
 (defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
   (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
 
-(defn- hinnoittele-toimenpide [app e! rivi]
+(defn- hinnoittele-toimenpide [app* e! rivi]
   [:div
-   (if (and (get-in app [:hinnoittele-toimenpide ::to/id])
-            (= (get-in app [:hinnoittele-toimenpide ::to/id])
+   (if (and (get-in app* [:hinnoittele-toimenpide ::to/id])
+            (= (get-in app* [:hinnoittele-toimenpide ::to/id])
                (::to/id rivi)))
      [:div
       [:span "Hinta: 0€"]
@@ -123,30 +129,30 @@
            [:th {:style {:width "35%"}}]
            [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
          [:tbody
-          (kenttarivi app e! "Työ")
-          (kenttarivi app e! "Komponentit")
-          (kenttarivi app e! "Yleiset materiaalit")
-          (kenttarivi app e! "Matkat")
-          (kenttarivi app e! "Muut kulut")]]
+          (kenttarivi app* e! "Työ")
+          (kenttarivi app* e! "Komponentit")
+          (kenttarivi app* e! "Yleiset materiaalit")
+          (kenttarivi app* e! "Matkat")
+          (kenttarivi app* e! "Muut kulut")]]
 
         [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
          [:span
           [:b "Yhteensä:"]
           [:span " "]
           (fmt/euro-opt (laske-hinnoittelun-kokonaishinta
-                          (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])))]]
+                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
         [:footer.vv-toimenpiteen-hinnoittelu-footer
          [napit/yleinen-ensisijainen
           "Valmis"
-          #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app)))
-          {:disabled (:hinnoittelun-tallennus-kaynnissa? app)}]]]]]
+          #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
+          {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
      [napit/yleinen-ensisijainen
       "Hinnoittele"
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
       {:luokka "nappi-grid"
-       :disabled (:infolaatikko-nakyvissa? app)}])])
+       :disabled (:infolaatikko-nakyvissa? app*)}])])
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -159,22 +165,33 @@
                                                           :aikavali (:aikavali valinnat)})))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet] :as app}]
-      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
+      (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
+        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
-      [:div
-       [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
-        {:urakkatoiminnot (urakkatoiminnot e! app)}]
-       [jaettu/listaus e! app {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                                 :komponentti (fn [rivi]
-                                                                [hinnoittele-toimenpide app e! rivi])}]
-                               :jaottelu (mapv
-                                           (fn [[hintaryhma toimenpiteet]]
-                                             {:otsikko (or (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
-                                                           "Kokonaishintaisista siirretyt")
-                                              :jaottelu-fn (constantly toimenpiteet)})
-                                           toimenpiteet)
-                               :paneelin-checkbox-sijainti "95.2%"
-                               :vaylan-checkbox-sijainti "95.2%"}]])))
+        [:div
+         [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
+          {:urakkatoiminnot (urakkatoiminnot e! app)}]
+
+         (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
+               :let [app* (r/wrap
+                           (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                           (fn [uusi]
+                             (assoc
+                               uusi
+                               :toimenpiteet
+                               (->> (assoc toimenpiteet-ryhmissa hintaryhma (:toimenpiteet uusi))
+                                    vals
+                                    (mapcat identity)))))]]
+           ^{:key (str "yksikkohintaiset-toimenpiteet-" (get-in hintaryhma [::h/hinnoittelut ::h/nimi]))}
+           [tuck
+            app*
+            (partial jaettu/listaus*
+                     {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                        :komponentti (fn [rivi]
+                                                       [hinnoittele-toimenpide app* e! rivi])}]
+                      :otsikko (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
+                      :paneelin-checkbox-sijainti "95.2%"
+                      :vaylan-checkbox-sijainti "95.2%"})])]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
