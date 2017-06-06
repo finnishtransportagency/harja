@@ -65,16 +65,14 @@
           hintatiedot)))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
-  (let [ ;; {1 [{:toimenpide-id 1 :hinnoittelu-linkit [{:id 2}]} {:id 1 :hinnoittelu-linkit [{:id 3}]}]}
+  (let [ ;; {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
         hintatiedot (group-by ::vv-toimenpide/id
                             (h-q/hae-hinnoittelutiedot-toimenpiteille
                               db
-                              (into #{} (map ::vv-toimenpide/id toimenpiteet))))
-        ;; {1 [{:toimenpide-id 1 :hinnoittelu-linkit [{:id 2} {:id 3}]}]}]}
-        hintatiedot-yhdistettyna (toimenpiteiden-hinnoittelut-yhdistettyna hintatiedot)]
+                              (into #{} (map ::vv-toimenpide/id toimenpiteet))))]
     (map
       (fn [toimenpide]
-        (merge toimenpide (first (hintatiedot-yhdistettyna (::vv-toimenpide/id toimenpide)))))
+        (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?

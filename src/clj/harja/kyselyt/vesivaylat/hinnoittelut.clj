@@ -97,11 +97,9 @@
                     {::h/id hinnoittelu-id}))))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  ;; TODO Palauta jokainen toimenpide vain kerran yhdessä mapissa
   (let [hinnoittelu-ilman-poistettuja-hintoja
         (fn [hinnoittelu]
-          (assoc hinnoittelu ::h/hinnat (filterv (comp not ::m/poistettu?)
-                                                 (::h/hinnat hinnoittelu))))
+          (assoc hinnoittelu ::h/hinnat (remove ::m/poistettu? (::h/hinnat hinnoittelu))))
         hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
                            (let [sopivat-hintaryhmat
                                  (filter
@@ -115,18 +113,19 @@
                        (set/union to/perustiedot to/hinnoittelu)
                        (op/and
                          {::to/id (op/in toimenpide-idt)}))
-         (map #(assoc % ::to/oma-hinnoittelu (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) false))))
-         (map #(assoc % ::to/hintaryhma (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) true))))
-         (map #(dissoc % ::to/hinnoittelu-linkit)))))
+         (map #(if-let [h (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) false))]
+                 (assoc % ::to/oma-hinnoittelu h)
+                 (identity %)))
+         (map #(if-let [h (first (hae-hinnoittelut (::to/hinnoittelu-linkit %) true))]
+                 (assoc % ::to/hintaryhma h)
+                 (identity %)))
+         (map #(dissoc % ::to/hinnoittelu-linkit))
+         (group-by ::to/id)
+         vals
+         (map (partial apply merge)))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (let [hinnoittelut (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})]
-    ;; TODO Tämä on vielä rikki nyt...
-    (assert (#{0 1} (count hinnoittelut))
-            "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu,
-             toimenpiteellä voi olla vain yksi hinnoittelu")
-
-    (first hinnoittelut)))
+  (::to/oma-hinnoittelu (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu [db user toimenpide-id urakka-id]
   (let [hinnoittelu (specql/insert! db
