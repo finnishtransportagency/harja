@@ -419,8 +419,7 @@
       :tienakyma (component/using
                    (tienakyma/->Tienakyma)
                    {:db :db-replica
-                    :http-palvelin :http-palvelin
-                    :tierekisteri :tierekisteri})
+                    :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])

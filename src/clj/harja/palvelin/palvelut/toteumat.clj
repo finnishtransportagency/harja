@@ -586,19 +586,20 @@
 (defn varustetoteuma-xf
   "Palauttaa transducerin tietokannasta haettavien varustetoteumien muuntamiseen.
   Tierekisteri tarvitaan parametrina muuntamaan varusteiden arvot. "
-  [tierekisteri]
-  (comp
-   (map #(assoc % :tyyppi-kartalla :varustetoteuma))
-   (map #(konv/string->keyword % :toimenpide))
-   (map #(konv/string->keyword % :toteumatyyppi))
-   (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-   (if (nil? tierekisteri)
-     (map identity)
-     (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
-                            tierekisteri
-                            (:arvot %)
-                            (:tietolaji %)))))
-   (map konv/alaviiva->rakenne)))
+  ([] (varustetoteuma-xf nil))
+  ([tierekisteri]
+   (comp
+    (map #(assoc % :tyyppi-kartalla :varustetoteuma))
+    (map #(konv/string->keyword % :toimenpide))
+    (map #(konv/string->keyword % :toteumatyyppi))
+    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+    (if (nil? tierekisteri)
+      (map identity)
+      (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
+                             tierekisteri
+                             (:arvot %)
+                             (:tietolaji %)))))
+    (map konv/alaviiva->rakenne))))
 
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
