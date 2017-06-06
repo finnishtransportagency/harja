@@ -106,8 +106,9 @@
                                  (filter
                                    #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
                                    hinnoittelu-linkit)]
-                             (mapv #(hinnoittelu-ilman-poistettuja-hintoja (::h/hinnoittelut %))
-                                   sopivat-hintaryhmat)))]
+                             (->> (map #(hinnoittelu-ilman-poistettuja-hintoja (::h/hinnoittelut %))
+                                    sopivat-hintaryhmat)
+                                 (filterv (comp not ::m/poistettu?)))))]
     (->> (specql/fetch db
                        ::to/reimari-toimenpide
                        (set/union to/perustiedot to/hinnoittelu)

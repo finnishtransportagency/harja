@@ -54,7 +54,7 @@
   #{[::hinnat (set/union hinta/perustiedot hinta/metatiedot)]})
 
 (def hinnoittelutiedot
-  (set/union perustiedot hinnat))
+  (set/union perustiedot metatiedot hinnat))
 
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})
