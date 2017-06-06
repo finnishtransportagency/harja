@@ -97,13 +97,17 @@
                     {::h/id hinnoittelu-id}))))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (let [hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
+  (let [hinnoittelu-ilman-poistettuja-hintoja
+        (fn [hinnoittelu]
+          (assoc hinnoittelu ::h/hinnat (filterv (comp not ::m/poistettu?)
+                                                 (::h/hinnat hinnoittelu))))
+        hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
                            (let [sopivat-hintaryhmat
                                  (filter
-                                   #(and (= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
-                                         (not (get-in % [::h/hinnoittelut ::m/poistettu?])))
+                                   #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
                                    hinnoittelu-linkit)]
-                             (mapv #(::h/hinnoittelut %) sopivat-hintaryhmat)))]
+                             (mapv #(hinnoittelu-ilman-poistettuja-hintoja (::h/hinnoittelut %))
+                                   sopivat-hintaryhmat)))]
     (->> (specql/fetch db
                        ::to/reimari-toimenpide
                        (set/union to/perustiedot to/hinnoittelu)
