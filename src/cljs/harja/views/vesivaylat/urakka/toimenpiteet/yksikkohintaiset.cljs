@@ -174,14 +174,14 @@
 
          (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
                :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]]
-           ^{:key (str "yksikkohintaiset-toimenpiteet-" (get-in hintaryhma [::h/hinnoittelut ::h/nimi]))}
+           ^{:key (str "yksikkohintaiset-toimenpiteet-" (::h/nimi hintaryhma))}
            [jaettu/listaus
             e!
             app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide app* e! rivi])}]
-             :otsikko (or (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
+             :otsikko (or (::h/nimi hintaryhma)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
