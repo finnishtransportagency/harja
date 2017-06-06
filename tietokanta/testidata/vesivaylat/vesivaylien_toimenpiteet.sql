@@ -420,17 +420,45 @@ VALUES
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
    (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
 
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id", poistettu)
+VALUES
+  ('POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN' , false,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'), true);
+
+
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
 VALUES
   ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Tämän ei pitäisi näkyä'),
    'Työ', 600, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Tämän ei pitäisi näkyä'),
+   'POISTETTU HINTA EI SAA NÄKYÄ', 99999999, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), true);
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
+   'POISTETTUUN HINNOITTELUUN KUULUVA HINTA JOKA EI OLE POISTETTU EI SAA NÄKYÄ MISSÄÄN', 99999999, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), false);
+
+
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
 VALUES
   ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'),
    (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Tämän ei pitäisi näkyä'),
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id", luoja)
+VALUES
+  ((SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'),
+   (SELECT id FROM vv_hinnoittelu WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 -- ***********************************************
