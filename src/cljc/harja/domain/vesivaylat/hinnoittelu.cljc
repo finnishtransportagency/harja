@@ -47,8 +47,10 @@
     ::hintaryhma?
     ::id})
 
+(def metatiedot m/muokkauskentat)
+
 (def hinnat
-  #{[::hinnat hinta/perustiedot]})
+  #{[::hinnat hinta/perustiedot hinta/metatiedot]})
 
 (def hinnoittelutiedot
   (clojure.set/union perustiedot hinnat))

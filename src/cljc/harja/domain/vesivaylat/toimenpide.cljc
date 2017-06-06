@@ -298,13 +298,7 @@ reimari-tilat
     ::reimari-turvalaite
     ::reimari-vayla})
 
-(def metatiedot
-  #{::m/muokattu
-    ::m/muokkaaja-id
-    ::m/luotu
-    ::m/luoja-id
-    ::m/poistettu?
-    ::m/poistaja-id})
+(def metatiedot m/muokkauskentat)
 
 (def viittaus-idt
   #{::toteuma-id
