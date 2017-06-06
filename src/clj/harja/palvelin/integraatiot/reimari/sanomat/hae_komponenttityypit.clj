@@ -38,11 +38,14 @@
                                                    (name %))
                        komponenttityyppi-attribuutit))
 
-(defn hae-komponenttityypit-vastaus [vastaus-xml]
-  (vec (z/xml-> vastaus-xml
-                :HaeKomponenttiTyypitResponse
-                :komponenttityyppi
-                lue-komponenttityyppi)))
+(defn hae-toimenpiteet-vastaus [vastaus-xml]
+  (if-let [ht (z/xml1-> vastaus-xml :S:Body :HaeKomponenttiTyypit)]
+    (vec (z/xml->
+          ht
+          :HaeKomponenttiTyypitResponse
+          :komponenttityyppi
+          lue-komponenttityyppi))
+    (log/error "Reimarin toimenpidehaun vastaus ei sisällä :HaeKomponenttiTyypit -elementtiä")))
 
 (defn lue-hae-komponenttityypit-vastaus [xml]
   (hae-komponenttityypit-vastaus (xml/lue xml "UTF-8")))
