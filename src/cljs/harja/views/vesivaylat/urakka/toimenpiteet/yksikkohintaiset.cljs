@@ -173,25 +173,18 @@
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
          (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-               :let [app* (r/wrap
-                           (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                           (fn [uusi]
-                             (assoc
-                               uusi
-                               :toimenpiteet
-                               (->> (assoc toimenpiteet-ryhmissa hintaryhma (:toimenpiteet uusi))
-                                    vals
-                                    (mapcat identity)))))]]
+               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]]
            ^{:key (str "yksikkohintaiset-toimenpiteet-" (get-in hintaryhma [::h/hinnoittelut ::h/nimi]))}
-           [tuck
+           [jaettu/listaus
+            e!
             app*
-            (partial jaettu/listaus*
-                     {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                        :komponentti (fn [rivi]
-                                                       [hinnoittele-toimenpide app* e! rivi])}]
-                      :otsikko (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
-                      :paneelin-checkbox-sijainti "95.2%"
-                      :vaylan-checkbox-sijainti "95.2%"})])]))))
+            {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                               :komponentti (fn [rivi]
+                                              [hinnoittele-toimenpide app* e! rivi])}]
+             :otsikko (or (get-in hintaryhma [::h/hinnoittelut ::h/nimi])
+                          "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
+             :paneelin-checkbox-sijainti "95.2%"
+             :vaylan-checkbox-sijainti "95.2%"}])]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
