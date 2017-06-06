@@ -35,3 +35,10 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
+
+(deftest hae-hinnoittelutiedot-toimenpiteille
+  (let [toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        vastaus (q/hae-hinnoittelutiedot-toimenpiteille (:db jarjestelma)
+                                                        #{toimenpide-id})]
+    (is (number? toimenpide-id))
+    (is (= (count vastaus) 1))))
