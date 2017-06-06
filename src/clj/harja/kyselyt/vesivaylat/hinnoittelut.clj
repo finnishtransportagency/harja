@@ -97,13 +97,18 @@
                     {::h/id hinnoittelu-id}))))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (let [hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
+  (let [hinnoittelu-ilman-poistettuja-hintoja
+        (fn [hinnoittelu]
+          (assoc hinnoittelu ::h/hinnat (filterv (comp not ::m/poistettu?)
+                                                 (::h/hinnat hinnoittelu))))
+        hae-hinnoittelut (fn [hinnoittelu-linkit hintaryhma?]
                            (let [sopivat-hintaryhmat
                                  (filter
-                                   #(and (= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
-                                         (not (get-in % [::h/hinnoittelut ::m/poistettu?])))
+                                   #(= (get-in % [::h/hinnoittelut ::h/hintaryhma?]) hintaryhma?)
                                    hinnoittelu-linkit)]
-                             (mapv #(::h/hinnoittelut %) sopivat-hintaryhmat)))]
+                             (->> (map #(hinnoittelu-ilman-poistettuja-hintoja (::h/hinnoittelut %))
+                                    sopivat-hintaryhmat)
+                                 (filterv (comp not ::m/poistettu?)))))]
     (->> (specql/fetch db
                        ::to/reimari-toimenpide
                        (set/union to/perustiedot to/hinnoittelu)
@@ -114,10 +119,8 @@
          (map #(dissoc % ::to/hinnoittelu-linkit)))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (let [hinnoittelut (->> (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
-                          (remove (comp ::h/hintaryhma? ::h/hinnoittelut ::to/hinnoittelu-linkit))
-                          (map #(get-in % [::to/hinnoittelu-linkit])))
-        hinnoittelut (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})]
+  (let [hinnoittelut (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})]
+    ;; TODO Tämä on vielä rikki nyt...
     (assert (#{0 1} (count hinnoittelut))
             "Kun poistetut ja hintaryhmiksi merkityt hinnoittelut on poistettu,
              toimenpiteellä voi olla vain yksi hinnoittelu")

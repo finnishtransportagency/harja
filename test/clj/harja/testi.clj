@@ -354,6 +354,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Vantaan alueurakka 2009-2019'"))))
 
+(defn hae-reimari-toimenpide-poiujen-korjaus []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
+
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
                    FROM   lampotilat
