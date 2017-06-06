@@ -9,7 +9,7 @@
   yhteen tiehen ja aikaväliin. Tällä mallilla ei tarvitse tehdä erikseen enää
   karttakuvan klikkauksesta hakua vaan kaikki tienäkymän tieto on jo frontilla.
 
-  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden
+  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden, tierekisterin
   ja parametrimäpin, jossa on seuraavat tiedot:
   - hakualueen extent: :x1, :y1, :x2 ja :y2
   - tierekisteriosoitteen geometria: :sijainti
@@ -32,6 +32,7 @@
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
+            [harja.palvelin.palvelut.toteumat :as toteumat]
             [clojure.core.async :as async]
             [harja.kyselyt.kursori :as kursori]
             [harja.domain.tienakyma :as d]))
@@ -56,7 +57,7 @@
      {:alku alku
       :loppu loppu})))
 
-(defn- hae-toteumat [db parametrit]
+(defn- hae-toteumat [db _ parametrit]
   (kursori/hae-kanavaan
    (async/chan 32 (comp
                     ;; Tässä ei haluta palauttaa varustetoteumia.
@@ -67,20 +68,24 @@
                     (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
+(defn- hae-varustetoteumat [db tierekisteri parametrit]
+  (kursori/hae-kanavaan
+   (async/chan 32 (toteumat/varustetoteuma-xf tierekisteri))
+   db q/hae-varustetoteumat parametrit))
 
-(defn- hae-tarkastukset [db parametrit]
+(defn- hae-tarkastukset [db _ parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
                                              (map #(assoc % :tyyppi-kartalla :tarkastus))
                                              (map #(konv/string->keyword % :tyyppi))))
                         db q/hae-tarkastukset parametrit))
 
-(defn- hae-turvallisuuspoikkeamat [db parametrit]
+(defn- hae-turvallisuuspoikkeamat [db _ parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (geo/muunna-pg-tulokset :sijainti)
                                              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
                                              (map #(konv/array->keyword-set % :tyyppi))))
                         db q/hae-turvallisuuspoikkeamat parametrit))
 
-(defn- hae-laatupoikkeamat [db parametrit]
+(defn- hae-laatupoikkeamat [db _ parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
                                              (geo/muunna-pg-tulokset :sijainti)
                                              (map #(if (nil? (get-in % [:yllapitokohde :numero]))
@@ -89,7 +94,7 @@
                                              (map #(assoc % :tyyppi-kartalla :laatupoikkeama))))
                         db q/hae-laatupoikkeamat parametrit))
 
-(defn- hae-ilmoitukset [db parametrit]
+(defn- hae-ilmoitukset [db _ parametrit]
   (let [ch (async/chan 32)]
     (async/thread
       (let [tulokset (konv/sarakkeet-vektoriin
@@ -104,7 +109,7 @@
         (async/close! ch)))
     ch))
 
-(defn- hae-tietyoilmoitukset [db parametrit]
+(defn- hae-tietyoilmoitukset [db _ parametrit]
   (let [ch (async/chan 32)]
     (async/thread
       (let [tulokset (into []
@@ -124,17 +129,18 @@
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
    :laatupoikkeamat #'hae-laatupoikkeamat
-   :tietyoilmoitukset #'hae-tietyoilmoitukset})
+   :tietyoilmoitukset #'hae-tietyoilmoitukset
+   :varustetoteumat #'hae-varustetoteumat})
 
 (def +haun-max-kesto+ 20000)
 
-(defn- hae-tienakymaan [db valinnat]
+(defn- hae-tienakymaan [db tierekisteri valinnat]
   (let [parametrit (hakuparametrit valinnat)]
     (reset! debug-hakuparametrit parametrit)
 
     (let [timeout (async/timeout +haun-max-kesto+)
           kanavat (vals (fmap (fn [haku-fn]
-                                (haku-fn db parametrit))
+                                (haku-fn db tierekisteri parametrit))
                               tienakyma-haut))
           tulos-ch (async/merge kanavat)
           lue! #(async/alts!! [timeout tulos-ch])]
@@ -151,7 +157,7 @@
           (doseq [k kanavat]
             (async/close! k)))))))
 
-(defn- hae-reittipisteet [db {:keys [toteuma-id]}]
+(defn- hae-reittipisteet [db _ {:keys [toteuma-id]}]
   (q/hae-reittipisteet db {:toteuma-id toteuma-id}))
 
 (defn vain-tilaajalle! [user]
@@ -163,13 +169,15 @@
 
 (defrecord Tienakyma []
   component/Lifecycle
-  (start [{db :db http :http-palvelin :as this}]
+  (start [{db :db http :http-palvelin
+           tierekisteri :tierekisteri
+           :as this}]
     (julkaise-palvelu
      http
      :hae-tienakymaan
      (fn [user valinnat]
        (vain-tilaajalle! user)
-       (hae-tienakymaan db valinnat))
+       (hae-tienakymaan db tierekisteri valinnat))
      {:kysely-spec ::d/hakuehdot
       :vastaus-spec ::d/tulokset})
 

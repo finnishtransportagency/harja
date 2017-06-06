@@ -583,18 +583,26 @@
 
     (toteumat-q/poista-tehtava! db (:id user) (:id tiedot))))
 
+(defn varustetoteuma-xf
+  "Palauttaa transducerin tietokannasta haettavien varustetoteumien muuntamiseen.
+  Tierekisteri tarvitaan parametrina muuntamaan varusteiden arvot. "
+  [tierekisteri]
+  (comp
+   (map #(assoc % :tyyppi-kartalla :varustetoteuma))
+   (map #(konv/string->keyword % :toimenpide))
+   (map #(konv/string->keyword % :toteumatyyppi))
+   (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+   (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
+                          tierekisteri
+                          (:arvot %)
+                          (:tietolaji %))))
+   (map konv/alaviiva->rakenne)))
+
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
-                       (comp
-                         (map #(konv/string->keyword % :toimenpide))
-                         (map #(konv/string->keyword % :toteumatyyppi))
-                         (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                         (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi tierekisteri
-                                                                                                 (:arvot %)
-                                                                                                 (:tietolaji %))))
-                         (map konv/alaviiva->rakenne))
+                       (varustetoteuma-xf tierekisteri)
                        (toteumat-q/hae-urakan-varustetoteumat
                          db
                          urakka-id
@@ -783,14 +791,14 @@
     {:tehtava :tehtavat
      :materiaalitoteuma :materiaalit}))
 
-(defn- siirry-kokonaishintainen-toteuma
-  "Palauttaa frontin tarvitsemat tiedot, joilla kokonaishintaiseen toteumaan voidaan siirtyä"
+(defn- siirry-toteuma
+  "Palauttaa frontin tarvitsemat tiedot, joilla toteumaan voidaan siirtyä"
   [db user toteuma-id]
   (first
     (konv/sarakkeet-vektoriin
       (into []
             (map konv/alaviiva->rakenne)
-            (toteumat-q/siirry-kokonaishintainen-toteuma
+            (toteumat-q/siirry-toteuma
               db {:toteuma-id toteuma-id
                   :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
                   :urakoitsija-id (get-in user [:organisaatio :id])}))
