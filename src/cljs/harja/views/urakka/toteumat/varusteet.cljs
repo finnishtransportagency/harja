@@ -93,6 +93,7 @@
                        toteumat))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
      {:otsikko "Tehty" :tyyppi :pvm :fmt pvm/pvm-aika :nimi :luotu :leveys 10}
+     {:otsikko "Tekijä" :tyyppi :string :nimi :tekija :hae #(str (:luojan-etunimi %) " " (:luojan-sukunimi %)) :leveys 10}
      {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
      {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
       :hae (fn [rivi]
@@ -150,6 +151,11 @@
        :otsikko "Kirjattu"
        :tyyppi :pvm
        :muokattava? (constantly false)}
+      (when (or (:luojan-etunimi varustetoteuma) (:luojan-sukunimi varustetoteuma))
+        {:nimi :tekija
+         :otsikko "Tekijä"
+         :hae #(str (:luojan-etunimi %) " " (:luojan-sukunimi %))
+         :muokattava? (constantly false)})
       (when (:lahetetty varustetoteuma)
         {:nimi :lahetetty
          :otsikko "Lähetetty Tierekisteriin"
@@ -169,59 +175,60 @@
 
 (defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
   (let [tunniste (or (:tunniste varustetoteuma)
-                     (get-in varustetoteuma [:arvot :tunniste] ))]
+                     (get-in varustetoteuma [:arvot :tunniste]))]
+    (println varustetoteuma)
     (lomake/ryhma
-     "Varusteen tunnistetiedot"
-     (when tunniste
-       {:nimi :tunniste
-        :otsikko "Tunniste"
-        :hae (constantly tunniste)
-        :muokattava? (constantly false)})
-     {:nimi :tietolaji
-      :otsikko "Varusteen tyyppi"
-      :tyyppi :valinta
-      :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
-      :valinta-nayta second
-      :valinta-arvo first
-      :muokattava? (constantly muokattava?)}
-     {:nimi :tierekisteriosoite
-      :otsikko "Tierekisteriosoite"
-      :tyyppi :tierekisteriosoite
-      :pakollinen? muokattava?
-      :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
-      :muokattava? (constantly muokattava?)}
-     {:nimi :ajorata
-      :otsikko "Ajorata"
-      :tyyppi :valinta
-      :valinnat (if muokattava?
-                  (if (:ajoradat varustetoteuma)
-                    (:ajoradat varustetoteuma)
-                    tierekisteri-varusteet/oletus-ajoradat)
-                  tierekisteri-varusteet/kaikki-ajoradat)
-      :pakollinen? muokattava?
-      :leveys 1
-      :muokattava? (constantly muokattava?)}
-     {:nimi :puoli
-      :otsikko "Tien puoli"
-      :tyyppi :valinta
-      :valinnat (tierekisteri-varusteet/tien-puolet (:tietolaji varustetoteuma))
-      :pituus 1
-      :pakollinen? muokattava?
-      :muokattava? (constantly muokattava?)}
-     {:nimi :alkupvm
-      :otsikko "Alkupäivämäärä"
-      :tyyppi :pvm
-      :pakollinen? muokattava?
-      :muokattava? (constantly muokattava?)}
-     (when (not= (:toiminto varustetoteuma) :lisatty)
-       {:nimi :loppupvm
-        :otsikko "Loppupäivämäärä"
-        :tyyppi :pvm
-        :muokattava? (constantly muokattava?)})
-     {:nimi :lisatieto
-      :otsikko "Lisätietoja"
-      :tyyppi :string
-      :muokattava? (constantly muokattava?)})))
+      "Varusteen tunnistetiedot"
+      (when tunniste
+        {:nimi :tunniste
+         :otsikko "Tunniste"
+         :hae (constantly tunniste)
+         :muokattava? (constantly false)})
+      {:nimi :tietolaji
+       :otsikko "Varusteen tyyppi"
+       :tyyppi :valinta
+       :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
+       :valinta-nayta second
+       :valinta-arvo first
+       :muokattava? (constantly muokattava?)}
+      {:nimi :tierekisteriosoite
+       :otsikko "Tierekisteriosoite"
+       :tyyppi :tierekisteriosoite
+       :pakollinen? muokattava?
+       :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+       :muokattava? (constantly muokattava?)}
+      {:nimi :ajorata
+       :otsikko "Ajorata"
+       :tyyppi :valinta
+       :valinnat (if muokattava?
+                   (if (:ajoradat varustetoteuma)
+                     (:ajoradat varustetoteuma)
+                     tierekisteri-varusteet/oletus-ajoradat)
+                   tierekisteri-varusteet/kaikki-ajoradat)
+       :pakollinen? muokattava?
+       :leveys 1
+       :muokattava? (constantly muokattava?)}
+      {:nimi :puoli
+       :otsikko "Tien puoli"
+       :tyyppi :valinta
+       :valinnat (tierekisteri-varusteet/tien-puolet (:tietolaji varustetoteuma))
+       :pituus 1
+       :pakollinen? muokattava?
+       :muokattava? (constantly muokattava?)}
+      {:nimi :alkupvm
+       :otsikko "Alkupäivämäärä"
+       :tyyppi :pvm
+       :pakollinen? muokattava?
+       :muokattava? (constantly muokattava?)}
+      (when (not= (:toiminto varustetoteuma) :lisatty)
+        {:nimi :loppupvm
+         :otsikko "Loppupäivämäärä"
+         :tyyppi :pvm
+         :muokattava? (constantly muokattava?)})
+      {:nimi :lisatieto
+       :otsikko "Lisätietoja"
+       :tyyppi :string
+       :muokattava? (constantly muokattava?)})))
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)

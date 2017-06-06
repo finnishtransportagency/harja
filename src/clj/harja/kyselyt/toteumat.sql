@@ -807,11 +807,14 @@ SELECT
   loppupvm,
   lahetetty,
   lahetysvirhe,
-  tila
+  tila,
+  k.etunimi           AS "luojan-etunimi",
+  k.sukunimi          AS "luojan-sukunimi"
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  left join kayttaja k on vt.luoja = k.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
