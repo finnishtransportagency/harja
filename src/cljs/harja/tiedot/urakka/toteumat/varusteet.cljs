@@ -142,15 +142,16 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-   {:toiminto toiminto
-    :tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))
-    :alkupvm (or (:alkupvm tietue) (pvm/nyt))
-    :muokattava? true
-    :ajoradat varusteet-domain/oletus-ajoradat
-    :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
-    :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first varusteet-domain/tien-puolet))
-    :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-    :tierekisteriosoite (varusteen-osoite varuste)}))
+   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))]
+     {:toiminto toiminto
+      :tietolaji tietolaji
+      :alkupvm (or (:alkupvm tietue) (pvm/nyt))
+      :muokattava? true
+      :ajoradat varusteet-domain/oletus-ajoradat
+      :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
+      :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
+      :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
+      :tierekisteriosoite (varusteen-osoite varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
