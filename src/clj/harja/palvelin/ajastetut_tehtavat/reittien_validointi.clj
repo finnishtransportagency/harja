@@ -7,7 +7,7 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastus]
-            [harja.palvelin.palvelut.tierek-haku :as tierekisteri]
+            [harja.palvelin.palvelut.tierekisteri :as tierekisteri]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.palvelut.toteumat :refer [paivita-toteuman-reitti]]
             [clojure.java.jdbc :as jdbc]
