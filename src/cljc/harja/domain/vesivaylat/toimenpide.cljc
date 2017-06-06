@@ -4,11 +4,9 @@
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
-            [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
-            [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
-            [harja.domain.vesivaylat.sopimus :as vv-sopimus]
             [clojure.string :as str]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
@@ -279,6 +277,8 @@ reimari-tilat
 (s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
+(s/def ::oma-hinnoittelu ::h/hinnoittelu)
+(s/def ::hintaryhma ::h/hinnoittelu)
 (s/def ::vikakorjauksia? boolean?)
 (s/def ::idt (s/coll-of ::id))
 
@@ -298,13 +298,7 @@ reimari-tilat
     ::reimari-turvalaite
     ::reimari-vayla})
 
-(def metatiedot
-  #{::m/muokattu
-    ::m/muokkaaja-id
-    ::m/luotu
-    ::m/luoja-id
-    ::m/poistettu?
-    ::m/poistaja-id})
+(def metatiedot m/muokkauskentat)
 
 (def viittaus-idt
   #{::toteuma-id

@@ -34,3 +34,5 @@
     ::maara
     ::yleiskustannuslisa
     ::id})
+
+(def metatiedot m/muokkauskentat)
