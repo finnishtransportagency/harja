@@ -12,7 +12,8 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset])
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
@@ -39,16 +40,20 @@
 
 (defn nayta-varustetoteuma!
   "Navigoi annetun urakan tietoihin ja näyttää varustetoteuman tiedot."
-  [varustetoteuma-id]
+  [toteuma-id]
   (go
-    (let [{:keys [urakka-id hallintayksikko-id]}
-          (<! (hae-toteuman-siirtymatiedot varustetoteuma-id))]
+    (let [{:keys [urakka-id hallintayksikko-id aikavali]}
+          (<! (hae-toteuman-siirtymatiedot toteuma-id))]
 
-      (nav/aseta-valittu-valilehti! :sivu :urakat)
-      (nav/aseta-valittu-valilehti! :urakat :toteumat)
+      (varusteet/valitse-toteuman-idlla! toteuma-id)
+
       (nav/aseta-valittu-valilehti! :toteumat :varusteet)
+      (nav/aseta-valittu-valilehti! :urakat :toteumat)
+      (nav/aseta-valittu-valilehti! :sivu :urakat)
 
-      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id))))
+      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+
+      (urakka/valitse-aikavali! (:alku aikavali) (:loppu aikavali)))))
 
 (defn nayta-kokonaishintainen-toteuma!
   "Navigoi annetun urakan tietoihin ja näyttää kokonaishintaisen toteuman tiedot."
