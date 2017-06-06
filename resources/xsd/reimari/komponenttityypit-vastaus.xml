@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body> -->
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
 <HaeKomponenttiTyypit xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
   <HaeKomponenttiTyypitResponse>
       <komponenttityyppi id="4242"
