@@ -97,25 +97,28 @@
                                        sopimus-id
                                        aikavali
                                        tienumero] :as hakuehdot}
-                               {:keys [arvot
+                               {:keys [id
+                                       arvot
                                        sijainti
                                        puoli
                                        ajorata
                                        lisatieto
                                        tietolaji
                                        toiminto
+                                       toimenpide
                                        tierekisteriosoite
                                        alkupvm
                                        loppupvm] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
-        toteuma {:arvot arvot
+        toteuma {:id id
+                 :arvot arvot
                  :sijainti sijainti
                  :puoli puoli
                  :ajorata ajorata
                  :tierekisteriosoite tierekisteriosoite
                  :lisatieto lisatieto
                  :tietolaji tietolaji
-                 :toiminto toiminto
+                 :toiminto (or toiminto toimenpide)
                  :urakka-id @nav/valittu-urakka-id
                  :kuntoluokitus (when (and (:kuntoluokitus arvot)
                                            (not (str/blank? (:kuntoluokitus arvot))))
@@ -215,7 +218,7 @@
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (= "virhe" (:tila toteuma)))))]
       (tulos!)))
 
   v/TyhjennaValittuToteuma

@@ -546,6 +546,32 @@ VALUES (:tunniste,
   :tr_ajorata,
   :sijainti);
 
+
+-- name: paivita-varustetoteuma!
+-- Päivittää annetun varustetoteuman
+UPDATE varustetoteuma
+SET
+  tunniste                = :tunniste,
+  toteuma                 = :toteuma,
+  toimenpide              = :toimenpide :: VARUSTETOTEUMA_TYYPPI,
+  tietolaji               = :tietolaji,
+  arvot                   = :arvot,
+  karttapvm               = :karttapvm,
+  alkupvm                 = :alkupvm,
+  loppupvm                = :loppupvm,
+  piiri                   = :piiri,
+  kuntoluokka             = :kuntoluokka,
+  tierekisteriurakkakoodi = :tierekisteriurakkakoodi,
+  tr_numero               = :tr_numero,
+  tr_alkuosa              = :tr_alkuosa,
+  tr_alkuetaisyys         = :tr_alkuetaisyys,
+  tr_loppuosa             = :tr_loppuosa,
+  tr_loppuetaisyys        = :tr_loppuetaisyys,
+  tr_puoli                = :tr_puoli,
+  tr_ajorata              = :tr_ajorata,
+  sijainti                = :sijainti
+WHERE id = :id;
+
 -- name: poista-toteuman-varustetiedot!
 DELETE FROM varustetoteuma
 WHERE toteuma = :id;
@@ -780,6 +806,7 @@ SELECT
   alkupvm,
   loppupvm,
   lahetetty,
+  lahetysvirhe,
   tila
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
@@ -929,7 +956,7 @@ SELECT id,
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
-SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
