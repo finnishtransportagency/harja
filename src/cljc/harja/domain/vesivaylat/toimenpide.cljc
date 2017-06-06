@@ -6,9 +6,12 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
+            [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [clojure.string :as str]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
+            [harja.domain.sopimus :as sopimus]
+            [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
     #?@(:clj [
