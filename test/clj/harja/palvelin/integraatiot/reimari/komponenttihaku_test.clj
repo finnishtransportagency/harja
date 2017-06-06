@@ -17,6 +17,6 @@
 (t/deftest kasittele-vastaus-kantatallennus
   (ht/tarkista-map-arvot
    (first (sut/kasittele-vastaus (:db ht/jarjestelma)  (slurp "resources/xsd/reimari/vastaus.xml") ))
-   {:harja.domain.vesivaylat.komponenttityypit/muokattu #inst "2017-04-24T09:42:04.123-00:00",
+   {:harja.domain.vesivaylat.komponenttityyppi/muokattu #inst "2017-04-24T09:42:04.123-00:00",
     ;; ...
     }))

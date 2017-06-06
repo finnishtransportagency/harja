@@ -34,7 +34,7 @@
 
 
 (defn- lue-komponenttityyppi [komponenttityyppi]
-  (xml/lue-attribuutit komponenttityyppi #(keyword "harja.domain.vesivaylat.komponenttityypit"
+  (xml/lue-attribuutit komponenttityyppi #(keyword "harja.domain.vesivaylat.komponenttityyppi"
                                                    (name %))
                        komponenttityyppi-attribuutit))
 
