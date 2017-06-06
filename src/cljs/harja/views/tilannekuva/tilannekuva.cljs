@@ -20,7 +20,9 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.bootstrap :as bs]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]
                    [harja.tyokalut.ui :refer [for*]]))
@@ -343,6 +345,21 @@
 (defn- nayta-tai-piilota-karttataso! [tila]
   (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? tila)))
 
+(def tilannekuvan-infopaneelin-linkit
+  {:paallystys
+   {:toiminto (fn [yllapitokohdeosa]
+                (yllapito/nayta-yhteyshenkilot-modal!
+                 (:yllapitokohde-id yllapitokohdeosa)))
+    :teksti "Näytä yhteyshenkilöt"}
+
+   :varustetoteuma
+   {:toiminto (comp siirtymat/nayta-varustetoteuma! :id)
+    :teksti "Toteumanäkymään"
+    :tooltip "Siirry urakan varustetoteumiin"
+
+    ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
+    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}})
+
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
@@ -361,12 +378,7 @@
           (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
           (when (:id @nav/valittu-urakka) (tiedot/aseta-urakka-valituksi! (:id @nav/valittu-urakka)))
           (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
-          (kartta-tiedot/kasittele-infopaneelin-linkit!
-           {:paallystys
-            {:toiminto (fn [yllapitokohdeosa]
-                         (yllapito/nayta-yhteyshenkilot-modal!
-                          (:yllapitokohde-id yllapitokohdeosa)))
-             :teksti "Näytä yhteyshenkilöt"}})
+          (kartta-tiedot/kasittele-infopaneelin-linkit! tilannekuvan-infopaneelin-linkit)
           (tiedot/seuraa-alueita!))
      #(do (kartta/aseta-paivitetaan-karttaa-tila! false)
           (reset! tilannekuva-kartalla/karttataso-tilannekuva false)
