@@ -76,7 +76,7 @@
                 "format": "date-time"
               },
               "voimassaolo": {
-                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/pakollinen",
+                "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/voimassaolo",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
@@ -124,6 +124,23 @@
                       "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/0/koodi/muutospvm",
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "voimassaolo": {
+                      "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "alkupvm": {
+                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/voimassaolo/alkupvm",
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "loppupvm": {
+                          "id": "urn:harja/tietolaji/ominaisuudet/0/ominaisuus/koodisto/voimassaolo/alkupvm",
+                          "type": ["string", "null"],
+                          "format": "date-time"
+                        }
+                      }
                     }
                   }
                 }

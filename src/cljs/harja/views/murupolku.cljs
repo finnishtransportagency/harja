@@ -96,10 +96,12 @@
    [livi-pudotusvalikko {:valinta @nav/valittu-urakoitsija
                          :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/valitse-urakoitsija!
-                         :class (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
+                         :class (str "alasveto-urakoitsija"
+                                     (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled (or (some? @nav/valittu-urakka)
                                        (= (:sivu @reitit/url-navigaatio) :raportit))}
     (vec (conj (into [] (case (:arvo @nav/urakkatyyppi)
+                          :kaikki @urakoitsijat/urakoitsijat-kaikki
                           :hoito @urakoitsijat/urakoitsijat-hoito
                           :paallystys @urakoitsijat/urakoitsijat-paallystys
                           :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
@@ -117,7 +119,7 @@
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled (boolean @nav/valittu-urakka)}
-    nav/+urakkatyypit+]])
+    nav/+urakkatyypit-ja-kaikki+]])
 
 (defn murupolku
   "Itse murupolkukomponentti joka sisältää html:n"

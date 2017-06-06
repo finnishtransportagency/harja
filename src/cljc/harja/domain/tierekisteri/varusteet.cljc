@@ -36,7 +36,6 @@
    "tl512" "Viemärit"
    "tl165" "Välikaistat"
    "tl516" "Hiekkalaatikot"
-   "tl323" "Viheralueet"
    "tl524" "Viherkuviot"})
 
 (def tien-puolet
@@ -66,6 +65,10 @@
    :hae (comp :tie :sijainti :tietue :varuste)
    :fmt tr/tierekisteriosoite-tekstina
    :leveys 1})
+
+(defn parsi-luku [s]
+  #?(:cljs (js/parseInt s)
+     :clj  (Integer/parseInt s)))
 
 (defmulti varusteominaisuus->skeema
           "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
@@ -109,10 +112,14 @@
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
-  [{ominaisuus :ominaisuus} muokattava?]
+  [{{:keys [pakollinen pituus alaraja ylaraja] :as ominaisuus} :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
-          :regex (re-pattern (str "-?\\d{1," 10 "}"))
+          :regex (re-pattern (str "-?\\d*"))
+          :validoi [#(cond
+                       (and alaraja (not (str/blank? %)) (< (parsi-luku %) alaraja)) (str "Arvon pitää olla vähintään: " alaraja)
+                       (and ylaraja (not (str/blank? %)) (> (parsi-luku %) ylaraja)) (str "Arvon pitää olla vähemmän kuin: " ylaraja)
+                       :default nil)]
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default

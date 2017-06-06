@@ -231,3 +231,26 @@
   [nimi kontrollit]
   (sisaan-ulos #(kartta-tiedot/nayta-kartan-kontrollit! nimi kontrollit)
                #(kartta-tiedot/poista-kartan-kontrollit! nimi)))
+
+(defn fokusoi
+  "Fokusoi komponentin tai annetun CSS-selektorin sen alta piirron jälkeen"
+  ([] (fokusoi nil))
+  ([alipolku]
+   (piirretty
+    (fn [this]
+      (let [elt (r/dom-node this)]
+        (when-let [elt (if alipolku
+                         (.querySelector elt alipolku)
+                         elt)]
+          (.focus elt)))))))
+
+(defn skrollaa-nakyviin-absolute
+  "Skrollaa absoluuttisesti (ikkunan koordinaateissa olevan) komponentin näkyviin piirron jälkeen"
+  []
+  (piirretty
+   (fn [this]
+     (let [node (r/dom-node this)
+           [_ y _ h] (dom/sijainti node)
+           korkeus @dom/korkeus]
+       (when (> (+ y h) korkeus)
+         (.scrollBy js/window 0 (- (+ y h) korkeus)))))))

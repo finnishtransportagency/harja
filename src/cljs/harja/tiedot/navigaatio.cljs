@@ -89,18 +89,22 @@
   (filterv
     some?
     [{:nimi "Hoito" :arvo :hoito}
-    {:nimi "Tiemerkintä" :arvo :tiemerkinta}
-    {:nimi "Päällystys" :arvo :paallystys}
-    {:nimi "Paikkaus" :arvo :paikkaus}
-    {:nimi "Valaistus" :arvo :valaistus}
-    {:nimi "Siltakorjaus" :arvo :siltakorjaus}
-    {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
-    ;; "Vesiväylät" ei ole urakkatyyppi, vaan väylämuoto
-    ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
-    ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
-    ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
-    (when (istunto/ominaisuus-kaytossa? :vesivayla)
-      {:nimi "Vesiväylät" :arvo :vesivayla})]))
+     {:nimi "Tiemerkintä" :arvo :tiemerkinta}
+     {:nimi "Päällystys" :arvo :paallystys}
+     {:nimi "Paikkaus" :arvo :paikkaus}
+     {:nimi "Valaistus" :arvo :valaistus}
+     {:nimi "Siltakorjaus" :arvo :siltakorjaus}
+     {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
+     ;; "Vesiväylät" ei ole urakkatyyppi, vaan väylämuoto
+     ;; Vesi-väylämuotoon liittyy todellisuudessa monia urakkatyyppejä,
+     ;; kuten hoito, ruoppaus, turvalaitteden-korjaus.. kuitenkin toistaiseksi
+     ;; näitä kaikkia tyyppejä käsitellään Harjan käyttöliittymässä samalla tavalla.
+     (when (istunto/ominaisuus-kaytossa? :vesivayla)
+       {:nimi "Vesiväylät" :arvo :vesivayla})]))
+
+(def +urakkatyypit-ja-kaikki+
+  (into [{:nimi "Kaikki" :arvo :kaikki}]
+        +urakkatyypit+))
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
@@ -191,15 +195,17 @@
     (vaihda-vaylamuoto! ut)
     (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
     (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
-                                                       :hoito @urk/urakoitsijat-hoito
-                                                       :paallystys @urk/urakoitsijat-paallystys
-                                                       :paikkaus @urk/urakoitsijat-paikkaus
-                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                       :valaistus @urk/urakoitsijat-valaistus
-                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
-                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
-                                                       :vesivayla @urk/urakoitsijat-vesivaylat)]
+           #(let [nykyisen-urakkatyypin-urakoitsijat
+                  (case (:arvo ut)
+                    :kaikki @urk/urakoitsijat-kaikki
+                    :hoito @urk/urakoitsijat-hoito
+                    :paallystys @urk/urakoitsijat-paallystys
+                    :paikkaus @urk/urakoitsijat-paikkaus
+                    :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                    :valaistus @urk/urakoitsijat-valaistus
+                    :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                    :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet
+                    :vesivayla @urk/urakoitsijat-vesivaylat)]
               (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
                 %
                 nil)))))
@@ -332,7 +338,8 @@
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []
-            (comp (filter #(or (= v-ur-tyyppi (:tyyppi %))
+            (comp (filter #(or (= :kaikki v-ur-tyyppi)
+                               (= v-ur-tyyppi (:tyyppi %))
                                (and (= v-ur-tyyppi :vesivayla)
                                     (urakka-domain/vesivayla-urakka? %))))
                   (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
