@@ -14,4 +14,4 @@ CREATE TABLE reimari_komponenttityyppi (
        "alkupvm" TIMESTAMP,
        "loppupvm" TIMESTAMP
        -- Tarvitaanko Harjan vakiot muokkaustiedot?
-)
+);
