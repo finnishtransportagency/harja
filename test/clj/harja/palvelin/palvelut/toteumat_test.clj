@@ -338,7 +338,7 @@
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))
         hae #(kutsu-palvelua (:http-palvelin jarjestelma)
-                             :siirry-kokonaishintainen-toteuma
+                             :siirry-toteuma
                              %
                              toteuma-id)
         ok-tulos {:alkanut #inst "2008-09-08T21:10:00.000000000-00:00"
