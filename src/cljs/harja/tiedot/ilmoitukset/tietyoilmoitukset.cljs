@@ -109,6 +109,8 @@
   {::t/yllapitokohde yllapitokohde-id
    ::t/alku alku
    ::t/loppu loppu
+   ::t/kohteen-aikataulu {:kohteen-alku (:alku data)
+                          :paallystys-valmis (:loppu data)}
    ::t/osoite {::tr/geometria geometria
                ::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
