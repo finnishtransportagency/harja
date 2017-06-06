@@ -191,7 +191,7 @@
     {:nimi :puoli
      :otsikko "Tien puoli"
      :tyyppi :valinta
-     :valinnat tierekisteri-varusteet/tien-puolet
+     :valinnat (tierekisteri-varusteet/tien-puolet (:tietolaji varustetoteuma))
      :pituus 1
      :pakollinen? muokattava?
      :muokattava? (constantly muokattava?)}
