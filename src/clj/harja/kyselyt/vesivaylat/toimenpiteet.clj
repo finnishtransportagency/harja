@@ -50,7 +50,7 @@
 
 (defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
   (assoc hinnoittelu ::vv-hinnoittelu/hinnat
-                     (remove ::m/poistettu? (::vv-hinnoittelu/hinnat hinnoittelu))))
+                     (vec (remove ::m/poistettu? (::vv-hinnoittelu/hinnat hinnoittelu)))))
 
 (defn hae-hinnoittelut [hinnoittelu-linkit hintaryhma?]
   (let [sopivat-hintaryhmat
