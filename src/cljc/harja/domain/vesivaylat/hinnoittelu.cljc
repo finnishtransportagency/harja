@@ -103,6 +103,6 @@
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/id
           ::hintaelementit
-          :harja.domain.vesivaylat.toimenpide/id]))
+          :harja.domain.vesivaylat.toimenpide/urakka-id]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
