@@ -172,5 +172,4 @@
                                ::m/luoja-id (:id user)
                                ::hinta/hinnoittelu-id hinnoittelu-id}))))))
 
-    (log/debug "PALAUTTELE: " (pr-str (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
     (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
