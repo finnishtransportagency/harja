@@ -305,14 +305,14 @@ reimari-tilat
 (def metatiedot m/muokkauskentat)
 
 (def viittaus-idt
-  #{::toteuma-id
-    ::urakoitsija-id
+  #{::urakoitsija-id
     ::sopimus-id
     ::urakka-id
     ::turvalaite-id
     ::vayla-id
-    ::luoja
-    ::luoja-id})
+    ::m/muokkaaja-id
+    ::m/luoja-id
+    ::m/poistaja-id})
 
 (def hinnoittelu
   #{[::hinnoittelu-linkit h/toimenpiteen-hinnoittelut]})
