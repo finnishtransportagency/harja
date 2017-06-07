@@ -143,6 +143,7 @@
 
 (defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
   (jdbc/with-db-transaction [db db]
+    ;; TODO toimenpiteet-kuuluvat-urakkaan? palauttaa false
     (when (and (to-q/toimenpiteet-kuuluvat-urakkaan? db #{toimenpide-id} urakka-id)
                (hinnat-kuuluvat-toimenpiteeseen? db (map ::hinta/id hinnat) toimenpide-id))
       (let [hinnoittelu-id (::h/id
@@ -171,4 +172,5 @@
                                ::m/luoja-id (:id user)
                                ::hinta/hinnoittelu-id hinnoittelu-id}))))))
 
+    (log/debug "PALAUTTELE: " (pr-str (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
     (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
