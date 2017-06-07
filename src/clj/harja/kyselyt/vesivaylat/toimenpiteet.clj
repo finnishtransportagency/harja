@@ -92,7 +92,7 @@
        ;; Groupataan ja yhdistetään toimenpiteen tiedot
        (group-by ::vv-toimenpide/id)
        vals
-       (map (partial apply merge))))
+       (mapv (partial apply merge))))
 
 (defn suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
