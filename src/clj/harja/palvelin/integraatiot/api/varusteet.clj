@@ -94,14 +94,14 @@
 (defn hae-geometria-varusteelle [db {:keys [numero aosa aet losa let] :as tiesijainti}]
   (when (and numero aosa aet)
     (if (and losa let)
-     (tieverkko-q/tierekisteriosoite-viivaksi db {:tie numero
-                                                  :aosa aosa
-                                                  :aet aet
-                                                  :losa losa
-                                                  :loppuet let})
-     (tieverkko-q/tierekisteriosoite-pisteeksi db {:tie numero
+      (tieverkko-q/tierekisteriosoite-viivaksi db {:tie numero
                                                    :aosa aosa
-                                                   :aet aet}))))
+                                                   :aet aet
+                                                   :losa losa
+                                                   :loppuet let})
+      (tieverkko-q/tierekisteriosoite-pisteeksi db {:tie numero
+                                                    :aosa aosa
+                                                    :aet aet}))))
 
 (defn- muodosta-tietueiden-hakuvastaus [tierekisteri db vastausdata]
   {:varusteet
@@ -149,7 +149,7 @@
                                              tietolajitunniste
                                              voimassaolopvm
                                              tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus db tierekisteri vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri db vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {:varusteet []}))))
