@@ -84,7 +84,7 @@
 
 
 
-(defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu urakka-id]
+(defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
   (jdbc/with-db-transaction [db db]
     (doseq [id toimenpide-idt]
       (specql/insert! db
@@ -93,7 +93,7 @@
                        ::h/hinnoittelu-id hinnoittelu
                        ::m/luoja-id (:id user)}))))
 
-(defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat urakka-id]
+(defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat]
   (jdbc/with-db-transaction [db db]
     (doseq [hinta hinnat]
       (if (id-olemassa? (::hinta/id hinta))

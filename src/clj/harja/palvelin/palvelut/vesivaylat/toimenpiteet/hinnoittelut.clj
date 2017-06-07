@@ -10,6 +10,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
 (defn hae-hinnoittelut [db user tiedot]
@@ -37,7 +38,7 @@
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
       (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))
-      (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot) urakka-id))))
+      (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot)))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -47,11 +48,10 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/hinnoittelu-id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (map ::hinta/id hinnat) hinnoittelu-id)
+      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot))) (::h/hinnoittelu-id tiedot))
       (q/tallenna-hintaryhmalle-hinta! db user
                                        (::h/hinnoittelu-id tiedot)
-                                       (::h/hintaelementit tiedot)
-                                       urakka-id))))
+                                       (::h/hintaelementit tiedot)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -60,7 +60,7 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db (map ::hinta/id hinnat) toimenpide-id)
+      (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db (set (map ::hinta/id (::h/hintaelementit tiedot))) (::to/id tiedot))
       (q/tallenna-toimenpiteelle-hinta! db user
                                         (::to/id tiedot)
                                         (::h/hintaelementit tiedot)
