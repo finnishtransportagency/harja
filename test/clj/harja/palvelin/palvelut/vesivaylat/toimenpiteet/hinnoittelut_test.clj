@@ -62,7 +62,12 @@
                                 kysely-params)]
 
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
-    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))))
+    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))
+
+
+    (is (= (count (::h/hinnat vastaus)) 2))
+    (is (some #(== (::hinta/maara %) 666) (::h/hinnat vastaus)))
+    (is (some #(== (::hinta/maara %) 123) (::h/hinnat vastaus)))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
