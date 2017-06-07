@@ -49,6 +49,7 @@
 (deftest tallenna-toimenpiteelle-hinta
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
+        hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
@@ -59,7 +60,8 @@
                                             ::hinta/maara 123}]}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
-                                kysely-params)]
+                                kysely-params)
+        hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
 
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))
@@ -67,7 +69,8 @@
 
     (is (= (count (::h/hinnat vastaus)) 2))
     (is (some #(== (::hinta/maara %) 666) (::h/hinnat vastaus)))
-    (is (some #(== (::hinta/maara %) 123) (::h/hinnat vastaus)))))
+    (is (some #(== (::hinta/maara %) 123) (::h/hinnat vastaus)))
+    (is (= (+ hinnat-ennen 2) hinnat-jalkeen))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
