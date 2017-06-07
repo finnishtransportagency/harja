@@ -63,3 +63,14 @@
 
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))))
+
+(deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
+  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/id toimenpide-id
+                       ::h/hintaelementit []}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   kysely-params)))))
