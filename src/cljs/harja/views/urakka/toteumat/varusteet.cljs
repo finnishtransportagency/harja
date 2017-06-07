@@ -37,7 +37,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -296,6 +297,7 @@
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
+    (komp/lippu varustetiedot/karttataso-varustetoteuma)
     (komp/watcher varustetiedot/valinnat
                   (fn [_ _ uusi]
                     (e! (v/->YhdistaValinnat uusi))))
@@ -319,6 +321,7 @@
       (kasittele-alkutila e! app)
 
       [:span
+       [debug/debug app]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
