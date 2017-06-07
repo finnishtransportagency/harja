@@ -59,7 +59,8 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                 kysely-params)]
+
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
-    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastays vastaus))
+    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))
 
     (is (= (count vastaus)) 1)))
