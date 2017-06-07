@@ -14,14 +14,16 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
-            [harja.kyselyt.livitunnisteet :as livitunnisteet]
+            [harja.kyselyt.livitunnisteet :as livitunnisteet-q]
+            [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clojure.string :as str]
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.geo :as geo])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -89,7 +91,19 @@
         (log/debug "Haetaan kaikkien tietolajien kuvaukset käyttäjälle: " kayttaja)
         (hae-kaikki-tietolajit tierekisteri)))))
 
-(defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
+(defn hae-geometria-varusteelle [db {:keys [numero aosa aet losa let] :as tiesijainti}]
+  (when (and numero aosa aet)
+    (if (and losa let)
+     (tieverkko-q/tierekisteriosoite-viivaksi db {:tie numero
+                                                  :aosa aosa
+                                                  :aet aet
+                                                  :losa losa
+                                                  :loppuet let})
+     (tieverkko-q/tierekisteriosoite-pisteeksi db {:tie numero
+                                                   :aosa aosa
+                                                   :aet aet}))))
+
+(defn- muodosta-tietueiden-hakuvastaus [tierekisteri db vastausdata]
   {:varusteet
    (mapv
      (fn [tietue]
@@ -97,29 +111,31 @@
              vastaus (tierekisteri/hae-tietolaji tierekisteri tietolaji nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
-             arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
+             arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)
+             tiesijainti (get-in tietue [:tietue :sijainti :tie])]
          {:varuste
           {:tunniste (get-in tietue [:tietue :tunniste])
            :tietue
-           {:sijainti {:tie {:numero (get-in tietue [:tietue :sijainti :tie :numero]),
-                             :aosa (get-in tietue [:tietue :sijainti :tie :aosa]),
-                             :aet (get-in tietue [:tietue :sijainti :tie :aet]),
-                             :losa (get-in tietue [:tietue :sijainti :tie :losa]),
-                             :let (get-in tietue [:tietue :sijainti :tie :let]),
-                             :ajr (get-in tietue [:tietue :sijainti :tie :ajr]),
-                             :puoli (get-in tietue [:tietue :sijainti :tie :puoli]),
-                             :kaista (get-in tietue [:tietue :sijainti :tie :kaista])}},
+           {:sijainti {:tie {:numero (:numero tiesijainti),
+                             :aosa (:aosa tiesijainti),
+                             :aet (:aet tiesijainti),
+                             :losa (:losa tiesijainti),
+                             :let (:let tiesijainti),
+                             :ajr (:ajr tiesijainti),
+                             :puoli (:puoli tiesijainti),
+                             :kaista (:kaista tiesijainti)}},
             :alkupvm (get-in tietue [:tietue :alkupvm])
             :loppupvm (get-in tietue [:tietue :loppupvm])
             :karttapvm (get-in tietue [:tietue :karttapvm]),
             :kuntoluokitus (get-in tietue [:tietue :kuntoluokka]),
             :ely (Integer/parseInt (get-in tietue [:tietue :piiri]))
             :tietolaji {:tunniste tietolaji,
-                        :arvot arvot-mappina}}}}))
+                        :arvot arvot-mappina}}}
+          :sijainti (geo/pg->clj (hae-geometria-varusteelle db tiesijainti))}))
      (:tietueet vastausdata))})
 
 
-(defn hae-varusteet [tierekisteri parametrit kayttaja]
+(defn hae-varusteet [tierekisteri db parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
@@ -133,26 +149,26 @@
                                              tietolajitunniste
                                              voimassaolopvm
                                              tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus db tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {:varusteet []}))))
 
-(defn hae-varuste [tierekisteri parametrit kayttaja]
+(defn hae-varuste [tierekisteri db parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastaus (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri db vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {:varusteet []}))))
 
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
-  (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
+  (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (:varusteen-lisays data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietolajin-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste livitunniste)
@@ -200,7 +216,7 @@
 (defn hae-varusteita
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
-  [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
   (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
@@ -225,12 +241,11 @@
 
             :default
             {:error "Ei hakuehtoja"})]
-      
-      (if (:onnistunut tulos)
 
+      (if (:onnistunut tulos)
         (merge {:onnistunut true}
                (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-               (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+               (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
         tulos))
 
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -252,14 +267,14 @@
       (GET "/api/varusteet/haku" request
         (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
-                                 (hae-varusteet tierekisteri parametrit kayttaja)))))
+                                 (hae-varusteet tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
-                                 (hae-varuste tierekisteri parametrit kayttaja)))))
+                                 (hae-varuste tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
@@ -290,7 +305,7 @@
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
                         (async
-                          (hae-varusteita user tierekisteri tiedot))))
+                          (hae-varusteita user tierekisteri db tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]

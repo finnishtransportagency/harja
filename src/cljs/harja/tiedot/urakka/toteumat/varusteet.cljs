@@ -57,6 +57,7 @@
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
+                                          ;; todo: tähän pitäisi tehdä joku hookki: kun arvo päivittyy, päivitetään myös kartta
                                           :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]
@@ -78,17 +79,19 @@
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
-(defn varustetoteumat-karttataso [toteumat]
+(defn varustetoteumat-karttataso [toteumat varusteet]
+  (log "--->>>" (pr-str varusteet))
   (kartalla-esitettavaan-muotoon
-    toteumat
-    (constantly false)
-    (keep (fn [toteuma]
-            (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
-              (assoc toteuma
-                :tyyppi-kartalla :varustetoteuma
-                :tooltip (tooltip toteuma)
-                :sijainti {:type :point
-                           :coordinates sijainti}))))))
+    (concat (keep (fn [toteuma]
+                    (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
+                      (assoc toteuma
+                        :tyyppi-kartalla :varustetoteuma
+                        :tooltip (tooltip toteuma)
+                        :sijainti {:type :point
+                                   :coordinates sijainti})))
+                  toteumat)
+            (map #(assoc % :tyyppi-kartalla :varuste) varusteet))
+    (constantly false)))
 
 (defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
@@ -188,6 +191,10 @@
     :toteumat toteumat
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
+(defn kartalle [app]
+  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app) (get-in app [:tierekisterin-varusteet :varusteet]))
+             :karttataso-nakyvissa? true))
+
 (extend-protocol t/Event
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -210,25 +217,23 @@
                   {valittu-toimenpide :valittu-toimenpide
                    valittu-toteumaid :valittu-toteumaid
                    :as app}]
-    (assoc app
-           :karttataso (varustetoteumat-karttataso toteumat)
-           :karttataso-nakyvissa? true
-           :toteumat toteumat
-           :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
-           :varustetoteuma (when valittu-toteumaid
-                             (some #(when (= (:toteumaid %) valittu-toteumaid) %)
-                                   toteumat))
-           :valittu-toteumaid nil))
+    (kartalle
+      (assoc app
+        :toteumat toteumat
+        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+        :varustetoteuma (when valittu-toteumaid
+                          (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                toteumat))
+        :valittu-toteumaid nil)))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
     (let [valittu-toimenpide (first tyyppi)
           naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)]
-      (assoc app
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :valinnat (assoc valinnat :tyyppi tyyppi)
-        :naytettavat-toteumat naytettavat-toteumat)))
+      (kartalle
+        (assoc app
+          :valinnat (assoc valinnat :tyyppi tyyppi)
+          :naytettavat-toteumat naytettavat-toteumat))))
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
@@ -283,12 +288,10 @@
   v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
     (let [toteumat (if toteumat toteumat [])]
-      (-> app
-          (dissoc :varustetoteuma)
-          (assoc :karttataso (varustetoteumat-karttataso toteumat)
-                 :karttataso-nakyvissa? true
-                 :toteumahaku-id nil)
-          (haetut-toteumat toteumat))))
+      (kartalle
+        (-> app
+            (dissoc :varustetoteuma :toteumahaku-id)
+            (haetut-toteumat toteumat)))))
 
   v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
@@ -310,12 +313,9 @@
 
   v/VarustetoteumatMuuttuneet
   (process-event [{toteumat :varustetoteumat :as data} app]
-    (-> app
-        (dissoc :uudet-varustetoteumat)
-        (assoc
-          :karttataso (varustetoteumat-karttataso toteumat)
-          :karttataso-nakyvissa? true)
-        (haetut-toteumat toteumat))))
+    (kartalle (-> app
+         (dissoc :uudet-varustetoteumat)
+         (haetut-toteumat toteumat)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
