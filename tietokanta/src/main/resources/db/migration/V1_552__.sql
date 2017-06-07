@@ -1,4 +1,5 @@
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-komponenttityypit');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-turvalaitekomponentit');
 CREATE TABLE reimari_komponenttityyppi (
        "id" TEXT PRIMARY KEY,
        "nimi" TEXT NOT NULL,
