@@ -161,6 +161,11 @@
              (not (pvm/ennen? data vertailtava-pvm)))
     (or viesti (str "Päivämäärän pitää olla " (pvm/pvm vertailtava-pvm) " ennen"))))
 
+(defmethod validoi-saanto :pvm-sama [_ _ data _ _ & [vertailtava-pvm viesti]]
+  (when (and data vertailtava-pvm
+             (not (pvm/sama-pvm? data vertailtava-pvm)))
+    (or viesti (str "Päivämäärän pitää olla sama kuin " (pvm/pvm vertailtava-pvm)))))
+
 (defmethod validoi-saanto :aika-jalkeen [_ _ data rivi _ & [vertailtava-aika-tai-kentan-nimi viesti]]
   (let [vertailtava-aika (if (keyword? vertailtava-aika-tai-kentan-nimi)
                            (get rivi vertailtava-aika-tai-kentan-nimi)
