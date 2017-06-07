@@ -15,5 +15,18 @@ CREATE TABLE reimari_komponenttityyppi (
        "muokattu" TIMESTAMP,
        "alkupvm" TIMESTAMP,
        "loppupvm" TIMESTAMP
-       -- Tarvitaanko Harjan vakiot muokkaustiedot?
+);
+CREATE TABLE reimari_turvalaitekomponentti (
+       "id" TEXT PRIMARY KEY,
+       "lisatiedot" TEXT NOT NULL,
+       "turvalaitenro" TEXT NOT NULL,
+       "komponentti-id" TEXT NOT NULL REFERENCES reimari_komponenttityyppi(id),
+       "sarjanumero" TEXT NOT NULL,
+       "paivitysaika" TIMESTAMP,
+       "luontiaika" TIMESTAMP,
+       "luoja" TEXT NOT NULL,
+       "muokkaaja" TEXT NOT NULL,
+       "muokattu" TIMESTAMP,
+       "alkupvm" TIMESTAMP,
+       "loppupvm" TIMESTAMP
 );

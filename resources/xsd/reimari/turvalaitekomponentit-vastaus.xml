@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body> -->
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
 <HaeTurvalaiteKomponentit xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
   <HaeTurvalaiteKomponentitResponse>
       <turvalaitekomponentti id="9595"
@@ -17,5 +17,4 @@
                              />
   </HaeTurvalaiteKomponentitResponse>
 </HaeTurvalaiteKomponentit>
-
-<!-- </S:Body></S:Envelope> -->
+</S:Body></S:Envelope>
