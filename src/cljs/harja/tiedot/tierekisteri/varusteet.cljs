@@ -36,15 +36,16 @@
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
   ([app tietolaji varusteet]
-   (-> app
-       (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
-       (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
-       (assoc-in [:tierekisterin-varusteet :listaus-skeema]
-                 (into varusteet/varusteen-perustiedot-skeema
-                       (comp (filter varusteet/kiinnostaa-listauksessa?)
-                             (map varusteet/varusteominaisuus->skeema))
-                       (:ominaisuudet tietolaji)))
-       (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))))
+   (varuste-tiedot/kartalle
+     (-> app
+         (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
+         (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
+         (assoc-in [:tierekisterin-varusteet :listaus-skeema]
+                   (into varusteet/varusteen-perustiedot-skeema
+                         (comp (filter varusteet/kiinnostaa-listauksessa?)
+                               (map varusteet/varusteominaisuus->skeema))
+                         (:ominaisuudet tietolaji)))
+         (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
 
 ;; Määritellään varustehaun UI tapahtumat
 

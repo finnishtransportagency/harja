@@ -80,7 +80,6 @@
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
 (defn varustetoteumat-karttataso [toteumat varusteet]
-  (log "--->>>" (pr-str varusteet))
   (kartalla-esitettavaan-muotoon
     (concat (keep (fn [toteuma]
                     (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
@@ -192,8 +191,7 @@
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (defn kartalle [app]
-  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app) (get-in app [:tierekisterin-varusteet :varusteet]))
-             :karttataso-nakyvissa? true))
+  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app) (get-in app [:tierekisterin-varusteet :varusteet]))))
 
 (extend-protocol t/Event
   v/YhdistaValinnat

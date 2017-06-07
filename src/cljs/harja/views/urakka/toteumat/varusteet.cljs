@@ -297,6 +297,7 @@
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
+    (komp/lippu varustetiedot/karttataso-varustetoteuma)
     (komp/watcher varustetiedot/valinnat
                   (fn [_ _ uusi]
                     (e! (v/->YhdistaValinnat uusi))))
