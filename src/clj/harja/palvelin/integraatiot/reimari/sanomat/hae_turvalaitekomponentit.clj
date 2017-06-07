@@ -47,5 +47,4 @@
     (log/error "Reimarin turvalaitekomponenttihaun vastaus ei sisällä :HaeTurvalaiteKomponentit -elementtiä")))
 
 (defn lue-hae-turvalaitekomponentit-vastaus [xml]
-  (println "ff")
   (hae-turvalaitekomponentit-vastaus (xml/lue xml "UTF-8")))

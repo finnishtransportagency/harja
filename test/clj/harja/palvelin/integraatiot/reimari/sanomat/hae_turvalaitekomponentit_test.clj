@@ -11,9 +11,24 @@
              [clojure.spec.alpha :as s]))
 
 (def turvalaitekomponentti
-  {::turvalaitekomponentti/id "9595"
-   ;; ...
-   })
+  {:harja.domain.vesivaylat.turvalaitekomponentti/sarjanumero
+   "234234423",
+   :harja.domain.vesivaylat.turvalaitekomponentti/loppupvm
+   #inst "2017-07-20T00:00:00.000-00:00",
+   :harja.domain.vesivaylat.turvalaitekomponentti/turvalaitenro "234",
+   :harja.domain.vesivaylat.turvalaitekomponentti/valiaikainen false,
+   :harja.domain.vesivaylat.turvalaitekomponentti/luoja "Aatos",
+   :harja.domain.vesivaylat.turvalaitekomponentti/komponentti-id "4242",
+   :harja.domain.vesivaylat.turvalaitekomponentti/id "9595",
+   :harja.domain.vesivaylat.turvalaitekomponentti/alkupvm
+   #inst "2011-05-01T01:00:00.000-00:00",
+   :harja.domain.vesivaylat.turvalaitekomponentti/muokkaaja "Vilho",
+   :harja.domain.vesivaylat.turvalaitekomponentti/muokattu
+   #inst "2016-07-20T00:00:00.000-00:00",
+   :harja.domain.vesivaylat.turvalaitekomponentti/luontiaika
+   #inst "2010-05-01T01:00:00.000-00:00",
+   :harja.domain.vesivaylat.turvalaitekomponentti/lisatiedot
+   "asennettu kivasti"})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-turvalaitekomponentti
@@ -21,7 +36,7 @@
             slurp
             hae-turvalaitekomponentit/lue-hae-turvalaitekomponentit-vastaus
             first)]
-    (clojure.pprint/pprint luettu-turvalaitekomponentti)
+    ;; (clojure.pprint/pprint luettu-turvalaitekomponentti)
     (is (some? luettu-turvalaitekomponentti))
     (println (s/explain-str ::turvalaitekomponentti/turvalaitekomponentti luettu-turvalaitekomponentti))
     (is (nil? (s/explain-data ::turvalaitekomponentti/turvalaitekomponentti luettu-turvalaitekomponentti)))
