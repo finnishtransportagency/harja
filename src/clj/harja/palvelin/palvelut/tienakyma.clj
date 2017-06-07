@@ -9,8 +9,8 @@
   yhteen tiehen ja aikaväliin. Tällä mallilla ei tarvitse tehdä erikseen enää
   karttakuvan klikkauksesta hakua vaan kaikki tienäkymän tieto on jo frontilla.
 
-  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden, tierekisterin
-  ja parametrimäpin, jossa on seuraavat tiedot:
+  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden ja parametrimäpin,
+  jossa on seuraavat tiedot:
   - hakualueen extent: :x1, :y1, :x2 ja :y2
   - tierekisteriosoitteen geometria: :sijainti
   - tierekisteriosoite: :numero, :alkuosa, :alkuetaisyys, :loppuosa ja :loppuetaisyys
