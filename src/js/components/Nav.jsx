@@ -46,8 +46,8 @@ export default React.createClass({
               <div className="column medium-4 harja-feedback"><a href={testiHarjaLink} target="_blank">TestiHARJA</a></div>
               <div className="column medium-4 harja-feedback"><a href={feedbackHref}>Palautetta!</a></div>
             </div>
-            <div className="row harja-title-bar-title">
-              <div className="title-bar-title column medium-12">Liikenneviraston Harja-projekti</div>
+            <div className="row">
+              <div className="harja-title-bar-title column medium-12">Liikenneviraston Harja-projekti</div>
             </div>
           </div>
         </div>
