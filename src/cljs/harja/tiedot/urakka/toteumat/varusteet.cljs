@@ -57,7 +57,6 @@
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
-                                          ;; todo: tähän pitäisi tehdä joku hookki: kun arvo päivittyy, päivitetään myös kartta
                                           :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]

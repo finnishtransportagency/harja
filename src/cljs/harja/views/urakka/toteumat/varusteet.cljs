@@ -177,7 +177,6 @@
 (defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
   (let [tunniste (or (:tunniste varustetoteuma)
                      (get-in varustetoteuma [:arvot :tunniste]))]
-    (println varustetoteuma)
     (lomake/ryhma
       "Varusteen tunnistetiedot"
       (when tunniste
