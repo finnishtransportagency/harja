@@ -111,7 +111,6 @@
         (tallenna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/tallenna-toimenpiteelle-hinta-kysely
        :vastaus-spec ::h/tallenna-toimenpiteelle-hinta-vastaus})
-
     this)
 
   (stop [this]
