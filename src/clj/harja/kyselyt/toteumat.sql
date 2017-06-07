@@ -943,19 +943,20 @@ SELECT
 FROM
   (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
 
--- name: siirry-kokonaishintainen-toteuma
--- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
+-- name: siirry-toteuma
+-- Palauttaa tiedot, joita tarvitaan frontilla toteumaan siirtymiseen ja
 -- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu
 SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko-id",
+       t.tyyppi,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
        tpk3.koodi AS tehtava_toimenpideinstanssi,
        hk.alkupvm AS aikavali_alku,
        hk.loppupvm AS aikavali_loppu
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
-       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       LEFT JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE

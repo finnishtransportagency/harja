@@ -47,12 +47,20 @@
                 ;; Valittu varustetoteuma
                 :varustetoteuma nil
 
+                ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
+                ;; id, joka valitaan kun haku on valmistunut
+                :valittu-toteumaid nil
+
+
                 ;; Tierekisterin varusteiden hakuehdot ja tulokset
                 :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
                                           :varusteet nil}}))
+
+(defn valitse-toteuman-idlla! [toteumaid]
+  (swap! varusteet assoc :valittu-toteumaid toteumaid))
 
 (defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
@@ -194,13 +202,19 @@
         :toteumahaku-id nil)))
 
   v/VarusteToteumatHaettu
-  (process-event [{toteumat :toteumat} app]
-    (let [valittu-toimenpide (:valittu-toimenpide app)]
-      (assoc app
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :toteumat toteumat
-        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat))))
+  (process-event [{toteumat :toteumat}
+                  {valittu-toimenpide :valittu-toimenpide
+                   valittu-toteumaid :valittu-toteumaid
+                   :as app}]
+    (assoc app
+           :karttataso (varustetoteumat-karttataso toteumat)
+           :karttataso-nakyvissa? true
+           :toteumat toteumat
+           :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+           :varustetoteuma (when valittu-toteumaid
+                             (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                   toteumat))
+           :valittu-toteumaid nil))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
