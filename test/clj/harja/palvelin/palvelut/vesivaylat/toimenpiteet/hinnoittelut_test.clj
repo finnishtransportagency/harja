@@ -7,6 +7,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
@@ -45,11 +46,16 @@
     (is (= (count vastaus) 1))))
 
 (deftest tallenna-toimenpiteelle-hinta
-  (let [toimenpide-id nil ;; TODO
+  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt toimenpide-id
-                       ::h/hintaelementit []} ;; TODO
+                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
+                                            ::hinta/yleiskustannuslisa 0
+                                            ::hinta/maara 666}
+                                           {::hinta/otsikko "Testihinta 2"
+                                            ::hinta/yleiskustannuslisa 12
+                                            ::hinta/maara 123}]}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                 kysely-params)]

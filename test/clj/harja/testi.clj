@@ -300,6 +300,10 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-reimari-toimenpide-ilman-hinnoittelua []
+  (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                   WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
