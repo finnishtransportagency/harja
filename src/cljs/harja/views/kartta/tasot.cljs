@@ -46,6 +46,7 @@
     :yks-hint-toteumat
     :kok-hint-toteumat
     :varusteet
+    :varustetoteumat
     :muut-tyot
     :paallystyskohteet
     :paikkauskohteet

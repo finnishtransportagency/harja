@@ -129,6 +129,20 @@
             {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}]
    :data toteuma})
 
+(defmethod infopaneeli-skeema :varuste [varuste]
+  (let [tietolaji (get-in varuste [:varuste :tietue :tietolaji :tunniste])]
+    {:tyyppi :varuste
+     :jarjesta-fn (constantly (pvm/nyt))
+     :otsikko "Varuste"
+     :tiedot [{:otsikko "Tietolaji" :tyyppi :string :nimi :tietolaji}
+              {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
+              {:otsikko "Osoite" :tyyppi :string :nimi :osoite}
+              {:otsikko "Kuntoluokitus" :tyyppi :string :nimi :kuntoluokitus}]
+     :data {:tunniste (get-in varuste [:varuste :tunniste])
+            :tietolaji (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")
+            :osoite (tr-domain/tierekisteriosoite-tekstina (get-in varuste [:varuste :tietue :sijainti :tie]))
+            :kuntoluokitus (get-in varuste [:varuste :tietue :kuntoluokitus])}}))
+
 (defn- yllapitokohde-skeema
   "Ottaa ylläpitokohdeosan, jolla on lisäksi tietoa sen 'pääkohteesta' :yllapitokohde avaimen takana."
   [yllapitokohdeosa]
@@ -143,11 +157,11 @@
         aikataulu-teksti (fn [pvm otsikko pvm-tyyppi]
                            (if (and pvm (pvm/sama-tai-ennen? pvm (pvm/nyt)))
                              (str otsikko " " (case pvm-tyyppi
-                                                    :aloitus "aloitettu"
-                                                    :valmistuminen "valmistunut"))
+                                                :aloitus "aloitettu"
+                                                :valmistuminen "valmistunut"))
                              (str otsikko " " (case pvm-tyyppi
-                                                    :aloitus "aloitetaan"
-                                                    :valmistuminen "valmistuu"))))
+                                                :aloitus "aloitetaan"
+                                                :valmistuminen "valmistuu"))))
         kohde-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde kohde-aloitus])
                                                "Kohde" :aloitus)
         paallystys-aloitus-teksti (aikataulu-teksti (get-in yllapitokohdeosa [:yllapitokohde paallystys-aloitus])
