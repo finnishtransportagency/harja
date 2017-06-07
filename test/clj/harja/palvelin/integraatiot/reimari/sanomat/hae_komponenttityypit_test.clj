@@ -20,6 +20,7 @@
             slurp
             hae-komponenttityypit/lue-hae-komponenttityypit-vastaus
             first)]
+    (is (some? luettu-komponenttityyppi))
     (println (s/explain-str ::komponenttityyppi/komponenttityyppi luettu-komponenttityyppi))
     (is (nil? (s/explain-data ::komponenttityyppi/komponenttityyppi luettu-komponenttityyppi)))
     (testi/tarkista-map-arvot komponenttityyppi luettu-komponenttityyppi)))

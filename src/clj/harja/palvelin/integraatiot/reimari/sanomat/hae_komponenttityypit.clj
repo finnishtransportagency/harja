@@ -6,7 +6,7 @@
   (:require [harja.tyokalut.xml :as xml]
             [clojure.data.zip.xml :as z]
             [taoensso.timbre :as log]
-            [harja.domain.vesivaylat.toimenpide :as toimenpide]
+            [harja.domain.vesivaylat.komponenttityyppi :as komponenttityyppi]
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.vesivaylat.sopimus :as sopimus]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
@@ -38,14 +38,14 @@
                                                    (name %))
                        komponenttityyppi-attribuutit))
 
-(defn hae-toimenpiteet-vastaus [vastaus-xml]
+(defn hae-komponenttityypit-vastaus [vastaus-xml]
   (if-let [ht (z/xml1-> vastaus-xml :S:Body :HaeKomponenttiTyypit)]
     (vec (z/xml->
           ht
           :HaeKomponenttiTyypitResponse
           :komponenttityyppi
           lue-komponenttityyppi))
-    (log/error "Reimarin toimenpidehaun vastaus ei sisällä :HaeKomponenttiTyypit -elementtiä")))
+    (log/error "Reimarin komponenttityyppihaun vastaus ei sisällä :HaeKomponenttiTyypit -elementtiä")))
 
 (defn lue-hae-komponenttityypit-vastaus [xml]
   (hae-komponenttityypit-vastaus (xml/lue xml "UTF-8")))
