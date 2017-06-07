@@ -113,7 +113,8 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :alueet oletusalueet}))
+     :alueet oletusalueet
+     :varustetoteumat {tk/varustetoteumat false}}))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
