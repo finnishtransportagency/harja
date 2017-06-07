@@ -9,7 +9,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.urakka :as ur]
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
 (defn hae-hinnoittelut [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -33,18 +34,20 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-
-      (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot) urakka-id)
+      (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
+      (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
+      (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))
       (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot) urakka-id))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      ;; TODO Vaadi toimenpide kuuluu urakkaan?
+      (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-
+      (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/hinnoittelu-id tiedot)} urakka-id)
+      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (map ::hinta/id hinnat) hinnoittelu-id)
       (q/tallenna-hintaryhmalle-hinta! db user
                                        (::h/hinnoittelu-id tiedot)
                                        (::h/hintaelementit tiedot)
@@ -54,9 +57,10 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      ;; TODO Vaadi toimenpide kuuluu urakkaan?
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
+      (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
+      (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db (map ::hinta/id hinnat) toimenpide-id)
       (q/tallenna-toimenpiteelle-hinta! db user
                                         (::to/id tiedot)
                                         (::h/hintaelementit tiedot)

@@ -38,15 +38,15 @@
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?]))))
 
-(defn toimenpiteet-kuuluvat-urakkaan? [db toimenpide-idt urakka-id]
-  (boolean
-    (->> (fetch
-           db
-           ::vv-toimenpide/reimari-toimenpide
-           (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
-           {::vv-toimenpide/id (op/in toimenpide-idt)})
-         (keep ::vv-toimenpide/urakka-id)
-         (every? (partial = urakka-id)))))
+(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
+  (when-not (->> (fetch
+                   db
+                   ::vv-toimenpide/reimari-toimenpide
+                   (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
+                   {::vv-toimenpide/id (op/in toimenpide-idt)})
+                 (keep ::vv-toimenpide/urakka-id)
+                 (every? (partial = urakka-id)))
+    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
   (assoc hinnoittelu ::vv-hinnoittelu/hinnat
@@ -106,11 +106,11 @@
              {::vv-toimenpide/id (op/in toimenpide-idt)})))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
-  (let [ ;; {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
+  (let [;; {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
         hintatiedot (group-by ::vv-toimenpide/id
-                            (hae-hinnoittelutiedot-toimenpiteille
-                              db
-                              (into #{} (map ::vv-toimenpide/id toimenpiteet))))]
+                              (hae-hinnoittelutiedot-toimenpiteille
+                                db
+                                (into #{} (map ::vv-toimenpide/id toimenpiteet))))]
     (map
       (fn [toimenpide]
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
