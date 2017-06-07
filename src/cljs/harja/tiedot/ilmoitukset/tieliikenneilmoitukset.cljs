@@ -279,11 +279,36 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                          ;; Palvelin palauttaa vektorin kuittauksia, joihin
                          ;; olemassaolevat liitetään
                          (into (first v) kuittaukset))))
-        (assoc app :kuittaa-monta nil))))
+        (assoc app
+               :kuittaa-monta nil
+               :pikakuittaus nil))))
 
   v/PeruMonenKuittaus
   (process-event [_ app]
-    (assoc app :kuittaa-monta nil)))
+    (assoc app :kuittaa-monta nil))
+
+  v/AloitaPikakuittaus
+  (process-event [{:keys [ilmoitus kuittaustyyppi]} app]
+    (assoc app :pikakuittaus
+           {:ilmoitus ilmoitus
+            :tyyppi kuittaustyyppi}))
+
+  v/PaivitaPikakuittaus
+  (process-event [{:keys [pikakuittaus]} app]
+    (update app :pikakuittaus merge pikakuittaus))
+
+  v/TallennaPikakuittaus
+  (process-event [_ {:keys [pikakuittaus] :as app}]
+    (let [tulos! (t/send-async! v/->KuittaaVastaus)]
+      (go
+        (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset!
+                     [(:ilmoitus pikakuittaus)]
+                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi})))))
+      (assoc-in app [:pikakuittaus :tallennus-kaynnissa?] true)))
+
+  v/PeruutaPikakuittaus
+  (process-event [_ app]
+    (dissoc app :pikakuittaus)))
 
 (defonce karttataso-ilmoitukset (atom false))
 

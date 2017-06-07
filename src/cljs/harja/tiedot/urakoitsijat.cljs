@@ -5,7 +5,7 @@
             [harja.domain.urakka :as urakka-domain]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [tarkkaile!]]
-            
+
             [cljs.core.async :refer [chan <! >! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -29,6 +29,17 @@
 (def urakoitsijat-vesivaylat
   (reaction (into #{} (filter (comp urakka-domain/vesivayla-urakkatyypit keyword :urakkatyyppi) @urakoitsijat))))
 
+(def urakoitsijat-kaikki
+  ;; Koska urakoitsijat setti sisältää saman urakoitsijan jokaiselle
+  ;; eri urakkatyypille, jota urakoitsija tekee, ryhmitellään tässä
+  ;; :id mukaan ja kerätään urakkatyypit settiin.
+  (reaction (into #{}
+                  (map #(-> (first %)
+                            (assoc :urakkatyypit (into #{}
+                                                       (map :urakkatyyppi)
+                                                       %))
+                            (dissoc :urakkatyyppi)))
+                  (vals (group-by :id @urakoitsijat)))))
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]
     (go

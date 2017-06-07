@@ -232,16 +232,19 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
+
+
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
   (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
 (def ^{:doc "Reimarin toimenpiteen tilat"}
-reimari-tilat
+  reimari-tilat
   {"1022541202" :suoritettu
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
 
 (define-tables
+  ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -257,6 +260,10 @@ reimari-tilat
          ::turvalaite (rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
          ::sopimus (rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
          ::vayla (rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)])}])
+
+
+(s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
+(s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))
 
 ;; Harjassa työlaji/-luokka/toimenpide esitetään tietyllä avaimella
 (s/def ::tyolaji (set (vals reimari-tyolajit)))
@@ -333,6 +340,7 @@ reimari-tilat
     ::lisatieto
     ::suoritettu
     ::lisatyo?})
+
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
