@@ -60,7 +60,10 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db (set (map ::hinta/id (::h/hintaelementit tiedot))) (::to/id tiedot))
+      ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
+      (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]
+        (when-not (empty? hinta-idt)
+          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
       (q/tallenna-toimenpiteelle-hinta! db user
                                         (::to/id tiedot)
                                         (::h/hintaelementit tiedot)
