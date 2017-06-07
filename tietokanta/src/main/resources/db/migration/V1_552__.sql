@@ -1,3 +1,4 @@
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-komponenttityypit');
 CREATE TABLE reimari_komponenttityyppi (
        "id" TEXT PRIMARY KEY,
        "nimi" TEXT NOT NULL,
