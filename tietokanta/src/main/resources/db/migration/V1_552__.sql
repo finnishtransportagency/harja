@@ -28,5 +28,6 @@ CREATE TABLE reimari_turvalaitekomponentti (
        "muokkaaja" TEXT NOT NULL,
        "muokattu" TIMESTAMP,
        "alkupvm" TIMESTAMP,
+       "valiaikainen" BOOLEAN NOT NULL DEFAULT FALSE,
        "loppupvm" TIMESTAMP
 );
