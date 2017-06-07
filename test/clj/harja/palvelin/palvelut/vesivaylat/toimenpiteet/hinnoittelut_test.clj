@@ -16,7 +16,7 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as yks]
-            [harja.kyselyt.vesivaylat.hinnoittelut :as q]
+            [harja.kyselyt.vesivaylat.toimenpiteet :as q]
             [clojure.spec.alpha :as s]))
 
 (defn jarjestelma-fixture [testit]
@@ -49,7 +49,7 @@
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
-                       ::toi/idt toimenpide-id
+                       ::toi/id toimenpide-id
                        ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
                                             ::hinta/yleiskustannuslisa 0
                                             ::hinta/maara 666}
