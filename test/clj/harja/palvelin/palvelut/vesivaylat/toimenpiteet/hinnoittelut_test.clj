@@ -74,3 +74,17 @@
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
+
+(deftest tallenna-toimenpiteelle-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
+  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/id toimenpide-id
+                       ::h/hintaelementit [{::hinta/id 666
+                                            ::hinta/otsikko "Testihinta 1"
+                                            ::hinta/yleiskustannuslisa 0
+                                            ::hinta/maara 666}]}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   kysely-params)))))
