@@ -11,6 +11,7 @@
             [harja.domain.vesivaylat.toimenpide :as toi]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
+            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as hin]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
@@ -26,8 +27,8 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :vv-yksikkohintaiset (component/using
-                                               (yks/->YksikkohintaisetToimenpiteet)
+                        :vv-hinnoittelut (component/using
+                                               (hin/->Hinnoittelut)
                                                [:db :http-palvelin])))))
 
   (testit)
@@ -61,6 +62,4 @@
                                 kysely-params)]
 
     (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
-    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))
-
-    (is (= (count vastaus)) 1)))
+    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))))
