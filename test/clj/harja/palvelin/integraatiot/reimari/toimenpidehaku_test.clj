@@ -6,7 +6,7 @@
             [clojure.test :as t]))
 
 (def jarjestelma-fixture
-  (ht/laajenna-integraatiojarjestelmafixture
+  (ht/laajenna-integraatiojarjestelmafixturea
    "yit"
    :reimari (component/using
            (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil)
@@ -16,7 +16,7 @@
 
 (t/deftest kasittele-vastaus-kantatallennus
   (ht/tarkista-map-arvot
-   (first (tohaku/kasittele-vastaus (:db ht/jarjestelma)  (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml") ))
+   (first (tohaku/kasittele-vastaus (:db ht/jarjestelma) (ht/hae-helsingin-vesivaylaurakan-id) (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml") ))
    {:harja.domain.vesivaylat.toimenpide/urakka-id (ht/hae-helsingin-vesivaylaurakan-id)
     :harja.domain.vesivaylat.toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
     :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
@@ -57,4 +57,4 @@
     {:harja.domain.vesivaylat.turvalaite/r-nro "904",
      :harja.domain.vesivaylat.turvalaite/r-nimi
      "Glosholmsklacken pohjoinen",
-     :harja.domain.vesivaylat.turvalaite/r-ryhma 514}})))
+     :harja.domain.vesivaylat.turvalaite/r-ryhma 514}}))
