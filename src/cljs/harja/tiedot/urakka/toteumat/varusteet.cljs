@@ -78,7 +78,7 @@
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
-(defn varustetoteumat-karttataso [toteumat tierekisterin-varusteet]
+(defn varustetoteumat-karttataso [toteumat tierekisterin-varusteet valittu-varustetoteuma]
   (kartalla-esitettavaan-muotoon
     (concat (keep (fn [toteuma]
                     (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
@@ -89,14 +89,13 @@
                                    :coordinates sijainti})))
                   toteumat)
             (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
-    #(let [valittu-varustetoteuma (:varustetoteuma @varusteet)]
-       (and valittu-varustetoteuma
-            (or (and (:id %)
-                     (= (:id valittu-varustetoteuma)
-                        (:id %)))
-                (and (get-in valittu-varustetoteuma [:arvot :tunniste])
-                     (= (get-in valittu-varustetoteuma [:arvot :tunniste])
-                        (get-in % [:varuste :tunniste]))))))))
+    #(and valittu-varustetoteuma
+           (or (and (:id %)
+                    (= (:id valittu-varustetoteuma)
+                       (:id %)))
+               (and (get-in valittu-varustetoteuma [:arvot :tunniste])
+                    (= (get-in valittu-varustetoteuma [:arvot :tunniste])
+                       (get-in % [:varuste :tunniste])))))))
 
 (defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
@@ -197,7 +196,9 @@
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (defn kartalle [app]
-  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app) (get-in app [:tierekisterin-varusteet :varusteet]))))
+  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app)
+                                                     (get-in app [:tierekisterin-varusteet :varusteet])
+                                                     (:varustetoteuma app))))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -246,7 +247,7 @@
 
   v/TyhjennaValittuToteuma
   (process-event [_ app]
-    (assoc app :varustetoteuma nil))
+    (kartalle (assoc app :varustetoteuma nil)))
 
   v/UusiVarusteToteuma
   (process-event [{:keys [toiminto varuste]} _]

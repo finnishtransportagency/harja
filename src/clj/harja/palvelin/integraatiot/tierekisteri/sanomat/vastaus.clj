@@ -19,7 +19,7 @@
 (defn parsi-voimassaolo [data]
   (when data
     {:alkupvm (xml/parsi-paivamaara (z/xml1-> data :alkupvm z/text))
-    :loppupvm (xml/parsi-paivamaara (z/xml1-> data :loppupvm z/text))}))
+     :loppupvm (xml/parsi-paivamaara (z/xml1-> data :loppupvm z/text))}))
 
 (defn parsi-koodisto [data]
   {:koodiryhma (z/xml1-> data :koodiryhma z/text)

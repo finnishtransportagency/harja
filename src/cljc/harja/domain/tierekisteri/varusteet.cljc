@@ -2,7 +2,8 @@
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
     #?@(:cljs [[harja.loki :refer [log]]])
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.pvm :as pvm]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
                                  :lisatty "Lisätty"
@@ -109,11 +110,16 @@
    :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
    :pituus-max (:pituus ominaisuus)})
 
+(defn tietolajin-koodi-voimassa? [koodi]
+  (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
+    (pvm/valissa? (pvm/nyt) alkupvm loppupvm)
+    true))
+
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
-  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
-                                :koodi (str (:koodi %)))
-                      (:koodisto ominaisuus))
+  (let [koodisto (filter tietolajin-koodi-voimassa? (map #(assoc % :selite (str/capitalize (:selite %))
+                                 :koodi (str (:koodi %)))
+                       (:koodisto ominaisuus)))
         hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
