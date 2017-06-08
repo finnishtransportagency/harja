@@ -36,3 +36,6 @@
     ::id})
 
 (def metatiedot m/muokkauskentat)
+
+(defn hinta-otsikolla [otsikko hinnat]
+  (first (filter #(= (::otsikko %) otsikko) hinnat)))

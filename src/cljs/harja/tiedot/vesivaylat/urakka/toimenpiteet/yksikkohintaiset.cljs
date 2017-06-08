@@ -24,13 +24,6 @@
 
 (def yleiskustannuslisa 12)
 
-(def alustava-hinnoittelu
-  [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-   {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-   {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-   {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-   {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}])
-
 (defonce tila
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
@@ -267,6 +260,7 @@
                        ::hinta/maara (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat))
                        ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
                                                           (hinta/hinta-otsikolla otsikko hinnat)))})]
+      ;; TODO Testi puuttuu
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
@@ -322,6 +316,7 @@
   HinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
+    ;; TODO Lisää hintatiedot hinnoiteltuun toimenpiteeseen
     (assoc app :hinnoittelun-tallennus-kaynnissa? false))
 
   HinnoitteluEiTallennettu
