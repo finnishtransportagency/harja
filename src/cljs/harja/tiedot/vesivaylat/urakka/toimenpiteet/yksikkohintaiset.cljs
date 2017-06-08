@@ -241,9 +241,10 @@
 
   ValitutLiitetty
   (process-event [{vastaus :vastaus} app]
-    (go ((tuck/send-async! ->HaeToimenpiteet) (:valinnat app)))
+    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku (:valinnat app)))
 
-    (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
+      (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
   ValitutEiLiitetty
   (process-event [_ app]
