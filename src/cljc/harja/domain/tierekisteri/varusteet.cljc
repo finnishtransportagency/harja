@@ -112,7 +112,7 @@
 
 (defn tietolajin-koodi-voimassa? [koodi]
   (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
-    (pvm/valissa? (pvm/nyt) alkupvm loppupvm)
+    (t/within? (t/interval alkupvm loppupvm) (t/now))
     true))
 
 (defmethod varusteominaisuus->skeema :koodisto
