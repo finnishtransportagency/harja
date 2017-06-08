@@ -234,26 +234,25 @@
       (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
-;; TODO Testi vanhentui, pitää korjata
-#_(deftest toimenpiteen-hinnoittelu
+(deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1))]
-    (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-    (is (= (:hinnoittele-toimenpide uusi-tila)
-           {::to/id 1
-            ::h/hintaelementit
-            [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-             {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-             {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-             {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-             {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]})))))
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+               {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+               {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+               {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
+               {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]})))))
 
-;; TODO Testi vanhentui, pitää korjata
-#_(deftest toimenpiteen-kentan-hinnoittelu
+(deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 5})
+          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                               ::hinta/maara 5})
                         vanha-tila)]
       (is (= (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])
              [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
@@ -290,7 +289,7 @@
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
                         vanha-tila)]
-      (is (= vanha-tila uusi-tila)))))
+      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit]))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]

@@ -258,10 +258,9 @@
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
           luo-hinta (fn [otsikko hinnat]
                       {::hinta/otsikko otsikko
-                       ::hinta/maara (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat))
+                       ::hinta/maara (or (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat)) 0)
                        ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
                                                           (hinta/hinta-otsikolla otsikko hinnat)))})]
-      ;; TODO Testi vanhentui, pitäisi päivittää
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
