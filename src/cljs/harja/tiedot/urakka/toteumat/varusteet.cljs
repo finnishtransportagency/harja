@@ -90,12 +90,12 @@
                   toteumat)
             (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
     #(and valittu-varustetoteuma
-           (or (and (:id %)
-                    (= (:id valittu-varustetoteuma)
-                       (:id %)))
-               (and (get-in valittu-varustetoteuma [:arvot :tunniste])
-                    (= (get-in valittu-varustetoteuma [:arvot :tunniste])
-                       (get-in % [:varuste :tunniste])))))))
+          (or (and (:id %)
+                   (= (:id valittu-varustetoteuma)
+                      (:id %)))
+              (and (get-in valittu-varustetoteuma [:arvot :tunniste])
+                   (= (get-in valittu-varustetoteuma [:arvot :tunniste])
+                      (get-in % [:varuste :tunniste])))))))
 
 (defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
@@ -320,7 +320,11 @@
   (process-event [{toteumat :varustetoteumat :as data} app]
     (kartalle (-> app
                   (dissoc :uudet-varustetoteumat)
-                  (haetut-toteumat toteumat)))))
+                  (haetut-toteumat toteumat))))
+
+  v/LisaaLiitetiedosto
+  (process-event [{liitetiedosto :liitetiedosto :as data} app]
+    (assoc-in app [:varustetoteuma :liitteet] (conj (get-in app [:varustetoteuma :liitteet]) liitetiedosto))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
