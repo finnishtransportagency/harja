@@ -339,6 +339,7 @@
                                         toimenpide))
                                     (:toimenpiteet app))]
       ;; TODO Tee testi tälle
+      ;; TODO Ilmeisesti ei tallennu toimenpiteeseen uudet tiedot oikein? Näkyy vanha kun avaa leijukkeen?
       (merge (assoc app :hinnoittelun-tallennus-kaynnissa? false
                         :toimenpiteet paivitetyt-toimenpiteet)
              (alusta-toimenpiteen-hinnoittelu app))))
