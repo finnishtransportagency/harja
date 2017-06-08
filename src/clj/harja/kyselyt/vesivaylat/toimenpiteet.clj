@@ -77,6 +77,15 @@
                                          true
                                          ::vv-toimenpide/hintaryhma))
 
+(defn ilman-poistettuja-linkkeja [toimenpiteet]
+  (map
+    (fn [t]
+      (update t
+              ::vv-toimenpide/hinnoittelu-linkit
+              (fn [linkit]
+                (remove ::m/poistettu? linkit))))
+    toimenpiteet))
+
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
   (->> (fetch db
               ::vv-toimenpide/reimari-toimenpide
@@ -84,6 +93,7 @@
               (op/and
                 {::vv-toimenpide/id (op/in toimenpide-idt)}))
 
+       (ilman-poistettuja-linkkeja)
        (toimenpiteet-omalla-hinnoittelulla)
        (toimenpiteet-hintaryhmalla)
        ;; Poistetaan turha hinnoittelu-linkit avain
