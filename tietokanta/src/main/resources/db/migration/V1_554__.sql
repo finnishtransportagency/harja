@@ -50,11 +50,11 @@ SELECT luo_vv_tpk('VV111-21', 'Viankorjauskäynnit (valolaiteviat): Vikailmoituk
 
 
 
-SELECT luo_vv_tpk('VV111-22', 'Muut (sisältää mm. materiaalit)- Poijun toimittaminen kunnostukseen ja maalaaminen', 'kpl');
-SELECT luo_vv_tpk('VV111-23', 'Muut (sisältää mm. materiaalit)- 20t lohkoankkuri', 'kpl');
-SELECT luo_vv_tpk('VV111-24', 'Muut (sisältää mm. materiaalit)- 6t paino', 'kpl');
-SELECT luo_vv_tpk('VV111-25', 'Muut (sisältää mm. materiaalit)- Normaali jääpoiju', 'kpl');
-SELECT luo_vv_tpk('VV111-26', 'Muut (sisältää mm. materiaalit)- Poijuviitta halk. 1000, L9900', 'kpl');
+SELECT luo_vv_tpk('VV111-22', 'Muut (sisältää mm. materiaalit): Poijun toimittaminen kunnostukseen ja maalaaminen', 'kpl');
+SELECT luo_vv_tpk('VV111-23', 'Muut (sisältää mm. materiaalit): 20t lohkoankkuri', 'kpl');
+SELECT luo_vv_tpk('VV111-24', 'Muut (sisältää mm. materiaalit): 6t paino', 'kpl');
+SELECT luo_vv_tpk('VV111-25', 'Muut (sisältää mm. materiaalit): Normaali jääpoiju', 'kpl');
+SELECT luo_vv_tpk('VV111-26', 'Muut (sisältää mm. materiaalit): Poijuviitta halk. 1000, L9900', 'kpl');
 
 
 
