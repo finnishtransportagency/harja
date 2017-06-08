@@ -292,8 +292,8 @@
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:hinnoittelun-tallennus-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->HinnoitteluTallennettu)
-            fail! (tuck/send-async! ->HinnoitteluEiTallennettu)
+      (let [tulos! (tuck/send-async! ->ToimenpiteenHinnoitteluTallennettu)
+            fail! (tuck/send-async! ->ToimenpiteenHinnoitteluEiTallennettu)
             parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
                         ::h/hintaelementit (mapv
