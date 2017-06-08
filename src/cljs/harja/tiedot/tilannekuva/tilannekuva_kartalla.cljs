@@ -36,7 +36,8 @@
    :paallystys             #(assoc % :tyyppi-kartalla :paallystys)
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
    :tietyomaat    #(assoc % :tyyppi-kartalla :tietyomaa)
-   :tietyoilmoitukset #(assoc % :tyyppi-kartalla :tietyoilmoitus)})
+   :tietyoilmoitukset #(assoc % :tyyppi-kartalla :tietyoilmoitus)
+   :varustetoteumat identity})
 
 (def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle,
 etteivät ne mene päällekkäin muiden tasojen kanssa."}
@@ -50,7 +51,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    :tyokoneet              :tilannekuva-tyokoneet
    :toteumat               :tilannekuva-toteumat
    :tietyomaat    :tilannekuva-tietyomaat
-   :tietyoilmoitukset :tilannekuva-tietyoilmoitukset})
+   :tietyoilmoitukset :tilannekuva-tietyoilmoitukset
+   :varustetoteumat :tilannekuva-varustetoteumat})
 
 (defmulti muodosta-karttataso (fn [taso uudet-asiat] taso))
 

@@ -17,7 +17,7 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.id :as id])

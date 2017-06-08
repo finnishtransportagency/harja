@@ -224,7 +224,8 @@
                ::lomake/col-luokka ""})]
       pikakuittaus])))
 
-(defn pikakuittaus [e! pikakuittaus]
+(defn pikakuittaus [e! {:keys [tyyppi] :as pikakuittaus}]
   [leijuke/leijuke
-   {:sulje! #(e! (v/->PeruutaPikakuittaus))}
+   {:otsikko (apurit/kuittaustyypin-selite tyyppi)
+    :sulje! #(e! (v/->PeruutaPikakuittaus))}
    [pikakuittauslomake e! pikakuittaus]])

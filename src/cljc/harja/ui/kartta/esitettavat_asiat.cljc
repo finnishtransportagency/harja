@@ -292,6 +292,16 @@
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
+(defmethod asia-kartalle :varuste [varuste valittu?]
+  (let [ikoni (ulkoasu/varusteen-ikoni)]
+    (assoc varuste
+      :type :varuste
+      :nimi (or (:tooltip varuste) "Varuste")
+      :selite {:teksti "Varuste"
+               :img    ikoni}
+      :alue (maarittele-feature varuste valittu?
+                                (ulkoasu/varusteen-ikoni)))))
+
 (defmethod asia-kartalle :tietyoilmoitus [tietyoilmoitus valittu?]
   (let [ikoni (ulkoasu/tietyoilmoituksen-ikoni)
         viiva (ulkoasu/tietyoilmoituksen-viiva)]
