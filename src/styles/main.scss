@@ -43,6 +43,14 @@ html, body {
   font-size: large;
 }
 
+// Add flex-basis to bootstrap styles to fix ie11 bug
+.top-bar-right {
+  flex-basis: 50%;
+}
+.top-bar-left {
+  flex-basis: 50%;
+}
+
 #main, #harja-home, #harja-main-view {
   height: 100%;
 }
@@ -255,6 +263,9 @@ a.harja-notice-link {
     color: white;
     float: right;
   }
+  button {
+    color: white;
+  }
 }
 
 a.harja-news-link {
@@ -403,7 +414,7 @@ a.harja-news-link {
 }
 
 .harja-title-bar-title {
-  float: right;
+  text-align: right;
 }
 
 .harja-menu {
