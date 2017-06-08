@@ -1,16 +1,17 @@
 (ns harja.domain.vesivaylat.toimenpide
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
+            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.alus :as vv-alus]
-            [clojure.string :as str]
-            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
@@ -322,7 +323,9 @@ reimari-tilat
     ::m/poistaja-id})
 
 (def hinnoittelu
-  #{[::hinnoittelu-linkit h/toimenpiteen-hinnoittelut]})
+  #{[::hinnoittelu-linkit (set/union
+                            m/muokkauskentat
+                            h/toimenpiteen-hinnoittelut)]})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
