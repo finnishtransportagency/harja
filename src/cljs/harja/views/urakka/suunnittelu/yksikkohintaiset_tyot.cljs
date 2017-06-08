@@ -17,7 +17,9 @@
             [cljs.core.async :refer [<!]]
 
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka :as urakka-domain]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -67,10 +69,14 @@
 
 (defn yllapidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-   {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%" :tasaa :oikea}
+   {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%" :tasaa :oikea
+    :placeholder-fn #(:yksikko %)}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
-   {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys "15%"
+    :placeholder-fn #(str "€ / " (:yksikko %))}
+   {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false)
+    :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn paivita-hoitorivin-summat [{:keys [maara-kkt-10-12 maara-kkt-1-9 yksikkohinta] :as rivi}]
   (let [yht-10-12 (and yksikkohinta maara-kkt-10-12
@@ -85,6 +91,27 @@
 (defn paivita-yllapitorivin-summat [{:keys [maara yksikkohinta] :as rivi}]
   (assoc rivi
       :yhteensa (and maara yksikkohinta (* maara yksikkohinta))))
+
+(defn- etuliitteen-mukaan-valiotsikoilla [tyorivit]
+  (->> tyorivit
+       (map #(let [nimi (:tehtavan_nimi %)
+                   kaksoispiste (.indexOf nimi ":")
+                   valiotsikko (if (neg? kaksoispiste)
+                                 ""
+                                 (subs nimi 0 kaksoispiste))
+                   nimi (if (neg? kaksoispiste)
+                          nimi
+                          (subs nimi (inc kaksoispiste)))]
+               (assoc %
+                      :tehtavan_nimi nimi
+                      :valiotsikko valiotsikko)))
+       (group-by :valiotsikko)
+       (sort-by first)
+       (mapcat (fn [[otsikko tehtavat]]
+                 (into (if (str/blank? otsikko)
+                         []
+                         [(grid/otsikko otsikko)])
+                       tehtavat)))))
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
@@ -148,9 +175,12 @@
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))
 
+        vesivaylaurakka? (reaction (urakka-domain/vesivayla-urakkatyyppi? (:tyyppi @urakka)))
         tyorivit-joilla-hinta (reaction
-                                (keep #(if (:yksikkohinta %)
-                                        (identity %)) @tyorivit))
+                               (let [tyorivit (filter :yksikkohinta @tyorivit)]
+                                 (if @vesivaylaurakka?
+                                   (etuliitteen-mukaan-valiotsikoilla tyorivit)
+                                   tyorivit)))
 
         toimenpiteen-kustannukset (reaction (reduce + 0 (keep :yhteensa @tyorivit-joilla-hinta)))]
 
@@ -185,7 +215,9 @@
            :voi-lisata? false
            :voi-poistaa? (constantly false)
            :aloita-muokkaus-fn (fn [_]
-                                 (ryhmittele-hinnoitellut @tyorivit))
+                                 (if @vesivaylaurakka?
+                                   (etuliitteen-mukaan-valiotsikoilla @tyorivit)
+                                   (ryhmittele-hinnoitellut @tyorivit)))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
                              [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
@@ -208,7 +240,7 @@
             (hoidon-sarakkeet)
             (yllapidon-sarakkeet))
 
-               @tyorivit-joilla-hinta]
+          @tyorivit-joilla-hinta]
          [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]
 
          [:div.hoitokauden-kustannukset
