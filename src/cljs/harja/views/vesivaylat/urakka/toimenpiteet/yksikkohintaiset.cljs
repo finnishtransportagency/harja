@@ -123,7 +123,7 @@
          [:thead
           [:tr
            [:th {:style {:width "45%"}}]
-           [:th {:style {:width "35%"}}]
+           [:th {:style {:width "35%"}} "Hinta"]
            [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
          [:tbody
           (kenttarivi app* e! "Työ")

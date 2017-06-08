@@ -28,8 +28,8 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :vv-hinnoittelut (component/using
-                                               (hin/->Hinnoittelut)
-                                               [:db :http-palvelin])))))
+                                           (hin/->Hinnoittelut)
+                                           [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -47,30 +47,54 @@
     (is (= (count vastaus) 1))))
 
 (deftest tallenna-toimenpiteelle-hinta
-  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
-        hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
-        kysely-params {::toi/urakka-id urakka-id
-                       ::toi/id toimenpide-id
-                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
-                                            ::hinta/yleiskustannuslisa 0
-                                            ::hinta/maara 666}
-                                           {::hinta/otsikko "Testihinta 2"
-                                            ::hinta/yleiskustannuslisa 12
-                                            ::hinta/maara 123}]}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
-                                kysely-params)
-        hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
+  (testing "Uusien hintojen lisäys"
+    (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+          insert-params {::toi/urakka-id urakka-id
+                         ::toi/id toimenpide-id
+                         ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
+                                              ::hinta/yleiskustannuslisa 0
+                                              ::hinta/maara 666}
+                                             {::hinta/otsikko "Testihinta 2"
+                                              ::hinta/yleiskustannuslisa 12
+                                              ::hinta/maara 123}]}
+          insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                         insert-params)
+          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
 
-    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely kysely-params))
-    (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus vastaus))
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
 
 
-    (is (= (count (::h/hinnat vastaus)) 2))
-    (is (some #(== (::hinta/maara %) 666) (::h/hinnat vastaus)))
-    (is (some #(== (::hinta/maara %) 123) (::h/hinnat vastaus)))
-    (is (= (+ hinnat-ennen 2) hinnat-jalkeen))))
+      (is (= (count (::h/hinnat insert-vastaus)) 2))
+      (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
+      (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
+      (is (= (+ hinnat-ennen 2) hinnat-jalkeen))
+
+      (testing "Lisättyjen hintojen päivittäminen"
+        (let [hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+              update-params {::toi/urakka-id urakka-id
+                             ::toi/id toimenpide-id
+                             ::h/hintaelementit (mapv (fn [hinta]
+                                                        (assoc hinta ::hinta/maara
+                                                                     (case (::hinta/maara hinta)
+                                                                       666M 555
+                                                                       123M 321)))
+                                                      (::h/hinnat insert-vastaus))}
+              update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                             update-params)
+              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
+
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
+
+          (is (= (count (::h/hinnat update-vastaus)) 2))
+          (is (some #(== (::hinta/maara %) 555) (::h/hinnat update-vastaus)))
+          (is (some #(== (::hinta/maara %) 321) (::h/hinnat update-vastaus)))
+          (is (= hinnat-ennen hinnat-jalkeen)))))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
