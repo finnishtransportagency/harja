@@ -435,6 +435,16 @@
   [vuosi]
   (luo-pvm vuosi 8 30))
 
+(defn vesivaylien-hoitokauden-alkupvm
+  "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
+  [vuosi]
+  (luo-pvm vuosi 7 1))
+
+(defn vesivaylien-hoitokauden-loppupvm
+  "Vesiväylien hoitokauden loppupvm vuodelle: 31.7.vuosi"
+  [vuosi]
+  (luo-pvm vuosi 6 31))
+
 (defn- d [x]
   #?(:cljs x
      :clj  (if (instance? Date x)
