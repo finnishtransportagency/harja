@@ -69,12 +69,10 @@
 
 (defn yllapidon-sarakkeet []
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-   {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%" :tasaa :oikea
-    :placeholder-fn #(:yksikko %)}
+   {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%" :tasaa :oikea}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
    {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
-    :fmt fmt/euro-opt :leveys "15%"
-    :placeholder-fn #(str "€ / " (:yksikko %))}
+    :fmt fmt/euro-opt :leveys "15%"}
    {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false)
     :leveys "15%" :fmt fmt/euro-opt}])
 
