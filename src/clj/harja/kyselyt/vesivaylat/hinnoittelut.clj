@@ -34,7 +34,7 @@
   (let [toimenpiteen-hinnat (->> (specql/fetch
                                    db
                                    ::to/reimari-toimenpide
-                                   (set/union to/perustiedot)
+                                   (set/union to/perustiedot to/hinnoittelu)
                                    {::to/id toimenpide-id})
                                  (mapcat ::to/hinnoittelu-linkit)
                                  (mapcat (comp ::h/hinnat ::h/hinnoittelut))
