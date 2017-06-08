@@ -171,10 +171,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                     nykyiset-tulokset)))))]]))))
 
 
+(defn placeholder [{:keys [placeholder placeholder-fn rivi] :as kentta} data]
+  (or placeholder
+      (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake?]
+                                :as kentta} data]
   [:input {:class (when lomake? "form-control")
-           :placeholder placeholder
+           :placeholder (placeholder kentta data)
            on-change* #(let [v (-> % .-target .-value)]
                          (when (or (not regex) (re-matches regex v))
                            (reset! data v)))
@@ -256,7 +260,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                       "})?"))]
         [:input {:class       (when lomake? "form-control")
                  :type        "text"
-                 :placeholder (:placeholder kentta)
+                 :placeholder (placeholder kentta data)
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
