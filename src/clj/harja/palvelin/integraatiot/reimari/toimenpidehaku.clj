@@ -33,12 +33,13 @@
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit
                       })
 
-(defn kasittele-vastaus [db vastaus-xml]
+(defn kasittele-vastaus [db urakka-id vastaus-xml]
   (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
+                                       (merge (rename-keys toimenpide-tiedot avainmuunnokset)
+                                              {::toimenpide/urakka-id urakka-id})))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
@@ -52,8 +53,7 @@
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
      [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
-     ]]))
+      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]]]))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
   (let [otsikot {"Content-Type" "text/xml"
@@ -66,7 +66,7 @@
                         :muutosaika muutosaika}
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
-    (kasittele-vastaus db body)))
+    (kasittele-vastaus db nil body))) ;; TODO Täytyy päätellä urakka reimari-toimenpiteelle
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (last (sort-by ::integraatiotapahtuma/alkanut
