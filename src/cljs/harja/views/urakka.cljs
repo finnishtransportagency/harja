@@ -40,8 +40,7 @@
     :yleiset true
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not= sopimustyyppi :kokonaisurakka)
-                      (not= tyyppi :tiemerkinta)
-                      (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
+                      (not= tyyppi :tiemerkinta))
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (not (u-domain/vesivayla-urakkatyyppi? tyyppi))
