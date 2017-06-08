@@ -22,7 +22,7 @@
                                        (slurp "resources/xsd/reimari/vastaus.xml")))
       {:harja.domain.vesivaylat.toimenpide/urakka-id urakka-id
        :harja.domain.vesivaylat.toimenpide/suoritettu
-       #inst "2017-04-24T09:42:04.000-00:00",
+       #inst "2017-04-24T09:42:04.123-00:00",
        :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
        :harja.domain.vesivaylat.toimenpide/reimari-tila "1022541202",
        :harja.domain.vesivaylat.toimenpide/lisatyo? false,
@@ -33,7 +33,7 @@
         :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
        :harja.domain.vesivaylat.toimenpide/id 8,
        :harja.domain.vesivaylat.toimenpide/reimari-luotu
-       #inst "2017-04-24T13:00:00.000-00:00",
+       #inst "2017-04-24T13:00:00.123-00:00",
        :harja.domain.vesivaylat.toimenpide/lisatieto
        "vaihdettiin patterit lamppuun",
        :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka "1022541905",
@@ -47,7 +47,7 @@
         :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
        :harja.domain.vesivaylat.toimenpide/reimari-tyyppi "1022542001",
        :harja.domain.vesivaylat.toimenpide/reimari-muokattu
-       #inst "2017-04-24T13:30:00.000-00:00",
+       #inst "2017-04-24T13:30:00.123-00:00",
        :harja.domain.vesivaylat.toimenpide/reimari-komponentit
        [{:harja.domain.vesivaylat.komponentti/tila "234",
          :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",
