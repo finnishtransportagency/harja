@@ -28,6 +28,10 @@
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
+
+(defn kk-fmt [kk]
+  (get +kuukaudet+ (dec kk)))
+
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])
@@ -607,32 +611,29 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     [alku loppu]))
 
 
-#?(:cljs
-   (defn hoitokauden-kuukausivalit
-     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun hoitokauden
-   jokaiselle kuukaudelle."
-     [[alkupvm loppupvm]]
-     (let [alku (t/first-day-of-the-month alkupvm)]
-       (loop [kkt [(kuukauden-aikavali alkupvm)]
-              kk (t/plus alku (t/months 1))]
-         (if (t/after? kk loppupvm)
-           kkt
-           (recur (conj kkt
-                        (kuukauden-aikavali kk))
-                  (t/plus kk (t/months 1))))))))
+(defn aikavalin-kuukausivalit
+  "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun aikavälin jokaiselle kuukaudelle."
+  [[alkupvm loppupvm]]
+  (let [alku (t/first-day-of-the-month alkupvm)]
+    (loop [kkt [(kuukauden-aikavali alkupvm)]
+           kk (t/plus alku (t/months 1))]
+      (if (t/after? kk loppupvm)
+        kkt
+        (recur (conj kkt
+                     (kuukauden-aikavali kk))
+               (t/plus kk (t/months 1)))))))
 
-#?(:cljs
-   (defn vuoden-kuukausivalit
-     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
-     [alkuvuosi]
-     (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
-       (loop [kkt [(kuukauden-aikavali alku)]
-              kk (t/plus alku (t/months 1))]
-         (if (not= (vuosi kk) alkuvuosi)
-           kkt
-           (recur (conj kkt
-                        (kuukauden-aikavali kk))
-                  (t/plus kk (t/months 1))))))))
+(defn vuoden-kuukausivalit
+  "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
+  [alkuvuosi]
+  (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
+    (loop [kkt [(kuukauden-aikavali alku)]
+           kk (t/plus alku (t/months 1))]
+      (if (not= (vuosi kk) alkuvuosi)
+        kkt
+        (recur (conj kkt
+                     (kuukauden-aikavali kk))
+               (t/plus kk (t/months 1)))))))
 
 (defn ed-kk-aikavalina
   [p]
