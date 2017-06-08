@@ -123,9 +123,13 @@
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
-  (let [koodisto (filter tietolajin-koodi-voimassa? (map #(assoc % :selite (str/capitalize (:selite %))
-                                                                   :koodi (str (:koodi %)))
-                                                         (:koodisto ominaisuus)))
+  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
+                                :koodi (str (:koodi %)))
+                      (:koodisto ominaisuus))
+        ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
+        koodisto (if muokattava?
+                   (filter tietolajin-koodi-voimassa? koodisto)
+                   koodisto)
         hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
