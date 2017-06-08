@@ -109,6 +109,8 @@
   {::t/yllapitokohde yllapitokohde-id
    ::t/alku alku
    ::t/loppu loppu
+   ::t/kohteen-aikataulu {:kohteen-alku (:alku data)
+                          :paallystys-valmis (:loppu data)}
    ::t/osoite {::tr/geometria geometria
                ::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
@@ -266,7 +268,9 @@
         (try
           (let [vastaus-kanava (k/post! :tallenna-tietyoilmoitus
                                  (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :urakan-kohteet
+                                     (dissoc ::t/tyovaiheet
+                                             ::t/kohteen-aikataulu
+                                             :urakan-kohteet
                                              :komponentissa-virheita?)))
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
