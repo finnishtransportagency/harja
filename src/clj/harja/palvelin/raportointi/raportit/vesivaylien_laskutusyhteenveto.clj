@@ -16,41 +16,30 @@
 
 (def hinnoittelusarakkeet
   [{:leveys 3 :otsikko "Hinnoit\u00ADtelu"}
-   {:leveys 1 :otsikko "Maksuerät"}
-   {:leveys 1 :otsikko "Tunnus"}
-   {:leveys 1 :otsikko "Tilaus\u00ADvaltuus [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Suunni\u00ADtellut [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Toteutunut [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Yhteensä (S+T) [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Jäljellä [€]" :fmt :raha}
-   {:leveys 1 :otsikko "Yhteensä jäljellä (hoito ja käyttö)"}])
+   {:leveys 1 :otsikko "Tilaus\u00ADvaltuus" :fmt :raha}
+   {:leveys 1 :otsikko "Suunni\u00ADtellut" :fmt :raha}
+   {:leveys 1 :otsikko "Toteutunut" :fmt :raha}
+   {:leveys 1 :otsikko "Yhteensä (S+T)" :fmt :raha}
+   {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
-(def erittelysarakkeet
+(def kk-erittelysarakkeet
   [{:leveys 3 :otsikko "Työ"}
-   {:leveys 1 :otsikko "Kuvaus / Erä"}
-   {:leveys 1 :otsikko "Tarjousp. V-kirje"}
    {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunni\u00ADtellut kust. [€]" :fmt :raha}
-   {:leveys 1 :otsikko "Tilaus V-kirje"}
-   {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunni\u00ADteltu valmis\u00ADtumispvm"}
-   {:leveys 1 :otsikko "Valmistu\u00ADmispvm"}
-   {:leveys 1 :otsikko "Laskun n:o"}
-   {:leveys 1 :otsikko "Laskutus pvm"}
-   {:leveys 1 :otsikko "Maksuerän tunnus"}
-   {:leveys 1 :otsikko "Laskut. summa" :fmt :raha}])
+   {:leveys 1 :otsikko "Suunni\u00ADtellut" :fmt :raha}
+   {:leveys 1 :otsikko "Toteutunut" :fmt :raha}])
+
+(def toimenpideerittelysarakkeet
+  [{:leveys 1 :otsikko "Työ"}
+   {:leveys 1 :otsikko "Pvm"}])
 
 (defn- kok-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    (:summa tiedot)
    (:summa tiedot)
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
   [(str (to/reimari-toimenpidetyyppi-fmt
@@ -58,15 +47,11 @@
         " ("
         (:maara tiedot)
         "kpl)")
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
 
 (defn- hinnoittelurivit [tiedot]
   (apply concat
@@ -103,30 +88,12 @@
 
 (defn- kk-kasittelyrivi [kk kauppamerenkulku-hinta hinta-muu]
   [["Kauppamerenkulku"
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
     kk
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
     kauppamerenkulku-hinta]
    ["Muu"
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
     kk
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-    [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
+    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
     hinta-muu]])
 
 (defn- kk-kasittelyrivit [raportin-tiedot kk-vali]
@@ -165,18 +132,8 @@
           (mapv (fn [toimenpide]
                   [(to/reimari-toimenpidetyyppi-fmt
                      (get to/reimari-toimenpidetyypit (:toimenpide toimenpide)))
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   (pvm/pvm-opt (:suoritettu toimenpide))
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]
-                   [:varillinen-teksti {:arvo "???" :tyyli :virhe}]])
-                toimenpiteet)]))
+                   (pvm/pvm-opt (:suoritettu toimenpide))])
+                (sort-by :suoritettu toimenpiteet))]))
 
 (defn- toimenpiteiden-erittelyrivit [raportin-tiedot]
   (let [hinnoittelulla-ryhmiteltyna (group-by :hinnoittelu-id
@@ -207,11 +164,11 @@
      [:taulukko {:otsikko "Kuukausierittely"
                  :tyhja (if (empty? kk-erittely) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      erittelysarakkeet
+      kk-erittelysarakkeet
       kk-erittely]
 
      [:taulukko {:otsikko "Toimenpiteiden erittely"
                  :tyhja (if (empty? toimenpiteiden-erittely) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      erittelysarakkeet
+      toimenpideerittelysarakkeet
       toimenpiteiden-erittely]]))
