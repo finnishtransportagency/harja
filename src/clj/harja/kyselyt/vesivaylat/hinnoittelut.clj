@@ -40,7 +40,7 @@
                                  (mapcat (comp ::h/hinnat ::h/hinnoittelut))
                                  (map ::hinta/id)
                                  (into #{}))]
-    (when-not (set/subset? (into #{} hinta-idt) toimenpiteen-hinnat)
+    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinnat)
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
 (defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
