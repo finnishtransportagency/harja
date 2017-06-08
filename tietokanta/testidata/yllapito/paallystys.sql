@@ -222,6 +222,16 @@ VALUES ((SELECT id
                                                             FROM kayttaja
                                                             WHERE kayttajanimi = 'jvh'));
 
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
+                                         yksikko, tilattu_maara, ennustettu_maara, yksikkohinta, luoja,
+                                         poistettu)
+VALUES ((SELECT id
+         FROM yllapitokohde
+         WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste' ::maaramuutos_tyon_tyyppi,
+        'POISTETTU TYÖ EI SAA NÄKYÄ TAI TULLA LASKUIHIN', 'kg', 99999, 1, 9999, (SELECT id
+                                                            FROM kayttaja
+                                                            WHERE kayttajanimi = 'jvh'), true);
+
 -- Päällystysilmoitukset
 
 -- Leppäjärven ilmoitustiedoissa on kirjattu tietoja olemattomalle kohdeosalle (osa on ehkä myöhemmin poistettu)
