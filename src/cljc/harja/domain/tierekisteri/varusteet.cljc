@@ -3,7 +3,8 @@
   (:require [clojure.string :as str]
     #?@(:cljs [[harja.loki :refer [log]]])
             [harja.domain.tierekisteri :as tr]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
                                  :lisatty "Lisätty"
@@ -112,14 +113,18 @@
 
 (defn tietolajin-koodi-voimassa? [koodi]
   (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
-    (t/within? (t/interval alkupvm loppupvm) (t/now))
+    (cond
+      (and alkupvm loppupvm) (t/within? (t/interval alkupvm loppupvm) (t/now))
+      alkupvm (t/after? (t/now) alkupvm)
+      loppupvm (t/before? (t/now) loppupvm)
+      :else true)
     true))
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (filter tietolajin-koodi-voimassa? (map #(assoc % :selite (str/capitalize (:selite %))
-                                 :koodi (str (:koodi %)))
-                       (:koodisto ominaisuus)))
+                                                                   :koodi (str (:koodi %)))
+                                                         (:koodisto ominaisuus)))
         hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta

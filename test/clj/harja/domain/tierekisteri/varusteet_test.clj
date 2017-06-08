@@ -19,4 +19,12 @@
 
     (is (not (varusteet/tietolajin-koodi-voimassa?
                {:voimassaolo {:alkupvm (t/date-time 2017 9 9)
-                              :loppupvm (t/date-time 2018 1 1)}})))))
+                              :loppupvm (t/date-time 2018 1 1)}})))
+    (is (varusteet/tietolajin-koodi-voimassa?
+          {:voimassaolo {:alkupvm (t/date-time 2017 1 1)}}))
+    (is (not (varusteet/tietolajin-koodi-voimassa?
+               {:voimassaolo {:alkupvm (t/date-time 2017 9 1)}})))
+    (is (varusteet/tietolajin-koodi-voimassa?
+          {:voimassaolo {:loppupvm (t/date-time 2017 9 1)}}))
+    (is (not (varusteet/tietolajin-koodi-voimassa?
+               {:voimassaolo {:loppupvm (t/date-time 2017 1 1)}})))))
