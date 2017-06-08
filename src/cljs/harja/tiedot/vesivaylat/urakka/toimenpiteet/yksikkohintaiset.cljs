@@ -84,9 +84,14 @@
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
-(defrecord HinnoitteluTallennettu [vastaus])
-(defrecord HinnoitteluEiTallennettu [virhe])
+(defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
+(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
+
+(defn alusta-toimenpiteen-hinnoittelu [app]
+  (assoc app :hinnoittele-toimenpide
+             {::to/id nil
+              ::h/hintaelementit nil}))
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -313,20 +318,36 @@
 
       app))
 
-  HinnoitteluTallennettu
+  ToimenpiteenHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    ;; TODO Lisää hintatiedot hinnoiteltuun toimenpiteeseen
-    (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+    (let [uudet-hinnat (::h/hinnat vastaus)
+          paivitettava-toimenpide (to/toimenpide-idlla (:toimenpiteet app)
+                                                       (get-in app [:hinnoittele-toimenpide ::to/id]))
+          paivitetty-toimenpide (assoc paivitettava-toimenpide
+                                  ::h/hinta-elementit
+                                  (mapv
+                                    #(select-keys % [::hinta/id
+                                                     ::hinta/yleiskustannuslisa
+                                                     ::hinta/otsikko
+                                                     ::hinta/maara])
+                                    uudet-hinnat))
+          paivitetyt-toimenpiteet (mapv
+                                    (fn [toimenpide]
+                                      (if (= (::to/id toimenpide) (::to/id paivitettava-toimenpide))
+                                        paivitetty-toimenpide
+                                        toimenpide))
+                                    (:toimenpiteet app))]
+      ;; TODO Tee testi tälle
+      (merge (assoc app :hinnoittelun-tallennus-kaynnissa? false
+                        :toimenpiteet paivitetyt-toimenpiteet)
+             (alusta-toimenpiteen-hinnoittelu app))))
 
-  HinnoitteluEiTallennettu
+  ToimenpiteenHinnoitteluEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
     (assoc app :hinnoittelun-tallennus-kaynnissa? false))
 
   PeruToimenpiteenHinnoittelu
   (process-event [_ app]
-    (assoc app :hinnoittele-toimenpide
-               {::to/id nil
-                ::h/hintaelementit nil})))
-
+    (alusta-toimenpiteen-hinnoittelu app)))
