@@ -1,21 +1,21 @@
 (ns harja.kyselyt.vesivaylat.toimenpiteet
-  (:require [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch update!]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as s]
+            [clojure.set :as set]
+            [clojure.future :refer :all]
+            [jeesql.core :refer [defqueries]]
+            [specql.core :refer [fetch update! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
-            [clojure.spec.alpha :as s]
             [taoensso.timbre :as log]
-            [clojure.future :refer :all]
-            [harja.kyselyt.specql-db :refer [define-tables]]
 
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
-            [clojure.future :refer :all]
-            [clojure.set :as set]))
+            [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
+            [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
   (comp
@@ -38,24 +38,89 @@
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?]))))
 
+(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
+  (when-not (->> (fetch
+                   db
+                   ::vv-toimenpide/reimari-toimenpide
+                   (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
+                   {::vv-toimenpide/id (op/in toimenpide-idt)})
+                 (keep ::vv-toimenpide/urakka-id)
+                 (every? (partial = urakka-id)))
+    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+
+(defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
+  (assoc hinnoittelu ::vv-hinnoittelu/hinnat
+                     (vec (remove ::m/poistettu? (::vv-hinnoittelu/hinnat hinnoittelu)))))
+
+(defn hae-hinnoittelut [hinnoittelu-linkit hintaryhma?]
+  (let [sopivat-hintaryhmat
+        (filter
+          #(= (get-in % [::vv-hinnoittelu/hinnoittelut
+                         ::vv-hinnoittelu/hintaryhma?])
+              hintaryhma?)
+          hinnoittelu-linkit)]
+    (->> (map #(hinnoittelu-ilman-poistettuja-hintoja
+                 (::vv-hinnoittelu/hinnoittelut %))
+              sopivat-hintaryhmat)
+         (remove ::m/poistettu?))))
+
+(defn toimenpide-siistitylla-hintatiedolla [hintaryhma? avain toimenpiteet]
+  (map #(if-let [h (first (hae-hinnoittelut (::vv-toimenpide/hinnoittelu-linkit %) hintaryhma?))]
+          (assoc % avain h)
+          (identity %))
+       toimenpiteet))
+
+(def toimenpiteet-omalla-hinnoittelulla (partial toimenpide-siistitylla-hintatiedolla
+                                                 false
+                                                 ::vv-toimenpide/oma-hinnoittelu))
+(def toimenpiteet-hintaryhmalla (partial toimenpide-siistitylla-hintatiedolla
+                                         true
+                                         ::vv-toimenpide/hintaryhma))
+
+(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
+  (->> (fetch db
+              ::vv-toimenpide/reimari-toimenpide
+              (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
+              (op/and
+                {::vv-toimenpide/id (op/in toimenpide-idt)}))
+
+       (toimenpiteet-omalla-hinnoittelulla)
+       (toimenpiteet-hintaryhmalla)
+       ;; Poistetaan turha hinnoittelu-linkit avain
+       (map #(dissoc % ::vv-toimenpide/hinnoittelu-linkit))
+
+       ;; Groupataan ja yhdistetään toimenpiteen tiedot
+       (group-by ::vv-toimenpide/id)
+       vals
+       (mapv (partial apply merge))))
+
 (defn suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
         (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  ;; TODO Saisiko tätä tehtyä yhdellä kyselyllä kuten SQL:ssä?
-  (let [toimenpiteiden-toteuma-idt (map ::vv-toimenpide/toteuma-id
-                                        (fetch db ::vv-toimenpide/reimari-toimenpide
-                                               #{::vv-toimenpide/toteuma-id}
-                                               {::vv-toimenpide/id (op/in toimenpide-idt)}))]
-    (update! db ::tot/toteuma
-             {::tot/tyyppi (name uusi-tyyppi)}
-             {::tot/id (op/in toimenpiteiden-toteuma-idt)})))
+  (jdbc/with-db-transaction [db db]
+    (update! db ::vv-toimenpide/reimari-toimenpide
+             {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
+             {::vv-toimenpide/id (op/in toimenpide-idt)})))
+
+(defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
+  (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
+        hintatiedot (group-by ::vv-toimenpide/id
+                              (hae-hinnoittelutiedot-toimenpiteille
+                                db
+                                (into #{} (map ::vv-toimenpide/id toimenpiteet))))]
+    (map
+      (fn [toimenpide]
+        (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
+      toimenpiteet)))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
-  (let [urakka-id (::tot/urakka-id tiedot)
+  (let [yksikkohintaiset? (= :yksikkohintainen tyyppi)
+        kokonaishintaiset? (= :kokonaishintainen tyyppi)
+        urakka-id (::vv-toimenpide/urakka-id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vayla-id (::vv-toimenpide/vayla-id tiedot)
@@ -65,21 +130,22 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-                               vv-toimenpide/viittaukset
+                               (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot)
                              (op/and
                                {::m/poistettu? false}
-                               {::vv-toimenpide/toteuma {:harja.domain.toteuma/urakka-id urakka-id}}
+                               {::vv-toimenpide/urakka-id urakka-id}
                                (when (and luotu-alku luotu-loppu)
                                  {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id
                                  {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
-                               (when (= :kokonaishintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-kokonaishintainen"}})
-                               (when (= :yksikkohintainen tyyppi)
-                                 {::vv-toimenpide/toteuma {:harja.domain.toteuma/tyyppi "vv-yksikkohintainen"}})
-                               (when sopimus-id {::vv-toimenpide/sopimus-id sopimus-id})
+                               (when kokonaishintaiset?
+                                 {::vv-toimenpide/hintatyyppi :kokonaishintainen})
+                               (when yksikkohintaiset?
+                                 {::vv-toimenpide/hintatyyppi :yksikkohintainen})
+                               (when sopimus-id
+                                 {::vv-toimenpide/sopimus-id sopimus-id})
                                (when (and alku loppu)
                                  {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
                                (when vaylatyyppi
@@ -93,4 +159,6 @@
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))]
-    (into [] toimenpiteet-xf fetchattu)))
+    (cond->> (into [] toimenpiteet-xf fetchattu)
+             yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
+             kokonaishintaiset? (identity))))

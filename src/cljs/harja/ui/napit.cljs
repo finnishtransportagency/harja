@@ -142,6 +142,7 @@
            :disabled disabled
            :on-click #(do
                         (.preventDefault %)
+                        (.stopPropagation %)
                         (toiminto))}
           (when tallennus-kaynnissa?
             [y/ajax-loader])
