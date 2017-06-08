@@ -34,7 +34,7 @@
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
-   (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)
+   (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
@@ -50,7 +50,7 @@
     u/valitse-urakan-vuosi!]))
 
 (defn urakan-hoitokausi-ja-kuukausi [urakka]
-  (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
+  (let [kuukaudet (vec (concat [nil] (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)))]
     [valinnat/urakan-hoitokausi-ja-kuukausi
      urakka
      u/valitun-urakan-hoitokaudet
@@ -216,3 +216,11 @@
       u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
       u/valittu-aikavali
       u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali [ur]
+  (fn [ur]
+    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+      ur
+      u/valittu-sopimusnumero u/valitse-sopimusnumero!
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      u/valittu-aikavali)))

@@ -222,6 +222,7 @@
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
+           :salli-valiotsikoiden-piilotus? true
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
@@ -238,7 +239,7 @@
             :nimi :tr-ajorata
             :muokattava? (constantly false)
             :tyyppi :string :tasaa :oikea
-            :fmt #(pot/arvo-koodilla pot/+ajoradat+ %)
+            :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
             :leveys 3}
            {:otsikko "Kais\u00ADta"
             :muokattava? (constantly false)

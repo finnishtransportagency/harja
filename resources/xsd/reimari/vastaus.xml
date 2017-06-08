@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HaeToimenpiteet xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+  <HaeToimenpiteetResponse>
+    <toimenpide id="-123456"
+		tyolaji="1022541802"
+		tyoluokka="1022541905"
+		tyyppi="1022542001"
+		lisatieto="vaihdettiin patterit lamppuun"
+		lisatyo="false"
+		tila="1022541202"
+		suoritettu="2017-04-24T09:42:04Z"
+		luotu="2017-04-24T13:00:00Z"
+		muokattu="2017-04-24T13:30:00Z"
+		>
+
+      <!-- Urakoitsijan ja sopimuksen tiedot -->
+      <urakoitsija id="2" nimi="Merimiehet Oy"/>
+      <sopimus nro="-666" tyyppi="1022542301" nimi="Hoitosopimus"/>
+
+      <!-- Aluksen tiedot. Jos ei alustietoja, jätetään elementti pois -->
+      <alus tunnus="omapaatti" nimi="MS Totally out of Gravitas"/>
+
+      <!-- Väylän numero ja nimi -->
+      <vayla nro="12345" nimi="Joku väylä"/>
+
+      <!-- Turvalaitteen numero, nimi ja urakka (ryhmä) -->
+      <turvalaite nro="904" nimi="Glosholmsklacken pohjoinen" ryhma="514"/>
+
+      <komponentit>
+        <komponentti id="123" nimi="Erikoispoiju" tila="234"/>
+        <komponentti id="124" nimi="Erikoismerkki" tila="345"/>
+      </komponentit>
+
+    </toimenpide>
+  </HaeToimenpiteetResponse>
+</HaeToimenpiteet>

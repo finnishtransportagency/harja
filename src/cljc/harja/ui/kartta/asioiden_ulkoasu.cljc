@@ -112,6 +112,7 @@
    :ei-ok-tarkastus-urakoitsija "oranssi"
    :tarkastus-vakiohavainnolla "keltainen"
    :varustetoteuma "tummansininen"
+   :varuste "oranssi"
    :yllapito "pinkki"
 
    :tietyoilmoitus "oranssi"})
@@ -261,6 +262,9 @@
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
+
+(defn varusteen-ikoni []
+  (pinni-ikoni (:varuste ikonien-varit)))
 
 (defn tietyoilmoituksen-ikoni []
   (pinni-ikoni (:tietyoilmoitus ikonien-varit)))

@@ -4,8 +4,8 @@
             #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
                :clj
                [taoensso.timbre :as log])
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.geo :as geo]
@@ -291,6 +291,16 @@
                :img    ikoni}
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
+
+(defmethod asia-kartalle :varuste [varuste valittu?]
+  (let [ikoni (ulkoasu/varusteen-ikoni)]
+    (assoc varuste
+      :type :varuste
+      :nimi (or (:tooltip varuste) "Varuste")
+      :selite {:teksti "Varuste"
+               :img    ikoni}
+      :alue (maarittele-feature varuste valittu?
+                                (ulkoasu/varusteen-ikoni)))))
 
 (defmethod asia-kartalle :tietyoilmoitus [tietyoilmoitus valittu?]
   (let [ikoni (ulkoasu/tietyoilmoituksen-ikoni)

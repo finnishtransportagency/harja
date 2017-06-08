@@ -193,9 +193,11 @@
     [:fo:block
      (checkbox-lista [["Ulottumarajoituksia" true]]
                      #{(boolean (or (::t/max-leveys raj)
-                                    (::t/max-korkeus raj)))})
+                                    (::t/max-korkeus raj)
+                                    (::t/max-pituus raj)))})
      (sisennetty-arvo (::t/max-korkeus raj) "(m, ajoneuvon max. korkeus)")
      (sisennetty-arvo (::t/max-leveys raj) "(m, ajoneuvon max. leveys)")
+     (sisennetty-arvo (::t/max-pituus raj) "(m, ajoneuvon max. pituus)")
 
      (checkbox-lista [["Painorajoitus" true
                        [:fo:inline
@@ -227,7 +229,7 @@
                      :as ilm}]
   (let [jarj (into {}
                    (map (juxt ::t/jarjestely ::t/selite))
-                   kaistajarj)
+                   [kaistajarj])
         nopeus (into {}
                      (map (juxt ::t/rajoitus ::t/matka))
                      nopeusrajoitukset)
@@ -243,6 +245,7 @@
        [(tieto "Kaistajärjestelyt"
                (checkbox-lista [["Yksi ajokaista suljettu" "ajokaistaSuljettu"]
                                 ["Yksi ajorata suljettu" "ajorataSuljettu"]
+                                ["Tie suljettu" "tieSuljettu"]
                                 ["Muu" "muu" (get jarj "muu")]]
                                jarj))]
        [(tieto "Nopeusrajoitus"
@@ -297,16 +300,20 @@
        [(tieto "Pysäytyksiä"
                [:fo:block
                 (checkbox-lista [["Liikennevalot" "liikennevalot"]
-                                 ["Liikenteen ohjaaja" "lohj"]
+                                 ["Liikenteen ohjaaja" "liikenteenohjaaja"]
                                  ["Satunnaisia" "satunnaisia"]]
-                                ;; FIXME: näytä pysäytykset
-                                #{})
-                (pvm-ja-aika "alkaa" (::t/pysaytysten_alku ilm))
-                (pvm-ja-aika "päättyy" (::t/pysaytysten_loppu ilm))])]
+                                #{(::t/liikenteenohjaaja ilm)})
+                (pvm-ja-aika "alkaa" (::t/pysaytysten-alku ilm))
+                (pvm-ja-aika "päättyy" (::t/pysaytysten-loppu ilm))])]
+       [(tieto "Liikenteenohjaus"
+               [:fo:block
+                (checkbox-lista [["Ohjataan vuorotellen" "ohjataanVuorotellen"]
+                                 ["Ohjataan kaksisuuntaisena" "ohjataanKaksisuuntaisena"]]
+                                #{(::t/liikenteenohjaus ilm)})])]
        [(tieto "Arvioitu viivytys"
                [:fo:block
-                (sisennetty-arvo (::t/viivastys_normaali_liikenteessa ilm) "(min, normaali liikenne)")
-                (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
+                (sisennetty-arvo (::t/viivastys-normaali-liikenteessa ilm) "(min, normaali liikenne)")
+                (sisennetty-arvo (::t/viivastys-ruuhka-aikana ilm) "(min, ruuhka-aika)")])]
        [(tieto "Kulkurajoituksia"
                [:fo:block
                 (ajoneuvorajoitukset ilm)])])])))
@@ -321,7 +328,7 @@
               "vastenTienumeronkasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
               "")])]))
 
-(defn- muuta [{m ::t/huomautukset}]
+(defn- muuta [{m ::t/lisatietoja}]
   [:fo:block m])
 
 (defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::m/luotu muokattu ::m/muokattu}]

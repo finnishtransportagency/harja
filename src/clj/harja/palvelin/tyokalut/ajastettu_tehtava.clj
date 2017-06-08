@@ -12,18 +12,20 @@
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
 
 (defn ajasta-paivittain [[tunti minuutti sekuntti] tehtava]
-  (chime-at (periodic-seq
-              (.. (t/now)
-                  (withZone (DateTimeZone/forID "Europe/Helsinki"))
-                  (withTime tunti minuutti sekuntti 0))
-              (t/days 1))
-            tehtava
-            virhekasittely))
+  (when (and tunti minuutti sekuntti)
+    (chime-at (periodic-seq
+               (.. (t/now)
+                   (withZone (DateTimeZone/forID "Europe/Helsinki"))
+                   (withTime tunti minuutti sekuntti 0))
+               (t/days 1))
+              tehtava
+              virhekasittely)))
 
 (defn ajasta-minuutin-valein [minuutit tehtava]
-  (chime-at (periodic-seq
-              (.. (t/now)
-                  (withZone (DateTimeZone/forID "Europe/Helsinki")))
-              (t/minutes minuutit))
-            tehtava
-            virhekasittely))
+  (when minuutit
+    (chime-at (periodic-seq
+               (.. (t/now)
+                   (withZone (DateTimeZone/forID "Europe/Helsinki")))
+               (t/minutes minuutit))
+              tehtava
+              virhekasittely)))

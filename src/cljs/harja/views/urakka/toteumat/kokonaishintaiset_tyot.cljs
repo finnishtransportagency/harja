@@ -74,7 +74,7 @@
                                      (tiedot/valitse-paivakohtainen-tehtava!
                                       (:pvm %) (:toimenpidekoodi %)))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
-       :mahdollista-rivin-valinta true
+       :mahdollista-rivin-valinta? true
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste tunniste
@@ -211,7 +211,8 @@
              :nimi :suorittajan-ytunnus
              :hae (comp :ytunnus :suorittaja)
              :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
-             :pituus-max 256
+             :pituus-max 9
+             :validoi [[:ytunnus]]
              :tyyppi :string
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
             (lomake/ryhma

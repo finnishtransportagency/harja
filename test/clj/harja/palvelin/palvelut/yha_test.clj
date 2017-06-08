@@ -182,14 +182,14 @@
       (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
       (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
           "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
-      (is (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))))
+      (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen)))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-uudet-yha-kohteet +kayttaja-jvh+
                                 {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:ajorata 1
+                                 :kohteet (luo-yha-kohteet {:ajorata 0
                                                             :kaista 1
                                                             :tienumero 9
                                                             :aosa 328
@@ -207,7 +207,7 @@
     (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
     (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
     (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Alkuosan pituus 3060 ei kelpaa"))))
+           "Alkuosan 328 ajorataa 1 ei ole olemassa"))))
 
 (deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosaa-ei-olemassa
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

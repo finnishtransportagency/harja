@@ -35,3 +35,9 @@
 
 ;; Kuittauksen vastaus
 (defrecord KuittaaVastaus [vastaus])
+
+;;
+(defrecord AloitaPikakuittaus [ilmoitus kuittaustyyppi])
+(defrecord PaivitaPikakuittaus [pikakuittaus])
+(defrecord TallennaPikakuittaus [])
+(defrecord PeruutaPikakuittaus [])

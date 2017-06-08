@@ -129,9 +129,10 @@ SELECT ttm.yllapitokohde
   FROM tietyomaa ttm
  WHERE ttm.yllapitokohde IN (:idt)
 UNION
-SELECT t.yllapitokohde
-  FROM tarkastus t
- WHERE t.yllapitokohde IN (:idt) AND t.poistettu IS NOT TRUE
+SELECT ty.yllapitokohde
+  FROM tarkastus_yllapitokohde ty
+       JOIN tarkastus t ON ty.tarkastus = t.id
+ WHERE ty.yllapitokohde IN (:idt) AND t.poistettu IS NOT TRUE
 
 -- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
 SELECT ((EXISTS(SELECT *
@@ -246,7 +247,8 @@ SELECT
   ypk.tr_ajorata       AS "tr-ajorata",
   ypk.tr_kaista        AS "tr-kaista",
   ypk.yhaid            AS "yha-id",
-  ypk.yha_kohdenumero  AS "yha-kohdenumero"
+  ypk.yha_kohdenumero  AS "yha-kohdenumero",
+  ypk.yllapitoluokka   AS "yllapitoluokka"
 FROM yllapitokohde ypk
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka

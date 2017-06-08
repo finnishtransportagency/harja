@@ -4,14 +4,18 @@
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
+            [goog.events.EventType :as EventType]
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
 
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi ;todo lisää onnistumisviesti
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
@@ -62,25 +66,25 @@
          [:button
           {:id (:id asetukset)
            :disabled (or @kysely-kaynnissa? (:disabled asetukset))
-           :class    (if (or @kysely-kaynnissa? (:disabled asetukset))
-                       (str luokka " disabled")
-                       luokka)
+           :class (if (or @kysely-kaynnissa? (:disabled asetukset))
+                    (str luokka " disabled")
+                    luokka)
            :on-click #(do
-                       (.preventDefault %)
-                       (reset! kysely-kaynnissa? true)
-                       (reset! nayta-virheviesti? false)
-                       (go (let [tulos (<! (kysely))]
-                             (when kun-valmis (kun-valmis tulos))
-                             (if (not (k/virhe? tulos))
-                               (do
-                                 (reset! kysely-kaynnissa? false)
-                                 (when kun-onnistuu (kun-onnistuu tulos)))
-                               (do
-                                 (reset! kysely-kaynnissa? false)
-                                 (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
-                                 (reset! nayta-virheviesti? true)
-                                 (when kun-virhe (kun-virhe tulos)))))))
-           :title    (:title asetukset)}
+                        (.preventDefault %)
+                        (reset! kysely-kaynnissa? true)
+                        (reset! nayta-virheviesti? false)
+                        (go (let [tulos (<! (kysely))]
+                              (when kun-valmis (kun-valmis tulos))
+                              (if (not (k/virhe? tulos))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (when kun-onnistuu (kun-onnistuu tulos)))
+                                (do
+                                  (reset! kysely-kaynnissa? false)
+                                  (log "VIRHE PALVELINKUTSUSSA!" (pr-str tulos))
+                                  (reset! nayta-virheviesti? true)
+                                  (when kun-virhe (kun-virhe tulos)))))))
+           :title (:title asetukset)}
 
           (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
          (when @nayta-virheviesti?
@@ -94,125 +98,146 @@
              :horizontal (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio) :inline-block)
              :vertical (y/virheviesti-sailio virheviesti (when suljettava-virhe? sulkemisfunktio))))]))))
 
-(defn takaisin
-  [teksti takaisin-fn]
-  [:button.nappi-toissijainen {:on-click #(do
-                                           (.preventDefault %)
-                                           (takaisin-fn))}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+(defn nappi
+  "Yleinen nappikomponentti, jota voi muokata optioilla.
+   Yleensä kannattaa tämän sijaan käyttää tarkemmin määriteltyjä nappeja.
 
-(defn urakan-sivulle [teksti click-fn]
-  [:button.nappi-toissijainen {:on-click #(do
-                                           (.preventDefault %)
-                                           (click-fn))}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+   Optiot:
+   disabled                   boolean. Jos true, nappi on disabloitu.
+   luokka                     Luokka napille (string, erota välilyönnillä jos useita).
+   ikoni                      Nappiin piirrettävä ikonikomponentti.
+   sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
+   tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
+  ([teksti toiminto] (nappi teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky?] :as optiot}]
+   (let [naulattu? (atom false)
+         disabled? (atom disabled)
+         napin-etaisyys-ylareunaan (atom nil)
+         maarita-sticky! (fn []
+                          (if (and
+                                sticky?
+                                (not @disabled?)
+                                (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
+                            (reset! naulattu? true)
+                            (reset! naulattu? false)))
+         kasittele-scroll-event (fn [this _]
+                                  (maarita-sticky!))
+         kasittele-resize-event (fn [this _]
+                                  (maarita-sticky!))]
+     (komp/luo
+       (komp/dom-kuuntelija js/window
+                            EventType/SCROLL kasittele-scroll-event
+                            EventType/RESIZE kasittele-resize-event)
+       (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                           (reset! disabled? disabled)
+                           (maarita-sticky!)))
+       (komp/piirretty #(reset! napin-etaisyys-ylareunaan
+                                (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                  (r/dom-node %))))
+       (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?] :as optiot}]
+         [:button
+          {:class (str (when disabled "disabled ")
+                       (when @naulattu? "nappi-naulattu ")
+                       luokka)
+           :disabled disabled
+           :on-click #(do
+                        (.preventDefault %)
+                        (.stopPropagation %)
+                        (toiminto))}
+          (when tallennus-kaynnissa?
+            [y/ajax-loader])
+          (when tallennus-kaynnissa?
+            " ")
+
+          (if (and ikoni
+                   (not tallennus-kaynnissa?))
+            [ikonit/ikoni-ja-teksti ikoni teksti]
+            teksti)])))))
+
+(defn takaisin
+  ([toiminto] (takaisin "Takaisin" toiminto {}))
+  ([teksti toiminto] (takaisin teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)
+                             :ikoni (ikonit/livicon-chevron-left)})]))
 
 (defn uusi
-  "Nappi 'uuden asian' luonnille.
-Asetukset on optionaalinen mäppi ja voi sisältää:
-  :disabled  jos true, nappi on disabloitu"
-
-  ([teksti uusi-fn] (uusi teksti uusi-fn {}))
-  ([teksti uusi-fn {:keys [disabled luokka]}]
-   [:button.nappi-ensisijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (uusi-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
+  ([toiminto] (uusi "Uusi" toiminto {}))
+  ([teksti toiminto] (uusi teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-ensisijainen" " " luokka)
+                             :ikoni (ikonit/livicon-plus)})]))
 
 (defn hyvaksy
-  ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
-  ([teksti hyvaksy-fn] (hyvaksy teksti hyvaksy-fn))
-  ([teksti hyvaksy-fn {:keys [disabled luokka]}]
-    [:button.nappi-myonteinen
-     {:class (str (when disabled "disabled") (or luokka ""))
-      :disabled disabled
-      :on-click #(do
-                  (.preventDefault %)
-                  (hyvaksy-fn))}
-     [ikonit/ikoni-ja-teksti [ikonit/check] teksti]]))
+  ([toiminto] (hyvaksy "OK" toiminto {}))
+  ([teksti toiminto] (hyvaksy teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-myonteinen" " " luokka)
+                             :ikoni (ikonit/check)})]))
 
 (defn peruuta
-  ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
-  ([teksti peruuta-fn {:keys [disabled luokka]}]
-   [:button.nappi-kielteinen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (peruuta-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
+  ([toiminto] (peruuta "Peruuta" toiminto {}))
+  ([teksti toiminto] (peruuta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-kielteinen" " " luokka)
+                             :ikoni (ikonit/livicon-ban)})]))
 
-(defn yleinen
-  "Yleinen toimintopainike
-  Asetukset on optionaalinen mäppi ja voi sisältää:
-  :disabled jos true, nappi on disabloitu
-  :ikoni näytettävä ikoni"
-  ([teksti toiminto-fn] (yleinen teksti toiminto-fn {}))
-  ([teksti toiminto-fn {:keys [disabled luokka ikoni]}]
-   [:button.nappi-toissijainen
-    {:class (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                 (.preventDefault %)
-                 (toiminto-fn))}
-    (if ikoni
-      [:span ikoni (str " " teksti)]
-      teksti)]))
+(defn yleinen-ensisijainen
+  ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-ensisijainen" " " luokka)
+                             :disabled disabled})]))
+
+(defn yleinen-toissijainen
+  ([teksti toiminto] (yleinen-toissijainen teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)})]))
 
 (defn tallenna
-  "Yleinen 'Tallenna' nappi."
-  ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
-  ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
-   [:button.nappi-ensisijainen
-    {:class (str (when disabled "disabled ") luokka)
-     :disabled disabled
-     :on-click #(do (.preventDefault %)
-                    (toiminto-fn))}
-    (if tallennus-kaynnissa?
-      [y/ajax-loader]
-      ikoni)
-    (when (or ikoni tallennus-kaynnissa?) " ")
-    sisalto]))
+  ([teksti toiminto] (tallenna teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-ensisijainen" " " luokka)})]))
 
-(defn sulje
-  "'Sulje' ruksi"
+(defn sulje-ruksi
   [sulje!]
   [:button.close {:on-click sulje!
                   :type "button"}
    [ikonit/remove]])
 
 (defn poista
-  ([teksti poista-fn] (poista teksti poista-fn {}))
-  ([teksti poista-fn {:keys [disabled luokka]}]
-   [:button.nappi-kielteinen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (poista-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] teksti]]))
+  ([teksti toiminto] (poista teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-kielteinen" " " luokka)
+                             :ikoni (ikonit/livicon-trash)})]))
 
 (defn tarkasta
-  ([teksti tarkasta-fn] (tarkasta teksti tarkasta-fn {}))
-  ([teksti tarkasta-fn {:keys [disabled luokka]}]
-   [:button.nappi-toissijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (tarkasta-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/eye-open] teksti]]))
+  ([teksti toiminto] (tarkasta teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)
+                             :ikoni (ikonit/eye-open)})]))
 
 (defn muokkaa
-  ([teksti muokkaa-fn] (muokkaa teksti muokkaa-fn {}))
-  ([teksti muokkaa-fn {:keys [disabled luokka]}]
-   [:button.nappi-toissijainen
-    {:class    (str (when disabled "disabled ") (or luokka ""))
-     :disabled disabled
-     :on-click #(do
-                  (.preventDefault %)
-                  (muokkaa-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-pen] teksti]]))
+  ([teksti toiminto] (muokkaa teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)
+                             :ikoni (ikonit/livicon-pen)})]))

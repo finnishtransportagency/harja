@@ -35,7 +35,7 @@
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
     :footer-fn (fn [data]
                  [:span
-                  [napit/yleinen
+                  [napit/yleinen-toissijainen
                    "Hae"
                    #(e! (tiedot/->Hae))
                    {:ikoni (ikonit/livicon-search)
@@ -64,6 +64,23 @@
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
 
+(defn tienakyman-infopaneelin-linkit [e!]
+  {:toteuma
+   [{:teksti "Toteumanäkymään"
+     :tooltip "Siirry urakan toteumanäkymään"
+     :ikoni [ikonit/livicon-eye]
+     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
+    {:teksti "Reittipisteet"
+     :tooltip "Hae toteuman kaikki reittipisteet kartalle"
+     :ikoni [ikonit/livicon-info-circle]
+     :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]
+
+   :varustetoteuma
+   [{:teksti "Toteumanäkymään"
+     :tooltip "Siirry urakan varustetoteumiin"
+     :ikoni [ikonit/livicon-eye]
+     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]})
+
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
   ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
   (tasot/poista-geometria! :tr-valittu-osoite)
@@ -75,14 +92,7 @@
     {:avatut-asiat (comp avatut-tulokset :idx :data)
      :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
      :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
-     :linkkifunktiot {:toteuma [{:teksti "Toteumanäkymään"
-                                 :tooltip "Siirry urakan toteumanäkymään"
-                                 :ikoni [ikonit/livicon-eye]
-                                 :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
-                                {:teksti "Reittipisteet"
-                                 :tooltip "Hae toteuman kaikki reittipisteet kartalle"
-                                 :ikoni [ikonit/livicon-info-circle]
-                                 :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]} }
+     :linkkifunktiot (tienakyman-infopaneelin-linkit e!)}
     tulokset]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]

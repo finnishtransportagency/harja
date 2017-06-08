@@ -79,45 +79,45 @@
 
  :geometriapaivitykset {:tuontivali 60
 
-                        :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-alk-osoite                "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-alk-tuontikohde           "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
+                        :tieosoiteverkon-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-alk-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :pohjavesialueen-shapefile                 "file://shp/Pohjavesialueet/PTV_tl141.shp"
-                        :pohjavesialueen-alk-osoite                "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl141.shz"
-                        :pohjavesialueen-alk-tuontikohde           "./shp/Pohjavesialueet/PTV_tl141.shz"
+                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
+                        :pohjavesialueen-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl141.shz"
+                        :pohjavesialueen-alk-tuontikohde "./shp/Pohjavesialueet/PTV_tl141.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile       "file://shp/Talvihoitoluokat/PTV_tl132.shp"
-                        :talvihoidon-hoitoluokkien-alk-osoite      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/PTV_tl132.shp"
+                        :talvihoidon-hoitoluokkien-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl132.shz"
                         :talvihoidon-hoitoluokkien-alk-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
 
-                        :soratien-hoitoluokkien-shapefile          "file://shp/Soratieluokat/PTV_tl149.shp"
-                        :soratien-hoitoluokkien-alk-osoite         "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl149.shz"
-                        :soratien-hoitoluokkien-alk-tuontikohde    "./shp/Soratieluokat/PTV_tl149.shz"
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/PTV_tl149.shp"
+                        :soratien-hoitoluokkien-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl149.shz"
+                        :soratien-hoitoluokkien-alk-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
 
-                        :siltojen-shapefile                        "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-alk-osoite                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
-                        :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
+                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
+                        :siltojen-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
+                        :siltojen-alk-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
-                        :urakoiden-shapefile                       "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
-                        :urakoiden-alk-osoite                      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2016.shz"
-                        :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
+                        :urakoiden-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-alk-tuontikohde "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
 
-                        :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
-                        :ely-alueiden-alk-osoite                   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
-                        :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
+                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
+                        :ely-alueiden-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
+                        :ely-alueiden-alk-tuontikohde "./shp/ELYt/ULKOISET_Elyt_infra.shz"
 
-                        :valaistusurakoiden-shapefile             "file://shp/Valaistusurakat/PTV_tl167.shp"
-                        :valaistusurakoiden-alk-osoite            "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl167.shz"
-                        :valaistusurakoiden-alk-tuontikohde       "./shp/Valaistusurakat/PTV_tl167.shz"
+                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/PTV_tl167.shp"
+                        :valaistusurakoiden-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl167.shz"
+                        :valaistusurakoiden-alk-tuontikohde "./shp/Valaistusurakat/PTV_tl167.shz"
 
-                        :paallystyspalvelusopimusten-shapefile    "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
-                        :paallystyspalvelusopimusten-alk-osoite   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
+                        :paallystyspalvelusopimusten-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
                         :paallystyspalvelusopimusten-alk-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
 
-                        :tekniset-laitteet-urakat-shapefile      "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
+                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
 
-                        :siltojenpalvelusopimusten-shapefile      "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
+                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
                         }
 
  :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
@@ -132,8 +132,8 @@
  ;; ClamAV REST palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
 
- :paivystystarkistus  {:paivittainen-aika [12 11 00]}
- :reittitarkistus  {:paivittainen-aika [00 30 00]}
+ :paivystystarkistus {:paivittainen-aika [12 11 00]}
+ :reittitarkistus {:paivittainen-aika [00 30 00]}
 
  ;; Seuraavat ominaisuudet on mahdollista kytkeä pois päältä eri ympäristöissä lisäämällä avaimen settiin:
  ;; :laatupoikkeaman-selvityspyynnosta-lahtee-viesti  Kun laatupoikkeamasta pyydetään selvitystä urakoitsijalta,
@@ -142,11 +142,21 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  ;; :vesivayla
- :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet}
+ :pois-kytketyt-ominaisuudet #{}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
+
+ :reimari {:url "https://www.example.com/reimari/"
+           :kayttajatunnus "reimaritunnus"
+           :salasana "reimarisalasana"
+           ;; :paivittainen-toimenpidehaku [16 18 00]
+           }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
                  :paivittainen-tarkistusaika [11 00 00]
                  :paivitysvali-paivissa 60}
+
+ :tyotunti-muistutukset {:paivittainen-aika nil}
+
+ :vkm  {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos"}
  }

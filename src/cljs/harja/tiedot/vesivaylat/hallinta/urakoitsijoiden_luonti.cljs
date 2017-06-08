@@ -17,7 +17,8 @@
          :valittu-urakoitsija nil
          :tallennus-kaynnissa? false
          :urakoitsijoiden-haku-kaynnissa? false
-         :haetut-urakoitsijat nil}))
+         :haetut-urakoitsijat nil
+         :haetut-ytunnukset {}}))
 
 (defn- aloitus [nyt [alku loppu]]
   (cond
@@ -53,6 +54,9 @@
 (defrecord HaeUrakoitsijat [])
 (defrecord UrakoitsijatHaettu [urakoitsijat])
 (defrecord UrakoitsijatEiHaettu [virhe])
+(defrecord HaeLomakevaihtoehdot [])
+(defrecord LomakevaihtoehdotHaettu [tulos])
+(defrecord LomakevaihtoehdotEiHaettu [virhe])
 
 (extend-protocol tuck/Event
   ValitseUrakoitsija
@@ -128,4 +132,31 @@
   UrakoitsijatEiHaettu
   (process-event [_ app]
     (viesti/nayta! [:span "Virhe urakoitsijoiden haussa!"] :danger)
-    (assoc app :urakoitsijoiden-haku-kaynnissa? false)))
+    (assoc app :urakoitsijoiden-haku-kaynnissa? false))
+
+  HaeLomakevaihtoehdot
+  (process-event [_ app]
+    (let [tulos! (tuck/send-async! ->LomakevaihtoehdotHaettu)
+          fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
+      (go
+        (try
+          (let [urakoitsijat (async/<! (k/post! :hae-kaikki-urakoitsijat {}))
+                ytunnukset (into {} (map (juxt ::o/ytunnus ::o/nimi) urakoitsijat))
+                vastaus {:ytunnukset ytunnukset}]
+            (if (some k/virhe? (vals vastaus))
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    app)
+
+  LomakevaihtoehdotHaettu
+  (process-event [{tulos :tulos} app]
+    (harja.loki/log (pr-str (:ytunnukset tulos)))
+    (assoc app :haetut-ytunnukset (:ytunnukset tulos)))
+
+  LomakevaihtoehdotEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Hupsista, ongelmia Harjan kanssa juttelussa." :danger)
+    app))

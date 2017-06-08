@@ -27,7 +27,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -161,7 +161,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             :tyyppi      :numero
             :nimi        :summa
             :leveys      1
-            :validoi     [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero nil 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
+            :validoi     [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
             :muokattava? sanktio-domain/sakko?}
 
            (when (urakka/indeksi-kaytossa?)
@@ -508,13 +508,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                        paatosoikeus?
                                        laatupoikkeama optiot])})
                     (when (nayta-siirtymisnappi? @laatupoikkeama)
-                      {:rivi?       true
-                       :uusi-rivi?  true
-                       :nimi        :laatupoikkeama
-                       :vihje       (siirtymisnapin-vihje @laatupoikkeama)
-                       :tyyppi      :komponentti
+                      {:rivi? true
+                       :uusi-rivi? true
+                       :nimi :laatupoikkeama
+                       :vihje (siirtymisnapin-vihje @laatupoikkeama)
+                       :tyyppi :komponentti
                        :komponentti (fn [_]
-                                      [napit/yleinen
+                                      [napit/yleinen-toissijainen
                                        (siirtymisnapin-teksti @laatupoikkeama)
                                        (fn []
                                          (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))

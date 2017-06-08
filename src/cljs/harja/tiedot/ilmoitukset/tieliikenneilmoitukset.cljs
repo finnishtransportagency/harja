@@ -49,6 +49,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (atom {:ilmoitusnakymassa? false
          :valittu-ilmoitus nil
          :uusi-kuittaus-auki? false
+         :ensimmainen-haku-tehty? false
          :ilmoitushaku-id nil ;; ilmoitushaun timeout
          :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
          :ilmoitukset nil ;; haetut ilmoitukset
@@ -121,11 +122,19 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            uusien-kyselyjen-maara)
         optiot))))
 
-(def ^:const ilmoitushaun-aloitusviive-ms 1000)
+(def ^:const ilmoitushaun-viive-ms 3000)
+(def ^:const taustahaun-viive-ms 60000)
+(def ^:const ensimmaisen-haun-viive-ms 5000)
+
+(defn- maarita-hakuviive [app]
+  (if (:ensimmainen-haku-tehty? app)
+    ilmoitushaun-viive-ms
+    ensimmaisen-haun-viive-ms))
 
 (defn- hae
-  "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
-  ([app] (hae app ilmoitushaun-aloitusviive-ms))
+  "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan.
+   Viivettä käytetään, jotteivät useat peräkkäiset muutokset turhaan aiheuttaisi hakua palvelimelta."
+  ([app] (hae app (maarita-hakuviive app)))
   ([app timeout] (hae app timeout false))
   ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
    (if-not (:voi-hakea? valinnat)
@@ -138,7 +147,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
            (assoc :ilmoitushaku-id (.setTimeout js/window
                                                 (t/send-async! v/->HaeIlmoitukset)
                                                 timeout))
-           (assoc :taustahaku? taustahaku?))))))
+           (assoc :taustahaku? taustahaku?)
+           (assoc :ensimmainen-haku-tehty? true))))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -190,7 +200,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                          (map :ilmoitusid (:ilmoitukset tulokset)))
                                  valittu
                                  nil))
-           60000
+           taustahaun-viive-ms
            true)))
 
   v/ValitseIlmoitus
@@ -269,11 +279,36 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                          ;; Palvelin palauttaa vektorin kuittauksia, joihin
                          ;; olemassaolevat liitetään
                          (into (first v) kuittaukset))))
-        (assoc app :kuittaa-monta nil))))
+        (assoc app
+               :kuittaa-monta nil
+               :pikakuittaus nil))))
 
   v/PeruMonenKuittaus
   (process-event [_ app]
-    (assoc app :kuittaa-monta nil)))
+    (assoc app :kuittaa-monta nil))
+
+  v/AloitaPikakuittaus
+  (process-event [{:keys [ilmoitus kuittaustyyppi]} app]
+    (assoc app :pikakuittaus
+           {:ilmoitus ilmoitus
+            :tyyppi kuittaustyyppi}))
+
+  v/PaivitaPikakuittaus
+  (process-event [{:keys [pikakuittaus]} app]
+    (update app :pikakuittaus merge pikakuittaus))
+
+  v/TallennaPikakuittaus
+  (process-event [_ {:keys [pikakuittaus] :as app}]
+    (let [tulos! (t/send-async! v/->KuittaaVastaus)]
+      (go
+        (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset!
+                     [(:ilmoitus pikakuittaus)]
+                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi})))))
+      (assoc-in app [:pikakuittaus :tallennus-kaynnissa?] true)))
+
+  v/PeruutaPikakuittaus
+  (process-event [_ app]
+    (dissoc app :pikakuittaus)))
 
 (defonce karttataso-ilmoitukset (atom false))
 

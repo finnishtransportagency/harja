@@ -1,4 +1,4 @@
-(ns harja.domain.laadunseuranta.laatupoikkeamat
+(ns harja.domain.laadunseuranta.laatupoikkeama
   (:require [harja.pvm :as pvm]))
 
 (defn kuvaile-tekija [tekija]

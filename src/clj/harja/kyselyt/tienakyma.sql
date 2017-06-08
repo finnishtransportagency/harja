@@ -24,6 +24,33 @@ SELECT t.id,
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))
 
+-- name: hae-varustetoteumat
+-- fetch-size: 64
+-- row-fn: muunna-toteuma
+-- Hakee kaikki toteumat
+SELECT t.id,
+       t.tyyppi as toteumatyyppi,
+       t.reitti as sijainti,
+       t.alkanut, t.paattynyt,
+       t.suorittajan_nimi AS suorittaja_nimi,
+       vt.tr_numero AS tierekisteriosoite_numero,
+       vt.tr_alkuosa AS tierekisteriosoite_alkuosa,
+       vt.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+       vt.tr_loppuosa AS tierekisteriosoite_loppuosa,
+       vt.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys,
+       vt.tunniste,
+       vt.kuntoluokka,
+       vt.tietolaji,
+       vt.alkupvm, vt.loppupvm, vt.toimenpide,
+       vt.arvot
+  FROM varustetoteuma vt
+       JOIN toteuma t ON vt.toteuma = t.id
+       JOIN urakka u ON t.urakka = u.id
+ WHERE ST_Intersects(t.envelope, :sijainti)
+   AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
+   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
+        (t.paattynyt BETWEEN :alku AND :loppu))
+
 -- name: hae-tarkastukset
 -- fetch-size: 64
 SELECT t.id, t.aika, t.tyyppi, t.tarkastaja,
@@ -145,4 +172,7 @@ SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
 
 -- name: hae-reittipisteet
 -- Hakee yhden annetun toteuman reittipisteet
-SELECT aika,sijainti FROM reittipiste WHERE toteuma = :toteuma-id
+SELECT (x.rp).aika, (x.rp).sijainti
+  FROM (SELECT unnest(reittipisteet) AS rp
+          FROM toteuman_reittipisteet
+	 WHERE toteuma = :toteuma-id) x

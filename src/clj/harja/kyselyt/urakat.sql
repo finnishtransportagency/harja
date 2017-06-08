@@ -4,6 +4,8 @@ SELECT
   u.nimi,
   u.alkupvm,
   u.loppupvm,
+  u.sampoid,
+  u.urakkanro,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   urk.id                   AS urakoitsija_id,
@@ -124,9 +126,11 @@ SELECT
   k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-    THEN '*'
+                            THEN '*'
                             ELSE '' END),
-                           id, '=', sampoid))
+                            id,
+                            '=',
+                            COALESCE (sampoid, nimi)))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
 
@@ -345,12 +349,10 @@ VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: u
         :sopimustyyppi :: sopimustyyppi, :urakkanumero);
 
 -- name: luo-harjassa-luotu-urakka<!
-INSERT INTO urakka (nimi, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
-                    harjassa_luotu, luotu, luoja)
-    VALUES (:nimi, :alkupvm, :loppupvm,
-                   :alue, :hallintayksikko,
-                   :urakoitsija, :hanke, 'vesivayla-hoito', TRUE,
-                   NOW(), :kayttaja);
+INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
+                    harjassa_luotu, luotu, luoja, sampoid)
+VALUES (:nimi, :urakkanro, :alkupvm, :loppupvm, :alue, :hallintayksikko, :urakoitsija, :hanke, 'vesivayla-hoito',
+               TRUE, NOW(), :kayttaja, (SELECT 'PRHAR' || LPAD(currval(pg_get_serial_sequence('urakka', 'id'))::text, 5, '0')));
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
@@ -370,14 +372,15 @@ WHERE id = :id;
 -- name: paivita-harjassa-luotu-urakka<!
 -- Päivittää Harjassa luotua (vesiväylä)urakkaa
 UPDATE urakka
-  SET nimi = :nimi,
-    alkupvm = :alkupvm,
-    loppupvm = :loppupvm,
-    alue = :alue,
-    hallintayksikko = :hallintayksikko,
-    urakoitsija = :urakoitsija,
-    muokattu = NOW(),
-    muokkaaja = :kayttaja
+SET nimi          = :nimi,
+  urakkanro       = :urakkanro,
+  alkupvm         = :alkupvm,
+  loppupvm        = :loppupvm,
+  alue            = :alue,
+  hallintayksikko = :hallintayksikko,
+  urakoitsija     = :urakoitsija,
+  muokattu        = NOW(),
+  muokkaaja       = :kayttaja
 WHERE id = :id AND harjassa_luotu IS TRUE;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
@@ -740,13 +743,14 @@ WHERE k.kayttajanimi = :kayttajanimi
 -- Hakee urakan perustiedot id:llä APIa varten.
 SELECT
   u.id,
+  u.sampoid,
   u.nimi,
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
   u.indeksi,
   u.takuu_loppupvm,
-  u.urakkanro AS alueurakkanumero,
+  u.urakkanro,
   u.hanke     AS "hanke-id",
   urk.nimi    AS urakoitsija_nimi,
   urk.ytunnus AS urakoitsija_ytunnus,

@@ -5,12 +5,12 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.293"]
+                 [org.clojure/clojurescript "1.9.542"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [clojure-future-spec "1.9.0-alpha14"]
+                 [clojure-future-spec "1.9.0-alpha16-1"]
 
-                 [prismatic/schema "1.1.3"]
+                 [prismatic/schema "1.1.6"]
                  [org.clojure/core.async "0.2.395"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.239"]
@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.5"]
+                 [specql "0.6-alpha23"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -63,7 +63,7 @@
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
 
-                 [namespacefy "0.2.4"]
+                 [namespacefy "0.3"]
 
                  ;; Sähköposti lähetys
                  [com.draines/postal "2.0.2"]
@@ -76,7 +76,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.8"]
-                 [figwheel "0.5.9"]
+                 [figwheel "0.5.10"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
@@ -87,7 +87,7 @@
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.13.0"]
-                 [com.andrewmcveigh/cljs-time "0.3.14"] ;; TODO Voisi päivittää, mutta tämän uusi versio aiheuttaa vertailuongelmia(?!)
+                 [com.andrewmcveigh/cljs-time "0.5.0"]
 
                  [cljsjs/openlayers "3.15.1"]
 
@@ -125,7 +125,7 @@
                  [dk.ative/docjure "1.11.0"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [figwheel-sidecar "0.5.8"]
+                 [figwheel-sidecar "0.5.10"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
@@ -139,7 +139,8 @@
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
-                                  [org.clojure/test.check "0.9.0"]]
+                                  [org.clojure/test.check "0.9.0"]
+                                  [org.apache.pdfbox/pdfbox "2.0.5"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.1.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
@@ -158,9 +159,9 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.9"]
+            [lein-figwheel "0.5.10"]
             [codox "0.8.11"]
-            [jonase/eastwood "0.2.3"]
+            [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.6"]]

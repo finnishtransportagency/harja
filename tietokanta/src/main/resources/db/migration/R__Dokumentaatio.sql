@@ -125,3 +125,23 @@ E'Sisältää tiedon mitä indeksejä erityyppisissä urakoissa on käytössä.'
 COMMENT ON TABLE paallystysurakan_indeksi IS
 E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen polttoöljyn tai \n
  nestekaasun hintaindekseihin. Tässä taulussa on tieto, mitä sidontoja päällystysurakoissa on tehty.';
+
+-- Vesiväylät
+
+COMMENT ON TABLE vv_vayla IS
+E'Väylä on vedessä oleva reitti, jonka varressa on turvalaitteita. Väylillä on nimi, tyyppi, ja sijainti. Tyyppi voi olla kauppamerenkulku tai muu. Koska turvalaitteiden pitää aina liittyä väylään, tyyppeihin voidaan joutua lisäämään myös "Virtuaaliväylä", joka ei ole oikeasti väylä. Tällaiset turvalaitteet ovat avomerellä.';
+
+COMMENT ON TABLE vv_turvalaite IS
+E'Turvalaitteet ovat vedessä olevia poijuja, viittoja, ja muita asioita. Kaikki vesiväylien toimenpiteet liittyvät aina turvalaitteisiin. Turvalaitteissa voi olla komponentteja, kuten aurinkopaneeleita, akkuja, jne. Turvlaaitteet liittyvät aina väylään.';
+
+COMMENT ON TABLE vv_vikailmoitus IS
+E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata tietyn ajan sisällä. Vikakorjaus tulee Harjaan toimenpiteenä.';
+
+COMMENT ON TABLE reimari_toimenpide IS
+E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
+
+COMMENT ON TABLE vv_hinnoittelu IS
+E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun kautta. Jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä. Tällaisenkin toimenpiteen pitää kuitenkin kuulua hinnoitteluun, joka on hintaryhmä. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä. Esimerkiksi, voi olla hinnoittelu (joka on hintaryhmä) *Skikkebön majakan korjaus*, ja tälle hinnoittelulle on suoraan määritelty hinta "Työ 60k e". Siihen ryhmään kuuluu toimenpiteitä, ja yhdelle toimenpiteelle on määritelty lisäksi oma hinta "Komponentti 15k"';
+
+COMMENT ON TABLE vv_hinta IS
+E'Hinta liittyy aina hinnoitteluun';

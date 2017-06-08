@@ -6,21 +6,21 @@
             [clj-time.coerce :refer [from-sql-time]]
             [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.kyselyt.yhteyshenkilot :as q-yhteyshenkilot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [harja.geo :as geo]
-            [clojure.string :as str]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch upsert!]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
             [specql.op :as op]
             [harja.domain.tierekisteri :as tr]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.domain.roolit :as roolit]
             [slingshot.slingshot :refer [throw+]]))
@@ -62,7 +62,7 @@
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
                           :urakat (if urakka
-                                    [urakka]
+                                    #{(:id urakka)}
                                     kayttajan-urakat)
                           :urakattomat? (nil? urakka)
                           :luojaid (when vain-kayttajan-luomat (:id user))
@@ -107,7 +107,10 @@
                   {::t/id (:id params)}))))
 
 (defn hae-yhteyshenkilo-roolissa [rooli kayttajat]
-  (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
+  (first (filter (fn [k] (and
+                           (= rooli (:rooli k))
+                           (:ensisijainen k)))
+                 kayttajat)))
 
 (defn hae-urakan-yllapitokohdelista [db urakka-id]
   (let [yllapitokohteet (q-yllapitokohteet/hae-kaikki-urakan-yllapitokohteet db {:urakka urakka-id})]
@@ -146,7 +149,7 @@
         urakan-yllapitokohteet (hae-urakan-yllapitokohdelista db urakka-id)
         yllapitokohde (assoc yllapitokohde :geometria geometria :kohteet urakan-yllapitokohteet)]
     (if urakka-sampo-id
-      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+      (let [kayttajat (q-yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id)
             urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
             tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
             yllapitokohde (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
@@ -159,7 +162,7 @@
   (let [{:keys [urakka-sampo-id] :as urakka}
         (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})
         urakka (if urakka-sampo-id
-                 (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+                 (let [kayttajat (q-yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id)
                        urakoitsijan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "vastuuhenkilo" kayttajat)
                        tilaajan-yhteyshenkilo (hae-yhteyshenkilo-roolissa "ELY_Urakanvalvoja" kayttajat)
                        urakka (assoc urakka :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo

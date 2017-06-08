@@ -196,7 +196,7 @@
                     yhdistyksessa-onnistuneet-kohteet (filterv (comp not :virhe) yhdistetyt-kohteet)
                     _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str yhdistyksessa-onnistuneet-kohteet))
                     {:keys [yhatiedot tallentamatta-jaaneet-kohteet] :as vastaus}
-                    (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistyksessa-onnistuneet-kohteet))]
+                    (<! (tallenna-uudet-yha-kohteet harja-urakka-id yhdistetyt-kohteet))]
                 (if (k/virhe? vastaus)
                   {:status :error :viesti "Kohteiden tallentaminen epäonnistui."
                    :koodi :kohteiden-tallentaminen-epaonnistui}
@@ -246,9 +246,11 @@
      (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."]
+         "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
+         Kohteet on kuitenkin tallennettu Harjaan."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
+           ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
      (when-not (empty? epaonnistuneet-tallennukset)
        [:div
@@ -256,6 +258,7 @@
          "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
          (for [kohde epaonnistuneet-tallennukset]
+           ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
 
      [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))

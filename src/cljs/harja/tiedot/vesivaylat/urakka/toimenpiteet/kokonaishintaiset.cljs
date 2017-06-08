@@ -1,70 +1,62 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.domain.vesivaylat.vayla :as va]
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.urakka :as ur]
+            [cljs.core.async :as async :refer [<!]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.protokollat :as protokollat]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [cljs.spec.alpha :as s]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (defonce tila
-  (atom {:nakymassa? false
+  (atom {:valinnat {:urakka-id nil
+                    :sopimus-id nil
+                    :aikavali [nil nil]
+                    :vaylatyyppi :kauppamerenkulku
+                    :vayla nil
+                    :tyolaji nil
+                    :tyoluokka nil
+                    :toimenpide nil
+                    :vain-vikailmoitukset? false}
+         :nakymassa? false
+         :haku-kaynnissa? false
          :infolaatikko-nakyvissa? false
-         ;; TODO Testidataa vain
-         :toimenpiteet [{::to/id 0
-                         ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/vikakorjaus true
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 1
-                         ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Kuopio, Iisalmen väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 2
-                         ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Kopio, Iisalmen väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 3
-                         ::to/tyolaji :viitat
-                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 4
-                         ::to/tyolaji :kiinteat
-                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 5
-                         ::to/tyolaji :poijut
-                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}
-                        {::to/id 6
-                         ::to/tyolaji :poijut
-                         ::to/vayla {:nimi "Varkaus, Kuopion väylä"}
-                         ::to/tyoluokka "Asennus ja huolto"
-                         ::to/toimenpide "Huoltotyö"
-                         ::to/pvm (pvm/nyt)
-                         ::to/turvalaite {:nimi "Siitenluoto (16469)"}}]}))
+         :toimenpiteet nil}))
+
+(def valinnat
+  (reaction
+    (when (:nakymassa? @tila)
+      {:urakka-id (:id @nav/valittu-urakka)
+       :sopimus-id (first @u/valittu-sopimusnumero)
+       :aikavali @u/valittu-aikavali})))
+
+(def vaylahaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti
+                                                  :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
+            vastaus)))))
 
 (defrecord Nakymassa? [nakymassa?])
-(defrecord ValitseToimenpide [tiedot])
-(defrecord ValitseTyolaji [tiedot])
-(defrecord AsetaInfolaatikonTila [uusi-tila])
+(defrecord PaivitaValinnat [tiedot])
+(defrecord HaeToimenpiteet [valinnat])
+(defrecord ToimenpiteetHaettu [toimenpiteet])
+(defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord SiirraValitutYksikkohintaisiin [])
+
+(defn kyselyn-hakuargumentit [valinnat]
+  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event
 
@@ -72,25 +64,46 @@
   (process-event [{nakymassa? :nakymassa?} app]
     (assoc app :nakymassa? nakymassa?))
 
-  ValitseToimenpide
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (let [toimenpide-id (:id tiedot)
-          valinta (:valinta tiedot)
-          paivitetty-toimenpide (-> (to/toimenpide-idlla toimenpiteet toimenpide-id)
-                                    (assoc :valittu? valinta))]
-      (assoc app :toimenpiteet (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                     toimenpiteet))))
+  PaivitaValinnat
+  ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
+  ;; jotta näkymä pysyy synkassa valintojen kanssa
+  (process-event [{tiedot :tiedot} app]
+    (let [uudet-valinnat (merge (:valinnat app)
+                                (select-keys tiedot jaettu/valintojen-avaimet))
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
 
-  ValitseTyolaji
-  (process-event [{tiedot :tiedot} {:keys [toimenpiteet] :as app}]
-    (let [tyolaji (:tyolaji tiedot)
-          valinta (:valinta tiedot)
-          paivitetyt-toimenpiteet (mapv #(if (= (::to/tyolaji %) tyolaji)
-                                           (assoc % :valittu? valinta)
-                                           %)
-                                        toimenpiteet)]
-      (assoc app :toimenpiteet paivitetyt-toimenpiteet)))
+  SiirraValitutYksikkohintaisiin
+  (process-event [_ app]
+    (jaettu/siirra-valitut! :siirra-toimenpiteet-yksikkohintaisiin app))
 
-  AsetaInfolaatikonTila
-  (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila)))
+  HaeToimenpiteet
+  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
+  (process-event [{valinnat :valinnat} app]
+    (if-not (:haku-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
+        (try
+          (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
+            (go
+              (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
+                (if (k/virhe? vastaus)
+                  (fail! vastaus)
+                  (tulos! vastaus))))
+            (assoc app :haku-kaynnissa? true))
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  ToimenpiteetHaettu
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+               :haku-kaynnissa? false))
+
+  ToimenpiteetEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
+    (assoc app :haku-kaynnissa? false)))

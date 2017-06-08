@@ -23,7 +23,7 @@
                   "Muokkaa sopimusta"
                   "Luo uusi sopimus")
        :muokkaa! #(e! (tiedot/->SopimustaMuokattu (lomake/ilman-lomaketietoja %)))
-       :voi-muokata? #(oikeudet/hallinta-vesivaylat)
+       :voi-muokata? (oikeudet/hallinta-vesivaylat)
        :footer-fn (fn [hanke]
                     [napit/tallenna
                      "Tallenna sopimus"
