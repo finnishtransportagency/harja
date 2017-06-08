@@ -160,7 +160,7 @@
                                                          :toimenpide :autot-traktorit
                                                          :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
-             {::tot/urakka-id 666
+             {::to/urakka-id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
               ::to/vayla-id 1
@@ -180,7 +180,7 @@
                                                          :tyoluokka nil
                                                          :toimenpide nil})]
       (is (= hakuargumentit
-             {::tot/urakka-id 666
+             {::to/urakka-id 666
               ::to/sopimus-id 777
               :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
@@ -188,7 +188,7 @@
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
                                                          :sopimus-id 777})]
-      (is (= hakuargumentit {::tot/urakka-id 666
+      (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777
                              :tyyppi :kokonaishintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
@@ -196,7 +196,7 @@
 (deftest yksikkohintaisiin-siirto
   (testing "Siirron aloittaminen"
     (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
       (let [vanha-tila testitila
             uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
                           vanha-tila)]
@@ -206,7 +206,7 @@
   (let [vanha-tila testitila
         siirretyt #{1 2 3}
         toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (tiedot/->ToimenpiteetSiirretty siirretyt)
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
                       vanha-tila)
         toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
 
@@ -216,12 +216,6 @@
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hakemisen-aloitus
-  (testing "Haku ei lähde koska spec failaa"
-    (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
-
-      (is (not (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
-
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
