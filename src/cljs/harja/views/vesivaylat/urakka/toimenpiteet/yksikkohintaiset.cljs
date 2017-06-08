@@ -107,9 +107,6 @@
                  (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])
 
-(defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
-  (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
-
 (defn- hinnoittele-toimenpide [app* e! rivi]
   [:div
    (if (and (get-in app* [:hinnoittele-toimenpide ::to/id])
@@ -139,7 +136,7 @@
          [:span
           [:b "Yhteensä:"]
           [:span " "]
-          (fmt/euro-opt (laske-hinnoittelun-kokonaishinta
+          (fmt/euro-opt (h/laske-hinnoittelun-kokonaishinta
                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
         [:footer.vv-toimenpiteen-hinnoittelu-footer

@@ -34,7 +34,7 @@ CREATE TABLE vv_hinnoittelu
 (
   id         SERIAL PRIMARY KEY,
   "urakka-id" INTEGER REFERENCES urakka(id) NOT NULL,
-  nimi       VARCHAR CONSTRAINT nipulla_oltava_nimi CHECK (hintaryhma IS FALSE OR nimi IS NOT NULL),
+  nimi       VARCHAR(1024) CONSTRAINT nipulla_oltava_nimi CHECK (hintaryhma IS FALSE OR nimi IS NOT NULL),
   UNIQUE("urakka-id", nimi),
   hintaryhma BOOLEAN                          NOT NULL DEFAULT FALSE,
 
@@ -64,7 +64,7 @@ CREATE TABLE vv_hinta
 (
   id                 SERIAL PRIMARY KEY,
   "hinnoittelu-id"   INTEGER REFERENCES vv_hinnoittelu (id),
-  otsikko            VARCHAR                          NOT NULL,
+  otsikko            VARCHAR(1024)                    NOT NULL,
   maara              NUMERIC                          NOT NULL,
   yleiskustannuslisa NUMERIC                          NOT NULL DEFAULT 0,
 

@@ -1,5 +1,3 @@
--- (SELECT id FROM kayttaja WHERE kayttajanimi = 'harja' OR kayttajanimi = 'tero')
-
 CREATE OR REPLACE FUNCTION lisaa_oletushinnoittelut()
   RETURNS TRIGGER AS $$
 BEGIN

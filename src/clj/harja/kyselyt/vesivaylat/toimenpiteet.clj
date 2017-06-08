@@ -106,7 +106,7 @@
              {::vv-toimenpide/id (op/in toimenpide-idt)})))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
-  (let [;; {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
+  (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
         hintatiedot (group-by ::vv-toimenpide/id
                               (hae-hinnoittelutiedot-toimenpiteille
                                 db
