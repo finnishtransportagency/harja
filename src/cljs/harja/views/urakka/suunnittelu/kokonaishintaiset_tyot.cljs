@@ -28,11 +28,20 @@
 
 
 (defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
-  (let [tyon-kalenteri-vuosi (if-not (= :hoito urakkatyyppi)
-                               (pvm/vuosi alkupvm)
+  (let [tyon-kalenteri-vuosi (case urakkatyyppi
+
+                               :hoito
                                (if (<= 10 kk 12)
                                  (pvm/vuosi alkupvm)
-                                 (pvm/vuosi loppupvm)))
+                                 (pvm/vuosi loppupvm))
+
+                               :vesivayla-hoito
+                               (if (<= 8 kk 12)
+                                 (pvm/vuosi alkupvm)
+                                 (pvm/vuosi loppupvm))
+
+                               ;; muille tyypeille
+                               (pvm/vuosi alkupvm))
         kk-alku (pvm/luo-pvm tyon-kalenteri-vuosi (dec kk) 1)]
     (if-not (or (pvm/sama-kuukausi? alkupvm kk-alku)
                 (pvm/ennen? alkupvm kk-alku))
@@ -143,6 +152,9 @@
                           (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
                                                  hoitokauden-alku hoitokauden-loppu)
                                   tyhjat-tyot))))))
+
+(defn- nayta-kokonaishintainen-tehtavalista? [tyyppi]
+  (not (#{:tiemerkinta :vesivayla-hoito} tyyppi)))
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
@@ -290,7 +302,7 @@
                                   (assoc tama-rivi :maksupvm maksu-pvm)))}]
              @tyorivit]
 
-            (when (not= (:tyyppi @urakka) :tiemerkinta)
+            (when (nayta-kokonaishintainen-tehtavalista? (:tyyppi @urakka))
               [kokonaishintaiset-tyot-tehtavalista
                @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
                @u/valittu-toimenpideinstanssi])])
