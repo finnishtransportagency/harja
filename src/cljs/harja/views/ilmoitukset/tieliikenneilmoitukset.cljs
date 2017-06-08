@@ -9,7 +9,7 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne
+              kuittaustyypin-selite kuittaustyypin-lyhenne kuittaustyypin-otsikko
               tilan-selite] :as domain]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
@@ -38,7 +38,8 @@
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -68,21 +69,46 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
+(defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus}]
+  [:div
+   (kuittaustyypin-selite kuittaustyyppi)
+   [:br]
+   (pvm/pvm-aika kuitattu)
+   [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)
+   [:br]
+   "Kuittaa klikkaamalla."])
 
-(defn kuittauslista [{kuittaukset :kuittaukset}]
-  [:div.kuittauslista
-   (map-indexed
-     (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
-       ^{:key i}
-       [yleiset/tooltip {}
-        [:div.kuittaus {:class (name kuittaustyyppi)}
-         (kuittaustyypin-lyhenne kuittaustyyppi)]
-        [:div
-         (kuittaustyypin-selite kuittaustyyppi)
-         [:br]
-         (pvm/pvm-aika kuitattu)
-         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
-     (remove domain/valitysviesti? kuittaukset))])
+
+(defn kuittauslista [e! pikakuittaus {id :id kuittaukset :kuittaukset :as ilmoitus}]
+  (let [kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)
+        pikakuittaus? (and pikakuittaus (= id (get-in pikakuittaus [:ilmoitus :id])))]
+    [:span
+     (when pikakuittaus?
+       [kuittaukset/pikakuittaus e! pikakuittaus])
+     [:div.kuittauslista
+      (for*
+        [kuittaustyyppi domain/kuittaustyypit
+         :let [kuitattu? (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)]]
+        [yleiset/tooltip {}
+         [:div.kuittaus {:class (str (name kuittaustyyppi)
+                                     (when-not kuitattu?
+                                       " ei-kuittausta"))
+                         :on-click #(do (.stopPropagation %)
+                                        (.preventDefault %)
+                                        (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
+          [:span
+           (str (kuittaustyypin-lyhenne kuittaustyyppi) " ")
+           (if kuitattu?
+             (ikonit/livicon-check)
+             (ikonit/livicon-minus))]]
+         (if kuitattu?
+           [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
+           [:div
+            (kuittaustyypin-selite kuittaustyyppi)
+            [:br]
+            "Ei tehty."
+            [:br]
+            "Kuittaa klikkaamalla"])])]]))
 
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
@@ -174,7 +200,9 @@
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
-                            #(e! (v/->ValitseKuitattavaIlmoitus %)))]
+                            #(e! (v/->ValitseKuitattavaIlmoitus %)))
+        pikakuittaus-ilmoitus-id (when pikakuittaus
+                                   (get-in pikakuittaus [:ilmoitus :id]))]
     [:span.ilmoitukset
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -204,7 +232,9 @@
                              #(e! (v/->ValitseIlmoitus %))))
         :piilota-toiminnot true
         :max-rivimaara 500
-        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
+        :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
+                         "ilmoitusrivi-fade")}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "
@@ -221,13 +251,10 @@
                                                     (not kirjoitusoikeus?))
                                       :checked (valitut-ilmoitukset rivi)}]]))
            :leveys 1})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-        {:otsikko "Id" :nimi :ilmoitusid :leveys 3}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
-        {:otsikko "Otsikko" :nimi :otsikko :leveys 7
-         :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
-        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7
+        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
          :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
         {:otsikko "Ilmoitettu" :nimi :ilmoitettu
          :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
@@ -245,10 +272,10 @@
          :leveys 6}
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
-         :komponentti kuittauslista
-         :leveys 6}
+         :komponentti (partial kuittauslista e! pikakuittaus)
+         :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
                 (assoc % :lihavoi true)
                 %)

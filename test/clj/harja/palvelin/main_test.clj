@@ -53,7 +53,9 @@
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
     :vv-vaylat
-    :reimari})
+    :vv-hinnoittelut
+    :reimari
+    :vkm})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
@@ -62,3 +64,6 @@
       (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!")))
     (doseq [k komponentit]
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
+
+(deftest restart-toimii
+  (is (= :ok (sut/dev-restart))))

@@ -126,7 +126,11 @@
                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
                                                  urakka-id
                                                  kayttaja))
-                  urakka urakoitsija urakkatyyppi hallintayksikko
+                  urakka urakoitsija
+                  (if (= :kaikki urakkatyyppi)
+                    nil
+                    urakkatyyppi)
+                  hallintayksikko
                   (first aikavali) (second aikavali))
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))

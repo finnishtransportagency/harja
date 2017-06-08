@@ -338,11 +338,12 @@
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))
         hae #(kutsu-palvelua (:http-palvelin jarjestelma)
-                             :siirry-kokonaishintainen-toteuma
+                             :siirry-toteuma
                              %
                              toteuma-id)
         ok-tulos {:alkanut #inst "2008-09-08T21:10:00.000000000-00:00"
                   :urakka-id 2
+                  :tyyppi "kokonaishintainen"
                   :hallintayksikko-id 12
                   :aikavali {:alku #inst "2007-09-30T21:00:00.000-00:00"
                              :loppu #inst "2008-09-29T21:00:00.000-00:00"}
@@ -353,10 +354,10 @@
     (is (some? toteuma-id))
 
     ;; Tilaajan käyttäjä voi hakea siirtymätiedot
-    (is (= ok-tulos (hae +kayttaja-jvh+)))
+    (tarkista-map-arvot ok-tulos (hae +kayttaja-jvh+))
 
     ;; Eri urakoitsijalla palautuu tyhjät tiedot
     (is (= ei-ok-tulos (hae +kayttaja-yit_uuvh+)))
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
-    (is (= ok-tulos (hae +kayttaja-ulle+)))))
+    (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))

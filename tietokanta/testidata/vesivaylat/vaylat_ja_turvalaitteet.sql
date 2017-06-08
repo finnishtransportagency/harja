@@ -8,6 +8,11 @@ INSERT INTO vv_vayla
 VALUES
   ('Akonniemen väylät', 2, 'kauppamerenkulku'::vv_vaylatyyppi);
 
+INSERT INTO vv_vayla
+(nimi, "vatu-id", tyyppi)
+VALUES
+  ('Muu väylä', 3, 'muu'::vv_vaylatyyppi);
+
 INSERT INTO vv_turvalaite
 (nimi, tunniste, tyyppi, vayla)
     VALUES
