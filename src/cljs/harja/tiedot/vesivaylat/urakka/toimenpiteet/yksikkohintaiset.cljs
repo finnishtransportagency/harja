@@ -260,7 +260,7 @@
                        ::hinta/maara (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat))
                        ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
                                                           (hinta/hinta-otsikolla otsikko hinnat)))})]
-      ;; TODO Testi puuttuu
+      ;; TODO Testi vanhentui, pitäisi päivittää
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
