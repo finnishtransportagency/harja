@@ -53,6 +53,7 @@
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
     :vv-vaylat
+    :vv-hinnoittelut
     :reimari
     :vkm})
 
@@ -63,3 +64,6 @@
       (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!")))
     (doseq [k komponentit]
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
+
+(deftest restart-toimii
+  (is (= :ok (sut/dev-restart))))
