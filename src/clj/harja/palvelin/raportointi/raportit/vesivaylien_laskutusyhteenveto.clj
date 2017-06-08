@@ -19,7 +19,7 @@
    {:leveys 1 :otsikko "Maksuerät"}
    {:leveys 1 :otsikko "Tunnus"}
    {:leveys 1 :otsikko "Tilaus\u00ADvaltuus [t €]" :fmt :raha}
-   {:leveys 1 :otsikko "Suunni\u00ADtellut [t €] HOX PITÄISIKÖ OLLA KPL?" :fmt :raha}
+   {:leveys 1 :otsikko "Suunni\u00ADtellut [t €]" :fmt :raha}
    {:leveys 1 :otsikko "Toteutunut [t €]" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä (S+T) [t €]" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä [€]" :fmt :raha}
