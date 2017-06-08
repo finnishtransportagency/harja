@@ -1,10 +1,11 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])
-            [harja.domain.tierekisteri :as tr]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]))
+    #?@(:clj [
+            [clj-time.core :as t]])
+    #?@(:cljs [[harja.loki :refer [log]]
+               [cljs-time.core :as t]])
+            [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
                                  :lisatty "Lisätty"
