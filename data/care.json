@@ -1,4 +1,10 @@
 [
+        {
+    "date": "2017-06-08",
+    "title": "Uudistuksia Ilmoitusten käsittelyyn HARJA:ssa",
+    "short": "Olemme tehneet uudistuksia ilmoitusten käsittelyyn HARJA:ssa. ",
+    "body": "<p>Pikakuittausmahdollisuus Ilmoituslistassa: Ilmoituksia voi nyt kuitata pikakuittaustoiminnolla suoraan ilmoitusten listauksesta viemällä hiiren ”Kuittaukset” sarakkeessa olevien värillisten laatikoiden päälle ja klikkaamalla haluamansa laatikon auki.</p> <p>Kaikki –valinta Urakkatyyppivalikossa: Käsitellessään Ilmoituksia Hallintoyksikkötasolla tai koko valtakunnan tasolla, voi käyttäjä valita Urakkatyyppivalikosta näkymän oikeasta yläkulmasta Urakkatyypiksi ”Kaikki”.</p>"  
+  },
       {
     "date": "2017-06-07",
     "title": "HARJAan kirjautumisen käyttökatko tiistaina 13.6.2017 klo 19:30 – 20:30",
