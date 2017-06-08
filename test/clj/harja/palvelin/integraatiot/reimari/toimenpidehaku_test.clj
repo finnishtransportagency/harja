@@ -1,12 +1,12 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku-test
-  (:require [harja.palvelin.integraatiot.reimari.toimenpidehaku :as sut]
+  (:require [harja.palvelin.integraatiot.reimari.toimenpidehaku :as tohaku]
             [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
             [com.stuartsierra.component :as component]
             [harja.testi :as ht]
             [clojure.test :as t]))
 
 (def jarjestelma-fixture
-  (ht/laajenna-integraatiojarjestelmafixturea
+  (ht/laajenna-integraatiojarjestelmafixture
    "yit"
    :reimari (component/using
            (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil)
@@ -16,18 +16,17 @@
 
 (t/deftest kasittele-vastaus-kantatallennus
   (ht/tarkista-map-arvot
-   (first (sut/kasittele-vastaus (:db ht/jarjestelma)  (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml") ))
-   {:harja.domain.vesivaylat.toimenpide/suoritettu
-    #inst "2017-04-24T09:42:04.123-00:00",
+   (first (tohaku/kasittele-vastaus (:db ht/jarjestelma)  (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml") ))
+   {:harja.domain.vesivaylat.toimenpide/urakka-id (ht/hae-helsingin-vesivaylaurakan-id)
+    :harja.domain.vesivaylat.toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
     :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
     :harja.domain.vesivaylat.toimenpide/reimari-tila "1022541202",
     :harja.domain.vesivaylat.toimenpide/lisatyo? false,
     :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi "1022542001"
     :harja.domain.vesivaylat.toimenpide/reimari-vayla
-
     {:harja.domain.vesivaylat.vayla/r-nro "12345",
      :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
-    :harja.domain.vesivaylat.toimenpide/id 7,
+    :harja.domain.vesivaylat.toimenpide/id 8,
     :harja.domain.vesivaylat.toimenpide/reimari-luotu
     #inst "2017-04-24T13:00:00.123-00:00",
     :harja.domain.vesivaylat.toimenpide/lisatieto
@@ -58,4 +57,4 @@
     {:harja.domain.vesivaylat.turvalaite/r-nro "904",
      :harja.domain.vesivaylat.turvalaite/r-nimi
      "Glosholmsklacken pohjoinen",
-     :harja.domain.vesivaylat.turvalaite/r-ryhma 514}}))
+     :harja.domain.vesivaylat.turvalaite/r-ryhma 514}})))

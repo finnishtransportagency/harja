@@ -34,7 +34,9 @@
         tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app
-        {:jaottelu [{:otsikko "Kokonaishintaiset toimenpiteet" :jaottelu-fn identity}]}]])))
+        {:otsikko "Kokonaishintaiset toimenpiteet"
+         :paneelin-checkbox-sijainti "94.3%"
+         :vaylan-checkbox-sijainti "94.3%"}]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

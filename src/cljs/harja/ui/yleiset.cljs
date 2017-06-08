@@ -325,8 +325,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   :jata-kaventamatta            Setti otsikoita, joita ei kavenneta, vaikka 'kavenna?' olisi true
   :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
   :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
-  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi"
-  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla
+  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
+  :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)"
+  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
            tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta]} & otsikot-ja-arvot]
   (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
         otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
@@ -341,9 +342,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
                                      {:style {:display "auto"}})]
              ^{:key (str i otsikko)}
-             [:div.tietorivi (when (and kavenna?
-                                        (not (jata-kaventamatta otsikko)))
-                               {:style {:margin-bottom "0.5em"}})
+             [:div.tietorivi (merge
+                               (when-not piirra-viivat?
+                                 {:class "tietorivi-ilman-alaviivaa"})
+                               (when (and kavenna?
+                                         (not (jata-kaventamatta otsikko)))
+                                {:style {:margin-bottom "0.5em"}}))
               [:span.tietokentta (merge attrs rivin-attribuutit) otsikko]
               [:span.tietoarvo arvo]
               (when (tyhja-rivi-otsikon-jalkeen otsikko)

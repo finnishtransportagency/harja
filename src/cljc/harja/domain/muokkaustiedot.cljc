@@ -18,7 +18,13 @@
   poistaja-sarake
   {"poistaja" ::poistaja-id})
 
-
+(def muokkauskentat
+  #{::muokattu
+    ::muokkaaja-id
+    ::luotu
+    ::luoja-id
+    ::poistettu?
+    ::poistaja-id})
 
 (defn lisaa-muokkaustiedot [x id-kentta user]
   (if-not (id/id-olemassa? (get x id-kentta))

@@ -92,21 +92,17 @@
         [yleiset/tooltip {}
          [:div.kuittaus {:class (str (name kuittaustyyppi)
                                      (when-not kuitattu?
-                                       " ei-kuittausta"))
+                                       "-ei-kuittausta"))
                          :on-click #(do (.stopPropagation %)
                                         (.preventDefault %)
                                         (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
-          [:span
-           (str (kuittaustyypin-lyhenne kuittaustyyppi) " ")
-           (if kuitattu?
-             (ikonit/livicon-check)
-             (ikonit/livicon-minus))]]
+          [:span (kuittaustyypin-lyhenne kuittaustyyppi)]]
          (if kuitattu?
            [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
            [:div
             (kuittaustyypin-selite kuittaustyyppi)
             [:br]
-            "Ei tehty."
+            "Ei tehty"
             [:br]
             "Kuittaa klikkaamalla"])])]]))
 

@@ -487,7 +487,7 @@
                                          :luokka (str (if (even? (+ i 1))
                                                         "parillinen "
                                                         "pariton ")
-                                                      (when (or rivi-klikattu rivin-infolaatikko)
+                                                      (when (or rivi-klikattu mahdollista-rivin-valinta?)
                                                         "klikattava ")
                                                       (when (:korosta rivi) "korostettu-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
@@ -548,10 +548,10 @@
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
-  :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun riviä klikataan.
+  :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun rivi on valittuna.
                                         Funktiota kutsutaan rivin tiedoilla.
+                                        HUOM! Vaatii toimiakseen: mahdollista-rivin-valinta? true
   :mahdollista-rivin-valinta?           jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
-                                        Jos :rivin-infolaatikko optio on annettu, tämä optio on aina true
   :salli-valiotsikoiden-piilotus?       Jos true, väliotsikoiden sisällön voi piilottaa klikkaamalla riviä
   :valiotsikoiden-alkutila              Jos väliotsikot on sallittu piilottaa, tämä määrittää, mitkä otsikot ovat
                                         oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
@@ -599,7 +599,6 @@
         tallennus-kaynnissa (atom false)
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
-        mahdollista-rivin-valinta? (if rivin-infolaatikko true mahdollista-rivin-valinta?)
         rivien-maara (atom (count tiedot))
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
@@ -864,11 +863,12 @@
        (fn []
          (nollaa-muokkaustiedot!))}
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
-                    piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko
+                    piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts}
             skeema alkup-tiedot]
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+              mahdollista-rivin-valinta? (or mahdollista-rivin-valinta? false)
               muuta-gridia-muokataan? (and
                                         (>= (count @muokkauksessa-olevat-gridit) 1)
                                         (not (@muokkauksessa-olevat-gridit komponentti-id)))
