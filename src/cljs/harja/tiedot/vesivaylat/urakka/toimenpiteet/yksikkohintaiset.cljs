@@ -54,8 +54,7 @@
          :hintaryhmien-liittaminen-kaynnissa? false
          :hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide {::to/id nil
-                                  ::h/hintaelementit
-                                  alustava-hinnoittelu}}))
+                                  ::h/hintaelementit nil}}))
 
 (def valinnat
   (reaction
@@ -260,9 +259,22 @@
 
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
-    (assoc app :hinnoittele-toimenpide
-               {::to/id toimenpide-id
-                ::h/hintaelementit alustava-hinnoittelu}))
+    (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
+          toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
+          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
+          luo-hinta (fn [otsikko hinnat]
+                      {::hinta/otsikko otsikko
+                       ::hinta/maara (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat))
+                       ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
+                                                          (hinta/hinta-otsikolla otsikko hinnat)))})]
+      (assoc app :hinnoittele-toimenpide
+                 {::to/id toimenpide-id
+                  ::h/hintaelementit
+                  [(luo-hinta "Työ" hinnat)
+                   (luo-hinta "Komponentit" hinnat)
+                   (luo-hinta "Yleiset materiaalit" hinnat)
+                   (luo-hinta "Matkat" hinnat)
+                   (luo-hinta "Muut kulut" hinnat)]})))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
@@ -286,13 +298,13 @@
             parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
                         ::h/hintaelementit (mapv
-                                              (fn [hinnoittelu]
-                                                (assoc hinnoittelu
-                                                  ::hinta/yleiskustannuslisa
-                                                  (if (::hinta/yleiskustannuslisa hinnoittelu)
-                                                    yleiskustannuslisa
-                                                    0)))
-                                              (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
+                                             (fn [hinnoittelu]
+                                               (assoc hinnoittelu
+                                                 ::hinta/yleiskustannuslisa
+                                                 (if (::hinta/yleiskustannuslisa hinnoittelu)
+                                                   yleiskustannuslisa
+                                                   0)))
+                                             (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
         (try
           (go
             (let [vastaus (<! (k/post! :tallenna-toimenpiteelle-hinta parametrit))]
@@ -321,5 +333,5 @@
   (process-event [_ app]
     (assoc app :hinnoittele-toimenpide
                {::to/id nil
-                ::h/hintaelementit alustava-hinnoittelu})))
+                ::h/hintaelementit nil})))
 
