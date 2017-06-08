@@ -300,6 +300,10 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-reimari-toimenpide-ilman-hinnoittelua []
+  (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                   WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
@@ -353,6 +357,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Vantaan alueurakka 2009-2019'"))))
+
+(defn hae-reimari-toimenpide-poiujen-korjaus []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
