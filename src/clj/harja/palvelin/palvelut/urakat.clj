@@ -399,7 +399,6 @@
                       :laheta-urakka-sahkeeseen
                       (fn [user urakka-id]
                         (laheta-urakka-sahkeeseen sahke user urakka-id)))
-
     this)
 
   (stop [{http :http-palvelin :as this}]

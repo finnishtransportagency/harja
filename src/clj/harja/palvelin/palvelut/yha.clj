@@ -17,7 +17,7 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [clojure.string :as str]
             [harja.domain.tierekisteri :as tr-domain]))
 

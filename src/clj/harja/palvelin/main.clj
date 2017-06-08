@@ -24,6 +24,8 @@
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
+    [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+    [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -75,13 +77,13 @@
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
-    
+
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
 
 
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
-    [harja.palvelin.palvelut.tierek-haku :as tierek-haku]
+    [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
 
     ;; Harja API
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
@@ -317,7 +319,7 @@
                   [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (yllapitokohteet/->Yllapitokohteet)
-                         [:http-palvelin :db :fim :sonja-sahkoposti])
+                         [:http-palvelin :db :fim :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])
@@ -386,7 +388,7 @@
              [:http-palvelin :db :yha-integraatio])
 
       :tr-haku (component/using
-                 (tierek-haku/->TierekisteriHaku)
+                 (tierekisteri-haku/->TierekisteriHaku)
                  [:http-palvelin :db])
 
       :geometriapaivitykset (component/using
@@ -446,6 +448,16 @@
                  (sahke/->Sahke lahetysjono uudelleenlahetysaika))
                [:db :integraatioloki :sonja])
 
+      :reimari (component/using
+              (let [{:keys [url kayttajatunnus salasana paivittainen-toimenpidehaku]} (:reimari asetukset)]
+                (reimari/->Reimari url kayttajatunnus salasana paivittainen-toimenpidehaku))
+              [:db :integraatioloki])
+
+      :vkm (component/using
+             (let [{url :url} (:vkm asetukset)]
+               (vkm/->VKM url))
+             [:db :integraatioloki])
+
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db])
@@ -502,7 +514,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti :vkm])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])
