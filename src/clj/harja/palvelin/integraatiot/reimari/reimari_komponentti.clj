@@ -18,21 +18,25 @@
 (defprotocol HaeTurvalaiteKomponentit
   (hae-turvalaitekomponentit [this]))
 
-(defrecord Reimari [pohja-url kayttajatunnus salasana paivittainen-tphakuaika]
+(defrecord Reimari [pohja-url kayttajatunnus salasana paivittainen-tphakuaika paivittainen-kthakuaika paivittainen-tlkhakuaika]
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
-    (if paivittainen-tphakuaika
-      (assoc this
-             :ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
-                                   paivittainen-tphakuaika
-                                   (fn [& args] (hae-toimenpiteet this))))
-      ;; else
-      this))
+    (assoc this
+           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
+                                    paivittainen-tphakuaika
+                                    (fn [& args] (hae-toimenpiteet this)))
+           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
+                                    paivittainen-kthakuaika
+                                    (fn [& args] (hae-komponenttityypit this)))
+           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
+                                     paivittainen-tlkhakuaika
+                                     (fn [& args] (hae-turvalaitekomponentit this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
-    (when paivittainen-tphakuaika
-      (apply (:ajastus-peruutus-fn this) []))
+    (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn]]
+      (when-let [peru-fn (get this k)]
+        (peru-fn)))
     this)
 
   HaeToimenpiteet
