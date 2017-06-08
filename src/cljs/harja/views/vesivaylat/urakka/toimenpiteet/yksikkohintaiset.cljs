@@ -27,7 +27,7 @@
   [yleiset/livi-pudotusvalikko
    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
-    :class "livi-alasveto-250 livi-alasveto-inline-block"
+    :class "livi-alasveto-250 inline-block"
     :valinta valittu-hintaryhma
     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
    hintaryhmat])
