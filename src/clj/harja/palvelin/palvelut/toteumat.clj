@@ -656,7 +656,8 @@
                                        toiminto
                                        alkupvm
                                        loppupvm
-                                       kuntoluokitus] :as toteuma}]
+                                       kuntoluokitus
+                                       liiteet] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
   (let [varustetoteuma-id
@@ -712,10 +713,15 @@
                                 :tr_loppuetaisyys (:loppuetaisyys tierekisteriosoite)
                                 :tr_puoli puoli
                                 :tr_ajorata ajorata
-                                :sijainti sijainti}]
-            (if id
-              (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
-              (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))))]
+                                :sijainti sijainti}
+                id (if id
+                     (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
+                     (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
+            (when liitteet
+              (doseq [liite liiteet]
+                (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id liite))))
+            id))]
+
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
 
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))

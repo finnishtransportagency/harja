@@ -991,3 +991,6 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE
         OR u.urakoitsija = :urakoitsija-id)
+
+-- name: tallenna-liite-toteumalle<!
+INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
