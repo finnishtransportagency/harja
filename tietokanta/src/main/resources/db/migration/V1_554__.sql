@@ -83,7 +83,7 @@ BEGIN
   SELECT id FROM urakka WHERE tyyppi = 'vesivayla-hoito'
   LOOP
     INSERT INTO vv_hinnoittelu ("urakka-id",nimi, hintaryhma, luoja) VALUES
-      (u, 'Muutos- ja lisätyöt', TRUE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'harja' OR kayttajanimi = 'tero')),
-      (u, 'Erikseen tilatut työt', TRUE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'harja' OR kayttajanimi = 'tero'));
+      (u, 'Muutos- ja lisätyöt', TRUE, (SELECT luoja FROM urakka WHERE id = u)),
+      (u, 'Erikseen tilatut työt', TRUE, (SELECT luoja FROM urakka WHERE id = u));
   END LOOP;
 END$$;
