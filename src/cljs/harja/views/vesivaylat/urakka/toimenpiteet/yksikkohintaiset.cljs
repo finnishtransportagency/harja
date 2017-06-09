@@ -87,10 +87,7 @@
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (->> (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                   (filter #(= (::hinta/otsikko %) otsikko))
-                   (first)
-                   (::hinta/maara))
+      (r/wrap (tiedot/hinnan-maara app* otsikko)
               (fn [uusi]
                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                            ::hinta/maara uusi}))))]
@@ -99,10 +96,7 @@
    [:td
     (when (= otsikko "Yleiset materiaalit")
       [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (->> (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                    (filter #(= (::hinta/otsikko %) otsikko))
-                    (first)
-                    (::hinta/yleiskustannuslisa))
+       (r/wrap (tiedot/hinnan-yleiskustannuslisa app* otsikko)
                (fn [uusi]
                  (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])

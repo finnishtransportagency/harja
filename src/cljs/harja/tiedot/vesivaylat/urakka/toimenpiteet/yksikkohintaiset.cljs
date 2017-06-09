@@ -63,6 +63,18 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
+(defn- hinnan-ominaisuus [app otsikko ominaisuus]
+  (->> (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
+       (filter #(= (::hinta/otsikko %) otsikko))
+       (first)
+       ominaisuus))
+
+(defn hinnan-maara [app otsikko]
+  (hinnan-ominaisuus app otsikko ::hinta/maara))
+
+(defn hinnan-yleiskustannuslisa [app otsikko]
+  (hinnan-ominaisuus app otsikko ::hinta/yleiskustannuslisa))
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
