@@ -328,17 +328,9 @@
   ToimenpiteenHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    (let [uudet-hinnat (::h/hinnat vastaus)
-          paivitettava-toimenpide (to/toimenpide-idlla (:toimenpiteet app)
+    (let [paivitettava-toimenpide (to/toimenpide-idlla (:toimenpiteet app)
                                                        (get-in app [:hinnoittele-toimenpide ::to/id]))
-          paivitetty-toimenpide (assoc paivitettava-toimenpide
-                                  ::h/hinta-elementit
-                                  (mapv
-                                    #(select-keys % [::hinta/id
-                                                     ::hinta/yleiskustannuslisa
-                                                     ::hinta/otsikko
-                                                     ::hinta/maara])
-                                    uudet-hinnat))
+          paivitetty-toimenpide (assoc paivitettava-toimenpide ::to/oma-hinnoittelu vastaus)
           paivitetyt-toimenpiteet (mapv
                                     (fn [toimenpide]
                                       (if (= (::to/id toimenpide) (::to/id paivitettava-toimenpide))
