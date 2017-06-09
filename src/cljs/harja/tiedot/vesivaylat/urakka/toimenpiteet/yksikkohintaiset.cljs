@@ -88,12 +88,11 @@
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
 
-(defn alusta-toimenpiteen-hinnoittelu [app]
-  (assoc app
-    :hinnoittelun-tallennus-kaynnissa? false
-    :hinnoittele-toimenpide
-    {::to/id nil
-     ::h/hintaelementit nil}))
+(def alustettu-toimenpiteen-hinnoittelu
+  {:hinnoittelun-tallennus-kaynnissa? false
+   :hinnoittele-toimenpide
+   {::to/id nil
+    ::h/hintaelementit nil}})
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -338,9 +337,8 @@
                                         toimenpide))
                                     (:toimenpiteet app))]
       ;; TODO Tee testi tälle
-      ;; TODO Ilmeisesti ei tallennu toimenpiteeseen uudet tiedot oikein? Näkyy vanha kun avaa leijukkeen?
       (merge (assoc app :toimenpiteet paivitetyt-toimenpiteet)
-             (alusta-toimenpiteen-hinnoittelu app))))
+             alustettu-toimenpiteen-hinnoittelu)))
 
   ToimenpiteenHinnoitteluEiTallennettu
   (process-event [_ app]
@@ -349,4 +347,4 @@
 
   PeruToimenpiteenHinnoittelu
   (process-event [_ app]
-    (alusta-toimenpiteen-hinnoittelu app)))
+    (merge app alustettu-toimenpiteen-hinnoittelu)))
