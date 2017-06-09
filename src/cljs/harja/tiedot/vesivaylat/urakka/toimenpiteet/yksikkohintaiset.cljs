@@ -193,19 +193,20 @@
   HaeHintaryhmat
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
-            fail! (tuck/send-async! ->HintaryhmatEiHaettu)
-            parametrit {::urakka/id (get-in app [:valinnat :urakka-id])}]
-        (try
-          (go
-            (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
-              (if (k/virhe? vastaus)
-                (fail! vastaus)
-                (tulos! vastaus))))
-          (assoc app :hintaryhmien-haku-kaynnissa? true)
-          (catch :default e
-            (fail! nil)
-            (throw e))))
+      (when-let [urakka-id (get-in app [:valinnat :urakka-id])]
+        (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
+             fail! (tuck/send-async! ->HintaryhmatEiHaettu)
+             parametrit {::urakka/id urakka-id}]
+         (try
+           (go
+             (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
+               (if (k/virhe? vastaus)
+                 (fail! vastaus)
+                 (tulos! vastaus))))
+           (assoc app :hintaryhmien-haku-kaynnissa? true)
+           (catch :default e
+             (fail! nil)
+             (throw e)))))
 
       app))
 

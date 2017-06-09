@@ -156,10 +156,10 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeHintaryhmat))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
                                                           :sopimus-id (first (:sopimus valinnat))
-                                                          :aikavali (:aikavali valinnat)})))
+                                                          :aikavali (:aikavali valinnat)}))
+                           (e! (tiedot/->HaeHintaryhmat)))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! {:keys [toimenpiteet] :as app}]
       (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
