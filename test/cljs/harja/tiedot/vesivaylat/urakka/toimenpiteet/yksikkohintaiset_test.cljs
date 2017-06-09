@@ -62,7 +62,7 @@
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
                                                                    ::hinta/maara 4
-                                                                   ::hinta/yleiskustannuslisa 0}]}
+                                                                   ::hinta/yleiskustannuslisa 12}]}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -307,7 +307,7 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa false}]})))))
+                ::hinta/yleiskustannuslisa true}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
@@ -338,9 +338,9 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa false}]}))))
+                ::hinta/yleiskustannuslisa true}]}))))
 
-  (testing "Hinnoittele kentän rahamäärä"
+  (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
                          (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
@@ -368,7 +368,7 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa false}]}))))
+                ::hinta/yleiskustannuslisa true}]}))))
 
   (testing "Peru hinnoittelu"
     (let [vanha-tila testitila

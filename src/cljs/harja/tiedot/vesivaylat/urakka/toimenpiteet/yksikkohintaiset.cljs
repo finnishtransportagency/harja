@@ -265,9 +265,7 @@
                       {::hinta/id (::hinta/id olemassa-oleva-hinta)
                        ::hinta/otsikko otsikko
                        ::hinta/maara (or (::hinta/maara olemassa-oleva-hinta) 0)
-                       ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa olemassa-oleva-hinta)]
-                                                    (pos? yleiskustannuslisa)
-                                                    false)})]
+                       ::hinta/yleiskustannuslisa (boolean (::hinta/yleiskustannuslisa olemassa-oleva-hinta))})]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
