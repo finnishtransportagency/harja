@@ -22,14 +22,14 @@
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
+            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva-tiedot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -104,6 +104,11 @@
                                :sillat (kartan-asioiden-z-indeksit :sillat)
                                oletus-zindex))))))
 
+(def urakkarajan-selite
+  {:teksti "Urakkaraja",
+   :vari ["rgb(0, 0, 0)" "rgb(255, 255, 255)" "rgb(255, 255, 255)"]})
+
+
 (defn- urakat-ja-organisaatiot-kartalla*
   [hals v-hal v-ur sivu valilehti urakat-kartalla]
   (cond
@@ -149,15 +154,22 @@
 
 (def urakat-ja-organisaatiot-kartalla
   (reaction
-   (into []
-         (keep organisaation-geometria)
-         (urakat-ja-organisaatiot-kartalla*
-           @hal/hallintayksikot
-           @nav/valittu-hallintayksikko
-           @nav/valittu-urakka
-           @nav/valittu-sivu
-           (nav/valittu-valilehti @nav/valittu-sivu)
-           @nav/urakat-kartalla))))
+    (with-meta
+      (into []
+           (keep organisaation-geometria)
+           (urakat-ja-organisaatiot-kartalla*
+             @hal/hallintayksikot
+             @nav/valittu-hallintayksikko
+             @nav/valittu-urakka
+             @nav/valittu-sivu
+             (nav/valittu-valilehti @nav/valittu-sivu)
+             @nav/urakat-kartalla))
+      {:selitteet
+       (if (and
+             (= :tilannekuva @nav/valittu-sivu)
+             (tilannekuva-tiedot/alueita-valittu? @tilannekuva-tiedot/suodattimet))
+         #{urakkarajan-selite}
+         #{})})))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
