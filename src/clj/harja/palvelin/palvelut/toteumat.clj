@@ -720,7 +720,6 @@
                 id (if id
                      (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
                      (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
-            (println "--->>>> uusi-liite" uusi-liite)
             (when uusi-liite
               (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id uusi-liite)))
             id))]
