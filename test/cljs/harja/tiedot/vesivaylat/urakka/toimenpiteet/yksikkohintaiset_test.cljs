@@ -46,23 +46,23 @@
                                 ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 0
                                                                    ::hinta/otsikko "Työ"
                                                                    ::hinta/maara 0
-                                                                   ::hinta/yleiskustannuslisa false}
+                                                                   ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 1
                                                                    ::hinta/otsikko "Komponentit"
                                                                    ::hinta/maara 1
-                                                                   ::hinta/yleiskustannuslisa false}
+                                                                   ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 2
                                                                    ::hinta/otsikko "Yleiset materiaalit"
                                                                    ::hinta/maara 2
-                                                                   ::hinta/yleiskustannuslisa false}
+                                                                   ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 3
                                                                    ::hinta/otsikko "Matkat"
                                                                    ::hinta/maara 3
-                                                                   ::hinta/yleiskustannuslisa false}
+                                                                   ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
                                                                    ::hinta/maara 4
-                                                                   ::hinta/yleiskustannuslisa false}]}
+                                                                   ::hinta/yleiskustannuslisa 0}]}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
