@@ -34,7 +34,7 @@
                       })
 
 (defn kasittele-vastaus [db urakka-id vastaus-xml]
-  (log/debug "kasittele-vastaus" vastaus-xml)
+  ;; (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
