@@ -109,8 +109,8 @@
 
 (defn- hinnoittele-nappiteksti [toimenpide]
   (if (::to/oma-hinnoittelu toimenpide)
-    (str "Muuta hintaa (" (fmt/euro-opt (hinta/kokonaishinta
-                                          (get-in toimenpide [::to/oma-hinnoittelu ::h/hinnat])))
+    (str "Muokkaa hintaa (" (fmt/euro-opt (hinta/kokonaishinta
+                                            (get-in toimenpide [::to/oma-hinnoittelu ::h/hinnat])))
          ")")
     "Hinnoittele"))
 
