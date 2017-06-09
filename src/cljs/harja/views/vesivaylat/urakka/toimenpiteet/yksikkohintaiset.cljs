@@ -81,7 +81,7 @@
 ;;;;;;;;;;;;
 ;; Hinnan antamisen leijuke
 
-(defn- kenttarivi [app* e! otsikko]
+(defn- kenttarivi [e! app* otsikko]
   [:tr
    [:td [:b otsikko]]
    [:td
@@ -107,7 +107,7 @@
                  (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])
 
-(defn- hinnoittele-toimenpide [app* e! rivi]
+(defn- hinnoittele-toimenpide [e! app* rivi]
   [:div
    (if (and (get-in app* [:hinnoittele-toimenpide ::to/id])
             (= (get-in app* [:hinnoittele-toimenpide ::to/id])
@@ -126,11 +126,11 @@
            [:th {:style {:width "35%"}} "Hinta"]
            [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
          [:tbody
-          (kenttarivi app* e! "Työ")
-          (kenttarivi app* e! "Komponentit")
-          (kenttarivi app* e! "Yleiset materiaalit")
-          (kenttarivi app* e! "Matkat")
-          (kenttarivi app* e! "Muut kulut")]]
+          (kenttarivi e! app* "Työ")
+          (kenttarivi e! app* "Komponentit")
+          (kenttarivi e! app* "Yleiset materiaalit")
+          (kenttarivi e! app* "Matkat")
+          (kenttarivi e! app* "Muut kulut")]]
 
         [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
          [:span
@@ -177,7 +177,7 @@
             app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
-                                              [hinnoittele-toimenpide app* e! rivi])}]
+                                              [hinnoittele-toimenpide e! app* rivi])}]
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
              :paneelin-checkbox-sijainti "95.2%"
