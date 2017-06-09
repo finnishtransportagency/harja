@@ -89,9 +89,11 @@
 (defrecord PeruToimenpiteenHinnoittelu [])
 
 (defn alusta-toimenpiteen-hinnoittelu [app]
-  (assoc app :hinnoittele-toimenpide
-             {::to/id nil
-              ::h/hintaelementit nil}))
+  (assoc app
+    :hinnoittelun-tallennus-kaynnissa? false
+    :hinnoittele-toimenpide
+    {::to/id nil
+     ::h/hintaelementit nil}))
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -345,8 +347,7 @@
                                     (:toimenpiteet app))]
       ;; TODO Tee testi tälle
       ;; TODO Ilmeisesti ei tallennu toimenpiteeseen uudet tiedot oikein? Näkyy vanha kun avaa leijukkeen?
-      (merge (assoc app :hinnoittelun-tallennus-kaynnissa? false
-                        :toimenpiteet paivitetyt-toimenpiteet)
+      (merge (assoc app :toimenpiteet paivitetyt-toimenpiteet)
              (alusta-toimenpiteen-hinnoittelu app))))
 
   ToimenpiteenHinnoitteluEiTallennettu
