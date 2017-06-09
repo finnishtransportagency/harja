@@ -366,11 +366,28 @@ reimari-tilat
 (defn- uusin-toimenpide [toimenpiteet]
   (first (sort-by ::pvm pvm/jalkeen? toimenpiteet)))
 
+(defn hintaryhman-otsikko [hintaryhma toimenpiteet]
+  ;; Toimenpiteistä päivämäärää tms tähän mukaan?
+  (::h/nimi hintaryhma))
+
 (defn- hintaryhmien-jarjestys-arvotettuna
   "Palauttaa mäpin, jossa on avaimena hintaryhmä, ja arvona
   ryhmän järjestys numerolla."
   [ryhma-ja-toimenpiteet]
-  (let [ryhma-ja-uusin-toimenpide (map
+  (into {}
+        (map-indexed
+          (fn [i [hintaryhma _]] [hintaryhma i])
+          (sort-by
+            (comp ::nimi key)
+            >
+            ryhma-ja-toimenpiteet)))
+
+  ;; Aiemmin haluttiin järjestää ryhmät siten, että otetaan ryhmien uusin toimenpide,
+  ;; ja järjestetään ryhmät tämän perusteella uusimmasta vanhimpaan. Kuitenkin kun ryhmien
+  ;; sisältöä vaihteli, niin ryhmät vaihteli järjestystä aika villisti. Tämän takia ainakin
+  ;; toistaiseksi vaihdettiin järjestykseksi aakkosjärjestys. Säilytetään tämä koodinpätkä
+  ;; toistaiseksi, kunnes todetaan, että aakkosjärjestys on todellakin parempi.
+  #_(let [ryhma-ja-uusin-toimenpide (map
                                     (fn [[hintaryhma toimenpiteet]]
                                       [hintaryhma (uusin-toimenpide toimenpiteet)])
                                     ryhma-ja-toimenpiteet)]

@@ -178,7 +178,7 @@
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide app* e! rivi])}]
-             :otsikko (or (::h/nimi hintaryhma)
+             :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
