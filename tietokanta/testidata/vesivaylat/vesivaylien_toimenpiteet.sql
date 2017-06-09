@@ -13,7 +13,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -36,7 +35,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('kokonaishintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     12,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -62,7 +60,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -85,7 +82,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('kokonaishintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     22,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -111,7 +107,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -134,7 +129,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('kokonaishintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     32,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -164,7 +158,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -187,7 +180,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('kokonaishintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     42,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -225,7 +217,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -248,7 +239,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('kokonaishintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     52,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -278,7 +268,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -301,7 +290,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('yksikkohintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     62,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -342,7 +330,6 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
- "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
@@ -365,7 +352,6 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('yksikkohintainen',
-    (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     72,
     '(23, Pohjanmeren venepojat)',
     (SELECT id
@@ -396,7 +382,7 @@ INSERT INTO vv_hinnoittelu
 VALUES
   ('Hietasaaren poijujen korjaus', true,
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
+   (SELECT ("reimari-turvalaite").ryhma FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -418,14 +404,15 @@ INSERT INTO vv_hinnoittelu
 VALUES
   ('Tämän ei pitäisi näkyä' , false,
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
+   (SELECT ("reimari-turvalaite").ryhma FROM reimari_toimenpide WHERE lisatieto = 'Poijujen korjausta kuten on sovittu'));
 
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id", poistettu)
 VALUES
   ('POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN' , false,
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-   (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'), true);
+
+   (SELECT ("reimari-turvalaite").ryhma FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'), true);
 
 
 INSERT INTO vv_hinta
