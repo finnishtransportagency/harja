@@ -337,7 +337,6 @@
                                         paivitetty-toimenpide
                                         toimenpide))
                                     (:toimenpiteet app))]
-      ;; TODO Tee testi tälle
       (merge (assoc app :toimenpiteet paivitetyt-toimenpiteet)
              alustettu-toimenpiteen-hinnoittelu)))
 

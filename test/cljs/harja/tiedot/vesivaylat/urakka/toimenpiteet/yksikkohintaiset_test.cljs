@@ -376,6 +376,63 @@
                         vanha-tila)]
       (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit]))))))
 
+(deftest toimenpiteen-hinnoittelu-tallennettu
+  (testing "Toimenpiteen hinnoittelu tallennettu"
+    (let [vanha-tila (assoc testitila
+                       :hinnoittele-toimenpide
+                       {:harja.domain.vesivaylat.toimenpide/id 1
+                        :harja.domain.vesivaylat.hinnoittelu/hintaelementit
+                        [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
+                          :harja.domain.vesivaylat.hinta/maara 10
+                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                         {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
+                          :harja.domain.vesivaylat.hinta/maara 20
+                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                         {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
+                          :harja.domain.vesivaylat.hinta/maara 30
+                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                         {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
+                          :harja.domain.vesivaylat.hinta/maara 40
+                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                         {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
+                          :harja.domain.vesivaylat.hinta/maara 50
+                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]})
+          uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
+                          {:harja.domain.vesivaylat.hinnoittelu/hinnat
+                           [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
+                             :harja.domain.vesivaylat.hinta/maara 10
+                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                            {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
+                             :harja.domain.vesivaylat.hinta/maara 20
+                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                            {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
+                             :harja.domain.vesivaylat.hinta/maara 30
+                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                            {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
+                             :harja.domain.vesivaylat.hinta/maara 40
+                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+                            {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
+                             :harja.domain.vesivaylat.hinta/maara 50
+                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
+                           :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
+                           :harja.domain.vesivaylat.hinnoittelu/id 666
+                           :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
+                           :harja.domain.muokkaustiedot/poistettu? false})
+                        vanha-tila)]
+
+      ;; Hinnoittelu ei ole enää päällä
+      (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
+      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      ;; TODO TESTAA ETTÄ TALLENNETTU HINNOITTELU TALLENTUI OIKEALLE TOIMENPITEELLE HINTATIEDOIKSI
+      ))
+
+  (testing "Peru hinnoittelu"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                        vanha-tila)]
+      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit]))))))
+
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
     (is (false? (:haku-kaynnissa? tulos)))
