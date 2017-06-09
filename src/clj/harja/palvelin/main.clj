@@ -644,23 +644,6 @@
 (defn explain [sql]
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
 
-(defn alusta-lokipriorisointi! []
-  (let [db (:db harja-jarjestelma)
-        ;; todo: lue muutokset tietokannasta
-        muutokset [["turha" :info]
-                   ["paha" :error]]
-        lokipriorisointi-middleware (fn [{:keys [hostname message args level] :as ap-args}]
-                                      (println "lokimiddleware kutsuttu" ap-args)
-                                      (let [alkup-level level
-                                            viesti (or message (str (first args)))
-                                            uusi-level (first (filter
-                                                              some? (for [[alkuosa uusi-taso] muutokset ]
-                                                                      (when (clojure.string/starts-with?
-                                                                             viesti alkuosa) uusi-taso) )))]
-                                        (assoc ap-args :level (or uusi-level alkup-level))))]
-    (log/set-config! [:middleware]
-                     [lokipriorisointi-middleware])))
-
 (defn log-level-info! []
   (log/set-config! [:appenders :standard-out :min-level] :info))
 
