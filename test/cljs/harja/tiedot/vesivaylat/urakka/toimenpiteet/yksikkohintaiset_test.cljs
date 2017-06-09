@@ -26,12 +26,7 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hinnoittele-toimenpide {::to/id nil
-                                         ::h/hintaelementit
-                                         [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-                                          {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-                                          {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-                                          {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-                                          {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]}
+                                         ::h/hintaelementit nil}
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
@@ -48,6 +43,26 @@
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
+                                ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 0
+                                                                   ::hinta/otsikko "Työ"
+                                                                   ::hinta/maara 0
+                                                                   ::hinta/yleiskustannuslisa false}
+                                                                  {::hinta/id 1
+                                                                   ::hinta/otsikko "Komponentit"
+                                                                   ::hinta/maara 1
+                                                                   ::hinta/yleiskustannuslisa false}
+                                                                  {::hinta/id 2
+                                                                   ::hinta/otsikko "Yleiset materiaalit"
+                                                                   ::hinta/maara 2
+                                                                   ::hinta/yleiskustannuslisa false}
+                                                                  {::hinta/id 3
+                                                                   ::hinta/otsikko "Matkat"
+                                                                   ::hinta/maara 3
+                                                                   ::hinta/yleiskustannuslisa false}
+                                                                  {::hinta/id 4
+                                                                   ::hinta/otsikko "Muut kulut"
+                                                                   ::hinta/maara 4
+                                                                   ::hinta/yleiskustannuslisa false}]}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -235,55 +250,125 @@
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest toimenpiteen-hinnoittelu
-  (testing "Aloita toimenpiteen hinnoittelu"
+  (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1))]
+          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 0)
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 0
+              ::h/hintaelementit
+              [{::hinta/id nil
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id nil
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id nil
+                ::hinta/otsikko
+                "Yleiset materiaalit"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id nil
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id nil
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}]}))))
+
+  (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1)
+                        vanha-tila)]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hintaelementit
-              [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-               {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-               {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-               {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-               {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]})))))
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 2
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa false}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
-                                                               ::hinta/maara 5})
-                        vanha-tila)]
-      (is (= (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])
-             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))
-      (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])
-             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 5 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))))
+          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                                    ::hinta/maara 666})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 666
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa false}]}))))
 
-  (testing "Hinnoittele kentän yleiskustannuslisä"
+  (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Työ"
-                                                               ::hinta/yleiskustannuslisa true})
-                        vanha-tila)]
-      (is (= (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])
-             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))
-      (is (= (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])
-             [{::hinta/otsikko "Työ" ::hinta/maara 0 ::hinta/yleiskustannuslisa true}
-              {::hinta/otsikko "Komponentit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Yleiset materiaalit" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Matkat" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}
-              {::hinta/otsikko "Muut kulut" ::hinta/maara 0 ::hinta/yleiskustannuslisa false}]))))
+          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                                    ::hinta/yleiskustannuslisa true})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 2
+                ::hinta/yleiskustannuslisa true}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa false}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa false}]}))))
 
   (testing "Peru hinnoittelu"
     (let [vanha-tila testitila

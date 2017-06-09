@@ -261,19 +261,19 @@
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
-          luo-hinta (fn [otsikko hinnat]
-                      {::hinta/otsikko otsikko
-                       ::hinta/maara (or (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat)) 0)
-                       ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
-                                                          (hinta/hinta-otsikolla otsikko hinnat)))})]
+          luo-hinta (fn [otsikko olemassa-oleva-hinta]
+                      {::hinta/id (::hinta/id olemassa-oleva-hinta)
+                       ::hinta/otsikko otsikko
+                       ::hinta/maara (or (::hinta/maara olemassa-oleva-hinta) 0)
+                       ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa olemassa-oleva-hinta))})]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
-                  [(luo-hinta "Työ" hinnat)
-                   (luo-hinta "Komponentit" hinnat)
-                   (luo-hinta "Yleiset materiaalit" hinnat)
-                   (luo-hinta "Matkat" hinnat)
-                   (luo-hinta "Muut kulut" hinnat)]})))
+                  [(luo-hinta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
+                   (luo-hinta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
+                   (luo-hinta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
+                   (luo-hinta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
+                   (luo-hinta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))]})))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
@@ -338,6 +338,9 @@
                                         paivitetty-toimenpide
                                         toimenpide))
                                     (:toimenpiteet app))]
+      (log "PÄIVITETTÄVÄ TOIMENPIDE: " (pr-str paivitettava-toimenpide))
+      (log "PÄIVITETTY TOIMENPIDE: " (pr-str paivitetty-toimenpide))
+      (log "PÄIVITETYT TOIMENPITEET" (pr-str paivitetyt-toimenpiteet))
       ;; TODO Tee testi tälle
       ;; TODO Ilmeisesti ei tallennu toimenpiteeseen uudet tiedot oikein? Näkyy vanha kun avaa leijukkeen?
       (merge (assoc app :hinnoittelun-tallennus-kaynnissa? false
