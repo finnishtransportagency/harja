@@ -340,9 +340,6 @@
                                         paivitetty-toimenpide
                                         toimenpide))
                                     (:toimenpiteet app))]
-      (log "PÄIVITETTÄVÄ TOIMENPIDE: " (pr-str paivitettava-toimenpide))
-      (log "PÄIVITETTY TOIMENPIDE: " (pr-str paivitetty-toimenpide))
-      (log "PÄIVITETYT TOIMENPITEET" (pr-str paivitetyt-toimenpiteet))
       ;; TODO Tee testi tälle
       ;; TODO Ilmeisesti ei tallennu toimenpiteeseen uudet tiedot oikein? Näkyy vanha kun avaa leijukkeen?
       (merge (assoc app :hinnoittelun-tallennus-kaynnissa? false
