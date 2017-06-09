@@ -28,8 +28,7 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
-            [harja.tiedot.tilannekuva.tilannekuva :as tilannekuva-tiedot])
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -164,10 +163,11 @@
              @nav/valittu-sivu
              (nav/valittu-valilehti @nav/valittu-sivu)
              @nav/urakat-kartalla))
+      ;; koska HAR-5117 Tilannekuva: Selite mustille urakkarajoille
       {:selitteet
        (if (and
              (= :tilannekuva @nav/valittu-sivu)
-             (tilannekuva-tiedot/alueita-valittu? @tilannekuva-tiedot/suodattimet))
+             @nav/tilannekuvassa-alueita-valittu?)
          #{urakkarajan-selite}
          #{})})))
 

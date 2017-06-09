@@ -414,3 +414,5 @@
                      (apply funktio urakka args)
                      urakka))
                  urakat))))
+
+(def tilannekuvassa-alueita-valittu? (atom false))
