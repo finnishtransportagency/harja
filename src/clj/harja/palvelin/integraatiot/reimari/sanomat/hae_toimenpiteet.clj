@@ -15,9 +15,10 @@
             [clojure.set :refer [rename-keys]]
             [harja.pvm :as pvm]))
 
+
 (defn- aikaleima [text]
   (when-not (str/blank? text)
-    (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
+    (.toDate (xml/parsi-xsd-datetime-ms-aikaleimalla text))))
 
 (def toimenpide-attribuutit {:id #(Integer/parseInt %)
                              :tyolaji identity
@@ -105,12 +106,14 @@
       {::toimenpide/urakoitsija (lue-urakoitsija v)})
     {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
 
-
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
-  (vec (z/xml-> vastaus-xml
-                :HaeToimenpiteetResponse
-                :toimenpide
-                lue-toimenpide)))
+  (if-let [ht (z/xml1-> vastaus-xml :S:Body :HaeToimenpiteet)]
+    (vec (z/xml->
+          ht
+          :HaeToimenpiteetResponse
+          :toimenpide
+          lue-toimenpide))
+    (log/error "Reimarin toimenpidehaun vastaus ei sisällä :HaeToimenpiteet -elementtiä")))
 
 (defn lue-hae-toimenpiteet-vastaus [xml]
   (hae-toimenpiteet-vastaus (xml/lue xml "UTF-8")))

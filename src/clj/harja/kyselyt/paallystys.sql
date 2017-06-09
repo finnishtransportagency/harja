@@ -238,7 +238,8 @@ SELECT
   k.jarjestelma    AS "jarjestelman-lisaama"
 FROM yllapitokohteen_maaramuutos ym
   LEFT JOIN kayttaja k ON ym.luoja = k.id
-WHERE yllapitokohde IN (:idt);
+WHERE yllapitokohde IN (:idt)
+  AND ym.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,

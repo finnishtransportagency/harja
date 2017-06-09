@@ -135,7 +135,7 @@
                            [nil]
                            (cond
                              hk
-                             (pvm/hoitokauden-kuukausivalit hk)
+                             (pvm/aikavalin-kuukausivalit hk)
 
                              vuosi
                              (pvm/vuoden-kuukausivalit vuosi)
