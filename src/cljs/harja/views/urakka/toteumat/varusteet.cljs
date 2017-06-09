@@ -244,13 +244,12 @@
   {:otsikko "Liitteet" :nimi :liitteet
    :palstoja 2
    :tyyppi :komponentti
-   :komponentti (if muokattava?
-                  (fn [_]
-                    [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
-                     {:uusi-liite-atom (r/wrap (:uusi-liite varustetoteuma)
-                                               #(e! (v/->LisaaLiitetiedosto %)))
-                      :uusi-liite-teksti "Lisää liite varustetoteumaan"}])
-                  #())})
+   :komponentti (fn [_]
+                  [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
+                   {:uusi-liite-atom (when muokattava?
+                                       (r/wrap (:uusi-liite varustetoteuma)
+                                               #(e! (v/->LisaaLiitetiedosto %))))
+                    :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
 
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)

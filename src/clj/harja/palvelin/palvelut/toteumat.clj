@@ -660,7 +660,7 @@
                                        alkupvm
                                        loppupvm
                                        kuntoluokitus
-                                       liitteet] :as toteuma}]
+                                       uusi-liite] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
   (let [varustetoteuma-id
@@ -720,9 +720,9 @@
                 id (if id
                      (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
                      (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
-            (when liitteet
-              (doseq [liite liitteet]
-                (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id liite))))
+            (println "--->>>> uusi-liite" uusi-liite)
+            (when uusi-liite
+              (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id uusi-liite)))
             id))]
 
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))

@@ -124,7 +124,8 @@
                                        tierekisteriosoite
                                        alkupvm
                                        loppupvm
-                                       liitteet] :as toteuma}]
+                                       uusi-liite] :as toteuma}]
+  (log "--->> " (pr-str uusi-liite))
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:id id
                  :arvot arvot
@@ -141,7 +142,7 @@
                                   (js/parseInt (:kuntoluokitus arvot)))
                  :alkupvm alkupvm
                  :loppupvm loppupvm
-                 :liitteet liitteet}
+                 :uusi-liite uusi-liite}
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
                    :alkupvm (first aikavali)
@@ -326,7 +327,7 @@
 
   v/LisaaLiitetiedosto
   (process-event [{liite :liite} app]
-    (assoc-in app [:varustetoteuma :liitteet] [liite])))
+    (assoc-in app [:varustetoteuma :uusi-liite] liite)))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
