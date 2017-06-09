@@ -114,12 +114,12 @@
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
          maarita-sticky! (fn []
-                          (if (and
-                                sticky?
-                                (not @disabled?)
-                                (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
-                            (reset! naulattu? true)
-                            (reset! naulattu? false)))
+                           (if (and
+                                 sticky?
+                                 (not @disabled?)
+                                 (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
+                             (reset! naulattu? true)
+                             (reset! naulattu? false)))
          kasittele-scroll-event (fn [this _]
                                   (maarita-sticky!))
          kasittele-resize-event (fn [this _]
@@ -189,6 +189,16 @@
                             optiot
                             {:luokka (str "nappi-kielteinen" " " luokka)
                              :ikoni (ikonit/livicon-ban)})]))
+
+(defn yleinen
+  ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
+  ([teksti tyyppi toiminto {:keys [disabled luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (case tyyppi
+                                       :ensisijainen (str "nappi-ensisijainen" " " luokka)
+                                       :toissijainen (str "nappi-toissijainen" " " luokka))
+                             :disabled disabled})]))
 
 (defn yleinen-ensisijainen
   ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))

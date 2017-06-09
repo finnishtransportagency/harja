@@ -50,6 +50,7 @@
   (testing "Uusien hintojen lisäys"
     (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
           urakka-id (hae-helsingin-vesivaylaurakan-id)
+          hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
           insert-params {::toi/urakka-id urakka-id
                          ::toi/id toimenpide-id
@@ -62,7 +63,8 @@
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                          insert-params)
-          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
+          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+          hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
       (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
       (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
@@ -71,10 +73,12 @@
       (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
       (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
-      (is (= (+ hinnat-ennen 2) hinnat-jalkeen))
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelut")
+      (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
 
       (testing "Lisättyjen hintojen päivittäminen"
-        (let [hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+        (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+              hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
               update-params {::toi/urakka-id urakka-id
                              ::toi/id toimenpide-id
                              ::h/hintaelementit (mapv (fn [hinta]
@@ -86,7 +90,8 @@
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                              update-params)
-              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))]
+              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+              hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
@@ -94,6 +99,7 @@
           (is (= (count (::h/hinnat update-vastaus)) 2))
           (is (some #(== (::hinta/maara %) 555) (::h/hinnat update-vastaus)))
           (is (some #(== (::hinta/maara %) 321) (::h/hinnat update-vastaus)))
+          (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= hinnat-ennen hinnat-jalkeen)))))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
