@@ -614,13 +614,17 @@
                          (konv/sql-date loppupvm)
                          (boolean tienumero)
                          tienumero))
-        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
-                                  toteumat
-                                  {:reittipiste :reittipisteet
-                                   :toteumatehtava :toteumatehtavat}
-                                  :id)]
-    (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
-    kasitellyt-toteumarivit))
+        toteumat (konv/sarakkeet-vektoriin
+                   toteumat
+                   {:reittipiste :reittipisteet
+                    :toteumatehtava :toteumatehtavat}
+                   :id)]
+    (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
+    (map
+      #(let [liitteet (toteumat-q/hae-toteuman-liitteet db (:toteumaid %))]
+         (println "--->> liitteet" liitteet)
+         (assoc % :liitteet liitteet))
+      toteumat)))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
   ([db user urakka-id pvm toimenpidekoodi]

@@ -994,3 +994,15 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
 
 -- name: tallenna-liite-toteumalle<!
 INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
+
+-- name: hae-toteuman-liitteet
+SELECT
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
+FROM liite l
+  JOIN toteuma_liite tl ON l.id = tl.liite
+WHERE tl.toteuma = :toteumaid
+ORDER BY l.luotu ASC
