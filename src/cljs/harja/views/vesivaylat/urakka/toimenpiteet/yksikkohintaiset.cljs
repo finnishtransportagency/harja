@@ -108,7 +108,7 @@
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])
 
 (defn- hinnoittele-nappiteksti [toimenpide]
-  (if (::to/oma-hinnoittelu toimenpide)
+  (if (to/toimenpiteella-oma-hinnoittelu? toimenpide)
     (str "Muokkaa hintaa (" (fmt/euro-opt (hinta/kokonaishinta
                                             (get-in toimenpide [::to/oma-hinnoittelu ::h/hinnat])))
          ")")
@@ -152,8 +152,9 @@
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
-       [napit/yleinen-ensisijainen
+       [napit/yleinen
         (hinnoittele-nappiteksti rivi)
+        (if (not (to/toimenpiteella-oma-hinnoittelu? rivi)) :ensisijainen :toissijainen)
         #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
         {:luokka "nappi-grid"
          :disabled (:infolaatikko-nakyvissa? app*)}])]))

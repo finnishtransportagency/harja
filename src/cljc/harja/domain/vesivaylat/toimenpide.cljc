@@ -370,6 +370,9 @@ reimari-tilat
   ;; Toimenpiteistä päivämäärää tms tähän mukaan?
   (::h/nimi hintaryhma))
 
+(defn toimenpiteella-oma-hinnoittelu? [toimenpide]
+  (boolean (::oma-hinnoittelu toimenpide)))
+
 (defn- hintaryhmien-jarjestys-arvotettuna
   "Palauttaa mäpin, jossa on avaimena hintaryhmä, ja arvona
   ryhmän järjestys numerolla."
