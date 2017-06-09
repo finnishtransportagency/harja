@@ -54,6 +54,7 @@
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
+            [harja.tiedot.tilannekuva.tilannekuva :as tiedot-tilannekuva]
             [harja.ui.kartta.ikonit :as kartta-ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -275,11 +276,20 @@
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 
+;; tässä, koska circular dependency jos requirataan esitettävät asiat
+(def urakkarajan-selite
+  {:teksti "Urakkaraja",
+   :vari ["rgb(0, 0, 0)" "rgb(255, 255, 255)" "rgb(255, 255, 255)"]})
 
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
                                 (vals @tasot/geometriat-kartalle)))
+        ;; jos urakoita on valittu, näytetään selite urakkarajoille HAR-5117
+        alueita-valittu? (tiedot-tilannekuva/alueita-valittu? @tiedot-tilannekuva/suodattimet)
+        selitteet (if alueita-valittu?
+                    (conj selitteet urakkarajan-selite)
+                    selitteet)
         lukumaara-str (fmt/left-pad 2 (count selitteet))
         varilaatikon-koko 20
         teksti (if @tiedot/ikonien-selitykset-auki

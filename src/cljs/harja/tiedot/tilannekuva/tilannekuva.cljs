@@ -447,3 +447,10 @@ hakutiheys-historiakuva 1200000)
            (fn [_ _ old new]
              (log "valittu-tila muuttui " old " => " new)
              (pollaus-muuttui)))
+
+(defn alueita-valittu?
+  [suodattimet]
+  (let [elyt (vals (:alueet suodattimet))
+        urakat (mapcat vals elyt)
+        valitut (mapcat vals urakat)]
+    (some? (some true? valitut))))
