@@ -18,7 +18,8 @@
             [specql.rel :as rel]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]]))
+            [clojure.future :refer :all]])
+            [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -362,8 +363,46 @@ reimari-tilat
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
 
+(defn- uusin-toimenpide [toimenpiteet]
+  (first (sort-by ::pvm pvm/jalkeen? toimenpiteet)))
+
+(defn- hintaryhmien-jarjestys-arvotettuna
+  "Palauttaa mäpin, jossa on avaimena hintaryhmä, ja arvona
+  ryhmän järjestys numerolla."
+  [ryhma-ja-toimenpiteet]
+  (let [ryhma-ja-uusin-toimenpide (map
+                                    (fn [[hintaryhma toimenpiteet]]
+                                      [hintaryhma (uusin-toimenpide toimenpiteet)])
+                                    ryhma-ja-toimenpiteet)]
+
+
+    (into {}
+          (map-indexed
+            (fn [i [hintaryhma _]] [hintaryhma i])
+            ;; Jarjesta ryhmät uusimman toimenpiteen mukaan, uusimmasta vanhimpaan
+            (sort-by
+              (comp ::pvm second)
+              pvm/jalkeen?
+
+              ryhma-ja-uusin-toimenpide)))))
+
+(defn jarjesta-hintaryhmat
+  "Ottaa mäpin, missä avain on hintaryhmä, ja arvo on vektori toimenpiteitä.
+  Palauttaa sortatun mäpin. Hintaryhmät järjestetään tärkeimmästä vähiten tärkeään,
+  ja toimenpiteet hintaryhmän sisällä järjestetään uusimmasta vanhimpaan."
+  [ryhma-ja-toimenpiteet]
+  (let [jarjestys (hintaryhmien-jarjestys-arvotettuna ryhma-ja-toimenpiteet)]
+    (reduce-kv
+      ;; Järjestä toimenpiteet hintaryhmän sisällä
+      (fn [m k v] (assoc m k (sort-by ::pvm pvm/jalkeen? v)))
+      {}
+      (into
+        ;; Hintaryhmät tärkeimmästä vähiten tärkeään
+       (sorted-map-by (fn [eka toka] (< (jarjestys eka) (jarjestys toka))))
+       ryhma-ja-toimenpiteet))))
+
 (defn toimenpiteet-hintaryhmissa [toimenpiteet]
-  (group-by ::hintaryhma toimenpiteet))
+  (jarjesta-hintaryhmat (group-by ::hintaryhma toimenpiteet)))
 
 ;; Palvelut
 
