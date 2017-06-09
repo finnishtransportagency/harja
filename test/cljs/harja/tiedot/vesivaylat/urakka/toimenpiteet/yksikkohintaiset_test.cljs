@@ -378,9 +378,10 @@
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (testing "Toimenpiteen hinnoittelu tallennettu"
-    (let [vanha-tila (assoc testitila
+    (let [hinnoiteltava-toimenpide-id 1
+          vanha-tila (assoc testitila
                        :hinnoittele-toimenpide
-                       {:harja.domain.vesivaylat.toimenpide/id 1
+                       {:harja.domain.vesivaylat.toimenpide/id hinnoiteltava-toimenpide-id
                         :harja.domain.vesivaylat.hinnoittelu/hintaelementit
                         [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
                           :harja.domain.vesivaylat.hinta/maara 10
@@ -418,14 +419,36 @@
                            :harja.domain.vesivaylat.hinnoittelu/id 666
                            :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
                            :harja.domain.muokkaustiedot/poistettu? false})
-                        vanha-tila)]
+                        vanha-tila)
+          paivitettu-toimenpide (first (filter #(= (::to/id %) hinnoiteltava-toimenpide-id)
+                                               (:toimenpiteet uusi-tila)))]
 
       ;; Hinnoittelu ei ole enää päällä
       (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
       (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
       (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
-      ;; TODO TESTAA ETTÄ TALLENNETTU HINNOITTELU TALLENTUI OIKEALLE TOIMENPITEELLE HINTATIEDOIKSI
-      ))
+
+      (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
+             {:harja.domain.vesivaylat.hinnoittelu/hinnat
+              [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
+                :harja.domain.vesivaylat.hinta/maara 10
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+               {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
+                :harja.domain.vesivaylat.hinta/maara 20
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+               {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
+                :harja.domain.vesivaylat.hinta/maara 30
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+               {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
+                :harja.domain.vesivaylat.hinta/maara 40
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
+               {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
+                :harja.domain.vesivaylat.hinta/maara 50
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
+              :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
+              :harja.domain.vesivaylat.hinnoittelu/id 666
+              :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
+              :harja.domain.muokkaustiedot/poistettu? false}))))
 
   (testing "Peru hinnoittelu"
     (let [vanha-tila testitila
