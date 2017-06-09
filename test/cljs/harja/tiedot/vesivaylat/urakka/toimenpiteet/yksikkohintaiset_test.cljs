@@ -379,6 +379,7 @@
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (testing "Toimenpiteen hinnoittelu tallennettu"
     (let [hinnoiteltava-toimenpide-id 1
+          ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
           vanha-tila (assoc testitila
                        :hinnoittele-toimenpide
                        {:harja.domain.vesivaylat.toimenpide/id hinnoiteltava-toimenpide-id
