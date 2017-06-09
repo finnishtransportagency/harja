@@ -98,7 +98,9 @@
 
 (s/def ::tallenna-hintaryhmalle-hinta-kysely
   (s/keys
-    :req [::id ::hinnat ::ur/id]))
+    :req [::ur/id
+          ::id
+          ::hintaelementit]))
 
 (s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
 

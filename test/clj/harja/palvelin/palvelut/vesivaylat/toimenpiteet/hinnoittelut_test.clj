@@ -126,3 +126,37 @@
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
+
+;; TODO Enabloi kun toimii
+#_(deftest tallenna-ryhmalle-hinta
+  (testing "Hintojen lisääminen hintaryhmälle"
+    (let [hinnoittelu-id (hae-hinnoittelu)
+          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+          hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+          insert-params {::u/id urakka-id
+                         ::h/id hinnoittelu-id
+                         ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
+                                              ::hinta/yleiskustannuslisa 0
+                                              ::hinta/maara 666}
+                                             {::hinta/otsikko "Testihinta 2"
+                                              ::hinta/yleiskustannuslisa 12
+                                              ::hinta/maara 123}]}
+          insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
+                                         insert-params)
+          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+          hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+      (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-vastaus insert-vastaus))
+
+
+      (is (= (count (::h/hinnat insert-vastaus)) 2))
+      (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
+      (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelut")
+      (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
+
+      ;; TODO TESTAA PÄIVITTÄMINEN
+      )))
