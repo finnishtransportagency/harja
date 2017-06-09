@@ -622,7 +622,6 @@
     (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
     (map
       #(let [liitteet (toteumat-q/hae-toteuman-liitteet db (:toteumaid %))]
-         (println "--->> liitteet" liitteet)
          (assoc % :liitteet liitteet))
       toteumat)))
 
