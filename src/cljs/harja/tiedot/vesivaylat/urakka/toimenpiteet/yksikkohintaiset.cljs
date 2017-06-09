@@ -299,12 +299,15 @@
             parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
                         ::h/hintaelementit (mapv
-                                             (fn [hinnoittelu]
-                                               (assoc hinnoittelu
-                                                 ::hinta/yleiskustannuslisa
-                                                 (if (::hinta/yleiskustannuslisa hinnoittelu)
-                                                   yleiskustannuslisa
-                                                   0)))
+                                             (fn [hinta]
+                                               (merge
+                                                 (when-let [id (::hinta/id hinta)]
+                                                   {::hinta/id id})
+                                                 {::hinta/otsikko (::hinta/otsikko hinta)
+                                                  ::hinta/maara (::hinta/maara hinta)
+                                                  ::hinta/yleiskustannuslisa (if (::hinta/yleiskustannuslisa hinta)
+                                                                               yleiskustannuslisa
+                                                                               0)}))
                                              (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
         (try
           (go
