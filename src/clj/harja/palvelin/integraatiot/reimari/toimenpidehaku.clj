@@ -33,13 +33,12 @@
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit
                       })
 
-(defn kasittele-vastaus [db urakka-id vastaus-xml]
+(defn kasittele-vastaus [db vastaus-xml]
   ;; (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                       (merge (rename-keys toimenpide-tiedot avainmuunnokset)
-                                              {::toimenpide/urakka-id urakka-id})))]
+                                       (merge (rename-keys toimenpide-tiedot avainmuunnokset))))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
@@ -66,7 +65,7 @@
                         :muutosaika muutosaika}
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
-    (kasittele-vastaus db nil body))) ;; TODO Täytyy päätellä urakka reimari-toimenpiteelle
+    (kasittele-vastaus db body)))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (last (sort-by ::integraatiotapahtuma/alkanut
