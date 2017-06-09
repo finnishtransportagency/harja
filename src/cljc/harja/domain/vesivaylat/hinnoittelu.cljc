@@ -67,9 +67,6 @@
           :harja.domain.vesivaylat.toimenpide/hintatyyppi
           :harja.domain.vesivaylat.toimenpide/lisatyo?}]}]})
 
-(defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
-  (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
-
 ;; Palvelut
 
 (s/def ::hae-hinnoittelut-kysely

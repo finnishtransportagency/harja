@@ -107,49 +107,56 @@
                  (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])
 
+(defn- hinnoittele-nappiteksti [toimenpide]
+  (if (::to/oma-hinnoittelu toimenpide)
+    (str "Muuta hintaa (" (fmt/euro-opt (hinta/kokonaishinta
+                                          (get-in toimenpide [::to/oma-hinnoittelu ::h/hinnat])))
+         ")")
+    "Hinnoittele"))
+
 (defn- hinnoittele-toimenpide [app* e! rivi]
-  [:div
-   (if (and (get-in app* [:hinnoittele-toimenpide ::to/id])
-            (= (get-in app* [:hinnoittele-toimenpide ::to/id])
-               (::to/id rivi)))
-     [:div
-      [:span "Hinta: 0€"]
-      [leijuke {:otsikko "Hinnoittele toimenpide"
-                :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
-       [:div.vv-toimenpiteen-hinnoittelutiedot
-        {:on-click #(.stopPropagation %)}
+  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
+    [:div
+     (if (and hinnoittele-toimenpide-id
+              (= hinnoittele-toimenpide-id (::to/id rivi)))
+       [:div
+        [:span "Hinta: 0€"]
+        [leijuke {:otsikko "Hinnoittele toimenpide"
+                  :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
+         [:div.vv-toimenpiteen-hinnoittelutiedot
+          {:on-click #(.stopPropagation %)}
 
-        [:table.vv-toimenpiteen-hinnoittelutiedot-grid
-         [:thead
-          [:tr
-           [:th {:style {:width "45%"}}]
-           [:th {:style {:width "35%"}} "Hinta"]
-           [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
-         [:tbody
-          (kenttarivi app* e! "Työ")
-          (kenttarivi app* e! "Komponentit")
-          (kenttarivi app* e! "Yleiset materiaalit")
-          (kenttarivi app* e! "Matkat")
-          (kenttarivi app* e! "Muut kulut")]]
+          [:table.vv-toimenpiteen-hinnoittelutiedot-grid
+           [:thead
+            [:tr
+             [:th {:style {:width "45%"}}]
+             [:th {:style {:width "35%"}} "Hinta"]
+             [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
+           [:tbody
+            (kenttarivi app* e! "Työ")
+            (kenttarivi app* e! "Komponentit")
+            (kenttarivi app* e! "Yleiset materiaalit")
+            (kenttarivi app* e! "Matkat")
+            (kenttarivi app* e! "Muut kulut")]]
 
-        [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-         [:span
-          [:b "Yhteensä:"]
-          [:span " "]
-          (fmt/euro-opt (h/laske-hinnoittelun-kokonaishinta
-                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
+          [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+           [:span
+            [:b "Yhteensä:"]
+            [:span " "]
+            (fmt/euro-opt (hinta/kokonaishinta
+                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
-        [:footer.vv-toimenpiteen-hinnoittelu-footer
-         [napit/yleinen-ensisijainen
-          "Valmis"
-          #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
-          {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
+          [:footer.vv-toimenpiteen-hinnoittelu-footer
+           [napit/yleinen-ensisijainen
+            "Valmis"
+            #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
+            {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
-     [napit/yleinen-ensisijainen
-      "Hinnoittele"
-      #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-      {:luokka "nappi-grid"
-       :disabled (:infolaatikko-nakyvissa? app*)}])])
+       [napit/yleinen-ensisijainen
+        (hinnoittele-nappiteksti rivi)
+        #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+        {:luokka "nappi-grid"
+         :disabled (:infolaatikko-nakyvissa? app*)}])]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo

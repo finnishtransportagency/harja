@@ -37,5 +37,8 @@
 
 (def metatiedot m/muokkauskentat)
 
+(defn- kokonaishinta [hinnat]
+  (reduce + 0 (map ::maara hinnat)))
+
 (defn hinta-otsikolla [otsikko hinnat]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))
