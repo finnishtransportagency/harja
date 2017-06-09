@@ -428,6 +428,7 @@
       (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
       (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
 
+      ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
       (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
              {:harja.domain.vesivaylat.hinnoittelu/hinnat
               [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
