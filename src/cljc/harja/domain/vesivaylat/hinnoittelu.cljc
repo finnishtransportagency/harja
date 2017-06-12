@@ -113,4 +113,4 @@
           :harja.domain.vesivaylat.toimenpide/id
           ::hintaelementit]))
 
-(s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
+(s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hae-hinnoittelut-vastaus)

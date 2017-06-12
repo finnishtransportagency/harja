@@ -53,15 +53,14 @@
                  (every? (partial = hinnoittelu-id)))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
-(defn hae-hinnoittelut [db tiedot]
-  (let [urakka-id (::ur/id tiedot)]
-    (->> (specql/fetch db
-                   ::h/hinnoittelu
-                   (set/union h/perustiedot h/hinnat)
-                   {::h/urakka-id urakka-id
-                    ::h/hintaryhma? true
-                    ::m/poistettu? false})
-         (map #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %)))))))
+(defn hae-hinnoittelut [db urakka-id]
+  (->> (specql/fetch db
+                     ::h/hinnoittelu
+                     (set/union h/perustiedot h/hinnat)
+                     {::h/urakka-id urakka-id
+                      ::h/hintaryhma? true
+                      ::m/poistettu? false})
+       (map #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
@@ -156,6 +155,4 @@
                             hinta
                             {::m/luotu (pvm/nyt)
                              ::m/luoja-id (:id user)
-                             ::hinta/hinnoittelu-id hinnoittelu-id})))))
-
-    (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
+                             ::hinta/hinnoittelu-id hinnoittelu-id})))))))

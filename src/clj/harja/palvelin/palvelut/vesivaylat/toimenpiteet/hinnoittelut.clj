@@ -13,12 +13,11 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
-(defn hae-hinnoittelut [db user tiedot]
+(defn hae-hinnoittelut [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::ur/id tiedot)]
-      (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
-      (q/hae-hinnoittelut db tiedot))))
+    (assert urakka-id "Urakka-id puuttuu!")
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
+    (q/hae-hinnoittelut db urakka-id)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -52,7 +51,8 @@
                                              (::h/id tiedot))
       (q/tallenna-hintaryhmalle-hinta! db user
                                        (::h/id tiedot)
-                                       (::h/hintaelementit tiedot)))))
+                                       (::h/hintaelementit tiedot))
+      (hae-hinnoittelut db user urakka-id))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -68,7 +68,8 @@
       (q/tallenna-toimenpiteelle-hinta! db user
                                         (::to/id tiedot)
                                         (::h/hintaelementit tiedot)
-                                        urakka-id))))
+                                        urakka-id)
+      (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot)))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
@@ -78,7 +79,8 @@
       http
       :hae-hinnoittelut
       (fn [user tiedot]
-        (hae-hinnoittelut db user tiedot))
+        (let [urakka-id (::ur/id tiedot)]
+          (hae-hinnoittelut db user urakka-id)))
       {:kysely-spec ::h/hae-hinnoittelut-kysely
        :vastaus-spec ::h/hae-hinnoittelut-vastaus})
 
