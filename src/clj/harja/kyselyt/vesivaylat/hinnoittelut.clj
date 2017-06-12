@@ -57,7 +57,7 @@
   (let [urakka-id (::ur/id tiedot)]
     (->> (specql/fetch db
                    ::h/hinnoittelu
-                   (set/union h/perustiedot h/hinnat) ;; TODO POISTA POISTETUT HINNAT!111
+                   (set/union h/perustiedot h/hinnat)
                    {::h/urakka-id urakka-id
                     ::h/hintaryhma? true
                     ::m/poistettu? false})

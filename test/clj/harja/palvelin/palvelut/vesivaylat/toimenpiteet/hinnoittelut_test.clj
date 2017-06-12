@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
+            [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as hin]
@@ -227,6 +228,8 @@
     (is (s/valid? ::h/hae-hinnoittelut-vastaus vastaus))
 
     (is (>= (count vastaus) 1))
+    (is (>= (count (mapcat ::h/hinnat vastaus)) 1))
+    (is (every? (comp not ::m/poistettu?) (mapcat ::h/hinnat vastaus)))
     (is (some #(= (::h/nimi %) "Hietasaaren poijujen korjaus") vastaus))))
 
 (deftest hae-hinnoittelut-ilman-oikeuksia
