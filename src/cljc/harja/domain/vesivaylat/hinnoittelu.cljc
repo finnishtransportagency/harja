@@ -105,7 +105,7 @@
           ::id
           ::hintaelementit]))
 
-(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hinnoittelut-kysely)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hinnoittelut-vastaus)
 
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
