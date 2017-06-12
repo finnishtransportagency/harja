@@ -14,6 +14,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [harja.fmt :as fmt]))
 
@@ -233,12 +234,23 @@
                gridin-sarakkeet]])
            tyolajit))))
 
-(defn- hintaryhman-hinnoittelu []
-  [:div.otsikkopaneeli-footer {:style {:margin-top "5px"}}
-   [napit/yleinen-ensisijainen
-   "Määrittele yksi hinta koko ryhmälle"
-   #(log "DOH!")
-   {:luokka "pull-right"}]])
+(defn- hintaryhman-hinnoittelu [e! app hintaryhma]
+  (let [hinnoitellaan? (get-in app [:hinnoittele-hintaryhma ::h/id])]
+    [:div.otsikkopaneeli-footer {:style {:margin-top "5px"}}
+     (if hinnoitellaan?
+       [napit/yleinen-ensisijainen
+        "Määrittele yksi hinta koko ryhmälle"
+        #(log "DOH!")
+        {:luokka "pull-right"}]
+       [:div
+        [napit/yleinen-ensisijainen
+         "Valmis"
+         #(log "DOH VALMIS!")
+         {:luokka "pull-right"}]
+        [napit/yleinen-ensisijainen
+         "Peruuta"
+         #(log "DOH PERUUTA!")
+         {:luokka "pull-right"}]])]))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti
@@ -271,7 +283,7 @@
                   :gridin-sarakkeet gridin-sarakkeet
                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
          (when hintaryhma
-           [hintaryhman-hinnoittelu hintaryhma])]))
+           [hintaryhman-hinnoittelu e! app hintaryhma])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))

@@ -70,6 +70,9 @@
           :harja.domain.vesivaylat.toimenpide/hintatyyppi
           :harja.domain.vesivaylat.toimenpide/lisatyo?}]}]})
 
+(defn hinnoittelu-idlla [hinnoittelut id]
+  (first (filter #(= (::id %) id) hinnoittelut)))
+
 ;; Palvelut
 
 (s/def ::hae-hinnoittelut-kysely

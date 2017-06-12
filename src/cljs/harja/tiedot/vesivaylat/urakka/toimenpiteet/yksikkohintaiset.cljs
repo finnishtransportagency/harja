@@ -96,6 +96,7 @@
 (defrecord ValitutLiitetty [vastaus])
 (defrecord ValitutEiLiitetty [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
+(defrecord AloitaHintaryhmanHinnoittelu [toimenpide-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
@@ -286,6 +287,28 @@
                                                     false)})]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
+                  ::h/hintaelementit
+                  [(luo-hinta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
+                   (luo-hinta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
+                   (luo-hinta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
+                   (luo-hinta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
+                   (luo-hinta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))]})))
+
+  AloitaHintaryhmanHinnoittelu
+  (process-event [{hintaryhma-id :hintaryhma-id} app]
+    ;; TODO Duplikaatin makua yllä olevaan nähden, voisi funktioistaa?
+    ;; TODO Testi tälle
+    (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+          hinnat (::h/hinnat hinnoiteltava-hintaryhma)
+          luo-hinta (fn [otsikko olemassa-oleva-hinta]
+                      {::hinta/id (::hinta/id olemassa-oleva-hinta)
+                       ::hinta/otsikko otsikko
+                       ::hinta/maara (or (::hinta/maara olemassa-oleva-hinta) 0)
+                       ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa olemassa-oleva-hinta)]
+                                                    (not (zero? yleiskustannuslisa))
+                                                    false)})]
+      (assoc app :hinnoittele-toimenpide
+                 {::to/id hintaryhma-id
                   ::h/hintaelementit
                   [(luo-hinta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
                    (luo-hinta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
