@@ -304,8 +304,15 @@
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
 
-(defn hae-hinnoittelu []
-  (ffirst (q (str "SELECT id FROM vv_hinnoittelu LIMIT 1;"))))
+(defn hae-helsingin-vesivaylaurakan-hinnoittelu []
+  (ffirst (q (str "SELECT id FROM vv_hinnoittelu
+                   WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   LIMIT 1;"))))
+
+(defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
+  (ffirst (q (str "SELECT id FROM vv_hinnoittelu
+                   WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   LIMIT 1;"))))
 
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id

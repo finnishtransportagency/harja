@@ -102,6 +102,17 @@
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= hinnat-ennen hinnat-jalkeen)))))))
 
+(deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
+  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/id toimenpide-id
+                       ::h/hintaelementit []}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-toimenpiteelle-hinta +kayttaja-tero+
+                                           kysely-params)))))
+
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -127,10 +138,10 @@
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
 
-;; TODO Enabloi kun toimii
-#_(deftest tallenna-ryhmalle-hinta
+;; TODO Kesken
+(deftest tallenna-ryhmalle-hinta
   (testing "Hintojen lisääminen hintaryhmälle"
-    (let [hinnoittelu-id (hae-hinnoittelu)
+    (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
           urakka-id (hae-helsingin-vesivaylaurakan-id)
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
@@ -160,3 +171,51 @@
 
       ;; TODO TESTAA PÄIVITTÄMINEN
       )))
+
+;; TODO Failaa!?
+(deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
+  (let [hinnoittelu-id (hae-vanhtaan-vesivaylaurakan-hinnoittelu)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/id hinnoittelu-id
+                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
+                                            ::hinta/yleiskustannuslisa 0
+                                            ::hinta/maara 666}
+                                           {::hinta/otsikko "Testihinta 2"
+                                            ::hinta/yleiskustannuslisa 12
+                                            ::hinta/maara 123}]}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
+                                                   kysely-params)))))
+
+;; TODO Failaa!?
+(deftest tallenna-ryhmalle-hinta-kun-hinnat-eivat-kuulu-hinnoitteluun
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/id hinnoittelu-id
+                       ::h/hintaelementit [{::hinta/id 666
+                                            ::hinta/otsikko "Testihinta 1"
+                                            ::hinta/yleiskustannuslisa 0
+                                            ::hinta/maara 666}]}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest tallenna-ryhmalle-hinta-ilman-kirjoitusoikeutta
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/id hinnoittelu-id
+                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
+                                            ::hinta/yleiskustannuslisa 0
+                                            ::hinta/maara 666}
+                                           {::hinta/otsikko "Testihinta 2"
+                                            ::hinta/yleiskustannuslisa 12
+                                            ::hinta/maara 123}]}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-hintaryhmalle-hinta +kayttaja-tero+
+                                           kysely-params)))))
