@@ -216,3 +216,28 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hintaryhmalle-hinta +kayttaja-tero+
                                            kysely-params)))))
+
+(deftest hae-hinnoittelut-ilman-oikeuksia
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::u/id urakka-id}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-hinnoittelut +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest luo-hinnoittelu-ilman-oikeuksia
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/nimi "Testi"}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :luo-hinnoittelu +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/idt #{1 2 3}
+                       ::h/id hinnoittelu-id
+                       ::u/id urakka-id}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :liita-toimenpiteet-hinnoitteluun +kayttaja-tero+
+                                           kysely-params)))))
