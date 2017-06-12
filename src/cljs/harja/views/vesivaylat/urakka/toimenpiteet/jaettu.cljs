@@ -125,8 +125,8 @@
   [napit/yleinen-ensisijainen (if siirto-kaynnissa?
                                 [ajax-loader-pieni "Siirretään.."]
                                 (str otsikko
-                                    (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
-                                      (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
+                                     (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
+                                       (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
    toiminto
    {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
                   siirto-kaynnissa?)}])
@@ -234,8 +234,8 @@
            tyolajit))))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
-                             gridin-sarakkeet otsikko
-                             paneelin-checkbox-sijainti vaylan-checkbox-sijainti]
+                             gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti
+                                                      vaylan-checkbox-sijainti]}]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -269,10 +269,11 @@
   ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
-    (conj (vec (concat oletussarakkeet (or lisa-sarakkeet []))) (valinta-checkbox e! app))
-    otsikko
-    paneelin-checkbox-sijainti
-    vaylan-checkbox-sijainti]))
+    (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
+          (valinta-checkbox e! app))
+    {:otsikko otsikko
+     :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
+     :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
 
 (defn listaus* [optiot e! app]
   [:div
