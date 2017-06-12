@@ -55,12 +55,13 @@
 
 (defn hae-hinnoittelut [db tiedot]
   (let [urakka-id (::ur/id tiedot)]
-    (specql/fetch db
-                  ::h/hinnoittelu
-                  h/perustiedot
-                  {::h/urakka-id urakka-id
-                   ::h/hintaryhma? true
-                   ::m/poistettu? false})))
+    (->> (specql/fetch db
+                   ::h/hinnoittelu
+                   (set/union h/perustiedot h/hinnat) ;; TODO POISTA POISTETUT HINNAT!111
+                   {::h/urakka-id urakka-id
+                    ::h/hintaryhma? true
+                    ::m/poistettu? false})
+         (map #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %)))))))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
