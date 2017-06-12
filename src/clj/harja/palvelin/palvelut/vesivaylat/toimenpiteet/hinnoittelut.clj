@@ -46,10 +46,11 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-      (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/hinnoittelu-id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot))) (::h/hinnoittelu-id tiedot))
+      (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
+      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot)))
+                                             (::h/id tiedot))
       (q/tallenna-hintaryhmalle-hinta! db user
-                                       (::h/hinnoittelu-id tiedot)
+                                       (::h/id tiedot)
                                        (::h/hintaelementit tiedot)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
