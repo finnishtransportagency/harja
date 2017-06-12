@@ -63,7 +63,7 @@
   #{[::toimenpide-linkit
      #{[::toimenpiteet
         #{:harja.domain.vesivaylat.toimenpide/id
-          :harja.domain.vesivaylat.toimenpide/urakka-id
+          :harja.domain.vesivaylat.toimenpide/reimari-turvalaite
           :harja.domain.vesivaylat.toimenpide/hintatyyppi
           :harja.domain.vesivaylat.toimenpide/lisatyo?}]}]})
 

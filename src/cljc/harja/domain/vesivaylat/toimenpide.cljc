@@ -314,7 +314,7 @@ reimari-tilat
 (def viittaus-idt
   #{::urakoitsija-id
     ::sopimus-id
-    ::urakka-id
+    ::reimari-turvalaite
     ::turvalaite-id
     ::vayla-id
     ::m/muokkaaja-id
@@ -394,3 +394,11 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+
+(defn toimenpiteen-urakka-id [toimenpide]
+  (when (some? toimenpide)
+    ;; (println "toimenpiteen urakka id:" (pr-str toimenpide))
+
+    ;; (println "toimenpiteen urakka id:" (pr-str  (::reimari-turvalaite toimenpide)))
+    ;; (assert (::reimari-turvalaite toimenpide) toimenpide)
+    (-> toimenpide ::reimari-turvalaite ::vv-turvalaite/r-ryhma)))
