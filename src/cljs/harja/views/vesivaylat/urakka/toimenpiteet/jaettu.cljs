@@ -241,29 +241,28 @@
 
         :default
         [:div
-         [:div
-          (when otsikko [:h1 otsikko])
-          (into [otsikkopaneeli
-                 {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
-                  :paneelikomponentit
-                  [{:sijainti paneelin-checkbox-sijainti
-                    :sisalto
-                    (fn [{:keys [tunniste]}]
-                      (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
-                        [kentat/tee-kentta
-                         {:tyyppi :checkbox}
-                         (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
-                                 (fn [uusi]
-                                   (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                 :valinta uusi}
-                                                                toimenpiteet))))]))}]}]
-                (luo-otsikkorivit
-                  {:e! e!
-                   :app app
-                   :toimenpiteet toimenpiteet
-                   :haku-kaynnissa? haku-kaynnissa?
-                   :gridin-sarakkeet gridin-sarakkeet
-                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))]]))
+         (when otsikko [:h1 otsikko])
+         (into [otsikkopaneeli
+                {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+                 :paneelikomponentit
+                 [{:sijainti paneelin-checkbox-sijainti
+                   :sisalto
+                   (fn [{:keys [tunniste]}]
+                     (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
+                       [kentat/tee-kentta
+                        {:tyyppi :checkbox}
+                        (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
+                                (fn [uusi]
+                                  (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                                :valinta uusi}
+                                                               toimenpiteet))))]))}]}]
+               (luo-otsikkorivit
+                 {:e! e!
+                  :app app
+                  :toimenpiteet toimenpiteet
+                  :haku-kaynnissa? haku-kaynnissa?
+                  :gridin-sarakkeet gridin-sarakkeet
+                  :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
