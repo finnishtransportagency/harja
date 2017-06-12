@@ -102,7 +102,7 @@
                           {::hinta/hinnoittelu-id hinnoittelu-id
                            ::m/muokkaaja-id (:id user)
                            ::m/muokattu (pvm/nyt)})
-                        {::h/id (::h/id hinta)})
+                        {::hinta/id (::hinta/id hinta)})
 
         (specql/insert! db
                         ::hinta/hinta

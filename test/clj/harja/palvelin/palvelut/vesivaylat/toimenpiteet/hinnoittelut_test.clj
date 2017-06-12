@@ -169,8 +169,33 @@
       (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
       (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut")
 
-      ;; TODO TESTAA PÄIVITTÄMINEN
-      )))
+      (testing "Lisättyjen hintojen päivittäminen"
+        (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+              hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+              update-params {::u/id urakka-id
+                             ::h/id hinnoittelu-id
+                             ::h/hintaelementit (mapv (fn [hinta]
+                                                        (assoc hinta ::hinta/maara
+                                                                     (case (::hinta/maara hinta)
+                                                                       666M 555
+                                                                       123M 321)))
+                                                      (::h/hinnat paivitetty-hinnoittelu))}
+              update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
+                                             update-params)
+              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
+              hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+              paivitetty-hinnoittelu (first (filter #(= (::h/id %) hinnoittelu-id) update-vastaus))]
+
+          (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-kysely insert-params))
+          (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-vastaus insert-vastaus))
+
+          (is (map? paivitetty-hinnoittelu))
+          (is (= (count (::h/hinnat paivitetty-hinnoittelu)) 2))
+          (is (some #(== (::hinta/maara %) 555) (::h/hinnat paivitetty-hinnoittelu)))
+          (is (some #(== (::hinta/maara %) 321) (::h/hinnat paivitetty-hinnoittelu)))
+          (is (= hinnat-ennen hinnat-jalkeen) "Hintojen määrä pystyi samana päivityksessä")
+          (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut edelleenkään"))))))
 
 (deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
   (let [hinnoittelu-id (hae-vanhtaan-vesivaylaurakan-hinnoittelu)
