@@ -257,7 +257,6 @@ reimari-tilat
     "lisatyo" ::lisatyo?
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
-    ::urakka (specql.rel/has-one {::reimari-turvalaite {::vv-turvalaite/r-ryhma}} ::urakka/urakka ::urakka/id)
     ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
     ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
@@ -329,7 +328,6 @@ reimari-tilat
 (def sopimus #{[::sopimus sopimus/perustiedot]})
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
-(def urakka #{[::urakka #{}]})
 
 (def viittaukset
   (clojure.set/union
@@ -337,7 +335,6 @@ reimari-tilat
     urakoitsija
     sopimus
     turvalaite
-    urakka
     vayla))
 
 (def perustiedot
