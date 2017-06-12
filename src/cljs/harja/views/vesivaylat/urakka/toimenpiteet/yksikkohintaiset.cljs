@@ -176,6 +176,7 @@
                                               [hinnoittele-toimenpide e! app* rivi])}]
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
+             :hinnoittele-hintaryhma? (boolean (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet))
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
 

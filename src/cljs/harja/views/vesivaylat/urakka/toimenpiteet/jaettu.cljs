@@ -233,9 +233,17 @@
                gridin-sarakkeet]])
            tyolajit))))
 
+(defn- hintaryhman-hinnoittelu []
+  [:div.otsikkopaneeli-footer {:style {:margin-top "5px"}}
+   [napit/yleinen-ensisijainen
+   "Määrittele yksi hinta koko ryhmälle"
+   #(log "DOH!")
+   {:luokka "pull-right"}]])
+
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti
-                                                      vaylan-checkbox-sijainti]}]
+                                                      vaylan-checkbox-sijainti
+                                                      hinnoittele-hintaryhma?]}]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -262,16 +270,20 @@
                   :toimenpiteet toimenpiteet
                   :haku-kaynnissa? haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
-                  :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))]))
+                  :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
+         (when hinnoittele-hintaryhma?
+           [hintaryhman-hinnoittelu])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
-  ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti]}]
+  ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
+                   hinnoittele-hintaryhma?]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
           (valinta-checkbox e! app))
     {:otsikko otsikko
+     :hinnoittele-hintaryhma? hinnoittele-hintaryhma?
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
 
