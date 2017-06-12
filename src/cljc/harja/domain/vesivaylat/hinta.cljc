@@ -35,6 +35,9 @@
     ::yleiskustannuslisa
     ::id})
 
+(def viittaus-idt
+  #{::hinnoittelu-id})
+
 (def metatiedot m/muokkauskentat)
 
 (defn- kokonaishinta [hinnat]

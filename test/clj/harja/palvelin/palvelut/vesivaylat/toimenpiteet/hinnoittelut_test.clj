@@ -129,7 +129,7 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/hintaelementit [{::hinta/id 666
+                       ::h/hintaelementit [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                             ::hinta/otsikko "Testihinta 1"
                                             ::hinta/yleiskustannuslisa 0
                                             ::hinta/maara 666}]}]
@@ -188,13 +188,12 @@
                                                    :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
 
-;; TODO Failaa!?
-#_(deftest tallenna-ryhmalle-hinta-kun-hinnat-eivat-kuulu-hinnoitteluun
+(deftest tallenna-ryhmalle-hinta-kun-hinnat-eivat-kuulu-hinnoitteluun
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
-                       ::h/hintaelementit [{::hinta/id 666
+                       ::h/hintaelementit [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                             ::hinta/otsikko "Testihinta 1"
                                             ::hinta/yleiskustannuslisa 0
                                             ::hinta/maara 666}]}]

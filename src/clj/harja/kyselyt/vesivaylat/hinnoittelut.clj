@@ -46,11 +46,10 @@
 (defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
   (when-not (->> (specql/fetch
                    db
-                   ::h/hinnoittelu
-                   (set/union h/hinnat)
-                   {::h/hinnat {::hinta/id (op/in hinta-idt)}})
-
-                 (keep ::h/id)
+                   ::hinta/hinta
+                   (set/union hinta/perustiedot hinta/viittaus-idt)
+                   {::hinta/id (op/in hinta-idt)})
+                 (keep ::hinta/hinnoittelu-id)
                  (every? (partial = hinnoittelu-id)))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 

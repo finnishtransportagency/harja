@@ -427,6 +427,13 @@ VALUES
    (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
    (SELECT "urakka-id" FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2'), true);
 
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id")
+VALUES
+  ('Vanhaan urakan testihinnoittelu' , true,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -446,6 +453,11 @@ VALUES
   ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
    'POISTETTUUN HINNOITTELUUN KUULUVA HINTA JOKA EI OLE POISTETTU EI SAA NÄKYÄ MISSÄÄN', 99999999, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), false);
 
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja)
+VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vanhaan urakan testihinnoittelu'),
+   'Työ', 5, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)

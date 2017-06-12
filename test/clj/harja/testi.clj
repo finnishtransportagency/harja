@@ -314,6 +314,11 @@
                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    LIMIT 1;"))))
 
+(defn hae-vanhtaan-vesivaylaurakan-hinta []
+  (ffirst (q (str "SELECT id FROM vv_hinta
+                   WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vanhaan urakan testihinnoittelu')
+                   LIMIT 1;"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
