@@ -161,7 +161,6 @@
       (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-kysely insert-params))
       (is (s/valid? ::h/tallenna-hintaryhmalle-hinta-vastaus insert-vastaus))
 
-
       (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
       (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
@@ -217,15 +216,28 @@
                                            :tallenna-hintaryhmalle-hinta +kayttaja-tero+
                                            kysely-params)))))
 
+(deftest hae-hinnoittelut
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::u/id urakka-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-hinnoittelut +kayttaja-jvh+
+                                kysely-params)]
+
+    (is (s/valid? ::h/hae-hinnoittelut-kysely kysely-params))
+    (is (s/valid? ::h/hae-hinnoittelut-vastaus vastaus))
+
+    (is (>= (count vastaus) 1))
+    (is (some #(= (::h/nimi %) "Hietasaaren poijujen korjaus") vastaus))))
+
 (deftest hae-hinnoittelut-ilman-oikeuksia
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-hinnoittelut +kayttaja-tero+
                                            kysely-params)))))
 
 (deftest luo-hinnoittelu-ilman-oikeuksia
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/nimi "Testi"}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -234,7 +246,7 @@
 
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/idt #{1 2 3}
                        ::h/id hinnoittelu-id
                        ::u/id urakka-id}]

@@ -87,11 +87,11 @@
   (jdbc/with-db-transaction [db db]
     (doall
       (for [id toimenpide-idt]
-       (specql/insert! db
-                       ::h/hinnoittelu<->toimenpide
-                       {::h/toimenpide-id id
-                        ::h/hinnoittelu-id hinnoittelu
-                        ::m/luoja-id (:id user)})))))
+        (specql/insert! db
+                        ::h/hinnoittelu<->toimenpide
+                        {::h/toimenpide-id id
+                         ::h/hinnoittelu-id hinnoittelu
+                         ::m/luoja-id (:id user)})))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat]
   (jdbc/with-db-transaction [db db]

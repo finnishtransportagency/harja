@@ -16,7 +16,6 @@
 (defn hae-hinnoittelut [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
-      ;; TODO Testi puuttuu
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/hae-hinnoittelut db tiedot))))
