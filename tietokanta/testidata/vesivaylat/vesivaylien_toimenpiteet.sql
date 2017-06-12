@@ -450,6 +450,12 @@ VALUES
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja, poistettu)
 VALUES
+  ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'Hietasaaren poijujen korjaus'),
+   'HINTARYHMÄÄN LIITTYVÄ POISTETTU HINTA EI SAA NÄKYÄ', 99999999, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), true);
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+VALUES
   ((SELECT id FROM vv_hinnoittelu WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
    'POISTETTUUN HINNOITTELUUN KUULUVA HINTA JOKA EI OLE POISTETTU EI SAA NÄKYÄ MISSÄÄN', 99999999, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), false);
 
