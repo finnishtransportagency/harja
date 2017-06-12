@@ -242,8 +242,7 @@
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti
-                                                      vaylan-checkbox-sijainti
-                                                      hinnoittele-hintaryhma?]}]
+                                                      vaylan-checkbox-sijainti hintaryhma]}]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -271,19 +270,19 @@
                   :haku-kaynnissa? haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
-         (when hinnoittele-hintaryhma?
-           [hintaryhman-hinnoittelu])]))
+         (when hintaryhma
+           [hintaryhman-hinnoittelu hintaryhma])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   hinnoittele-hintaryhma?]}]
+                   hintaryhma]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
           (valinta-checkbox e! app))
     {:otsikko otsikko
-     :hinnoittele-hintaryhma? hinnoittele-hintaryhma?
+     :hintaryhma hintaryhma
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
 
