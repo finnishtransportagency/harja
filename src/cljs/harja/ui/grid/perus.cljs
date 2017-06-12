@@ -25,7 +25,8 @@
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
-                   [harja.makrot :refer [fnc]]))
+                   [harja.makrot :refer [fnc]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin."
@@ -575,11 +576,14 @@
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
   :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
                                          :teksti (näytettävä teksti) ja :sarakkeita (colspan)
+  :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
+                                        joka saa muokkaustiedot parametrina ja palauttaa
+                                        sekvenssin mäppejä kuten :rivi-ennen
+
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
   :voi-muokata-rivia?                   predikaattifunktio, jolla voidaan määrittää jolla voidaan määrittää kaikille
-                                        riveille yhteinen sääntö milloin rivejä saa muokata
-  "
+                                        riveille yhteinen sääntö milloin rivejä saa muokata "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
@@ -945,7 +949,13 @@
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                          :nayta-toimintosarake? nayta-toimintosarake?
-                                         :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))]])
+                                         :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))
+                (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
+                                             ((:rivi-jalkeen-fn opts) (vals @muokatut)))]
+                  [:tr {:class (:luokka (meta rivi-jalkeen))}
+                   (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
+                         [:td {:colSpan (or sarakkeita 1) :class luokka}
+                          teksti])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
