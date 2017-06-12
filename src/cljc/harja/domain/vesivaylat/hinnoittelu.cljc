@@ -105,7 +105,7 @@
           ::id
           ::hintaelementit]))
 
-(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::tallenna-hintaryhmalle-hinta-vastaus)
 
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
@@ -113,4 +113,4 @@
           :harja.domain.vesivaylat.toimenpide/id
           ::hintaelementit]))
 
-(s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hae-hinnoittelut-vastaus)
+(s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
