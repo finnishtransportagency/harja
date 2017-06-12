@@ -141,7 +141,7 @@
 
 #_(deftest tallenna-ryhmalle-hinta
   (testing "Hintojen lisääminen hintaryhmälle"
-    (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+    (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
           urakka-id (hae-helsingin-vesivaylaurakan-id)
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
@@ -188,7 +188,7 @@
                                                    kysely-params)))))
 
 (deftest tallenna-ryhmalle-hinta-kun-hinnat-eivat-kuulu-hinnoitteluun
-  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
@@ -202,7 +202,7 @@
                                                    kysely-params)))))
 
 (deftest tallenna-ryhmalle-hinta-ilman-kirjoitusoikeutta
-  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
@@ -248,7 +248,7 @@
                                            kysely-params)))))
 
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
-  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/idt #{1 2 3}
                        ::h/id hinnoittelu-id
