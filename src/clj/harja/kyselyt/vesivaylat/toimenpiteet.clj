@@ -132,13 +132,14 @@
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
-                               vv-toimenpide/perustiedot
-                               (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
-                               vv-toimenpide/reimari-kentat
-                               vv-toimenpide/metatiedot)
+                              vv-toimenpide/perustiedot
+                              (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
+                              vv-toimenpide/reimari-kentat
+                              vv-toimenpide/metatiedot)
                              (op/and
-                               {::m/poistettu? false}
-                               {::vv-toimenpide/urakka-id urakka-id}
+                              {::m/poistettu? false}
+
+                               {::vv-toimenpide/reimari-turvalaite {::vv-turvalaite/r-ryhma urakka-id}}
                                (when (and luotu-alku luotu-loppu)
                                  {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id
@@ -160,8 +161,43 @@
                                (when tyoluokat
                                  {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
                                (when toimenpiteet
-                                 {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+                                 {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)}))
+                             )
                       (suodata-vikakorjaukset vikailmoitukset?))]
+    #_(def *f1
+      (clojure.set/union
+       vv-toimenpide/perustiedot
+       (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
+       vv-toimenpide/reimari-kentat
+       vv-toimenpide/metatiedot))
+    #_(def *f2
+      (op/and
+       {::m/poistettu? false}
+
+       {::vv-toimenpide/reimari-turvalaite {::vv-turvalaite/r-ryhma urakka-id}}
+       (when (and luotu-alku luotu-loppu)
+         {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
+       (when urakoitsija-id
+         {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
+       (when kokonaishintaiset?
+         {::vv-toimenpide/hintatyyppi :kokonaishintainen})
+       (when yksikkohintaiset?
+         {::vv-toimenpide/hintatyyppi :yksikkohintainen})
+       (when sopimus-id
+         {::vv-toimenpide/sopimus-id sopimus-id})
+       (when (and alku loppu)
+         {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
+       (when vaylatyyppi
+         {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
+       (when vayla-id
+         {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
+       (when tyolaji
+         {::vv-toimenpide/reimari-tyolaji tyolaji})
+       (when tyoluokat
+         {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
+       (when toimenpiteet
+         {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+
     (cond->> (into [] toimenpiteet-xf fetchattu)
              yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
              kokonaishintaiset? (identity))))
