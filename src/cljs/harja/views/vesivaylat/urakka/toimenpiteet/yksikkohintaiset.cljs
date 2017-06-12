@@ -10,6 +10,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.leijuke :refer [leijuke]]
+            [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
@@ -17,7 +18,8 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.grid :as grid])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -101,13 +103,6 @@
                  (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                             ::hinta/yleiskustannuslisa uusi}))))])]])
 
-(defn- hinnoittele-nappiteksti [toimenpide]
-  (if (to/toimenpiteella-oma-hinnoittelu? toimenpide)
-    (str "Muokkaa hintaa (" (fmt/euro-opt (hinta/kokonaishinta
-                                            (get-in toimenpide [::to/oma-hinnoittelu ::h/hinnat])))
-         ")")
-    "Hinnoittele"))
-
 (defn- hinnoittele-toimenpide [e! app* rivi]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
     [:div
@@ -146,12 +141,13 @@
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
-       [napit/yleinen
-        (hinnoittele-nappiteksti rivi)
-        (if (not (to/toimenpiteella-oma-hinnoittelu? rivi)) :ensisijainen :toissijainen)
-        #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-        {:luokka "nappi-grid"
-         :disabled (:infolaatikko-nakyvissa? app*)}])]))
+       (grid/erikoismuokattava-kentta
+         {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
+          :nappi-teksti "Hinnoittele"
+          :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :nappi-optiot {:disabled (:infolaatikko-nakyvissa? app*)}
+          :arvo (fmt/euro-opt (hinta/kokonaishinta
+                                (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
