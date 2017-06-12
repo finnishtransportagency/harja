@@ -1074,6 +1074,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
 
+(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
+  [:span {:class (or luokka "label-ja-kentta")}
+   [:span.kentan-otsikko otsikko]
+   [:div.kentta
+    [nayta-arvo kentta-params arvo-atom]]])
+
 (def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")
 
 (defn- parsi-aika [string]
