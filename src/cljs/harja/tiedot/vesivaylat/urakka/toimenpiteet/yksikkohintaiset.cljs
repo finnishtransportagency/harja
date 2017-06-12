@@ -47,6 +47,8 @@
          :hintaryhmien-liittaminen-kaynnissa? false
          :hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide {::to/id nil
+                                  ::h/hintaelementit nil}
+         :hinnoittele-hintaryhma {::h/id nil
                                   ::h/hintaelementit nil}}))
 
 (def valinnat
