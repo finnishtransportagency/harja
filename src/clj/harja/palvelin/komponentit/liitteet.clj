@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [harja.domain.liitteet :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.komponentit.virustarkistus :as virustarkistus])
+            [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+            [fileyard.client :as fileyard-client])
   (:import (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
            (com.mchange.v2.c3p0 C3P0ProxyConnection)
@@ -34,6 +35,11 @@
         (io/copy in out)
         (.toByteArray out)))))
 
+(defn- lue-fileyard-tiedosto [client uuid]
+  (with-open [out (ByteArrayOutputStream.)]
+    (io/copy (fileyard-client/fetch client uuid) out)
+    (.toByteArray out)))
+
 (defn- tallenna-lob [db ^InputStream in]
   (with-open [c (doto (.getConnection (:datasource db))
                   (.setAutoCommit false))]
@@ -61,7 +67,7 @@
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liite [db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+(defn- tallenna-liite [db fileyard-client virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
@@ -70,8 +76,8 @@
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
-                oid (tallenna-lob db (io/input-stream lahde))
-                liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
+              uuid @(fileyard-client/save fileyard-client lahde)
+              liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko uuid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
             (log/debug "Liite tallennettu.")
             liite))
       (do
@@ -80,14 +86,20 @@
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- hae-liite [db liitteen-id]
-  (let [liite (first (liitteet/hae-liite-lataukseen db liitteen-id))]
-    (dissoc (assoc liite :data (lue-lob db (:liite_oid liite))) :liite_oid)))
+(defn- hae-liite [db fileyard-client liitteen-id]
+  (let [{:keys [fileyard-uuid] :as liite}
+        (first (liitteet/hae-liite-lataukseen db liitteen-id))]
+
+    (dissoc
+     (if fileyard-uuid
+       (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-uuid))
+       (assoc liite :data (lue-lob db (:liite_oid liite))))
+     :liite_oid :fileyard-uuid)))
 
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet/hae-pikkukuva-lataukseen db liitteen-id)))
 
-(defrecord Liitteet []
+(defrecord Liitteet [fileyard-url]
   component/Lifecycle
   (start [this]
     this)
@@ -97,8 +109,10 @@
   LiitteidenHallinta
   (luo-liite [{db :db virustarkistus :virustarkistus}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
-    (tallenna-liite db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+    (tallenna-liite db
+                    (fileyard-client/new-client fileyard-url)
+                    virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
-    (hae-liite db liitteen-id))
+    (hae-liite db (fileyard-client/new-client fileyard-url) liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))

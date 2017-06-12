@@ -1,14 +1,14 @@
 -- name: tallenna-liite<!
--- Tallentaa uuden liitteen. Liitteen large object pitää olla tallennettuna jo ja oid annettava.
+-- Tallentaa uuden liitteen. Liitteen pitää olla tallennettuna jo ja fileyard UUID annettava.
 INSERT
   INTO liite
-       (nimi, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
-VALUES (:nimi, :tyyppi, :koko, :oid, :pikkukuva, :luoja, current_timestamp, :urakka,
+       (nimi, tyyppi, koko, "fileyard-uuid", pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
+VALUES (:nimi, :tyyppi, :koko, :fileyard-uuid, :pikkukuva, :luoja, current_timestamp, :urakka,
         :kuvaus, :lahdejarjestelma::lahde);
 
 -- name: hae-liite-lataukseen
--- Hakee liitteen tiedot sen latausta varten. 
-SELECT liite_oid, tyyppi, koko, urakka FROM liite WHERE id = :id;
+-- Hakee liitteen tiedot sen latausta varten.
+SELECT "fileyard-uuid", liite_oid, tyyppi, koko, urakka FROM liite WHERE id = :id;
 
 -- name: hae-pikkukuva-lataukseen
 -- Hakee liitteen pikkukuvan sen latausta varten.
