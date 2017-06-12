@@ -138,7 +138,6 @@
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
 
-;; TODO Kesken
 #_(deftest tallenna-ryhmalle-hinta
   (testing "Hintojen lisääminen hintaryhmälle"
     (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu)
@@ -166,8 +165,8 @@
       (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
       (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
-      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelut")
       (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
+      (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut")
 
       ;; TODO TESTAA PÄIVITTÄMINEN
       )))
