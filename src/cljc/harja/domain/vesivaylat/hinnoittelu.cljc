@@ -48,6 +48,9 @@
     ::hintaryhma?
     ::id})
 
+(def viittaus-idt
+  #{::urakka-id})
+
 (def metatiedot m/muokkauskentat)
 
 (def hinnat

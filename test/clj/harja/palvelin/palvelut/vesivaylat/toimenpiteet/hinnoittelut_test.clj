@@ -172,8 +172,7 @@
       ;; TODO TESTAA PÄIVITTÄMINEN
       )))
 
-;; TODO Failaa!?
-#_(deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
+(deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
   (let [hinnoittelu-id (hae-vanhtaan-vesivaylaurakan-hinnoittelu)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id

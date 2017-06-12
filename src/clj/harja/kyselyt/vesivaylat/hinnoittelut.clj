@@ -24,7 +24,7 @@
   (when-not (->> (specql/fetch
                    db
                    ::h/hinnoittelu
-                   (set/union h/perustiedot)
+                   (set/union h/perustiedot h/viittaus-idt)
                    {::h/id (op/in hinnoittelu-idt)})
                  (keep ::h/urakka-id)
                  (every? (partial = urakka-id)))
