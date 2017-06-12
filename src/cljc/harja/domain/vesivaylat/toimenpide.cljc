@@ -397,8 +397,4 @@ reimari-tilat
 
 (defn toimenpiteen-urakka-id [toimenpide]
   (when (some? toimenpide)
-    ;; (println "toimenpiteen urakka id:" (pr-str toimenpide))
-
-    ;; (println "toimenpiteen urakka id:" (pr-str  (::reimari-turvalaite toimenpide)))
-    ;; (assert (::reimari-turvalaite toimenpide) toimenpide)
     (-> toimenpide ::reimari-turvalaite ::vv-turvalaite/r-ryhma)))

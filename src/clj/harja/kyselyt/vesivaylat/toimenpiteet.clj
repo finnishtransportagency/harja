@@ -42,15 +42,14 @@
   (assoc toimenpide ::vv-toimenpide/urakka-id (vv-toimenpide/toimenpiteen-urakka-id toimenpide)))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
-  (log/debug "Toimenpiteet " toimenpide-idt " kuuluvat urakkaan?: " urakka-id)
-    (when-not (->> (fetch
-                    db
-                    ::vv-toimenpide/reimari-toimenpide
-                    (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
-                    {::vv-toimenpide/id (op/in toimenpide-idt)})
+  (when-not (->> (fetch
+                  db
+                  ::vv-toimenpide/reimari-toimenpide
+                  (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
+                  {::vv-toimenpide/id (op/in toimenpide-idt)})
                  (keep vv-toimenpide/toimenpiteen-urakka-id)
                  (every? (partial = urakka-id)))
-      (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
   (assoc hinnoittelu ::vv-hinnoittelu/hinnat
@@ -82,11 +81,6 @@
                                          ::vv-toimenpide/hintaryhma))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (log/debug
-
-   "fetchataan kentat "(set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
-   '(op/and
-    {::vv-toimenpide/id (op/in toimenpide-idt)}))
   (->> (fetch db
               ::vv-toimenpide/reimari-toimenpide
               (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)

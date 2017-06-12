@@ -9,7 +9,6 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
-            [harja.domain.vesivaylat.toimenpide :as tl]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as hin]
@@ -51,8 +50,7 @@
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
-        kysely-params {;; ::toi/reimari-turvalaite {::tl/r-ryhma urakka-id}
-                       ::toi/urakka-id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
                                             ::hinta/yleiskustannuslisa 0
@@ -77,8 +75,7 @@
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
-        kysely-params {;; ::toi/reimari-turvalaite {::tl/r-ryhma urakka-id}
-                       ::toi/urakka-id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/hintaelementit []}]
 
