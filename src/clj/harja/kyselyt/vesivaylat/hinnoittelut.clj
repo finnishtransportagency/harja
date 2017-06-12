@@ -54,8 +54,7 @@
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
 (defn hae-hinnoittelut [db tiedot]
-  (let
-    [urakka-id (::ur/id tiedot)]
+  (let [urakka-id (::ur/id tiedot)]
     (specql/fetch db
                   ::h/hinnoittelu
                   h/perustiedot
@@ -64,9 +63,8 @@
                    ::m/poistettu? false})))
 
 (defn luo-hinnoittelu! [db user tiedot]
-  (let
-    [urakka-id (::ur/id tiedot)
-     nimi (::h/nimi tiedot)]
+  (let [urakka-id (::ur/id tiedot)
+        nimi (::h/nimi tiedot)]
     (specql/insert! db
                     ::h/hinnoittelu
                     {::h/urakka-id urakka-id
