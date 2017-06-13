@@ -17,7 +17,7 @@
 (t/deftest kasittele-vastaus-kantatallennus
   (ht/tarkista-map-arvot
    (first (tohaku/kasittele-vastaus (:db ht/jarjestelma)
-                                    (slurp "resources/xsd/reimari/vastaus.xml")))
+                                    (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml")))
    {:harja.domain.vesivaylat.toimenpide/urakka-id (ht/hae-helsingin-vesivaylaurakan-id)
     :harja.domain.vesivaylat.toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
     :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
