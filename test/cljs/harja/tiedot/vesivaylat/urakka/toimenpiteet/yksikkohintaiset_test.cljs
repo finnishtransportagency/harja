@@ -169,7 +169,7 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+          hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
                                                          :sopimus-id 777
                                                          :aikavali [alku loppu]
                                                          :vaylatyyppi :muu
@@ -193,7 +193,7 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
                                                          :sopimus-id 777
                                                          :tyolaji nil
                                                          :tyoluokka nil
@@ -205,7 +205,7 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
+    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
                                                          :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777
