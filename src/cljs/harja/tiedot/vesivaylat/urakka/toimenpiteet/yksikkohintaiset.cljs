@@ -96,7 +96,7 @@
 (defrecord ValitutLiitetty [vastaus])
 (defrecord ValitutEiLiitetty [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
-(defrecord AloitaHintaryhmanHinnoittelu [toimenpide-id])
+(defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])

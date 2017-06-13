@@ -164,7 +164,7 @@
          {:luokka "pull-right"}]]
        [napit/yleinen-ensisijainen
         "Määrittele yksi hinta koko ryhmälle"
-        #(log "DOH!")
+        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
         {:luokka "pull-right"}])]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
