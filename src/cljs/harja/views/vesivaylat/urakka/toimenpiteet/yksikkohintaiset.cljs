@@ -149,6 +149,24 @@
           :arvo (fmt/euro-opt (hinta/kokonaishinta
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
+(defn- hintaryhman-hinnoittelu [e! app hintaryhma]
+  (let [hinnoitellaan? (get-in app [:hinnoittele-hintaryhma ::h/id])]
+    [:div
+     (if hinnoitellaan?
+       [:div
+        [napit/yleinen-ensisijainen
+         "Valmis"
+         #(log "DOH VALMIS!")
+         {:luokka "pull-right"}]
+        [napit/yleinen-ensisijainen
+         "Peruuta"
+         #(log "DOH PERUUTA!")
+         {:luokka "pull-right"}]]
+       [napit/yleinen-ensisijainen
+        "Määrittele yksi hinta koko ryhmälle"
+        #(log "DOH!")
+        {:luokka "pull-right"}])]))
+
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
@@ -174,6 +192,8 @@
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide e! app* rivi])}]
+             :footer (when hintaryhma
+                       [hintaryhman-hinnoittelu e! app hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
              :hintaryhma hintaryhma

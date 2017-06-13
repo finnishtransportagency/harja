@@ -234,27 +234,9 @@
                gridin-sarakkeet]])
            tyolajit))))
 
-(defn- hintaryhman-hinnoittelu [e! app hintaryhma]
-  (let [hinnoitellaan? (get-in app [:hinnoittele-hintaryhma ::h/id])]
-    [:div.otsikkopaneeli-footer {:style {:margin-top "5px"}}
-     (if hinnoitellaan?
-       [napit/yleinen-ensisijainen
-        "Määrittele yksi hinta koko ryhmälle"
-        #(log "DOH!")
-        {:luokka "pull-right"}]
-       [:div
-        [napit/yleinen-ensisijainen
-         "Valmis"
-         #(log "DOH VALMIS!")
-         {:luokka "pull-right"}]
-        [napit/yleinen-ensisijainen
-         "Peruuta"
-         #(log "DOH PERUUTA!")
-         {:luokka "pull-right"}]])]))
-
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
-                             gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti
-                                                      vaylan-checkbox-sijainti hintaryhma]}]
+                             gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
+                                                      vaylan-checkbox-sijainti]}]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -282,19 +264,19 @@
                   :haku-kaynnissa? haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
-         (when hintaryhma
-           [hintaryhman-hinnoittelu e! app hintaryhma])]))
+         (when footer
+           [:div.toimenpiteet-listaus-footer footer])]))
 
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   hintaryhma]}]
+                   footer]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
           (valinta-checkbox e! app))
     {:otsikko otsikko
-     :hintaryhma hintaryhma
+     :footer footer
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
 
