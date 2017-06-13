@@ -2,31 +2,29 @@
   (:require [harja.palvelin.integraatiot.reimari.toimenpidehaku :as tohaku]
             [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [harja.testi :as ht]
             [clojure.test :as t]))
 
 (def jarjestelma-fixture
   (ht/laajenna-integraatiojarjestelmafixturea
-    "yit"
-    :reimari (component/using
-               (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil)
-               [:db :integraatioloki])))
+   "yit"
+   :reimari (component/using
+           (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil)
+           [:db :integraatioloki])))
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
 
 (t/deftest kasittele-vastaus-kantatallennus
   (ht/tarkista-map-arvot
    (first (tohaku/kasittele-vastaus (:db ht/jarjestelma)
-                                    (slurp "resources/xsd/reimari/vastaus.xml")))
-   {:harja.domain.vesivaylat.toimenpide/suoritettu
-    #inst "2017-04-24T09:42:04.123-00:00",
+                                    (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml")))
+   {:harja.domain.vesivaylat.toimenpide/urakka-id (ht/hae-helsingin-vesivaylaurakan-id)
+    :harja.domain.vesivaylat.toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
     :harja.domain.vesivaylat.toimenpide/reimari-id -123456,
     :harja.domain.vesivaylat.toimenpide/reimari-tila "1022541202",
     :harja.domain.vesivaylat.toimenpide/lisatyo? false,
     :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi "1022542001"
     :harja.domain.vesivaylat.toimenpide/reimari-vayla
-
     {:harja.domain.vesivaylat.vayla/r-nro "12345",
      :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
     :harja.domain.vesivaylat.toimenpide/id 8,
