@@ -299,9 +299,8 @@
 
     AloitaHintaryhmanHinnoittelu
     (process-event [{hintaryhma-id :hintaryhma-id} app]
-      ;; TODO Testi tälle
       (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-            hinnat (::h/hinnat hinnoiteltava-hintaryhma)]
+            hinnat (::h/hintaelementit hinnoiteltava-hintaryhma)]
         (assoc app :hinnoittele-hintaryhma
                    {::h/id hintaryhma-id
                     ::h/hintaelementit (hintakentat hinnat)})))

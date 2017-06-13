@@ -363,8 +363,7 @@
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa false}]}))))
 
-  ;; FIXME Tämä ei mene läpi!?
-  #_(testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
+  (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666)
                         vanha-tila)]
