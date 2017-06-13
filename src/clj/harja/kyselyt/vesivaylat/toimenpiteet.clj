@@ -133,7 +133,7 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                               vv-toimenpide/perustiedot
-                              (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
+                              vv-toimenpide/viittaukset
                               vv-toimenpide/reimari-kentat
                               vv-toimenpide/metatiedot)
                              (op/and
