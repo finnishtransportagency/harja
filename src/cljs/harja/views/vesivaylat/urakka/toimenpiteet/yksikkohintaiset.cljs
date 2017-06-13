@@ -180,25 +180,28 @@
     (fn [e! {:keys [toimenpiteet] :as app}]
       (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
-
         [:div
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
-
-         (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]]
-           ^{:key (str "yksikkohintaiset-toimenpiteet-" (::h/nimi hintaryhma))}
-           [jaettu/listaus e! app*
-            {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                               :komponentti (fn [rivi]
-                                              [hinnoittele-toimenpide e! app* rivi])}]
-             :footer (when hintaryhma
-                       [hintaryhman-hinnoittelu e! app hintaryhma])
-             :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
-                          "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
-             :hintaryhma hintaryhma
-             :paneelin-checkbox-sijainti "95.2%"
-             :vaylan-checkbox-sijainti "95.2%"}])]))))
+         (map-indexed
+           (fn [idx [hintaryhma hintaryhman-toimenpiteet]]
+             (log "yksikköhintaisten toimenpiteet näkymä, hintaryhmä " (pr-str hintaryhma)
+                  "hintaryhman-toimenpiteet " (pr-str hintaryhman-toimenpiteet))
+             (let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]
+               ^{:key idx}
+               [jaettu/listaus
+                e! app*
+                {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                   :komponentti (fn [rivi]
+                                                  [hinnoittele-toimenpide e! app* rivi])}]
+                 :gridin-idx idx
+                 :footer (when hintaryhma
+                           [hintaryhman-hinnoittelu e! app hintaryhma])
+                 :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
+                              "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
+                 :paneelin-checkbox-sijainti "95.2%"
+                 :vaylan-checkbox-sijainti "95.2%"}]))
+           toimenpiteet-ryhmissa)]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
