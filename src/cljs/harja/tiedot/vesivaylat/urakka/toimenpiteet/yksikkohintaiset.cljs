@@ -307,8 +307,8 @@
                        ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa olemassa-oleva-hinta)]
                                                     (not (zero? yleiskustannuslisa))
                                                     false)})]
-      (assoc app :hinnoittele-toimenpide
-                 {::to/id hintaryhma-id
+      (assoc app :hinnoittele-hintaryhma
+                 {::h/id hintaryhma-id
                   ::h/hintaelementit
                   [(luo-hinta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
                    (luo-hinta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
