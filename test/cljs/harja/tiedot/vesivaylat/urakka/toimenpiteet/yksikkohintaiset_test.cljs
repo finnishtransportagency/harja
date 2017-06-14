@@ -327,24 +327,24 @@
               [{::hinta/id nil
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko
                 "Yleiset materiaalit"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}]}))))
+                ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
@@ -357,23 +357,23 @@
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/maara 2
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]})))))
+                ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
@@ -387,24 +387,24 @@
               [{::hinta/id nil
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko
                 "Yleiset materiaalit"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}]}))))
+                ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
@@ -417,23 +417,23 @@
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/maara 2
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]})))))
+                ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
@@ -448,29 +448,29 @@
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/maara 666
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]}))))
+                ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
                          (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/yleiskustannuslisa true})))]
+                                                                    ::hinta/yleiskustannuslisa 12})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
@@ -478,23 +478,23 @@
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/maara 2
-                ::hinta/yleiskustannuslisa true}
+                ::hinta/yleiskustannuslisa 12}
                {::hinta/id 3
                 ::hinta/otsikko "Matkat"
                 ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
+                ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]})))))
+                ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
@@ -515,39 +515,39 @@
                       :harja.domain.vesivaylat.hinnoittelu/hintaelementit
                       [{::hinta/otsikko "Työ"
                         ::hinta/maara 10
-                        ::hinta/yleiskustannuslisa false}
+                        ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Komponentit"
                         ::hinta/maara 20
-                        ::hinta/yleiskustannuslisa false}
+                        ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Yleiset materiaalit"
                         ::hinta/maara 30
-                        ::hinta/yleiskustannuslisa false}
+                        ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Matkat"
                         ::hinta/maara 40
-                        ::hinta/yleiskustannuslisa false}
+                        ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Muut kulut"
                         ::hinta/maara 50
-                        ::hinta/yleiskustannuslisa false}]})
+                        ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
                         {:harja.domain.vesivaylat.hinnoittelu/hinnat
                          [{::hinta/otsikko "Työ"
                            ::hinta/maara 10
-                           ::hinta/yleiskustannuslisa false}
+                           ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Komponentit"
                            ::hinta/maara 20
-                           ::hinta/yleiskustannuslisa false}
+                           ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Yleiset materiaalit"
                            ::hinta/maara 30
-                           ::hinta/yleiskustannuslisa false}
+                           ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Matkat"
                            ::hinta/maara 40
-                           ::hinta/yleiskustannuslisa false}
+                           ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Muut kulut"
                            ::hinta/maara 50
-                           ::hinta/yleiskustannuslisa false}]
-                         :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
-                         :harja.domain.vesivaylat.hinnoittelu/id 666
-                         :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
+                           ::hinta/yleiskustannuslisa 0}]
+                         ::h/hintaryhma? false
+                         ::h/id 666
+                         ::h/nimi "Hinnoittelu"
                          :harja.domain.muokkaustiedot/poistettu? false})
                       vanha-tila)
         paivitettu-toimenpide (first (filter #(= (::to/id %) hinnoiteltava-toimenpide-id)
@@ -560,25 +560,25 @@
 
     ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
     (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
-           {:harja.domain.vesivaylat.hinnoittelu/hinnat
+           {::h/hinnat
             [{::hinta/otsikko "Työ"
               ::hinta/maara 10
-              ::hinta/yleiskustannuslisa false}
+              ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Komponentit"
               ::hinta/maara 20
-              ::hinta/yleiskustannuslisa false}
+              ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Yleiset materiaalit"
               ::hinta/maara 30
-              ::hinta/yleiskustannuslisa false}
+              ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Matkat"
               ::hinta/maara 40
-              ::hinta/yleiskustannuslisa false}
+              ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Muut kulut"
               ::hinta/maara 50
-              ::hinta/yleiskustannuslisa false}]
-            :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
-            :harja.domain.vesivaylat.hinnoittelu/id 666
-            :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
+              ::hinta/yleiskustannuslisa 0}]
+            ::h/hintaryhma? false
+            ::h/id 666
+            ::h/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
 (deftest hinnoittelu-ei-tallennettu
