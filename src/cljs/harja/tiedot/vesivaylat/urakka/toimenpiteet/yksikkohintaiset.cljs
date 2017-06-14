@@ -83,10 +83,10 @@
 (defrecord ValitutEiLiitetty [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
-(defrecord HinnoitteleToimenpide [tiedot])
+(defrecord HinnoitteleToimenpide [tiedot]) ;TODO testi
 (defrecord HinnoitteluTallennettu [vastaus])
-(defrecord HinnoitteluEiTallennettu [virhe])
-(defrecord PeruToimenpiteenHinnoittelu [])
+(defrecord HinnoitteluEiTallennettu [virhe]) ;;TODO testi
+(defrecord PeruToimenpiteenHinnoittelu []) ;; TODO
 
 (defn kyselyn-hakuargumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -260,7 +260,6 @@
                        ::hinta/maara (::hinta/maara (hinta/hinta-otsikolla otsikko hinnat))
                        ::hinta/yleiskustannuslisa (pos? (::hinta/yleiskustannuslisa
                                                           (hinta/hinta-otsikolla otsikko hinnat)))})]
-      ;; TODO Testi puuttuu
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hintaelementit
