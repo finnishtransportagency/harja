@@ -214,10 +214,7 @@
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
                                              (nil? @tiedot/uudet-aluesuodattimet))
             tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))
-            alueita-valittu? (let [elyt (vals (:alueet @tiedot/suodattimet))
-                                   urakat (mapcat vals elyt)
-                                   valitut (mapcat vals urakat)]
-                               (some? (some true? valitut)))]
+            alueita-valittu? (tiedot/alueita-valittu? @tiedot/suodattimet)]
         [:div
          [asetuskokoelma
           (cond

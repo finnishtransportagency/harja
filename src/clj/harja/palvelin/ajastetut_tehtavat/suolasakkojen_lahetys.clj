@@ -1,12 +1,12 @@
 (ns harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
   "Suolasakkojen lähetys tehdään touko-, kesä-, heinä-, syys- ja elokuun ensimmäisenä päivänä klo 02:00."
-  (:require [chime :refer [chime-ch]]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clojure.core.async :as a :refer [<! go-loop]]
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]
             [harja.kyselyt.maksuerat :as maksuerat]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [chime :refer [chime-at]])
   (:import (org.joda.time DateTimeZone)))
 
@@ -32,7 +32,8 @@
   (chime-at (tee-aikataulu)
             (fn [_]
               (log/debug "Merkitään suolasakot likaisiksi seuraavaa Sampo-lähetystä varten")
-              (merkitse-sakkomaksuerat-likaisiksi (:db this)))))
+              (merkitse-sakkomaksuerat-likaisiksi (:db this)))
+            ajastettu-tehtava/virhekasittely))
 
 (defrecord SuolasakkojenLahetys []
   component/Lifecycle

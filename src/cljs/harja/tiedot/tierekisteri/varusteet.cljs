@@ -64,7 +64,7 @@
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
 (defrecord AloitaVarusteenMuokkaus [varuste])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
-(defrecord ToimintoOnnistui [vastaus])
+(defrecord ToimintoOnnistui [vastaus viesti])
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -100,15 +100,15 @@
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
-
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (-> app
         (hakutulokset)
         (assoc :uudet-varustetoteumat vastaus)))
 
   ToimintoOnnistui
-  (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
-
+  (process-event [{:keys [viesti vastaus]} app]
+    (when viesti
+      (viesti/nayta! viesti :success))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (-> app
         (hakutulokset)

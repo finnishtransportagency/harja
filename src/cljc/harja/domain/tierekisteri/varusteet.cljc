@@ -1,7 +1,10 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])
+    #?@(:clj [
+            [clj-time.core :as t]])
+    #?@(:cljs [[harja.loki :refer [log]]
+               [cljs-time.core :as t]])
             [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
@@ -109,11 +112,24 @@
    :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
    :pituus-max (:pituus ominaisuus)})
 
+(defn tietolajin-koodi-voimassa? [koodi]
+  (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
+    (cond
+      (and alkupvm loppupvm) (t/within? (t/interval alkupvm loppupvm) (t/now))
+      alkupvm (t/after? (t/now) alkupvm)
+      loppupvm (t/before? (t/now) loppupvm)
+      :else true)
+    true))
+
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
+        ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
+        koodisto (if muokattava?
+                   (filter tietolajin-koodi-voimassa? koodisto)
+                   koodisto)
         hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
