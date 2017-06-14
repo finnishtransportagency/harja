@@ -951,7 +951,10 @@
                                          :nayta-toimintosarake? nayta-toimintosarake?
                                          :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))
                 (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
-                                             ((:rivi-jalkeen-fn opts) (vals @muokatut)))]
+                                             ((:rivi-jalkeen-fn opts)
+                                              (if muokataan
+                                                (vals @muokatut)
+                                                alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
                    (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
                          [:td {:colSpan (or sarakkeita 1) :class luokka}
