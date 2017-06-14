@@ -190,6 +190,21 @@
       (is (false? (tiedot/valinnan-tila mitaan-ei-valittu)))
       (is (= indeterminate (tiedot/valinnan-tila osa-valittu))))))
 
+(deftest toimenpiteet-siirretty
+  (is (= {:toimenpiteet [{::to/id 2}]
+          :siirto-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteetSiirretty [{::to/id 1}]) [{::to/id 1} {::to/id 2}]))))
+
+(deftest toimenpiteet-ei-siirretty
+  (is (= {:siirto-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteetEiSiirretty)))))
+
+(deftest valittujen-siirto
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetSiirretty tiedot/->ToimenpiteetEiSiirretty}
+    (is (= {:siirto-kaynnissa? true}
+           (tiedot/siirra-valitut! :foo {})))))
+
 (deftest tilan-yhdistaminen
 
   (testing "Tilan yhdistäminen muuttaa vain valintoja"

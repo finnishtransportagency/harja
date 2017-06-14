@@ -130,7 +130,7 @@
   ToimenpiteetEiSiirretty
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
-    app))
+    (assoc app :siirto-kaynnissa? false)))
 
 (defn siirra-valitut! [palvelu app]
   (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
