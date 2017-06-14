@@ -83,8 +83,3 @@ SELECT luo_vv_tpk('VV111-42', 'Hoidon vuosihinta, määrämuutokset: Kiinteä tu
 SELECT luo_vv_tpk('VV111-43', 'Hoidon vuosihinta, määrämuutokset: Kiinteä turvalaite, pimeä', 'kpl');
 
 
--- Luodaan vesiväylien hoitourakoille toimenpideinstanssit
-INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm)
- SELECT id, (select id from toimenpidekoodi where koodi='VV111'), nimi, alkupvm, loppupvm
-   FROM urakka
-  WHERE tyyppi='vesivayla-hoito';
