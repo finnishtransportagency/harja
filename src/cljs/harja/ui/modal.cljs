@@ -42,9 +42,10 @@
                     (when leveys
                       {:style {:max-width leveys}}))
         [:div.modal-content {:on-click #(do
-                                         (.preventDefault %)
-                                         (.stopPropagation %)
-                                         piilota!)}
+                                          ;; estää file-open dialogin poistamisen
+                                          #_(.preventDefault %)
+                                          (.stopPropagation %)
+                                          piilota!)}
          (when otsikko
            [:div.modal-header
             [:button.close {:on-click piilota!

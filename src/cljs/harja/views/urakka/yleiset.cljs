@@ -129,8 +129,8 @@
 (defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
    [grid/grid
-    {:otsikko "Työtunnit"
-     :tyhja "Ei työtunteja."
+    {:otsikko "TURI-työtunnit"
+     :tyhja "Ei TURI-työtunteja."
      :tallenna tallenna!
      :voi-lisata? false
      :voi-poistaa? (constantly false)
