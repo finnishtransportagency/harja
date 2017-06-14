@@ -83,7 +83,8 @@
   (testing "Rivin asettaminen valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 0)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}) vanha-tila)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 0)]
       (is (not (:valittu? vanha-kohde)))
       (is (true? (:valittu? muokattu-kohde)))))
@@ -91,7 +92,8 @@
   (testing "Rivin asettaminen ei-valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 1)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}) vanha-tila)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
       (is (true? (:valittu? vanha-kohde)))
       (is (false? (:valittu? muokattu-kohde))))))
@@ -101,7 +103,8 @@
   (testing "Valitaan viitat"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta true})
+                                                  :valinta true}
+                                                 (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
       (is (every? true? (map :valittu? viitat)))))
@@ -109,7 +112,8 @@
   (testing "Asetetaan valinnat pois viitoilta"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta false})
+                                                  :valinta false}
+                                                 (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
       (is (every? false? (map :valittu? viitat))))))
@@ -125,7 +129,8 @@
   (testing "Valitaan Iisalmen väylä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta true})
+                                                :valinta true}
+                                               (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
       (is (every? true? (map :valittu? viitat)))))
@@ -133,7 +138,8 @@
   (testing "Asetetaan valinnat pois Iisalmen väylältä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta false})
+                                                :valinta false}
+                                               (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
       (is (every? false? (map :valittu? viitat))))))
