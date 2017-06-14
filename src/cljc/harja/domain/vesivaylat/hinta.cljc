@@ -43,7 +43,7 @@
 ;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
 (def yleinen-yleiskustannuslisa 12)
 
-(defn- yleiskustannuslisien-osuus
+(defn yleiskustannuslisien-osuus
   "Palauttaa hintojen yleiskustannusten osuuden"
   [hinnat]
   (reduce + 0
@@ -60,7 +60,19 @@
   [hinnat]
   (reduce + 0 (map ::maara hinnat)))
 
-(defn- kokonaishinta-yleiskustannuslisineen [hinnat]
+(defn hinnan-ominaisuus [hinnat otsikko ominaisuus]
+  (->> hinnat
+       (filter #(= (::otsikko %) otsikko))
+       (first)
+       ominaisuus))
+
+(defn hinnan-maara [hinnat otsikko]
+  (hinnan-ominaisuus hinnat otsikko ::maara))
+
+(defn hinnan-yleiskustannuslisa [hinnat otsikko]
+  (hinnan-ominaisuus hinnat otsikko ::yleiskustannuslisa))
+
+(defn kokonaishinta-yleiskustannuslisineen [hinnat]
   (+ (perushinta hinnat)
      (yleiskustannuslisien-osuus hinnat)))
 

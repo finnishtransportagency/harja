@@ -89,7 +89,7 @@
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (tiedot/hinnan-maara app* otsikko)
+      (r/wrap (hinta/hinnan-maara (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]) otsikko)
               (fn [uusi]
                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                            ::hinta/maara uusi}))))]
@@ -97,7 +97,9 @@
      "€"]]
    [:td
     [tee-kentta {:tyyppi :checkbox}
-     (r/wrap (if-let [yleiskustannuslisa (tiedot/hinnan-yleiskustannuslisa app* otsikko)]
+     (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
+                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                                           otsikko)]
                (pos? yleiskustannuslisa)
                false)
              (fn [uusi]
@@ -165,7 +167,8 @@
          [tee-kentta {:tyyppi :numero
                       :placeholder "Syötä hinta"
                       :kokonaisosan-maara 7}
-          (r/wrap 0
+          (r/wrap (hinta/hinnan-maara (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit])
+                                      "Ryhmähinta")
                   #(log "TODO"))]
          [:span " "]
          [:span "€"]]
