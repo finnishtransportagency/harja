@@ -183,6 +183,7 @@
      kentat/nayta-otsikollinen-kentta)
    {:otsikko "Vuoden kokonaishintaiset työt"
     :kentta-params {:tyyppi :positiivinen-numero
+                    :fmt fmt/euro-opt
                     :placeholder "Syötä hoitokauden urakkasumma (€)"}
     :arvo-atom (r/wrap @vuosisumma-atom
                        #(do (reset! vuosisumma-atom %)
