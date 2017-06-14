@@ -41,31 +41,28 @@
 (def metatiedot m/muokkauskentat)
 
 ;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
-(def yleiskustannuslisa 12)
+(def yleinen-yleiskustannuslisa 12)
 
-(defn- kokonaishinta-yleiskustannuslisineen [hinnat]
-  (reduce + 0
-          (map
-            (fn [hinta]
-              (let [maara (::maara hinta)
-                    yleiskustannuslisa? (::yleiskustannuslisa hinta)]
-                (if yleiskustannuslisa?
-                  (* (+ (/ yleiskustannuslisa 100) 1) maara)
-                  maara)))
-            hinnat)))
-
-(defn- yleiskustannuslisien-osuus [hinnat]
+(defn- yleiskustannuslisien-osuus
+  "Palauttaa hintojen yleiskustannusten osuuden"
+  [hinnat]
   (reduce + 0
           (keep
             (fn [hinta]
               (let [maara (::maara hinta)
-                    yleiskustannuslisa? (::yleiskustannuslisa hinta)]
-                (when yleiskustannuslisa?
+                    yleiskustannuslisa (::yleiskustannuslisa hinta)]
+                (when yleiskustannuslisa
                   (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
             hinnat)))
 
-(defn- kokonaishinta [hinnat]
+(defn- perushinta
+  "Palauttaa hintojen summan ilman yleiskustannuslisiä"
+  [hinnat]
   (reduce + 0 (map ::maara hinnat)))
+
+(defn- kokonaishinta-yleiskustannuslisineen [hinnat]
+  (+ (perushinta hinnat)
+     (yleiskustannuslisien-osuus hinnat)))
 
 (defn hinta-otsikolla [otsikko hinnat]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))

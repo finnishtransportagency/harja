@@ -97,10 +97,15 @@
      "€"]]
    [:td
     [tee-kentta {:tyyppi :checkbox}
-     (r/wrap (tiedot/hinnan-yleiskustannuslisa app* otsikko)
+     (r/wrap (if-let [yleiskustannuslisa (tiedot/hinnan-yleiskustannuslisa app* otsikko)]
+               (pos? yleiskustannuslisa)
+               false)
              (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                          ::hinta/yleiskustannuslisa uusi}))))]]])
+               (e! (tiedot/->HinnoitteleToimenpideKentta
+                     {::hinta/otsikko otsikko
+                      ::hinta/yleiskustannuslisa (if uusi
+                                                   hinta/yleinen-yleiskustannuslisa
+                                                   0)}))))]]])
 
 (defn- hinnoittele-toimenpide [e! app* rivi]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
@@ -129,7 +134,7 @@
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
-            "Perushinta:" (fmt/euro-opt (hinta/kokonaishinta
+            "Perushinta:" (fmt/euro-opt (hinta/perushinta
                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
             "Yleiskustannuslisät (12%):" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
                                                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))

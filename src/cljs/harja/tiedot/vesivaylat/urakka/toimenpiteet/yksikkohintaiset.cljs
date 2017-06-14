@@ -113,8 +113,8 @@
    ::hinta/otsikko otsikko
    ::hinta/maara (or (::hinta/maara hinta) 0)
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
-                                (not (zero? yleiskustannuslisa))
-                                false)})
+                                yleiskustannuslisa
+                                0)})
 
 (defn- hintakentat [hinnat]
   [(hintakentta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
@@ -123,261 +123,259 @@
    (hintakentta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
-  (defn hakukyselyn-argumentit [valinnat]
-    (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
+(defn hakukyselyn-argumentit [valinnat]
+  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
 
-  (extend-protocol tuck/Event
+(extend-protocol tuck/Event
 
-    Nakymassa?
-    (process-event [{nakymassa? :nakymassa?} app]
-      (assoc app :nakymassa? nakymassa?))
+  Nakymassa?
+  (process-event [{nakymassa? :nakymassa?} app]
+    (assoc app :nakymassa? nakymassa?))
 
-    PaivitaValinnat
-    ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
-    ;; jotta näkymä pysyy synkassa valintojen kanssa
-    (process-event [{tiedot :tiedot} app]
-      (let [uudet-valinnat (merge (:valinnat app)
-                                  (select-keys tiedot jaettu/valintojen-avaimet))
-            haku (tuck/send-async! ->HaeToimenpiteet)]
-        (go (haku uudet-valinnat))
-        (assoc app :valinnat uudet-valinnat)))
+  PaivitaValinnat
+  ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
+  ;; jotta näkymä pysyy synkassa valintojen kanssa
+  (process-event [{tiedot :tiedot} app]
+    (let [uudet-valinnat (merge (:valinnat app)
+                                (select-keys tiedot jaettu/valintojen-avaimet))
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
 
-    SiirraValitutKokonaishintaisiin
-    (process-event [_ app]
-      (jaettu/siirra-valitut! :siirra-toimenpiteet-kokonaishintaisiin app))
+  SiirraValitutKokonaishintaisiin
+  (process-event [_ app]
+    (jaettu/siirra-valitut! :siirra-toimenpiteet-kokonaishintaisiin app))
 
-    HaeToimenpiteet
-    ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
-    (process-event [{valinnat :valinnat} app]
-      (if-not (:haku-kaynnissa? app)
-        (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-              fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-          (try
-            (let [hakuargumentit (hakukyselyn-argumentit valinnat)]
-              (go
-                (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
-                  (if (k/virhe? vastaus)
-                    (fail! vastaus)
-                    (tulos! vastaus))))
-              (assoc app :haku-kaynnissa? true))
-            (catch :default e
-              (fail! nil)
-              (throw e))))
-
-        app))
-
-    ToimenpiteetHaettu
-    (process-event [{toimenpiteet :toimenpiteet} app]
-      (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
-                 :haku-kaynnissa? false))
-
-    ToimenpiteetEiHaettu
-    (process-event [_ app]
-      (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-      (assoc app :haku-kaynnissa? false))
-
-    UudenHintaryhmanLisays?
-    (process-event [{lisays-auki? :lisays-auki?} app]
-      (assoc app :uuden-hintaryhman-lisays? lisays-auki?))
-
-    UudenHintaryhmanNimeaPaivitetty
-    (process-event [{nimi :nimi} app]
-      (assoc app :uusi-hintaryhma nimi))
-
-    LuoHintaryhma
-    (process-event [{nimi :nimi} app]
-      (if-not (:hintaryhman-tallennus-kaynnissa? app)
-        (let [tulos! (tuck/send-async! ->HintaryhmaLuotu)
-              fail! (tuck/send-async! ->HintaryhmaEiLuotu)
-              parametrit {::h/nimi nimi
-                          ::urakka/id (get-in app [:valinnat :urakka-id])}]
-          (try
+  HaeToimenpiteet
+  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
+  (process-event [{valinnat :valinnat} app]
+    (if-not (:haku-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
+            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
+        (try
+          (let [hakuargumentit (hakukyselyn-argumentit valinnat)]
             (go
-              (let [vastaus (<! (k/post! :luo-hinnoittelu parametrit))]
+              (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
                 (if (k/virhe? vastaus)
                   (fail! vastaus)
                   (tulos! vastaus))))
-            (assoc app :hintaryhman-tallennus-kaynnissa? true)
-            (catch :default e
-              (fail! nil)
-              (throw e))))
+            (assoc app :haku-kaynnissa? true))
+          (catch :default e
+            (fail! nil)
+            (throw e))))
 
-        app))
+      app))
 
-    HintaryhmaLuotu
-    (process-event [{vastaus :vastaus} app]
-      (-> app
-          (update :hintaryhmat conj vastaus)
-          (assoc :hintaryhman-tallennus-kaynnissa? false
-                 :uusi-hintaryhma nil
-                 :uuden-hintaryhman-lisays? false)))
+  ToimenpiteetHaettu
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+               :haku-kaynnissa? false))
 
-    HintaryhmaEiLuotu
-    (process-event [_ app]
-      (viesti/nayta! "Hintaryhmän tallennus epäonnistui!" :danger)
-      (assoc app :hintaryhman-tallennus-kaynnissa? false
-                 :uusi-hintaryhma nil
-                 :uuden-hintaryhman-lisays? false))
+  ToimenpiteetEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
+    (assoc app :haku-kaynnissa? false))
 
-    HaeHintaryhmat
-    (process-event [_ app]
-      (if-not (:hintaryhmien-haku-kaynnissa? app)
-        (when-let [urakka-id (get-in app [:valinnat :urakka-id])]
-          (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
-                fail! (tuck/send-async! ->HintaryhmatEiHaettu)
-                parametrit {::urakka/id urakka-id}]
-            (try
-              (go
-                (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
-                  (if (k/virhe? vastaus)
-                    (fail! vastaus)
-                    (tulos! vastaus))))
-              (assoc app :hintaryhmien-haku-kaynnissa? true)
-              (catch :default e
-                (fail! nil)
-                (throw e)))))
+  UudenHintaryhmanLisays?
+  (process-event [{lisays-auki? :lisays-auki?} app]
+    (assoc app :uuden-hintaryhman-lisays? lisays-auki?))
 
-        app))
+  UudenHintaryhmanNimeaPaivitetty
+  (process-event [{nimi :nimi} app]
+    (assoc app :uusi-hintaryhma nimi))
 
-    HintaryhmatHaettu
-    (process-event [{vastaus :vastaus} app]
-      (assoc app :hintaryhmat vastaus
-                 :hintaryhmien-haku-kaynnissa? false))
+  LuoHintaryhma
+  (process-event [{nimi :nimi} app]
+    (if-not (:hintaryhman-tallennus-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->HintaryhmaLuotu)
+            fail! (tuck/send-async! ->HintaryhmaEiLuotu)
+            parametrit {::h/nimi nimi
+                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :luo-hinnoittelu parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hintaryhman-tallennus-kaynnissa? true)
+          (catch :default e
+            (fail! nil)
+            (throw e))))
 
-    HintaryhmatEiHaettu
-    (process-event [_ app]
-      (viesti/nayta! "Hintaryhmien haku epäonnistui!" :danger)
-      (assoc app :hintaryhmien-haku-kaynnissa? false))
+      app))
 
-    ValitseHintaryhma
-    (process-event [{hintaryhma :hintaryhma} app]
-      (assoc app :valittu-hintaryhma hintaryhma))
+  HintaryhmaLuotu
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+        (update :hintaryhmat conj vastaus)
+        (assoc :hintaryhman-tallennus-kaynnissa? false
+               :uusi-hintaryhma nil
+               :uuden-hintaryhman-lisays? false)))
 
-    LiitaValitutHintaryhmaan
-    (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
-      (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
-        (let [tulos! (tuck/send-async! ->ValitutLiitetty)
-              fail! (tuck/send-async! ->ValitutEiLiitetty)
-              parametrit {::to/idt (map ::to/id valitut)
-                          ::h/id (::h/id hintaryhma)
-                          ::urakka/id (get-in app [:valinnat :urakka-id])}]
+  HintaryhmaEiLuotu
+  (process-event [_ app]
+    (viesti/nayta! "Hintaryhmän tallennus epäonnistui!" :danger)
+    (assoc app :hintaryhman-tallennus-kaynnissa? false
+               :uusi-hintaryhma nil
+               :uuden-hintaryhman-lisays? false))
+
+  HaeHintaryhmat
+  (process-event [_ app]
+    (if-not (:hintaryhmien-haku-kaynnissa? app)
+      (when-let [urakka-id (get-in app [:valinnat :urakka-id])]
+        (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
+              fail! (tuck/send-async! ->HintaryhmatEiHaettu)
+              parametrit {::urakka/id urakka-id}]
           (try
             (go
-              (let [vastaus (<! (k/post! :liita-toimenpiteet-hinnoitteluun parametrit))]
+              (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
                 (if (k/virhe? vastaus)
                   (fail! vastaus)
                   (tulos! vastaus))))
-            (assoc app :hintaryhmien-liittaminen-kaynnissa? true)
-
+            (assoc app :hintaryhmien-haku-kaynnissa? true)
             (catch :default e
               (fail! nil)
-              (throw e))))
+              (throw e)))))
 
-        app))
+      app))
 
-    ValitutLiitetty
-    (process-event [{vastaus :vastaus} app]
-      (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-        (go (haku (:valinnat app)))
+  HintaryhmatHaettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :hintaryhmat vastaus
+               :hintaryhmien-haku-kaynnissa? false))
 
-        (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
+  HintaryhmatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Hintaryhmien haku epäonnistui!" :danger)
+    (assoc app :hintaryhmien-haku-kaynnissa? false))
 
-    ValitutEiLiitetty
-    (process-event [_ app]
-      (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
-      (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
+  ValitseHintaryhma
+  (process-event [{hintaryhma :hintaryhma} app]
+    (assoc app :valittu-hintaryhma hintaryhma))
 
-    AloitaToimenpiteenHinnoittelu
-    (process-event [{toimenpide-id :toimenpide-id} app]
-      (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
-            toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
-            hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)]
-        (assoc app :hinnoittele-toimenpide
-                   {::to/id toimenpide-id
-                    ::h/hintaelementit (hintakentat hinnat)})))
+  LiitaValitutHintaryhmaan
+  (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
+    (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->ValitutLiitetty)
+            fail! (tuck/send-async! ->ValitutEiLiitetty)
+            parametrit {::to/idt (map ::to/id valitut)
+                        ::h/id (::h/id hintaryhma)
+                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :liita-toimenpiteet-hinnoitteluun parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hintaryhmien-liittaminen-kaynnissa? true)
 
-    AloitaHintaryhmanHinnoittelu
-    (process-event [{hintaryhma-id :hintaryhma-id} app]
-      (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-            hinnat (::h/hintaelementit hinnoiteltava-hintaryhma)]
-        (assoc app :hinnoittele-hintaryhma
-                   {::h/id hintaryhma-id
-                    ::h/hintaelementit (hintakentat hinnat)})))
+          (catch :default e
+            (fail! nil)
+            (throw e))))
 
-    HinnoitteleToimenpideKentta
-    (process-event [{tiedot :tiedot} app]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-                (mapv (fn [hinnoittelu]
-                        (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko tiedot))
-                          (cond-> hinnoittelu
-                                  (::hinta/maara tiedot)
-                                  (assoc ::hinta/maara (::hinta/maara tiedot))
+      app))
 
-                                  (some? (::hinta/yleiskustannuslisa tiedot))
-                                  (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa tiedot)))
-                          hinnoittelu))
-                      (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))))
+  ValitutLiitetty
+  (process-event [{vastaus :vastaus} app]
+    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku (:valinnat app)))
 
-    HinnoitteleToimenpide
-    (process-event [{tiedot :tiedot} app]
-      (if-not (:hinnoittelun-tallennus-kaynnissa? app)
-        (let [tulos! (tuck/send-async! ->ToimenpiteenHinnoitteluTallennettu)
-              fail! (tuck/send-async! ->ToimenpiteenHinnoitteluEiTallennettu)
-              parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                          ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-                          ::h/hintaelementit (mapv
-                                               (fn [hinta]
-                                                 (merge
-                                                   (when-let [id (::hinta/id hinta)]
-                                                     {::hinta/id id})
-                                                   {::hinta/otsikko (::hinta/otsikko hinta)
-                                                    ::hinta/maara (::hinta/maara hinta)
-                                                    ::hinta/yleiskustannuslisa (if (::hinta/yleiskustannuslisa hinta)
-                                                                                 hinta/yleiskustannuslisa
-                                                                                 0)}))
-                                               (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
-          (try
-            (go
-              (let [vastaus (<! (k/post! :tallenna-toimenpiteelle-hinta parametrit))]
-                (if (k/virhe? vastaus)
-                  (fail! vastaus)
-                  (tulos! vastaus))))
-            (assoc app :hinnoittelun-tallennus-kaynnissa? true)
+      (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
-            (catch :default e
-              (fail! nil)
-              (throw e))))
+  ValitutEiLiitetty
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
+    (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
 
-        app))
+  AloitaToimenpiteenHinnoittelu
+  (process-event [{toimenpide-id :toimenpide-id} app]
+    (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
+          toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
+          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)]
+      (assoc app :hinnoittele-toimenpide
+                 {::to/id toimenpide-id
+                  ::h/hintaelementit (hintakentat hinnat)})))
 
-    ToimenpiteenHinnoitteluTallennettu
-    (process-event [{vastaus :vastaus} app]
-      (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-      (let [paivitettava-toimenpide (to/toimenpide-idlla (:toimenpiteet app)
-                                                         (get-in app [:hinnoittele-toimenpide ::to/id]))
-            paivitetty-toimenpide (assoc paivitettava-toimenpide ::to/oma-hinnoittelu vastaus)
-            paivitetyt-toimenpiteet (mapv
-                                      (fn [toimenpide]
-                                        (if (= (::to/id toimenpide) (::to/id paivitettava-toimenpide))
-                                          paivitetty-toimenpide
-                                          toimenpide))
-                                      (:toimenpiteet app))]
-        (assoc app :toimenpiteet paivitetyt-toimenpiteet
-                   :hinnoittelun-tallennus-kaynnissa? false
-                   :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+  AloitaHintaryhmanHinnoittelu
+  (process-event [{hintaryhma-id :hintaryhma-id} app]
+    (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+          hinnat (::h/hintaelementit hinnoiteltava-hintaryhma)]
+      (assoc app :hinnoittele-hintaryhma
+                 {::h/id hintaryhma-id
+                  ::h/hintaelementit (hintakentat hinnat)})))
 
-    ToimenpiteenHinnoitteluEiTallennettu
-    (process-event [_ app]
-      (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
-      (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+  HinnoitteleToimenpideKentta
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
+              (mapv (fn [hinnoittelu]
+                      (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko tiedot))
+                        (cond-> hinnoittelu
+                                (::hinta/maara tiedot)
+                                (assoc ::hinta/maara (::hinta/maara tiedot))
 
-    PeruToimenpiteenHinnoittelu
-    (process-event [_ app]
-      (assoc app :hinnoittelun-tallennus-kaynnissa? false
-                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
+                                (some? (::hinta/yleiskustannuslisa tiedot))
+                                (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa tiedot)))
+                        hinnoittelu))
+                    (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))))
+
+  HinnoitteleToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (if-not (:hinnoittelun-tallennus-kaynnissa? app)
+      (let [tulos! (tuck/send-async! ->ToimenpiteenHinnoitteluTallennettu)
+            fail! (tuck/send-async! ->ToimenpiteenHinnoitteluEiTallennettu)
+            parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                        ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+                        ::h/hintaelementit (mapv
+                                             (fn [hinta]
+                                               (merge
+                                                 (when-let [id (::hinta/id hinta)]
+                                                   {::hinta/id id})
+                                                 {::hinta/otsikko (::hinta/otsikko hinta)
+                                                  ::hinta/maara (::hinta/maara hinta)
+                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                             (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
+        (try
+          (go
+            (let [vastaus (<! (k/post! :tallenna-toimenpiteelle-hinta parametrit))]
+              (if (k/virhe? vastaus)
+                (fail! vastaus)
+                (tulos! vastaus))))
+          (assoc app :hinnoittelun-tallennus-kaynnissa? true)
+
+          (catch :default e
+            (fail! nil)
+            (throw e))))
+
+      app))
+
+  ToimenpiteenHinnoitteluTallennettu
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Hinnoittelu tallennettu!" :success)
+    (let [paivitettava-toimenpide (to/toimenpide-idlla (:toimenpiteet app)
+                                                       (get-in app [:hinnoittele-toimenpide ::to/id]))
+          paivitetty-toimenpide (assoc paivitettava-toimenpide ::to/oma-hinnoittelu vastaus)
+          paivitetyt-toimenpiteet (mapv
+                                    (fn [toimenpide]
+                                      (if (= (::to/id toimenpide) (::to/id paivitettava-toimenpide))
+                                        paivitetty-toimenpide
+                                        toimenpide))
+                                    (:toimenpiteet app))]
+      (assoc app :toimenpiteet paivitetyt-toimenpiteet
+                 :hinnoittelun-tallennus-kaynnissa? false
+                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+
+  ToimenpiteenHinnoitteluEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+
+  PeruToimenpiteenHinnoittelu
+  (process-event [_ app]
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false
+               :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
 
 
-    PeruHintaryhmanHinnoittelu
-    (process-event [_ app]
-      (assoc app :hinnoittelun-tallennus-kaynnissa? false
-                 :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))
+  PeruHintaryhmanHinnoittelu
+  (process-event [_ app]
+    (assoc app :hinnoittelun-tallennus-kaynnissa? false
+               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))
