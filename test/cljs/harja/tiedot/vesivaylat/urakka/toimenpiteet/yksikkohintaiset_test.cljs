@@ -665,3 +665,18 @@
     (is (empty? (filter #(siirretyt (::to/id %))
                         (:toimenpiteet uusi-tila)))
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
+
+(deftest hinnan-ominaisuudet
+  (let [app {:hinnoittele-toimenpide {::h/hintaelementit [{::hinta/otsikko :foobar :barbar :baz}]}}]
+    (is (= :baz
+           (tiedot/hinnan-ominaisuus app
+                                     :foobar
+                                     :barbar))))
+
+  (let [app {:hinnoittele-toimenpide {::h/hintaelementit [{::hinta/otsikko :foobar ::hinta/maara :baz}]}}]
+    (is (= :baz
+           (tiedot/hinnan-maara app :foobar))))
+
+  (let [app {:hinnoittele-toimenpide {::h/hintaelementit [{::hinta/otsikko :foobar ::hinta/yleiskustannuslisa :baz}]}}]
+    (is (= :baz
+           (tiedot/hinnan-yleiskustannuslisa app :foobar)))))
