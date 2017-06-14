@@ -96,12 +96,11 @@
      [:span " "]
      "€"]]
    [:td
-    (when (= otsikko "Yleiset materiaalit")
-      [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (tiedot/hinnan-yleiskustannuslisa app* otsikko)
-               (fn [uusi]
-                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                            ::hinta/yleiskustannuslisa uusi}))))])]])
+    [tee-kentta {:tyyppi :checkbox}
+     (r/wrap (tiedot/hinnan-yleiskustannuslisa app* otsikko)
+             (fn [uusi]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                          ::hinta/yleiskustannuslisa uusi}))))]]])
 
 (defn- hinnoittele-toimenpide [e! app* rivi]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
@@ -129,11 +128,13 @@
             (kenttarivi e! app* "Muut kulut")]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-           [:span
-            [:b "Yhteensä:"]
-            [:span " "]
-            (fmt/euro-opt (hinta/kokonaishinta
-                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
+           [yleiset/tietoja {:tietokentan-leveys "180px"}
+            "Perushinta:" (fmt/euro-opt (hinta/kokonaishinta
+                                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
+            "Yleiskustannuslisät (12%):" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
+                                                         (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
+            "Yhteensä:" (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
+                                        (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
           [:footer.vv-toimenpiteen-hinnoittelu-footer
            [napit/tallenna
@@ -146,7 +147,7 @@
           :nappi-teksti "Hinnoittele"
           :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
           :nappi-optiot {:disabled (:infolaatikko-nakyvissa? app*)}
-          :arvo (fmt/euro-opt (hinta/kokonaishinta
+          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]

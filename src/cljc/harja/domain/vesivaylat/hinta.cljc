@@ -22,8 +22,8 @@
     "poistaja" ::m/poistaja-id
     #?@(:clj [::hinnoittelu (rel/has-one
                               ::hinnoittelu-id
-                           :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
-                           :harja.domain.vesivaylat.hinnoittelu/id)])}])
+                              :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
+                              :harja.domain.vesivaylat.hinnoittelu/id)])}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
@@ -39,6 +39,30 @@
   #{::hinnoittelu-id})
 
 (def metatiedot m/muokkauskentat)
+
+;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
+(def yleiskustannuslisa 12)
+
+(defn- kokonaishinta-yleiskustannuslisineen [hinnat]
+  (reduce + 0
+          (map
+            (fn [hinta]
+              (let [maara (::maara hinta)
+                    yleiskustannuslisa? (::yleiskustannuslisa hinta)]
+                (if yleiskustannuslisa?
+                  (* (+ (/ yleiskustannuslisa 100) 1) maara)
+                  maara)))
+            hinnat)))
+
+(defn- yleiskustannuslisien-osuus [hinnat]
+  (reduce + 0
+          (keep
+            (fn [hinta]
+              (let [maara (::maara hinta)
+                    yleiskustannuslisa? (::yleiskustannuslisa hinta)]
+                (when yleiskustannuslisa?
+                  (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
+            hinnat)))
 
 (defn- kokonaishinta [hinnat]
   (reduce + 0 (map ::maara hinnat)))

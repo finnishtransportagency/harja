@@ -22,8 +22,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(def yleiskustannuslisa 12)
-
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
    ::h/hintaelementit nil})
@@ -335,7 +333,7 @@
                                                    {::hinta/otsikko (::hinta/otsikko hinta)
                                                     ::hinta/maara (::hinta/maara hinta)
                                                     ::hinta/yleiskustannuslisa (if (::hinta/yleiskustannuslisa hinta)
-                                                                                 yleiskustannuslisa
+                                                                                 hinta/yleiskustannuslisa
                                                                                  0)}))
                                                (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
           (try
