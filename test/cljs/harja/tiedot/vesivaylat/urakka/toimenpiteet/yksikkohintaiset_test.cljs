@@ -26,7 +26,7 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
-                               ::h/hintaelementit {::hinta/id nil
+                               ::h/hintaelementit {::hinta/id 1
                                                    ::hinta/otsikko "Ryhmähinta"
                                                    ::hinta/maara 600
                                                    ::hinta/yleiskustannuslisa 12}}]
@@ -370,8 +370,8 @@
               ::h/hintaelementit
               [{::hinta/id nil
                 ::hinta/otsikko "Ryhmähinta"
-                ::hinta/maara 600
-                ::hinta/yleiskustannuslisa 12}]}))))
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
@@ -381,10 +381,10 @@
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 666
               ::h/hintaelementit
-              [{::hinta/id nil
+              [{::hinta/id 1
                 ::hinta/otsikko "Ryhmähinta"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}]})))))
+                ::hinta/maara 600
+                ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
