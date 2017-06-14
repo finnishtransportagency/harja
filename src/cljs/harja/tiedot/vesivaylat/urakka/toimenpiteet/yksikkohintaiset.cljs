@@ -124,7 +124,7 @@
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
 (defn- hintaryhman-hintakentat [hinnat]
-  [(hintakentta "Ryhmähinta" (hinta/hinta-otsikolla "Työ" hinnat))])
+  [(hintakentta "Ryhmähinta" (hinta/hinta-otsikolla "Ryhmähinta" hinnat))])
 
 (defn hakukyselyn-argumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
