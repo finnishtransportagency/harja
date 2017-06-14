@@ -14,8 +14,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma
-  ([tiedot toiminto] (varustetoteuma tiedot toiminto nil nil))
-  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto]
+  ([tiedot toiminto]
+   (varustetoteuma tiedot toiminto nil nil nil))
+  ([tiedot toiminto kuntoluokitus lisatieto]
+   (varustetoteuma tiedot toiminto kuntoluokitus lisatieto nil))
+  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto uusi-liite]
    (let [tr-osoite (get-in tietue [:sijainti :tie])]
      {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :puoli (:puoli tr-osoite)
@@ -31,7 +34,8 @@
       :alkupvm (:alkupvm tietue)
       :loppupvm (:loppupvm tietue)
       :kuntoluokitus kuntoluokitus
-      :lisatieto lisatieto})))
+      :lisatieto lisatieto
+      :uusi-liite uusi-liite})))
 
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
@@ -55,6 +59,7 @@
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
+(defrecord LisaaLiitetiedosto [liite])
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
@@ -65,6 +70,7 @@
 (defrecord AloitaVarusteenMuokkaus [varuste])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
+
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -138,12 +144,14 @@
     (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
 
   TallennaVarustetarkastus
-  (process-event [{varuste :varuste {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus} :tarkastus :as data} app]
+  (process-event [{varuste :varuste
+                   {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus uusi-liite :uusi-liite} :tarkastus
+                   :as data} app]
     (let [tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
         (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
-              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto)
+              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto uusi-liite)
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
@@ -159,4 +167,8 @@
 
   AloitaVarusteenMuokkaus
   (process-event [{varuste :varuste} app]
-    (assoc app :muokattava-varuste varuste)))
+    (assoc app :muokattava-varuste varuste))
+
+  LisaaLiitetiedosto
+  (process-event [{liite :liite} app]
+    (assoc-in app [:tierekisterin-varusteet :tarkastus :uusi-liite] liite)))

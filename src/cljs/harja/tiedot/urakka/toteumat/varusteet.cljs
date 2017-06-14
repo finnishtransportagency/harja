@@ -125,7 +125,6 @@
                                        alkupvm
                                        loppupvm
                                        uusi-liite] :as toteuma}]
-  (log "--->> " (pr-str uusi-liite))
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:id id
                  :arvot arvot
