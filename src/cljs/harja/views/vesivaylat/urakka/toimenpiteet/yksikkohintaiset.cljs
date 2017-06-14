@@ -167,8 +167,7 @@
          [tee-kentta {:tyyppi :numero
                       :placeholder "Syötä hinta"
                       :kokonaisosan-maara 7}
-          (r/wrap (hinta/hinnan-maara (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit])
-                                      "Ryhmähinta")
+          (r/wrap (hinta/hinnan-maara (::h/hinnat hintaryhma) "Ryhmähinta")
                   #(log "TODO"))]
          [:span " "]
          [:span "€"]]
