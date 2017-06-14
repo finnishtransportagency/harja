@@ -152,26 +152,26 @@
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]
   (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
         hinnoitellaan? (some? hinnoittelu-id)]
-    [:div
+    [:div.pull-right
      (if hinnoitellaan?
        [:div
-        [tee-kentta {:tyyppi :numero
-                     :placeholder "Syötä hinta"
-                     :kokonaisosan-maara 7}
-         (r/wrap 0
-           #(log "TODO"))]
-        [napit/peruuta
-         "Peruuta"
-         #(e! (tiedot/->PeruHintaryhmanHinnoittelu))
-         {:luokka "pull-right"}]
+        [:div.inline-block {:style {:margin-right "10px"}}
+         [tee-kentta {:tyyppi :numero
+                      :placeholder "Syötä hinta"
+                      :kokonaisosan-maara 7}
+          (r/wrap 0
+                  #(log "TODO"))]
+         [:span " "]
+         [:span "€"]]
         [napit/tallenna
          "Valmis"
-         #(log "DOH VALMIS!")
-         {:luokka "pull-right"}]]
+         #(log "DOH VALMIS!")]
+        [napit/peruuta
+         "Peruuta"
+         #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        [napit/yleinen-ensisijainen
         "Määrittele yksi hinta koko ryhmälle"
-        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-        {:luokka "pull-right"}])]))
+        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))])]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
