@@ -116,6 +116,17 @@ hakutiheys-historiakuva 1200000)
      :alueet oletusalueet
      :varustetoteumat {tk/varustetoteumat false}}))
 
+(defn alueita-valittu?
+  [suodattimet]
+  (let [elyt (vals (:alueet suodattimet))
+        urakat (mapcat vals elyt)
+        valitut (mapcat vals urakat)]
+    (some? (some true? valitut))))
+
+(defonce paivita-aluevalinta
+  (run! (let [valittuja? (alueita-valittu? @suodattimet)]
+          (reset! nav/tilannekuvassa-alueita-valittu? valittuja?))))
+
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
 

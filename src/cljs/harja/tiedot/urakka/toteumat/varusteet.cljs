@@ -317,10 +317,10 @@
     (dissoc app :virhe))
 
   v/VarustetoteumatMuuttuneet
-  (process-event [{toteumat :varustetoteumat :as data} app]
+  (process-event [{varustetoteumat :varustetoteumat :as data} app]
     (kartalle (-> app
-                  (dissoc :uudet-varustetoteumat)
-                  (haetut-toteumat toteumat)))))
+         (dissoc :uudet-varustetoteumat)
+         (haetut-toteumat varustetoteumat)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

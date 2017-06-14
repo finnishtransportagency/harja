@@ -142,24 +142,21 @@
   [osa osien-pituudet]
   (number? (get osien-pituudet osa)))
 
-(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet]
+(defn osan-pituus-sopiva-verkolla? [osa etaisyys ajoratojen-pituudet]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (if-let [osan-pituus (get osien-pituudet osa)]
-    (and (<= etaisyys osan-pituus)
-         (>= etaisyys 0))
+  (if-let [hae (fn [ajorata] (:pituus
+                               (first (filter #(and (= osa (:osa %))
+                                                    (= ajorata (:ajorata %)))
+                                              ajoratojen-pituudet))))]
+    (let [nolla-ajoradan-pituus (hae 0)
+          ykkosajoradan-pituus (hae 1)
+          kakkosajoradan-pituus (hae 2)
+          ajoradan-pituus (+ (or nolla-ajoradan-pituus 0)
+                             (max (or ykkosajoradan-pituus 0)
+                                  (or kakkosajoradan-pituus 0)))]
+      (and (<= etaisyys ajoradan-pituus)
+           (>= etaisyys 0)))
     false))
-
-(defn ajoradan-pituus-sopiva-verkolla? [osa ajorata etaisyys ajoratojen-pituudet]
-  "Tarkistaa, onko annetun tieosan ajoradan alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (let [asdf(if-let [ajoradan-pituus (:pituus
-                                   (first (filter #(and (= osa (:osa %))
-                                                        (= ajorata (:ajorata %)))
-                                                  ajoratojen-pituudet)))]
-
-          (and (<= etaisyys ajoradan-pituus)
-               (>= etaisyys 0))
-          false)]
-    asdf))
 
 (defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
   (and
