@@ -108,6 +108,7 @@
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
+(defrecord PeruHintaryhmanHinnoittelu [])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -375,4 +376,10 @@
     PeruToimenpiteenHinnoittelu
     (process-event [_ app]
       (assoc app :hinnoittelun-tallennus-kaynnissa? false
-                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
+
+
+    PeruHintaryhmanHinnoittelu
+    (process-event [_ app]
+      (assoc app :hinnoittelun-tallennus-kaynnissa? false
+                 :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))

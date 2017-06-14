@@ -584,11 +584,17 @@
   (is (= {:hinnoittelun-tallennus-kaynnissa? false}
          (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
 
-(deftest hinnoittelun-peruminen
+(deftest toimenpiteen-hinnoittelun-peruminen
   (let [vanha-tila testitila
-       uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
-                     vanha-tila)]
-   (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))))
+        uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))))
+
+(deftest hintaryhman-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruHintaryhmanHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))))
 
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
@@ -602,15 +608,16 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :aikavali [alku loppu]
-                                                         :vaylatyyppi :muu
-                                                         :vayla 1
-                                                         :tyolaji :poijut
-                                                         :tyoluokka :asennus-ja-huolto
-                                                         :toimenpide :autot-traktorit
-                                                         :vain-vikailmoitukset? true})]
+          hakuargumentit (tiedot/hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
              {::to/urakka-id 666
               ::to/sopimus-id 777

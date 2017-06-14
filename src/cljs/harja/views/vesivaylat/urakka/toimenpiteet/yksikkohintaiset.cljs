@@ -136,7 +136,7 @@
                             (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
           [:footer.vv-toimenpiteen-hinnoittelu-footer
-           [napit/yleinen-ensisijainen
+           [napit/tallenna
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
@@ -155,13 +155,18 @@
     [:div
      (if hinnoitellaan?
        [:div
-        [napit/yleinen-ensisijainen
+        [tee-kentta {:tyyppi :numero
+                     :placeholder "Syötä hinta"
+                     :kokonaisosan-maara 7}
+         (r/wrap 0
+           #(log "TODO"))]
+        [napit/peruuta
+         "Peruuta"
+         #(e! (tiedot/->PeruHintaryhmanHinnoittelu))
+         {:luokka "pull-right"}]
+        [napit/tallenna
          "Valmis"
          #(log "DOH VALMIS!")
-         {:luokka "pull-right"}]
-        [napit/yleinen-ensisijainen
-         "Peruuta"
-         #(log "DOH PERUUTA!")
          {:luokka "pull-right"}]]
        [napit/yleinen-ensisijainen
         "Määrittele yksi hinta koko ryhmälle"
