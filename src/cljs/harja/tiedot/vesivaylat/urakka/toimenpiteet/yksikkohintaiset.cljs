@@ -88,25 +88,25 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
-(defrecord UudenHintaryhmanLisays? [lisays-auki?])
-(defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
+(defrecord UudenHintaryhmanLisays? [lisays-auki?]) ;; TODO testi
+(defrecord UudenHintaryhmanNimeaPaivitetty [nimi]) ;; TODO testi
 (defrecord SiirraValitutKokonaishintaisiin [])
-(defrecord LuoHintaryhma [nimi])
-(defrecord HintaryhmaLuotu [vastaus])
-(defrecord HintaryhmaEiLuotu [virhe])
-(defrecord HaeHintaryhmat [])
-(defrecord HintaryhmatHaettu [vastaus])
-(defrecord HintaryhmatEiHaettu [virhe])
-(defrecord ValitseHintaryhma [hintaryhma])
-(defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
-(defrecord ValitutLiitetty [vastaus])
-(defrecord ValitutEiLiitetty [virhe])
+(defrecord LuoHintaryhma [nimi]) ;; TODO testi
+(defrecord HintaryhmaLuotu [vastaus]) ;; TODO testi
+(defrecord HintaryhmaEiLuotu [virhe]) ;; TODO testi
+(defrecord HaeHintaryhmat []) ;; TODO testi
+(defrecord HintaryhmatHaettu [vastaus]) ;; TODO
+(defrecord HintaryhmatEiHaettu [virhe]) ;; TODO
+(defrecord ValitseHintaryhma [hintaryhma]) ;; TODO
+(defrecord LiitaValitutHintaryhmaan [hintaryhma valitut]) ;; TODO
+(defrecord ValitutLiitetty [vastaus]) ;; TODO
+(defrecord ValitutEiLiitetty [virhe]) ;; TODO
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
-(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe]) ;; TODO
 (defrecord PeruToimenpiteenHinnoittelu [])
 
 (defn- hintakentta [otsikko hinta]
