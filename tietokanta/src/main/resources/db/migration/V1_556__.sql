@@ -6,7 +6,7 @@ DECLARE id_temp TEXT;
 BEGIN
   id_temp := (SELECT id FROM urakka u
     WHERE
-    u.urakkanro = (OLD."reimari-turvalaite").ryhma::text) LIMIT 1;
+    u.urakkanro = (NEW."reimari-turvalaite").ryhma::text) LIMIT 1;
 
   NEW."urakka-id" = id_temp;
                 -- urakka-id:ksi tulee NULL jos ei löydy, joka on ok
