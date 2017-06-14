@@ -26,26 +26,10 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
-                               ::h/hintaelementit [{::hinta/id 0
-                                                    ::hinta/otsikko "Työ"
-                                                    ::hinta/maara 0
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 1
-                                                    ::hinta/otsikko "Komponentit"
-                                                    ::hinta/maara 1
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 2
-                                                    ::hinta/otsikko "Yleiset materiaalit"
-                                                    ::hinta/maara 2
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 3
-                                                    ::hinta/otsikko "Matkat"
-                                                    ::hinta/maara 3
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 4
-                                                    ::hinta/otsikko "Muut kulut"
-                                                    ::hinta/maara 4
-                                                    ::hinta/yleiskustannuslisa 12}]}]
+                               ::h/hintaelementit {::hinta/id nil
+                                                   ::hinta/otsikko "Ryhmähinta"
+                                                   ::hinta/maara 600
+                                                   ::hinta/yleiskustannuslisa 12}}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
                 :hinnoittele-hintaryhma {::h/id nil
@@ -386,8 +370,8 @@
               ::h/hintaelementit
               [{::hinta/id nil
                 ::hinta/otsikko "Ryhmähinta"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}]}))))
+                ::hinta/maara 600
+                ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
