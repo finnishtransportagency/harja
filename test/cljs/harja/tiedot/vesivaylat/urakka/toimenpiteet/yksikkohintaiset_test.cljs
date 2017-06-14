@@ -195,14 +195,24 @@
       (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
-(deftest hakemisen-epaonnistuminen
-  (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
-    (is (false? (:haku-kaynnissa? tulos)))))
-
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
     (is (false? (:haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
+    (is (false? (:haku-kaynnissa? tulos)))))
+
+(deftest uuden-hintaryhman-lisays
+  (is (= {:foo :bar :uuden-hintaryhman-lisays? true}
+         (e! (tiedot/->UudenHintaryhmanLisays? true) {:foo :bar})))
+  (is (= {:foo :bar :uuden-hintaryhman-lisays? false}
+         (e! (tiedot/->UudenHintaryhmanLisays? false) {:foo :bar}))))
+
+(deftest hintaryhman-nimen-paivitys
+  (is (= {:foo :bar :uusi-hintaryhma "Bar"}
+         (e! (tiedot/->UudenHintaryhmanNimeaPaivitetty "Bar") {:foo :bar}))))
 
 (deftest kokonaishintaisiin-siirto
   (testing "Siirron aloittaminen"
@@ -212,6 +222,97 @@
             uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
                           vanha-tila)]
         (is (true? (:siirto-kaynnissa? uusi-tila)))))))
+
+(deftest kokonaishintaisiin-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
+
+(deftest hintaryhman-luonti
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmaLuotu tiedot/->HintaryhmaEiLuotu}
+
+    (is (= {:hintaryhman-tallennus-kaynnissa? true}
+           (e! (tiedot/->LuoHintaryhma :foo)))))
+
+  (testing "Haku ei lähde uudestaan"
+    (let [app {:foo :bar :hintaryhman-tallennus-kaynnissa? true}]
+      (is (= app (e! (tiedot/->LuoHintaryhma :bar) app))))))
+
+(deftest hintaryhma-luotu
+  (let [app {:hintaryhman-tallennus-kaynnissa? false
+             :uusi-hintaryhma nil
+             :uuden-hintaryhman-lisays? false
+             :hintaryhmat [{:id 1}]}]
+    (is (= {:hintaryhman-tallennus-kaynnissa? false
+            :uusi-hintaryhma nil
+            :uuden-hintaryhman-lisays? false
+            :hintaryhmat [{:id 1} {:id 2}]}
+           (e! (tiedot/->HintaryhmaLuotu {:id 2}) app)))))
+
+(deftest hintaryhmaa-ei-luotu
+  (let [app {:hintaryhman-tallennus-kaynnissa? false
+             :uusi-hintaryhma nil
+             :uuden-hintaryhman-lisays? false
+             :hintaryhmat [{:id 1}]}]
+    (is (= {:hintaryhman-tallennus-kaynnissa? false
+            :uusi-hintaryhma nil
+            :uuden-hintaryhman-lisays? false
+            :hintaryhmat [{:id 1}]}
+           (e! (tiedot/->HintaryhmaEiLuotu {:msg :error}) app)))))
+
+(deftest hintaryhmien-haku
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmatHaettu tiedot/->HintaryhmatEiHaettu}
+
+    (is (= {:hintaryhmien-haku-kaynnissa? true}
+           (e! (tiedot/->HaeHintaryhmat)))))
+
+  (testing "Haku ei lähde uudestaan"
+    (let [app {:foo :bar :hintaryhmien-haku-kaynnissa? true}]
+      (is (= app (e! (tiedot/->LuoHintaryhma :bar) app))))))
+
+(deftest hintaryhma-haettu
+  (is (= {:hintaryhmat [{:id 1}]
+          :hintaryhmien-haku-kaynnissa? false}
+         (e! (tiedot/->HintaryhmatHaettu [{:id 1}])))))
+
+(deftest hintaryhmaa-ei-haettu
+  (is (= {:hintaryhmien-haku-kaynnissa? false} (e! (tiedot/->HintaryhmatEiHaettu {:msg :error})))))
+
+(deftest hintaryhman-valinta
+  (is (= {:valittu-hintaryhma {:id 1}}
+         (e! (tiedot/->ValitseHintaryhma {:id 1})))))
+
+(deftest hintaryhmaan-liittaminen
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutLiitetty tiedot/->ValitutEiLiitetty}
+
+    (is (= {:hintaryhmien-liittaminen-kaynnissa? true}
+           (e! (tiedot/->LiitaValitutHintaryhmaan {::h/id 1} [{::to/id 1}])
+               {:hintaryhmien-liittaminen-kaynnissa? false}))))
+
+  (let [app {:hintaryhmien-liittaminen-kaynnissa? true :foo :bar}]
+    (is (= app (e! (tiedot/->LiitaValitutHintaryhmaan 1 2) app)))))
+
+(deftest hintaryhmaan-liitetty
+  (vaadi-async-kutsut
+    #{tiedot/->HaeToimenpiteet}
+
+    (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
+           (e! (tiedot/->ValitutLiitetty {:foo :bar}))))))
+
+(deftest hintaryhmaan-ei-liitetty
+  (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
+         (e! (tiedot/->ValitutEiLiitetty {:msg :error})))))
 
 (deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
@@ -394,6 +495,16 @@
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa true}]})))))
 
+(deftest toimenpiteen-hinnoittelu
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/ToimenpiteenHinnoitteluEiTallennettu}
+
+    (is (= {:hinnoittelun-tallennus-kaynnissa? true}
+           (e! (tiedot/->HinnoitteleToimenpide 1)))))
+
+  (let [app {:hinnoittelun-tallennus-kaynnissa? true}]
+    (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
+
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (let [hinnoiteltava-toimenpide-id 1
         ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
@@ -468,6 +579,10 @@
             :harja.domain.vesivaylat.hinnoittelu/id 666
             :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
+
+(deftest hinnoittelu-ei-tallennettu
+  (is (= {:hinnoittelun-tallennus-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
 
 (deftest hinnoittelun-peruminen
   (let [vanha-tila testitila
