@@ -38,7 +38,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -238,6 +239,18 @@
                          ominaisuudet)]
       (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))))
 
+
+(defn varusteen-liitteet [e! muokattava? varustetoteuma]
+  {:otsikko "Liitteet" :nimi :liitteet
+   :palstoja 2
+   :tyyppi :komponentti
+   :komponentti (fn [_]
+                  [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
+                   {:uusi-liite-atom (when muokattava?
+                                       (r/wrap (:uusi-liite varustetoteuma)
+                                               #(e! (v/->LisaaLiitetiedosto %))))
+                    :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
+
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
@@ -270,7 +283,8 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet)]
+       (varusteen-ominaisuudet muokattava? ominaisuudet)
+       (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
