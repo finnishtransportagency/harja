@@ -511,40 +511,40 @@
         ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
         vanha-tila (assoc testitila
                      :hinnoittele-toimenpide
-                     {:harja.domain.vesivaylat.toimenpide/id hinnoiteltava-toimenpide-id
+                     {::to/id hinnoiteltava-toimenpide-id
                       :harja.domain.vesivaylat.hinnoittelu/hintaelementit
-                      [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-                        :harja.domain.vesivaylat.hinta/maara 10
-                        :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                       {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-                        :harja.domain.vesivaylat.hinta/maara 20
-                        :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                       {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-                        :harja.domain.vesivaylat.hinta/maara 30
-                        :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                       {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-                        :harja.domain.vesivaylat.hinta/maara 40
-                        :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                       {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-                        :harja.domain.vesivaylat.hinta/maara 50
-                        :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]})
+                      [{::hinta/otsikko "Työ"
+                        ::hinta/maara 10
+                        ::hinta/yleiskustannuslisa false}
+                       {::hinta/otsikko "Komponentit"
+                        ::hinta/maara 20
+                        ::hinta/yleiskustannuslisa false}
+                       {::hinta/otsikko "Yleiset materiaalit"
+                        ::hinta/maara 30
+                        ::hinta/yleiskustannuslisa false}
+                       {::hinta/otsikko "Matkat"
+                        ::hinta/maara 40
+                        ::hinta/yleiskustannuslisa false}
+                       {::hinta/otsikko "Muut kulut"
+                        ::hinta/maara 50
+                        ::hinta/yleiskustannuslisa false}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
                         {:harja.domain.vesivaylat.hinnoittelu/hinnat
-                         [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-                           :harja.domain.vesivaylat.hinta/maara 10
-                           :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                          {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-                           :harja.domain.vesivaylat.hinta/maara 20
-                           :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                          {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-                           :harja.domain.vesivaylat.hinta/maara 30
-                           :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                          {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-                           :harja.domain.vesivaylat.hinta/maara 40
-                           :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                          {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-                           :harja.domain.vesivaylat.hinta/maara 50
-                           :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
+                         [{::hinta/otsikko "Työ"
+                           ::hinta/maara 10
+                           ::hinta/yleiskustannuslisa false}
+                          {::hinta/otsikko "Komponentit"
+                           ::hinta/maara 20
+                           ::hinta/yleiskustannuslisa false}
+                          {::hinta/otsikko "Yleiset materiaalit"
+                           ::hinta/maara 30
+                           ::hinta/yleiskustannuslisa false}
+                          {::hinta/otsikko "Matkat"
+                           ::hinta/maara 40
+                           ::hinta/yleiskustannuslisa false}
+                          {::hinta/otsikko "Muut kulut"
+                           ::hinta/maara 50
+                           ::hinta/yleiskustannuslisa false}]
                          :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
                          :harja.domain.vesivaylat.hinnoittelu/id 666
                          :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
@@ -561,21 +561,21 @@
     ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
     (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
            {:harja.domain.vesivaylat.hinnoittelu/hinnat
-            [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-              :harja.domain.vesivaylat.hinta/maara 10
-              :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-             {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-              :harja.domain.vesivaylat.hinta/maara 20
-              :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-             {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-              :harja.domain.vesivaylat.hinta/maara 30
-              :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-             {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-              :harja.domain.vesivaylat.hinta/maara 40
-              :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-             {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-              :harja.domain.vesivaylat.hinta/maara 50
-              :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
+            [{::hinta/otsikko "Työ"
+              ::hinta/maara 10
+              ::hinta/yleiskustannuslisa false}
+             {::hinta/otsikko "Komponentit"
+              ::hinta/maara 20
+              ::hinta/yleiskustannuslisa false}
+             {::hinta/otsikko "Yleiset materiaalit"
+              ::hinta/maara 30
+              ::hinta/yleiskustannuslisa false}
+             {::hinta/otsikko "Matkat"
+              ::hinta/maara 40
+              ::hinta/yleiskustannuslisa false}
+             {::hinta/otsikko "Muut kulut"
+              ::hinta/maara 50
+              ::hinta/yleiskustannuslisa false}]
             :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
             :harja.domain.vesivaylat.hinnoittelu/id 666
             :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
