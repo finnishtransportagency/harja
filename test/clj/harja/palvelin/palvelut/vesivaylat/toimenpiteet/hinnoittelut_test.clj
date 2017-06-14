@@ -86,8 +86,7 @@
 (deftest tallenna-toimenpiteelle-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
   (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
-        kysely-params {;; ::toi/reimari-turvalaite {::tl/r-ryhma urakka-id}
-                       ::toi/urakka-id urakka-id
+        kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/hintaelementit [{::hinta/id 666
                                             ::hinta/otsikko "Testihinta 1"

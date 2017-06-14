@@ -313,7 +313,7 @@ reimari-tilat
 (def viittaus-idt
   #{::urakoitsija-id
     ::sopimus-id
-    ::reimari-turvalaite
+    ::urakka-id
     ::turvalaite-id
     ::vayla-id
     ::m/muokkaaja-id
@@ -328,6 +328,8 @@ reimari-tilat
 (def sopimus #{[::sopimus sopimus/perustiedot]})
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
+(def urakka #{[::urakka #{}]})
+
 
 (def viittaukset
   (clojure.set/union
@@ -335,6 +337,7 @@ reimari-tilat
     urakoitsija
     sopimus
     turvalaite
+    urakka
     vayla))
 
 (def perustiedot
@@ -391,7 +394,3 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
-
-(defn toimenpiteen-urakka-id [toimenpide]
-  (when (some? toimenpide)
-    (-> toimenpide ::reimari-turvalaite ::vv-turvalaite/r-ryhma)))
