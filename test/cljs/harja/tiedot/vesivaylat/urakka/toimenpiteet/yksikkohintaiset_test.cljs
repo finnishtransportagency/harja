@@ -273,12 +273,13 @@
   (vaadi-async-kutsut
     #{tiedot/->HintaryhmatHaettu tiedot/->HintaryhmatEiHaettu}
 
-    (is (= {:hintaryhmien-haku-kaynnissa? true}
-           (e! (tiedot/->HaeHintaryhmat)))))
+    (is (= {:valinnat {:urakka-id 1}
+            :hintaryhmien-haku-kaynnissa? true}
+           (e! (tiedot/->HaeHintaryhmat) {:valinnat {:urakka-id 1}}))))
 
   (testing "Haku ei lähde uudestaan"
     (let [app {:foo :bar :hintaryhmien-haku-kaynnissa? true}]
-      (is (= app (e! (tiedot/->LuoHintaryhma :bar) app))))))
+      (is (= app (e! (tiedot/->HaeHintaryhmat) app))))))
 
 (deftest hintaryhma-haettu
   (is (= {:hintaryhmat [{:id 1}]
@@ -495,9 +496,9 @@
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa true}]})))))
 
-(deftest toimenpiteen-hinnoittelu
+(deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
-    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/ToimenpiteenHinnoitteluEiTallennettu}
+    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
     (is (= {:hinnoittelun-tallennus-kaynnissa? true}
            (e! (tiedot/->HinnoitteleToimenpide 1)))))
