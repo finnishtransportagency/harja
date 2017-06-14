@@ -449,8 +449,14 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-              (let [{:keys [url kayttajatunnus salasana paivittainen-toimenpidehaku]} (:reimari asetukset)]
-                (reimari/->Reimari url kayttajatunnus salasana paivittainen-toimenpidehaku))
+                (let [{:keys [url kayttajatunnus salasana
+                              paivittainen-toimenpidehaku
+                              paivittainen-komponenttityyppihaku
+                              paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
+                  (reimari/->Reimari url kayttajatunnus salasana
+                                     paivittainen-toimenpidehaku
+                                     paivittainen-komponenttityyppihaku
+                                     paivittainen-turvalaitekomponenttihaku))
               [:db :integraatioloki])
 
       :vkm (component/using
@@ -640,6 +646,7 @@
 
 (defn log-level-info! []
   (log/set-config! [:appenders :standard-out :min-level] :info))
+
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten
