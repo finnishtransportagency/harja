@@ -614,13 +614,16 @@
                          (konv/sql-date loppupvm)
                          (boolean tienumero)
                          tienumero))
-        kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
-                                  toteumat
-                                  {:reittipiste :reittipisteet
-                                   :toteumatehtava :toteumatehtavat}
-                                  :id)]
-    (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
-    kasitellyt-toteumarivit))
+        toteumat (konv/sarakkeet-vektoriin
+                   toteumat
+                   {:reittipiste :reittipisteet
+                    :toteumatehtava :toteumatehtavat}
+                   :id)]
+    (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
+    (map
+      #(let [liitteet (toteumat-q/hae-toteuman-liitteet db (:toteumaid %))]
+         (assoc % :liitteet liitteet))
+      toteumat)))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
   ([db user urakka-id pvm toimenpidekoodi]
@@ -656,7 +659,8 @@
                                        toiminto
                                        alkupvm
                                        loppupvm
-                                       kuntoluokitus] :as toteuma}]
+                                       kuntoluokitus
+                                       uusi-liite] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
   (let [varustetoteuma-id
@@ -712,10 +716,14 @@
                                 :tr_loppuetaisyys (:loppuetaisyys tierekisteriosoite)
                                 :tr_puoli puoli
                                 :tr_ajorata ajorata
-                                :sijainti sijainti}]
-            (if id
-              (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
-              (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))))]
+                                :sijainti sijainti}
+                id (if id
+                     (toteumat-q/paivita-varustetoteuma! db varustetoteuma)
+                     (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
+            (when uusi-liite
+              (toteumat-q/tallenna-liite-toteumalle<! db toteuma-id (:id uusi-liite)))
+            id))]
+
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
 
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))

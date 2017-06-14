@@ -1,2 +1,4 @@
--- Oletettavasti hinnan otsikon pitää olla uniikki per hinnoittelu
-CREATE UNIQUE INDEX uniikki_hinta on vv_hinta ("hinnoittelu-id", otsikko) WHERE poistettu IS NOT TRUE;
+CREATE TABLE toteuma_liite (
+  toteuma INTEGER REFERENCES toteuma (id),
+  liite INTEGER REFERENCES liite (id)
+);

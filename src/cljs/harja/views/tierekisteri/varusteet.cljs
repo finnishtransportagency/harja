@@ -13,7 +13,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.modal :as modal]
             [clojure.string :as str]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :refer [atom] :as r]
+            [harja.ui.liitteet :as liitteet]
+            [harja.ui.debug :as debug]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -80,13 +82,18 @@
                           "4" "Hyvä"
                           "5" "Erinomainen"})
 
-(defn varustetarkastuslomake [e! {tietolaji :tietolaji tunniste :tunniste varuste :varuste tarkastus :tiedot}]
+(defn varustetarkastuslomake [e! {tietolaji :tietolaji
+                                  tunniste :tunniste
+                                  varuste :varuste
+                                  tarkastus :tiedot
+                                  uusi-liite :uusi-liite}]
   (let [varusteen-kuntoluokka (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
         valittu-kuntoluokka (cond
                               (and (nil? tarkastus) (str/blank? varusteen-kuntoluokka)) (ffirst kuntoluokka->selite)
                               (nil? tarkastus) varusteen-kuntoluokka
                               :default (:kuntoluokitus tarkastus))
-        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka)]
+        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka
+                                   :uusi-liite uusi-liite)]
     [modal/modal
      {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
       :nakyvissa? true
@@ -109,7 +116,16 @@
         :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
        {:otsikko "Lisätietoja"
         :nimi :lisatietoja
-        :tyyppi :string}]
+        :tyyppi :string}
+       {:otsikko "Liitteet"
+        :nimi :liitteet
+        :tyyppi :komponentti
+        :komponentti (fn [_]
+                       [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet tarkastus)
+                        {:uusi-liite-teksti "Lisää liite tarkastukseen"
+                         :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
+                                                  #(e! (v/->LisaaLiitetiedosto %)))
+                         :modaalissa? true}])}]
       tarkastus]]))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
