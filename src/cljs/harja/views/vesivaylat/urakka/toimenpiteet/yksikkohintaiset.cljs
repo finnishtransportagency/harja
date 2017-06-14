@@ -150,7 +150,8 @@
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]
-  (let [hinnoitellaan? (get-in app [:hinnoittele-hintaryhma ::h/id])]
+  (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
+        hinnoitellaan? (some? hinnoittelu-id)]
     [:div
      (if hinnoitellaan?
        [:div
