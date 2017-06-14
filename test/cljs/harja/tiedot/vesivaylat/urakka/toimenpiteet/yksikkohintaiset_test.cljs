@@ -385,24 +385,7 @@
              {::h/id 1
               ::h/hintaelementit
               [{::hinta/id nil
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
-                ::hinta/otsikko
-                "Yleiset materiaalit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
-                ::hinta/otsikko "Muut kulut"
+                ::hinta/otsikko "Ryhmähinta"
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}]}))))
 
@@ -414,25 +397,9 @@
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 666
               ::h/hintaelementit
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
+              [{::hinta/id nil
+                ::hinta/otsikko "Ryhmähinta"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 1
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/maara 2
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 3
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu

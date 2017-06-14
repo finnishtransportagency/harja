@@ -116,12 +116,15 @@
                                 yleiskustannuslisa
                                 0)})
 
-(defn- hintakentat [hinnat]
+(defn- toimenpiteen-hintakentat [hinnat]
   [(hintakentta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
    (hintakentta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
    (hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
    (hintakentta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
+
+(defn- hintaryhman-hintakentat [hinnat]
+  [(hintakentta "Ryhmähinta" (hinta/hinta-otsikolla "Työ" hinnat))])
 
 (defn hakukyselyn-argumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
@@ -294,7 +297,7 @@
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
-                  ::h/hintaelementit (hintakentat hinnat)})))
+                  ::h/hintaelementit (toimenpiteen-hintakentat hinnat)})))
 
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]
@@ -302,7 +305,7 @@
           hinnat (::h/hintaelementit hinnoiteltava-hintaryhma)]
       (assoc app :hinnoittele-hintaryhma
                  {::h/id hintaryhma-id
-                  ::h/hintaelementit (hintakentat hinnat)})))
+                  ::h/hintaelementit (hintaryhman-hintakentat hinnat)})))
 
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
