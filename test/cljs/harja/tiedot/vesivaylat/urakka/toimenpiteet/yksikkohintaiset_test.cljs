@@ -26,10 +26,10 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
-                               ::h/hintaelementit {::hinta/id 1
-                                                   ::hinta/otsikko "Ryhmähinta"
-                                                   ::hinta/maara 600
-                                                   ::hinta/yleiskustannuslisa 12}}]
+                               ::h/hintaelementit [{::hinta/id 1
+                                                    ::hinta/otsikko "Ryhmähinta"
+                                                    ::hinta/maara 600
+                                                    ::hinta/yleiskustannuslisa 12}]}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
                 :hinnoittele-hintaryhma {::h/id nil
