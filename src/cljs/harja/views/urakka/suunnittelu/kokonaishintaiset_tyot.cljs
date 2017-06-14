@@ -25,7 +25,8 @@
             [harja.ui.kentat :as kentat])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction-writable]]))
 
 
 
@@ -134,8 +135,19 @@
    [yleiset/vihje
     "Tehtävät ovat järjestelmän laajuisia ja vain järjestelmän vastuuhenkilö voi muuttaa niitä."]])
 
+(defn- prosenttiosuudet [tyorivit]
+  (let [summa (reduce + 0 (map :summa tyorivit))]
+    (with-meta
+      (mapv (fn [{s :summa :as rivi}]
+              (assoc rivi :prosentti
+                     (if s
+                       (Math/round (/ (* 100 s) summa))
+                       0)))
+            tyorivit)
+      {:vuosisumma summa})))
+
 (defn- tyorivit [urakka valittu-sopimusnumero valittu-hoitokausi valittu-toimenpideinstanssi
-                 valitun-toimenpiteen-ja-hoitokauden-tyot ]
+                 valitun-toimenpiteen-ja-hoitokauden-tyot prosenttijako?]
   (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
                                     valitun-toimenpiteen-ja-hoitokauden-tyot))
         tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
@@ -148,14 +160,15 @@
                                             (first valittu-sopimusnumero))
                             tyhjat-kkt))]
 
-    (vec (sort-by (juxt :vuosi :kuukausi)
-                  (concat valitun-toimenpiteen-ja-hoitokauden-tyot
-                          ;; filteröidään pois hoitokauden ulkopuoliset kk:t
-                          (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
-                                                 hoitokauden-alku hoitokauden-loppu)
-                                  tyhjat-tyot))))))
+    (prosenttiosuudet
+     (vec (sort-by (juxt :vuosi :kuukausi)
+                   (concat valitun-toimenpiteen-ja-hoitokauden-tyot
+                           ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                           (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                  hoitokauden-alku hoitokauden-loppu)
+                                   tyhjat-tyot)))))))
 
-(defn- nayta-kokonaishintainen-tehtavalista? [tyyppi]
+(defn- nayta-tehtavalista-ja-kustannukset? [tyyppi]
   (not (#{:tiemerkinta :vesivayla-hoito} tyyppi)))
 
 
@@ -180,6 +193,29 @@
                                       (paivita-kk-arvo-prosentin-mukaan rivi %))
                                     rivit)))))}])
 
+(defn- tayta-maksupvm [lahtorivi tama-rivi]
+  ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
+  ;; ja tehdään vastaavalla erotuksella oleva muutos
+  (let [maksupvm (:maksupvm lahtorivi)
+        p (t/day maksupvm)
+        kk-alku (pvm/luo-pvm (:vuosi lahtorivi) (dec (:kuukausi lahtorivi)) 1)
+        suunta (if (pvm/sama-kuukausi? maksupvm kk-alku)
+                 0
+                 (if (t/before? kk-alku maksupvm) 1 -1))
+        kk-ero ;; lasketaan kuinka monta kuukautta eroa on maksupäivällä ja rivin kuukaudella
+        (loop [ero 0
+               kk kk-alku]
+          (if (pvm/sama-kuukausi? kk maksupvm)
+            ero
+            (recur (+ ero suunta)
+                   (t/plus kk (t/months suunta)))))
+        maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
+                         (t/months kk-ero))
+        paivia (t/number-of-days-in-the-month maksu-kk)
+        maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
+
+    (assoc tama-rivi :maksupvm maksu-pvm)))
+
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
@@ -203,11 +239,14 @@
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
 
+        prosenttijako? (reaction (= (:tyyppi @urakka) :vesivayla-hoito))
+
         tyorivit (reaction
                   (tyorivit
                    @urakka @u/valittu-sopimusnumero
                    @u/valittu-hoitokausi @u/valittu-toimenpideinstanssi
-                   @valitun-toimenpiteen-ja-hoitokauden-tyot))
+                   @valitun-toimenpiteen-ja-hoitokauden-tyot
+                   @prosenttijako?))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
 
@@ -238,9 +277,9 @@
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
                                                :summa))
 
-        prosenttijako? (reaction (= (:tyyppi @urakka) :vesivayla-hoito))
 
-        vuosisumma (atom 123456)
+
+        vuosisumma (reaction-writable (:vuosisumma (meta @tyorivit)))
         vuosisumma-muokattava? (atom false)
 
         g (grid/grid-ohjaus)]
@@ -293,7 +332,9 @@
                                                  :kirjoitus
                                                  (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)))
               :tallenna-vain-muokatut false
-              :peruuta #(reset! tuleville? false)
+              :peruuta #(do
+                          (reset! vuosisumma-muokattava? false)
+                          (reset! tuleville? false))
               :tunniste #((juxt :vuosi :kuukausi) %)
               :voi-lisata? false
               :voi-poistaa? (constantly false)
@@ -336,38 +377,17 @@
                :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys 25
                :tayta-alas?   #(not (nil? %))
                :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
-               :tayta-fn      (fn [lahtorivi tama-rivi]
-                                ;; lasketaan lähtörivin maksupäivän erotus sen rivin vuosi/kk
-                                ;; ja tehdään vastaavalla erotuksella oleva muutos
-                                (let [maksupvm (:maksupvm lahtorivi)
-                                      p (t/day maksupvm)
-                                      kk-alku (pvm/luo-pvm (:vuosi lahtorivi) (dec (:kuukausi lahtorivi)) 1)
-                                      suunta (if (pvm/sama-kuukausi? maksupvm kk-alku)
-                                               0
-                                               (if (t/before? kk-alku maksupvm) 1 -1))
-                                      kk-ero ;; lasketaan kuinka monta kuukautta eroa on maksupäivällä ja rivin kuukaudella
-                                      (loop [ero 0
-                                             kk kk-alku]
-                                        (if (pvm/sama-kuukausi? kk maksupvm)
-                                          ero
-                                          (recur (+ ero suunta)
-                                                 (t/plus kk (t/months suunta)))))
-                                      maksu-kk (t/plus (pvm/luo-pvm (:vuosi tama-rivi) (dec (:kuukausi tama-rivi)) 1)
-                                                       (t/months kk-ero))
-                                      paivia (t/number-of-days-in-the-month maksu-kk)
-                                      maksu-pvm (pvm/luo-pvm (t/year maksu-kk) (dec (t/month maksu-kk)) (min p paivia))]
-
-                                  (assoc tama-rivi :maksupvm maksu-pvm)))}]
+               :tayta-fn      tayta-maksupvm}]
              @tyorivit]
 
-            (when (nayta-kokonaishintainen-tehtavalista? (:tyyppi @urakka))
+            (when (nayta-tehtavalista-ja-kustannukset? (:tyyppi @urakka))
               [kokonaishintaiset-tyot-tehtavalista
                @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
                @u/valittu-toimenpideinstanssi])])
 
          ;; TODO Jos on tiemerkintä, niin pitäisi näyttää kok. hint. yhteensä, yks. hint yhteensä ja muut yhteensä,
          ;; myös muilla välilehdillä
-         (when (not= (:tyyppi @urakka) :tiemerkinta)
+         (when (nayta-tehtavalista-ja-kustannukset? (:tyyppi @urakka))
            [hoidon-kustannusyhteenveto
             @valitun-hoitokauden-ja-tpin-kustannukset
             @s/valitun-hoitokauden-kok-hint-kustannukset
