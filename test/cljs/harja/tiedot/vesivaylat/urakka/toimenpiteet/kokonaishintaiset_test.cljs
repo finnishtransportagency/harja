@@ -150,15 +150,16 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                                :sopimus-id 777
-                                                                :aikavali [alku loppu]
-                                                                :vaylatyyppi :muu
-                                                                :vayla 1
-                                                                :tyolaji :poijut
-                                                                :tyoluokka :asennus-ja-huolto
-                                                                :toimenpide :autot-traktorit
-                                                                :vain-vikailmoitukset? true})]
+          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
              {::to/urakka-id 666
               ::to/sopimus-id 777
@@ -167,8 +168,7 @@
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
               ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true
-              :tyyppi :kokonaishintainen}))
+              :vikailmoitukset? true}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))

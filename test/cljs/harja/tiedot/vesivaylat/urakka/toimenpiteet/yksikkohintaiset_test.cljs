@@ -593,8 +593,7 @@
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
               ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true
-              :tyyppi :yksikkohintainen}))
+              :vikailmoitukset? true}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
