@@ -26,14 +26,14 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :vv-yksikkohintaiset (component/using
-                                                (yks/->YksikkohintaisetToimenpiteet)
-                                                [:db :http-palvelin])))))
+                                               (yks/->YksikkohintaisetToimenpiteet)
+                                               [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
