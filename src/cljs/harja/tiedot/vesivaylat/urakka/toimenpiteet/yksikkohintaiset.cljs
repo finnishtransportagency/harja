@@ -117,8 +117,10 @@
    (hintakentta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
+(def hintaryhman-hintakentta-otsikko "Ryhmähinta")
+
 (defn- hintaryhman-hintakentat [hinnat]
-  [(hintakentta "Ryhmähinta" (hinta/hinta-otsikolla "Ryhmähinta" hinnat))])
+  [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
 
 (defn hakukyselyn-argumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))

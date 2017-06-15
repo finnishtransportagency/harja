@@ -89,7 +89,9 @@
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (hinta/hinnan-maara (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]) otsikko)
+      (r/wrap (hinta/hinnan-maara
+                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                otsikko)
               (fn [uusi]
                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                            ::hinta/maara uusi}))))]
@@ -128,11 +130,11 @@
              [:th {:style {:width "35%"}} "Hinta"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
-            (kenttarivi e! app* "Työ")
-            (kenttarivi e! app* "Komponentit")
-            (kenttarivi e! app* "Yleiset materiaalit")
-            (kenttarivi e! app* "Matkat")
-            (kenttarivi e! app* "Muut kulut")]]
+            [kenttarivi e! app* "Työ"]
+            [kenttarivi e! app* "Komponentit"]
+            [kenttarivi e! app* "Yleiset materiaalit"]
+            [kenttarivi e! app* "Matkat"]
+            [kenttarivi e! app* "Muut kulut"]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
@@ -167,9 +169,12 @@
          [tee-kentta {:tyyppi :numero
                       :placeholder "Syötä hinta"
                       :kokonaisosan-maara 7}
-          (r/wrap (hinta/hinnan-maara (::h/hinnat hintaryhma) "Ryhmähinta")
-                  #(e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko "Ryhmähinta"
-                                                              ::hinta/maara %})))]
+          (r/wrap (hinta/hinnan-maara
+                    (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit])
+                    tiedot/hintaryhman-hintakentta-otsikko)
+                  #(e! (tiedot/->HinnoitteleHintaryhmaKentta
+                         {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                          ::hinta/maara %})))]
          [:span " "]
          [:span "€"]]
         [napit/tallenna

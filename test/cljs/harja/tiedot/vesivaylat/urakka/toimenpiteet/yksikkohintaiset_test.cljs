@@ -27,7 +27,7 @@
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
                                ::h/hinnat [{::hinta/id 1
-                                            ::hinta/otsikko "Ryhmähinta"
+                                            ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                                             ::hinta/maara 600
                                             ::hinta/yleiskustannuslisa 0}]}]
                 :hinnoittele-toimenpide {::to/id nil
@@ -369,7 +369,7 @@
              {::h/id 1
               ::h/hintaelementit
               [{::hinta/id nil
-                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}]}))))
 
@@ -382,7 +382,7 @@
              {::h/id 666
               ::h/hintaelementit
               [{::hinta/id 1
-                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/maara 600
                 ::hinta/yleiskustannuslisa 0}]})))))
 
@@ -451,14 +451,14 @@
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
-                         (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko "Ryhmähinta"
+                         (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                                                                     ::hinta/maara 123})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 666
               ::h/hintaelementit
               [{::hinta/id 1
-                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/maara 123
                 ::hinta/yleiskustannuslisa 0}]})))))
 
