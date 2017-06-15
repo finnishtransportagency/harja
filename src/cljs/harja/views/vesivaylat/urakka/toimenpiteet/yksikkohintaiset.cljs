@@ -234,8 +234,9 @@
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
-         (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]]
+         (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
+               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                     hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)]]
            ^{:key (str "yksikkohintaiset-toimenpiteet-" (::h/nimi hintaryhma))}
            [jaettu/listaus e! app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
@@ -245,7 +246,6 @@
                        [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
-             :hintaryhma hintaryhma
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
 

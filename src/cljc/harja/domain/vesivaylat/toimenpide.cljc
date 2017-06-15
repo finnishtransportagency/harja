@@ -291,7 +291,7 @@ reimari-tilat
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::oma-hinnoittelu ::h/hinnoittelu)
-(s/def ::hintaryhma ::h/hinnoittelu)
+(s/def ::hintaryhma-id ::h/id)
 (s/def ::vikakorjauksia? boolean?)
 (s/def ::idt (s/coll-of ::id))
 
@@ -407,7 +407,7 @@ reimari-tilat
                 ryhma-ja-uusin-toimenpide)))))
 
 (defn jarjesta-hintaryhmat
-  "Ottaa mäpin, missä avain on hintaryhmä, ja arvo on vektori toimenpiteitä.
+  "Ottaa mäpin, missä avain on hintaryhma-id, ja arvo on vektori toimenpiteitä.
   Palauttaa sortatun mäpin. Hintaryhmät järjestetään tärkeimmästä vähiten tärkeään,
   ja toimenpiteet hintaryhmän sisällä järjestetään uusimmasta vanhimpaan."
   [ryhma-ja-toimenpiteet]
@@ -422,7 +422,7 @@ reimari-tilat
         ryhma-ja-toimenpiteet))))
 
 (defn toimenpiteet-hintaryhmissa [toimenpiteet]
-  (jarjesta-hintaryhmat (group-by ::hintaryhma toimenpiteet)))
+  (jarjesta-hintaryhmat (group-by ::hintaryhma-id toimenpiteet)))
 
 ;; Palvelut
 
@@ -440,7 +440,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
-                     :opt [::vikakorjauksia?  ::oma-hinnoittelu ::hintaryhma
+                     :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
                            ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
