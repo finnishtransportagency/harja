@@ -1,4 +1,4 @@
-(ns harja.tuck-apurit)
+(ns harja.testutils.tuck-apurit)
 
 (defmacro vaadi-async-kutsut [halutut-set & body]
   `(let [kutsutut# (atom #{})]

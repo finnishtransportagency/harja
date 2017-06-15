@@ -2,7 +2,7 @@
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]

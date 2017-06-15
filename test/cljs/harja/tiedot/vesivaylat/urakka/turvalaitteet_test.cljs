@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.turvalaitteet-test
   (:require [harja.tiedot.vesivaylat.urakka.turvalaitteet :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
 
 (deftest nakymaan-tuleminen

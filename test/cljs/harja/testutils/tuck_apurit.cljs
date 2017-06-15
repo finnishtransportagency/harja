@@ -5,7 +5,7 @@
             [cljs.core.async :as async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.tuck-apurit :refer [vaadi-async-kutsut]]))
+                   [harja.testutils.tuck-apurit :refer [vaadi-async-kutsut]]))
 
 (defn e!
   "Prosessoi konstruktoidun tuck-eventin, joko tyhjää tai annettua tilaa vasten.
