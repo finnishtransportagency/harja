@@ -33,32 +33,32 @@
         {:tyypit nil :alueurakkanro (tarkista-alueurakkanro alueurakkanro)}))))
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
-                       hallintayksikko]
+                       hallintayksikko urakoitsija-id]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
   (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko sopimustyyppi
-                            alueurakkanro urakka-id))
+                            alueurakkanro urakoitsija-id urakka-id))
 
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
-                   hallintayksikko]
+                   hallintayksikko urakoitsija-id]
   (log/debug "Luodaan uusi urakka.")
 
   (let [uusi-id (:id (urakat-q/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko
-                                            sopimustyyppi alueurakkanro))]
+                                            sopimustyyppi alueurakkanro urakoitsija-id))]
     (log/debug "Uusi urakka id on:" uusi-id)
     (urakat-q/paivita-urakka-alueiden-nakyma db)
     uusi-id))
 
 (defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkanro urakkatyyppi sopimustyyppi
-                        ely-id]
+                        ely-id urakoitsija-id]
   (let [urakka-id (:id (first (urakat-q/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
         (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkanro urakkatyyppi sopimustyyppi
-                        ely-id)
+                        ely-id urakoitsija-id)
         urakka-id)
       (do
         (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
-                    ely-id)))))
+                    ely-id urakoitsija-id)))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
   (yhteyshenkilot-q/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)
@@ -92,19 +92,26 @@
   (when (= urakkatyyppi "paallystys")
     "kokonaisurakka"))
 
+(defn hae-urakoitsija [db ytunnus nimi]
+  (when-let [ytunnus (if (empty? ytunnus) nil (merkkijono/leikkaa 9 ytunnus))]
+    (:id (or
+           (first (organisaatiot-q/hae-id-y-tunnuksella db ytunnus))
+           (organisaatiot-q/luo-organisaatio<! db nil nimi ytunnus nil nil "urakoitsija")))))
+
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
-                                   ely-hash alueurakkanro]}]
+                                   ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (when (not (urakat-q/perustettu-harjassa? db sampo-id))
-      (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
+      (let [urakoitsija-id (hae-urakoitsija db urakoitsijan-ytunnus urakoitsijan-nimi)
+            tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
             tyypit (:tyypit tyyppi-ja-alueurakkanro)
             alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
             urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
             sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
             ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
-                                       sopimustyyppi ely-id)]
+                                       sopimustyyppi ely-id urakoitsija-id)]
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
                            urakka-id
                            urakkatyyppi

@@ -35,6 +35,7 @@
 
 (defn muodosta [urakka viesti-id]
   (let [xml (xml/tee-xml-sanoma (urakka-hiccup urakka viesti-id))]
+    (println "--->>> " xml)
     (when (not (xml/validi-xml? "xsd/sampo/inbound/" "Sampo2Harja.xsd" xml))
       (throw (new RuntimeException
                   "Sähkeeseen lähetettävä XML-sanoma ei ole XSD-skeeman Sampo2Harja.xsd mukaan validi.")))
