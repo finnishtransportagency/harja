@@ -272,7 +272,7 @@
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]
     (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-          hinnat (::h/hintaelementit hinnoiteltava-hintaryhma)]
+          hinnat (::h/hinnat hinnoiteltava-hintaryhma)]
       (assoc app :hinnoittele-hintaryhma
                  {::h/id hintaryhma-id
                   ::h/hintaelementit (hintaryhman-hintakentat hinnat)})))
