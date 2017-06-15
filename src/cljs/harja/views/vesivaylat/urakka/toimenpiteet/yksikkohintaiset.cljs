@@ -161,7 +161,8 @@
 
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]
   (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
-        hinnoitellaan? (some? hinnoittelu-id)]
+        hinnoitellaan? (some? hinnoittelu-id)
+        hinnat (::h/hinnat hintaryhma)]
     [:div.pull-right
      (if hinnoitellaan?
        [:div
@@ -184,10 +185,19 @@
         [napit/peruuta
          "Peruuta"
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
-       [napit/yleinen-ensisijainen
-        "Määrittele yksi hinta koko ryhmälle"
-        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-        {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}])]))
+       (if (empty? hinnat)
+         [napit/yleinen-ensisijainen
+         "Määrittele yksi hinta koko ryhmälle"
+         #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
+         [:div
+          [:div.inline-block {:style {:margin-right "10px"}}
+           [:b "Ryhmähinta: "]
+           [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+          [napit/yleinen-toissijainen
+           (ikonit/muokkaa)
+           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+           {:ikoninappi? true}]]))]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
