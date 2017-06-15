@@ -92,7 +92,7 @@
 
 
 (defn kuittauslista [e! pikakuittaus {id :id kuittaukset :kuittaukset :as ilmoitus}]
-  (let [oikeus? false #_(oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset @nav/valittu-urakka-id)
+  (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset @nav/valittu-urakka-id)
         kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)
         pikakuittaus? (and pikakuittaus (= id (get-in pikakuittaus [:ilmoitus :id])))]
     [:span
