@@ -145,3 +145,10 @@ E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun
 
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun';
+
+COMMENT ON TABLE vv_kiintio IS
+E'Vesiväylien sopimuksissa mainitaan usein kiintiöitä, jotka voivat olla hyvin vapaamuotoisia. Esimerkiksi (ei oikeasta sopimuksesta), sopimukseen\n
+Voi kuulua 15 kappaletta talvella vaurioituneen viitan korjausta, ja 5 kappaletta vanhentuneen aurinkopaneelin päivitystä. Kokonaishintaiset toimenpiteet\n
+täyttävät näitä kiintiöitä, ja kun kiintiö täyttyy, aletaan toimenpiteistä maksamaan yksikköhintoja. Tässä vaiheessa tilaaja/urakoitsija yhdessä määrittelevät,\n
+tarkalleen mitkä toimenpiteet kuuluvat kiintiöön, ja mitkä eivät, koska esimerkiksi kauas tehdystä toimenpiteestä joudutaan maksamaan suurempi yksikköhinta matkoista. \n
+Urakoitsija merkitsee kokonaishintaisia toimenpiteitä kiintiöihin kuuluvaksi, ja tilaaja seuraa kiintiöiden täyttymistä.';
