@@ -16,7 +16,10 @@
   ([event tila]
    (tuck/process-event event tila)))
 
-(defn palvelukutsu [palvelu argumentit {:keys [onnistui epaonnistui]}]
+(defn palvelukutsu
+  ([palvelu argumentit optiot]
+   (palvelu nil palvelu argumentit optiot))
+  ([app palvelu argumentit {:keys [onnistui epaonnistui]}]
   (let [onnistui! (when onnistui (tuck/send-async! onnistui))
         epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
     (try
@@ -27,4 +30,5 @@
             (when onnistui! (onnistui! vastaus)))))
       (catch :default e
         (when epaonnistui! (epaonnistui! nil))
-        (throw e)))))
+        (throw e)))
+    app)))
