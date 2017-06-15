@@ -85,9 +85,9 @@ WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
       alkanut >= :alkaen AND
       alkanut <= :paattyen AND
-      (:otsikot :: TEXT IS NULL OR iv.otsikko IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
-      (:parametrit :: TEXT IS NULL OR iv.parametrit IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
-      (:sisalto :: TEXT IS NULL OR iv.sisalto IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+      (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
+      (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
+      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
 ORDER BY it.id DESC, it.alkanut DESC;
 
 -- name: hae-uusimmat-integraatiotapahtumat
@@ -108,9 +108,9 @@ FROM integraatiotapahtuma it
 WHERE (:jarjestelma :: VARCHAR IS NULL OR jarjestelma = :jarjestelma) AND
       (:integraatio :: VARCHAR IS NULL OR nimi = :integraatio) AND
       (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
-      (:otsikot :: TEXT IS NULL OR iv.otsikko IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
-      (:parametrit :: TEXT IS NULL OR iv.parametrit IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
-      (:sisalto :: TEXT IS NULL OR iv.sisalto IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+      (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
+      (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
+      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
 ORDER BY it.id DESC, it.alkanut DESC
 LIMIT 50;
 
