@@ -185,21 +185,12 @@
   LuoHintaryhma
   (process-event [{nimi :nimi} app]
     (if-not (:hintaryhman-tallennus-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->HintaryhmaLuotu)
-            fail! (tuck/send-async! ->HintaryhmaEiLuotu)
-            parametrit {::h/nimi nimi
-                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
-        (try
-          (go
-            (let [vastaus (<! (k/post! :luo-hinnoittelu parametrit))]
-              (if (k/virhe? vastaus)
-                (fail! vastaus)
-                (tulos! vastaus))))
-          (assoc app :hintaryhman-tallennus-kaynnissa? true)
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (do (tuck-apurit/palvelukutsu :luo-hinnoittelu
+                                    {::h/nimi nimi
+                                     ::urakka/id (get-in app [:valinnat :urakka-id])}
+                                    {:onnistui ->HintaryhmaLuotu
+                                     :epaonnistui ->HintaryhmaEiLuotu})
+          (assoc app :hintaryhman-tallennus-kaynnissa? true))
       app))
 
   HintaryhmaLuotu
@@ -220,21 +211,11 @@
   HaeHintaryhmat
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
-      (when-let [urakka-id (get-in app [:valinnat :urakka-id])]
-        (let [tulos! (tuck/send-async! ->HintaryhmatHaettu)
-              fail! (tuck/send-async! ->HintaryhmatEiHaettu)
-              parametrit {::urakka/id urakka-id}]
-          (try
-            (go
-              (let [vastaus (<! (k/post! :hae-hinnoittelut parametrit))]
-                (if (k/virhe? vastaus)
-                  (fail! vastaus)
-                  (tulos! vastaus))))
-            (assoc app :hintaryhmien-haku-kaynnissa? true)
-            (catch :default e
-              (fail! nil)
-              (throw e)))))
-
+      (do (tuck-apurit/palvelukutsu :hae-hinnoittelut
+                                    {::urakka/id (get-in app [:valinnat :urakka-id])}
+                                    {:onnistui ->HintaryhmatHaettu
+                                     :epaonnistui ->HintaryhmatEiHaettu})
+          (assoc app :hintaryhmien-haku-kaynnissa? true))
       app))
 
   HintaryhmatHaettu
@@ -254,23 +235,13 @@
   LiitaValitutHintaryhmaan
   (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
     (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->ValitutLiitetty)
-            fail! (tuck/send-async! ->ValitutEiLiitetty)
-            parametrit {::to/idt (map ::to/id valitut)
-                        ::h/id (::h/id hintaryhma)
-                        ::urakka/id (get-in app [:valinnat :urakka-id])}]
-        (try
-          (go
-            (let [vastaus (<! (k/post! :liita-toimenpiteet-hinnoitteluun parametrit))]
-              (if (k/virhe? vastaus)
-                (fail! vastaus)
-                (tulos! vastaus))))
-          (assoc app :hintaryhmien-liittaminen-kaynnissa? true)
-
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (do (tuck-apurit/palvelukutsu :liita-toimenpiteet-hinnoitteluun
+                                    {::to/idt (map ::to/id valitut)
+                                     ::h/id (::h/id hintaryhma)
+                                     ::urakka/id (get-in app [:valinnat :urakka-id])}
+                                    {:onnistui ->ValitutLiitetty
+                                     :epaonnistui ->ValitutEiLiitetty})
+          (assoc app :hintaryhmien-liittaminen-kaynnissa? true))
       app))
 
   ValitutLiitetty
