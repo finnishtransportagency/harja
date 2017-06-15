@@ -65,9 +65,9 @@
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
                     :suora? true
                     :palvelin "solita-service-1.solita.fi"
-                    :jonot {:sahkoposti-sisaan-jono ""
-                            :sahkoposti-ulos-jono ""
-                            :sahkoposti-ulos-kuittausjono ""}}
+                    :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
+                            :sahkoposti-ulos-jono "Harja.Send.Email.InQ"
+                            :sahkoposti-ulos-kuittausjono "Harja.Send.Email.Status"}}
 
  :tierekisteri {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
                 :uudelleenlahetys-aikavali-minuutteina 60}
