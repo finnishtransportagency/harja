@@ -17,7 +17,9 @@
             [cljs.core.async :refer [<!]]
 
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka :as urakka-domain]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -53,7 +55,9 @@
             [(grid/otsikko "Hinta merkitsemättä tai tehtävä ei kuulu urakkaan")]
             (get otsikon-mukaan :ei-hintaa))))
 
-(defn hoidon-sarakkeet []
+(defmulti urakkatyypin-sarakkeet (fn [tyyppi] tyyppi))
+
+(defmethod urakkatyypin-sarakkeet :hoito [_]
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "30%"}
    {:otsikko (str "Määrä 10-12/" (.getYear (first @u/valittu-hoitokausi))) :nimi :maara-kkt-10-12 :tyyppi :positiivinen-numero :leveys "10%" :tasaa :oikea}
    {:otsikko (str "Yhteen\u00ADsä " (.getYear (first @u/valittu-hoitokausi))) :nimi :yhteensa-kkt-10-12
@@ -65,12 +69,21 @@
    {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys "10%"}
    {:otsikko "Kausi yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "13%" :fmt fmt/euro-opt}])
 
-(defn yllapidon-sarakkeet []
+(defmethod urakkatyypin-sarakkeet :vesivayla-hoito [_]
+  [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys 4}
+   {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 1}
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys 1}])
+
+;; Ylläpidon sarakkeet
+(defmethod urakkatyypin-sarakkeet :default [_]
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
    {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys "15%" :tasaa :oikea}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "15%"}
-   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero :fmt fmt/euro-opt :leveys "15%"}
-   {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false) :leveys "15%" :fmt fmt/euro-opt}])
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys "15%"}
+   {:otsikko "Yhteensä" :nimi :yhteensa :tasaa :oikea :tyyppi :string :muokattava? (constantly false)
+    :leveys "15%" :fmt fmt/euro-opt}])
 
 (defn paivita-hoitorivin-summat [{:keys [maara-kkt-10-12 maara-kkt-1-9 yksikkohinta] :as rivi}]
   (let [yht-10-12 (and yksikkohinta maara-kkt-10-12
@@ -85,6 +98,30 @@
 (defn paivita-yllapitorivin-summat [{:keys [maara yksikkohinta] :as rivi}]
   (assoc rivi
       :yhteensa (and maara yksikkohinta (* maara yksikkohinta))))
+
+(defn- etuliitteen-mukaan-valiotsikoilla [tyorivit]
+  (->> tyorivit
+       (map #(let [nimi (:tehtavan_nimi %)
+                   kaksoispiste (.indexOf nimi ":")
+                   valiotsikko (if (neg? kaksoispiste)
+                                 ""
+                                 (subs nimi 0 kaksoispiste))
+                   nimi (if (neg? kaksoispiste)
+                          nimi
+                          (subs nimi (inc kaksoispiste)))]
+               (assoc %
+                      :tehtavan_nimi nimi
+                      :valiotsikko valiotsikko)))
+       (group-by :valiotsikko)
+       (sort-by first)
+       (mapcat (fn [[otsikko tehtavat]]
+                 (into (if (str/blank? otsikko)
+                         []
+                         [(grid/otsikko otsikko)])
+                       tehtavat)))))
+
+(defn- nayta-kustannukset? [ur]
+  (not= (:tyyppi ur) :vesivayla-hoito))
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
@@ -148,9 +185,12 @@
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))
 
+        vesivaylaurakka? (reaction (urakka-domain/vesivayla-urakkatyyppi? (:tyyppi @urakka)))
         tyorivit-joilla-hinta (reaction
-                                (keep #(if (:yksikkohinta %)
-                                        (identity %)) @tyorivit))
+                               (let [tyorivit (filter :yksikkohinta @tyorivit)]
+                                 (if @vesivaylaurakka?
+                                   (etuliitteen-mukaan-valiotsikoilla tyorivit)
+                                   tyorivit)))
 
         toimenpiteen-kustannukset (reaction (reduce + 0 (keep :yhteensa @tyorivit-joilla-hinta)))]
 
@@ -185,7 +225,9 @@
            :voi-lisata? false
            :voi-poistaa? (constantly false)
            :aloita-muokkaus-fn (fn [_]
-                                 (ryhmittele-hinnoitellut @tyorivit))
+                                 (if @vesivaylaurakka?
+                                   (etuliitteen-mukaan-valiotsikoilla @tyorivit)
+                                   (ryhmittele-hinnoitellut @tyorivit)))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
                              [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
@@ -204,39 +246,38 @@
                                            (map (comp paivita-yllapitorivin-summat second) rivit)))))}
 
           ;; sarakkeet
-          (if (= :hoito (:tyyppi ur))
-            (hoidon-sarakkeet)
-            (yllapidon-sarakkeet))
+          (urakkatyypin-sarakkeet (:tyyppi ur))
 
-               @tyorivit-joilla-hinta]
+          @tyorivit-joilla-hinta]
          [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]
 
-         [:div.hoitokauden-kustannukset
-          [:div.summa.summa-toimenpiteen-hoitokausi
-           "Yksikköhintaisten töiden toimenpiteen hoitokausi yhteensä "
-           [:span (fmt/euro @toimenpiteen-kustannukset)]]
-          [:div.summa.summa-hoitokausi
-           "Yksikkohintaisten töiden hoitokausi yhteensä "
-           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-          [:div.summa.summa-hoitokaudet
-           "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]
-          [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
-           [:div.col-xs-6.piirakka
-            (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
-                  kaikki-kust @kaikkien-hoitokausien-kustannukset]
-              (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
-                [:span.piirakka-wrapper
-                 [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
-                 [vis/pie
-                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                  {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
-           [:div.col-xs-6.piirakka
-            (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
-                  kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
-              (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
-                [:span.piirakka-wrapper
-                 [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
-                 [vis/pie
-                  {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]]]))))
+         (when (nayta-kustannukset? ur)
+           [:div.hoitokauden-kustannukset
+            [:div.summa.summa-toimenpiteen-hoitokausi
+             "Yksikköhintaisten töiden toimenpiteen hoitokausi yhteensä "
+             [:span (fmt/euro @toimenpiteen-kustannukset)]]
+            [:div.summa.summa-hoitokausi
+             "Yksikkohintaisten töiden hoitokausi yhteensä "
+             [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
+            [:div.summa.summa-hoitokaudet
+             "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+             [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]
+            [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
+             [:div.col-xs-6.piirakka
+              (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
+                    kaikki-kust @kaikkien-hoitokausien-kustannukset]
+                (when (or (not= 0 valittu-kust) (not= 0 kaikki-kust))
+                  [:span.piirakka-wrapper
+                   [:h5.piirakka-label "Tämän hoitokauden osuus kaikista hoitokausista"]
+                   [vis/pie
+                    {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                    {"Valittu hoitokausi" valittu-kust "Muut hoitokaudet" (- kaikki-kust valittu-kust)}]]))]
+             [:div.col-xs-6.piirakka
+              (let [yks-hint-yhteensa @valitun-hoitokauden-yks-hint-kustannukset
+                    kok-hint-yhteensa @s/valitun-hoitokauden-kok-hint-kustannukset]
+                (when (or (not= 0 yks-hint-yhteensa) (not= 0 kok-hint-yhteensa))
+                  [:span.piirakka-wrapper
+                   [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
+                   [vis/pie
+                    {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+                    {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]])]))))
