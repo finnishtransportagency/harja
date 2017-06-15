@@ -9,7 +9,15 @@
             [specql.rel :as rel]
             [taoensso.timbre :as log]
 
-            [harja.domain.muokkaustiedot :as m]))
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.vesivaylat.kiintio :as kiintio]))
 
 (defn hae-kiintiot [db tiedot]
-  (constantly {}))
+  (let [urakka-id (::kiintio/urakka-id tiedot)]
+    (fetch db
+          ::kiintio/kiintio
+          (set/union kiintio/perustiedot
+                     kiintio/kiintion-toimenpiteet)
+           (op/and
+             {::kiintio/urakka-id urakka-id}
+             {::kiintio/poistettu? false}))))
