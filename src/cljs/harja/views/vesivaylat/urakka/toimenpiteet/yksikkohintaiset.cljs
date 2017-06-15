@@ -237,7 +237,7 @@
          (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
                :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
                      hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)]]
-           ^{:key (str "yksikkohintaiset-toimenpiteet-" (::h/nimi hintaryhma))}
+           ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
            [jaettu/listaus e! app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
