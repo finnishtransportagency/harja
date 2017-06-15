@@ -267,7 +267,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko]}]
+                                peruuta otsikko validoi-fn]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -298,29 +298,35 @@
          [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
       (when-not muokkaa-aina
-        [:button.nappi-myonteinen.grid-tallenna
-         {:disabled (or (not (empty? @virheet))
-                        @tallennus-kaynnissa
-                        (not muokattu?))
-          :on-click #(when-not @tallennus-kaynnissa
-                       (let [kaikki-rivit (mapv second @muokatut)
-                             ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
-                             tallennettavat (filter (fn [rivi]
-                                                      (not (and (neg-int? (:id rivi))
-                                                                (:poistettu rivi))))
-                                                    kaikki-rivit)
-                             tallennettavat
-                             (if tallenna-vain-muokatut
-                               (do (log "TALLENNA VAIN MUOKATUT")
-                                   (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
-                               tallennettavat)]
-                         (do (.preventDefault %)
-                             (reset! tallennus-kaynnissa true)
-                             (go
-                               (when-not (empty? tallennettavat)
-                                 (<! (tallenna tallennettavat)))
-                               (nollaa-muokkaustiedot!)))))}
-         [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+        (let [validointivirhe (when validoi-fn
+                                (validoi-fn (vals @muokatut)))]
+          (y/wrap-if
+           validointivirhe
+           [y/tooltip {} :% validointivirhe]
+           [:button.nappi-myonteinen.grid-tallenna
+            {:disabled (or validointivirhe
+                           (not (empty? @virheet))
+                           @tallennus-kaynnissa
+                           (not muokattu?))
+             :on-click #(when-not @tallennus-kaynnissa
+                          (let [kaikki-rivit (mapv second @muokatut)
+                                ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                                tallennettavat (filter (fn [rivi]
+                                                         (not (and (neg-int? (:id rivi))
+                                                                   (:poistettu rivi))))
+                                                       kaikki-rivit)
+                                tallennettavat
+                                (if tallenna-vain-muokatut
+                                  (do (log "TALLENNA VAIN MUOKATUT")
+                                      (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                                  tallennettavat)]
+                            (do (.preventDefault %)
+                                (reset! tallennus-kaynnissa true)
+                                (go
+                                  (when-not (empty? tallennettavat)
+                                    (<! (tallenna tallennettavat)))
+                                  (nollaa-muokkaustiedot!)))))}
+            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
         [:button.nappi-kielteinen.grid-peru
@@ -544,6 +550,9 @@
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+  :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
+                                        virheilmoituksen, jos tallennus estetään.
+
                                         jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
@@ -869,7 +878,8 @@
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
-                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts}
+                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
+                    validoi-fn] :as opts}
             skeema alkup-tiedot]
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               mahdollista-rivin-valinta? (or mahdollista-rivin-valinta? false)
@@ -898,7 +908,8 @@
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                             :peruuta peruuta :otsikko otsikko})
+                             :peruuta peruuta :otsikko otsikko
+                             :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
@@ -980,7 +991,8 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko})])])))))
+                                :peruuta peruuta :otsikko otsikko
+                                :validoi-fn validoi-fn})])])))))
 
 (defn otsikkorivin-tiedot [otsikko maara]
   (str otsikko
