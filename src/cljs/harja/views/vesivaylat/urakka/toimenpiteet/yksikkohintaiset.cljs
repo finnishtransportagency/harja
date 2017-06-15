@@ -159,10 +159,18 @@
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
-(defn- hintaryhman-hinnoittelu [e! app hintaryhma]
-  (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
+(defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
+  (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
+        hintaryhman-toimenpiteet (:toimenpiteet app*)
+        hintaryhman-toimenpiteiden-omat-hinnat (remove
+                                                 nil?
+                                                 (mapcat #(get-in % [::to/oma-hinnoittelu ::h/hinnat])
+                                                         hintaryhman-toimenpiteet))
+        hintaryhman-toimenpiteiden-yhteishinta (hinta/kokonaishinta-yleiskustannuslisineen
+                                                 hintaryhman-toimenpiteiden-omat-hinnat)
         hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
-        hinnat (::h/hinnat hintaryhma)]
+        hinnat (::h/hinnat hintaryhma)
+        hintaryhman-kokonaishinta (hinta/kokonaishinta-yleiskustannuslisineen hinnat)]
     [:div.pull-right
      (if hinnoitellaan?
        [:div
@@ -171,7 +179,7 @@
                       :placeholder "Syötä hinta"
                       :kokonaisosan-maara 7}
           (r/wrap (hinta/hinnan-maara
-                    (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit])
+                    (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
                     tiedot/hintaryhman-hintakentta-otsikko)
                   #(e! (tiedot/->HinnoitteleHintaryhmaKentta
                          {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
@@ -180,24 +188,33 @@
          [:span "€"]]
         [napit/tallenna
          "Valmis"
-         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app)))
-         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
+         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
+         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
         [napit/peruuta
          "Peruuta"
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        (if (empty? hinnat)
          [napit/yleinen-ensisijainen
-         "Määrittele yksi hinta koko ryhmälle"
-         #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
+          "Määrittele yksi hinta koko ryhmälle"
+          #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+          {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
          [:div
           [:div.inline-block {:style {:margin-right "10px"}}
-           [:b "Ryhmähinta: "]
-           [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-          [napit/yleinen-toissijainen
+           (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+             [:span
+              [:b "Ryhmähinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+             ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+             ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+             ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+             [yleiset/tietoja {:tietokentan-leveys "180px"}
+              "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+              "Ryhmähinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+              "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+          [:div.inline-block {:style {:vertical-align :top}}
+           [napit/yleinen-toissijainen
            (ikonit/muokkaa)
            #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:ikoninappi? true}]]))]))
+           {:ikoninappi? true}]]]))]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -225,7 +242,7 @@
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide e! app* rivi])}]
              :footer (when hintaryhma
-                       [hintaryhman-hinnoittelu e! app hintaryhma])
+                       [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
              :hintaryhma hintaryhma
