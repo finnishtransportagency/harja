@@ -157,20 +157,11 @@
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-        (try
-          (let [hakuargumentit (hakukyselyn-argumentit valinnat)]
-            (go
-              (let [vastaus (<! (k/post! :hae-yksikkohintaiset-toimenpiteet hakuargumentit))]
-                (if (k/virhe? vastaus)
-                  (fail! vastaus)
-                  (tulos! vastaus))))
-            (assoc app :haku-kaynnissa? true))
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (do (tuck-apurit/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
+                                    (hakukyselyn-argumentit valinnat)
+                                    {:onnistui ->ToimenpiteetHaettu
+                                     :epaonnistui ->ToimenpiteetEiHaettu})
+          (assoc app :haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu

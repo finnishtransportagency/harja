@@ -27,4 +27,4 @@
             (when onnistui! (onnistui! vastaus)))))
       (catch :default e
         (when epaonnistui! (epaonnistui! nil))
-        (throw e)))))epaonnistui!
+        (throw e)))))
