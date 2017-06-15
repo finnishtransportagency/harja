@@ -10,6 +10,7 @@
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
+            [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
@@ -24,7 +25,8 @@
                       (not= tyyppi :paallystys)
                       (not= tyyppi :vesivayla-hoito))
     :suola (= tyyppi :hoito)
-    :muut (not= tyyppi :vesivayla-hoito)))
+    :muut (not= tyyppi :vesivayla-hoito)
+    :kiintiot (= tyyppi :vesivayla-hoito)))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -64,4 +66,11 @@
           (when (and (oikeudet/urakat-suunnittelu-materiaalit id)
                      (valilehti-mahdollinen? :materiaalit ur))
             ^{:key "materiaalit"}
-            [mat/materiaalit ur])]]))))
+            [mat/materiaalit ur])
+
+          "Kiintiöt"
+          :kiintiot
+          (when (and #_(oikeudet/urakat-suunnittelu-kiintiot id)
+                  (valilehti-mahdollinen? :kiintiot ur))
+            ^{:key "kiintiöt"}
+            [kiintiot/kiintiot])]]))))
