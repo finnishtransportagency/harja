@@ -136,11 +136,11 @@
     "Tehtävät ovat järjestelmän laajuisia ja vain järjestelmän vastuuhenkilö voi muuttaa niitä."]])
 
 (defn- prosenttiosuudet [tyorivit]
-  (let [summa (reduce + 0 (map :summa tyorivit))]
+  (let [summa (reduce + 0 (keep :summa tyorivit))]
     (with-meta
       (mapv (fn [{s :summa :as rivi}]
               (assoc rivi :prosentti
-                     (if s
+                     (if (and s (pos? summa))
                        (Math/round (/ (* 100 s) summa))
                        0)))
             tyorivit)
