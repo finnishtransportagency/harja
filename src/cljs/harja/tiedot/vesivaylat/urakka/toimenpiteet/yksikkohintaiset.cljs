@@ -11,7 +11,7 @@
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tuck-apurit :as tuck-apurit]
+            [harja.tyokalut.tuck :as tuck-tyokalut]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.viesti :as viesti]
@@ -163,7 +163,7 @@
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
+      (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
                                     (hakukyselyn-argumentit valinnat)
                                     {:onnistui ->ToimenpiteetHaettu
                                      :epaonnistui ->ToimenpiteetEiHaettu})
@@ -191,7 +191,7 @@
   LuoHintaryhma
   (process-event [{nimi :nimi} app]
     (if-not (:hintaryhman-tallennus-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :luo-hinnoittelu
+      (do (tuck-tyokalut/palvelukutsu :luo-hinnoittelu
                                     {::h/nimi nimi
                                      ::urakka/id (get-in app [:valinnat :urakka-id])}
                                     {:onnistui ->HintaryhmaLuotu
@@ -217,7 +217,7 @@
   HaeHintaryhmat
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :hae-hinnoittelut
+      (do (tuck-tyokalut/palvelukutsu :hae-hinnoittelut
                                     {::urakka/id (get-in app [:valinnat :urakka-id])}
                                     {:onnistui ->HintaryhmatHaettu
                                      :epaonnistui ->HintaryhmatEiHaettu})
@@ -241,7 +241,7 @@
   LiitaValitutHintaryhmaan
   (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
     (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :liita-toimenpiteet-hinnoitteluun
+      (do (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-hinnoitteluun
                                     {::to/idt (map ::to/id valitut)
                                      ::h/id (::h/id hintaryhma)
                                      ::urakka/id (get-in app [:valinnat :urakka-id])}
@@ -292,7 +292,7 @@
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :tallenna-toimenpiteelle-hinta
+      (do (tuck-tyokalut/palvelukutsu :tallenna-toimenpiteelle-hinta
                                     {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                      ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
                                      ::h/hintaelementit (mapv
@@ -313,7 +313,7 @@
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :tallenna-hintaryhmalle-hinta
+      (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
                                     {::ur/id (get-in app [:valinnat :urakka-id])
                                      ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
                                      ::h/hintaelementit (mapv

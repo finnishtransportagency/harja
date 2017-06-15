@@ -10,7 +10,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tuck-apurit :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -134,9 +134,9 @@
     (assoc app :siirto-kaynnissa? false)))
 
 (defn siirra-valitut! [palvelu app]
-  (tuck-apurit/palvelukutsu palvelu
-                            {::to/urakka-id (get-in app [:valinnat :urakka-id])
+  (tuck-tyokalut/palvelukutsu palvelu
+                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
                              ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
-                            {:onnistui ->ToimenpiteetSiirretty
+                              {:onnistui ->ToimenpiteetSiirretty
                              :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))

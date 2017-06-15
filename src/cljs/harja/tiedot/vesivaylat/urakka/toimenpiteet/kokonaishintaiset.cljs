@@ -16,7 +16,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.tuck-apurit :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -83,9 +83,9 @@
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (do (tuck-apurit/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
-                                    (kyselyn-hakuargumentit valinnat)
-                                    {:onnistui ->ToimenpiteetHaettu
+      (do (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
+                                      (kyselyn-hakuargumentit valinnat)
+                                      {:onnistui ->ToimenpiteetHaettu
                                      :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc app :haku-kaynnissa? true))
       app))
