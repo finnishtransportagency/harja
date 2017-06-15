@@ -16,18 +16,15 @@
   ([event tila]
    (tuck/process-event event tila)))
 
-(defn palvelukutsu [{:keys [onnistui epaonnistui palvelu argumentit uusi-tila]}]
-  (let [tulos! (tuck/send-async! onnistui)
-        fail! (tuck/send-async! epaonnistui)]
+(defn palvelukutsu [palvelu argumentit {:keys [onnistui epaonnistui]}]
+  (let [onnistui! (when onnistui (tuck/send-async! onnistui))
+        epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
     (try
       (go
         (let [vastaus (<! (k/post! palvelu argumentit))]
           (if (k/virhe? vastaus)
-            (fail! vastaus)
-            (tulos! vastaus))))
-
-      uusi-tila
-
+            (when epaonnistui! (epaonnistui! vastaus))
+            (when onnistui! (onnistui! vastaus)))))
       (catch :default e
-        (fail! nil)
-        (throw e)))))
+        (when epaonnistui! (epaonnistui! nil))
+        (throw e)))))epaonnistui!

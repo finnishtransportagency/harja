@@ -324,21 +324,21 @@
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:hinnoittelun-tallennus-kaynnissa? app)
-      (tuck-apurit/palvelukutsu {:onnistui ->ToimenpiteenHinnoitteluTallennettu
-                                 :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu
-                                 :palvelu :tallenna-toimenpiteelle-hinta
-                                 :argumentit {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                                              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-                                              ::h/hintaelementit (mapv
-                                                                   (fn [hinta]
-                                                                     (merge
-                                                                       (when-let [id (::hinta/id hinta)]
-                                                                         {::hinta/id id})
-                                                                       {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                        ::hinta/maara (::hinta/maara hinta)
-                                                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                                   (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
-                                 :uusi-tila (assoc app :hinnoittelun-tallennus-kaynnissa? true)})
+      (do (tuck-apurit/palvelukutsu :tallenna-toimenpiteelle-hinta
+                                    {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                     ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+                                     ::h/hintaelementit (mapv
+                                                          (fn [hinta]
+                                                            (merge
+                                                              (when-let [id (::hinta/id hinta)]
+                                                                {::hinta/id id})
+                                                              {::hinta/otsikko (::hinta/otsikko hinta)
+                                                               ::hinta/maara (::hinta/maara hinta)
+                                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                          (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
+                                    {:onnistui ->ToimenpiteenHinnoitteluTallennettu
+                                     :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
+          (assoc app :hinnoittelun-tallennus-kaynnissa? true))
       app))
 
   ToimenpiteenHinnoitteluTallennettu
