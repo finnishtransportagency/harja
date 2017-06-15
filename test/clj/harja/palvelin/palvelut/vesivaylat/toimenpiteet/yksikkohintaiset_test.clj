@@ -50,7 +50,9 @@
 
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
-    (is (>= (count vastaus) 2))))
+    (is (>= (count vastaus) 2))
+    (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
+    (is (some #(not (empty? (::toi/hintaryhma %))) vastaus))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
