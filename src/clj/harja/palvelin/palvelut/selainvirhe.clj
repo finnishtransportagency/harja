@@ -10,18 +10,21 @@
             [harja.pvm :as pvm]))
 
 (defn sanitoi [sisalto]
-  (str/replace (str sisalto) "<" "&lt;"))
+  (str/replace (str sisalto) #"[<>&]" (fn [merkki] (case merkki
+                                                      "<" "&lt;"
+                                                      ">" "&gt;"
+                                                      "&" "&amp;"))))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
-  [:table
-   [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
-   [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
-   [:tr [:td {:valign "top"} [:b "URL:"]] [:td [:pre (sanitoi url)]]]
-   [:tr [:td {:valign "top"} [:b "Selain: "]] [:td [:pre (sanitoi selain)]]]
-   [:tr [:td {:valign "top"} [:b "Rivi: "]] [:td [:pre (sanitoi rivi)]]]
-   [:tr [:td {:valign "top"} [:b "Sarake: "]] [:td [:pre (sanitoi sarake)]]]
-   [:tr [:td {:valign "top"} [:b "Käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
-   (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
+  (println "ERRORI HEITETTY")
+  (str "*Selainvirhe:*\t" (sanitoi viesti) "\n"
+       "*Sijainti Harjassa:*\t" (sanitoi sijainti) "\n"
+       "*URL:*\t" (sanitoi url) "\n"
+       "*Selain:*\t" (sanitoi selain) "\n"
+       "*Rivi:*\t" (sanitoi rivi) "\n"
+       "*Sarake:*\t" (sanitoi sarake) "\n"
+       "*Käyttäjä:*\t" (sanitoi kayttajanimi) " (" (sanitoi id) ")" "\n"
+       (when stack "*Stack:*\t" (sanitoi stack) "\n")))
 
 (defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
   (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
