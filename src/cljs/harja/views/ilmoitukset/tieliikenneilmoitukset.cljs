@@ -69,18 +69,31 @@
     (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
-(defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus}]
-  [:div
-   (kuittaustyypin-selite kuittaustyyppi)
-   [:br]
-   (pvm/pvm-aika kuitattu)
-   [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)
-   [:br]
-   "Kuittaa klikkaamalla."])
+(defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
+  (let [selite (kuittaustyypin-selite (or kuittaustyyppi napin-kuittaustyypi))]
+    (conj
+      (if kuitattu?
+        [:div
+         selite
+         [:br]
+         (pvm/pvm-aika kuitattu)
+         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)
+         [:br]]
+
+        [:div
+         selite
+         [:br]
+         "Ei tehty"
+         [:br]])
+
+      (if oikeus?
+        "Kuittaa klikkaamalla"
+        "Ei oikeutta kuitata"))))
 
 
 (defn kuittauslista [e! pikakuittaus {id :id kuittaukset :kuittaukset :as ilmoitus}]
-  (let [kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)
+  (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset @nav/valittu-urakka-id)
+        kuittaukset-tyypin-mukaan (group-by :kuittaustyyppi kuittaukset)
         pikakuittaus? (and pikakuittaus (= id (get-in pikakuittaus [:ilmoitus :id])))]
     [:span
      (when pikakuittaus?
@@ -92,20 +105,15 @@
         [yleiset/tooltip {}
          [:div.kuittaus {:class (str (name kuittaustyyppi)
                                      (when-not kuitattu?
-                                       "-ei-kuittausta"))
+                                       "-ei-kuittausta")
+                                     (when-not oikeus?
+                                       " ei-sallittu"))
                          :on-click #(do (.stopPropagation %)
                                         (.preventDefault %)
-                                        (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi)))}
+                                        (when oikeus?
+                                          (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi))))}
           [:span (kuittaustyypin-lyhenne kuittaustyyppi)]]
-         (if kuitattu?
-           [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi))]
-           [:div
-            (kuittaustyypin-selite kuittaustyyppi)
-            [:br]
-            "Ei tehty"
-            [:br]
-            "Kuittaa klikkaamalla"])])]]))
-
+         [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi)) kuittaustyyppi kuitattu? oikeus?]])]]))
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
