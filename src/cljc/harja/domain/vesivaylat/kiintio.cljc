@@ -13,13 +13,12 @@
 
 (define-tables
   ["vv_kiintio" ::kiintio
-   (merge
-     m/muokkaustiedot
-     m/poistettu?-sarake
-     m/poistaja-sarake
-     {::toimenpiteet (specql.rel/has-many ::id
-                                          :harja.domain.vesivaylat.toimenpide/toimenpide
-                                          ::harja.domain.vesivaylat.toimenpide/kiintio-id)})])
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   harja.domain.muokkaustiedot/poistaja-sarake
+   {::toimenpiteet (specql.rel/has-many ::id
+                                        :harja.domain.vesivaylat.toimenpide/toimenpide
+                                        :harja.domain.vesivaylat.toimenpide/kiintio-id)}])
 
 (def perustiedot #{::id ::nimi ::kuvaus ::koko})
 
