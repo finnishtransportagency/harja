@@ -41,7 +41,7 @@
       (fn [user tiedot]
         (hae-kokonaishintaiset-toimenpiteet db user tiedot))
       {:kysely-spec ::to/hae-vesivaylien-toimenpiteet-kysely
-       :vastaus-spec ::to/hae-vesivayilien-toimenpiteet-vastaus})
+       :vastaus-spec ::to/hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus})
     (julkaise-palvelu
       http
       :siirra-toimenpiteet-yksikkohintaisiin

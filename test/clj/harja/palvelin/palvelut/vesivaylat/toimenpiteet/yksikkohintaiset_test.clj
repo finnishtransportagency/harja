@@ -48,7 +48,7 @@
                                 :hae-yksikkohintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaus vastaus))
+    (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
     (is (>= (count vastaus) 4))))
 
 (deftest kokonaishintaisiin-siirto

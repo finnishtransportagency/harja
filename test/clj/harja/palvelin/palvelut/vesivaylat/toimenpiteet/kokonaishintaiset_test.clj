@@ -50,7 +50,7 @@
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-    (is (s/valid? ::toi/hae-vesivayilien-toimenpiteet-vastaus vastaus))
+    (is (s/valid? ::toi/hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus vastaus))
     (is (>= (count vastaus) 4))))
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
