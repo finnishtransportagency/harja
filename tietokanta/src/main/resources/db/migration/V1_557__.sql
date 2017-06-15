@@ -22,8 +22,8 @@ CREATE TABLE vv_materiaali (
 
 
 CREATE VIEW vv_materiaalilistaus AS
-  SELECT nimi,
+  SELECT "urakka-id", nimi,
          FIRST_VALUE(maara) over w AS "alkuperainen-maara",
-	 SUM(maara) over w AS "maara-nyt"
+	 	 SUM(maara) over w AS "maara-nyt"
     FROM vv_materiaali
 WINDOW w AS (PARTITION BY nimi ORDER BY pvm ASC);
