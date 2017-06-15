@@ -18,17 +18,17 @@
 
 (defn palvelukutsu
   ([palvelu argumentit optiot]
-   (palvelu nil palvelu argumentit optiot))
+   (palvelukutsu nil palvelu argumentit optiot))
   ([app palvelu argumentit {:keys [onnistui epaonnistui]}]
-  (let [onnistui! (when onnistui (tuck/send-async! onnistui))
-        epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
-    (try
-      (go
-        (let [vastaus (<! (k/post! palvelu argumentit))]
-          (if (k/virhe? vastaus)
-            (when epaonnistui! (epaonnistui! vastaus))
-            (when onnistui! (onnistui! vastaus)))))
-      (catch :default e
-        (when epaonnistui! (epaonnistui! nil))
-        (throw e)))
-    app)))
+   (let [onnistui! (when onnistui (tuck/send-async! onnistui))
+         epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
+     (try
+       (go
+         (let [vastaus (<! (k/post! palvelu argumentit))]
+           (if (k/virhe? vastaus)
+             (when epaonnistui! (epaonnistui! vastaus))
+             (when onnistui! (onnistui! vastaus)))))
+       (catch :default e
+         (when epaonnistui! (epaonnistui! nil))
+         (throw e)))
+     app)))
