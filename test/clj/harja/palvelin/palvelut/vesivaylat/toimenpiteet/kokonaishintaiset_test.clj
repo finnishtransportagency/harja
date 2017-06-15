@@ -189,8 +189,6 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
 
-      (log/debug "VASTAUS: " (pr-str vastaus))
-
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 3))
       (is (every? #(false? (::toi/vikakorjauksia? %)) vastaus))))
