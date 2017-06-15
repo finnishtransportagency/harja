@@ -30,7 +30,7 @@ WHERE id = :id;
 INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi,
                                sisalto, otsikko, parametrit, kasitteleva_palvelin)
 VALUES
-  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi,
+  (:integraatiotapahtuma, :osoite, :suunta :: INTEGRAATIOSUUNTA, :sisaltotyyppi, :siirtotyyppi,
    :sisalto, :otsikko, :parametrit, :kasittelevapalvelin);
 
 -- name: hae-tapahtumaid-ulkoisella-idlla
@@ -67,28 +67,52 @@ FROM integraatio;
 
 -- name: hae-jarjestelman-integraatiotapahtumat-aikavalilla
 -- Hakee annetun järjestelmän integraatiotapahtumat annetulla aikavälillä
-SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
-       i.id as integraatio_id,
-       i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi
-  FROM integraatiotapahtuma it
+SELECT DISTINCT ON (it.id)
+  it.id,
+  it.ulkoinenid,
+  it.lisatietoja,
+  it.alkanut,
+  it.paattynyt,
+  it.onnistunut,
+  i.id          AS integraatio_id,
+  i.jarjestelma AS integraatio_jarjestelma,
+  i.nimi        AS integraatio_nimi
+FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
- WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
-   AND (:integraatio_annettu = false OR nimi ILIKE :integraatio)
-   AND alkanut >= :alkaen AND alkanut <= :paattyen;
+  LEFT JOIN integraatioviesti iv ON it.id = iv.integraatiotapahtuma
+WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
+      (:integraatio :: VARCHAR IS NULL OR i.nimi = :integraatio) AND
+      (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
+      alkanut >= :alkaen AND
+      alkanut <= :paattyen AND
+      (:otsikot :: TEXT IS NULL OR iv.otsikko IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
+      (:parametrit :: TEXT IS NULL OR iv.parametrit IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
+      (:sisalto :: TEXT IS NULL OR iv.sisalto IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+ORDER BY it.id DESC, it.alkanut DESC;
 
 -- name: hae-uusimmat-integraatiotapahtumat
 -- Hakee uusimmat integraatiotapahtumat
-SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
-       i.id as integraatio_id,
-       i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi
-  FROM integraatiotapahtuma it
+SELECT DISTINCT ON (it.id)
+  it.id,
+  it.ulkoinenid,
+  it.lisatietoja,
+  it.alkanut,
+  it.paattynyt,
+  it.onnistunut,
+  i.id          AS integraatio_id,
+  i.jarjestelma AS integraatio_jarjestelma,
+  i.nimi        AS integraatio_nimi
+FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
- WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
-   AND (:integraatio_annettu = false OR nimi ILIKE :integraatio)
-ORDER BY alkanut DESC
- LIMIT 50;
+  LEFT JOIN integraatioviesti iv ON it.id = iv.integraatiotapahtuma
+WHERE (:jarjestelma :: VARCHAR IS NULL OR jarjestelma = :jarjestelma) AND
+      (:integraatio :: VARCHAR IS NULL OR nimi = :integraatio) AND
+      (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
+      (:otsikot :: TEXT IS NULL OR iv.otsikko IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
+      (:parametrit :: TEXT IS NULL OR iv.parametrit IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
+      (:sisalto :: TEXT IS NULL OR iv.sisalto IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+ORDER BY it.id DESC, it.alkanut DESC
+LIMIT 50;
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
@@ -102,22 +126,22 @@ SELECT
   otsikko,
   parametrit,
   osoite,
-  kasitteleva_palvelin as "kasitteleva-palvelin"
+  kasitteleva_palvelin AS "kasitteleva-palvelin"
 FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
 -- name: hae-integraatiotapahtumien-maarat
 -- Hakee annetun integraation tapahtumien määrät päivittäin ryhmiteltynä
 SELECT
-  date_trunc('day', it.alkanut) as pvm,
-  it.integraatio as integraatio,
-  i.jarjestelma as jarjestelma,
-  i.nimi as nimi,
-  count(*) as maara
+  date_trunc('day', it.alkanut) AS pvm,
+  it.integraatio                AS integraatio,
+  i.jarjestelma                 AS jarjestelma,
+  i.nimi                        AS nimi,
+  count(*)                      AS maara
 FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
-WHERE (:jarjestelma_annettu = false OR i.jarjestelma ILIKE :jarjestelma)
-      AND (:integraatio_annettu = false OR i.nimi ILIKE :integraatio)
+WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
+      AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
 GROUP BY pvm, integraatio, jarjestelma, nimi
 ORDER BY pvm;
 
