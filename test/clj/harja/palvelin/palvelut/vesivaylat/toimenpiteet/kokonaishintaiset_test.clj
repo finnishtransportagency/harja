@@ -35,7 +35,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -102,10 +102,13 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 4))))
 
-  (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä"
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+      (is (>= (count vastaus) 2))
+      (is (every? #(= (get-in % [::toi/vayla ::va/id]) vayla-id) vastaus))))
+
+  (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä,
+            muuten ei palaudu mitään"
     ;; Käytännössä tällaista tilannetta ei pitäisi tulla, UI:lta voidaan valita vain
     ;; annetun väylätyypin mukaisia väyliä filtteriksi.
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -132,8 +135,7 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (= (count vastaus) 0)
-          "Ei toimenpiteitä tällä väylällä"))))
+      (is (= (count vastaus) 0) "Ei toimenpiteitä höpöväylällä"))))
 
 (deftest toimenpiteiden-haku-toimii-vaylatyyppifiltterilla
   (testing "Väylätyyppifiltteri löytää toimenpiteet"
@@ -147,7 +149,8 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 4))))
+      (is (>= (count vastaus) 4))
+      (is (every? #(= (get-in % [::toi/vayla ::va/tyyppi]) :kauppamerenkulku) vastaus))))
 
   (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -160,8 +163,7 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (= (count vastaus) 0)
-          "Ei toimenpiteitä tällä väylätyypillä"))))
+      (is (= (count vastaus) 0) "Ei toimenpiteitä tällä väylätyypillä"))))
 
 (deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
   (testing "Vikailmoituksellit löytyy"
@@ -174,7 +176,8 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (= (count vastaus) 1))))
+      (is (= (count vastaus) 1))
+      (is (every? #(true? (::toi/vikakorjauksia? %)) vastaus))))
 
   (testing "Vikailmoituksettomat löytyy"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -185,8 +188,12 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
+
+      (log/debug "VASTAUS: " (pr-str vastaus))
+
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 3))))
+      (is (>= (count vastaus) 3))
+      (is (every? #(false? (::toi/vikakorjauksia? %)) vastaus))))
 
   (testing "Vikailmoituksettomat löytyy"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -198,7 +205,8 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 3)))))
+      (is (>= (count vastaus) 3))
+      (is (every? #(false? (::toi/vikakorjauksia? %)) vastaus)))))
 
 (deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
   (testing "Työlajilla suodatus toimii"
@@ -210,7 +218,8 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (>= (count vastaus) 4)))
+      (is (>= (count vastaus) 4))
+      (is (every? #(= (::toi/tyolaji %) :poijut) vastaus)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
@@ -231,7 +240,8 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (>= (count vastaus) 4)))
+      (is (>= (count vastaus) 3))
+      (is (every? #(= (::toi/tyoluokka %) :valo-ja-energialaitteet) vastaus)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
@@ -252,7 +262,8 @@
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
-      (is (>= (count vastaus) 4)))
+      (is (>= (count vastaus) 3))
+      (is (every? #(= (::toi/toimenpide %) :valo-ja-energialaitetyot) vastaus)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
@@ -276,7 +287,11 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 4)))
+      (is (>= (count vastaus) 3))
+
+      (is (every? #(= (::toi/tyolaji %) :poijut) vastaus))
+      (is (every? #(= (::toi/tyoluokka %) :valo-ja-energialaitteet) vastaus))
+      (is (every? #(= (::toi/toimenpide %) :valo-ja-energialaitetyot) vastaus)))
 
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
