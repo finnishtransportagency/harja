@@ -16,33 +16,27 @@
                                                       "&" "&amp;"))))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
-  (println "ERRORI HEITETTY")
-  (str "*Selainvirhe:*\t" (sanitoi viesti) "\n"
-       "*Sijainti Harjassa:*\t" (sanitoi sijainti) "\n"
-       "*URL:*\t" (sanitoi url) "\n"
-       "*Selain:*\t" (sanitoi selain) "\n"
-       "*Rivi:*\t" (sanitoi rivi) "\n"
-       "*Sarake:*\t" (sanitoi sarake) "\n"
-       "*Käyttäjä:*\t" (sanitoi kayttajanimi) " (" (sanitoi id) ")" "\n"
-       (when stack "*Stack:*\t" (sanitoi stack) "\n")))
+  {:fields
+          (filterv (fn [mappi] (not (nil? (:title mappi))))
+            (map #(hash-map :title %1 :value (sanitoi %2))
+                  ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack")]
+                  [viesti sijainti url selain rivi sarake (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") stack]))})
 
 (defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
   (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
                              yhteyskatkokset)
         palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
-    [:div "Käyttäjä " (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") " raportoi yhteyskatkoksista palveluissa:"
-     [:table
-      (map (fn [palvelu]
-             [:tr
-              [:td {:valign "top"} [:b (str palvelu)]]
-              [:td [:pre (str "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl, "
-                              "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                   (sort t/after?)
-                                                   (first))
-                              "viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                 (sort t/after?)
-                                                 (last)))]]])
-           (keys palvelulla-ryhmiteltyna))]]))
+    {:text (str "Käyttäjä " (sanitoi kayttajanimi) " (" (sanitoi id) ")" " raportoi yhteyskatkoksista palveluissa:")
+     :fields (mapv (fn [palvelu]
+                      (hash-map :title (str palvelu)
+                                :value (str "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl, "
+                                           "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                                (sort t/after?)
+                                                                (first))
+                                           "viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                              (sort t/after?)
+                                                              (last)))))
+                  (keys palvelulla-ryhmiteltyna))}))
 
 (defn raportoi-selainvirhe
   "Logittaa yksittäisen selainvirheen"
