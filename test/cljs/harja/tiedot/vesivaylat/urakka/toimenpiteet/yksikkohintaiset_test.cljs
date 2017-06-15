@@ -29,7 +29,7 @@
                                ::h/hintaelementit [{::hinta/id 1
                                                     ::hinta/otsikko "Ryhmähinta"
                                                     ::hinta/maara 600
-                                                    ::hinta/yleiskustannuslisa 12}]}]
+                                                    ::hinta/yleiskustannuslisa 0}]}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
                 :hinnoittele-hintaryhma {::h/id nil
@@ -384,7 +384,7 @@
               [{::hinta/id 1
                 ::hinta/otsikko "Ryhmähinta"
                 ::hinta/maara 600
-                ::hinta/yleiskustannuslisa 12}]})))))
+                ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
@@ -446,6 +446,21 @@
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]})))))
+
+(deftest toimenpiteen-kentan-hinnoittelu
+  (testing "Hinnoittele hintaryhmän kentän rahamäärä"
+    (let [vanha-tila testitila
+          uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
+                         (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko "Ryhmähinta"
+                                                                    ::hinta/maara 123})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-hintaryhma uusi-tila)
+             {::h/id 666
+              ::h/hintaelementit
+              [{::hinta/id 1
+                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/maara 123
+                ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
