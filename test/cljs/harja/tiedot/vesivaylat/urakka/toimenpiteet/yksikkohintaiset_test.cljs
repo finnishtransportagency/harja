@@ -614,6 +614,5 @@
     (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
                                                                 :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
-                             ::to/sopimus-id 777
-                             :tyyppi :yksikkohintainen}))
+                             ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
