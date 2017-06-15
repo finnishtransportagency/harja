@@ -166,7 +166,7 @@
       (is (= (count vastaus) 0) "Ei toimenpiteitä tällä väylätyypillä"))))
 
 (deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
-  (testing "Vikailmoituksellit löytyy"
+  (testing ":vikailmoitukset? true, vain vikailmoitukselliset palautuu"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
@@ -179,7 +179,7 @@
       (is (= (count vastaus) 1))
       (is (every? #(true? (::toi/vikakorjauksia? %)) vastaus))))
 
-  (testing "Vikailmoituksettomat löytyy"
+  (testing ":vikailmoitukset? false, palautuu vikailmoitukselliset ja -ilmoituksettomat"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
@@ -190,10 +190,9 @@
                                   kysely-params)]
 
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 3))
-      (is (every? #(false? (::toi/vikakorjauksia? %)) vastaus))))
+      (is (>= (count vastaus) 3))))
 
-  (testing "Vikailmoituksettomat löytyy"
+  (testing ":vikailmoitukset? nil, palautuu vikailmoitukselliset ja -ilmoituksettomat"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
@@ -203,8 +202,7 @@
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 3))
-      (is (every? #(false? (::toi/vikakorjauksia? %)) vastaus)))))
+      (is (>= (count vastaus) 3)))))
 
 (deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
   (testing "Työlajilla suodatus toimii"
