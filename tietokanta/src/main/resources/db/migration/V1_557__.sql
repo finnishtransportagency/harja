@@ -19,11 +19,13 @@ CREATE TABLE vv_materiaali (
   lisatieto TEXT -- vapaatekstinä lisätieto
 );
 
-
-
 CREATE VIEW vv_materiaalilistaus AS
-  SELECT "urakka-id", nimi,
-         FIRST_VALUE(maara) over w AS "alkuperainen-maara",
-	 	 SUM(maara) over w AS "maara-nyt"
-    FROM vv_materiaali
-WINDOW w AS (PARTITION BY nimi ORDER BY pvm ASC);
+  SELECT DISTINCT ON (m1."urakka-id", m1.nimi)
+         m1."urakka-id", m1.nimi,
+         (SELECT maara FROM vv_materiaali m2
+           WHERE m2."urakka-id" = m1."urakka-id" AND m2.nimi = m1.nimi
+          ORDER BY pvm ASC LIMIT 1) AS "alkuperainen-maara",
+	 	 (SELECT SUM(maara) FROM vv_materiaali m3
+	 	   WHERE m3."urakka-id" = m1."urakka-id" AND m3.nimi = m1.nimi) AS "maara-nyt"
+    FROM vv_materiaali m1
+    ORDER BY nimi ASC;
