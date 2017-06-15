@@ -447,7 +447,7 @@
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]})))))
 
-(deftest toimenpiteen-kentan-hinnoittelu
+(deftest hintaryhman-kentan-hinnoittelu
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
@@ -618,16 +618,3 @@
                              ::to/sopimus-id 777
                              :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
-
-(deftest kokonaishintaisiin-siirretty
-  (let [vanha-tila testitila
-        siirretyt #{1 2 3}
-        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
-                      vanha-tila)
-        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
-
-    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
-    (is (empty? (filter #(siirretyt (::to/id %))
-                        (:toimenpiteet uusi-tila)))
-        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
