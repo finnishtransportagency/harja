@@ -382,7 +382,7 @@ SET nimi          = :nimi,
   hallintayksikko = :hallintayksikko,
   urakoitsija     = :urakoitsija,
   muokattu        = NOW(),
-  muokkaaja       = :kayttaja,
+  muokkaaja       = :kayttaja
 WHERE id = :id AND harjassa_luotu IS TRUE;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
