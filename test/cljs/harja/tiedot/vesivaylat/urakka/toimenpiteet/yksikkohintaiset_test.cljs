@@ -2,7 +2,7 @@
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -26,10 +26,10 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
-                               ::h/hintaelementit [{::hinta/id 1
-                                                    ::hinta/otsikko "Ryhmähinta"
-                                                    ::hinta/maara 600
-                                                    ::hinta/yleiskustannuslisa 12}]}]
+                               ::h/hinnat [{::hinta/id 1
+                                            ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                                            ::hinta/maara 600
+                                            ::hinta/yleiskustannuslisa 0}]}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
                 :hinnoittele-hintaryhma {::h/id nil
@@ -369,7 +369,7 @@
              {::h/id 1
               ::h/hintaelementit
               [{::hinta/id nil
-                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}]}))))
 
@@ -382,9 +382,9 @@
              {::h/id 666
               ::h/hintaelementit
               [{::hinta/id 1
-                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/maara 600
-                ::hinta/yleiskustannuslisa 12}]})))))
+                ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
@@ -447,14 +447,29 @@
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]})))))
 
+(deftest hintaryhman-kentan-hinnoittelu
+  (testing "Hinnoittele hintaryhmän kentän rahamäärä"
+    (let [vanha-tila testitila
+          uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
+                         (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                                                                    ::hinta/maara 123})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-hintaryhma uusi-tila)
+             {::h/id 666
+              ::h/hintaelementit
+              [{::hinta/id 1
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                ::hinta/maara 123
+                ::hinta/yleiskustannuslisa 0}]})))))
+
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
-    (is (= {:hinnoittelun-tallennus-kaynnissa? true}
+    (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
            (e! (tiedot/->HinnoitteleToimenpide 1)))))
 
-  (let [app {:hinnoittelun-tallennus-kaynnissa? true}]
+  (let [app {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}]
     (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
@@ -505,7 +520,7 @@
                                              (:toimenpiteet uusi-tila)))]
 
     ;; Hinnoittelu ei ole enää päällä
-    (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+    (is (false? (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? uusi-tila)))
     (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
     (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
 
@@ -533,7 +548,7 @@
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
 (deftest hinnoittelu-ei-tallennettu
-  (is (= {:hinnoittelun-tallennus-kaynnissa? false}
+  (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
          (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen
@@ -603,16 +618,3 @@
                              ::to/sopimus-id 777
                              :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
-
-(deftest kokonaishintaisiin-siirretty
-  (let [vanha-tila testitila
-        siirretyt #{1 2 3}
-        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
-                      vanha-tila)
-        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
-
-    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
-    (is (empty? (filter #(siirretyt (::to/id %))
-                        (:toimenpiteet uusi-tila)))
-        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))

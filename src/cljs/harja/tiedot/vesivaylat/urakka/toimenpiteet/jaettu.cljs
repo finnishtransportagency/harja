@@ -9,7 +9,8 @@
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.ui.viesti :as viesti]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -88,7 +89,7 @@
                                     (assoc :valittu? valinta))]
       (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
                                  (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                      toimenpiteet)))))
+                                       toimenpiteet)))))
 
   ValitseTyolaji
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
@@ -133,13 +134,9 @@
     (assoc app :siirto-kaynnissa? false)))
 
 (defn siirra-valitut! [palvelu app]
-  (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
-        fail! (tuck/send-async! ->ToimenpiteetEiSiirretty)]
-    (go (let [valitut (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))
-              vastaus (<! (k/post! palvelu
-                                   {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                                    ::to/idt valitut}))]
-          (if (k/virhe? vastaus)
-            (fail! vastaus)
-            (tulos! vastaus)))))
+  (tuck-tyokalut/palvelukutsu palvelu
+                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                             ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
+                              {:onnistui ->ToimenpiteetSiirretty
+                             :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))
