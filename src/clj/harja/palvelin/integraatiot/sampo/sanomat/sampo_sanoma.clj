@@ -41,7 +41,7 @@
    :ely-hash (z/xml1-> project (z/attr :financialDepartmentHash))
    :alueurakkanro (z/xml1-> project (z/attr :vv_alueurakkanro))
    :urakoitsijan-nimi (z/xml1-> project (z/attr :company_name))
-   :urakoitsijan-ytunnus (z/xml1-> project (z/attr :vv_alueurakkanro))})
+   :urakoitsijan-ytunnus (z/xml1-> project (z/attr :vv_corporate_id))})
 
 (defn lue-sopimus [order]
   {:viesti-id (hae-viesti-id order)
