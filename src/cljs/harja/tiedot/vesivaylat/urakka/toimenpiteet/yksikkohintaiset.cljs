@@ -90,6 +90,7 @@
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
+(defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -116,6 +117,20 @@
 
 (defn hakukyselyn-argumentit [valinnat]
   (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
+
+(defn- paivita-hintajoukon-hinta
+  "Päivittää hintojen joukosta yksittäisen hinnan tiedot."
+  [hinnat uudet-hintatiedot]
+  (mapv (fn [hinnoittelu]
+          (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko uudet-hintatiedot))
+            (cond-> hinnoittelu
+                    (::hinta/maara uudet-hintatiedot)
+                    (assoc ::hinta/maara (::hinta/maara uudet-hintatiedot))
+
+                    (some? (::hinta/yleiskustannuslisa uudet-hintatiedot))
+                    (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa uudet-hintatiedot)))
+            hinnoittelu))
+        hinnat))
 
 (extend-protocol tuck/Event
 
@@ -298,16 +313,12 @@
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-              (mapv (fn [hinnoittelu]
-                      (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko tiedot))
-                        (cond-> hinnoittelu
-                                (::hinta/maara tiedot)
-                                (assoc ::hinta/maara (::hinta/maara tiedot))
+              (paivita-hintajoukon-hinta (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]) tiedot)))
 
-                                (some? (::hinta/yleiskustannuslisa tiedot))
-                                (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa tiedot)))
-                        hinnoittelu))
-                    (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))))
+  HinnoitteleHintaryhmaKentta
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-hintaryhma ::h/hintaelementit]
+              (paivita-hintajoukon-hinta (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]) tiedot)))
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
