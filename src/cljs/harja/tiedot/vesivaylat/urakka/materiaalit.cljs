@@ -13,12 +13,19 @@
 (defrecord HaeMateriaalinKaytto [nimi])
 (defrecord MateriaalinKayttoHaettu [nimi rivit])
 
+(defrecord AloitaMateriaalinLisays [])
+(defrecord PaivitaLisattavaMateriaali [tiedot])
+(defrecord LisaaMateriaali [])
+
 ;; App atom
 (defonce app (r/atom {:urakka-id nil
                       :materiaalilistaus nil
 
                       ;; materiaalin nimi -> käyttörivit
-                      :materiaalin-kaytto {}}))
+                      :materiaalin-kaytto {}
+
+                      ;; Lisättävän materiaalin tiedot mäp
+                      :lisaa-materiaali nil}))
 
 
 (defn- hae [{u :urakka-id :as app}]
@@ -47,4 +54,20 @@
 
   MateriaalinKayttoHaettu
   (process-event [{:keys [nimi rivit]} app]
-    (assoc-in app [:materiaalin-kaytto nimi] rivit)))
+    (assoc-in app [:materiaalin-kaytto nimi] rivit))
+
+  AloitaMateriaalinLisays
+  (process-event [_ app]
+    (assoc app :lisaa-materiaali {}))
+
+  PaivitaLisattavaMateriaali
+  (process-event [{tiedot :tiedot} app]
+    (update app :lisattava-materiaali merge tiedot))
+
+  LisaaMateriaali
+  (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
+    (let [tulos! (t/send-async! ->ListausHaettu)]
+      (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
+                               (merge {::m/urakka-id :urakka-id}
+                                      lisaa-materiaali)))))
+      app)))
