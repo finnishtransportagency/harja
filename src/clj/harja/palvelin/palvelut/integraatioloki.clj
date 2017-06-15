@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.integraatioloki :as q]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.string :as str]))
 
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
@@ -21,16 +22,16 @@
 
 (def tapahtuma-xf
   (comp
-   (map konversio/alaviiva->rakenne)
-   (map #(assoc % :onnistunut (boolean (Boolean/valueOf (:onnistunut %)))))))
+    (map konversio/alaviiva->rakenne)
+    (map #(assoc % :onnistunut (boolean (Boolean/valueOf (:onnistunut %)))))))
 
 (defn hae-integraatiot [db]
   (let [integraatiot (q/hae-jarjestelmien-integraatiot db)
         uniikit-integraatiot (mapv (fn [kartta]
                                      (assoc kartta :integraatiot
-                                            (mapv #(:integraatio %)
-                                                  (into []
-                                                        (filter #(= (:jarjestelma %) (:jarjestelma kartta))) integraatiot))))
+                                                   (mapv #(:integraatio %)
+                                                         (into []
+                                                               (filter #(= (:jarjestelma %) (:jarjestelma kartta))) integraatiot))))
                                    (set (map #(dissoc % :integraatio) integraatiot)))]
     (log/debug "Integraatiot:" uniikit-integraatiot)
     uniikit-integraatiot))
@@ -44,20 +45,37 @@
 
 (defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
-  [db kayttaja jarjestelma integraatio alkaen paattyen]
+  [db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
-  (let [tapahtumat
+  (let [{:keys [otsikot parametrit viestin-sisalto tapahtumien-tila]} hakuehdot
+        otsikot (if (str/blank? otsikot) nil otsikot)
+        parametrit (if (str/blank? parametrit) nil parametrit)
+        viestin-sisalto (if (str/blank? viestin-sisalto) nil viestin-sisalto)
+        onnistuneet (case tapahtumien-tila
+                      :onnistuneet true
+                      :epaonnistuneet false
+                      nil)
+
+        tapahtumat
         (into []
               tapahtuma-xf
               (if (and alkaen paattyen)
                 (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                      (boolean jarjestelma) jarjestelma
-                                                                      (boolean integraatio) integraatio
+                                                                      jarjestelma
+                                                                      integraatio
+                                                                      onnistuneet
                                                                       (konversio/sql-date alkaen)
-                                                                      (konversio/sql-date paattyen))
+                                                                      (konversio/sql-date paattyen)
+                                                                      otsikot
+                                                                      parametrit
+                                                                      viestin-sisalto)
                 (q/hae-uusimmat-integraatiotapahtumat db
-                                                      (boolean jarjestelma) jarjestelma
-                                                      (boolean integraatio) integraatio)))]
+                                                      jarjestelma
+                                                      integraatio
+                                                      onnistuneet
+                                                      otsikot
+                                                      parametrit
+                                                      viestin-sisalto)))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
@@ -66,9 +84,9 @@
   (let [
         jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
         maarat (q/hae-integraatiotapahtumien-maarat
-                db
-                (boolean jarjestelma) jarjestelma
-                (boolean integraatio) integraatio)]
+                 db
+                 (boolean jarjestelma) jarjestelma
+                 (boolean integraatio) integraatio)]
     maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
@@ -88,8 +106,8 @@
                         (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-integraatiotapahtumat
-                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
-                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen hakuehdot]}]
+                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen hakuehdot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-integraatiotapahtumien-maarat
                       (fn [kayttaja {:keys [jarjestelma integraatio]}]
