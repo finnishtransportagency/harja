@@ -466,10 +466,10 @@
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
-    (is (= {:hinnoittelun-tallennus-kaynnissa? true}
+    (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
            (e! (tiedot/->HinnoitteleToimenpide 1)))))
 
-  (let [app {:hinnoittelun-tallennus-kaynnissa? true}]
+  (let [app {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}]
     (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
@@ -520,7 +520,7 @@
                                              (:toimenpiteet uusi-tila)))]
 
     ;; Hinnoittelu ei ole enää päällä
-    (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+    (is (false? (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? uusi-tila)))
     (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
     (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
 
@@ -548,7 +548,7 @@
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
 (deftest hinnoittelu-ei-tallennettu
-  (is (= {:hinnoittelun-tallennus-kaynnissa? false}
+  (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
          (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen

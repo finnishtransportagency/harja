@@ -147,7 +147,7 @@
            [napit/tallenna
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
-            {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
+            {:disabled (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
        (grid/erikoismuokattava-kentta
          {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
@@ -174,13 +174,15 @@
          [:span "€"]]
         [napit/tallenna
          "Valmis"
-         #(log "DOH VALMIS!")]
+         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app)))
+         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
         [napit/peruuta
          "Peruuta"
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        [napit/yleinen-ensisijainen
         "Määrittele yksi hinta koko ryhmälle"
-        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))])]))
+        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+        {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}])]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo

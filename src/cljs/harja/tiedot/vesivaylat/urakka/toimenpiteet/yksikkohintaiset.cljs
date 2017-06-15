@@ -52,7 +52,8 @@
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
          :hintaryhmien-liittaminen-kaynnissa? false
-         :hinnoittelun-tallennus-kaynnissa? false
+         :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
+         :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu
          :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu}))
 
@@ -93,8 +94,11 @@
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
+(defrecord HinnoitteleHintaryhma [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+(defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
+(defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord PeruHintaryhmanHinnoittelu [])
 
@@ -285,7 +289,7 @@
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
-    (if-not (:hinnoittelun-tallennus-kaynnissa? app)
+    (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-apurit/palvelukutsu :tallenna-toimenpiteelle-hinta
                                     {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                      ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
@@ -300,7 +304,28 @@
                                                           (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
                                     {:onnistui ->ToimenpiteenHinnoitteluTallennettu
                                      :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
-          (assoc app :hinnoittelun-tallennus-kaynnissa? true))
+          (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
+      app))
+
+  HinnoitteleHintaryhma
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO TESTI
+    (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
+      (do (tuck-apurit/palvelukutsu :tallenna-hintaryhmalle-hinta
+                                    {::ur/id (get-in app [:valinnat :urakka-id])
+                                     ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
+                                     ::h/hintaelementit (mapv
+                                                          (fn [hinta]
+                                                            (merge
+                                                              (when-let [id (::hinta/id hinta)]
+                                                                {::hinta/id id})
+                                                              {::hinta/otsikko (::hinta/otsikko hinta)
+                                                               ::hinta/maara (::hinta/maara hinta)
+                                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                          (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]))}
+                                    {:onnistui ->HintaryhmanHinnoitteluTallennettu
+                                     :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
+          (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
   ToimenpiteenHinnoitteluTallennettu
@@ -316,21 +341,34 @@
                                         toimenpide))
                                     (:toimenpiteet app))]
       (assoc app :toimenpiteet paivitetyt-toimenpiteet
-                 :hinnoittelun-tallennus-kaynnissa? false
+                 :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
                  :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
 
   ToimenpiteenHinnoitteluEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
-    (assoc app :hinnoittelun-tallennus-kaynnissa? false))
+    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false))
+
+  HintaryhmanHinnoitteluTallennettu
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Hinnoittelu tallennettu!" :success)
+    ;; TODO TESTI
+    (assoc app :hintaryhmat vastaus
+               :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
+               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
+
+  HintaryhmanHinnoitteluEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
+    ;; TODO TESTI
+    (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
 
   PeruToimenpiteenHinnoittelu
   (process-event [_ app]
-    (assoc app :hinnoittelun-tallennus-kaynnissa? false
+    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
                :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
-
 
   PeruHintaryhmanHinnoittelu
   (process-event [_ app]
-    (assoc app :hinnoittelun-tallennus-kaynnissa? false
+    (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
                :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))
