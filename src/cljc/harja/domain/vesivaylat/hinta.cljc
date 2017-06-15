@@ -22,8 +22,8 @@
     "poistaja" ::m/poistaja-id
     #?@(:clj [::hinnoittelu (rel/has-one
                               ::hinnoittelu-id
-                           :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
-                           :harja.domain.vesivaylat.hinnoittelu/id)])}])
+                              :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
+                              :harja.domain.vesivaylat.hinnoittelu/id)])}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
@@ -40,8 +40,41 @@
 
 (def metatiedot m/muokkauskentat)
 
-(defn- kokonaishinta [hinnat]
+;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
+(def yleinen-yleiskustannuslisa 12)
+
+(defn yleiskustannuslisien-osuus
+  "Palauttaa hintojen yleiskustannusten osuuden"
+  [hinnat]
+  (reduce + 0
+          (keep
+            (fn [hinta]
+              (let [maara (::maara hinta)
+                    yleiskustannuslisa (::yleiskustannuslisa hinta)]
+                (when yleiskustannuslisa
+                  (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
+            hinnat)))
+
+(defn- perushinta
+  "Palauttaa hintojen summan ilman yleiskustannuslisiä"
+  [hinnat]
   (reduce + 0 (map ::maara hinnat)))
+
+(defn hinnan-ominaisuus [hinnat otsikko ominaisuus]
+  (->> hinnat
+       (filter #(= (::otsikko %) otsikko))
+       (first)
+       ominaisuus))
+
+(defn hinnan-maara [hinnat otsikko]
+  (hinnan-ominaisuus hinnat otsikko ::maara))
+
+(defn hinnan-yleiskustannuslisa [hinnat otsikko]
+  (hinnan-ominaisuus hinnat otsikko ::yleiskustannuslisa))
+
+(defn kokonaishinta-yleiskustannuslisineen [hinnat]
+  (+ (perushinta hinnat)
+     (yleiskustannuslisien-osuus hinnat)))
 
 (defn hinta-otsikolla [otsikko hinnat]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))

@@ -42,6 +42,7 @@
                                    :jarjestysnumero 1
                                    :kenttatunniste "tunniste"
                                    :koodisto nil
+                                   :muutospvm nil
                                    :pakollinen false
                                    :pituus 20
                                    :selite "Tunniste"

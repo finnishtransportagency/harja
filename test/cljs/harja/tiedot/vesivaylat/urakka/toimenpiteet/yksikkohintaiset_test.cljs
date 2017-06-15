@@ -26,25 +26,9 @@
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
                 :hintaryhmat [{::h/id 666
-                               ::h/hintaelementit [{::hinta/id 0
-                                                    ::hinta/otsikko "Työ"
-                                                    ::hinta/maara 0
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 1
-                                                    ::hinta/otsikko "Komponentit"
-                                                    ::hinta/maara 1
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 2
-                                                    ::hinta/otsikko "Yleiset materiaalit"
-                                                    ::hinta/maara 2
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 3
-                                                    ::hinta/otsikko "Matkat"
-                                                    ::hinta/maara 3
-                                                    ::hinta/yleiskustannuslisa 0}
-                                                   {::hinta/id 4
-                                                    ::hinta/otsikko "Muut kulut"
-                                                    ::hinta/maara 4
+                               ::h/hintaelementit [{::hinta/id 1
+                                                    ::hinta/otsikko "Ryhmähinta"
+                                                    ::hinta/maara 600
                                                     ::hinta/yleiskustannuslisa 12}]}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
@@ -180,6 +164,390 @@
         (is (nil? (:valinnat vanha-tila)))
         (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu}))))))
 
+(deftest hakemisen-aloitus
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
+
+      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
+
+  (testing "Uusi haku kun haku on jo käynnissä"
+    (vaadi-async-kutsut
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
+
+      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
+        (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
+
+(deftest hakemisen-valmistuminen
+  (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
+    (is (false? (:haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:toimenpiteet tulos)))))
+
+(deftest hakemisen-epaonnistuminen
+  (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
+    (is (false? (:haku-kaynnissa? tulos)))))
+
+(deftest uuden-hintaryhman-lisays
+  (is (= {:foo :bar :uuden-hintaryhman-lisays? true}
+         (e! (tiedot/->UudenHintaryhmanLisays? true) {:foo :bar})))
+  (is (= {:foo :bar :uuden-hintaryhman-lisays? false}
+         (e! (tiedot/->UudenHintaryhmanLisays? false) {:foo :bar}))))
+
+(deftest hintaryhman-nimen-paivitys
+  (is (= {:foo :bar :uusi-hintaryhma "Bar"}
+         (e! (tiedot/->UudenHintaryhmanNimeaPaivitetty "Bar") {:foo :bar}))))
+
+(deftest kokonaishintaisiin-siirto
+  (testing "Siirron aloittaminen"
+    (vaadi-async-kutsut
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      (let [vanha-tila testitila
+            uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
+                          vanha-tila)]
+        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
+
+(deftest kokonaishintaisiin-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
+
+(deftest hintaryhman-luonti
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmaLuotu tiedot/->HintaryhmaEiLuotu}
+
+    (is (= {:hintaryhman-tallennus-kaynnissa? true}
+           (e! (tiedot/->LuoHintaryhma :foo)))))
+
+  (testing "Haku ei lähde uudestaan"
+    (let [app {:foo :bar :hintaryhman-tallennus-kaynnissa? true}]
+      (is (= app (e! (tiedot/->LuoHintaryhma :bar) app))))))
+
+(deftest hintaryhma-luotu
+  (let [app {:hintaryhman-tallennus-kaynnissa? false
+             :uusi-hintaryhma nil
+             :uuden-hintaryhman-lisays? false
+             :hintaryhmat [{:id 1}]}]
+    (is (= {:hintaryhman-tallennus-kaynnissa? false
+            :uusi-hintaryhma nil
+            :uuden-hintaryhman-lisays? false
+            :hintaryhmat [{:id 1} {:id 2}]}
+           (e! (tiedot/->HintaryhmaLuotu {:id 2}) app)))))
+
+(deftest hintaryhmaa-ei-luotu
+  (let [app {:hintaryhman-tallennus-kaynnissa? false
+             :uusi-hintaryhma nil
+             :uuden-hintaryhman-lisays? false
+             :hintaryhmat [{:id 1}]}]
+    (is (= {:hintaryhman-tallennus-kaynnissa? false
+            :uusi-hintaryhma nil
+            :uuden-hintaryhman-lisays? false
+            :hintaryhmat [{:id 1}]}
+           (e! (tiedot/->HintaryhmaEiLuotu {:msg :error}) app)))))
+
+(deftest hintaryhmien-haku
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmatHaettu tiedot/->HintaryhmatEiHaettu}
+
+    (is (= {:valinnat {:urakka-id 1}
+            :hintaryhmien-haku-kaynnissa? true}
+           (e! (tiedot/->HaeHintaryhmat) {:valinnat {:urakka-id 1}}))))
+
+  (testing "Haku ei lähde uudestaan"
+    (let [app {:foo :bar :hintaryhmien-haku-kaynnissa? true}]
+      (is (= app (e! (tiedot/->HaeHintaryhmat) app))))))
+
+(deftest hintaryhma-haettu
+  (is (= {:hintaryhmat [{:id 1}]
+          :hintaryhmien-haku-kaynnissa? false}
+         (e! (tiedot/->HintaryhmatHaettu [{:id 1}])))))
+
+(deftest hintaryhmaa-ei-haettu
+  (is (= {:hintaryhmien-haku-kaynnissa? false} (e! (tiedot/->HintaryhmatEiHaettu {:msg :error})))))
+
+(deftest hintaryhman-valinta
+  (is (= {:valittu-hintaryhma {:id 1}}
+         (e! (tiedot/->ValitseHintaryhma {:id 1})))))
+
+(deftest hintaryhmaan-liittaminen
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutLiitetty tiedot/->ValitutEiLiitetty}
+
+    (is (= {:hintaryhmien-liittaminen-kaynnissa? true}
+           (e! (tiedot/->LiitaValitutHintaryhmaan {::h/id 1} [{::to/id 1}])
+               {:hintaryhmien-liittaminen-kaynnissa? false}))))
+
+  (let [app {:hintaryhmien-liittaminen-kaynnissa? true :foo :bar}]
+    (is (= app (e! (tiedot/->LiitaValitutHintaryhmaan 1 2) app)))))
+
+(deftest hintaryhmaan-liitetty
+  (vaadi-async-kutsut
+    #{tiedot/->HaeToimenpiteet}
+
+    (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
+           (e! (tiedot/->ValitutLiitetty {:foo :bar}))))))
+
+(deftest hintaryhmaan-ei-liitetty
+  (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
+         (e! (tiedot/->ValitutEiLiitetty {:msg :error})))))
+
+(deftest toimenpiteen-hinnoittelu
+  (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 0)
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 0
+              ::h/hintaelementit
+              [{::hinta/id nil
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id nil
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id nil
+                ::hinta/otsikko
+                "Yleiset materiaalit"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id nil
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id nil
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}]}))))
+
+  (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1)
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 2
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa 12}]})))))
+
+(deftest hintaryhman-hinnoittelu
+  (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AloitaHintaryhmanHinnoittelu 1)
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:hinnoittele-hintaryhma ::h/id])))
+      (is (= (:hinnoittele-hintaryhma uusi-tila)
+             {::h/id 1
+              ::h/hintaelementit
+              [{::hinta/id nil
+                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}]}))))
+
+  (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666)
+                        vanha-tila)]
+      (is (nil? (get-in vanha-tila [:hinnoittele-hintaryhma ::h/id])))
+      (is (= (:hinnoittele-hintaryhma uusi-tila)
+             {::h/id 666
+              ::h/hintaelementit
+              [{::hinta/id 1
+                ::hinta/otsikko "Ryhmähinta"
+                ::hinta/maara 600
+                ::hinta/yleiskustannuslisa 12}]})))))
+
+(deftest toimenpiteen-kentan-hinnoittelu
+  (testing "Hinnoittele kentän rahamäärä"
+    (let [vanha-tila testitila
+          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                                    ::hinta/maara 666})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 666
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa 12}]}))))
+
+  (testing "Hinnoittele kentän yleiskustannuslisä"
+    (let [vanha-tila testitila
+          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                                    ::hinta/yleiskustannuslisa 12})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+      (is (= (:hinnoittele-toimenpide uusi-tila)
+             {::to/id 1
+              ::h/hintaelementit
+              [{::hinta/id 0
+                ::hinta/otsikko "Työ"
+                ::hinta/maara 0
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 1
+                ::hinta/otsikko "Komponentit"
+                ::hinta/maara 1
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 2
+                ::hinta/otsikko "Yleiset materiaalit"
+                ::hinta/maara 2
+                ::hinta/yleiskustannuslisa 12}
+               {::hinta/id 3
+                ::hinta/otsikko "Matkat"
+                ::hinta/maara 3
+                ::hinta/yleiskustannuslisa 0}
+               {::hinta/id 4
+                ::hinta/otsikko "Muut kulut"
+                ::hinta/maara 4
+                ::hinta/yleiskustannuslisa 12}]})))))
+
+(deftest toimenpiteen-hinnoittelun-tallennus
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
+
+    (is (= {:hinnoittelun-tallennus-kaynnissa? true}
+           (e! (tiedot/->HinnoitteleToimenpide 1)))))
+
+  (let [app {:hinnoittelun-tallennus-kaynnissa? true}]
+    (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
+
+(deftest toimenpiteen-hinnoittelu-tallennettu
+  (let [hinnoiteltava-toimenpide-id 1
+        ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
+        vanha-tila (assoc testitila
+                     :hinnoittele-toimenpide
+                     {::to/id hinnoiteltava-toimenpide-id
+                      :harja.domain.vesivaylat.hinnoittelu/hintaelementit
+                      [{::hinta/otsikko "Työ"
+                        ::hinta/maara 10
+                        ::hinta/yleiskustannuslisa 0}
+                       {::hinta/otsikko "Komponentit"
+                        ::hinta/maara 20
+                        ::hinta/yleiskustannuslisa 0}
+                       {::hinta/otsikko "Yleiset materiaalit"
+                        ::hinta/maara 30
+                        ::hinta/yleiskustannuslisa 0}
+                       {::hinta/otsikko "Matkat"
+                        ::hinta/maara 40
+                        ::hinta/yleiskustannuslisa 0}
+                       {::hinta/otsikko "Muut kulut"
+                        ::hinta/maara 50
+                        ::hinta/yleiskustannuslisa 0}]})
+        uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
+                        {:harja.domain.vesivaylat.hinnoittelu/hinnat
+                         [{::hinta/otsikko "Työ"
+                           ::hinta/maara 10
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/otsikko "Komponentit"
+                           ::hinta/maara 20
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/otsikko "Yleiset materiaalit"
+                           ::hinta/maara 30
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/otsikko "Matkat"
+                           ::hinta/maara 40
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/otsikko "Muut kulut"
+                           ::hinta/maara 50
+                           ::hinta/yleiskustannuslisa 0}]
+                         ::h/hintaryhma? false
+                         ::h/id 666
+                         ::h/nimi "Hinnoittelu"
+                         :harja.domain.muokkaustiedot/poistettu? false})
+                      vanha-tila)
+        paivitettu-toimenpide (first (filter #(= (::to/id %) hinnoiteltava-toimenpide-id)
+                                             (:toimenpiteet uusi-tila)))]
+
+    ;; Hinnoittelu ei ole enää päällä
+    (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
+
+    ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
+    (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
+           {::h/hinnat
+            [{::hinta/otsikko "Työ"
+              ::hinta/maara 10
+              ::hinta/yleiskustannuslisa 0}
+             {::hinta/otsikko "Komponentit"
+              ::hinta/maara 20
+              ::hinta/yleiskustannuslisa 0}
+             {::hinta/otsikko "Yleiset materiaalit"
+              ::hinta/maara 30
+              ::hinta/yleiskustannuslisa 0}
+             {::hinta/otsikko "Matkat"
+              ::hinta/maara 40
+              ::hinta/yleiskustannuslisa 0}
+             {::hinta/otsikko "Muut kulut"
+              ::hinta/maara 50
+              ::hinta/yleiskustannuslisa 0}]
+            ::h/hintaryhma? false
+            ::h/id 666
+            ::h/nimi "Hinnoittelu"
+            :harja.domain.muokkaustiedot/poistettu? false}))))
+
+(deftest hinnoittelu-ei-tallennettu
+  (is (= {:hinnoittelun-tallennus-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
+
+(deftest toimenpiteen-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))))
+
+(deftest hintaryhman-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruHintaryhmanHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))))
+
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
     (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
@@ -192,15 +560,16 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :aikavali [alku loppu]
-                                                         :vaylatyyppi :muu
-                                                         :vayla 1
-                                                         :tyolaji :poijut
-                                                         :tyoluokka :asennus-ja-huolto
-                                                         :toimenpide :autot-traktorit
-                                                         :vain-vikailmoitukset? true})]
+          hakuargumentit (tiedot/hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
              {::to/urakka-id 666
               ::to/sopimus-id 777
@@ -235,15 +604,6 @@
                              :tyyppi :yksikkohintainen}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
 
-(deftest kokonaishintaisiin-siirto
-  (testing "Siirron aloittaminen"
-    (vaadi-async-kutsut
-      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
-      (let [vanha-tila testitila
-            uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
-                          vanha-tila)]
-        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
-
 (deftest kokonaishintaisiin-siirretty
   (let [vanha-tila testitila
         siirretyt #{1 2 3}
@@ -256,296 +616,3 @@
     (is (empty? (filter #(siirretyt (::to/id %))
                         (:toimenpiteet uusi-tila)))
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
-
-(deftest hakemisen-aloitus
-  (testing "Haun aloittaminen"
-    (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
-
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
-
-  (testing "Uusi haku kun haku on jo käynnissä"
-    (vaadi-async-kutsut
-      ;; Ei saa aloittaa uusia hakuja
-      #{}
-
-      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
-        (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
-
-(deftest toimenpiteen-hinnoittelu
-  (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 0)
-                        vanha-tila)]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 0
-              ::h/hintaelementit
-              [{::hinta/id nil
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko
-                "Yleiset materiaalit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}]}))))
-
-  (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1)
-                        vanha-tila)]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 1
-              ::h/hintaelementit
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/maara 2
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]})))))
-
-(deftest hintaryhman-hinnoittelu
-  (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AloitaHintaryhmanHinnoittelu 1)
-                        vanha-tila)]
-      (is (nil? (get-in vanha-tila [:hinnoittele-hintaryhma ::h/id])))
-      (is (= (:hinnoittele-hintaryhma uusi-tila)
-             {::h/id 1
-              ::h/hintaelementit
-              [{::hinta/id nil
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko
-                "Yleiset materiaalit"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id nil
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}]}))))
-
-  (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666)
-                        vanha-tila)]
-      (is (nil? (get-in vanha-tila [:hinnoittele-hintaryhma ::h/id])))
-      (is (= (:hinnoittele-hintaryhma uusi-tila)
-             {::h/id 666
-              ::h/hintaelementit
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/maara 2
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]})))))
-
-(deftest toimenpiteen-kentan-hinnoittelu
-  (testing "Hinnoittele kentän rahamäärä"
-    (let [vanha-tila testitila
-          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/maara 666})))]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 1
-              ::h/hintaelementit
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/maara 666
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]}))))
-
-  (testing "Hinnoittele kentän yleiskustannuslisä"
-    (let [vanha-tila testitila
-          uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/yleiskustannuslisa true})))]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 1
-              ::h/hintaelementit
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/maara 1
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/maara 2
-                ::hinta/yleiskustannuslisa true}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkat"
-                ::hinta/maara 3
-                ::hinta/yleiskustannuslisa false}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/maara 4
-                ::hinta/yleiskustannuslisa true}]}))))
-
-  (testing "Peru hinnoittelu"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
-                        vanha-tila)]
-      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit]))))))
-
-(deftest toimenpiteen-hinnoittelu-tallennettu
-  (testing "Toimenpiteen hinnoittelu tallennettu"
-    (let [hinnoiteltava-toimenpide-id 1
-          ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
-          vanha-tila (assoc testitila
-                       :hinnoittele-toimenpide
-                       {:harja.domain.vesivaylat.toimenpide/id hinnoiteltava-toimenpide-id
-                        :harja.domain.vesivaylat.hinnoittelu/hintaelementit
-                        [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-                          :harja.domain.vesivaylat.hinta/maara 10
-                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                         {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-                          :harja.domain.vesivaylat.hinta/maara 20
-                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                         {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-                          :harja.domain.vesivaylat.hinta/maara 30
-                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                         {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-                          :harja.domain.vesivaylat.hinta/maara 40
-                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                         {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-                          :harja.domain.vesivaylat.hinta/maara 50
-                          :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]})
-          uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
-                          {:harja.domain.vesivaylat.hinnoittelu/hinnat
-                           [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-                             :harja.domain.vesivaylat.hinta/maara 10
-                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                            {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-                             :harja.domain.vesivaylat.hinta/maara 20
-                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                            {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-                             :harja.domain.vesivaylat.hinta/maara 30
-                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                            {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-                             :harja.domain.vesivaylat.hinta/maara 40
-                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-                            {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-                             :harja.domain.vesivaylat.hinta/maara 50
-                             :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
-                           :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
-                           :harja.domain.vesivaylat.hinnoittelu/id 666
-                           :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
-                           :harja.domain.muokkaustiedot/poistettu? false})
-                        vanha-tila)
-          paivitettu-toimenpide (first (filter #(= (::to/id %) hinnoiteltava-toimenpide-id)
-                                               (:toimenpiteet uusi-tila)))]
-
-      ;; Hinnoittelu ei ole enää päällä
-      (is (false? (:hinnoittelun-tallennus-kaynnissa? uusi-tila)))
-      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::to/id])))
-      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
-
-      ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
-      (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
-             {:harja.domain.vesivaylat.hinnoittelu/hinnat
-              [{:harja.domain.vesivaylat.hinta/otsikko "Työ"
-                :harja.domain.vesivaylat.hinta/maara 10
-                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-               {:harja.domain.vesivaylat.hinta/otsikko "Komponentit"
-                :harja.domain.vesivaylat.hinta/maara 20
-                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-               {:harja.domain.vesivaylat.hinta/otsikko "Yleiset materiaalit"
-                :harja.domain.vesivaylat.hinta/maara 30
-                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-               {:harja.domain.vesivaylat.hinta/otsikko "Matkat"
-                :harja.domain.vesivaylat.hinta/maara 40
-                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}
-               {:harja.domain.vesivaylat.hinta/otsikko "Muut kulut"
-                :harja.domain.vesivaylat.hinta/maara 50
-                :harja.domain.vesivaylat.hinta/yleiskustannuslisa false}]
-              :harja.domain.vesivaylat.hinnoittelu/hintaryhma? false
-              :harja.domain.vesivaylat.hinnoittelu/id 666
-              :harja.domain.vesivaylat.hinnoittelu/nimi "Hinnoittelu"
-              :harja.domain.muokkaustiedot/poistettu? false}))))
-
-  (testing "Peru hinnoittelu"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
-                        vanha-tila)]
-      (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hintaelementit]))))))
-
-(deftest hakemisen-valmistuminen
-  (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:haku-kaynnissa? tulos)))
-    (is (= [{:id 1}] (:toimenpiteet tulos)))))
-
-(deftest hakemisen-epaonnistuminen
-  (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
-    (is (false? (:haku-kaynnissa? tulos)))))

@@ -89,19 +89,25 @@
    [:td
     [:span
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (tiedot/hinnan-maara app* otsikko)
+      (r/wrap (hinta/hinnan-maara (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]) otsikko)
               (fn [uusi]
                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                            ::hinta/maara uusi}))))]
      [:span " "]
      "€"]]
    [:td
-    (when (= otsikko "Yleiset materiaalit")
-      [tee-kentta {:tyyppi :checkbox}
-       (r/wrap (tiedot/hinnan-yleiskustannuslisa app* otsikko)
-               (fn [uusi]
-                 (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                            ::hinta/yleiskustannuslisa uusi}))))])]])
+    [tee-kentta {:tyyppi :checkbox}
+     (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
+                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                                           otsikko)]
+               (pos? yleiskustannuslisa)
+               false)
+             (fn [uusi]
+               (e! (tiedot/->HinnoitteleToimenpideKentta
+                     {::hinta/otsikko otsikko
+                      ::hinta/yleiskustannuslisa (if uusi
+                                                   hinta/yleinen-yleiskustannuslisa
+                                                   0)}))))]]])
 
 (defn- hinnoittele-toimenpide [e! app* rivi]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
@@ -129,14 +135,16 @@
             (kenttarivi e! app* "Muut kulut")]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-           [:span
-            [:b "Yhteensä:"]
-            [:span " "]
-            (fmt/euro-opt (hinta/kokonaishinta
-                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
+           [yleiset/tietoja {:tietokentan-leveys "180px"}
+            "Perushinta:" (fmt/euro-opt (hinta/perushinta
+                                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
+            "Yleiskustannuslisät (12%):" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
+                                                         (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
+            "Yhteensä:" (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
+                                        (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
 
           [:footer.vv-toimenpiteen-hinnoittelu-footer
-           [napit/yleinen-ensisijainen
+           [napit/tallenna
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (:hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
@@ -146,26 +154,32 @@
           :nappi-teksti "Hinnoittele"
           :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
           :nappi-optiot {:disabled (:infolaatikko-nakyvissa? app*)}
-          :arvo (fmt/euro-opt (hinta/kokonaishinta
+          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]
-  (let [hinnoitellaan? (get-in app [:hinnoittele-hintaryhma ::h/id])]
-    [:div
+  (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
+        hinnoitellaan? (some? hinnoittelu-id)]
+    [:div.pull-right
      (if hinnoitellaan?
        [:div
-        [napit/yleinen-ensisijainen
+        [:div.inline-block {:style {:margin-right "10px"}}
+         [tee-kentta {:tyyppi :numero
+                      :placeholder "Syötä hinta"
+                      :kokonaisosan-maara 7}
+          (r/wrap (hinta/hinnan-maara (::h/hinnat hintaryhma) "Ryhmähinta")
+                  #(log "TODO"))]
+         [:span " "]
+         [:span "€"]]
+        [napit/tallenna
          "Valmis"
-         #(log "DOH VALMIS!")
-         {:luokka "pull-right"}]
-        [napit/yleinen-ensisijainen
+         #(log "DOH VALMIS!")]
+        [napit/peruuta
          "Peruuta"
-         #(log "DOH PERUUTA!")
-         {:luokka "pull-right"}]]
+         #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        [napit/yleinen-ensisijainen
         "Määrittele yksi hinta koko ryhmälle"
-        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-        {:luokka "pull-right"}])]))
+        #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))])]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo

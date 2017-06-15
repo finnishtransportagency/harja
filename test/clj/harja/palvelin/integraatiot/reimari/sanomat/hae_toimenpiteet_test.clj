@@ -42,7 +42,7 @@
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
-        (-> "resources/xsd/reimari/vastaus.xml"
+        (-> "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
