@@ -161,7 +161,7 @@
 
 (defn- hintaryhman-hinnoittelu [e! app hintaryhma]
   (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
-        hinnoitellaan? (some? hinnoittelu-id)
+        hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
         hinnat (::h/hinnat hintaryhma)]
     [:div.pull-right
      (if hinnoitellaan?
