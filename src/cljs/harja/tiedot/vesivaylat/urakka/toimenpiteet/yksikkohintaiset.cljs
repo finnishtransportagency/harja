@@ -11,6 +11,7 @@
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
+            [harja.tuck-apurit :as tuck-apurit]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.viesti :as viesti]
@@ -323,31 +324,21 @@
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:hinnoittelun-tallennus-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->ToimenpiteenHinnoitteluTallennettu)
-            fail! (tuck/send-async! ->ToimenpiteenHinnoitteluEiTallennettu)
-            parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                        ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-                        ::h/hintaelementit (mapv
-                                             (fn [hinta]
-                                               (merge
-                                                 (when-let [id (::hinta/id hinta)]
-                                                   {::hinta/id id})
-                                                 {::hinta/otsikko (::hinta/otsikko hinta)
-                                                  ::hinta/maara (::hinta/maara hinta)
-                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                             (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}]
-        (try
-          (go
-            (let [vastaus (<! (k/post! :tallenna-toimenpiteelle-hinta parametrit))]
-              (if (k/virhe? vastaus)
-                (fail! vastaus)
-                (tulos! vastaus))))
-          (assoc app :hinnoittelun-tallennus-kaynnissa? true)
-
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (tuck-apurit/palvelukutsu {:onnistui ->ToimenpiteenHinnoitteluTallennettu
+                                 :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu
+                                 :palvelu :tallenna-toimenpiteelle-hinta
+                                 :argumentit {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+                                              ::h/hintaelementit (mapv
+                                                                   (fn [hinta]
+                                                                     (merge
+                                                                       (when-let [id (::hinta/id hinta)]
+                                                                         {::hinta/id id})
+                                                                       {::hinta/otsikko (::hinta/otsikko hinta)
+                                                                        ::hinta/maara (::hinta/maara hinta)
+                                                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                                   (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
+                                 :uusi-tila (assoc app :hinnoittelun-tallennus-kaynnissa? true)})
       app))
 
   ToimenpiteenHinnoitteluTallennettu
