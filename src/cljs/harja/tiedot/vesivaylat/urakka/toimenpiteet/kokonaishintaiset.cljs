@@ -32,7 +32,7 @@
                     :vain-vikailmoitukset? false}
          :nakymassa? false
          :haku-kaynnissa? false
-         :infolaatikko-nakyvissa? false
+         :infolaatikko-nakyvissa? {}
          :toimenpiteet nil}))
 
 (def valinnat

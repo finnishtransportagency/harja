@@ -43,7 +43,7 @@
                     :vain-vikailmoitukset? false}
          :nakymassa? false
          :haku-kaynnissa? false
-         :infolaatikko-nakyvissa? false
+         :infolaatikko-nakyvissa? {}
          :uuden-hintaryhman-lisays? false
          :valittu-hintaryhma nil
          :uusi-hintaryhma ""
