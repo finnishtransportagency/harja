@@ -89,10 +89,11 @@
             ;; Viestin parsinta onnistui, yritetään käsitellä se
             (try
               (let [vastaus (kasittelija data)]
-                (when (and jono-ulos kuittausmuodostaja)
+                (if (and jono-ulos kuittausmuodostaja)
                   (let [vastauksen-sisalto (kuittausmuodostaja vastaus)]
                     (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "" jono-ulos)
-                    (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))))
+                    (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
+                  (lokittaja :onnistunut nil "" tapahtuma-id ulkoinen-id)))
               (catch Exception e
                 ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
                 (lokittaja :epaonnistunut viestin-sisalto "" tapahtuma-id ulkoinen-id)))
