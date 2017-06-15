@@ -575,7 +575,7 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/hakukyselyn-argumentit
+          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
                            {:urakka-id 666
                             :sopimus-id 777
                             :aikavali [alku loppu]
@@ -600,11 +600,11 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :tyolaji nil
-                                                         :tyoluokka nil
-                                                         :toimenpide nil})]
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777
+                                                                :tyolaji nil
+                                                                :tyoluokka nil
+                                                                :toimenpide nil})]
       (is (= hakuargumentit
              {::to/urakka-id 666
               ::to/sopimus-id 777
@@ -612,8 +612,8 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777})]
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777
                              :tyyppi :yksikkohintainen}))

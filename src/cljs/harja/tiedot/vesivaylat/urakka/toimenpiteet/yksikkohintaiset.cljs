@@ -122,9 +122,6 @@
 (defn- hintaryhman-hintakentat [hinnat]
   [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
 
-(defn hakukyselyn-argumentit [valinnat]
-  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :yksikkohintainen}))
-
 (defn- paivita-hintajoukon-hinta
   "Päivittää hintojen joukosta yksittäisen hinnan tiedot."
   [hinnat uudet-hintatiedot]
@@ -164,9 +161,9 @@
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
-                                    (hakukyselyn-argumentit valinnat)
-                                    {:onnistui ->ToimenpiteetHaettu
-                                     :epaonnistui ->ToimenpiteetEiHaettu})
+                                      (jaettu/hakukyselyn-argumentit valinnat)
+                                      {:onnistui ->ToimenpiteetHaettu
+                                       :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc app :haku-kaynnissa? true))
       app))
 
@@ -192,10 +189,10 @@
   (process-event [{nimi :nimi} app]
     (if-not (:hintaryhman-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :luo-hinnoittelu
-                                    {::h/nimi nimi
-                                     ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                    {:onnistui ->HintaryhmaLuotu
-                                     :epaonnistui ->HintaryhmaEiLuotu})
+                                      {::h/nimi nimi
+                                       ::urakka/id (get-in app [:valinnat :urakka-id])}
+                                      {:onnistui ->HintaryhmaLuotu
+                                       :epaonnistui ->HintaryhmaEiLuotu})
           (assoc app :hintaryhman-tallennus-kaynnissa? true))
       app))
 
@@ -218,9 +215,9 @@
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-hinnoittelut
-                                    {::urakka/id (get-in app [:valinnat :urakka-id])}
-                                    {:onnistui ->HintaryhmatHaettu
-                                     :epaonnistui ->HintaryhmatEiHaettu})
+                                      {::urakka/id (get-in app [:valinnat :urakka-id])}
+                                      {:onnistui ->HintaryhmatHaettu
+                                       :epaonnistui ->HintaryhmatEiHaettu})
           (assoc app :hintaryhmien-haku-kaynnissa? true))
       app))
 
@@ -242,11 +239,11 @@
   (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
     (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-hinnoitteluun
-                                    {::to/idt (map ::to/id valitut)
-                                     ::h/id (::h/id hintaryhma)
-                                     ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                    {:onnistui ->ValitutLiitetty
-                                     :epaonnistui ->ValitutEiLiitetty})
+                                      {::to/idt (map ::to/id valitut)
+                                       ::h/id (::h/id hintaryhma)
+                                       ::urakka/id (get-in app [:valinnat :urakka-id])}
+                                      {:onnistui ->ValitutLiitetty
+                                       :epaonnistui ->ValitutEiLiitetty})
           (assoc app :hintaryhmien-liittaminen-kaynnissa? true))
       app))
 
@@ -293,19 +290,19 @@
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :tallenna-toimenpiteelle-hinta
-                                    {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                                     ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-                                     ::h/hintaelementit (mapv
-                                                          (fn [hinta]
-                                                            (merge
-                                                              (when-let [id (::hinta/id hinta)]
-                                                                {::hinta/id id})
-                                                              {::hinta/otsikko (::hinta/otsikko hinta)
-                                                               ::hinta/maara (::hinta/maara hinta)
-                                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                          (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
-                                    {:onnistui ->ToimenpiteenHinnoitteluTallennettu
-                                     :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
+                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+                                       ::h/hintaelementit (mapv
+                                                            (fn [hinta]
+                                                              (merge
+                                                                (when-let [id (::hinta/id hinta)]
+                                                                  {::hinta/id id})
+                                                                {::hinta/otsikko (::hinta/otsikko hinta)
+                                                                 ::hinta/maara (::hinta/maara hinta)
+                                                                 ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                            (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
+                                      {:onnistui ->ToimenpiteenHinnoitteluTallennettu
+                                       :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
@@ -314,19 +311,19 @@
     ;; TODO TESTI
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
-                                    {::ur/id (get-in app [:valinnat :urakka-id])
-                                     ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
-                                     ::h/hintaelementit (mapv
-                                                          (fn [hinta]
-                                                            (merge
-                                                              (when-let [id (::hinta/id hinta)]
-                                                                {::hinta/id id})
-                                                              {::hinta/otsikko (::hinta/otsikko hinta)
-                                                               ::hinta/maara (::hinta/maara hinta)
-                                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                          (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]))}
-                                    {:onnistui ->HintaryhmanHinnoitteluTallennettu
-                                     :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
+                                      {::ur/id (get-in app [:valinnat :urakka-id])
+                                       ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
+                                       ::h/hintaelementit (mapv
+                                                            (fn [hinta]
+                                                              (merge
+                                                                (when-let [id (::hinta/id hinta)]
+                                                                  {::hinta/id id})
+                                                                {::hinta/otsikko (::hinta/otsikko hinta)
+                                                                 ::hinta/maara (::hinta/maara hinta)
+                                                                 ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                            (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]))}
+                                      {:onnistui ->HintaryhmanHinnoitteluTallennettu
+                                       :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
           (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
       app))
 

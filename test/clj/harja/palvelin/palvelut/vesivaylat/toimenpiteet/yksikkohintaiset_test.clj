@@ -47,9 +47,10 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-yksikkohintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
-    (is (>= (count vastaus) 4))))
+    (is (>= (count vastaus) 2))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

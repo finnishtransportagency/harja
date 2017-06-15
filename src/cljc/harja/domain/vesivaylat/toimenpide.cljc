@@ -440,7 +440,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
-                     :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
+                     :opt [::vikakorjauksia?  ::oma-hinnoittelu ::hintaryhma
                            ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
