@@ -14,10 +14,16 @@
 
 (defn hae-kiintiot [db tiedot]
   (let [urakka-id (::kiintio/urakka-id tiedot)]
-    (fetch db
-          ::kiintio/kiintio
-          (set/union kiintio/perustiedot
-                     kiintio/kiintion-toimenpiteet)
-           (op/and
-             {::kiintio/urakka-id urakka-id}
-             {::kiintio/poistettu? false}))))
+    (into
+      []
+      (comp
+        (map #(assoc % ::kiintio/toimenpiteet (into []
+                                                    harja.kyselyt.vesivaylat.toimenpiteet/toimenpiteet-xf
+                                                    (::kiintio/toimenpiteet %)))))
+      (fetch db
+            ::kiintio/kiintio
+            (set/union kiintio/perustiedot
+                       kiintio/kiintion-toimenpiteet)
+            (op/and
+              {::kiintio/urakka-id urakka-id}
+              {::m/poistettu? false})))))
