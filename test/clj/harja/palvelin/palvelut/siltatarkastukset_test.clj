@@ -25,9 +25,9 @@
   (first (filter #(= nimi (:siltanimi %)) sillat)))
 
 (defn- poista-testin-tarkastukset []
-  (let [id (ffirst (q "SELECT id FROM siltatarkastus WHERE tarkastaja = 'Järjestelmän Vastaava';"))]
+  (let [id (ffirst (q "SELECT id FROM siltatarkastus WHERE tarkastaja = 'TESTIKAYTTAJA';"))]
     (u "DELETE FROM siltatarkastuskohde WHERE siltatarkastus = " id ";")
-    (u "DELETE FROM siltatarkastus WHERE tarkastaja = 'Järjestelmän Vastaava'")))
+    (u "DELETE FROM siltatarkastus WHERE tarkastaja = 'TESTIKAYTTAJA'")))
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
@@ -87,7 +87,7 @@
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                            :silta-id (hae-oulujoen-sillan-id)})]
-    (is (= (count tarkastukset) 2))
+    (is (= (count tarkastukset) 3))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
 
 (deftest oulun-urakan-2005-2014-tarkastukset
@@ -95,7 +95,7 @@
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
                                            :silta-id (hae-oulujoen-sillan-id)})]
-    (is (= (count tarkastukset) 2))
+    (is (= (count tarkastukset) 3))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
 
 (defn uusi-tarkastus []
@@ -106,9 +106,9 @@
              5 ["B" ""], 14 ["A" ""], 16 ["A" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
    :silta-id (hae-oulujoen-sillan-id),
    :liitteet [],
-   :tarkastusaika #inst "2016-07-28T11:34:49.000-00:00",
+   :tarkastusaika #inst "2017-07-28T11:34:49.000-00:00",
    :poistettu false
-   :tarkastaja "Järjestelmän Vastaava",})
+   :tarkastaja "TESTIKAYTTAJA"})
 
 (deftest tarkastuksen-tallennus-oulujoen-sillalle
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
