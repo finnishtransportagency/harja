@@ -8,6 +8,7 @@
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
+                    (pudota-ja-luo-testitietokanta-templatesta)
                     (component/start
                       (component/system-map
                         :db (luo-testitietokanta)
@@ -87,7 +88,7 @@
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                            :silta-id (hae-oulujoen-sillan-id)})]
-    (is (= (count tarkastukset) 3))
+    (is (= (count tarkastukset) 2))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
 
 (deftest oulun-urakan-2005-2014-tarkastukset
@@ -95,7 +96,7 @@
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                           {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
                                            :silta-id (hae-oulujoen-sillan-id)})]
-    (is (= (count tarkastukset) 3))
+    (is (= (count tarkastukset) 2))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
 
 (defn uusi-tarkastus []
