@@ -32,7 +32,10 @@
       (oikeudet/ei-oikeustarkistusta!)
       ;; TODO
       #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
-      (q/tallenna-kiintiot db tiedot))))
+      (q/vaadi-kiintiot-kuuluvat-urakkaan! db
+                                           (keep ::kiintio/id (:kiintiot tiedot))
+                                           urakka-id)
+      (q/tallenna-kiintiot! db user tiedot))))
 
 (defrecord Kiintiot []
   component/Lifecycle
