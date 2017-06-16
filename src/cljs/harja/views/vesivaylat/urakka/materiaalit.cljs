@@ -9,18 +9,27 @@
             [harja.pvm :as pvm]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.lomake :as lomake]
-            [harja.ui.valinnat :as valinnat]))
+            [harja.ui.valinnat :as valinnat])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn- materiaaliloki [e! nimi rivit]
   (komp/luo
    (komp/sisaan #(e! (tiedot/->HaeMateriaalinKaytto nimi)))
    (fn [e! nimi rivit]
-     [grid/grid {:tunniste ::m/pvm}
-      [{:otsikko "Pvm" :nimi ::m/pvm :fmt pvm/pvm :leveys 1}
-       {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :leveys 1}
-       {:otsikko "Lisätieto" :nimi ::m/lisatieto :leveys 5}]
-      rivit])))
+     [:div.vv-materiaaliloki
+      [:h3 "Muutokset"]
+      [:table
+       [:tbody
+        (for*
+         [{::m/keys [pvm maara lisatieto]} rivit]
+         [:tr
+          [:td {:width "15%"} (pvm/pvm pvm)]
+          [:td {:width "15%" :class (if (neg? maara)
+                                      "materiaali-miinus"
+                                      "materiaali-plus")}
+           maara " kpl"]
+          [:td {:width "70%"} lisatieto]])]]])))
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus]

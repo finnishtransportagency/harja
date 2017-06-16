@@ -5,7 +5,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.vesivaylat.materiaali :as m]
             [cljs.core.async :refer [<!]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään viestityypit
@@ -44,7 +45,8 @@
   ListausHaettu
   (process-event [{tulokset :tulokset} app]
     (assoc app
-           :materiaalilistaus tulokset))
+           :materiaalilistaus tulokset
+           :lisaa-materiaali nil))
 
   HaeMateriaalinKaytto
   (process-event [{nimi :nimi} {u :urakka-id :as app}]
@@ -71,7 +73,7 @@
   (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
     (let [tulos! (t/send-async! ->ListausHaettu)]
       (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
-                               lisaa-materiaali))))
+                               (lomake/ilman-lomaketietoja lisaa-materiaali)))))
       app))
 
   PeruMateriaalinLisays
