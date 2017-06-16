@@ -269,14 +269,18 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/nimi "Testi123"}]
-
     (testing "Luodaan uusi hinnoittelu"
-      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+      (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :luo-hinnoittelu +kayttaja-jvh+
-                                    kysely-params)]
+                                    kysely-params)
+            hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
         (is (s/valid? ::h/luo-hinnoittelu-kysely kysely-params))
         (is (s/valid? ::h/luo-hinnoittelu-vastaus vastaus))
+
+        ;; Hinnoittelu lisättiin
+        (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen))
 
         ;; Sama hinnoittelu palautui
         (is (= (::h/urakka-id vastaus) urakka-id))
