@@ -42,6 +42,7 @@
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
+  (log/debug "formatoi-aika: saatiin" muutosaika)
   (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
     (if (s/ends-with? aika-ilman-vyohyketta "Z")
       aika-ilman-vyohyketta
@@ -68,13 +69,14 @@
     (kasittele-vastaus db body)))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (last (sort-by ::integraatiotapahtuma/alkanut
-                 (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                               #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                 [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                      :harja.palvelin.integraatiot/jarjestelma}] }
-                               {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                   :harja.palvelin.integraatiot/nimi nimi}}))))
+  (::integraatiotapahtuma/alkanut
+   (last (sort-by ::integraatiotapahtuma/alkanut
+                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
+                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
+                                  [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
+                                                                        :harja.palvelin.integraatiot/jarjestelma}] }
+                                {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
+                                                                     :harja.palvelin.integraatiot/nimi nimi}})))))
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" "hae-toimenpiteet")]
