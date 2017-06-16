@@ -298,6 +298,7 @@ VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde);
 
 -- name: poista-siltatarkastus!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
+UPDATE siltatarkastus
 SET poistettu = TRUE
 WHERE id = :id
       AND urakka = :urakka;
