@@ -482,11 +482,13 @@
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (let [hinnoiteltava-toimenpide-id 1
-        ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
+        ;; Asetetaan hinnoittelu päälle ja testataan miten tila muuttuu,
+        ;; kun saadaan tallennukseen vastaus
         vanha-tila (assoc testitila
+                     :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true
                      :hinnoittele-toimenpide
                      {::to/id hinnoiteltava-toimenpide-id
-                      :harja.domain.vesivaylat.hinnoittelu/hintaelementit
+                      ::h/hintaelementit
                       [{::hinta/otsikko "Työ"
                         ::hinta/maara 10
                         ::hinta/yleiskustannuslisa 0}
@@ -503,7 +505,7 @@
                         ::hinta/maara 50
                         ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
-                        {:harja.domain.vesivaylat.hinnoittelu/hinnat
+                        {::h/hinnat
                          [{::hinta/otsikko "Työ"
                            ::hinta/maara 10
                            ::hinta/yleiskustannuslisa 0}
@@ -554,6 +556,38 @@
             ::h/id 666
             ::h/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
+
+(deftest hintaryhman-hinnoittelu-tallennettu
+  (let [hinnoiteltava-hintaryhma-id 1
+        ;; Asetetaan hinnoittelu päälle ja testataan miten tila muuttuu,
+        ;; kun saadaan tallennukseen vastaus
+        vanha-tila (assoc testitila
+                     :hinnoittele-hintaryhma
+                     :hintaryhman-hinnoittelun-tallennus-kaynnissa? true
+                     {::h/id hinnoiteltava-hintaryhma-id
+                      ::h/hintaelementit
+                      [{::hinta/otsikko "Ryhmähinta"
+                        ::hinta/maara 123
+                        ::hinta/yleiskustannuslisa 0}]})
+        palvelimen-vastaus {::h/hinnat [{::hinta/yleiskustannuslisa 0
+                                         ::hinta/maara 123
+                                         ::hinta/otsikko "Ryhmähinta"
+                                         ::hinta/id 1}]
+                            ::h/hintaryhma? true
+                            ::h/nimi "Hietasaaren poijujen korjaus"
+                            ::h/id 9}
+        uusi-tila (e! (tiedot/->HintaryhmanHinnoitteluTallennettu
+                        palvelimen-vastaus)
+                      vanha-tila)
+        paivitetyt-hintaryhmat (:hintaryhmat uusi-tila)]
+
+    ;; Hinnoittelu ei ole enää päällä
+    (is (false? (:hintaryhman-hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/id])))
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))
+
+    ;; Hintaryhmiksi asetettiin palvelimen vastaus
+    (is (= paivitetyt-hintaryhmat palvelimen-vastaus))))
 
 (deftest toimenpiteen-hinnoittelu-ei-tallennettu
   (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}

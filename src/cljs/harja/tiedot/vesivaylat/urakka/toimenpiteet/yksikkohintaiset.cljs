@@ -308,7 +308,6 @@
 
   HinnoitteleHintaryhma
   (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
                                       {::ur/id (get-in app [:valinnat :urakka-id])
