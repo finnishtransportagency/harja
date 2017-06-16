@@ -21,3 +21,4 @@
 
 (def grid perus/grid)
 (def muokkaus-grid muokkaus/muokkaus-grid)
+(def erikoismuokattava-kentta perus/erikoismuokattava-kentta)

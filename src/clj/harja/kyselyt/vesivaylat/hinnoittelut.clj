@@ -24,7 +24,7 @@
   (when-not (->> (specql/fetch
                    db
                    ::h/hinnoittelu
-                   (set/union h/perustiedot)
+                   (set/union h/perustiedot h/viittaus-idt)
                    {::h/id (op/in hinnoittelu-idt)})
                  (keep ::h/urakka-id)
                  (every? (partial = urakka-id)))
@@ -34,40 +34,37 @@
   (let [toimenpiteen-hinnat (->> (specql/fetch
                                    db
                                    ::to/reimari-toimenpide
-                                   (set/union to/perustiedot)
+                                   (set/union to/perustiedot to/hinnoittelu)
                                    {::to/id toimenpide-id})
                                  (mapcat ::to/hinnoittelu-linkit)
                                  (mapcat (comp ::h/hinnat ::h/hinnoittelut))
                                  (map ::hinta/id)
                                  (into #{}))]
-    (when-not (set/subset? (into #{} hinta-idt) toimenpiteen-hinnat)
+    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinnat)
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
 (defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
   (when-not (->> (specql/fetch
                    db
-                   ::h/hinnoittelu
-                   (set/union h/hinnat)
-                   {::h/hinnat {::hinta/id (op/in hinta-idt)}})
-
-                 (keep ::h/id)
+                   ::hinta/hinta
+                   (set/union hinta/perustiedot hinta/viittaus-idt)
+                   {::hinta/id (op/in hinta-idt)})
+                 (keep ::hinta/hinnoittelu-id)
                  (every? (partial = hinnoittelu-id)))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
-(defn hae-hinnoittelut [db tiedot]
-  (let
-    [urakka-id (::ur/id tiedot)]
-    (specql/fetch db
-                  ::h/hinnoittelu
-                  h/perustiedot
-                  {::h/urakka-id urakka-id
-                   ::h/hintaryhma? true
-                   ::m/poistettu? false})))
+(defn hae-hinnoittelut [db urakka-id]
+  (->> (specql/fetch db
+                     ::h/hinnoittelu
+                     (set/union h/perustiedot h/hinnat)
+                     {::h/urakka-id urakka-id
+                      ::h/hintaryhma? true
+                      ::m/poistettu? false})
+       (map #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))))
 
 (defn luo-hinnoittelu! [db user tiedot]
-  (let
-    [urakka-id (::ur/id tiedot)
-     nimi (::h/nimi tiedot)]
+  (let [urakka-id (::ur/id tiedot)
+        nimi (::h/nimi tiedot)]
     (specql/insert! db
                     ::h/hinnoittelu
                     {::h/urakka-id urakka-id
@@ -76,22 +73,26 @@
                      ::m/luoja-id (:id user)})))
 
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt]
-  (specql/update! db
-                  ::h/hinnoittelu<->toimenpide
-                  {::m/poistettu? true
-                   ::m/poistaja-id (:id user)}
-                  {::h/toimenpide-id (op/in toimenpide-idt)}))
-
-
+  (let [hintaryhma-idt (set (map ::h/id (specql/fetch db
+                                                      ::h/hinnoittelu
+                                                      #{::h/id}
+                                                      {::h/hintaryhma? true})))]
+    (specql/update! db
+                    ::h/hinnoittelu<->toimenpide
+                    {::m/poistettu? true
+                     ::m/poistaja-id (:id user)}
+                    {::h/toimenpide-id (op/in toimenpide-idt)
+                     ::h/hinnoittelu-id (op/in hintaryhma-idt)})))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
   (jdbc/with-db-transaction [db db]
-    (doseq [id toimenpide-idt]
-      (specql/insert! db
-                      ::h/hinnoittelu<->toimenpide
-                      {::h/toimenpide-id id
-                       ::h/hinnoittelu-id hinnoittelu
-                       ::m/luoja-id (:id user)}))))
+    (doall
+      (for [id toimenpide-idt]
+        (specql/insert! db
+                        ::h/hinnoittelu<->toimenpide
+                        {::h/toimenpide-id id
+                         ::h/hinnoittelu-id hinnoittelu
+                         ::m/luoja-id (:id user)})))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat]
   (jdbc/with-db-transaction [db db]
@@ -104,7 +105,7 @@
                           {::hinta/hinnoittelu-id hinnoittelu-id
                            ::m/muokkaaja-id (:id user)
                            ::m/muokattu (pvm/nyt)})
-                        {::h/id (::h/id hinta)})
+                        {::hinta/id (::hinta/id hinta)})
 
         (specql/insert! db
                         ::hinta/hinta
@@ -157,6 +158,4 @@
                             hinta
                             {::m/luotu (pvm/nyt)
                              ::m/luoja-id (:id user)
-                             ::hinta/hinnoittelu-id hinnoittelu-id})))))
-
-    (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)))
+                             ::hinta/hinnoittelu-id hinnoittelu-id})))))))

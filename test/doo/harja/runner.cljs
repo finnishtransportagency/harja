@@ -52,17 +52,17 @@
            'harja.tiedot.urakka.suunnittelu-test
            'harja.tiedot.urakka.yhatuonti-test
            'harja.tiedot.muokkauslukko-test
+           'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test
            'harja.views.urakka.paallystysilmoitukset-test
            'harja.views.urakka.paikkausilmoitukset-test
            'harja.views.urakka.yllapitokohteet-test
+           'harja.views.urakka.valitavoitteet-test
            'harja.views.urakka.yleiset-test
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
            'harja.ui.edistymispalkki-test
-           'harja.views.kartta.infopaneeli-test
-           'harja.views.urakka.valitavoitteet-test
            'harja.fmt-test
            'harja.tiedot.urakka.siirtymat-test
            'harja.tiedot.tierekisteri.varusteet-test
