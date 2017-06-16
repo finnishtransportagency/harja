@@ -9,9 +9,9 @@
 (defn palvelukutsu
   ([palvelu argumentit optiot]
    (palvelukutsu nil palvelu argumentit optiot))
-  ([app palvelu argumentit {:keys [onnistui epaonnistui]}]
-   (let [onnistui! (when onnistui (tuck/send-async! onnistui))
-         epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
+  ([app palvelu argumentit {:keys [onnistui onnistui-parametrit epaonnistui epaonnistui-parametrit]}]
+   (let [onnistui! (when onnistui (apply tuck/send-async! onnistui onnistui-parametrit))
+         epaonnistui! (when epaonnistui (apply tuck/send-async! epaonnistui epaonnistui-parametrit))]
      (try
        (go
          (let [vastaus (<! (k/post! palvelu argumentit))]
