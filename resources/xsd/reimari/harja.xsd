@@ -144,8 +144,8 @@
     <xs:attribute type="xs:token" name="merk-cod" use="required"/> <!-- COMPONENT_MERK_COD -->
     <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
     <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
-    <xs:attribute type="xs:dateTime" name="alkupvm" use="required"/> <!-- SDT -->
-    <xs:attribute type="xs:dateTime" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:date" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:date" name="loppupvm" use="required"/> <!-- EDT -->
   </xs:complexType>
 
   <!-- HaeTurvalaiteKomponentit -->
@@ -176,8 +176,8 @@
     <xs:attribute type="xs:string" name="lisatiedot" use="required"/> <!-- SDCOMP_MEM -->
     <xs:attribute type="xs:token" name="turvalaitenro" use="required"/>
     <xs:attribute type="xs:token" name="komponentti-id" use="required"/> <!-- COMPONENT_ID -->
-    <xs:attribute type="xs:dateTime" name="alkupvm" use="required"/> <!-- SDT -->
-    <xs:attribute type="xs:dateTime" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:date" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:date" name="loppupvm" use="required"/> <!-- EDT -->
     <xs:attribute type="xs:string" name="sarjanumero" use="required"/> <!-- SERIAL_CHR -->
     <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
     <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
