@@ -99,16 +99,16 @@
   (assoc rivi
       :yhteensa (and maara yksikkohinta (* maara yksikkohinta))))
 
-(defn- etuliitteen-mukaan-valiotsikoilla [tyorivit]
+(defn etuliitteen-mukaan-valiotsikoilla [tyorivit]
   (->> tyorivit
        (map #(let [nimi (:tehtavan_nimi %)
                    kaksoispiste (.indexOf nimi ":")
                    valiotsikko (if (neg? kaksoispiste)
                                  ""
-                                 (subs nimi 0 kaksoispiste))
+                                 (str/trim (subs nimi 0 kaksoispiste)))
                    nimi (if (neg? kaksoispiste)
                           nimi
-                          (subs nimi (inc kaksoispiste)))]
+                          (str/trim (subs nimi (inc kaksoispiste))))]
                (assoc %
                       :tehtavan_nimi nimi
                       :valiotsikko valiotsikko)))

@@ -6,7 +6,8 @@
             [cljs-time.core :as t]
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.loki :refer [log]]
-            [harja.pvm :refer [->pvm] :as pvm]))
+            [harja.pvm :refer [->pvm] :as pvm]
+            [harja.ui.grid :as grid]))
 
 (defn hk-rivi
   "Apuri hoitokausirivin tekemiseksi. Asettaa alkupvm annetulle vuodelle ja loppupvm seuraavalle."
