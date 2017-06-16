@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
-  (if paallystyssopimusnro
+  (if (and paallystyssopimusnro (not (empty? paallystyssopimusnro)))
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
             paallystyssopimusnro (str (int (Double/parseDouble paallystyssopimusnro)))

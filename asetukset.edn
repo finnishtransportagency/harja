@@ -77,43 +77,43 @@
 
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuotiaika {:paiva "perjantai" :aika [13 0 0]}
+ :geometriapaivitykset {:tuontiaika {:paiva "perjantai" :aika [15 39 0]}
 
                         :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-tallennuspolku"./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        ;; :tieosoiteverkon-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
+                        ;; :tieosoiteverkon-tallennuspolku"./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
-                        :pohjavesialueen-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl141.shz"
-                        :pohjavesialueen-tallennuspolku"./shp/Pohjavesialueet/PTV_tl141.shz"
+                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/TL141.shp"
+                        :pohjavesialueen-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL141&OUTPUTFORMAT=SHAPE-ZIP"
+                        :pohjavesialueen-tallennuspolku"./shp/Pohjavesialueet/TL141.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/PTV_tl132.shp"
-                        :talvihoidon-hoitoluokkien-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl132.shz"
-                        :talvihoidon-hoitoluokkien-tallennuspolku"./shp/Talvihoitoluokat/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/TL132.shp"
+                        :talvihoidon-hoitoluokkien-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL132&OUTPUTFORMAT=SHAPE-ZIP"
+                        :talvihoidon-hoitoluokkien-tallennuspolku"./shp/Talvihoitoluokat/TL132.shz"
 
-                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/PTV_tl149.shp"
-                        :soratien-hoitoluokkien-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl149.shz"
-                        :soratien-hoitoluokkien-tallennuspolku"./shp/Soratieluokat/PTV_tl149.shz"
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/TL149.shp"
+                        :soratien-hoitoluokkien-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL149&OUTPUTFORMAT=SHAPE-ZIP"
+                        :soratien-hoitoluokkien-tallennuspolku"./shp/Soratieluokat/TL149.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
-                        :siltojen-tallennuspolku"./shp/Sillat/PTV_silta.shz"
+                        :siltojen-shapefile "file://shp/Sillat/TL261.shp"
+                        :siltojen-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL261&OUTPUTFORMAT=SHAPE-ZIP"
+                        :siltojen-tallennuspolku"./shp/Sillat/TL261.shz"
 
-                        :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
-                        :urakoiden-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2016.shz"
-                        :urakoiden-tallennuspolku"./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-shapefile "file://shp/Hoitourakat/TL312.shx"
+                        :urakoiden-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL312&OUTPUTFORMAT=SHAPE-ZIP"
+                        :urakoiden-tallennuspolku"./shp/Hoitourakat/TL312.shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
-                        :ely-alueiden-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
-                        :ely-alueiden-tallennuspolku"./shp/ELYt/ULKOISET_Elyt_infra.shz"
+                        ;; :ely-alueiden-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
+                        ;; :ely-alueiden-tallennuspolku"./shp/ELYt/ULKOISET_Elyt_infra.shz"
 
-                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/PTV_tl167.shp"
-                        :valaistusurakoiden-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl167.shz"
-                        :valaistusurakoiden-tallennuspolku"./shp/Valaistusurakat/PTV_tl167.shz"
+                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/TL167.shp"
+                        :valaistusurakoiden-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL167&OUTPUTFORMAT=SHAPE-ZIP"
+                        :valaistusurakoiden-tallennuspolku"./shp/Valaistusurakat/TL167.shz"
 
-                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
-                        :paallystyspalvelusopimusten-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
-                        :paallystyspalvelusopimusten-tallennuspolku"./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/TL151.shp"
+                        :paallystyspalvelusopimusten-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL151&OUTPUTFORMAT=SHAPE-ZIP"
+                        :paallystyspalvelusopimusten-tallennuspolku"./shp/Paallystyspalvelusopimukset/TL151.shz"
 
                         :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
 

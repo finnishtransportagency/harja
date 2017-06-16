@@ -8,7 +8,7 @@
             [clj-time.coerce :as coerce]
             [clojure.java.io :as io]
             [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.inspire :as inspire]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
@@ -22,27 +22,27 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.net URI)
-           (java.sql Timestamp)))
+  (:import (java.net URI)))
 
 (defn ajasta-paivitys [this paivitystunnus ajopaiva ajoaika osoite kohdetiedoston-polku paivitys]
-  (log/debug (format "Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
+  (log/debug (format "Ajastetaan geometria-aineiston %s päivitys ajettavaksi viikonpäivänä %s kellonaikaan %s."
+                     paivitystunnus
+                     ajopaiva
+                     ajoaika))
   (ajastettu-tehtava/ajasta-viikonpaivana
     ajopaiva
     ajoaika
     (fn [_]
-      (alk/kaynnista-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
+      (inspire/kaynnista-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
 
 (defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
   (try
     (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
-          tiedosto (if (not polku) nil (io/file polku))
-          tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
+          tiedosto (if (not polku) nil (io/file polku))]
       (log/debug (format "Tarvitaanko paikallinen paivitys aineistolle: %s" paivitystunnus))
       (if (and
             (not (nil? tiedosto))
-            (.exists tiedosto)
-            (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm))
+            (.exists tiedosto))
         (do
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
@@ -73,16 +73,18 @@
                          (fn [] (paivitys (:db this) shapefile)))))))
 
 (defn maarittele-paikallinen-paivitystehtava [paivitystunnus url-avain tallennuspolku-avain shapefile-avain paivitys]
-  (fn [this {:keys [tuontivali] :as asetukset}]
+  (fn [this {:keys [tuontiaika] :as asetukset}]
     (let [url (get asetukset url-avain)
           tallennuspolku (get asetukset tallennuspolku-avain)
           shapefile (get asetukset shapefile-avain)
-          db (:db this)]
+          db (:db this)
+          {:keys [paiva aika]} tuontiaika]
       (log/debug "Paikallinen päivitystehtävä: " paivitystunnus url-avain tallennuspolku-avain shapefile-avain paivitys)
       (when (and (not url) (not tallennuspolku))
         (log/debug "Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
-        (chime-at
-          (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
+        (ajastettu-tehtava/ajasta-viikonpaivana
+          paiva
+          aika
           (fn [_]
             (try
               (when (tarvitaanko-paikallinen-paivitys? db paivitystunnus shapefile)

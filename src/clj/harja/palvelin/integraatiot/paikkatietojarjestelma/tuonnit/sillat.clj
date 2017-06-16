@@ -6,7 +6,7 @@
 
 (defn luo-tai-paivita-silta [db silta]
   (let [tyyppi (:siltatyy silta)
-        numero (int (:nro silta))
+        numero (int (:siltanro silta))
         nimi (:nimi silta)
         geometria (.toString (:the_geom silta))
         tie (:tie silta)
