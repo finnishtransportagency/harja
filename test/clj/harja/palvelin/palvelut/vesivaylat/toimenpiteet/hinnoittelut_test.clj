@@ -268,19 +268,27 @@
 (deftest luo-hinnoittelu
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
-                       ::h/nimi "Testi"}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :luo-hinnoittelu +kayttaja-jvh+
-                                kysely-params)]
+                       ::h/nimi "Testi123"}]
 
-    (is (s/valid? ::h/luo-hinnoittelu-kysely kysely-params))
-    (is (s/valid? ::h/luo-hinnoittelu-vastaus vastaus))
+    (testing "Luodaan uusi hinnoittelu"
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :luo-hinnoittelu +kayttaja-jvh+
+                                    kysely-params)]
 
-    ;; Sama hinnoittelu palautui
-    (is (= (::h/urakka-id vastaus) urakka-id))
-    (is (= (::h/nimi vastaus) "Testi"))
-    (is (true? (::h/hintaryhma? vastaus)))
-    (is (integer? (::h/id vastaus)))))
+        (is (s/valid? ::h/luo-hinnoittelu-kysely kysely-params))
+        (is (s/valid? ::h/luo-hinnoittelu-vastaus vastaus))
+
+        ;; Sama hinnoittelu palautui
+        (is (= (::h/urakka-id vastaus) urakka-id))
+        (is (= (::h/nimi vastaus) "Testi123"))
+        (is (true? (::h/hintaryhma? vastaus)))
+        (is (integer? (::h/id vastaus)))))
+
+    ;; Yritetään luoda samalla nimellä uusi hintaryhmä
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-hinnoittelut +kayttaja-tero+
+                                           kysely-params))
+        "Hintaryhmän nimi on jo olemassa urakassa, pitäisi tulla poikkeus")))
 
 (deftest luo-hinnoittelu-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
