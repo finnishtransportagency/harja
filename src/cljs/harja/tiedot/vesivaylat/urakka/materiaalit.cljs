@@ -4,7 +4,8 @@
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.vesivaylat.materiaali :as m]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään viestityypit
@@ -16,6 +17,7 @@
 (defrecord AloitaMateriaalinLisays [])
 (defrecord PaivitaLisattavaMateriaali [tiedot])
 (defrecord LisaaMateriaali [])
+(defrecord PeruMateriaalinLisays [])
 
 ;; App atom
 (defonce app (r/atom {:urakka-id nil
@@ -58,16 +60,20 @@
 
   AloitaMateriaalinLisays
   (process-event [_ app]
-    (assoc app :lisaa-materiaali {}))
+    (assoc app :lisaa-materiaali {::m/urakka-id (:urakka-id app)
+                                  ::m/pvm (pvm/nyt)}))
 
   PaivitaLisattavaMateriaali
   (process-event [{tiedot :tiedot} app]
-    (update app :lisattava-materiaali merge tiedot))
+    (update app :lisaa-materiaali merge tiedot))
 
   LisaaMateriaali
   (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
     (let [tulos! (t/send-async! ->ListausHaettu)]
       (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
-                               (merge {::m/urakka-id :urakka-id}
-                                      lisaa-materiaali)))))
-      app)))
+                               lisaa-materiaali))))
+      app))
+
+  PeruMateriaalinLisays
+  (process-event [_ app]
+    (dissoc app :lisaa-materiaali)))
