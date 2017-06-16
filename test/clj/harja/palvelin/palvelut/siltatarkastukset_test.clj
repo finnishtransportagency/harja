@@ -71,7 +71,8 @@
     (is (= (count sillat) 6))
     (is (= (count sillat-ilman-tarkastuksia) 3))
     (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
-'(deftest oulun-urakan-2014-2019-sillat
+
+(deftest oulun-urakan-2014-2019-sillat
    ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
    (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
                                      {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
