@@ -7,6 +7,7 @@
 (def gridia-muokataan? protokollat/gridia-muokataan?)
 (def grid-ohjaus protokollat/grid-ohjaus)
 (def otsikko protokollat/otsikko)
+(def otsikko? protokollat/otsikko?)
 (def aseta-virhe! protokollat/aseta-virhe!)
 (def hae-muokkaustila protokollat/hae-muokkaustila)
 (def poista-virhe! protokollat/poista-virhe!)
