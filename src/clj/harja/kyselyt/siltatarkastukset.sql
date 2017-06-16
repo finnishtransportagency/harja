@@ -163,17 +163,16 @@ SELECT
   (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = st.id) AS kohteet,
-  skl.kohde as liite_kohde,
-  liite.id   as liite_id,
-  liite.nimi as liite_nimi,
-  liite.tyyppi as liite_tyyppi,
-  liite.koko as liite_koko,
-  liite.liite_oid as liite_oid
+  skl.kohde                        AS liite_kohde,
+  liite.id                         AS liite_id,
+  liite.nimi                       AS liite_nimi,
+  liite.tyyppi                     AS liite_tyyppi,
+  liite.koko                       AS liite_koko,
+  liite.liite_oid                  AS liite_oid
 FROM siltatarkastus st
   LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
   LEFT JOIN liite ON skl.liite = liite.id
-WHERE silta = :silta
-      AND poistettu = FALSE
+WHERE silta = :silta AND NOT poistettu
 ORDER BY tarkastusaika DESC;
 
 -- name: hae-siltatarkastus
