@@ -48,6 +48,9 @@
     ::hintaryhma?
     ::id})
 
+(def viittaus-idt
+  #{::urakka-id})
+
 (def metatiedot m/muokkauskentat)
 
 (def hinnat
@@ -67,8 +70,8 @@
           :harja.domain.vesivaylat.toimenpide/hintatyyppi
           :harja.domain.vesivaylat.toimenpide/lisatyo?}]}]})
 
-(defn- laske-hinnoittelun-kokonaishinta [hinnoittelutiedot]
-  (reduce + 0 (map ::hinta/maara hinnoittelutiedot)))
+(defn hinnoittelu-idlla [hinnoittelut id]
+  (first (filter #(= (::id %) id) hinnoittelut)))
 
 ;; Palvelut
 
@@ -96,18 +99,21 @@
 
 (s/def ::hintaelementit
   (s/coll-of
-    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa])))
+    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
+            :opt [::id])))
 
 (s/def ::tallenna-hintaryhmalle-hinta-kysely
   (s/keys
-    :req [::id ::hinnat ::ur/id]))
+    :req [::ur/id
+          ::id
+          ::hintaelementit]))
 
-(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hinnoittelu)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hinnoittelut-vastaus)
 
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
-    :req [:harja.domain.vesivaylat.toimenpide/id
-          ::hintaelementit
-          :harja.domain.vesivaylat.toimenpide/urakka-id]))
+    :req [:harja.domain.vesivaylat.toimenpide/urakka-id
+          :harja.domain.vesivaylat.toimenpide/id
+          ::hintaelementit]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)

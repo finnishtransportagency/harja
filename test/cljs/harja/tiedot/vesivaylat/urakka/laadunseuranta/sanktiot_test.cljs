@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot-test
   (:require [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))

@@ -22,7 +22,8 @@
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]
@@ -1001,3 +1002,25 @@
        (when (not= maara 0)
          "kpl")
        ")"))
+
+(defn erikoismuokattava-kentta
+  "Jos annettu ehto on true, näyttää gridissä napin, jolla kenttää voidaan muokata.
+   Jos ehto on false, piirtää kentän arvon tekstinä sekä napin kynä-ikonilla,
+   jolla arvoa voi muokata."
+  [{:keys [ehto-fn nappi-teksti nappi-optiot toiminto-fn arvo] :as optiot}]
+  (if (ehto-fn)
+    [napit/yleinen-ensisijainen
+     nappi-teksti
+     toiminto-fn
+     (merge {:luokka (str "nappi-grid ")}
+            nappi-optiot)]
+    [:div
+     [:div.pull-left {:style {:position :relative
+                              :top "7px"}}
+      arvo]
+
+     [napit/yleinen-toissijainen
+      (ikonit/muokkaa)
+      toiminto-fn
+      (merge {:luokka "pull-right"
+              :ikoninappi? true} nappi-optiot)]]))
