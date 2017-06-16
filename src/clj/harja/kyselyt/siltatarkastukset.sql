@@ -300,8 +300,8 @@ VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde);
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
 SET poistettu = TRUE
-WHERE id = :id
-      AND urakka = :urakka;
+WHERE id = :id AND
+      urakka = :urakka;
 
 -- name: poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
