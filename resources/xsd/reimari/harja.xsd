@@ -127,13 +127,13 @@
     <xs:attribute type="xs:token" name="luokan-id" use="required"/> <!-- COMPCLASS_ID -->
     <xs:attribute type="xs:token" name="luokan-nimi" use="required"/> <!-- compclass.COMPCLASS_NME -->
     <xs:attribute type="xs:token" name="luokan-lisatiedot" use="required"/> <!-- compclass.COMPCLASS_MEM -->
-    <xs:attribute type="xs:token" name="luokan-paivitysaika" use="required"/> <!-- compclass.COMPCLASS_UTS -->
-    <xs:attribute type="xs:token" name="luokan-luontiaika" use="required"/> <!-- compclass.COMPCLASS_CTS -->
+    <xs:attribute type="xs:dateTime" name="luokan-paivitysaika" use="required"/> <!-- compclass.COMPCLASS_UTS -->
+    <xs:attribute type="xs:dateTime" name="luokan-luontiaika" use="required"/> <!-- compclass.COMPCLASS_CTS -->
     <xs:attribute type="xs:token" name="merk-cod" use="required"/> <!-- COMPONENT_MERK_COD -->
-    <xs:attribute type="xs:token" name="muokattu" use="required"/> <!-- UTS -->
-    <xs:attribute type="xs:token" name="luontiaika" use="required"/> <!-- CTS -->
-    <xs:attribute type="xs:token" name="alkupvm" use="required"/> <!-- SDT -->
-    <xs:attribute type="xs:token" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
+    <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
+    <xs:attribute type="xs:dateTime" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:dateTime" name="loppupvm" use="required"/> <!-- EDT -->
   </xs:complexType>
 
   <!-- HaeTurvalaiteKomponentit -->
@@ -164,11 +164,11 @@
     <xs:attribute type="xs:string" name="lisatiedot" use="required"/> <!-- SDCOMP_MEM -->
     <xs:attribute type="xs:token" name="turvalaitenro" use="required"/>
     <xs:attribute type="xs:token" name="komponentti-id" use="required"/> <!-- COMPONENT_ID -->
-    <xs:attribute type="xs:string" name="alkupvm" use="required"/> <!-- SDT -->
-    <xs:attribute type="xs:string" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:dateTime" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:dateTime" name="loppupvm" use="required"/> <!-- EDT -->
     <xs:attribute type="xs:string" name="sarjanumero" use="required"/> <!-- SERIAL_CHR -->
-    <xs:attribute type="xs:token" name="muokattu" use="required"/> <!-- UTS -->
-    <xs:attribute type="xs:token" name="luontiaika" use="required"/> <!-- CTS -->
+    <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
+    <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
     <xs:attribute type="xs:string" name="luoja" use="required"/> <!-- CUI -->
     <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
     <xs:attribute type="xs:boolean" name="valiaikainen" use="required"/> <!-- SDCOMP_TEMPORARY -->
