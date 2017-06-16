@@ -19,3 +19,6 @@ CREATE TRIGGER toimenpiteen_urakka_id_trigger
   BEFORE INSERT OR UPDATE ON reimari_toimenpide
   FOR EACH ROW
   EXECUTE PROCEDURE toimenpiteen_urakka_id_trigger_proc();
+
+CREATE UNIQUE INDEX reimari_id_index
+  ON reimari_toimenpide ("reimari-id");

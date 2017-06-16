@@ -17,7 +17,6 @@
             [clojure.set :refer [rename-keys]]))
 
 (def avainmuunnokset {::toimenpide/id ::toimenpide/reimari-id
-
                       ::toimenpide/luotu ::toimenpide/reimari-luotu
                       ::toimenpide/muokattu ::toimenpide/reimari-muokattu
                       ::toimenpide/urakoitsija ::toimenpide/reimari-urakoitsija
@@ -38,6 +37,7 @@
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
+                                       #{::toimenpide/reimari-id}
                                        (merge (rename-keys toimenpide-tiedot avainmuunnokset))))]
     (vec kanta-tiedot)))
 
