@@ -26,13 +26,14 @@
 ;; Urakkatoiminnot: Hintaryhmän valitseminen
 
 (defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
-  [yleiset/livi-pudotusvalikko
-   {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
-    :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
-    :class "livi-alasveto-250 inline-block"
-    :valinta valittu-hintaryhma
-    :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
-   hintaryhmat])
+  [:div.inline-block {:style {:margin-right "10px"}}
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
+     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+     :class "livi-alasveto-250 inline-block"
+     :valinta valittu-hintaryhma
+     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
+    hintaryhmat]])
 
 (defn- lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
                                hintaryhmien-liittaminen-kaynnissa?] :as app}]
