@@ -22,12 +22,10 @@
     (map #(set/rename-keys % {::vv-toimenpide/reimari-tyolaji ::vv-toimenpide/tyolaji
                               ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
                               ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
-                              ::vv-toimenpide/reimari-toimenpidetyyppi ::vv-toimenpide/toimenpide
-                              ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
+                              ::vv-toimenpide/reimari-toimenpidetyyppi ::vv-toimenpide/toimenpide}))
     (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
                    ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
-                   ::vv-toimenpide/turvalaite {::vv-turvalaite/nimi (get-in % [::vv-toimenpide/turvalaite ::vv-turvalaite/r-nimi])}
                    ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
