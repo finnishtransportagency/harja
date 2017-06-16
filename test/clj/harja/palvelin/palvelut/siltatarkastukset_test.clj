@@ -1,14 +1,12 @@
 (ns harja.palvelin.palvelut.siltatarkastukset-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
-
             [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
-                    (pudota-ja-luo-testitietokanta-templatesta)
                     (component/start
                       (component/system-map
                         :db (luo-testitietokanta)
@@ -20,7 +18,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (defn- silta-nimella [sillat nimi]
   (first (filter #(= nimi (:siltanimi %)) sillat)))
