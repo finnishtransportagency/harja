@@ -302,6 +302,28 @@
                                            :luo-hinnoittelu +kayttaja-tero+
                                            kysely-params)))))
 
+(deftest liita-toimenpiteet-hinnoitteluun
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        toimenpiteen-hinnoittelut (map :hinnoittelu-id
+                                       (q-map "SELECT \"hinnoittelu-id\"
+                                              FROM vv_hinnoittelu_toimenpide
+                                              WHERE \"toimenpide-id\" = 7"))
+        eri-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
+                                             WHERE \"urakka-id\" = " urakka-id "
+                                             AND id NOT IN (" (str/join ", " toimenpiteen-hinnoittelut) ")"))))
+        kysely-params {::toi/idt #{toimenpide-id}
+                       ::h/id eri-hinnoittelu-id
+                       ::u/id urakka-id}]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                    kysely-params)
+
+    ;; FIXME Testaa, että toimenpide irtoaa hintaryhmästä ja liittyy uuteen, oma hinnoittelu ei häviä
+    (is (= (count toimenpiteen-hinnoittelut) 2) "Testattavan toimenpiteen pitää kuulua kahteen hinnoitteluun")
+    (is (s/valid? ::h/liita-toimenpiteet-hinnotteluun-kysely kysely-params))))
+
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
         urakka-id (hae-helsingin-vesivaylaurakan-id)

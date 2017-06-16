@@ -79,8 +79,6 @@
                    ::m/poistaja-id (:id user)}
                   {::h/toimenpide-id (op/in toimenpide-idt)}))
 
-
-
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
   (jdbc/with-db-transaction [db db]
     (doall
