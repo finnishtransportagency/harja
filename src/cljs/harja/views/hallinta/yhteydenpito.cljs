@@ -11,7 +11,6 @@
    [:h3 "Sähköpostin lähettäminen Harja-käyttäjille"]
    [:p
     "Klikkaa "
-    [:button {:on-click #(throw (js/ErrorEvent.))} "dare"]
     [:a {:href (tiedot/mailto-bcc-linkki vastaanottajat)}
      "tästä"]
     " lähettääksesi viestin kaikille Harjan käyttäjille."]])
