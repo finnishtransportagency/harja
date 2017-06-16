@@ -23,11 +23,6 @@
 (defn- silta-nimella [sillat nimi]
   (first (filter #(= nimi (:siltanimi %)) sillat)))
 
-(defn- poista-testin-tarkastukset []
-  (let [id (ffirst (q "SELECT id FROM siltatarkastus WHERE tarkastaja = 'TESTIKAYTTAJA';"))]
-    (u "DELETE FROM siltatarkastuskohde WHERE siltatarkastus = " id ";")
-    (u "DELETE FROM siltatarkastus WHERE tarkastaja = 'TESTIKAYTTAJA'")))
-
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
                                     {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
@@ -120,8 +115,7 @@
         tarkastukset-kutsun-jalkeen (count (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                                                 {:urakka-id urakka-id
                                                                  :silta-id silta-id}))]
-    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-kutsun-jalkeen))
-    (poista-testin-tarkastukset)))
+    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-kutsun-jalkeen))))
 
 (deftest tarkastuksen-tallennus-ei-urakan-sillalle-epaonnistuu
   (let [urakka-id (hae-kajaanin-alueurakan-2014-2019-id)
