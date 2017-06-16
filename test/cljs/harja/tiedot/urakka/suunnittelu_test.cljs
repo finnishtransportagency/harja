@@ -147,7 +147,7 @@
   (let [alkupvm (->pvm "01.10.2006")
         loppupvm (->pvm "30.09.2007")
         rivit [{:maara 66 :alkupvm alkupvm :loppupvm loppupvm}]
-        
+
         kopioidut (u/rivit-tulevillekin-kausille {:alkupvm (->pvm "01.10.2005")
                                                   :loppupvm (->pvm "30.09.2010")
                                                   :tyyppi :hoito}
@@ -156,7 +156,7 @@
     (is (= 4 (count kopioidut)))
     (is (pvm/sama-pvm? (->pvm "01.10.2006") (:alkupvm (first kopioidut))))
     (is (pvm/sama-pvm? (->pvm "30.09.2010") (:loppupvm (last kopioidut))))
-    (is (every? #(= (:maara %) 66))) 
+    (is (every? #(= (:maara %) 66)))
     ))
 
 (deftest tietojen-kopiointi-tuleville-hoitokausille-kok-hint-tyot []
@@ -196,7 +196,7 @@
 
     ;; 2006-2007 ei ole lainkaan ryhmää
     (is (nil? (-> r (get [(pvm/hoitokauden-alkupvm 2006) (pvm/hoitokauden-loppupvm 2007)]))))
-        
+
     ;; rivi id:llä 2 on 2007-2008 hoitokauden ensimmäinen rivi
     (is (= 2 (-> r (get [(pvm/hoitokauden-alkupvm 2007) (pvm/hoitokauden-loppupvm 2008)]) first :id)))
     ))
@@ -215,19 +215,19 @@
     ;; rivi id:llä 1 on 2005-2006 hoitokauden ensimmäinen rivi
     (is (= 1 (-> r (get [(pvm/hoitokauden-alkupvm 2005) (pvm/hoitokauden-loppupvm 2006)]) first :id)))
 
-    ;; 2006-2007 on tyhjä ryhmä 
+    ;; 2006-2007 on tyhjä ryhmä
     (is (= [] (-> r (get [(pvm/hoitokauden-alkupvm 2006) (pvm/hoitokauden-loppupvm 2007)]))))
-        
+
     ;; rivi id:llä 2 on 2007-2008 hoitokauden ensimmäinen rivi
     (is (= 2 (-> r (get [(pvm/hoitokauden-alkupvm 2007) (pvm/hoitokauden-loppupvm 2008)]) first :id)))
-     
+
     ))
 
 (deftest varoita-ylikirjoituksesta-jos-muuttunut
   (is (s/varoita-ylikirjoituksesta? (u/ryhmittele-hoitokausittain
                                      [(hk-rivi 2007 {:maara 50})
                                       (hk-rivi 2008 {:maara 66})])
-                                    
+
                                     (hk 2007))))
 
 (deftest ala-varoita-ylikirjoituksesta-jos-vain-tyhjia
@@ -252,7 +252,7 @@
               :kuukausi 6}]
     (is (= (pvm/hoitokauden-alkupvm 2012) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
     (is (= (pvm/hoitokauden-loppupvm 2013) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
-    
+
 (deftest aseta-hoitokausi-testi-2 []
   (let [hoitokaudet (u/hoitokaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)})
         rivi {:vuosi 2013
@@ -336,3 +336,11 @@
     (is (= 400 (:yhteensa-kkt-1-9 sopimus-1-tyorivi)) viesti)
     (is (= 300 (:yhteensa-kkt-10-12 sopimus-1-tyorivi)) viesti)
     (is (= 700 (:yhteensa sopimus-1-tyorivi)) viesti)))
+
+(deftest vesivaylaurakan-hoitokaudet
+  (is (= [[(pvm/->pvm "1.8.2015") (pvm/->pvm "31.7.2016")]
+          [(pvm/->pvm "1.8.2016") (pvm/->pvm "31.7.2017")]
+          [(pvm/->pvm "1.8.2017") (pvm/->pvm "31.7.2018")]]
+         (u/hoitokaudet {:alkupvm (pvm/->pvm "1.8.2015")
+                         :loppupvm (pvm/->pvm "31.7.2018")
+                         :tyyppi :vesivayla-hoito}))))
