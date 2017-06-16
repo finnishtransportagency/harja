@@ -146,143 +146,29 @@
 (deftest tarkista-siltatarkastuksen-poisto
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         silta-id (hae-oulujoen-sillan-id)
+        tarkastus {:uudet-liitteet nil, :urakka-id urakka-id
+                   :kohteet {7 ["A" ""], 20 ["B" ""], 1 ["A" ""], 24 ["C" ""], 4 ["A" ""], 15 ["B" ""],
+                             21 ["B" ""], 13 ["A" ""], 22 ["C" ""], 6 ["B" ""], 17 ["B" ""], 3 ["A" ""],
+                             12 ["A" ""], 2 ["A" ""], 23 ["C" ""], 19 ["C" ""], 11 ["A" ""], 9 ["B" ""],
+                             5 ["B" ""], 14 ["A" ""], 16 ["A" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
+                   :silta-id silta-id,
+                   :liitteet [],
+                   :tarkastusaika #inst "2017-07-28T11:34:49.000-00:00",
+                   :poistettu false
+                   :tarkastaja "TESTIKAYTTAJA"}
         tarkastukset-ennen-uutta (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                                       {:urakka-id urakka-id
                                                        :silta-id silta-id})
-        poistettavan-tarkastuksen-id (:id (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+ (uusi-tarkastus)))
+        poistettavan-tarkastuksen-id (:id (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+ tarkastus))
         tarkastukset-lisayksen-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                                             {:urakka-id urakka-id
                                                              :silta-id silta-id})
-        poistovastaus (kutsu-http-palvelua :poista-siltatarkastus +kayttaja-jvh+ {:urakka-id urakka-id
+        tarkastukset-poiston-jalkeen (kutsu-http-palvelua :poista-siltatarkastus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                   :silta-id silta-id
-                                                                                  :siltatarkastus-id poistettavan-tarkastuksen-id})
-        tarkastukset-poiston-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
-                                                          {:urakka-id urakka-id
-                                                           :silta-id silta-id})]
-    (is (= [{:id 2
-             :kohteet {1 ["A"
-                          ""]
-                       10 ["A"
-                           ""]
-                       11 ["A"
-                           ""]
-                       12 ["A"
-                           ""]
-                       13 ["A"
-                           ""]
-                       14 ["A"
-                           ""]
-                       15 ["A"
-                           ""]
-                       16 ["A"
-                           ""]
-                       17 ["A"
-                           ""]
-                       18 ["D"
-                           ""]
-                       19 ["A"
-                           ""]
-                       2 ["A"
-                          ""]
-                       20 ["C"
-                           ""]
-                       21 ["B"
-                           ""]
-                       22 ["A"
-                           ""]
-                       23 ["A"
-                           ""]
-                       24 ["A"
-                           ""]
-                       3 ["A"
-                          ""]
-                       4 ["A"
-                          ""]
-                       5 ["A"
-                          ""]
-                       6 ["A"
-                          ""]
-                       7 ["A"
-                          ""]
-                       8 ["B"
-                          ""]
-                       9 ["A"
-                          ""]}
-             :liitteet []
-             :luoja nil
-             :luotu nil
-             :muokattu nil
-             :muokkaaja nil
-             :poistettu false
-             :silta 1
-             :tarkastaja "Sirkka Sillankoestaja"
-             :tarkastusaika #inst "2007-02-24T22:00:00.000000000-00:00"
-             :urakka 1}
-            {:id 1
-             :kohteet {1 ["A"
-                          "Maatuki ruosteessa."]
-                       10 ["A"
-                           ""]
-                       11 ["A"
-                           ""]
-                       12 ["A"
-                           ""]
-                       13 ["A"
-                           ""]
-                       14 ["A"
-                           ""]
-                       15 ["A"
-                           ""]
-                       16 ["A"
-                           ""]
-                       17 ["A"
-                           ""]
-                       18 ["A"
-                           ""]
-                       19 ["A"
-                           ""]
-                       2 ["B"
-                          ""]
-                       20 ["A"
-                           ""]
-                       21 ["A"
-                           ""]
-                       22 ["A"
-                           ""]
-                       23 ["A"
-                           ""]
-                       24 ["A"
-                           ""]
-                       3 ["C"
-                          ""]
-                       4 ["D"
-                          ""]
-                       5 ["A"
-                          ""]
-                       6 ["A"
-                          ""]
-                       7 ["A"
-                          ""]
-                       8 ["A"
-                          ""]
-                       9 ["A"
-                          ""]}
-             :liitteet []
-             :luoja nil
-             :luotu nil
-             :muokattu nil
-             :muokkaaja nil
-             :poistettu false
-             :silta 1
-             :tarkastaja "Sini Sillantarkastaja"
-             :tarkastusaika #inst "2006-04-14T21:00:00.000000000-00:00"
-             :urakka 1}]
-          poistovastaus))
-    (is (= (+ (count tarkastukset-ennen-uutta) 1)
-           (count tarkastukset-lisayksen-jalkeen))
+                                                                                  :siltatarkastus-id poistettavan-tarkastuksen-id})]
+    (println "---->>>>> poistettavan-tarkastuksen-id:" poistettavan-tarkastuksen-id)
+    (is (= (+ (count tarkastukset-ennen-uutta) 1) (count tarkastukset-lisayksen-jalkeen))
         "Lisäyksen jälkeen on 1 uusi tarkastus")
-    (is (= (count tarkastukset-ennen-uutta)
-           (count tarkastukset-poiston-jalkeen))
-        "Poiston jälkeen on sama määrä tarkastuksia kuin aluksi")
+    (is (= (count tarkastukset-ennen-uutta) (count tarkastukset-poiston-jalkeen)) "Poiston jälkeen on sama määrä tarkastuksia kuin aluksi")
     (is (not (some #(= poistettavan-tarkastuksen-id (:id %)) tarkastukset-poiston-jalkeen)) "Poistettua tarkastusta ei löydy listasta")
     (poista-testin-tarkastukset)))
