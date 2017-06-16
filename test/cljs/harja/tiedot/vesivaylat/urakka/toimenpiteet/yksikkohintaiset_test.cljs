@@ -547,9 +547,15 @@
             ::h/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
-(deftest hinnoittelu-ei-tallennettu
+(deftest toimenpiteen-hinnoittelu-ei-tallennettu
   (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
-         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
+         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})
+             {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}))))
+
+(deftest hintaryhman-hinnoittelu-ei-tallennettu
+  (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false}
+         (e! (tiedot/->HintaryhmanHinnoitteluEiTallennettu {:msg :error})
+             {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen
   (let [vanha-tila testitila

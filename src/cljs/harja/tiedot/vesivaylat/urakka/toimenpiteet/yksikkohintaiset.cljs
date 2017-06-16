@@ -359,7 +359,6 @@
   HintaryhmanHinnoitteluEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
-    ;; TODO TESTI
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
 
   PeruToimenpiteenHinnoittelu
