@@ -163,12 +163,11 @@
         tarkastukset-lisayksen-jalkeen (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
                                                             {:urakka-id urakka-id
                                                              :silta-id silta-id})
-        tarkastukset-poiston-jalkeen (kutsu-http-palvelua :poista-siltatarkastus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :silta-id silta-id
-                                                                                  :siltatarkastus-id poistettavan-tarkastuksen-id})]
-    (println "---->>>>> poistettavan-tarkastuksen-id:" poistettavan-tarkastuksen-id)
-    (is (= (+ (count tarkastukset-ennen-uutta) 1) (count tarkastukset-lisayksen-jalkeen))
-        "Lisäyksen jälkeen on 1 uusi tarkastus")
+        tarkastukset-poiston-jalkeen (kutsu-http-palvelua :poista-siltatarkastus
+                                                          +kayttaja-jvh+
+                                                          {:urakka-id urakka-id
+                                                           :silta-id silta-id
+                                                           :siltatarkastus-id poistettavan-tarkastuksen-id})]
+    (is (= (+ (count tarkastukset-ennen-uutta) 1) (count tarkastukset-lisayksen-jalkeen)) "Lisäyksen jälkeen on 1 uusi tarkastus")
     (is (= (count tarkastukset-ennen-uutta) (count tarkastukset-poiston-jalkeen)) "Poiston jälkeen on sama määrä tarkastuksia kuin aluksi")
-    (is (not (some #(= poistettavan-tarkastuksen-id (:id %)) tarkastukset-poiston-jalkeen)) "Poistettua tarkastusta ei löydy listasta")
-    (poista-testin-tarkastukset)))
+    (is (not (some #(= poistettavan-tarkastuksen-id (:id %)) tarkastukset-poiston-jalkeen)) "Poistettua tarkastusta ei löydy listasta")))
