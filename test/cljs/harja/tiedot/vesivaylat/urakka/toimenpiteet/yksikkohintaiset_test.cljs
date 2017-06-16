@@ -464,13 +464,21 @@
 
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
-    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
+    #{tiedot/->ToimenpiteenHinnoitteluTallennettu
+      tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
     (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
-           (e! (tiedot/->HinnoitteleToimenpide 1)))))
+           (e! (tiedot/->HinnoitteleToimenpide 1)
+               {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false})))))
 
-  (let [app {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}]
-    (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
+(deftest hintaryhman-hinnoittelun-tallennus
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmanHinnoitteluTallennettu
+      tiedot/->HintaryhmanHinnoitteluEiTallennettu}
+
+    (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}
+           (e! (tiedot/->HinnoitteleHintaryhma 1)
+               {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false})))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (let [hinnoiteltava-toimenpide-id 1

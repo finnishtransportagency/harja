@@ -351,7 +351,6 @@
   HintaryhmanHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    ;; TODO TESTI
     (assoc app :hintaryhmat vastaus
                :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
                :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
