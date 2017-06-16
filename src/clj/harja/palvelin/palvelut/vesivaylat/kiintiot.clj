@@ -18,12 +18,21 @@
 
 (defn hae-kiintiot [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::kiintio/urakka-id)]
+    (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/ei-oikeustarkistusta!)
       ;; TODO
       #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
       (q/hae-kiintiot db tiedot))))
+
+(defn tallenna-kiintiot [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::kiintio/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/ei-oikeustarkistusta!)
+      ;; TODO
+      #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
+      (q/tallenna-kiintiot db tiedot))))
 
 (defrecord Kiintiot []
   component/Lifecycle
@@ -37,10 +46,19 @@
       {:kysely-spec nil
        :vastaus-spec nil})
 
+    (julkaise-palvelu
+      http
+      :tallenna-kiintiot
+      (fn [user tiedot]
+       (tallenna-kiintiot db user tiedot))
+      {:kysely-spec nil
+       :vastaus-spec nil})
+
     this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kiintiot)
+      :hae-kiintiot
+      :tallenna-kiintiot)
     this))

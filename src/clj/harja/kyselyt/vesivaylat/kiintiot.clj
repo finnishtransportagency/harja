@@ -27,3 +27,6 @@
             (op/and
               {::kiintio/urakka-id urakka-id}
               {::m/poistettu? false})))))
+
+(defn tallenna-kiintiot [db tiedot]
+  nil)
