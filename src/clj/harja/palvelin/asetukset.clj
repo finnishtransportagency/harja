@@ -69,38 +69,38 @@
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                                s/Int
                                            (s/optional-key :tieosoiteverkon-shapefile)                 s/Str
-                                           (s/optional-key :tieosoiteverkon-alk-osoite)                s/Str
-                                           (s/optional-key :tieosoiteverkon-alk-tuontikohde)           s/Str
+                                           (s/optional-key :tieosoiteverkon-url)                s/Str
+                                           (s/optional-key :tieosoiteverkon-tallenuspolku)           s/Str
                                            (s/optional-key :pohjavesialueen-shapefile)                 s/Str
-                                           (s/optional-key :pohjavesialueen-alk-osoite)                s/Str
-                                           (s/optional-key :pohjavesialueen-alk-tuontikohde)           s/Str
+                                           (s/optional-key :pohjavesialueen-url)                s/Str
+                                           (s/optional-key :pohjavesialueen-tallenuspolku)           s/Str
                                            (s/optional-key :talvihoidon-hoitoluokkien-shapefile)       s/Str
-                                           (s/optional-key :talvihoidon-hoitoluokkien-alk-osoite)      s/Str
-                                           (s/optional-key :talvihoidon-hoitoluokkien-alk-tuontikohde) s/Str
+                                           (s/optional-key :talvihoidon-hoitoluokkien-url)      s/Str
+                                           (s/optional-key :talvihoidon-hoitoluokkien-tallenuspolku) s/Str
                                            (s/optional-key :soratien-hoitoluokkien-shapefile)          s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-alk-osoite)         s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-alk-tuontikohde)    s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-url)         s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-tallenuspolku)    s/Str
                                            (s/optional-key :siltojen-shapefile)                        s/Str
-                                           (s/optional-key :siltojen-alk-osoite)                       s/Str
-                                           (s/optional-key :siltojen-alk-tuontikohde)                  s/Str
+                                           (s/optional-key :siltojen-url)                       s/Str
+                                           (s/optional-key :siltojen-tallenuspolku)                  s/Str
                                            (s/optional-key :urakoiden-shapefile)                       s/Str
-                                           (s/optional-key :urakoiden-alk-osoite)                      s/Str
-                                           (s/optional-key :urakoiden-alk-tuontikohde)                 s/Str
+                                           (s/optional-key :urakoiden-url)                      s/Str
+                                           (s/optional-key :urakoiden-tallenuspolku)                 s/Str
                                            (s/optional-key :ely-alueiden-shapefile)                    s/Str
-                                           (s/optional-key :ely-alueiden-alk-osoite)                   s/Str
-                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str
+                                           (s/optional-key :ely-alueiden-url)                   s/Str
+                                           (s/optional-key :ely-alueiden-tallenuspolku)              s/Str
                                            (s/optional-key :valaistusurakoiden-shapefile)              s/Str
-                                           (s/optional-key :valaistusurakoiden-alk-osoite)             s/Str
-                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str
+                                           (s/optional-key :valaistusurakoiden-url)             s/Str
+                                           (s/optional-key :valaistusurakoiden-tallenuspolku)        s/Str
                                            (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
-                                           (s/optional-key :paallystyspalvelusopimusten-alk-osoite)             s/Str
-                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-url)             s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-tallenuspolku)         s/Str
                                            (s/optional-key :tekniset-laitteet-urakat-shapefile)              s/Str
-                                           (s/optional-key :tekniset-laitteet-urakat-alk-osoite)             s/Str
-                                           (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-url)             s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-tallenuspolku)         s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-alk-osoite)             s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-url)             s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-tallenuspolku)         s/Str
                                            }
 
    (s/optional-key :yha)                  {:url            s/Str
