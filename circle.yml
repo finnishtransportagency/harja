@@ -16,6 +16,7 @@ dependencies:
 
 test:
   override:
+    - lein clean
     - lein test
     - lein doo phantom test once
     - lein doo phantom laadunseuranta-test once
