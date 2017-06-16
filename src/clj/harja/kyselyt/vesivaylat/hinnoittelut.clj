@@ -73,11 +73,16 @@
                      ::m/luoja-id (:id user)})))
 
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt]
-  (specql/update! db
-                  ::h/hinnoittelu<->toimenpide
-                  {::m/poistettu? true
-                   ::m/poistaja-id (:id user)}
-                  {::h/toimenpide-id (op/in toimenpide-idt)}))
+  (let [hintaryhma-idt (set (map ::h/id (specql/fetch db
+                                                      ::h/hinnoittelu
+                                                      #{::h/id}
+                                                      {::h/hintaryhma? true})))]
+    (specql/update! db
+                    ::h/hinnoittelu<->toimenpide
+                    {::m/poistettu? true
+                     ::m/poistaja-id (:id user)}
+                    {::h/toimenpide-id (op/in toimenpide-idt)
+                     ::h/hinnoittelu-id (op/in hintaryhma-idt)})))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
   (jdbc/with-db-transaction [db db]

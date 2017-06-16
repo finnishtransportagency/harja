@@ -5,7 +5,6 @@
              [pvm :as pvm]
              [testi :refer :all]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
@@ -309,12 +308,15 @@
                                             (map :hinnoittelu-id
                                                  (q-map "SELECT \"hinnoittelu-id\"
                                               FROM vv_hinnoittelu_toimenpide
-                                              WHERE \"toimenpide-id\" = " toimenpide-id ";")))
+                                              WHERE \"toimenpide-id\" = " toimenpide-id
+                                              "AND poistettu IS NOT TRUE;")))
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
         liitettava-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
                                              WHERE \"urakka-id\" = " urakka-id "
+                                             AND hintaryhma IS TRUE
+                                             AND poistettu IS NOT TRUE
                                              AND id NOT IN (" (str/join ", " toimenpiteen-hinnoittelu-idt-ennen) ")"))))
         kysely-params {::toi/idt #{toimenpide-id}
                        ::h/id liitettava-hinnoittelu-id
