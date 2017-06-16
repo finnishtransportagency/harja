@@ -391,20 +391,20 @@ reimari-tilat
   ;; toistaiseksi vaihdettiin järjestykseksi aakkosjärjestys. Säilytetään tämä koodinpätkä
   ;; toistaiseksi, kunnes todetaan, että aakkosjärjestys on todellakin parempi.
   #_(let [ryhma-ja-uusin-toimenpide (map
-                                    (fn [[hintaryhma toimenpiteet]]
-                                      [hintaryhma (uusin-toimenpide toimenpiteet)])
-                                    ryhma-ja-toimenpiteet)]
+                                      (fn [[hintaryhma toimenpiteet]]
+                                        [hintaryhma (uusin-toimenpide toimenpiteet)])
+                                      ryhma-ja-toimenpiteet)]
 
 
-    (into {}
-          (map-indexed
-            (fn [i [hintaryhma _]] [hintaryhma i])
-            ;; Jarjesta ryhmät uusimman toimenpiteen mukaan, uusimmasta vanhimpaan
-            (sort-by
-              (comp ::pvm second)
-              pvm/jalkeen?
+      (into {}
+            (map-indexed
+              (fn [i [hintaryhma _]] [hintaryhma i])
+              ;; Jarjesta ryhmät uusimman toimenpiteen mukaan, uusimmasta vanhimpaan
+              (sort-by
+                (comp ::pvm second)
+                pvm/jalkeen?
 
-              ryhma-ja-uusin-toimenpide)))))
+                ryhma-ja-uusin-toimenpide)))))
 
 (defn jarjesta-hintaryhmat
   "Ottaa mäpin, missä avain on hintaryhmä, ja arvo on vektori toimenpiteitä.
@@ -418,8 +418,8 @@ reimari-tilat
       {}
       (into
         ;; Hintaryhmät tärkeimmästä vähiten tärkeään
-       (sorted-map-by (fn [eka toka] (< (jarjestys eka) (jarjestys toka))))
-       ryhma-ja-toimenpiteet))))
+        (sorted-map-by (fn [eka toka] (< (jarjestys eka) (jarjestys toka))))
+        ryhma-ja-toimenpiteet))))
 
 (defn toimenpiteet-hintaryhmissa [toimenpiteet]
   (jarjesta-hintaryhmat (group-by ::hintaryhma toimenpiteet)))
@@ -436,11 +436,19 @@ reimari-tilat
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-vesivayilien-toimenpiteet-vastaus
+(s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
-                     :opt [::vikakorjauksia?])))
+                     :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
+                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
+
+(s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
+  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+                           ::tyoluokka ::toimenpide ::pvm
+                           ::turvalaite]
+                     :opt [::vikakorjauksia?
+                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys

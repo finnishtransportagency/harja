@@ -997,4 +997,5 @@
      [napit/yleinen-toissijainen
       (ikonit/muokkaa)
       toiminto-fn
-      (merge {:luokka (str "pull-right nappi-ikoni ")} nappi-optiot)]]))
+      (merge {:luokka "pull-right"
+              :ikoninappi? true} nappi-optiot)]]))

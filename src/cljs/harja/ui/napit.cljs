@@ -103,13 +103,14 @@
    Yleensä kannattaa tämän sijaan käyttää tarkemmin määriteltyjä nappeja.
 
    Optiot:
+   ikoninappi?                Jos true, nappi piirretään pienenä ja siihen mahtuu yksi ikoni
    disabled                   boolean. Jos true, nappi on disabloitu.
    luokka                     Luokka napille (string, erota välilyönnillä jos useita).
    ikoni                      Nappiin piirrettävä ikonikomponentti.
    sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky? ikoninappi?] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -138,6 +139,7 @@
          [:button
           {:class (str (when disabled "disabled ")
                        (when @naulattu? "nappi-naulattu ")
+                       (when ikoninappi? "nappi-ikoni ")
                        luokka)
            :disabled disabled
            :on-click #(do

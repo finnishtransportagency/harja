@@ -3,7 +3,7 @@
             [harja.domain.urakka :as u]
             [harja.domain.sopimus :as s]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest urakan-valinta
   (let [ur {:foobar 1}]
