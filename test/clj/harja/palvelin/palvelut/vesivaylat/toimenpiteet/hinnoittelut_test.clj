@@ -265,6 +265,23 @@
                                            :hae-hinnoittelut +kayttaja-tero+
                                            kysely-params)))))
 
+(deftest luo-hinnoittelu
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/nimi "Testi"}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :luo-hinnoittelu +kayttaja-jvh+
+                                kysely-params)]
+
+    (is (s/valid? ::h/luo-hinnoittelu-kysely kysely-params))
+    (is (s/valid? ::h/luo-hinnoittelu-vastaus vastaus))
+
+    ;; Sama hinnoittelu palautui
+    (is (= (::h/urakka-id vastaus) urakka-id))
+    (is (= (::h/nimi vastaus) "Testi"))
+    (is (true? (::h/hintaryhma? vastaus)))
+    (is (integer? (::h/id vastaus)))))
+
 (deftest luo-hinnoittelu-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
