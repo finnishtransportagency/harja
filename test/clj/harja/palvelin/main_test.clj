@@ -62,5 +62,5 @@
     (doseq [k komponentit]
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
 
-(deftest restart-toimii
+#_(deftest restart-toimii
   (is (= :ok (sut/dev-restart))))

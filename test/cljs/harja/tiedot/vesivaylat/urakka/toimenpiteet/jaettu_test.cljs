@@ -2,7 +2,7 @@
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -83,7 +83,8 @@
   (testing "Rivin asettaminen valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 0)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}) vanha-tila)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 0)]
       (is (not (:valittu? vanha-kohde)))
       (is (true? (:valittu? muokattu-kohde)))))
@@ -91,7 +92,8 @@
   (testing "Rivin asettaminen ei-valituksi"
     (let [vanha-tila testitila
           vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 1)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}) vanha-tila)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
       (is (true? (:valittu? vanha-kohde)))
       (is (false? (:valittu? muokattu-kohde))))))
@@ -101,7 +103,8 @@
   (testing "Valitaan viitat"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta true})
+                                                  :valinta true}
+                                                 (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
       (is (every? true? (map :valittu? viitat)))))
@@ -109,7 +112,8 @@
   (testing "Asetetaan valinnat pois viitoilta"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta false})
+                                                  :valinta false}
+                                                 (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
       (is (every? false? (map :valittu? viitat))))))
@@ -125,7 +129,8 @@
   (testing "Valitaan Iisalmen väylä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta true})
+                                                :valinta true}
+                                               (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
       (is (every? true? (map :valittu? viitat)))))
@@ -133,7 +138,8 @@
   (testing "Asetetaan valinnat pois Iisalmen väylältä"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta false})
+                                                :valinta false}
+                                               (:toimenpiteet vanha-tila))
                         vanha-tila)
           viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
       (is (every? false? (map :valittu? viitat))))))
@@ -183,6 +189,21 @@
       (is (true? (tiedot/valinnan-tila kaikki-valittu)))
       (is (false? (tiedot/valinnan-tila mitaan-ei-valittu)))
       (is (= indeterminate (tiedot/valinnan-tila osa-valittu))))))
+
+(deftest toimenpiteet-siirretty
+  (is (= {:toimenpiteet [{::to/id 2}]
+          :siirto-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteetSiirretty [{::to/id 1}]) [{::to/id 1} {::to/id 2}]))))
+
+(deftest toimenpiteet-ei-siirretty
+  (is (= {:siirto-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteetEiSiirretty)))))
+
+(deftest valittujen-siirto
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetSiirretty tiedot/->ToimenpiteetEiSiirretty}
+    (is (= {:siirto-kaynnissa? true}
+           (tiedot/siirra-valitut! :foo {})))))
 
 (deftest tilan-yhdistaminen
 
