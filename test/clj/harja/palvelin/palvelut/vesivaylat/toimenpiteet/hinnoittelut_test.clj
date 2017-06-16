@@ -303,26 +303,40 @@
                                            kysely-params)))))
 
 (deftest liita-toimenpiteet-hinnoitteluun
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
-        toimenpiteen-hinnoittelut (map :hinnoittelu-id
-                                       (q-map "SELECT \"hinnoittelu-id\"
+  (let [hinnoittelu-on-hintaryhma? (fn [hinnoittelu-id]
+                                     (ffirst (q "SELECT hintaryhma FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";")))
+        hae-toimenpiteen-hinnoittelut-idt (fn [toimenpide-id]
+                                            (map :hinnoittelu-id
+                                                 (q-map "SELECT \"hinnoittelu-id\"
                                               FROM vv_hinnoittelu_toimenpide
-                                              WHERE \"toimenpide-id\" = 7"))
-        eri-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
+                                              WHERE \"toimenpide-id\" = " toimenpide-id ";")))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
+        liitettava-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
                                              WHERE \"urakka-id\" = " urakka-id "
-                                             AND id NOT IN (" (str/join ", " toimenpiteen-hinnoittelut) ")"))))
+                                             AND id NOT IN (" (str/join ", " toimenpiteen-hinnoittelu-idt-ennen) ")"))))
         kysely-params {::toi/idt #{toimenpide-id}
-                       ::h/id eri-hinnoittelu-id
-                       ::u/id urakka-id}]
+                       ::h/id liitettava-hinnoittelu-id
+                       ::u/id urakka-id}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                          kysely-params)
+        toimenpiteen-hinnoittelu-idt-jalkeen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)]
 
-    (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
-                    kysely-params)
+    ;; Tilanne ennen testiä on halutunlainen
+    (is (= (count toimenpiteen-hinnoittelu-idt-ennen) 2) "Testattavan toimenpiteen pitää kuulua kahteen hinnoitteluun")
+    (is (= (set (map hinnoittelu-on-hintaryhma? toimenpiteen-hinnoittelu-idt-ennen))
+           #{true false})
+        "Testattavan toimenpiteen kuulua hintaryhmään sekä omaan hinnoitteluun")
+    (is (s/valid? ::h/liita-toimenpiteet-hinnotteluun-kysely kysely-params))
 
-    ;; FIXME Testaa, että toimenpide irtoaa hintaryhmästä ja liittyy uuteen, oma hinnoittelu ei häviä
-    (is (= (count toimenpiteen-hinnoittelut) 2) "Testattavan toimenpiteen pitää kuulua kahteen hinnoitteluun")
-    (is (s/valid? ::h/liita-toimenpiteet-hinnotteluun-kysely kysely-params))))
+    ;; Tilanne testin jälkeen:
+    (is (= (count toimenpiteen-hinnoittelu-idt-jalkeen) 2) "Toimenpide kuuluu edelleen kahteen hinnoitteluun")
+    (is ((set toimenpiteen-hinnoittelu-idt-jalkeen) liitettava-hinnoittelu-id) "Toimenpide kuuluu nyt uuteen hinnoitteluun")
+    (is (= (set (map hinnoittelu-on-hintaryhma? toimenpiteen-hinnoittelu-idt-jalkeen))
+           #{true false})
+        "Toimenpide kuuluu edelleen hintaryhmään sekä omaan hinnoitteluun")))
 
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
