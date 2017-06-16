@@ -20,10 +20,11 @@
   (k/post! :hae-integraatiotapahtumien-maarat {:jarjestelma jarjestelma
                                                :integraatio integraatio}))
 
-(defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali]
+(defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali hakuehdot]
   (k/post! :hae-integraatiotapahtumat
            (merge {:jarjestelma (:jarjestelma jarjestelma)
-                   :integraatio integraatio}
+                   :integraatio integraatio
+                   :hakuehdot hakuehdot}
                   (when aikavali
                     {:alkaen      (first aikavali)
                      ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
@@ -41,14 +42,17 @@
 (defonce valittu-jarjestelma (atom nil))
 (defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom nil))
+(defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
 
 (defonce haetut-tapahtumat
   (reaction<! [valittu-jarjestelma @valittu-jarjestelma
                valittu-integraatio @valittu-integraatio
                valittu-aikavali @valittu-aikavali
-               nakymassa? @nakymassa?]
+               nakymassa? @nakymassa?
+               hakuehdot @hakuehdot]
+              {:odota 2000}
               (when nakymassa?
-                (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
+                (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
@@ -64,6 +68,8 @@
                                                    (second valittu-aikavali))
                                     maarat)
                             maarat))))))
+
+
 
 (defn nayta-tapahtumat-eilisen-jalkeen []
   (let [eilen (pvm/aikana (time/yesterday) 0 0 0 0)
