@@ -1,5 +1,6 @@
 (ns harja.views.vesivaylat.urakka.suunnittelu.kiintiot
   (:require [reagent.core :as r]
+            [cljs.core.async :refer [chan <!]]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.ui.debug :refer [debug]]
@@ -14,7 +15,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.vesivaylat.turvalaite :as tu]))
+            [harja.domain.vesivaylat.turvalaite :as tu])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
   [grid/grid
@@ -43,10 +45,13 @@
        [valinnat/urakan-sopimus @nav/valittu-urakka]
        [grid/grid
         {:otsikko ""
-         :voi-poistaa? (constantly false) ;;TODO oikeustarkastus + pitää olla tyhjä
-         :piilota-toiminnot? true ;; TODO
+         :voi-poistaa? (constantly true) ;;TODO oikeustarkastus + pitää olla tyhjä
+         :piilota-toiminnot? false ;; TODO
          :voi-lisata? true
-         :tallenna #(e! (tiedot/->TallennaKiintiot))
+         :tallenna (fn [sisalto]
+                     (let [ch (chan)]
+                       (e! (tiedot/->TallennaKiintiot sisalto ch))
+                       (go (<! ch))))
          :tyhja "Ei määriteltyjä kiintiöitä"
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
