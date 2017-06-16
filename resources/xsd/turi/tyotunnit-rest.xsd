@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit" targetNamespace="http://restimport.xml.turi.oikeatoliot.fi/tyotunnit"
-	elementFormDefault="unqualified" attributeFormDefault="unqualified">
+		   elementFormDefault="unqualified" attributeFormDefault="unqualified">
 	<xs:element name="tyoaikajakso">
 		<xs:complexType>
 			<xs:sequence>
@@ -124,11 +124,12 @@
 				<xs:element name="urakkatyyppi" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>
-							Urakan tyyppi: hoito/ylläpito/investoinnit/muut.
+							Urakan tyyppi.
 						</xs:documentation>
 					</xs:annotation>
 					<xs:simpleType>
 						<xs:restriction base="xs:string">
+							<!-- Tieurakat -->
 							<xs:enumeration value="hoito" />
 							<xs:enumeration value="paallystys" />
 							<xs:enumeration value="paikkaus" />
@@ -136,8 +137,17 @@
 							<xs:enumeration value="valaistus" />
 							<xs:enumeration value="siltakorjaus" />
 							<xs:enumeration value="tekniset-laitteet" />
-							<xs:enumeration value="investoinnit" />
-							<xs:enumeration value="muut" />
+							<!-- Vesiurakat -->
+							<xs:enumeration value="vesivayla-hoito" />
+							<xs:enumeration value="vesivayla-ruoppaus" />
+							<xs:enumeration value="vesivayla-turvalaitteiden-korjaus" />
+							<xs:enumeration value="vesivayla-kanavien-hoito" />
+							<xs:enumeration value="vesivayla-kanavien-korjaus" />
+							<!-- Rataurakat -->
+							<xs:enumeration value="kunnossapito-paallysrakenne" />
+							<xs:enumeration value="kunnossapito-sahkorata" />
+							<xs:enumeration value="kunnossapito-turvalaite" />
+							<xs:enumeration value="yllapito" />
 						</xs:restriction>
 					</xs:simpleType>
 				</xs:element>
