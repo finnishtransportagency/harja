@@ -544,8 +544,9 @@
   :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
-  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
-                                        jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
+  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
+                                        Funktion pitää palauttaa kanava.
+                                        Jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
