@@ -13,7 +13,8 @@
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :as modal]
-            [harja.ui.dom :as dom])
+            [harja.ui.dom :as dom]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -32,7 +33,7 @@
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
-                 :leveys  "80%"}
+                 :leveys "80%"}
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn nayta-otsikko [otsikko]
@@ -63,7 +64,7 @@
 
 (defn lataa-tiedostona [sisalto]
   (let [encode (aget js/window "encodeURIComponent")
-        url (str "data:Application/octet-stream,"(encode sisalto))]
+        url (str "data:Application/octet-stream," (encode sisalto))]
     (set! (.-location js/document) url)))
 
 (defn nayta-sisalto [sisalto]
@@ -81,8 +82,8 @@
 
                [:button.nappi-toissijainen {:type "button"
                                             :on-click #(do
-                                                        (.preventDefault %)
-                                                        (lataa-tiedostona sisalto))}
+                                                         (.preventDefault %)
+                                                         (lataa-tiedostona sisalto))}
                 (ikonit/download-alt) " Lataa"]]))}
          (ikonit/eye-open)]]]
       sisalto)))
@@ -99,8 +100,8 @@
            {:otsikko "Viestit"}
            [{:otsikko "Suunta" :nimi :suunta :leveys 10 :tyyppi :komponentti
              :komponentti #(if (= "sisään" (:suunta %))
-                            [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
-                            [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
+                             [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
+                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
             {:otsikko "Osoite" :nimi :osoite :leveys 30}
             {:otsikko "Parametrit" :nimi :parametrit :leveys 20 :tyyppi :komponentti
              :komponentti #(fmt/leikkaa-merkkijono 50 (kartta-merkkijonoksi (:parametrit %)))}
@@ -137,8 +138,8 @@
        [vis/bars {:width w
                   :height (min 200 h)
                   :label-fn #(if nayta-labelit?
-                              (pvm/paiva-kuukausi (:pvm %))
-                              "")
+                               (pvm/paiva-kuukausi (:pvm %))
+                               "")
                   :value-fn :maara
                   :format-amount str
                   :ticks tikit}
@@ -164,10 +165,10 @@
       {:otsikko "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
       {:otsikko "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
 
-     eniten-kutsutut]
-    ))
+     eniten-kutsutut]))
 
 (defn tapahtumien-paanakyma []
+  (log "--->>> " (pr-str @tiedot/haetut-tapahtumat))
   [:span
    [:div.container
     [:div.label-ja-alasveto
@@ -176,11 +177,11 @@
                            :format-fn #(if % (:jarjestelma %)
                                              "Kaikki järjestelmät")
                            :valitse-fn #(do
-                                         (reset! tiedot/valittu-jarjestelma %)
-                                         (when-not (and @tiedot/valittu-jarjestelma
-                                                        (contains? (:integraatiot @tiedot/valittu-jarjestelma)
-                                                                   @tiedot/valittu-integraatio))
-                                           (reset! tiedot/valittu-integraatio nil)))}
+                                          (reset! tiedot/valittu-jarjestelma %)
+                                          (when-not (and @tiedot/valittu-jarjestelma
+                                                         (contains? (:integraatiot @tiedot/valittu-jarjestelma)
+                                                                    @tiedot/valittu-integraatio))
+                                            (reset! tiedot/valittu-integraatio nil)))}
       (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
 
     (when @tiedot/valittu-jarjestelma
@@ -205,6 +206,34 @@
          [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
       [:div "Ei pyyntöjä annetuilla parametreillä"])
 
+    [lomake/lomake
+     {:otsikko "Hakuehdot"
+      :muokkaa! #(reset! tiedot/hakuehdot %)}
+     [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
+       :valinta-arvo first
+       :valinta-nayta second
+       :valinnat [[:kaikki "Kaikki"]
+                  [:onnistuneet "Onnistuneet"]
+                  [:epaonnistuneet "Epäonnistuneet"]]}
+      (lomake/ryhma
+        {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
+        {:otsikko "Otsikot"
+         :nimi :otsikot
+         :tyyppi :string}
+        {:otsikko "Parametrit"
+         :nimi :parametrit
+         :tyyppi :string}
+        {:otsikko "Viestin sisältö"
+         :nimi :viestin-sisalto
+         :tyyppi :string}
+        {:nimi :tyhjenna
+         :tyyppi :komponentti
+         :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
+                                                                        tiedot/hakuehdot
+                                                                        dissoc :otsikot :parametrit :viestin-sisalto)}
+                               "Tyhjennä"])})]
+     @tiedot/hakuehdot]
+
     [grid
      {:otsikko (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
       :tyhja (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
@@ -222,9 +251,9 @@
                 {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
               {:otsikko "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
                :komponentti #(if (nil? (:paattynyt %))
-                              [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
-                              (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
-                                                  [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
+                               [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
+                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
+                                                   [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
               {:otsikko "Alkanut" :nimi :alkanut :leveys 15
                :hae #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
               {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
