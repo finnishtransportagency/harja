@@ -57,7 +57,6 @@
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
-                                          ;; todo: tähän pitäisi tehdä joku hookki: kun arvo päivittyy, päivitetään myös kartta
                                           :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]
@@ -79,7 +78,7 @@
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
-(defn varustetoteumat-karttataso [toteumat varusteet]
+(defn varustetoteumat-karttataso [toteumat tierekisterin-varusteet valittu-varustetoteuma]
   (kartalla-esitettavaan-muotoon
     (concat (keep (fn [toteuma]
                     (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
@@ -89,8 +88,14 @@
                         :sijainti {:type :point
                                    :coordinates sijainti})))
                   toteumat)
-            (map #(assoc % :tyyppi-kartalla :varuste) varusteet))
-    (constantly false)))
+            (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
+    #(and valittu-varustetoteuma
+          (or (and (:id %)
+                   (= (:id valittu-varustetoteuma)
+                      (:id %)))
+              (and (get-in valittu-varustetoteuma [:arvot :tunniste])
+                   (= (get-in valittu-varustetoteuma [:arvot :tunniste])
+                      (get-in % [:varuste :tunniste])))))))
 
 (defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
@@ -118,7 +123,8 @@
                                        toimenpide
                                        tierekisteriosoite
                                        alkupvm
-                                       loppupvm] :as toteuma}]
+                                       loppupvm
+                                       uusi-liite] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:id id
                  :arvot arvot
@@ -134,7 +140,8 @@
                                            (not (str/blank? (:kuntoluokitus arvot))))
                                   (js/parseInt (:kuntoluokitus arvot)))
                  :alkupvm alkupvm
-                 :loppupvm loppupvm}
+                 :loppupvm loppupvm
+                 :uusi-liite uusi-liite}
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
                    :alkupvm (first aikavali)
@@ -191,7 +198,9 @@
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (defn kartalle [app]
-  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app) (get-in app [:tierekisterin-varusteet :varusteet]))))
+  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app)
+                                                     (get-in app [:tierekisterin-varusteet :varusteet])
+                                                     (:varustetoteuma app))))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -236,16 +245,16 @@
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (= "virhe" (:tila toteuma)))))]
-      (tulos!)))
+      (kartalle (tulos!))))
 
   v/TyhjennaValittuToteuma
   (process-event [_ app]
-    (assoc app :varustetoteuma nil))
+    (kartalle (assoc app :varustetoteuma nil)))
 
   v/UusiVarusteToteuma
   (process-event [{:keys [toiminto varuste]} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
-      (dissoc (tulos!) :muokattava-varuste)))
+      (kartalle (dissoc (tulos!) :muokattava-varuste))))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
@@ -311,10 +320,13 @@
 
   v/VarustetoteumatMuuttuneet
   (process-event [{varustetoteumat :varustetoteumat :as data} app]
-    (kartalle
-      (-> app
-          (dissoc :uudet-varustetoteumat)
-          (haetut-toteumat varustetoteumat)))))
+    (kartalle (-> app
+         (dissoc :uudet-varustetoteumat)
+         (haetut-toteumat varustetoteumat))))
+
+  v/LisaaLiitetiedosto
+  (process-event [{liite :liite} app]
+    (assoc-in app [:varustetoteuma :uusi-liite] liite)))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
