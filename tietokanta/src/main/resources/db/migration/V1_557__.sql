@@ -5,3 +5,6 @@ CREATE UNIQUE INDEX uniikki_yhdistelma on vv_hinnoittelu_toimenpide ("toimenpide
 
 -- Oletettavasti hinnan otsikon pitää olla uniikki per hinnoittelu
 CREATE UNIQUE INDEX uniikki_hinta on vv_hinta ("hinnoittelu-id", otsikko) WHERE poistettu IS NOT TRUE;
+
+-- Hinnalla on pakko olla hinnoittelu
+ALTER TABLE vv_hinta ALTER COLUMN "hinnoittelu-id" SET NOT NULL;
