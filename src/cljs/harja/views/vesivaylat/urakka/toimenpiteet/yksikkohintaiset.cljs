@@ -46,21 +46,24 @@
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   hintaryhmien-liittaminen-kaynnissa?)}])
 
-(defn- ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
+(defn- ryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
                                  hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
-     [tee-kentta {:tyyppi :string
-                  :placeholder "Ryhmän nimi"
-                  :pituus-max 160}
-      (r/wrap
-        uusi-hintaryhma
-        #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
+     [:div.inline-block {:style {:margin-right "10px"}}
+      [tee-kentta {:tyyppi :string
+                   :placeholder "Ryhmän nimi"
+                   :pituus-max 160}
+       (r/wrap
+         uusi-hintaryhma
+         #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]]
      [napit/yleinen-ensisijainen
       (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."] "Luo")
       #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
-      {:disabled hintaryhman-tallennus-kaynnissa?}]
-     [napit/yleinen-ensisijainen "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
+      {:disabled (or ;; Disabloidaan nappi jos hintaryhmän nimi on jo olemassa, tai liittäminen menossa
+                   ((set (map ::h/nimi hintaryhmat)) uusi-hintaryhma)
+                   hintaryhman-tallennus-kaynnissa?)}]
+     [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
     [napit/yleinen-ensisijainen
      "Luo uusi ryhmä"
@@ -212,9 +215,9 @@
               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
           [:div.inline-block {:style {:vertical-align :top}}
            [napit/yleinen-toissijainen
-           (ikonit/muokkaa)
-           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:ikoninappi? true}]]]))]))
+            (ikonit/muokkaa)
+            #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+            {:ikoninappi? true}]]]))]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
