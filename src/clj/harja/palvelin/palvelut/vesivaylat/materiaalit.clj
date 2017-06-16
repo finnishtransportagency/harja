@@ -15,6 +15,12 @@
   ;; tarkista oikeus
   (specql/fetch db ::m/materiaali #{::m/pvm ::m/maara ::m/lisatieto} params))
 
+(defn- kirjaa-materiaali [db user materiaali]
+  ;; TARKISTA OIKEUS
+  (println "MATSKUU: " (pr-str materiaali))
+  (specql/insert! db ::m/materiaali materiaali)
+  (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
+
 (defrecord Materiaalit []
   component/Lifecycle
   (start [{db :db
@@ -28,6 +34,11 @@
                                     (fn [user haku]
                                       (hae-materiaalin-kaytto db user haku))
                                     {:kysely-spec ::m/materiaalin-kayton-haku})
+    (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
+                                    (fn [user materiaali]
+                                      (kirjaa-materiaali db user materiaali))
+                                    {:kysely-spec ::m/materiaali-insert
+                                     :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 
   (stop [{http :http-palvelin :as this}]
