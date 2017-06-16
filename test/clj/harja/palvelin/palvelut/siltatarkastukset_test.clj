@@ -71,18 +71,16 @@
     (is (= (count sillat) 6))
     (is (= (count sillat-ilman-tarkastuksia) 3))
     (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
-'
-
-(deftest oulun-urakan-2014-2019-sillat
-  ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                     :listaus :kaikki})
-        sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
-                                                (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
-    (is (= (count sillat) 6))
-    (is (= (count sillat-ilman-tarkastuksia) 3))
-    (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
+'(deftest oulun-urakan-2014-2019-sillat
+   ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
+   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
+                                     {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                      :listaus :kaikki})
+         sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
+                                                 (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
+     (is (= (count sillat) 6))
+     (is (= (count sillat-ilman-tarkastuksia) 3))
+     (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
 
 (deftest oulun-urakan-2005-2012-tarkastukset
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
@@ -143,3 +141,25 @@
 (deftest tarkastuksen-tallennus-ilman-oikeuksia-epaonnistuu
   (is (thrown? Exception (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-tero+
                                               (uusi-tarkastus)))))
+
+
+(deftest tarkista-siltatarkastuksen-poisto
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        silta-id (hae-oulujoen-sillan-id)
+        tarkastukset-ennen-uutta (count (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id}))
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus +kayttaja-jvh+ (uusi-tarkastus))
+        tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                          {:urakka-id urakka-id
+                                           :silta-id silta-id})
+        tarkastukset-lisayksen-jalkeen (count tarkastukset)
+        _ (kutsu-http-palvelua :poista-siltatarkastus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                      :silta-id silta-id
+                                                                      :siltatarkastus-id (:id (first tarkastukset))})
+        tarkastukset-poiston-jalkeen (count (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
+                                                                 {:urakka-id urakka-id
+                                                                  :silta-id silta-id}))]
+    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-lisayksen-jalkeen) "Lisäyksen jälkeen on 1 uusi tarkastus")
+    (is (= tarkastukset-ennen-uutta tarkastukset-poiston-jalkeen) "Poiston jälkeen on sama määrä tarkastuksia kuin aluksi")
+    (poista-testin-tarkastukset)))
