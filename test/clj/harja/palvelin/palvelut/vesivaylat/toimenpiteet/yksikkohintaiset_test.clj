@@ -26,14 +26,14 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :vv-yksikkohintaiset (component/using
-                                                (yks/->YksikkohintaisetToimenpiteet)
-                                                [:db :http-palvelin])))))
+                                               (yks/->YksikkohintaisetToimenpiteet)
+                                               [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -47,9 +47,12 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-yksikkohintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
-    (is (>= (count vastaus) 4))))
+    (is (>= (count vastaus) 2))
+    (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
+    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

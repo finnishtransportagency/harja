@@ -56,9 +56,6 @@
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
 
-(defn kyselyn-hakuargumentit [valinnat]
-  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
-
 (extend-protocol tuck/Event
 
   Nakymassa?
@@ -84,7 +81,7 @@
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
-                                      (kyselyn-hakuargumentit valinnat)
+                                      (jaettu/hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu
                                      :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc app :haku-kaynnissa? true))

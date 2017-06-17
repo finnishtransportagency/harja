@@ -55,7 +55,7 @@
                   (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
             hinnat)))
 
-(defn- perushinta
+(defn perushinta
   "Palauttaa hintojen summan ilman yleiskustannuslisiä"
   [hinnat]
   (reduce + 0 (map ::maara hinnat)))

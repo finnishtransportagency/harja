@@ -117,7 +117,6 @@
 (defn suodattimet
   [e! PaivitaValinnatKonstruktori app urakka vaylahaku {:keys [lisasuodattimet urakkatoiminnot]}]
   [:div
-   [debug app]
    [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku
     (or lisasuodattimet [])
     (or urakkatoiminnot [])]])

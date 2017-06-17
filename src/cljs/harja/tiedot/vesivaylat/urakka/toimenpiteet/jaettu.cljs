@@ -48,7 +48,7 @@
        (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
        " siirretty."))
 
-(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+(defn hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide
                                       vain-vikailmoitukset?] :as valinnat}]
@@ -139,7 +139,7 @@
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
                               {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                             ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
+                               ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
                               {:onnistui ->ToimenpiteetSiirretty
-                             :epaonnistui ->ToimenpiteetEiSiirretty})
+                               :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))

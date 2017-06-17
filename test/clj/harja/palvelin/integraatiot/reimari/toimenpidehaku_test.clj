@@ -26,7 +26,7 @@
     :harja.domain.vesivaylat.toimenpide/reimari-vayla
     {:harja.domain.vesivaylat.vayla/r-nro "12345",
      :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
-    :harja.domain.vesivaylat.toimenpide/id 8,
+    :harja.domain.vesivaylat.toimenpide/id 10,
     :harja.domain.vesivaylat.toimenpide/reimari-luotu
     #inst "2017-04-24T13:00:00.123-00:00",
     :harja.domain.vesivaylat.toimenpide/lisatieto
