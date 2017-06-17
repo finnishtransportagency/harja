@@ -19,7 +19,8 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.fmt :as fmt]
-            [harja.ui.grid :as grid])
+            [harja.ui.grid :as grid]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -235,6 +236,7 @@
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
         [:div
+         [debug/debug app]
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
@@ -246,6 +248,7 @@
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide e! app* rivi])}]
+             :gridin-idx hintaryhma-id
              :footer (when hintaryhma
                        [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
