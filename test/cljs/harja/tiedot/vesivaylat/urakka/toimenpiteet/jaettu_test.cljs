@@ -12,7 +12,7 @@
             [cljs.spec.alpha :as s]))
 
 (def testitila {:nakymassa? true
-                :infolaatikko-nakyvissa? false
+                :infolaatikko-nakyvissa false
                 :valinnat {:urakka-id nil
                            :sopimus-id nil
                            :aikavali [nil nil]
@@ -122,8 +122,8 @@
   (testing "Asetetaan infolaatikko näkyviin"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->AsetaInfolaatikonTila true) vanha-tila)]
-      (is (false? (:infolaatikko-nakyvissa? vanha-tila)))
-      (is (true? (:infolaatikko-nakyvissa? uusi-tila))))))
+      (is (false? (:infolaatikko-nakyvissa vanha-tila)))
+      (is (true? (:infolaatikko-nakyvissa uusi-tila))))))
 
 (deftest vaylan-rivien-valinta
   (testing "Valitaan Iisalmen väylä"

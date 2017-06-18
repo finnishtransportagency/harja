@@ -196,11 +196,11 @@
    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
    {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}])
 
-(defn- paneelin-sisalto [e! app gridin-idx toimenpiteet sarakkeet]
+(defn- paneelin-sisalto [e! app listaus-tunniste toimenpiteet sarakkeet]
   [grid/grid
    {:tunniste ::to/id
     :infolaatikon-tila-muuttui (fn [nakyvissa?]
-                                 (e! (tiedot/->AsetaInfolaatikonTila gridin-idx nakyvissa?)))
+                                 (e! (tiedot/->AsetaInfolaatikonTila listaus-tunniste nakyvissa?)))
     :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
     :rivin-infolaatikko (fn [rivi data]
                           [toimenpide-infolaatikossa rivi])
@@ -211,8 +211,7 @@
    toimenpiteet])
 
 (defn- luo-otsikkorivit
-  [{:keys [e! app gridin-idx toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]}]
-  (log "luo otsikkorivit :gridin-idx " (pr-str gridin-idx))
+  [{:keys [e! app listaus-tunniste toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]}]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -226,7 +225,7 @@
               [paneelin-sisalto
                e!
                app
-               gridin-idx
+               listaus-tunniste
                (suodata-ja-ryhmittele-toimenpiteet-gridiin
                  e!
                  toimenpiteet
@@ -235,9 +234,9 @@
                gridin-sarakkeet]])
            tyolajit))))
 
-(defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa? haku-kaynnissa?] :as app}
+(defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
-                                                      gridin-idx vaylan-checkbox-sijainti]}]
+                                                      listaus-tunniste vaylan-checkbox-sijainti]}]
   (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
@@ -245,7 +244,7 @@
         [:div
          (when otsikko [:h1 otsikko])
          (into [otsikkopaneeli
-                {:otsikkoluokat (when infolaatikko-nakyvissa? ["livi-grid-infolaatikolla"])
+                {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
                  :paneelikomponentit
                  [{:sijainti paneelin-checkbox-sijainti
                    :sisalto
@@ -261,7 +260,7 @@
                (luo-otsikkorivit
                  {:e! e!
                   :app app
-                  :gridin-idx gridin-idx
+                  :listaus-tunniste listaus-tunniste
                   :toimenpiteet toimenpiteet
                   :haku-kaynnissa? haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
@@ -272,18 +271,13 @@
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   footer gridin-idx]}]
+                   footer listaus-tunniste]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
           (valinta-checkbox e! app))
     {:otsikko otsikko
      :footer footer
-     :gridin-idx gridin-idx
+     :listaus-tunniste listaus-tunniste
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
-
-(defn listaus* [optiot e! app]
-  [:div
-   [debug app]
-   [listaus e! app optiot]])

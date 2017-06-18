@@ -160,7 +160,7 @@
          {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
           :nappi-teksti "Hinnoittele"
           :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :nappi-optiot {:disabled (:infolaatikko-nakyvissa? app*)}
+          :nappi-optiot {:disabled (:infolaatikko-nakyvissa app*)}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
@@ -248,7 +248,7 @@
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide e! app* rivi])}]
-             :gridin-idx hintaryhma-id
+             :listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
              :footer (when hintaryhma
                        [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)

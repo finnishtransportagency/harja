@@ -76,7 +76,7 @@
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
-(defrecord AsetaInfolaatikonTila [gridin-idx uusi-tila])
+(defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 
@@ -118,11 +118,12 @@
                                  (concat paivitetyt-toimenpiteet paivittamattomat)))))
 
   AsetaInfolaatikonTila
-  (process-event [{gridin-idx :gridin-idx
+  (process-event [{tunniste :tunniste
                    uusi-tila :uusi-tila} app]
-    (log "AsetaInfolaatikonTila, gridin-idx " (pr-str gridin-idx) " uusi tila: " (pr-str uusi-tila))
-    (assoc app :infolaatikko-nakyvissa? (merge (:infolaatikko-nakyvissa? app)
-                                          {gridin-idx uusi-tila})))
+    (if tunniste
+      (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
+                                                {tunniste uusi-tila}))
+      app))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]

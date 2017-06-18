@@ -8,7 +8,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn urakkatoiminnot [e! app]
@@ -28,6 +29,7 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
+       [debug/debug app]
        [jaettu/suodattimet e!
         tiedot/->PaivitaValinnat
         app (:urakka valinnat)
@@ -35,6 +37,7 @@
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app
         {:otsikko "Kokonaishintaiset toimenpiteet"
+         :listaus-tunniste :kokonaishintaiset-toimenpiteet
          :paneelin-checkbox-sijainti "94.3%"
          :vaylan-checkbox-sijainti "94.3%"}]])))
 

@@ -13,7 +13,7 @@
             [cljs.spec.alpha :as s]))
 
 (def testitila {:nakymassa? true
-                :infolaatikko-nakyvissa? false
+                :infolaatikko-nakyvissa false
                 :valinnat {:urakka-id nil
                            :sopimus-id nil
                            :aikavali [nil nil]
