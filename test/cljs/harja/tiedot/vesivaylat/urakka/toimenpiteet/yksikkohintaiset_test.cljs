@@ -16,7 +16,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]))
 
 (def testitila {:nakymassa? true
-                :infolaatikko-nakyvissa false
+                :infolaatikko-nakyvissa {}
                 :valinnat {:urakka-id nil
                            :sopimus-id nil
                            :aikavali [nil nil]
