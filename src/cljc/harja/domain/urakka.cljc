@@ -68,5 +68,5 @@
 (defn vesivayla-urakkatyyppi? [tyyppi]
   (boolean (vesivayla-urakkatyypit tyyppi)))
 
-(defn vesivayla-urakka? [urakka]
+(defn vesivaylaurakka? [urakka]
   (vesivayla-urakkatyyppi? (:tyyppi urakka)))

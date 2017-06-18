@@ -24,10 +24,12 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.urakka :as u-domain]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain])
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -244,17 +246,26 @@
             @muokattu]
            [ajax-loader "Ladataan..."])]))))
 
-(defn sanktiolistaus
-  [optiot valittu-urakka]
-  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
-        yllapito? (:yllapito? optiot)
-        yhteensa (reduce + (map :summa sanktiot))
-        yhteensa (when yhteensa
-                   (if yllapito?
-                     (- yhteensa) ; ylläpidossa sakot miinusmerkkisiä
-                     yhteensa))
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
-    [:div.sanktiot
+(defn- suodattimet-ja-toiminnot [valittu-urakka vesivayla?]
+  (if vesivayla?
+    [:div
+     [valinnat/urakkavalinnat {}
+      ^{:key "urakkavalinnat"}
+      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+      ^{:key "urakkatoiminnot"}
+      [valinnat/urakkatoiminnot {}
+       (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                               (:id valittu-urakka))]
+         (yleiset/wrap-if
+           (not oikeus?)
+           [yleiset/tooltip {} :%
+            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                            oikeudet/urakat-laadunseuranta-sanktiot)]
+           ^{:key "Lisää sanktio"}
+           [napit/uusi "Lisää sanktio"
+            #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
+            {:disabled (not oikeus?)}]))]]]
+    [:div
      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                              (:id valittu-urakka))]
@@ -265,8 +276,21 @@
                                           oikeudet/urakat-laadunseuranta-sanktiot)]
          [napit/uusi "Lisää sanktio"
           #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
-          {:disabled (not oikeus?)}]))
+          {:disabled (not oikeus?)}]))]))
 
+(defn sanktiolistaus
+  [optiot valittu-urakka]
+  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
+        yllapito? (:yllapito? optiot)
+        vesivayla? (:vesivayla? optiot)
+        yhteensa (reduce + (map :summa sanktiot))
+        yhteensa (when yhteensa
+                   (if yllapito?
+                     (- yhteensa) ; ylläpidossa sakot miinusmerkkisiä
+                     yhteensa))
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+    [:div.sanktiot
+     [suodattimet-ja-toiminnot valittu-urakka vesivayla?]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
@@ -310,7 +334,8 @@
        [kartta/kartan-paikka]
        (let [optiot (merge optiot
                            {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                            :yllapito? @tiedot-urakka/yllapidon-urakka?})]
+                            :yllapito? @tiedot-urakka/yllapidon-urakka?
+                            :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
          (if @tiedot/valittu-sanktio
            [sanktion-tiedot optiot]
            [sanktiolistaus optiot @nav/valittu-urakka]))])))
