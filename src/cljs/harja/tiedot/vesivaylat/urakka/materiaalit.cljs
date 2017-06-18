@@ -20,6 +20,11 @@
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
 
+(defrecord AloitaMateriaalinKirjaus [nimi])
+(defrecord PaivitaMateriaalinKirjaus [tiedot])
+(defrecord KirjaaMateriaali [])
+(defrecord PeruMateriaalinKirjaus [])
+
 ;; App atom
 (defonce app (r/atom {:urakka-id nil
                       :materiaalilistaus nil
@@ -28,7 +33,10 @@
                       :materiaalin-kaytto {}
 
                       ;; Lisättävän materiaalin tiedot mäp
-                      :lisaa-materiaali nil}))
+                      :lisaa-materiaali nil
+
+                      ;; Kirjattavan materiaalin käytön tiedot
+                      :kirjaa-materiaali nil}))
 
 
 (defn- hae [{u :urakka-id :as app}]
@@ -46,7 +54,8 @@
   (process-event [{tulokset :tulokset} app]
     (assoc app
            :materiaalilistaus tulokset
-           :lisaa-materiaali nil))
+           :lisaa-materiaali nil
+           :kirjaa-materiaali nil))
 
   HaeMateriaalinKaytto
   (process-event [{nimi :nimi} {u :urakka-id :as app}]
@@ -78,4 +87,25 @@
 
   PeruMateriaalinLisays
   (process-event [_ app]
-    (dissoc app :lisaa-materiaali)))
+    (dissoc app :lisaa-materiaali))
+
+  AloitaMateriaalinKirjaus
+  (process-event [{nimi :nimi} app]
+    (assoc app :kirjaa-materiaali {::m/urakka-id (:urakka-id app)
+                                   ::m/nimi nimi
+                                   ::m/pvm (pvm/nyt)}))
+
+  PaivitaMateriaalinKirjaus
+  (process-event [{tiedot :tiedot} app]
+    (update app :kirjaa-materiaali merge tiedot))
+
+  PeruMateriaalinKirjaus
+  (process-event [_ app]
+    (dissoc app :kirjaa-materiaali))
+
+  KirjaaMateriaali
+  (process-event [_ {kirjaa-materiaali :kirjaa-materiaali :as app}]
+    (let [tulos! (t/send-async! ->ListausHaettu)]
+      (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
+                               (lomake/ilman-lomaketietoja kirjaa-materiaali)))))
+      app)))

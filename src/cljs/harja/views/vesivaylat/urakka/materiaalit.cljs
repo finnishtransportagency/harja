@@ -9,7 +9,10 @@
             [harja.pvm :as pvm]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.lomake :as lomake]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [harja.ui.ikonit :as ikonit]
+            [harja.loki :refer [log]]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -51,6 +54,36 @@
      :palstoja 3}]
    materiaali])
 
+(defn- materiaalin-kirjaus [e! {kirjaa-materiaali :kirjaa-materiaali
+                                listaus :materiaalilistaus
+                                :as app} nimi]
+  [:div.vv-materiaalin-kirjaus
+   [napit/yleinen-ensisijainen "Kirjaa"
+    #(e! (tiedot/->AloitaMateriaalinKirjaus nimi))
+    {:ikoni (ikonit/pencil)}]
+
+   (when (= nimi (::m/nimi kirjaa-materiaali))
+     [leijuke/leijuke {:otsikko (str "Kirjaa " nimi " käyttö")
+                       :sulje! #(e! (tiedot/->PeruMateriaalinKirjaus))}
+      [:div
+       [lomake/lomake {:muokkaa! #(e! (tiedot/->PaivitaMateriaalinKirjaus %))}
+        [{:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero
+          ::lomake/col-luokka "col-lg-6"}
+         {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm
+          ::lomake/col-luokka "col-lg-6"}
+         {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3]
+          :pituus-max 2000 :palstoja 3}]
+        kirjaa-materiaali]
+       (let [maara-nyt (some #(when (= nimi (::m/nimi %))
+                                (::m/maara-nyt %)) listaus)
+             kaytettava-maara (::m/maara kirjaa-materiaali)]
+         [yleiset/tietoja {}
+          "Määrä nyt: " maara-nyt
+          "Muutos: " (or kaytettava-maara "")
+          "Määrä jälkeen:" (+ maara-nyt (or kaytettava-maara 0))])
+       [napit/tallenna "Tallenna"
+        #(e! (tiedot/->KirjaaMateriaali))]]])])
+
 (defn materiaalit* [e! app]
   (komp/luo
    (komp/sisaan #(e! (tiedot/->PaivitaUrakka @nav/valittu-urakka)))
@@ -84,7 +117,10 @@
        [{:tyyppi :vetolaatikon-tila :leveys 1}
         {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
         {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
-        {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}]
+        {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
+        {:otsikko "Kirjaa" :leveys 10 :tyyppi :komponentti
+         :komponentti (fn [{nimi ::m/nimi}]
+                        [materiaalin-kirjaus e! app nimi])}]
        materiaalilistaus]])))
 
 (defn materiaalit [ur]
