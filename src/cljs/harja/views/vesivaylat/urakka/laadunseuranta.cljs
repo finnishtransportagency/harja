@@ -34,5 +34,5 @@
 
        "Sanktiot" :vesivayla-sanktiot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
+                  (oikeudet/urakat-laadunseuranta-sanktiot id))
          [sanktiot/sanktiot {:nakyma tyyppi}])])))
