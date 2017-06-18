@@ -7,13 +7,13 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.vesivaylat.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat]
-            [harja.views.vesivaylat.urakka.laadunseuranta.sanktiot :as sanktiot])
+            [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn laadunseuranta []
   (komp/luo
-    (fn [{:keys [id] :as ur}]
+    (fn [{:keys [id tyyppi] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
 
@@ -35,4 +35,4 @@
        "Sanktiot" :vesivayla-sanktiot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
-         [sanktiot/sanktiot])])))
+         [sanktiot/sanktiot {:nakyma tyyppi}])])))
