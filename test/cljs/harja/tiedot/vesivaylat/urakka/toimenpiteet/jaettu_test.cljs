@@ -121,9 +121,9 @@
 (deftest infolaatikon-tila
   (testing "Asetetaan infolaatikko näkyviin"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila true) vanha-tila)]
-      (is (false? (:infolaatikko-nakyvissa vanha-tila)))
-      (is (true? (:infolaatikko-nakyvissa uusi-tila))))))
+          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true) vanha-tila)]
+      (is (false? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
+      (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila)))))))
 
 (deftest vaylan-rivien-valinta
   (testing "Valitaan Iisalmen väylä"
