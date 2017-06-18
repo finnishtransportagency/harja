@@ -160,7 +160,7 @@
          {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
           :nappi-teksti "Hinnoittele"
           :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :nappi-optiot {:disabled (:infolaatikko-nakyvissa app*)}
+          :nappi-optiot {:disabled (some true? (vals (:infolaatikko-nakyvissa app*)))}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
