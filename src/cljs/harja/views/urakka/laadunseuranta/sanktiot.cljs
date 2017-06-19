@@ -43,6 +43,7 @@
       (let [yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
             yllapito? (:yllapito? optiot)
+            vesivayla? (:vesivayla? optiot)
             yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
         [:div
          [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -167,8 +168,7 @@
                 :valinta-arvo first
                 :valinta-nayta second
                 :valinnat sanktio-domain/+yllapidon-sanktiofraasit+
-                :palstoja 2}
-               )
+                :palstoja 2})
              {:otsikko "Perustelu" :nimi :perustelu
               :pakollinen? true
               :hae (comp :perustelu :paatos :laatupoikkeama)
@@ -206,7 +206,7 @@
                                 "- valitse laji -")
               :validoi [[:ei-tyhja "Valitse laji"]]}
 
-             (when-not yllapito?
+             (when-not (or yllapito? vesivayla?)
                {:otsikko "Tyyppi" :tyyppi :valinta
                 :palstoja 1
                 :pakollinen? true
