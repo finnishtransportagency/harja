@@ -36,7 +36,6 @@
 (defn sanktion-tiedot
   [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
-        _ (log "muokattu sanktio: " (pr-str muokattu))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))
         tallennus-kaynnissa (atom false)]

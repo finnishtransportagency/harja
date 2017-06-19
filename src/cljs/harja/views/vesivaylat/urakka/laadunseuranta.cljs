@@ -15,7 +15,7 @@
   (komp/luo
     (fn [{:keys [id tyyppi] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                :active (nav/valittu-valilehti-atom :toimenpiteet)}
+                :active (nav/valittu-valilehti-atom :laadunseuranta-vesivaylat)}
 
        "Tarkastukset" :vesivayla-tarkastukset
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
