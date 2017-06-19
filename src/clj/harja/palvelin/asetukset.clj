@@ -67,40 +67,41 @@
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
-   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                                s/Int
+   (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontiaika) {(s/optional-key :paiva)  s/Str
+                                                                         (s/optional-key :aika)  [s/Num]}
                                            (s/optional-key :tieosoiteverkon-shapefile)                 s/Str
                                            (s/optional-key :tieosoiteverkon-url)                s/Str
-                                           (s/optional-key :tieosoiteverkon-tallenuspolku)           s/Str
+                                           (s/optional-key :tieosoiteverkon-tallenusspolku)           s/Str
                                            (s/optional-key :pohjavesialueen-shapefile)                 s/Str
                                            (s/optional-key :pohjavesialueen-url)                s/Str
-                                           (s/optional-key :pohjavesialueen-tallenuspolku)           s/Str
+                                           (s/optional-key :pohjavesialueen-tallenusspolku)           s/Str
                                            (s/optional-key :talvihoidon-hoitoluokkien-shapefile)       s/Str
                                            (s/optional-key :talvihoidon-hoitoluokkien-url)      s/Str
-                                           (s/optional-key :talvihoidon-hoitoluokkien-tallenuspolku) s/Str
+                                           (s/optional-key :talvihoidon-hoitoluokkien-tallenusspolku) s/Str
                                            (s/optional-key :soratien-hoitoluokkien-shapefile)          s/Str
                                            (s/optional-key :soratien-hoitoluokkien-url)         s/Str
-                                           (s/optional-key :soratien-hoitoluokkien-tallenuspolku)    s/Str
+                                           (s/optional-key :soratien-hoitoluokkien-tallenusspolku)    s/Str
                                            (s/optional-key :siltojen-shapefile)                        s/Str
                                            (s/optional-key :siltojen-url)                       s/Str
-                                           (s/optional-key :siltojen-tallenuspolku)                  s/Str
+                                           (s/optional-key :siltojen-tallenusspolku)                  s/Str
                                            (s/optional-key :urakoiden-shapefile)                       s/Str
                                            (s/optional-key :urakoiden-url)                      s/Str
-                                           (s/optional-key :urakoiden-tallenuspolku)                 s/Str
+                                           (s/optional-key :urakoiden-tallenusspolku)                 s/Str
                                            (s/optional-key :ely-alueiden-shapefile)                    s/Str
                                            (s/optional-key :ely-alueiden-url)                   s/Str
-                                           (s/optional-key :ely-alueiden-tallenuspolku)              s/Str
+                                           (s/optional-key :ely-alueiden-tallenusspolku)              s/Str
                                            (s/optional-key :valaistusurakoiden-shapefile)              s/Str
                                            (s/optional-key :valaistusurakoiden-url)             s/Str
-                                           (s/optional-key :valaistusurakoiden-tallenuspolku)        s/Str
+                                           (s/optional-key :valaistusurakoiden-tallenusspolku)        s/Str
                                            (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
                                            (s/optional-key :paallystyspalvelusopimusten-url)             s/Str
-                                           (s/optional-key :paallystyspalvelusopimusten-tallenuspolku)         s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-tallennuspolku)         s/Str
                                            (s/optional-key :tekniset-laitteet-urakat-shapefile)              s/Str
                                            (s/optional-key :tekniset-laitteet-urakat-url)             s/Str
-                                           (s/optional-key :tekniset-laitteet-urakat-tallenuspolku)         s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-tallenusspolku)         s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-url)             s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-tallenuspolku)         s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-tallenusspolku)         s/Str
                                            }
 
    (s/optional-key :yha)                  {:url            s/Str
