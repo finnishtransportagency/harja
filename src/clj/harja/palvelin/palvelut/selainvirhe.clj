@@ -9,33 +9,27 @@
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
 
-(defn sanitoi [sisalto]
-  (str/replace (str sisalto) #"[<>&]" (fn [merkki] (case merkki
-                                                      "<" "&lt;"
-                                                      ">" "&gt;"
-                                                      "&" "&amp;"))))
-
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
-  {:fields
-          (filterv (fn [mappi] (not (nil? (:title mappi))))
-            (map #(hash-map :title %1 :value (sanitoi %2))
-                  ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack")]
-                  [viesti sijainti url selain rivi sarake (str (sanitoi kayttajanimi) " (" (sanitoi id) ")") stack]))})
+  (let [titles ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack")]
+        values [viesti sijainti url selain rivi sarake (str kayttajanimi " (" id ")") stack]]
+    {:fields (vec (keep-indexed #(when (not (nil? %2))
+                                    {:title %2 :value (get values %1)})
+                                titles))}))
 
-(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset] :as katkostiedot}]
+(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset]}]
   (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
                              yhteyskatkokset)
         palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
-    {:text (str "Käyttäjä " (sanitoi kayttajanimi) " (" (sanitoi id) ")" " raportoi yhteyskatkoksista palveluissa:")
+    {:text (str "Käyttäjä " kayttajanimi " (" id ")" " raportoi yhteyskatkoksista palveluissa:")
      :fields (mapv (fn [palvelu]
-                      (hash-map :title (str palvelu)
-                                :value (str "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl, "
-                                           "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                                (sort t/after?)
-                                                                (first))
-                                           "viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                              (sort t/after?)
-                                                              (last)))))
+                     {:title (str palvelu)
+                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl\n"
+                                   "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                        (sort t/after?)
+                                                        (first))
+                                   "\nviimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                        (sort t/after?)
+                                                        (last)))})
                   (keys palvelulla-ryhmiteltyna))}))
 
 (defn raportoi-selainvirhe
