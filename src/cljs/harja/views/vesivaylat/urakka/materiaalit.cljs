@@ -104,7 +104,8 @@
                                 :maara-placeholder "Syötä alkutilanne"}
              lisaa-materiaali materiaalilistaus]]])]]
 
-      [grid/grid {:tunniste ::m/nimi
+      [grid/grid {:id "vv-materiaalilistaus"
+                  :tunniste ::m/nimi
                   :tyhja "Ei materiaaleja"
                   :vetolaatikot (into {}
                                       (map (juxt ::m/nimi
