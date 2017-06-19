@@ -11,10 +11,6 @@
   #_(oikeudet/vaadi-lukuoikeus )
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
-(defn- hae-materiaalin-kaytto [db user params]
-  ;; tarkista oikeus
-  (specql/fetch db ::m/materiaali #{::m/pvm ::m/maara ::m/lisatieto} params))
-
 (defn- kirjaa-materiaali [db user materiaali]
   ;; TARKISTA OIKEUS
   (println "MATSKUU: " (pr-str materiaali))
@@ -30,10 +26,6 @@
                                       (hae-materiaalilistaus db user haku))
                                     {:kysely-spec ::m/materiaalilistauksen-haku
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
-    (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalin-kaytto
-                                    (fn [user haku]
-                                      (hae-materiaalin-kaytto db user haku))
-                                    {:kysely-spec ::m/materiaalin-kayton-haku})
     (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
                                     (fn [user materiaali]
                                       (kirjaa-materiaali db user materiaali))
