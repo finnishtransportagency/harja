@@ -8,6 +8,7 @@
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot :as tiedot]
             [harja.tiedot.navigaatio :as nav]
 
@@ -38,7 +39,8 @@
                                   :sopimus-id (first @u/valittu-sopimusnumero)}))
                            (e! (tiedot/->HaeKiintiot)))
                       #(do (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [kiintiot] :as app}]
+    (fn [e! {:keys [kiintiot
+                    kiintioiden-haku-kaynnissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       [:div
        [debug app]
@@ -52,7 +54,7 @@
                      (let [ch (chan)]
                        (e! (tiedot/->TallennaKiintiot sisalto ch))
                        (go (<! ch))))
-         :tyhja "Ei määriteltyjä kiintiöitä"
+         :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
          :uusi-rivi (fn [rivi] rivi)
@@ -60,24 +62,24 @@
                              (map (juxt ::kiintio/id (fn [rivi] [kiintion-toimenpiteet e! app rivi])))
                              kiintiot)
          }
-          [{:tyyppi :vetolaatikon-tila :leveys 3}
+          [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Nimi"
             :nimi ::kiintio/nimi
             :tyyppi :string
-            :leveys 3}
+            :leveys 6}
            {:otsikko "Kuvaus"
             :nimi ::kiintio/kuvaus
             :tyyppi :text
+            :leveys 12}
+           {:otsikko "Toteutunut"
+            :nimi :toteutunut
+            :hae (comp count ::kiintio/toimenpiteet)
+            :tyyppi :positiivinen-numero
+            :muokattava? (constantly false)
             :leveys 3}
            {:otsikko "Koko"
             :nimi ::kiintio/koko
             :tyyppi :positiivinen-numero
-            :leveys 3}
-           {:otsikko "Toteutunut"
-            :nimi :toteutunut
-            :hae (constantly 0)
-            :tyyppi :positiivinen-numero
-            :muokattava? (constantly false)
             :leveys 3}]
           kiintiot]])))
 
