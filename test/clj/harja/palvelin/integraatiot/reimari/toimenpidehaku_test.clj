@@ -26,7 +26,7 @@
    ::toimenpide/reimari-vayla
    {:harja.domain.vesivaylat.vayla/r-nro "12345",
     :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
-    ::toimenpide/id 8,
+    ::toimenpide/id 10,
    ::toimenpide/reimari-luotu
    #inst "2017-04-24T13:00:00.123-00:00",
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun",
@@ -69,5 +69,5 @@
     (tarkista-fn)
 
     ;; tarkistetaan että sama reimari-id luetussa toimenpiteessä päivittää tietuetta
-    (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide {::toimenpide/lisatyo? true} {::toimenpide/id 8})
+    (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide {::toimenpide/lisatyo? true} {::toimenpide/id 10})
     (tarkista-fn)))

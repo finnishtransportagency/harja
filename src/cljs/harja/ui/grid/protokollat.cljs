@@ -108,7 +108,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (hae-viimeisin-muokattu-id @gridi))
 
       (muokkaa-rivit! [this funktio args]
-        (apply muokkaa-rivit! @gridi funktio args))
+        (muokkaa-rivit! @gridi funktio args))
 
       (vetolaatikko-auki? [_ id]
         (vetolaatikko-auki? @gridi id))
