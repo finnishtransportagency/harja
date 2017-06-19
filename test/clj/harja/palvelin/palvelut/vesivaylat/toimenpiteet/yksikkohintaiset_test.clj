@@ -14,7 +14,9 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as yks]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -24,18 +26,33 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :vv-yksikkohintaiset (component/using
-                                                (yks/->YksikkohintaisetToimenpiteet)
-                                                [:db :http-palvelin])))))
+                                               (yks/->YksikkohintaisetToimenpiteet)
+                                               [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-;; TODO Hakutestit? Melkein samat kuin kok. hint. puolella? Ehkä voi testata kevyemmin?
+(deftest toimenpiteiden-haku
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id
+                       :alku (c/to-date (t/date-time 2017 1 1))
+                       :loppu (c/to-date (t/date-time 2018 1 1))}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-yksikkohintaiset-toimenpiteet +kayttaja-jvh+
+                                kysely-params)]
+
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+    (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
+    (is (>= (count vastaus) 2))
+    (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
+    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

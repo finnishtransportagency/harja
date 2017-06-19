@@ -3,7 +3,7 @@
             [clojure.test :refer-macros [deftest is testing]]
             [harja.domain.urakka :as u]
             [harja.domain.organisaatio :as o]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
 
 (deftest urakoitsijan-valinta

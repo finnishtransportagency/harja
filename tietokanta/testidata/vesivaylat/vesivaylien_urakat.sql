@@ -26,7 +26,7 @@ VALUES
    'vesivayla-hoito',
    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
+INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
    '2016-08-01', '2019-07-30',
@@ -34,7 +34,8 @@ VALUES
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
    (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
    'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   '555');
 
 INSERT INTO urakka (nimi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES

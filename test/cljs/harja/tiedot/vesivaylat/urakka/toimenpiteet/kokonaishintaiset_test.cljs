@@ -3,7 +3,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -150,15 +150,16 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :aikavali [alku loppu]
-                                                         :vaylatyyppi :muu
-                                                         :vayla 1
-                                                         :tyolaji :poijut
-                                                         :tyoluokka :asennus-ja-huolto
-                                                         :toimenpide :autot-traktorit
-                                                         :vain-vikailmoitukset? true})]
+          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
              {::to/urakka-id 666
               ::to/sopimus-id 777
@@ -167,30 +168,27 @@
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
               ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true
-              :tyyppi :kokonaishintainen}))
+              :vikailmoitukset? true}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :tyolaji nil
-                                                         :tyoluokka nil
-                                                         :toimenpide nil})]
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777
+                                                                :tyolaji nil
+                                                                :tyoluokka nil
+                                                                :toimenpide nil})]
       (is (= hakuargumentit
              {::to/urakka-id 666
-              ::to/sopimus-id 777
-              :tyyppi :kokonaishintainen}))
+              ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777})]
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
-                             ::to/sopimus-id 777
-                             :tyyppi :kokonaishintainen}))
+                             ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest yksikkohintaisiin-siirto

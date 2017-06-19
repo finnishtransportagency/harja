@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
   (:require [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti :as s]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest sopimuksen-valinta
   (let [sopimus {:foobar 1}]
