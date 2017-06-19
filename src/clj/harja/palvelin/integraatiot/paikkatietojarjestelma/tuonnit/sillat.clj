@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.siltatarkastukset :as s]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [clojure.string :as str]))
 
 (defn luo-tai-paivita-silta [db silta]
   (let [tyyppi (:siltatyy silta)
@@ -14,9 +15,11 @@
         alkuetaisyys (:aet silta)
         tunnus (:tunnus silta)
         id (int (:silta_id silta))]
-    (if (first (s/hae-silta-idlla db id))
-      (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
-      (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
+    (if (and (:tunnus silta) (not (str/blank? (:tunnus silta))))
+      (if (first (s/hae-silta-idlla db id))
+        (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
+        (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))
+      (log/warn (format "Siltaa (numero: %s, nimi: %s )ei voida tuoda ilman tunnusta." nimi numero)) )))
 
 (defn vie-silta-entry [db silta]
   (if (:the_geom silta)
