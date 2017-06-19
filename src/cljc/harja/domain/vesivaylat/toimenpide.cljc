@@ -333,6 +333,7 @@ reimari-tilat
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
 
+
 (def viittaukset
   (clojure.set/union
     vikailmoitus
