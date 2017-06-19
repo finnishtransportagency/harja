@@ -63,11 +63,11 @@
                        (first (tohaku/kasittele-vastaus
                                (:db ht/jarjestelma)
                                (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml")))
-                       referenssi-toimenpide-tietue)])
+                       referenssi-toimenpide-tietue)]
 
 
-  (tarkista-fn)
+    (tarkista-fn)
 
-  ;; tarkistetaan että sama reimari-id luetussa toimenpiteessä päivittää tietuetta
-  (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide {::toimenpide/lisatyo? true} {::toimenpide/id 8})
-  (tarkista-fn))
+    ;; tarkistetaan että sama reimari-id luetussa toimenpiteessä päivittää tietuetta
+    (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide {::toimenpide/lisatyo? true} {::toimenpide/id 8})
+    (tarkista-fn)))
