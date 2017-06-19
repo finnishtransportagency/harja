@@ -13,7 +13,6 @@
 
 (defn- kirjaa-materiaali [db user materiaali]
   ;; TARKISTA OIKEUS
-  (println "MATSKUU: " (pr-str materiaali))
   (specql/insert! db ::m/materiaali materiaali)
   (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
 
