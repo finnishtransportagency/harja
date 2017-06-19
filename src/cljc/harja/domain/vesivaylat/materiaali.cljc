@@ -8,6 +8,7 @@
 
 (define-tables
   ["vv_materiaali" ::materiaali]
+  ["vv_materiaali_muutos" ::muutos]
   ["vv_materiaalilistaus" ::materiaalilistaus])
 
 

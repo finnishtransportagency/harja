@@ -12,8 +12,6 @@
 ;; Määritellään viestityypit
 (defrecord PaivitaUrakka [urakka])
 (defrecord ListausHaettu [tulokset])
-(defrecord HaeMateriaalinKaytto [nimi])
-(defrecord MateriaalinKayttoHaettu [nimi rivit])
 
 (defrecord AloitaMateriaalinLisays [])
 (defrecord PaivitaLisattavaMateriaali [tiedot])
@@ -56,18 +54,6 @@
            :materiaalilistaus tulokset
            :lisaa-materiaali nil
            :kirjaa-materiaali nil))
-
-  HaeMateriaalinKaytto
-  (process-event [{nimi :nimi} {u :urakka-id :as app}]
-    (let [tulos! (t/send-async! (partial ->MateriaalinKayttoHaettu nimi))]
-      (go
-        (tulos! (<! (k/post! :hae-vesivayla-materiaalin-kaytto
-                             {::m/urakka-id u ::m/nimi nimi}))))
-      app))
-
-  MateriaalinKayttoHaettu
-  (process-event [{:keys [nimi rivit]} app]
-    (assoc-in app [:materiaalin-kaytto nimi] rivit))
 
   AloitaMateriaalinLisays
   (process-event [_ app]

@@ -16,23 +16,20 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn- materiaaliloki [e! nimi rivit]
-  (komp/luo
-   (komp/sisaan #(e! (tiedot/->HaeMateriaalinKaytto nimi)))
-   (fn [e! nimi rivit]
-     [:div.vv-materiaaliloki
-      [:h3 "Muutokset"]
-      [:table
-       [:tbody
-        (for*
-         [{::m/keys [pvm maara lisatieto]} rivit]
-         [:tr
-          [:td {:width "15%"} (pvm/pvm pvm)]
-          [:td {:width "15%" :class (if (neg? maara)
-                                      "materiaali-miinus"
-                                      "materiaali-plus")}
-           maara " kpl"]
-          [:td {:width "70%"} lisatieto]])]]])))
+(defn- materiaaliloki [e! rivit]
+  [:div.vv-materiaaliloki
+   [:h3 "Muutokset"]
+   [:table
+    [:tbody
+     (for*
+      [{::m/keys [pvm maara lisatieto]} rivit]
+      [:tr
+       [:td {:width "15%"} (pvm/pvm pvm)]
+       [:td {:width "15%" :class (if (neg? maara)
+                                   "materiaali-miinus"
+                                   "materiaali-plus")}
+        maara " kpl"]
+       [:td {:width "70%"} lisatieto]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus]
@@ -110,9 +107,9 @@
       [grid/grid {:tunniste ::m/nimi
                   :tyhja "Ei materiaaleja"
                   :vetolaatikot (into {}
-                                      (map (juxt ::m/nimi (fn [{nimi ::m/nimi}]
-                                                            [materiaaliloki e! nimi
-                                                             (materiaalin-kaytto nimi)])))
+                                      (map (juxt ::m/nimi
+                                                 (fn [{muutokset ::m/muutokset}]
+                                                   [materiaaliloki e! muutokset])))
                                       materiaalilistaus)}
        [{:tyyppi :vetolaatikon-tila :leveys 1}
         {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
