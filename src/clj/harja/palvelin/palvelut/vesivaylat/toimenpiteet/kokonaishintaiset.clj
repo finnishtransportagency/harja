@@ -20,7 +20,7 @@
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
-      (q/hae-toimenpiteet db tiedot))))
+      (q/hae-toimenpiteet db (assoc tiedot :tyyppi :kokonaishintainen)))))
 
 (defn siirra-toimenpiteet-yksikkohintaisiin [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -41,7 +41,7 @@
       (fn [user tiedot]
         (hae-kokonaishintaiset-toimenpiteet db user tiedot))
       {:kysely-spec ::to/hae-vesivaylien-toimenpiteet-kysely
-       :vastaus-spec ::to/hae-vesivayilien-toimenpiteet-vastaus})
+       :vastaus-spec ::to/hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus})
     (julkaise-palvelu
       http
       :siirra-toimenpiteet-yksikkohintaisiin

@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.selainvirhe
-  "Palvelu, jolla voi tallentaa logiin selain virheen"
+  "Palvelu, jolla voi tallentaa logiin selainvirheen"
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]

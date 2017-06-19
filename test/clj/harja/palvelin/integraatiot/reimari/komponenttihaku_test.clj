@@ -54,6 +54,3 @@
     #inst "2010-05-01T01:00:00.000-00:00",
     :harja.domain.vesivaylat.turvalaitekomponentti/lisatiedot
     "asennettu kivasti"}))
-
-(t/deftest ajastettu-komponenttihaku
-  )

@@ -49,7 +49,10 @@
   :luokka   optionaalinen lisäluokka
   :otsikko  Leijukkeessa näytettävä otsikko-teksti"
   [optiot sisalto]
-  (let [suunta (r/atom nil)
+  (let [;; Avautuissuunta määritetään komponentin korkeuden perusteella, joka määrittyy sisällön mukaan.
+        ;; Tällöin komponentti rendataan aluksi piilotettuna, jotta suunta saadaan määritettyä.
+        ;; Useimmissa tilanteissa yläpuolella on tilaa ja alhaalla ei, joten suunta ylös on hyvä default.
+        suunta (r/atom :ylos-vasen)
         paivita-suunta! (fn [this _]
                           (reset! suunta
                                   (maarita-suunta this)))

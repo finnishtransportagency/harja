@@ -22,10 +22,12 @@
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
-                   [harja.makrot :refer [fnc]]))
+                   [harja.makrot :refer [fnc]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin."
@@ -266,7 +268,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko]}]
+                                peruuta otsikko validoi-fn]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -297,29 +299,35 @@
          [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
       (when-not muokkaa-aina
-        [:button.nappi-myonteinen.grid-tallenna
-         {:disabled (or (not (empty? @virheet))
-                        @tallennus-kaynnissa
-                        (not muokattu?))
-          :on-click #(when-not @tallennus-kaynnissa
-                       (let [kaikki-rivit (mapv second @muokatut)
-                             ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
-                             tallennettavat (filter (fn [rivi]
-                                                      (not (and (neg-int? (:id rivi))
-                                                                (:poistettu rivi))))
-                                                    kaikki-rivit)
-                             tallennettavat
-                             (if tallenna-vain-muokatut
-                               (do (log "TALLENNA VAIN MUOKATUT")
-                                   (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
-                               tallennettavat)]
-                         (do (.preventDefault %)
-                             (reset! tallennus-kaynnissa true)
-                             (go
-                               (when-not (empty? tallennettavat)
-                                 (<! (tallenna tallennettavat)))
-                               (nollaa-muokkaustiedot!)))))}
-         [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+        (let [validointivirhe (when validoi-fn
+                                (validoi-fn (vals @muokatut)))]
+          (y/wrap-if
+           validointivirhe
+           [y/tooltip {} :% validointivirhe]
+           [:button.nappi-myonteinen.grid-tallenna
+            {:disabled (or validointivirhe
+                           (not (empty? @virheet))
+                           @tallennus-kaynnissa
+                           (not muokattu?))
+             :on-click #(when-not @tallennus-kaynnissa
+                          (let [kaikki-rivit (mapv second @muokatut)
+                                ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                                tallennettavat (filter (fn [rivi]
+                                                         (not (and (neg-int? (:id rivi))
+                                                                   (:poistettu rivi))))
+                                                       kaikki-rivit)
+                                tallennettavat
+                                (if tallenna-vain-muokatut
+                                  (do (log "TALLENNA VAIN MUOKATUT")
+                                      (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                                  tallennettavat)]
+                            (do (.preventDefault %)
+                                (reset! tallennus-kaynnissa true)
+                                (go
+                                  (when-not (empty? tallennettavat)
+                                    (<! (tallenna tallennettavat)))
+                                  (nollaa-muokkaustiedot!)))))}
+            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
         [:button.nappi-kielteinen.grid-peru
@@ -543,6 +551,9 @@
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+  :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
+                                        virheilmoituksen, jos tallennus estetään.
+
                                         jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
@@ -575,11 +586,14 @@
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
   :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
                                          :teksti (näytettävä teksti) ja :sarakkeita (colspan)
+  :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
+                                        joka saa muokkaustiedot parametrina ja palauttaa
+                                        sekvenssin mäppejä kuten :rivi-ennen
+
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
   :voi-muokata-rivia?                   predikaattifunktio, jolla voidaan määrittää jolla voidaan määrittää kaikille
-                                        riveille yhteinen sääntö milloin rivejä saa muokata
-  "
+                                        riveille yhteinen sääntö milloin rivejä saa muokata "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
@@ -865,7 +879,8 @@
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
-                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts}
+                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
+                    validoi-fn] :as opts}
             skeema alkup-tiedot]
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               mahdollista-rivin-valinta? (or mahdollista-rivin-valinta? false)
@@ -894,7 +909,8 @@
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                             :peruuta peruuta :otsikko otsikko})
+                             :peruuta peruuta :otsikko otsikko
+                             :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}
@@ -945,7 +961,16 @@
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :infolaatikko-nakyvissa? infolaatikko-nakyvissa?
                                          :nayta-toimintosarake? nayta-toimintosarake?
-                                         :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))]])
+                                         :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))
+                (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
+                                             ((:rivi-jalkeen-fn opts)
+                                              (if muokataan
+                                                (vals @muokatut)
+                                                alkup-tiedot)))]
+                  [:tr {:class (:luokka (meta rivi-jalkeen))}
+                   (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
+                         [:td {:colSpan (or sarakkeita 1) :class luokka}
+                          teksti])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
@@ -967,7 +992,8 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko})])])))))
+                                :peruuta peruuta :otsikko otsikko
+                                :validoi-fn validoi-fn})])])))))
 
 (defn otsikkorivin-tiedot [otsikko maara]
   (str otsikko
@@ -976,3 +1002,25 @@
        (when (not= maara 0)
          "kpl")
        ")"))
+
+(defn erikoismuokattava-kentta
+  "Jos annettu ehto on true, näyttää gridissä napin, jolla kenttää voidaan muokata.
+   Jos ehto on false, piirtää kentän arvon tekstinä sekä napin kynä-ikonilla,
+   jolla arvoa voi muokata."
+  [{:keys [ehto-fn nappi-teksti nappi-optiot toiminto-fn arvo] :as optiot}]
+  (if (ehto-fn)
+    [napit/yleinen-ensisijainen
+     nappi-teksti
+     toiminto-fn
+     (merge {:luokka (str "nappi-grid ")}
+            nappi-optiot)]
+    [:div
+     [:div.pull-left {:style {:position :relative
+                              :top "7px"}}
+      arvo]
+
+     [napit/yleinen-toissijainen
+      (ikonit/muokkaa)
+      toiminto-fn
+      (merge {:luokka "pull-right"
+              :ikoninappi? true} nappi-optiot)]]))
