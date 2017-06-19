@@ -11,4 +11,3 @@ ALTER TABLE vv_hinta ALTER COLUMN "hinnoittelu-id" SET NOT NULL;
 
 -- Toimenpiteen reimari-id uniikiksi
 ALTER TABLE reimari_toimenpide ADD CONSTRAINT "uniikki_reimari-id" UNIQUE ("reimari-id");
-
