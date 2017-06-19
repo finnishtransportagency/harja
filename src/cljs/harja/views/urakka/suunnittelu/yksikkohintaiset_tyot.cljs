@@ -192,7 +192,7 @@
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))
 
-        vesivaylaurakka? (reaction (urakka-domain/vesivayla-urakkatyyppi? (:tyyppi @urakka)))
+        vesivaylaurakka? (reaction (urakka-domain/vesivaylaurakkatyyppi? (:tyyppi @urakka)))
         tyorivit-joilla-hinta (reaction
                                (let [tyorivit (filter :yksikkohinta @tyorivit)]
                                  (if @vesivaylaurakka?

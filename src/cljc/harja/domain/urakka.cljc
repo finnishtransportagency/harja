@@ -65,8 +65,8 @@
 (def vesivayla-urakkatyypit #{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
                               :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
 
-(defn vesivayla-urakkatyyppi? [tyyppi]
+(defn vesivaylaurakkatyyppi? [tyyppi]
   (boolean (vesivayla-urakkatyypit tyyppi)))
 
 (defn vesivaylaurakka? [urakka]
-  (vesivayla-urakkatyyppi? (:tyyppi urakka)))
+  (vesivaylaurakkatyyppi? (:tyyppi urakka)))
