@@ -2,12 +2,14 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.urakat :as u]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [clojure.string :as str]))
 
 (defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
   (if (and paallystyssopimusnro (not (empty? paallystyssopimusnro)))
     (if geometria
-      (let [alueurakkanro (str alueurakkanro)
+      (let [alueurakkanro (when (and alueurakkanro (not (str/blank? alueurakkanro)))
+                            (str (int (Double/parseDouble alueurakkanro))))
             paallystyssopimusnro (str (int (Double/parseDouble paallystyssopimusnro)))
             geometria (.toString geometria)]
         (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
@@ -23,6 +25,6 @@
         (u/tuhoa-paallystyspalvelusopimusdata! db)
         (let [urakat (shapefile/tuo shapefile)]
           (doseq [urakka urakat]
-            (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:paalurakka urakka))))))
+            (tuo-urakka db (str (:ualue urakka)) (:the_geom urakka) (str (:paalurak urakka))))))
       (log/debug "Päällystyksen palvelusopimusten tuonti kantaan valmis."))
     (log/debug "Päällystyksen palvelusopimusten tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
