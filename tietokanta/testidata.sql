@@ -1,6 +1,9 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
+-- Testikäyttäjiä
+\i testidata/kayttajat.sql
+
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
 
@@ -10,14 +13,13 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
 
+\i testidata/vesivaylat/vesivaylien_urakat.sql
+
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
 -- Luodaan sanktiotyypit
 \i testidata/sanktiotyypit.sql
-
--- Testikäyttäjiä
-\i testidata/kayttajat.sql
 
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
@@ -27,6 +29,9 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Ladataan alueurakoiden geometriat
 \i testidata/alueurakat.sql
+
+-- Liitä käyttäjät urakoihin
+\i testidata/kayttajaroolit.sql
 
 -- Lisätään ELY numerot hallintayksiköille
 
@@ -134,7 +139,6 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Vesiväylät
 
-\i testidata/vesivaylat/vesivaylien_urakat.sql
 \i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
 \i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
 
