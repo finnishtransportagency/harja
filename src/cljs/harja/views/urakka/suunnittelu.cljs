@@ -21,8 +21,10 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :materiaalit (and (not= tyyppi :tiemerkinta)
-                      (not= tyyppi :paallystys))
-    :suola (= tyyppi :hoito)))
+                      (not= tyyppi :paallystys)
+                      (not= tyyppi :vesivayla-hoito))
+    :suola (= tyyppi :hoito)
+    :muut (not= tyyppi :vesivayla-hoito)))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -47,7 +49,8 @@
 
           "Muutos- ja lisätyöt"
           :muut
-          (when (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
+          (when (and (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
+                     (valilehti-mahdollinen? :muut ur))
             ^{:key "muut-tyot"}
             [muut-tyot/muut-tyot ur])
 

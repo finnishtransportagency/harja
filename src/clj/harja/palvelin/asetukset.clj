@@ -136,6 +136,12 @@
 
    (s/optional-key :vkm)   {:url s/Str}
 
+   (s/optional-key :reimari)                {:url                     s/Str
+                                             :kayttajatunnus          s/Str
+                                             :salasana                s/Str
+                                             (s/optional-key :paivittainen-toimenpidehaku)  [s/Num]
+                                             (s/optional-key :paivittainen-komponenttityyppihaku)  [s/Num]
+                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]}
    })
 
 (def oletusasetukset
