@@ -54,7 +54,8 @@
             muokkaustiedot (cond
                              (::m/poistettu? kiintio)
                              {::m/poistaja-id (:id user)
-                              ::m/poistettu (pvm/nyt)}
+                              ::m/poistettu? true
+                              ::m/muokattu (pvm/nyt)}
 
                              (id-olemassa? (::kiintio/id kiintio))
                              {::m/muokkaaja-id (:id user)
