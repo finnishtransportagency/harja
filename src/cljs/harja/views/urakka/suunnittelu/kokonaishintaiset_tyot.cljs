@@ -19,10 +19,12 @@
             [clojure.set :refer [difference]]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
-            [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.valinnat :as u-valinnat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.valinnat :as valinnat]
+            [harja.domain.urakka :as u-domain])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -217,6 +219,11 @@
 
     (assoc tama-rivi :maksupvm maksu-pvm)))
 
+(defn- suodattimet [urakka]
+  [valinnat/urakkavalinnat (when-not (u-domain/vesivaylaurakka? urakka) {:tyyliton? true})
+   ^{:key "valinnat"}
+   [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]])
+
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
@@ -299,7 +306,7 @@
      (fn [ur valitun-hoitokauden-yks-hint-kustannukset]
        [:span
         [:div.row
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide ur]]
+         [suodattimet ur]]
 
         [:div.row.kokonaishintaiset-tyot
 

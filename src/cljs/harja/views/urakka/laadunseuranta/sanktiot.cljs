@@ -249,36 +249,22 @@
            [ajax-loader "Ladataan..."])]))))
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka vesivayla?]
-  (if vesivayla?
-    [:div
-     [valinnat/urakkavalinnat {}
-      ^{:key "urakkavalinnat"}
-      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
-      ^{:key "urakkatoiminnot"}
-      [valinnat/urakkatoiminnot {}
-       (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                               (:id valittu-urakka))]
-         (yleiset/wrap-if
-           (not oikeus?)
-           [yleiset/tooltip {} :%
-            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                            oikeudet/urakat-laadunseuranta-sanktiot)]
-           ^{:key "Lisää sanktio"}
-           [napit/uusi "Lisää sanktio"
-            #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
-            {:disabled (not oikeus?)}]))]]]
-    [:div
-     [urakka-valinnat/urakan-hoitokausi valittu-urakka]
-     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                             (:id valittu-urakka))]
-       (yleiset/wrap-if
-         (not oikeus?)
-         [yleiset/tooltip {} :%
-          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                          oikeudet/urakat-laadunseuranta-sanktiot)]
-         [napit/uusi "Lisää sanktio"
-          #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
-          {:disabled (not oikeus?)}]))]))
+  [valinnat/urakkavalinnat (when-not vesivayla? {:tyyliton? true})
+   ^{:key "urakkavalinnat"}
+   [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+   ^{:key "urakkatoiminnot"}
+   [valinnat/urakkatoiminnot (when-not vesivayla? {:tyyliton? true})
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                            (:id valittu-urakka))]
+      (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                         oikeudet/urakat-laadunseuranta-sanktiot)]
+        ^{:key "Lisää sanktio"}
+        [napit/uusi "Lisää sanktio"
+         #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
+         {:disabled (not oikeus?)}]))]])
 
 (defn sanktiolistaus
   [optiot valittu-urakka]

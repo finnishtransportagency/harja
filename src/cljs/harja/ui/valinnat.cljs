@@ -372,10 +372,11 @@
                          :valitse-fn #(reset! valittu-toimenpide-atom %)}
     toimenpiteet]])
 
-(defn urakkavalinnat [optiot & sisalto]
-  [:div.urakkavalinnat sisalto])
+(defn urakkavalinnat [{:keys [tyyliton?]} & sisalto]
+  [:div.urakkavalinnat (when tyyliton? {:class "urakkavalinnat-tyyliton"})
+   sisalto])
 
-(defn urakkatoiminnot [{:keys [sticky?] :as optiot} & sisalto]
+(defn urakkatoiminnot [{:keys [sticky? tyyliton?] :as optiot} & sisalto]
   (let [naulattu? (atom false)
         elementin-etaisyys-ylareunaan (atom nil)
         maarita-sticky! (fn []
@@ -398,7 +399,8 @@
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
                                  (r/dom-node %))))
       (fn [optiot & sisalto]
-        [:div.urakkatoiminnot {:class (when @naulattu? "urakkatoiminnot-naulattu ")}
+        [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
+                                           (when tyyliton? "urakkatoiminnot-tyyliton "))}
          sisalto]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
