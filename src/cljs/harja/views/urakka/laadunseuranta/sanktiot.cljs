@@ -200,6 +200,9 @@
                                 :yllapidon_muistutus "Muistutus"
                                 :yllapidon_sakko "Sakko"
                                 :yllapidon_bonus "Bonus"
+                                :vesivayla_muistutus "Muistutus"
+                                :vesivayla_sakko "Sakko"
+                                :vesivayla_bonus "Bonus"
                                 "- valitse laji -")
               :validoi [[:ei-tyhja "Valitse laji"]]}
 
