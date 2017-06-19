@@ -58,7 +58,7 @@
          materiaalit []]
 
     ;; Assertoi, että palvelun kautta haettu ja generoiduista materiaaleista laskettu
-    ;; summat on sama kaikille materiaaleille
+    ;; summa on sama kaikille materiaaleille
     (let [haettu-listaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-vesivayla-materiaalilistaus
                                          testi/+kayttaja-jvh+
@@ -73,6 +73,7 @@
       (is (= listauksen-maara generoidut-maarat))
 
       (when (pos? i)
+        ;; Generoi ja kirjaa uusi materiaali
         (let [m (gen/generate testimateriaali-gen)]
           (kutsu-palvelua (:http-palvelin jarjestelma)
                           :kirjaa-vesivayla-materiaali
