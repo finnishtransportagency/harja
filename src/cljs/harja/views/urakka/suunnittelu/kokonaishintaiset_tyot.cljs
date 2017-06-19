@@ -333,6 +333,10 @@
                                                  :kirjoitus
                                                  (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)))
               :tallenna-vain-muokatut false
+              :validoi-fn (when @prosenttijako?
+                            (fn [rivit]
+                              (when (not= 100 (int (reduce + 0 (keep :prosentti rivit))))
+                                "Prosenttien tulee olla yhteensä 100")))
               :peruuta #(do
                           (reset! vuosisumma-muokattava? false)
                           (reset! tuleville? false))

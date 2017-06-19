@@ -26,13 +26,14 @@
 ;; Urakkatoiminnot: Hintaryhmän valitseminen
 
 (defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
-  [yleiset/livi-pudotusvalikko
-   {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
-    :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
-    :class "livi-alasveto-250 inline-block"
-    :valinta valittu-hintaryhma
-    :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
-   hintaryhmat])
+  [:div.inline-block {:style {:margin-right "10px"}}
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
+     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+     :class "livi-alasveto-250 inline-block"
+     :valinta valittu-hintaryhma
+     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
+    hintaryhmat]])
 
 (defn- lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
                                hintaryhmien-liittaminen-kaynnissa?] :as app}]
@@ -46,21 +47,24 @@
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   hintaryhmien-liittaminen-kaynnissa?)}])
 
-(defn- ryhman-luonti [e! {:keys [uuden-hintaryhman-lisays? uusi-hintaryhma
+(defn- ryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
                                  hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
-     [tee-kentta {:tyyppi :string
-                  :placeholder "Ryhmän nimi"
-                  :pituus-max 160}
-      (r/wrap
-        uusi-hintaryhma
-        #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]
+     [:div.inline-block {:style {:margin-right "10px"}}
+      [tee-kentta {:tyyppi :string
+                   :placeholder "Ryhmän nimi"
+                   :pituus-max 160}
+       (r/wrap
+         uusi-hintaryhma
+         #(e! (tiedot/->UudenHintaryhmanNimeaPaivitetty %)))]]
      [napit/yleinen-ensisijainen
       (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."] "Luo")
       #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
-      {:disabled hintaryhman-tallennus-kaynnissa?}]
-     [napit/yleinen-ensisijainen "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
+      {:disabled (or ;; Disabloidaan nappi jos hintaryhmän nimi on jo olemassa, tai liittäminen menossa
+                   ((set (map ::h/nimi hintaryhmat)) uusi-hintaryhma)
+                   hintaryhman-tallennus-kaynnissa?)}]
+     [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
     [napit/yleinen-ensisijainen
      "Luo uusi ryhmä"
@@ -159,10 +163,18 @@
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
-(defn- hintaryhman-hinnoittelu [e! app hintaryhma]
-  (let [hinnoittelu-id (get-in app [:hinnoittele-hintaryhma ::h/id])
-        hinnoitellaan? (some? hinnoittelu-id)
-        hinnat (::h/hinnat hintaryhma)]
+(defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
+  (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
+        hintaryhman-toimenpiteet (:toimenpiteet app*)
+        hintaryhman-toimenpiteiden-omat-hinnat (remove
+                                                 nil?
+                                                 (mapcat #(get-in % [::to/oma-hinnoittelu ::h/hinnat])
+                                                         hintaryhman-toimenpiteet))
+        hintaryhman-toimenpiteiden-yhteishinta (hinta/kokonaishinta-yleiskustannuslisineen
+                                                 hintaryhman-toimenpiteiden-omat-hinnat)
+        hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
+        hinnat (::h/hinnat hintaryhma)
+        hintaryhman-kokonaishinta (hinta/kokonaishinta-yleiskustannuslisineen hinnat)]
     [:div.pull-right
      (if hinnoitellaan?
        [:div
@@ -171,7 +183,7 @@
                       :placeholder "Syötä hinta"
                       :kokonaisosan-maara 7}
           (r/wrap (hinta/hinnan-maara
-                    (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit])
+                    (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
                     tiedot/hintaryhman-hintakentta-otsikko)
                   #(e! (tiedot/->HinnoitteleHintaryhmaKentta
                          {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
@@ -180,24 +192,33 @@
          [:span "€"]]
         [napit/tallenna
          "Valmis"
-         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app)))
-         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
+         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
+         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
         [napit/peruuta
          "Peruuta"
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        (if (empty? hinnat)
          [napit/yleinen-ensisijainen
-         "Määrittele yksi hinta koko ryhmälle"
-         #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)}]
+          "Määrittele yksi hinta koko ryhmälle"
+          #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+          {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
          [:div
           [:div.inline-block {:style {:margin-right "10px"}}
-           [:b "Ryhmähinta: "]
-           [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-          [napit/yleinen-toissijainen
-           (ikonit/muokkaa)
-           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:ikoninappi? true}]]))]))
+           (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+             [:span
+              [:b "Ryhmähinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+             ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+             ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+             ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+             [yleiset/tietoja {:tietokentan-leveys "180px"}
+              "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+              "Ryhmähinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+              "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+          [:div.inline-block {:style {:vertical-align :top}}
+           [napit/yleinen-toissijainen
+            (ikonit/muokkaa)
+            #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+            {:ikoninappi? true}]]]))]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -217,18 +238,18 @@
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
-         (for [[hintaryhma hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)]]
-           ^{:key (str "yksikkohintaiset-toimenpiteet-" (::h/nimi hintaryhma))}
+         (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
+               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                     hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)]]
+           ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
            [jaettu/listaus e! app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
                                               [hinnoittele-toimenpide e! app* rivi])}]
              :footer (when hintaryhma
-                       [hintaryhman-hinnoittelu e! app hintaryhma])
+                       [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
-             :hintaryhma hintaryhma
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
 

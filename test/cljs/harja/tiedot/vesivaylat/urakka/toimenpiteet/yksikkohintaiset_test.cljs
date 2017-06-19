@@ -464,21 +464,31 @@
 
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
-    #{tiedot/->ToimenpiteenHinnoitteluTallennettu tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
+    #{tiedot/->ToimenpiteenHinnoitteluTallennettu
+      tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
     (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
-           (e! (tiedot/->HinnoitteleToimenpide 1)))))
+           (e! (tiedot/->HinnoitteleToimenpide 1)
+               {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false})))))
 
-  (let [app {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}]
-    (is (= app (e! (tiedot/->HinnoitteleToimenpide 1) app)))))
+(deftest hintaryhman-hinnoittelun-tallennus
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmanHinnoitteluTallennettu
+      tiedot/->HintaryhmanHinnoitteluEiTallennettu}
+
+    (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}
+           (e! (tiedot/->HinnoitteleHintaryhma 1)
+               {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false})))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (let [hinnoiteltava-toimenpide-id 1
-        ;; Asetetaan hinnoittelu päälle ja oletetaan, että saadaan tallennukseen vastaus
+        ;; Asetetaan hinnoittelu päälle ja testataan miten tila muuttuu,
+        ;; kun saadaan tallennukseen vastaus
         vanha-tila (assoc testitila
+                     :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true
                      :hinnoittele-toimenpide
                      {::to/id hinnoiteltava-toimenpide-id
-                      :harja.domain.vesivaylat.hinnoittelu/hintaelementit
+                      ::h/hintaelementit
                       [{::hinta/otsikko "Työ"
                         ::hinta/maara 10
                         ::hinta/yleiskustannuslisa 0}
@@ -495,7 +505,7 @@
                         ::hinta/maara 50
                         ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
-                        {:harja.domain.vesivaylat.hinnoittelu/hinnat
+                        {::h/hinnat
                          [{::hinta/otsikko "Työ"
                            ::hinta/maara 10
                            ::hinta/yleiskustannuslisa 0}
@@ -547,9 +557,47 @@
             ::h/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
-(deftest hinnoittelu-ei-tallennettu
+(deftest hintaryhman-hinnoittelu-tallennettu
+  (let [hinnoiteltava-hintaryhma-id 1
+        ;; Asetetaan hinnoittelu päälle ja testataan miten tila muuttuu,
+        ;; kun saadaan tallennukseen vastaus
+        vanha-tila (assoc testitila
+                     :hinnoittele-hintaryhma
+                     :hintaryhman-hinnoittelun-tallennus-kaynnissa? true
+                     {::h/id hinnoiteltava-hintaryhma-id
+                      ::h/hintaelementit
+                      [{::hinta/otsikko "Ryhmähinta"
+                        ::hinta/maara 123
+                        ::hinta/yleiskustannuslisa 0}]})
+        palvelimen-vastaus {::h/hinnat [{::hinta/yleiskustannuslisa 0
+                                         ::hinta/maara 123
+                                         ::hinta/otsikko "Ryhmähinta"
+                                         ::hinta/id 1}]
+                            ::h/hintaryhma? true
+                            ::h/nimi "Hietasaaren poijujen korjaus"
+                            ::h/id 9}
+        uusi-tila (e! (tiedot/->HintaryhmanHinnoitteluTallennettu
+                        palvelimen-vastaus)
+                      vanha-tila)
+        paivitetyt-hintaryhmat (:hintaryhmat uusi-tila)]
+
+    ;; Hinnoittelu ei ole enää päällä
+    (is (false? (:hintaryhman-hinnoittelun-tallennus-kaynnissa? uusi-tila)))
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/id])))
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))
+
+    ;; Hintaryhmiksi asetettiin palvelimen vastaus
+    (is (= paivitetyt-hintaryhmat palvelimen-vastaus))))
+
+(deftest toimenpiteen-hinnoittelu-ei-tallennettu
   (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
-         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})))))
+         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})
+             {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}))))
+
+(deftest hintaryhman-hinnoittelu-ei-tallennettu
+  (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false}
+         (e! (tiedot/->HintaryhmanHinnoitteluEiTallennettu {:msg :error})
+             {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen
   (let [vanha-tila testitila
@@ -570,51 +618,3 @@
              ::va/id 1}
             {::va/nimi "Varkaus, Kuopion väylä"
              ::va/id 2}]))))
-
-(deftest hakuargumenttien-muodostus
-  (testing "Hakuargumenttien muodostus toimii"
-    (let [alku (t/now)
-          loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/hakukyselyn-argumentit
-                           {:urakka-id 666
-                            :sopimus-id 777
-                            :aikavali [alku loppu]
-                            :vaylatyyppi :muu
-                            :vayla 1
-                            :tyolaji :poijut
-                            :tyoluokka :asennus-ja-huolto
-                            :toimenpide :autot-traktorit
-                            :vain-vikailmoitukset? true})]
-      (is (= (dissoc hakuargumentit :alku :loppu)
-             {::to/urakka-id 666
-              ::to/sopimus-id 777
-              ::va/vaylatyyppi :muu
-              ::to/vayla-id 1
-              ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
-              ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
-              ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true
-              :tyyppi :yksikkohintainen}))
-      (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
-      (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
-
-  (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :tyolaji nil
-                                                         :tyoluokka nil
-                                                         :toimenpide nil})]
-      (is (= hakuargumentit
-             {::to/urakka-id 666
-              ::to/sopimus-id 777
-              :tyyppi :yksikkohintainen}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
-
-  (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                         :sopimus-id 777})]
-      (is (= hakuargumentit {::to/urakka-id 666
-                             ::to/sopimus-id 777
-                             :tyyppi :yksikkohintainen}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))

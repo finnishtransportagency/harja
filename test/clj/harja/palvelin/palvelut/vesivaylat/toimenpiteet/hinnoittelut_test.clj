@@ -5,7 +5,6 @@
              [pvm :as pvm]
              [testi :refer :all]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
@@ -265,6 +264,35 @@
                                            :hae-hinnoittelut +kayttaja-tero+
                                            kysely-params)))))
 
+(deftest luo-hinnoittelu
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::u/id urakka-id
+                       ::h/nimi "Testi123"}]
+    (testing "Luodaan uusi hinnoittelu"
+      (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :luo-hinnoittelu +kayttaja-jvh+
+                                    kysely-params)
+            hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+        (is (s/valid? ::h/luo-hinnoittelu-kysely kysely-params))
+        (is (s/valid? ::h/luo-hinnoittelu-vastaus vastaus))
+
+        ;; Hinnoittelu lisättiin
+        (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen))
+
+        ;; Sama hinnoittelu palautui
+        (is (= (::h/urakka-id vastaus) urakka-id))
+        (is (= (::h/nimi vastaus) "Testi123"))
+        (is (true? (::h/hintaryhma? vastaus)))
+        (is (integer? (::h/id vastaus)))))
+
+    ;; Yritetään luoda samalla nimellä uusi hintaryhmä
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-hinnoittelut +kayttaja-tero+
+                                           kysely-params))
+        "Hintaryhmän nimi on jo olemassa urakassa, pitäisi tulla poikkeus")))
+
 (deftest luo-hinnoittelu-ilman-oikeuksia
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
@@ -272,6 +300,45 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :luo-hinnoittelu +kayttaja-tero+
                                            kysely-params)))))
+
+(deftest liita-toimenpiteet-hinnoitteluun
+  (let [hinnoittelu-on-hintaryhma? (fn [hinnoittelu-id]
+                                     (ffirst (q "SELECT hintaryhma FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";")))
+        hae-toimenpiteen-hinnoittelut-idt (fn [toimenpide-id]
+                                            (map :hinnoittelu-id
+                                                 (q-map "SELECT \"hinnoittelu-id\"
+                                              FROM vv_hinnoittelu_toimenpide
+                                              WHERE \"toimenpide-id\" = " toimenpide-id
+                                              "AND poistettu IS NOT TRUE;")))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
+        liitettava-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
+                                             WHERE \"urakka-id\" = " urakka-id "
+                                             AND hintaryhma IS TRUE
+                                             AND poistettu IS NOT TRUE
+                                             AND id NOT IN (" (str/join ", " toimenpiteen-hinnoittelu-idt-ennen) ")"))))
+        kysely-params {::toi/idt #{toimenpide-id}
+                       ::h/id liitettava-hinnoittelu-id
+                       ::u/id urakka-id}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                          kysely-params)
+        toimenpiteen-hinnoittelu-idt-jalkeen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)]
+
+    ;; Tilanne ennen testiä on halutunlainen
+    (is (= (count toimenpiteen-hinnoittelu-idt-ennen) 2) "Testattavan toimenpiteen pitää kuulua kahteen hinnoitteluun")
+    (is (= (set (map hinnoittelu-on-hintaryhma? toimenpiteen-hinnoittelu-idt-ennen))
+           #{true false})
+        "Testattavan toimenpiteen kuulua hintaryhmään sekä omaan hinnoitteluun")
+    (is (s/valid? ::h/liita-toimenpiteet-hinnotteluun-kysely kysely-params))
+
+    ;; Tilanne testin jälkeen:
+    (is (= (count toimenpiteen-hinnoittelu-idt-jalkeen) 2) "Toimenpide kuuluu edelleen kahteen hinnoitteluun")
+    (is ((set toimenpiteen-hinnoittelu-idt-jalkeen) liitettava-hinnoittelu-id) "Toimenpide kuuluu nyt uuteen hinnoitteluun")
+    (is (= (set (map hinnoittelu-on-hintaryhma? toimenpiteen-hinnoittelu-idt-jalkeen))
+           #{true false})
+        "Toimenpide kuuluu edelleen hintaryhmään sekä omaan hinnoitteluun")))
 
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)

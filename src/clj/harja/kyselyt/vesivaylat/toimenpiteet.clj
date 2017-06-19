@@ -90,17 +90,20 @@
               (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
               (op/and
                 {::vv-toimenpide/id (op/in toimenpide-idt)}))
-
        (ilman-poistettuja-linkkeja)
        (toimenpiteet-omalla-hinnoittelulla)
        (toimenpiteet-hintaryhmalla)
        ;; Poistetaan turha hinnoittelu-linkit avain
        (map #(dissoc % ::vv-toimenpide/hinnoittelu-linkit))
-
        ;; Groupataan ja yhdistetään toimenpiteen tiedot
        (group-by ::vv-toimenpide/id)
        vals
-       (mapv (partial apply merge))))
+       (map (partial apply merge))
+       ;; Säilytetään hintaryhmästä vain hinnoittelu-id
+       (map #(if-let [hinnoitteluryhma-id (get-in % [::vv-toimenpide/hintaryhma ::vv-hinnoittelu/id])]
+               (assoc % ::vv-toimenpide/hintaryhma-id hinnoitteluryhma-id)
+               %))
+       (map #(dissoc % ::vv-toimenpide/hintaryhma))))
 
 (defn suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
