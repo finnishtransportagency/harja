@@ -81,3 +81,5 @@ SELECT luo_vv_tpk('VV111-40', 'Hoidon vuosihinta, määrämuutokset: Suurviitta,
 SELECT luo_vv_tpk('VV111-41', 'Hoidon vuosihinta, määrämuutokset: Viitta, pimeä', 'kpl');
 SELECT luo_vv_tpk('VV111-42', 'Hoidon vuosihinta, määrämuutokset: Kiinteä turvalaite, valaistu', 'kpl');
 SELECT luo_vv_tpk('VV111-43', 'Hoidon vuosihinta, määrämuutokset: Kiinteä turvalaite, pimeä', 'kpl');
+
+
