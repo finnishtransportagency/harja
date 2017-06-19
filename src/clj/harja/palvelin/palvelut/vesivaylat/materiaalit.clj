@@ -7,12 +7,12 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn- hae-materiaalilistaus [db user params]
-  ;; FIXME: lukuoikeuden tarkistus
-  #_(oikeudet/vaadi-lukuoikeus )
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit (::m/urakka-id params))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
 (defn- kirjaa-materiaali [db user materiaali]
-  ;; TARKISTA OIKEUS
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
+                                  (::m/urakka-id materiaali))
   (specql/insert! db ::m/materiaali materiaali)
   (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
 
@@ -28,7 +28,7 @@
     (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
                                     (fn [user materiaali]
                                       (kirjaa-materiaali db user materiaali))
-                                    {:kysely-spec ::m/materiaali-insert
+                                    {:kysely-spec ::m/materiaalikirjaus
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 

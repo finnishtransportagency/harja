@@ -14,3 +14,6 @@
 
 (s/def ::materiaalilistauksen-haku (s/keys :req [::urakka-id]))
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
+
+(s/def ::materiaalikirjaus (s/and ::materiaali-insert
+                                  (s/keys :req [::urakka-id ::nimi])))
