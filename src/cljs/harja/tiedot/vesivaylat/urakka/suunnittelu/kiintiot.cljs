@@ -17,14 +17,14 @@
 
 (defonce tila (r/atom
                 {:nakymassa? false
-                      :kiintioiden-haku-kaynnissa? false
-                       :kiintioiden-tallennus-kaynnissa? false
-                      :kiintiot nil
-                      :valinnat nil}))
+                 :kiintioiden-haku-kaynnissa? false
+                 :kiintioiden-tallennus-kaynnissa? false
+                 :kiintiot nil
+                 :valinnat nil}))
 
 (defonce valinnat
   (reaction
-    (when (:nakymassa? tila)
+    (when (:nakymassa? @tila)
       {:urakka-id (:id @nav/valittu-urakka)
        :sopimus-id (first @u/valittu-sopimusnumero)})))
 
@@ -71,7 +71,8 @@
   KiintiotEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Kiintiöiden haku epäonnistui!" :danger)
-    (assoc app :kiintioiden-haku-kaynnissa? false))
+    (assoc app :kiintioiden-haku-kaynnissa? false
+               :kiintiot []))
 
   TallennaKiintiot
   (process-event [{kiintiot :grid ch :paluukanava} app]
