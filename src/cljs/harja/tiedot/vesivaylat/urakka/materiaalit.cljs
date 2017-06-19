@@ -27,9 +27,6 @@
 (defonce app (r/atom {:urakka-id nil
                       :materiaalilistaus nil
 
-                      ;; materiaalin nimi -> käyttörivit
-                      :materiaalin-kaytto {}
-
                       ;; Lisättävän materiaalin tiedot mäp
                       :lisaa-materiaali nil
 
