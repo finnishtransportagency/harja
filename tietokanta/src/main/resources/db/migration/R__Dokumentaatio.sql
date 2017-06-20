@@ -140,6 +140,9 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
+COMMENT ON TABLE vv_hinnoittelu_toimenpide IS
+E'Linkkitaulu, jolla toimenpiteet ja hinnoittelut liitetään toisiinsa.';
+
 COMMENT ON TABLE vv_hinnoittelu IS
 E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun kautta. Jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä. Tällaisenkin toimenpiteen pitää kuitenkin kuulua hinnoitteluun, joka on hintaryhmä. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä. Esimerkiksi, voi olla hinnoittelu (joka on hintaryhmä) *Skikkebön majakan korjaus*, ja tälle hinnoittelulle on suoraan määritelty hinta "Työ 60k e". Siihen ryhmään kuuluu toimenpiteitä, ja yhdelle toimenpiteelle on määritelty lisäksi oma hinta "Komponentti 15k"';
 
