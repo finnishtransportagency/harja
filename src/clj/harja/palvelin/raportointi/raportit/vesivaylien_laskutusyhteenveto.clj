@@ -48,15 +48,24 @@
                                                                    :alkupvm alkupvm
                                                                    :loppupvm loppupvm}))})
 
-(defn- yhteensa-rivi [tiedot vaylatyyppi]
-  ["Yhteensä" ""
-   (reduce + 0
-           (conj (map :summa (filter #((:vaylatyyppi %) vaylatyyppi)
-                                     (:yksikkohintaiset tiedot)))
-                 ;; TODO VÄYLÄTYYPPI KOKONAISHINTAISIIN
-                 (:toteutunut-maara (first (:kokonaishintaiset tiedot)))))
-   ""])
+(defn- yhteensa-rivi
+  ([otsikko tiedot] (yhteensa-rivi otsikko tiedot nil))
+  ([otsikko tiedot vaylatyyppi]
+   [otsikko
+    ""
+    (reduce + 0
+            (conj (map :summa (if vaylatyyppi
+                                (filter #((:vaylatyyppi %) vaylatyyppi)
+                                        (:yksikkohintaiset tiedot))
+                                (:yksikkohintaiset tiedot)))
+                  ;; TODO VÄYLÄTYYPPI KOKONAISHINTAISIIN
+                  (:toteutunut-maara (first (:kokonaishintaiset tiedot)))))
+    ""]))
 
+(defn- kaikki-yhteensa [tiedot]
+  [(yhteensa-rivi "Kauppamerenkulku" tiedot "kauppamerenkulku")
+   (yhteensa-rivi "Muu vesiliikenne" tiedot "muu")
+   (yhteensa-rivi "Yhteensä" tiedot)])
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
@@ -71,7 +80,7 @@
                                     "Kauppamerenkulku: yksikköhintaiset"
                                     (:yksikkohintaiset raportin-tiedot)
                                     "kauppamerenkulku")
-        kauppamerenkulku-yht (yhteensa-rivi raportin-tiedot "kauppamerenkulku")
+        kauppamerenkulku-yht (yhteensa-rivi "Yhteensä" raportin-tiedot "kauppamerenkulku")
         muu-vesi-kok-hint (kok-hint-hinnoittelurivit
                             "Muu vesiliikenne: kokonaishintaiset"
                             (:kokonaishintaiset raportin-tiedot)
@@ -80,7 +89,8 @@
                             "Muu vesiliikenne: yksikköhintaiset"
                             (:yksikkohintaiset raportin-tiedot)
                             "muu")
-        muu-vesi-yht (yhteensa-rivi raportin-tiedot "muu")
+        muu-vesi-yht (yhteensa-rivi "Yhteensä" raportin-tiedot "muu")
+        kaikki-yht-rivit (kaikki-yhteensa raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
@@ -101,4 +111,11 @@
       hinnoittelusarakkeet
       (concat muu-vesi-kok-hint
               muu-vesi-yks-hint
-              [muu-vesi-yht])]]))
+              [muu-vesi-yht])]
+
+     [:taulukko {:otsikko "Yhteenveto"
+                 :tyhja (if (empty? kauppamerenkulku-kok-hint) "Ei raportoitavaa.")
+                 :sheet-nimi raportin-nimi
+                 :viimeinen-rivi-yhteenveto? true}
+      hinnoittelusarakkeet
+      kaikki-yht-rivit]]))
