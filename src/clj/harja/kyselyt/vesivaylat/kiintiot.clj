@@ -48,9 +48,12 @@
 
 (defn tallenna-kiintiot! [db user tiedot]
   (jdbc/with-db-transaction [db db]
-    (doseq [kiintio (:kiintiot tiedot)]
+    (doseq [kiintio (::kiintio/tallennettavat-kiintiot tiedot)]
       (let [sopimus-id (::kiintio/sopimus-id tiedot)
             urakka-id (::kiintio/urakka-id tiedot)
+            kiintio (if (id-olemassa? (::kiintio/id kiintio))
+                      kiintio
+                      (dissoc kiintio ::kiintio/id))
             muokkaustiedot (cond
                              (::m/poistettu? kiintio)
                              {::m/poistaja-id (:id user)
