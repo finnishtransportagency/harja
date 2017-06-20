@@ -183,28 +183,29 @@
                 :leveys 2 :tyyppi :string
                 :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-             {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
-              :palstoja 1 :uusi-rivi? true :nimi :laji
-              :hae (comp keyword :laji)
-              :aseta (fn [rivi arvo]
-                       (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                         (if-not (sanktio-domain/sakko? paivitetty)
-                           (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                           paivitetty)))
-              :valinnat mahdolliset-sanktiolajit
-              :valinta-nayta #(case %
-                                :A "Ryhmä A"
-                                :B "Ryhmä B"
-                                :C "Ryhmä C"
-                                :muistutus "Muistutus"
-                                :yllapidon_muistutus "Muistutus"
-                                :yllapidon_sakko "Sakko"
-                                :yllapidon_bonus "Bonus"
-                                :vesivayla_muistutus "Muistutus"
-                                :vesivayla_sakko "Sakko"
-                                :vesivayla_bonus "Bonus"
-                                "- valitse laji -")
-              :validoi [[:ei-tyhja "Valitse laji"]]}
+             (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+               {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
+                :palstoja 1 :uusi-rivi? true :nimi :laji
+                :hae (comp keyword :laji)
+                :aseta (fn [rivi arvo]
+                         (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                           (if-not (sanktio-domain/sakko? paivitetty)
+                             (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                             paivitetty)))
+                :valinnat mahdolliset-sanktiolajit
+                :valinta-nayta #(case %
+                                  :A "Ryhmä A"
+                                  :B "Ryhmä B"
+                                  :C "Ryhmä C"
+                                  :muistutus "Muistutus"
+                                  :yllapidon_muistutus "Muistutus"
+                                  :yllapidon_sakko "Sakko"
+                                  :yllapidon_bonus "Bonus"
+                                  :vesivayla_muistutus "Muistutus"
+                                  :vesivayla_sakko "Sakko"
+                                  :vesivayla_bonus "Bonus"
+                                  "- valitse laji -")
+                :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (when-not (or yllapito? vesivayla?)
                {:otsikko "Tyyppi" :tyyppi :valinta
