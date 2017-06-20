@@ -19,14 +19,13 @@
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
 (defn- kok-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
+  ;; TODO mites väylätyyppi saadaan tähän!?
   [{:otsikko otsikko}
    ["Kokonaishintaiset toimenpiteet"
-    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
-    (->> tiedot
-         (filter #(= (:vaylatyyppi %) vaylatyyppi))
-         (map :maara)
-         (reduce + 0))
-    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]]])
+    (:suunniteltu-maara (first tiedot))
+    (:toteutunut-maara (first tiedot))
+    (- (:suunniteltu-maara (first tiedot))
+       (:toteutunut-maara (first tiedot)))]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)

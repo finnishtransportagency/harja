@@ -1,10 +1,10 @@
 -- name: hae-yksikkohintaiset-toimenpiteet
 SELECT
-  hinnoittelu.nimi                          AS "hinnoittelu",
+  hinnoittelu.nimi                  AS "hinnoittelu",
   (SELECT SUM(maara)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = hinnoittelu.id
-   AND poistettu IS NOT TRUE) AS "summa",
+         AND poistettu IS NOT TRUE) AS "summa",
   -- Hinnoittelut, jotka ovat hinnoitteluryhmiä, sisältävät useita reimari-toimenpiteitä
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
@@ -17,7 +17,7 @@ SELECT
                              (SELECT "toimenpide-id"
                               FROM vv_hinnoittelu_toimenpide
                               WHERE "hinnoittelu-id" = hinnoittelu.id))))
-                                            AS vaylatyyppi
+                                    AS vaylatyyppi
 FROM vv_hinnoittelu hinnoittelu
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
@@ -32,21 +32,18 @@ WHERE "urakka-id" = :urakkaid
                                   WHERE "hinnoittelu-id" = hinnoittelu.id));
 
 -- name: hae-kokonaishintaiset-toimenpiteet
--- Toteutunut kok.hint työ on niiden kok.hint maksuerien summa, joiden maksupvm on menneisyydessä
 SELECT
-  "reimari-toimenpidetyyppi"                                             AS koodi,
-  (SELECT COUNT(id)
-   FROM reimari_toimenpide
-   WHERE "urakka-id" = :urakkaid
-         AND suoritettu >= :alkupvm
-         AND suoritettu <= :loppupvm
-         AND hintatyyppi = 'kokonaishintainen'
-         AND "reimari-toimenpidetyyppi" = rt."reimari-toimenpidetyyppi") AS maara,
-  vayla.tyyppi                                                           AS vaylatyyppi
-FROM reimari_toimenpide rt
-  LEFT JOIN vv_vayla vayla ON rt."vayla-id" = vayla.id
-WHERE "urakka-id" = :urakkaid
-      AND suoritettu >= :alkupvm
-      AND suoritettu <= :loppupvm
-      AND hintatyyppi = 'kokonaishintainen'
-GROUP BY koodi, vayla.tyyppi;
+  (SELECT SUM(summa)
+   FROM kokonaishintainen_tyo kt
+     LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+   WHERE tpi.urakka = :urakkaid
+         -- Kok. hint. osuu aikavälille jos eka päivä osuu
+         AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') >= :alkupvm
+         AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') <= :loppupvm) AS "suunniteltu-maara",
+  (SELECT SUM(summa)
+   FROM kokonaishintainen_tyo kt
+     LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+   WHERE tpi.urakka = :urakkaid
+         -- Toteutunut kok.hint työ on niiden kok.hint maksuerien summa,
+         -- joiden maksupvm on menneisyydessä
+         AND maksupvm <= NOW()) AS "toteutunut-maara"
