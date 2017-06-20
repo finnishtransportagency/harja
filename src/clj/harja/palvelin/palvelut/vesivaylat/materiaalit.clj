@@ -7,7 +7,7 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn- hae-materiaalilistaus [db user params]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit (::m/urakka-id params))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
 (defn- kirjaa-materiaali [db user materiaali]
