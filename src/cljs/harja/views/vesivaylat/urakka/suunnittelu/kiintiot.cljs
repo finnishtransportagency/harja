@@ -40,13 +40,17 @@
                            (e! (tiedot/->HaeKiintiot)))
                       #(do (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [kiintiot
-                    kiintioiden-haku-kaynnissa?] :as app}]
+                    kiintioiden-haku-kaynnissa?
+                    kiintioiden-tallennus-kaynnissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       [:div
        [debug app]
        [valinnat/urakan-sopimus @nav/valittu-urakka]
        [grid/grid
-        {:otsikko ""
+        {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
+                          kiintioiden-tallennus-kaynnissa?)
+                    [ajax-loader-pieni "Päivitetään listaa"]
+                    "Sopimuksessa määritellyt urakan kiintiöt")
          :voi-poistaa? (constantly true) ;;TODO oikeustarkastus + pitää olla tyhjä
          :piilota-toiminnot? false ;; TODO
          :voi-lisata? true
@@ -66,7 +70,8 @@
            {:otsikko "Nimi"
             :nimi ::kiintio/nimi
             :tyyppi :string
-            :leveys 6}
+            :leveys 6
+            :validoi [[:ei-tyhja "Anna nimi"]]}
            {:otsikko "Kuvaus"
             :nimi ::kiintio/kuvaus
             :tyyppi :text
@@ -80,7 +85,8 @@
            {:otsikko "Koko"
             :nimi ::kiintio/koko
             :tyyppi :positiivinen-numero
-            :leveys 3}]
+            :leveys 3
+            :validoi [[:ei-tyhja "Anna koko"]]}]
           kiintiot]])))
 
 (defn kiintiot []
