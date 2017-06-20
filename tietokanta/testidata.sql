@@ -33,8 +33,6 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Ladataan alueurakoiden geometriat
 \i testidata/alueurakat.sql
 
-
-
 -- Lisätään ELY numerot hallintayksiköille
 
 UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD';
@@ -133,7 +131,6 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/tietyomaat.sql
 
-
 -- Tietyöilmoitukset
 \i testidata/tietyoilmoitukset.sql
 
@@ -143,7 +140,6 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 \i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
 \i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
-
 
 -- Muunnetaan testidatan reittipisteet uuteen tallennusmuotoon
 SELECT siirra_kaikki_reittipisteet();
