@@ -53,6 +53,7 @@
     :vv-yksikkohintaiset
     :vv-kokonaishintaiset
     :vv-vaylat
+    :vv-kiintiot
     :vv-hinnoittelut
     :reimari
     :vkm})
