@@ -18,6 +18,9 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
+-- Liitä käyttäjät urakoihin
+\i testidata/kayttajaroolit.sql
+
 -- Luodaan sanktiotyypit
 \i testidata/sanktiotyypit.sql
 
@@ -30,8 +33,7 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Ladataan alueurakoiden geometriat
 \i testidata/alueurakat.sql
 
--- Liitä käyttäjät urakoihin
-\i testidata/kayttajaroolit.sql
+
 
 -- Lisätään ELY numerot hallintayksiköille
 
