@@ -12,7 +12,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -87,39 +88,42 @@
    (komp/watcher nav/valittu-urakka (fn [_ _ ur]
                                       (e! (tiedot/->PaivitaUrakka ur))))
    (fn [e! {:keys [materiaalilistaus materiaalin-kaytto lisaa-materiaali] :as app}]
-     [:div.vv-materiaalit
+     (let [voi-kirjata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivayla-materiaalit
+                                                  (:urakka-id app))]
+       [:div.vv-materiaalit
+        (when voi-kirjata?
+          [valinnat/urakkatoiminnot {}
+           ^{:key "lisaa-materiaali"}
+           [:div.inline-block
+            [napit/uusi "Lisää materiaali" #(e! (tiedot/->AloitaMateriaalinLisays))
+             {:disabled lisaa-materiaali}]
+            (when lisaa-materiaali
+              [:div.vv-lisaa-materiaali-leijuke
+               [leijuke/leijuke {:otsikko "Lisää materiaali"
+                                 :sulje! #(e! (tiedot/->PeruMateriaalinLisays))
+                                 :ankkuri "lisaa-nappi" :suunta :oikea}
+                [materiaali-lomake {:muokkaa! #(e! (tiedot/->PaivitaLisattavaMateriaali %))
+                                    :tallenna! #(e! (tiedot/->LisaaMateriaali))
+                                    :maara-placeholder "Syötä alkutilanne"}
+                 lisaa-materiaali materiaalilistaus]]])]])
 
-      [valinnat/urakkatoiminnot {}
-       ^{:key "lisaa-materiaali"}
-       [:div.inline-block
-        [napit/uusi "Lisää materiaali" #(e! (tiedot/->AloitaMateriaalinLisays))
-         {:disabled lisaa-materiaali}]
-        (when lisaa-materiaali
-          [:div.vv-lisaa-materiaali-leijuke
-           [leijuke/leijuke {:otsikko "Lisää materiaali"
-                             :sulje! #(e! (tiedot/->PeruMateriaalinLisays))
-                             :ankkuri "lisaa-nappi" :suunta :oikea}
-            [materiaali-lomake {:muokkaa! #(e! (tiedot/->PaivitaLisattavaMateriaali %))
-                                :tallenna! #(e! (tiedot/->LisaaMateriaali))
-                                :maara-placeholder "Syötä alkutilanne"}
-             lisaa-materiaali materiaalilistaus]]])]]
-
-      [grid/grid {:id "vv-materiaalilistaus"
-                  :tunniste ::m/nimi
-                  :tyhja "Ei materiaaleja"
-                  :vetolaatikot (into {}
-                                      (map (juxt ::m/nimi
-                                                 (fn [{muutokset ::m/muutokset}]
-                                                   [materiaaliloki e! muutokset])))
-                                      materiaalilistaus)}
-       [{:tyyppi :vetolaatikon-tila :leveys 1}
-        {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
-        {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
-        {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
-        {:otsikko "Kirjaa" :leveys 10 :tyyppi :komponentti
-         :komponentti (fn [{nimi ::m/nimi}]
-                        [materiaalin-kirjaus e! app nimi])}]
-       materiaalilistaus]])))
+        [grid/grid {:id "vv-materiaalilistaus"
+                    :tunniste ::m/nimi
+                    :tyhja "Ei materiaaleja"
+                    :vetolaatikot (into {}
+                                        (map (juxt ::m/nimi
+                                                   (fn [{muutokset ::m/muutokset}]
+                                                     [materiaaliloki e! muutokset])))
+                                        materiaalilistaus)}
+         [{:tyyppi :vetolaatikon-tila :leveys 1}
+          {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
+          {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
+          {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
+          (when voi-kirjata?
+            {:otsikko "Kirjaa" :leveys 10 :tyyppi :komponentti
+             :komponentti (fn [{nimi ::m/nimi}]
+                            [materiaalin-kirjaus e! app nimi])})]
+         materiaalilistaus]]))))
 
 (defn materiaalit [ur]
   [tuck/tuck tiedot/app materiaalit*])
