@@ -19,7 +19,8 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.fmt :as fmt]
-            [harja.ui.grid :as grid])
+            [harja.ui.grid :as grid]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -115,7 +116,7 @@
                                                    hinta/yleinen-yleiskustannuslisa
                                                    0)}))))]]])
 
-(defn- hinnoittele-toimenpide [e! app* rivi]
+(defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
     [:div
      (if (and hinnoittele-toimenpide-id
@@ -159,7 +160,7 @@
          {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
           :nappi-teksti "Hinnoittele"
           :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :nappi-optiot {:disabled (:infolaatikko-nakyvissa? app*)}
+          :nappi-optiot {:disabled (listaus-tunniste (:infolaatikko-nakyvissa app*))}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
 
@@ -240,12 +241,14 @@
 
          (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
                :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                     hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)]]
+                     hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+                     listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
            ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
            [jaettu/listaus e! app*
             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                :komponentti (fn [rivi]
-                                              [hinnoittele-toimenpide e! app* rivi])}]
+                                              [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+             :listaus-tunniste listaus-tunniste
              :footer (when hintaryhma
                        [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
