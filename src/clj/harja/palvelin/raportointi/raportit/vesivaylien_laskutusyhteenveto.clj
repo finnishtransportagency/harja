@@ -18,10 +18,9 @@
    {:leveys 1 :otsikko "Toteutunut" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
-(defn- kok-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
+(defn- kok-hint-hinnoittelurivit [tiedot vaylatyyppi]
   ;; TODO mites väylätyyppi saadaan tähän!?
-  [{:otsikko otsikko}
-   ["Kokonaishintaiset toimenpiteet"
+  [["Kokonaishintaiset toimenpiteet"
     (:suunniteltu-maara (first tiedot))
     (:toteutunut-maara (first tiedot))
     (- (:suunniteltu-maara (first tiedot))
@@ -33,10 +32,8 @@
    (:summa tiedot)
    ""])
 
-(defn- yks-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
-  (apply concat
-         [[{:otsikko otsikko}]
-          (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot))]))
+(defn- yks-hint-hinnoittelurivit [tiedot vaylatyyppi]
+  (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot)))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset (into []
@@ -73,20 +70,16 @@
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
         kauppamerenkulku-kok-hint (kok-hint-hinnoittelurivit
-                                    "Kauppamerenkulku: kokonaishintaiset"
                                     (:kokonaishintaiset raportin-tiedot)
                                     "kauppamerenkulku")
         kauppamerenkulku-yks-hint (yks-hint-hinnoittelurivit
-                                    "Kauppamerenkulku: yksikköhintaiset"
                                     (:yksikkohintaiset raportin-tiedot)
                                     "kauppamerenkulku")
         kauppamerenkulku-yht (yhteensa-rivi "Yhteensä" raportin-tiedot "kauppamerenkulku")
         muu-vesi-kok-hint (kok-hint-hinnoittelurivit
-                            "Muu vesiliikenne: kokonaishintaiset"
                             (:kokonaishintaiset raportin-tiedot)
                             "muu")
         muu-vesi-yks-hint (yks-hint-hinnoittelurivit
-                            "Muu vesiliikenne: yksikköhintaiset"
                             (:yksikkohintaiset raportin-tiedot)
                             "muu")
         muu-vesi-yht (yhteensa-rivi "Yhteensä" raportin-tiedot "muu")
