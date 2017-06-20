@@ -32,8 +32,7 @@ WHERE "urakka-id" = :urakkaid
                                   WHERE "hinnoittelu-id" = hinnoittelu.id));
 
 -- name: hae-kokonaishintaiset-toimenpiteet
--- Kokonaishintaisia toimenpiteitä ei hinnoitella Harjassa
--- Työt kuitenkin suunnitellaan, ja käytännössä suunnitelma = toteuma
+-- Toteutunut kok.hint työ on niiden kok.hint maksuerien summa, joiden maksupvm on menneisyydessä
 SELECT
   "reimari-toimenpidetyyppi"                                             AS koodi,
   (SELECT COUNT(id)
