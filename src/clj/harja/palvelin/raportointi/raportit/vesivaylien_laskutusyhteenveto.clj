@@ -28,11 +28,10 @@
        (:toteutunut-maara (first tiedot)))]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
-  ;; TODO Mites suunnitteltutiedot tähän!?
   [(:hinnoittelu tiedot)
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+   ""
    (:summa tiedot)
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
+   ""])
 
 (defn- yks-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
   (apply concat
