@@ -11,7 +11,7 @@
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]
                    [cljs.core.async.macros :refer [go]]))
 
-(test/use-fixtures :each u/komponentti-fixture utils/fake-palvelut-fixture)
+(test/use-fixtures :each u/komponentti-fixture utils/fake-palvelut-fixture utils/jvh-fixture)
 
 (def listaus
   [{::m/nimi "Poiju" ::m/alkuperainen-maara 20  ::m/maara-nyt 18 ::m/lisatieto "annettu 20 poijua"
