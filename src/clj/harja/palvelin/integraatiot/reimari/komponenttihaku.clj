@@ -102,7 +102,7 @@
 
 
 (defn hae-turvalaitekomponentit [db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-turvalaitekomponentit" "reimari")]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" "hae-turvalaitekomponentit")]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
