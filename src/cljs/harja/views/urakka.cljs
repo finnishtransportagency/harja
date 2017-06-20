@@ -50,7 +50,8 @@
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                        (u-domain/vesivayla-urakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
-    :vv-materiaalit (and ;;FIXME: tarkista oikeus
+    :vv-materiaalit (and
+                     (oikeudet/urakat-vesivayla-materiaalit id)
                      (u-domain/vesivayla-urakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
