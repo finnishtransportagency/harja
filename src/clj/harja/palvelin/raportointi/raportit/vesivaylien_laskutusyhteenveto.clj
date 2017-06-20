@@ -22,16 +22,6 @@
    {:leveys 1 :otsikko "Yhteensä (S+T)" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
-(def kk-erittelysarakkeet
-  [{:leveys 3 :otsikko "Työ"}
-   {:leveys 1 :otsikko "Pvm"}
-   {:leveys 1 :otsikko "Suunni\u00ADtellut" :fmt :raha}
-   {:leveys 1 :otsikko "Toteutunut" :fmt :raha}])
-
-(def toimenpideerittelysarakkeet
-  [{:leveys 1 :otsikko "Työ"}
-   {:leveys 1 :otsikko "Pvm"}])
-
 (defn- kok-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
@@ -113,19 +103,6 @@
         muu-hinta (hinta (:yksikkohintaiset raportin-tiedot) "muu" kk-vali)]
     (kk-kasittelyrivi (:kk-tekstina kk-vali) kauppamerenkulku-hinta muu-hinta)))
 
-(defn- kk-erittelyrivit [raportin-tiedot alkupvm loppupvm]
-  (let [kk-valit (pvm/aikavalin-kuukausivalit [(pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))
-                                               (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm))])
-        kk-valit (mapv
-                   #(-> {:kk-vali %
-                         :kk (t/month (first %))
-                         :kk-tekstina (str (pvm/kk-fmt (t/month (first %)))
-                                           " "
-                                           (t/year (first %)))})
-                   kk-valit)]
-    (apply concat
-           (mapv (partial kk-kasittelyrivit raportin-tiedot) kk-valit))))
-
 (defn- hinnoittelun-toimenpiteet [hinnoittelu toimenpiteet]
   (apply concat
          [[{:otsikko (or hinnoittelu "Muut")}]
@@ -135,22 +112,12 @@
                    (pvm/pvm-opt (:suoritettu toimenpide))])
                 (sort-by :suoritettu toimenpiteet))]))
 
-(defn- toimenpiteiden-erittelyrivit [raportin-tiedot]
-  (let [hinnoittelulla-ryhmiteltyna (group-by :hinnoittelu-id
-                                              (:toimenpiteet raportin-tiedot))]
-    (vec (mapcat (fn [hinnoittelu-id]
-                   (let [hinnoittelun-nimi (:hinnoittelu (first (get hinnoittelulla-ryhmiteltyna hinnoittelu-id)))]
-                     (hinnoittelun-toimenpiteet hinnoittelun-nimi (get hinnoittelulla-ryhmiteltyna hinnoittelu-id))))
-                 (reverse (sort (keys hinnoittelulla-ryhmiteltyna)))))))
-
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
                                             :urakka-id urakka-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
         hinnoittelu (hinnoittelurivit raportin-tiedot)
-        kk-erittely (kk-erittelyrivit raportin-tiedot alkupvm loppupvm)
-        toimenpiteiden-erittely (toimenpiteiden-erittelyrivit raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
@@ -159,16 +126,4 @@
                  :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       hinnoittelusarakkeet
-      hinnoittelu]
-
-     [:taulukko {:otsikko "Kuukausierittely"
-                 :tyhja (if (empty? kk-erittely) "Ei raportoitavaa.")
-                 :sheet-nimi raportin-nimi}
-      kk-erittelysarakkeet
-      kk-erittely]
-
-     [:taulukko {:otsikko "Toimenpiteiden erittely"
-                 :tyhja (if (empty? toimenpiteiden-erittely) "Ei raportoitavaa.")
-                 :sheet-nimi raportin-nimi}
-      toimenpideerittelysarakkeet
-      toimenpiteiden-erittely]]))
+      hinnoittelu]]))
