@@ -14,19 +14,15 @@
 
 (def hinnoittelusarakkeet
   [{:leveys 3 :otsikko "Hinnoit\u00ADtelu"}
-   {:leveys 1 :otsikko "Tilaus\u00ADvaltuus" :fmt :raha}
    {:leveys 1 :otsikko "Suunni\u00ADtellut" :fmt :raha}
    {:leveys 1 :otsikko "Toteutunut" :fmt :raha}
-   {:leveys 1 :otsikko "Yhteensä (S+T)" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
 (defn- kok-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    (:summa tiedot)
    (:summa tiedot)
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
@@ -35,8 +31,6 @@
         " ("
         (:maara tiedot)
         "kpl)")
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
@@ -84,7 +78,13 @@
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
 
-     [:taulukko {:otsikko "Hinnoittelu"
+     [:taulukko {:otsikko "Kauppamerenkulku"
+                 :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
+                 :sheet-nimi raportin-nimi}
+      hinnoittelusarakkeet
+      hinnoittelu]
+
+     [:taulukko {:otsikko "Muu vesiliikenne"
                  :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       hinnoittelusarakkeet
