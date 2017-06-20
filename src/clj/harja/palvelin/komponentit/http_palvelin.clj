@@ -108,12 +108,16 @@
                   ;; Parse onnistui ja ei speciä
                   [kysely nil]
 
-                  (if-not (s/valid? kysely-spec kysely)
-                    ;; Ei spec mukainen kysely, anna selitys virheeksi
-                    [::ei-validi-kysely (s/explain-str kysely-spec kysely)]
+                  (do
+                    (log/debug "VALIDOI KYSELY: " kysely-spec)
+                    (if-not (s/valid? kysely-spec kysely)
+                     ;; Ei spec mukainen kysely, anna selitys virheeksi
+                     (do
+                       (log/error (s/explain-str kysely-spec kysely))
+                       [::ei-validi-kysely (s/explain-str kysely-spec kysely)])
 
-                    ;; Data parsittu ok ja specin mukainen
-                    [kysely nil])))]
+                     ;; Data parsittu ok ja specin mukainen
+                     [kysely nil]))))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
              :body   virhe}
