@@ -249,12 +249,12 @@
             @muokattu]
            [ajax-loader "Ladataan..."])]))))
 
-(defn- suodattimet-ja-toiminnot [valittu-urakka vesivayla?]
-  [valinnat/urakkavalinnat (when-not vesivayla? {:tyyliton? true})
+(defn- suodattimet-ja-toiminnot [valittu-urakka]
+  [valinnat/urakkavalinnat {:urakka valittu-urakka}
    ^{:key "urakkavalinnat"}
    [urakka-valinnat/urakan-hoitokausi valittu-urakka]
    ^{:key "urakkatoiminnot"}
-   [valinnat/urakkatoiminnot (when-not vesivayla? {:tyyliton? true})
+   [valinnat/urakkatoiminnot {:urakka valittu-urakka}
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                             (:id valittu-urakka))]
       (yleiset/wrap-if
@@ -271,7 +271,6 @@
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
         yllapito? (:yllapito? optiot)
-        vesivayla? (:vesivayla? optiot)
         yhteensa (reduce + (map :summa sanktiot))
         yhteensa (when yhteensa
                    (if yllapito?
@@ -279,7 +278,7 @@
                      yhteensa))
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
-     [suodattimet-ja-toiminnot valittu-urakka vesivayla?]
+     [suodattimet-ja-toiminnot valittu-urakka]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])

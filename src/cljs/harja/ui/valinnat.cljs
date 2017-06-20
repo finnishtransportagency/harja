@@ -14,7 +14,8 @@
             [goog.events.EventType :as EventType]
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]))
+            [harja.ui.dom :as dom]
+            [harja.domain.urakka :as u-domain]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -372,11 +373,12 @@
                          :valitse-fn #(reset! valittu-toimenpide-atom %)}
     toimenpiteet]])
 
-(defn urakkavalinnat [{:keys [tyyliton?]} & sisalto]
-  [:div.urakkavalinnat (when tyyliton? {:class "urakkavalinnat-tyyliton"})
+(defn urakkavalinnat [{:keys [urakka]} & sisalto]
+  [:div.urakkavalinnat (when-not (u-domain/vesivaylaurakka? urakka)
+                         {:class "urakkavalinnat-tyyliton"})
    sisalto])
 
-(defn urakkatoiminnot [{:keys [sticky? tyyliton?] :as optiot} & sisalto]
+(defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
         elementin-etaisyys-ylareunaan (atom nil)
         maarita-sticky! (fn []
@@ -398,9 +400,10 @@
       (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
                                (dom/elementin-etaisyys-dokumentin-ylareunaan
                                  (r/dom-node %))))
-      (fn [optiot & sisalto]
+      (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
-                                           (when tyyliton? "urakkatoiminnot-tyyliton "))}
+                                           (when-not (u-domain/vesivaylaurakka? urakka)
+                                             "urakkatoiminnot-tyyliton "))}
          sisalto]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]

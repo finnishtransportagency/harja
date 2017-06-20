@@ -220,7 +220,7 @@
     (assoc tama-rivi :maksupvm maksu-pvm)))
 
 (defn- suodattimet [urakka]
-  [valinnat/urakkavalinnat (when-not (u-domain/vesivaylaurakka? urakka) {:tyyliton? true})
+  [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]])
 
