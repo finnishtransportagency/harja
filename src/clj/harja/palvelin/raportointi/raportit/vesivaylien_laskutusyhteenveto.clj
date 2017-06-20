@@ -18,74 +18,72 @@
    {:leveys 1 :otsikko "Toteutunut" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
-(defn- kok-hint-hinnoittelurivi [tiedot]
+(defn- kok-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
+  [{:otsikko otsikko}
+   ["Kaikki kokonaishintaiset toimenpiteet"
+    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
+    (->> tiedot
+         (filter #(= (:vaylatyyppi %) vaylatyyppi))
+         (map :maara)
+         (reduce + 0))
+    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]]])
+
+(defn- yks-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
    (:summa tiedot)
-   (:summa tiedot)
    [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
 
-(defn- yks-hint-hinnoittelurivi [tiedot]
-  [(str (to/reimari-toimenpidetyyppi-fmt
-          (get to/reimari-toimenpidetyypit (:koodi tiedot)))
-        " ("
-        (:maara tiedot)
-        "kpl)")
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
-   [:varillinen-teksti {:arvo "?" :tyyli :virhe}]])
-
-(defn- hinnoittelurivit [tiedot]
+(defn- yks-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
   (apply concat
-         [[{:otsikko "Kokonaishintaiset: kauppamerenkulku"}]
-          (mapv yks-hint-hinnoittelurivi (filter #(= (:vaylatyyppi %) "kauppamerenkulku")
-                                                 (:kokonaishintaiset tiedot)))
-          [{:otsikko "Kokonaishintaiset: muut"}]
-          (mapv yks-hint-hinnoittelurivi (filter #(= (:vaylatyyppi %) "muu")
-                                                 (:kokonaishintaiset tiedot)))
-          [{:otsikko "Yksikköhintaiset: kauppamerenkulku"}]
-          (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"kauppamerenkulku"}
-                                                                                 (:vaylatyyppi %))))
-                                                 (:yksikkohintaiset tiedot)))
-          [{:otsikko "Yksikköhintaiset: muut"}]
-          (mapv kok-hint-hinnoittelurivi (filter #(not (empty? (set/intersection #{"muu"}
-                                                                                 (:vaylatyyppi %))))
-                                                 (:yksikkohintaiset tiedot)))]))
+         [[{:otsikko otsikko}]
+          (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot))]))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   {:yksikkohintaiset (into []
-                           (comp
-                             (map #(konv/array->set % :vaylatyyppi))
-                             (map #(assoc % :ensimmainen-toimenpide (c/from-date (:ensimmainen-toimenpide %))))
-                             (map #(assoc % :viimeinen-toimenpide (c/from-date (:viimeinen-toimenpide %)))))
+                           (map #(konv/array->set % :vaylatyyppi))
                            (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                   :alkupvm alkupvm
                                                                   :loppupvm loppupvm}))
    :kokonaishintaiset (vec (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                    :alkupvm alkupvm
-                                                                   :loppupvm loppupvm}))
-   :toimenpiteet (vec (hae-toimenpiteet db {:urakkaid urakka-id
-                                            :alkupvm alkupvm
-                                            :loppupvm loppupvm}))})
+                                                                   :loppupvm loppupvm}))})
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [raportin-tiedot (hinnoittelutiedot {:db db
                                             :urakka-id urakka-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
-        hinnoittelu (hinnoittelurivit raportin-tiedot)
+        kauppamerenkulku-kok-hint (kok-hint-hinnoittelurivit
+                                    "Kauppamerenkulku: kokonaishintaiset"
+                                    (:kokonaishintaiset raportin-tiedot)
+                                    "kauppamerenkulku")
+        kauppamerenkulku-yks-hint (yks-hint-hinnoittelurivit
+                                    "Kauppamerenkulku: yksikköhintaiset"
+                                    (:yksikkohintaiset raportin-tiedot)
+                                    "kauppamerenkulku")
+        muu-vesi-kok-hint (kok-hint-hinnoittelurivit
+                            "Muu vesiliikenne: kokonaishintaiset"
+                            (:kokonaishintaiset raportin-tiedot)
+                            "muu")
+        muu-vesi-yks-hint (yks-hint-hinnoittelurivit
+                            "Muu vesiliikenne: yksikköhintaiset"
+                            (:yksikkohintaiset raportin-tiedot)
+                            "muu")
         raportin-nimi "Laskutusyhteenveto"]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
 
      [:taulukko {:otsikko "Kauppamerenkulku"
-                 :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
+                 :tyhja (if (empty? kauppamerenkulku-kok-hint) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       hinnoittelusarakkeet
-      hinnoittelu]
+      (concat kauppamerenkulku-kok-hint
+              kauppamerenkulku-yks-hint)]
 
      [:taulukko {:otsikko "Muu vesiliikenne"
-                 :tyhja (if (empty? hinnoittelu) "Ei raportoitavaa.")
+                 :tyhja (if (empty? kauppamerenkulku-kok-hint) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
       hinnoittelusarakkeet
-      hinnoittelu]]))
+      (concat muu-vesi-kok-hint
+              muu-vesi-yks-hint)]]))

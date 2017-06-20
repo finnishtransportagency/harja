@@ -3,7 +3,8 @@ SELECT
   hinnoittelu.nimi                          AS "hinnoittelu",
   (SELECT SUM(maara)
    FROM vv_hinta
-   WHERE "hinnoittelu-id" = hinnoittelu.id) AS "summa",
+   WHERE "hinnoittelu-id" = hinnoittelu.id
+   AND poistettu IS NOT TRUE) AS "summa",
   -- Hinnoittelut, jotka ovat hinnoitteluryhmiä, sisältävät useita reimari-toimenpiteitä
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
@@ -16,27 +17,11 @@ SELECT
                              (SELECT "toimenpide-id"
                               FROM vv_hinnoittelu_toimenpide
                               WHERE "hinnoittelu-id" = hinnoittelu.id))))
-                                            AS vaylatyyppi,
-  (SELECT suoritettu
-   FROM reimari_toimenpide
-   WHERE id IN (SELECT "toimenpide-id"
-                FROM vv_hinnoittelu_toimenpide
-                WHERE "hinnoittelu-id" = hinnoittelu.id)
-   ORDER BY suoritettu
-   LIMIT 1)
-                                            AS "ensimmainen-toimenpide",
-  (SELECT suoritettu
-   FROM reimari_toimenpide
-   WHERE id IN (SELECT "toimenpide-id"
-                FROM vv_hinnoittelu_toimenpide
-                WHERE "hinnoittelu-id" = hinnoittelu.id)
-   ORDER BY suoritettu DESC
-   LIMIT 1)
-                                            AS "viimeinen-toimenpide"
+                                            AS vaylatyyppi
 FROM vv_hinnoittelu hinnoittelu
 WHERE "urakka-id" = :urakkaid
+      AND poistettu IS NOT TRUE
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä
-      -- Vain yksikköhintaiset, koska kok. hint. toimenpiteitä ei hinnoitella Harjassa
       AND EXISTS(SELECT id
                  FROM reimari_toimenpide
                  WHERE suoritettu >= :alkupvm
@@ -47,6 +32,8 @@ WHERE "urakka-id" = :urakkaid
                                   WHERE "hinnoittelu-id" = hinnoittelu.id));
 
 -- name: hae-kokonaishintaiset-toimenpiteet
+-- Kokonaishintaisia toimenpiteitä ei hinnoitella Harjassa
+-- Työt kuitenkin suunnitellaan, ja käytännössä suunnitelma = toteuma
 SELECT
   "reimari-toimenpidetyyppi"                                             AS koodi,
   (SELECT COUNT(id)
@@ -64,17 +51,3 @@ WHERE "urakka-id" = :urakkaid
       AND suoritettu <= :loppupvm
       AND hintatyyppi = 'kokonaishintainen'
 GROUP BY koodi, vayla.tyyppi;
-
--- name: hae-toimenpiteet
-SELECT
-  rt.id as "toimenpide-id",
-  "reimari-toimenpidetyyppi" as toimenpide,
-  hinnoittelu.nimi as "hinnoittelu",
-  hinnoittelu.id as "hinnoittelu-id",
-  rt.suoritettu
-FROM reimari_toimenpide rt
-  lEFT JOIN vv_hinnoittelu_toimenpide vht ON vht."toimenpide-id" = rt.id
-  LEFT JOIN vv_hinnoittelu hinnoittelu ON vht."hinnoittelu-id" = hinnoittelu.id
-WHERE rt."urakka-id" = :urakkaid
-      AND suoritettu >= :alkupvm
-      AND suoritettu <= :loppupvm
