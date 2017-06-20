@@ -79,10 +79,11 @@
     (if-not (:kiintioiden-tallennus-kaynnissa? app)
       (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                         ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])
-                        :kiintiot (map
-                                    (fn [k]
-                                      (set/rename-keys k {:poistettu ::m/poistettu?}))
-                                    kiintiot)}]
+                        ::kiintio/tallennettavat-kiintiot
+                        (map
+                          (fn [k]
+                            (set/rename-keys k {:poistettu ::m/poistettu?}))
+                          kiintiot)}]
         (-> app
             (tuck-apurit/palvelukutsu :tallenna-kiintiot
                                       parametrit

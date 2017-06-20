@@ -33,7 +33,7 @@
       ;; TODO
       #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
       (q/vaadi-kiintiot-kuuluvat-urakkaan! db
-                                           (keep ::kiintio/id (:kiintiot tiedot))
+                                           (keep ::kiintio/id (::kiintio/tallennettavat-kiintiot tiedot))
                                            urakka-id)
       (q/tallenna-kiintiot! db user tiedot))))
 
@@ -46,16 +46,16 @@
       :hae-kiintiot
       (fn [user tiedot]
         (hae-kiintiot db user tiedot))
-      {:kysely-spec nil
-       :vastaus-spec nil})
+      {:kysely-spec ::kiintio/hae-kiintiot-kysely
+       :vastaus-spec ::kiintio/hae-kiintiot-vastaus})
 
     (julkaise-palvelu
       http
       :tallenna-kiintiot
       (fn [user tiedot]
        (tallenna-kiintiot db user tiedot))
-      {:kysely-spec nil
-       :vastaus-spec nil})
+      {:kysely-spec ::kiintio/tallenna-kiintiot-kysely
+       :vastaus-spec ::kiintio/tallenna-kiintiot-vastaus})
 
     this)
 

@@ -37,3 +37,21 @@
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyolaji
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka
                                                :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi}]})
+
+(s/def ::hae-kiintiot-kysely
+  (s/keys :req [::urakka-id ::sopimus-id]))
+
+(s/def ::hae-kiintiot-vastaus
+  (s/coll-of ::kiintio))
+
+(s/def ::tallennettava-kiintio
+  (s/keys :req [::nimi ::koko]
+          :opt [::kuvaus ::urakka-id ::sopimus-id ::m/poistettu? ::toimenpiteet ::m/muokkaaja-id
+                ::m/muokattu ::m/luoja-id ::m/luotu ::m/poistaja-id]))
+
+(s/def ::tallennettavat-kiintiot (s/coll-of ::tallennettava-kiintio))
+
+(s/def ::tallenna-kiintiot-kysely
+  (s/keys :req [::sopimus-id ::urakka-id ::tallennettavat-kiintiot]))
+
+(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-vastaus)
