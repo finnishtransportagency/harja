@@ -21,17 +21,14 @@
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/ei-oikeustarkistusta!)
-      ;; TODO
-      #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
       (q/hae-kiintiot db tiedot))))
 
 (defn tallenna-kiintiot [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/ei-oikeustarkistusta!)
-      ;; TODO
-      #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kiintiot user urakka-id)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
       (q/vaadi-kiintiot-kuuluvat-urakkaan! db
                                            (keep ::kiintio/id (::kiintio/tallennettavat-kiintiot tiedot))
                                            urakka-id)

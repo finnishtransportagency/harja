@@ -16,7 +16,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.vesivaylat.turvalaite :as tu])
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -51,9 +52,16 @@
                           kiintioiden-tallennus-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"]
                     "Sopimuksessa määritellyt urakan kiintiöt")
-         :voi-poistaa? (constantly true) ;;TODO oikeustarkastus + pitää olla tyhjä
-         :piilota-toiminnot? false ;; TODO
-         :voi-lisata? true
+         :voi-poistaa? (fn [kiintio]
+                         (and
+                           (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                                     (:id @nav/valittu-urakka))
+                           (empty? (::kiintio/toimenpiteet kiintio))))
+         :piilota-toiminnot? (not
+                               (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                                         (:id @nav/valittu-urakka)))
+         :voi-lisata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                                (:id @nav/valittu-urakka))
          :tallenna (fn [sisalto]
                      (let [ch (chan)]
                        (e! (tiedot/->TallennaKiintiot sisalto ch))
@@ -64,8 +72,7 @@
          :uusi-rivi (fn [rivi] rivi)
          :vetolaatikot (into {}
                              (map (juxt ::kiintio/id (fn [rivi] [kiintion-toimenpiteet e! app rivi])))
-                             kiintiot)
-         }
+                             kiintiot)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Nimi"
             :nimi ::kiintio/nimi
