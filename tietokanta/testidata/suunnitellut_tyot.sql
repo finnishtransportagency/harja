@@ -222,3 +222,8 @@ INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpidein
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 11, 1.2, '2016-11-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 5, 9, '2017-05-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
 INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
+
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm)
+  SELECT id, (select id from toimenpidekoodi where koodi='VV111'), nimi, alkupvm, loppupvm
+  FROM urakka
+  WHERE tyyppi='vesivayla-hoito';
