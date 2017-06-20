@@ -6,7 +6,9 @@
             [harja.domain.vesivaylat.materiaali :as m]
             [cljs.core.async :refer [<!]]
             [harja.pvm :as pvm]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.tyokalut.tuck :refer [palvelukutsu]]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään viestityypit
@@ -23,6 +25,8 @@
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
 
+(defrecord Virhe [virhe])
+
 ;; App atom
 (defonce app (r/atom {:urakka-id nil
                       :materiaalilistaus nil
@@ -34,16 +38,14 @@
                       :kirjaa-materiaali nil}))
 
 
-(defn- hae [{u :urakka-id :as app}]
-  (let [tulos! (t/send-async! ->ListausHaettu)]
-    (go
-      (tulos! (<! (k/post! :hae-vesivayla-materiaalilistaus {::m/urakka-id u}))))
-    app))
-
 (extend-protocol t/Event
   PaivitaUrakka
   (process-event [{urakka :urakka} app]
-    (hae (assoc app :urakka-id (:id urakka))))
+    (let [u (:id urakka)]
+      (palvelukutsu (assoc app :urakka-id u)
+                    :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
+                    {:onnistui ->ListausHaettu
+                     :epaonnistui ->Virhe})))
 
   ListausHaettu
   (process-event [{tulokset :tulokset} app]
@@ -63,10 +65,9 @@
 
   LisaaMateriaali
   (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
-    (let [tulos! (t/send-async! ->ListausHaettu)]
-      (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
-                               (lomake/ilman-lomaketietoja lisaa-materiaali)))))
-      app))
+    (palvelukutsu app :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
+                  {:onnistui ->ListausHaettu
+                   :epaonnistui ->Virhe}))
 
   PeruMateriaalinLisays
   (process-event [_ app]
@@ -88,7 +89,12 @@
 
   KirjaaMateriaali
   (process-event [_ {kirjaa-materiaali :kirjaa-materiaali :as app}]
-    (let [tulos! (t/send-async! ->ListausHaettu)]
-      (go (tulos! (<! (k/post! :kirjaa-vesivayla-materiaali
-                               (lomake/ilman-lomaketietoja kirjaa-materiaali)))))
-      app)))
+    (palvelukutsu app :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja kirjaa-materiaali)
+                  {:onnistui ->ListausHaettu
+                   :epaonnistui ->Virhe}))
+
+  Virhe
+  (process-event [virhe app]
+    (log "Virhe: " virhe)
+    (viesti/nayta! "Virhe palvelinkutsussa" :warning)
+    app))
