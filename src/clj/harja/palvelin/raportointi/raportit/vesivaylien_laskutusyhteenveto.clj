@@ -20,7 +20,7 @@
 
 (defn- kok-hint-hinnoittelurivit [otsikko tiedot vaylatyyppi]
   [{:otsikko otsikko}
-   ["Kaikki kokonaishintaiset toimenpiteet"
+   ["Kokonaishintaiset toimenpiteet"
     [:varillinen-teksti {:arvo "?" :tyyli :virhe}]
     (->> tiedot
          (filter #(= (:vaylatyyppi %) vaylatyyppi))
