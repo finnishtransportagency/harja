@@ -198,6 +198,7 @@
        :tyyppi :tierekisteriosoite
        :pakollinen? muokattava?
        :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+       :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
        :muokattava? (constantly muokattava?)}
       {:nimi :ajorata
        :otsikko "Ajorata"
