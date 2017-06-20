@@ -337,6 +337,7 @@ reimari-tilat
 (def urakka #{[::urakka #{}]})
 (def kiintio #{[::kiintio kiintio/perustiedot]})
 
+
 (def viittaukset
   (clojure.set/union
     vikailmoitus

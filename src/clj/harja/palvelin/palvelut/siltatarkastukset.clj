@@ -123,7 +123,12 @@
       (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
       (when (or (empty? sillan-urakat)
                 (not (some #(= urakka-id %) sillan-urakat)))
-        (throw (SecurityException. "Siltatarkastus ei kuulu väitettyyn urakkaan."))))))
+        (throw (SecurityException.
+                 (format "Siltatarkastusta ei voi kirjata sillalle (%s), koska se ei kuulu urakkaan (%s).
+                          Silta on merkitty kuuluvaksi urakoille: %s"
+                         silta-id
+                         urakka-id
+                         sillan-urakat)))))))
 
 (defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
   (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
