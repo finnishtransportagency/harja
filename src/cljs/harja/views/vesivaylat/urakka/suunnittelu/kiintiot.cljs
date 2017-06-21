@@ -92,6 +92,7 @@
            {:otsikko "Koko"
             :nimi ::kiintio/koko
             :tyyppi :positiivinen-numero
+            :kokonaisosan-maara 7
             :leveys 3
             :validoi [[:ei-tyhja "Anna koko"]]}]
           kiintiot]])))
