@@ -39,7 +39,7 @@ SELECT
      LEFT JOIN toimenpideinstanssi_vesivaylat tpi_vv ON kt.toimenpideinstanssi = tpi_vv."toimenpideinstanssi-id"
    WHERE tpi.urakka = :urakkaid
          AND tpi_vv.vaylatyyppi = :vaylatyyppi::vv_vaylatyyppi
-         -- Kok. hint. osuu aikavälille jos eka päivä osuu
+         -- Kok. hint. suunnittelu osuu aikavälille jos eka päivä osuu (välin tulisi aina olla kuukausiväli)
          AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') >= :alkupvm
          AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') <= :loppupvm) AS "suunniteltu-maara",
   (SELECT COALESCE(SUM(summa), 0)
@@ -48,6 +48,6 @@ SELECT
      LEFT JOIN toimenpideinstanssi_vesivaylat tpi_vv ON kt.toimenpideinstanssi = tpi_vv."toimenpideinstanssi-id"
    WHERE tpi.urakka = :urakkaid
          AND tpi_vv.vaylatyyppi = :vaylatyyppi::vv_vaylatyyppi
-         -- Toteutunut kok.hint työ on niiden kok.hint maksuerien summa,
-         -- joiden maksupvm on menneisyydessä
-         AND maksupvm <= NOW()) AS "toteutunut-maara"
+         -- Työ on toteutunut, jos sen maksupvm on aikavälillä
+         AND maksupvm >= :alkupvm
+         AND maksupvm <= :loppupvm) AS "toteutunut-maara"
