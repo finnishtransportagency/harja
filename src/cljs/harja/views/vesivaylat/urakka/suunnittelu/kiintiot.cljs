@@ -13,11 +13,12 @@
             [harja.tiedot.navigaatio :as nav]
 
             [harja.tiedot.urakka :as u]
-            [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.valinnat :as suodattimet]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -46,7 +47,9 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       [:div
        [debug app]
-       [valinnat/urakan-sopimus @nav/valittu-urakka]
+       [valinnat/urakkavalinnat
+        {}
+        [suodattimet/urakan-sopimus @nav/valittu-urakka]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
                           kiintioiden-tallennus-kaynnissa?)
