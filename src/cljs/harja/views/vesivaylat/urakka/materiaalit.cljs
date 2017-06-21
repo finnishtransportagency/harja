@@ -46,14 +46,15 @@
                                               (not (lomake/voi-tallentaa-ja-muokattu? data)))
                                    :ikoni ikoni}])}
      [{:otsikko "Nimi" :nimi ::m/nimi :tyyppi :string :palstoja 3
+       :pakollinen? true
        :validoi [(fn [nimi]
                    (when (some #(= nimi (::m/nimi %)) materiaalilistaus)
-                     "Materiaali on jo käytössä urakassa"))
-                 [:ei-tyhja]]}
+                     "Materiaali on jo käytössä urakassa"))]}
       {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
        :palstoja 1
-       :validoi [[:ei-tyhja]] ::lomake/col-luokka "col-lg-6"}
-      {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"}
+       :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+      {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"
+       :pakollinen? true}
       {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3] :pituus-max 2000
        :palstoja 3}]
      materiaali]))
@@ -83,9 +84,11 @@
                                                [yleiset/ajax-loader-pieni]
                                                [ikonit/tallenna])}])}
         [{:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero
-          ::lomake/col-luokka "col-lg-6"}
+          ::lomake/col-luokka "col-lg-6"
+          :pakollinen? true}
          {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm
-          ::lomake/col-luokka "col-lg-6"}
+          ::lomake/col-luokka "col-lg-6"
+          :pakollinen? true}
          {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3]
           :pituus-max 2000 :palstoja 3}]
         kirjaa-materiaali]
