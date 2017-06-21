@@ -26,11 +26,12 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
--- CREATE TRIGGER tg_aseta_ilmoituksen_tila
--- AFTER INSERT ON ilmoitustoimenpide
--- FOR EACH ROW
--- WHEN (NEW.kuittaustyyppi != 'vastaus' AND
---       NEW.kuittaustyyppi != 'muutos' AND
---     NEW.kuittaustyyppi != 'valitys' AND
---     NEW.kuittaustyyppi IS NOT NULL)
--- EXECUTE PROCEDURE aseta_ilmoituksen_tila();
+
+CREATE TRIGGER tg_aseta_ilmoituksen_tila
+AFTER INSERT ON ilmoitustoimenpide
+FOR EACH ROW
+WHEN (NEW.kuittaustyyppi != 'vastaus' AND
+      NEW.kuittaustyyppi != 'muutos' AND
+    NEW.kuittaustyyppi != 'valitys' AND
+    NEW.kuittaustyyppi IS NOT NULL)
+EXECUTE PROCEDURE aseta_ilmoituksen_tila();
