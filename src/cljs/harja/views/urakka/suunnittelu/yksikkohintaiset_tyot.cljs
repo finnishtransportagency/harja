@@ -16,10 +16,12 @@
             [harja.fmt :as fmt]
             [cljs.core.async :refer [<!]]
 
-            [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.valinnat :as u-valinnat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as urakka-domain]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.valinnat :as valinnat]
+            [harja.domain.urakka :as u-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -123,6 +125,11 @@
 (defn- nayta-kustannukset? [ur]
   (not= (:tyyppi ur) :vesivayla-hoito))
 
+(defn- suodattimet [urakka]
+  [valinnat/urakkavalinnat {:urakka urakka}
+   ^{:key "valinnat"}
+   [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut urakka]])
+
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot
         toimenpiteet-ja-tehtavat (atom nil)
@@ -185,7 +192,7 @@
                              + 0
                              (seq @sopimuksen-tyot-hoitokausittain)))
 
-        vesivaylaurakka? (reaction (urakka-domain/vesivayla-urakkatyyppi? (:tyyppi @urakka)))
+        vesivaylaurakka? (reaction (urakka-domain/vesivaylaurakkatyyppi? (:tyyppi @urakka)))
         tyorivit-joilla-hinta (reaction
                                (let [tyorivit (filter :yksikkohinta @tyorivit)]
                                  (if @vesivaylaurakka?
@@ -207,9 +214,7 @@
 
       (fn [ur]
         [:div.yksikkohintaiset-tyot
-         [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
-
-
+         [suodattimet ur]
          [grid/grid
           {:otsikko "Urakkasopimuksen mukaiset yksikköhinnat"
            :tyhja (if (nil? @toimenpiteet-ja-tehtavat) [ajax-loader "Yksikköhintaisia töitä haetaan..."] "Ei yksikköhintaisia töitä")

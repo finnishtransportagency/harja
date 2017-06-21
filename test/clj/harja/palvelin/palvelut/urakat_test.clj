@@ -55,9 +55,7 @@
         [toka-sopimuksen-id toka-sopimuksen-sampoid] (second sopimukset)]
     (is (= (:id haettu-urakka) @oulun-alueurakan-2005-2010-id) "haetun urakan id")
     (is (= (count sopimukset) 2) "haetun urakan sopimusten määrä")
-    (is (= eka-sopimuksen-id 1) "haetun urakan sopimustesti")
     (is (= eka-sopimuksen-sampoid "8H05228/01") "haetun urakan sopimustesti")
-    (is (= toka-sopimuksen-id 3) "haetun urakan sopimustesti")
     (is (= toka-sopimuksen-sampoid "THII-12-28555") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
     (is (= (:loppupvm haettu-urakka) (pvm/aikana (pvm/->pvm "30.9.2012") 23 59 59 999)) "haetun urakan loppupvm")))

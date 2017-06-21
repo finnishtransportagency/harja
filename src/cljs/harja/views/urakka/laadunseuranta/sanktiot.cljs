@@ -24,17 +24,18 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.urakka :as u-domain]
             [harja.ui.modal :as modal]
             [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain])
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
 (defn sanktion-tiedot
   [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
-        _ (log "muokattu sanktio: " (pr-str muokattu))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))
         tallennus-kaynnissa (atom false)]
@@ -42,6 +43,7 @@
       (let [yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
             yllapito? (:yllapito? optiot)
+            vesivayla? (:vesivayla? optiot)
             yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
         [:div
          [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -166,8 +168,7 @@
                 :valinta-arvo first
                 :valinta-nayta second
                 :valinnat sanktio-domain/+yllapidon-sanktiofraasit+
-                :palstoja 2}
-               )
+                :palstoja 2})
              {:otsikko "Perustelu" :nimi :perustelu
               :pakollinen? true
               :hae (comp :perustelu :paatos :laatupoikkeama)
@@ -182,27 +183,31 @@
                 :leveys 2 :tyyppi :string
                 :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-             {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
-              :palstoja 1 :uusi-rivi? true :nimi :laji
-              :hae (comp keyword :laji)
-              :aseta (fn [rivi arvo]
-                       (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                         (if-not (sanktio-domain/sakko? paivitetty)
-                           (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                           paivitetty)))
-              :valinnat mahdolliset-sanktiolajit
-              :valinta-nayta #(case %
-                                :A "Ryhmä A"
-                                :B "Ryhmä B"
-                                :C "Ryhmä C"
-                                :muistutus "Muistutus"
-                                :yllapidon_muistutus "Muistutus"
-                                :yllapidon_sakko "Sakko"
-                                :yllapidon_bonus "Bonus"
-                                "- valitse laji -")
-              :validoi [[:ei-tyhja "Valitse laji"]]}
+             (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+               {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
+                :palstoja 1 :uusi-rivi? true :nimi :laji
+                :hae (comp keyword :laji)
+                :aseta (fn [rivi arvo]
+                         (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                           (if-not (sanktio-domain/sakko? paivitetty)
+                             (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                             paivitetty)))
+                :valinnat mahdolliset-sanktiolajit
+                :valinta-nayta #(case %
+                                  :A "Ryhmä A"
+                                  :B "Ryhmä B"
+                                  :C "Ryhmä C"
+                                  :muistutus "Muistutus"
+                                  :yllapidon_muistutus "Muistutus"
+                                  :yllapidon_sakko "Sakko"
+                                  :yllapidon_bonus "Bonus"
+                                  :vesivayla_muistutus "Muistutus"
+                                  :vesivayla_sakko "Sakko"
+                                  :vesivayla_bonus "Bonus"
+                                  "- valitse laji -")
+                :validoi [[:ei-tyhja "Valitse laji"]]})
 
-             (when-not yllapito?
+             (when-not (or yllapito? vesivayla?)
                {:otsikko "Tyyppi" :tyyppi :valinta
                 :palstoja 1
                 :pakollinen? true
@@ -244,6 +249,24 @@
             @muokattu]
            [ajax-loader "Ladataan..."])]))))
 
+(defn- suodattimet-ja-toiminnot [valittu-urakka]
+  [valinnat/urakkavalinnat {:urakka valittu-urakka}
+   ^{:key "urakkavalinnat"}
+   [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+   ^{:key "urakkatoiminnot"}
+   [valinnat/urakkatoiminnot {:urakka valittu-urakka}
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                            (:id valittu-urakka))]
+      (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                         oikeudet/urakat-laadunseuranta-sanktiot)]
+        ^{:key "Lisää sanktio"}
+        [napit/uusi "Lisää sanktio"
+         #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
+         {:disabled (not oikeus?)}]))]])
+
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
@@ -255,18 +278,7 @@
                      yhteensa))
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
-     [urakka-valinnat/urakan-hoitokausi valittu-urakka]
-     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                             (:id valittu-urakka))]
-       (yleiset/wrap-if
-         (not oikeus?)
-         [yleiset/tooltip {} :%
-          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                          oikeudet/urakat-laadunseuranta-sanktiot)]
-         [napit/uusi "Lisää sanktio"
-          #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
-          {:disabled (not oikeus?)}]))
-
+     [suodattimet-ja-toiminnot valittu-urakka]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
@@ -310,7 +322,8 @@
        [kartta/kartan-paikka]
        (let [optiot (merge optiot
                            {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                            :yllapito? @tiedot-urakka/yllapidon-urakka?})]
+                            :yllapito? @tiedot-urakka/yllapidon-urakka?
+                            :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
          (if @tiedot/valittu-sanktio
            [sanktion-tiedot optiot]
            [sanktiolistaus optiot @nav/valittu-urakka]))])))

@@ -40,7 +40,6 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.hallintayksikot-test]
-            [harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot-test]
             [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat-test]
             [harja.tiedot.urakka.urakan-tyotunnit-test]
             [harja.ui.validointi-test]
@@ -88,7 +87,6 @@
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.hallintayksikot-test
-           'harja.tiedot.vesivaylat.urakka.laadunseuranta.sanktiot-test
            'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat-test
            'harja.tiedot.urakka.urakan-tyotunnit-test
            'harja.ui.validointi-test
