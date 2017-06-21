@@ -52,7 +52,7 @@
                        (istunto/ominaisuus-kaytossa? :vesivayla))
     :vv-materiaalit (and
                      (oikeudet/urakat-vesivayla-materiaalit id)
-                     (u-domain/vesivayla-urakkatyyppi? tyyppi))
+                     (u-domain/vesivaylaurakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
