@@ -22,6 +22,7 @@
    ::toimenpide/reimari-id -123456,
    ::toimenpide/reimari-tila "1022541202",
    ::toimenpide/lisatyo? false,
+   ::toimenpide/hintatyyppi "kokonaishintainen",
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/reimari-vayla
    {:harja.domain.vesivaylat.vayla/r-nro "12345",
