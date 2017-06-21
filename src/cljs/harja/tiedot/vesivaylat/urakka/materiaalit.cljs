@@ -106,4 +106,4 @@
   (process-event [virhe app]
     (log "Virhe: " virhe)
     (viesti/nayta! "Virhe palvelinkutsussa" :warning)
-    app))
+    (assoc app :tallennus-kaynnissa? false)))
