@@ -55,6 +55,7 @@
     :vv-vaylat
     :vv-kiintiot
     :vv-hinnoittelut
+    :vv-materiaalit
     :reimari
     :vkm})
 

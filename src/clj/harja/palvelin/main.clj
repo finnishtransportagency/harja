@@ -132,7 +132,11 @@
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
+<<<<<<< HEAD
     [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot])
+=======
+    [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit])
+>>>>>>> develop
 
   (:gen-class))
 
@@ -309,6 +313,9 @@
       :vv-kiintiot (component/using
                      (vv-kiintiot/->Kiintiot)
                      [:http-palvelin :db])
+      :vv-materiaalit (component/using
+                       (vv-materiaalit/->Materiaalit)
+                       [:http-palvelin :db])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])

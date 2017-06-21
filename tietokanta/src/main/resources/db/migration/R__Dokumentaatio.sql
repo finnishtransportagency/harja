@@ -155,3 +155,6 @@ Voi kuulua 15 kappaletta talvella vaurioituneen viitan korjausta, ja 5 kappalett
 täyttävät näitä kiintiöitä, ja kun kiintiö täyttyy, aletaan toimenpiteistä maksamaan yksikköhintoja. Tässä vaiheessa tilaaja/urakoitsija yhdessä määrittelevät,\n
 tarkalleen mitkä toimenpiteet kuuluvat kiintiöön, ja mitkä eivät, koska esimerkiksi kauas tehdystä toimenpiteestä joudutaan maksamaan suurempi yksikköhinta matkoista. \n
 Urakoitsija merkitsee kokonaishintaisia toimenpiteitä kiintiöihin kuuluvaksi, ja tilaaja seuraa kiintiöiden täyttymistä.';
+
+COMMENT ON TABLE vv_materiaali IS
+E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle myötämien materiaalien\nkappalemäärien alkutilanteen sekä muutokset niissä. Esimerkiksi tilaaja luovuttaa\nurakoitsijalle 10kpl poijuja urakan alussa ja urakoitsija käyttää niitä urakan aikana.\nUrakan aikana käytetyt ja hankitut materiaalit tulevat riveiksi tähän tauluun.';

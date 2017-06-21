@@ -32,6 +32,11 @@
         <komponentti id="124" nimi="Erikoismerkki" tila="345"/>
       </komponentit>
 
+      <viat>
+        <vika vika-id="42" tila="korjattu"/>
+        <vika vika-id="43" tila="aiheeton"/>
+      </viat>
+
     </toimenpide>
   </HaeToimenpiteetResponse>
 </HaeToimenpiteet>
