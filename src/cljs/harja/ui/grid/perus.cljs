@@ -1003,7 +1003,7 @@
          "kpl")
        ")"))
 
-(defn erikoismuokattava-kentta
+(defn arvo-ja-nappi
   "Jos annettu ehto on true, näyttää gridissä napin, jolla kenttää voidaan muokata.
    Jos ehto on false, piirtää kentän arvon tekstinä sekä napin kynä-ikonilla,
    jolla arvoa voi muokata."
