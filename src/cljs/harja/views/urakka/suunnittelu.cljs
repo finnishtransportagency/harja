@@ -70,7 +70,7 @@
 
           "Kiintiöt"
           :kiintiot
-          (when (and #_(oikeudet/urakat-suunnittelu-kiintiot id)
+          (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
             [kiintiot/kiintiot])]]))))
