@@ -13,6 +13,9 @@ BEGIN
   ELSEIF NEW.kuittaustyyppi = 'vastaanotto'
     THEN
       uusi_tila := 'vastaanotettu' :: ilmoituksen_tila;
+  ELSEIF NEW.kuittaustyyppi = 'vaara-urakka'
+    THEN
+      uusi_tila := 'lopetettu' :: ilmoituksen_tila;
   END IF;
 
   UPDATE ilmoitus
