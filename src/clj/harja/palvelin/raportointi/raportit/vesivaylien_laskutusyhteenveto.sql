@@ -33,17 +33,21 @@ WHERE "urakka-id" = :urakkaid
 
 -- name: hae-kokonaishintaiset-toimenpiteet
 SELECT
-  (SELECT SUM(summa)
+  (SELECT COALESCE(SUM(summa), 0)
    FROM kokonaishintainen_tyo kt
      LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+     LEFT JOIN toimenpideinstanssi_vesivaylat tpi_vv ON kt.toimenpideinstanssi = tpi_vv."toimenpideinstanssi-id"
    WHERE tpi.urakka = :urakkaid
+         AND tpi_vv.vaylatyyppi = :vaylatyyppi::vv_vaylatyyppi
          -- Kok. hint. osuu aikavälille jos eka päivä osuu
          AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') >= :alkupvm
          AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') <= :loppupvm) AS "suunniteltu-maara",
-  (SELECT SUM(summa)
+  (SELECT COALESCE(SUM(summa), 0)
    FROM kokonaishintainen_tyo kt
      LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+     LEFT JOIN toimenpideinstanssi_vesivaylat tpi_vv ON kt.toimenpideinstanssi = tpi_vv."toimenpideinstanssi-id"
    WHERE tpi.urakka = :urakkaid
+         AND tpi_vv.vaylatyyppi = :vaylatyyppi::vv_vaylatyyppi
          -- Toteutunut kok.hint työ on niiden kok.hint maksuerien summa,
          -- joiden maksupvm on menneisyydessä
          AND maksupvm <= NOW()) AS "toteutunut-maara"

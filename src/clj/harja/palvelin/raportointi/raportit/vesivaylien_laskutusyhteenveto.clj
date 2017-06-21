@@ -18,13 +18,12 @@
    {:leveys 1 :otsikko "Toteutunut" :fmt :raha}
    {:leveys 1 :otsikko "Jäljellä" :fmt :raha}])
 
-(defn- kok-hint-hinnoittelurivit [tiedot vaylatyyppi]
-  ;; TODO mites väylätyyppi saadaan tähän!?
+(defn- kok-hint-hinnoittelurivit [tiedot]
   [["Kokonaishintaiset toimenpiteet"
-    (:suunniteltu-maara (first tiedot))
-    (:toteutunut-maara (first tiedot))
-    (- (:suunniteltu-maara (first tiedot))
-       (:toteutunut-maara (first tiedot)))]])
+    (:suunniteltu-maara tiedot)
+    (:toteutunut-maara tiedot)
+    (- (:suunniteltu-maara tiedot)
+       (:toteutunut-maara tiedot))]])
 
 (defn- yks-hint-hinnoittelurivi [tiedot]
   [(:hinnoittelu tiedot)
@@ -41,9 +40,17 @@
                            (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
                                                                   :alkupvm alkupvm
                                                                   :loppupvm loppupvm}))
-   :kokonaishintaiset (vec (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+   :kokonaishintaiset {:kauppamerenkulku
+                       (first (hae-kokonaishintaiset-toimenpiteet db
+                                                                  {:urakkaid urakka-id
                                                                    :alkupvm alkupvm
-                                                                   :loppupvm loppupvm}))})
+                                                                   :loppupvm loppupvm
+                                                                   :vaylatyyppi "kauppamerenkulku"}))
+                       :muu
+                       (first (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                                      :alkupvm alkupvm
+                                                                      :loppupvm loppupvm
+                                                                      :vaylatyyppi "muu"}))}})
 
 (defn- yhteensa-rivi
   ([otsikko tiedot] (yhteensa-rivi otsikko tiedot nil))
@@ -55,8 +62,10 @@
                                 (filter #((:vaylatyyppi %) vaylatyyppi)
                                         (:yksikkohintaiset tiedot))
                                 (:yksikkohintaiset tiedot)))
-                  ;; TODO VÄYLÄTYYPPI KOKONAISHINTAISIIN
-                  (:toteutunut-maara (first (:kokonaishintaiset tiedot)))))
+                  (if vaylatyyppi
+                    (:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))
+                    (reduce + 0
+                            (map :toteutunut-maara (vals (:kokonaishintaiset tiedot)))))))
     ""]))
 
 (defn- kaikki-yhteensa [tiedot]
@@ -70,15 +79,13 @@
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
         kauppamerenkulku-kok-hint (kok-hint-hinnoittelurivit
-                                    (:kokonaishintaiset raportin-tiedot)
-                                    "kauppamerenkulku")
+                                    (:kauppamerenkulku (:kokonaishintaiset raportin-tiedot)))
         kauppamerenkulku-yks-hint (yks-hint-hinnoittelurivit
                                     (:yksikkohintaiset raportin-tiedot)
                                     "kauppamerenkulku")
         kauppamerenkulku-yht (yhteensa-rivi "Yhteensä" raportin-tiedot "kauppamerenkulku")
         muu-vesi-kok-hint (kok-hint-hinnoittelurivit
-                            (:kokonaishintaiset raportin-tiedot)
-                            "muu")
+                            (:muu (:kokonaishintaiset raportin-tiedot)))
         muu-vesi-yks-hint (yks-hint-hinnoittelurivit
                             (:yksikkohintaiset raportin-tiedot)
                             "muu")
