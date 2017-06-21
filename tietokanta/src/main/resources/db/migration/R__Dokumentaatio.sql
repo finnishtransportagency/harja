@@ -145,3 +145,6 @@ E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun
 
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun';
+
+COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
+E'Taulun tarkoitus on liittää toimenpideinstanssiin vesiväylä-spesifistä tietoa';
