@@ -52,20 +52,20 @@
                           kiintioiden-tallennus-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"]
                     "Sopimuksessa määritellyt urakan kiintiöt")
-         :voi-poistaa? (fn [kiintio]
-                         (and
-                           (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
-                                                     (:id @nav/valittu-urakka))
-                           (empty? (::kiintio/toimenpiteet kiintio))))
+         :esta-poistaminen? #(not-empty (::kiintio/toimenpiteet %))
+         :esta-poistaminen-tooltip (fn [_] "Vain tyhjiä kiintiöitä voi poistaa")
          :piilota-toiminnot? (not
                                (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                          (:id @nav/valittu-urakka)))
          :voi-lisata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                 (:id @nav/valittu-urakka))
-         :tallenna (fn [sisalto]
-                     (let [ch (chan)]
-                       (e! (tiedot/->TallennaKiintiot sisalto ch))
-                       (go (<! ch))))
+         :tallenna (when
+                     (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                               (:id @nav/valittu-urakka))
+                     (fn [sisalto]
+                      (let [ch (chan)]
+                        (e! (tiedot/->TallennaKiintiot sisalto ch))
+                        (go (<! ch)))))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
