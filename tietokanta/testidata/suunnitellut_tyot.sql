@@ -218,6 +218,10 @@ VALUES ((SELECT id
          FROM toimenpidekoodi
          WHERE koodi = '24104'), '2016-08-01', '2017-07-30');
 
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+    VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'),
+             'kauppamerenkulku'::vv_vaylatyyppi);
+
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
@@ -226,6 +230,10 @@ VALUES ((SELECT id
         (SELECT id
          FROM toimenpidekoodi
          WHERE nimi = 'Rannikon muut'), '2016-08-01', '2017-07-30');
+
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann muu vl, TP'),
+        'muu'::vv_vaylatyyppi);
 
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
@@ -236,6 +244,10 @@ VALUES ((SELECT id
          FROM toimenpidekoodi
          WHERE nimi = 'Rannikon kauppamerenkulku'), '2016-08-01', '2017-07-30');
 
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann kmrk, TP'),
+        'kauppamerenkulku'::vv_vaylatyyppi);
+
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, sampoid, alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
@@ -244,6 +256,10 @@ VALUES ((SELECT id
         (SELECT id
          FROM toimenpidekoodi
          WHERE koodi = '24103'), 'PR00008511', '2016-08-01', '2017-07-30');
+
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann muu vl, TP'),
+        'muu'::vv_vaylatyyppi);
 
 -- Vesiväylien suunnitellut työt
 
