@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
+<HaeViat xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+    <HaeViatResponse>
+            <vika id="563" turvalaitenro="234"
+                  lisatiedot="lamppu rikki"
+                  ilmoittaja="Lampuntutkijat oy"
+                  ilmoittajan-yhteystieto="Seppo Seppola 055 555 555"
+                  epakunnossa="false"
+                  tyyppikoodi="1022541001"
+                  tilakoodi="1022541103"
+                  havaittu="2017-01-01T12:12:12.123"
+                  kirjattu="2017-01-01T17:12:12.123"
+                  korjattu="2017-02-01T11:12:12.123"
+                  muokattu="2017-02-02T11:12:12.123"
+                  luontiaika="2017-02-02T11:12:12.123"
+                  luoja="Esa Esim"
+                  muokkaaja="Esa Esim"/>
+            <vika id="566" turvalaitenro="237"
+                  lisatiedot="lamppu rikki"
+                  ilmoittaja="Lampuntutkijat oy"
+                  ilmoittajan-yhteystieto="Seppo Seppola 055 555 555"
+                  epakunnossa="false"
+                  tyyppikoodi="1022541001"
+                  tilakoodi="1022541103"
+                  havaittu="2017-01-01T16:16:16.163"
+                  kirjattu="2017-01-01T17:16:16.163"
+                  korjattu="2017-02-01T11:16:16.163"
+                  muokattu="2017-02-02T11:16:16.163"
+                  luontiaika="2017-02-02T11:16:16.163"
+                  luoja="Esa Esim"
+                  muokkaaja="Esa Esim"/>
+  </HaeViatResponse>
+</HaeViat>
+
+</S:Body></S:Envelope>
