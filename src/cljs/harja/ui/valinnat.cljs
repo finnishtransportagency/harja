@@ -374,7 +374,7 @@
     toimenpiteet]])
 
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
-  [:div.urakkavalinnat (when-not (u-domain/vesivaylaurakka? urakka)
+  [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
    sisalto])
 
@@ -402,7 +402,7 @@
                                  (r/dom-node %))))
       (fn [{:keys [urakka] :as optiot} & sisalto]
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
-                                           (when-not (u-domain/vesivaylaurakka? urakka)
+                                           (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                                              "urakkatoiminnot-tyyliton "))}
          sisalto]))))
 
