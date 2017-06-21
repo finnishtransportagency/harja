@@ -58,14 +58,14 @@
    [otsikko
     ""
     (reduce + 0
-            (conj (map :summa (if vaylatyyppi
-                                (filter #((:vaylatyyppi %) vaylatyyppi)
-                                        (:yksikkohintaiset tiedot))
-                                (:yksikkohintaiset tiedot)))
-                  (if vaylatyyppi
-                    (:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))
-                    (reduce + 0
-                            (map :toteutunut-maara (vals (:kokonaishintaiset tiedot)))))))
+            (concat
+              (map :summa (if vaylatyyppi
+                            (filter #((:vaylatyyppi %) vaylatyyppi)
+                                    (:yksikkohintaiset tiedot))
+                            (:yksikkohintaiset tiedot)))
+              (if vaylatyyppi
+                [(:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))]
+                (map :toteutunut-maara (vals (:kokonaishintaiset tiedot))))))
     ""]))
 
 (defn- kaikki-yhteensa [tiedot]
