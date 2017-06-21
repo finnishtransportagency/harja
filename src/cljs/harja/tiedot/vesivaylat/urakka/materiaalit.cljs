@@ -35,7 +35,9 @@
                       :lisaa-materiaali nil
 
                       ;; Kirjattavan materiaalin käytön tiedot
-                      :kirjaa-materiaali nil}))
+                      :kirjaa-materiaali nil
+
+                      :tallennus-kaynnissa? false}))
 
 
 (extend-protocol t/Event
@@ -54,7 +56,8 @@
     (assoc app
            :materiaalilistaus tulokset
            :lisaa-materiaali nil
-           :kirjaa-materiaali nil))
+           :kirjaa-materiaali nil
+           :tallennus-kaynnissa? false))
 
   AloitaMateriaalinLisays
   (process-event [_ app]
@@ -67,9 +70,11 @@
 
   LisaaMateriaali
   (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
-    (palvelukutsu app :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
-                  {:onnistui ->ListausHaettu
-                   :epaonnistui ->Virhe}))
+    (-> app
+        (assoc :tallennus-kaynnissa? true)
+        (palvelukutsu :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
+                      {:onnistui ->ListausHaettu
+                       :epaonnistui ->Virhe})))
 
   PeruMateriaalinLisays
   (process-event [_ app]
@@ -91,9 +96,11 @@
 
   KirjaaMateriaali
   (process-event [_ {kirjaa-materiaali :kirjaa-materiaali :as app}]
-    (palvelukutsu app :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja kirjaa-materiaali)
-                  {:onnistui ->ListausHaettu
-                   :epaonnistui ->Virhe}))
+    (-> app
+        (assoc :tallennus-kaynnissa? true)
+        (palvelukutsu :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja kirjaa-materiaali)
+                      {:onnistui ->ListausHaettu
+                       :epaonnistui ->Virhe})))
 
   Virhe
   (process-event [virhe app]
