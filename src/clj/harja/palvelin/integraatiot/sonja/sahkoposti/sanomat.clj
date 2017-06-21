@@ -46,17 +46,3 @@
     {:viesti-id (v :viestiId)
      :aika (xml/parsi-xsd-datetime (v :aika))
      :onnistunut (xml/parsi-totuusarvo (v :onnistunut))}))
-
-(defn kuittaus
-  "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
-  [{viesti-id :viesti-id} virheet]
-  [:sahkoposti:kuittaus {:xmlns:sahkoposti +sahkoposti-ns+}
-   [:viestiId viesti-id]
-   [:aika (xml/formatoi-xsd-datetime (pvm/nyt))]
-   [:onnistunut (nil? virheet)]
-   (when virheet
-     (for [virhe virheet]
-       [:virheet virhe]))])
-
-(defn kirjoita-kuittaus [kuittaus]
-  (xml/tee-xml-sanoma kuittaus))
