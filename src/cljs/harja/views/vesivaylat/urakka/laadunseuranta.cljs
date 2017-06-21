@@ -7,32 +7,36 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.vesivaylat.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat]
-            [harja.views.vesivaylat.urakka.laadunseuranta.sanktiot :as sanktiot])
+            [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn laadunseuranta []
   (komp/luo
-    (fn [{:keys [id] :as ur}]
+    (fn [{:keys [id tyyppi] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                :active (nav/valittu-valilehti-atom :toimenpiteet)}
+                :active (nav/valittu-valilehti-atom :laadunseuranta-vesivaylat)}
 
-       "Tarkastukset" :vesivayla-tarkastukset
-       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id)) ; TODO OIKEUS!
-         [tarkastukset/tarkastukset])
+       ;; TODO Enabloi sitten kun nämä on oikeasti valmiina
+       ;; Osa ainakin tehtäneen tiepuolen koodipohjalla, joten nämä
+       ;; nykyiset tuck-pohjat voi sitten poistaa
 
-       "Laatupoikkeamat" :vesivayla-laatupoikkeamat
-       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
-         [laatupoikkeamat/laatupoikkeamat])
+       ;;"Tarkastukset" :vesivayla-tarkastukset
+       ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+       ;;          #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id)) ; TODO OIKEUS!
+       ;; [tarkastukset/tarkastukset])
 
-       "Vikaseuranta" :vesivayla-viat
-       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylalaadunseuranta-viat id))
-         [viat/viat])
+       ;;"Laatupoikkeamat" :vesivayla-laatupoikkeamat
+       ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+       ;;           #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
+       ;;  [laatupoikkeamat/laatupoikkeamat])
+
+       ;;"Vikaseuranta" :vesivayla-viat
+       ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+       ;;           (oikeudet/urakat-vesivaylalaadunseuranta-viat id))
+       ;;  [viat/viat])
 
        "Sanktiot" :vesivayla-sanktiot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
+                  (oikeudet/urakat-laadunseuranta-sanktiot id))
          [sanktiot/sanktiot])])))
