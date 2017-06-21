@@ -1,6 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
+            [harja.id :refer [id-olemassa?]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [>! <!]]
@@ -80,10 +81,15 @@
       (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                         ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])
                         ::kiintio/tallennettavat-kiintiot
-                        (map
-                          (fn [k]
-                            (set/rename-keys k {:poistettu ::m/poistettu?}))
-                          kiintiot)}]
+                        (->>
+                          kiintiot
+                          ;; Ei lähetetä palvelimelle rivejä, jotka on gridiin lisätty, ja heti poistettu
+                          (remove #(and (not (id-olemassa? (::kiintio/id %)))
+                                        (:poistettu %)))
+                          ;; Muutetaan gridin sisäinen :poistettu avain oikeaan muotoon
+                          (map
+                           (fn [k]
+                             (set/rename-keys k {:poistettu ::m/poistettu?}))))}]
         (-> app
             (tuck-apurit/palvelukutsu :tallenna-kiintiot
                                       parametrit
