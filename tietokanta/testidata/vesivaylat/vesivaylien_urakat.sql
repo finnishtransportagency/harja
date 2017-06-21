@@ -26,7 +26,7 @@ VALUES
    'vesivayla-hoito',
    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
+INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
    '2016-08-01', '2019-07-30',
@@ -34,7 +34,8 @@ VALUES
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
    (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
    'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   '555');
 
 INSERT INTO urakka (nimi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
@@ -88,40 +89,3 @@ INSERT INTO toimenpidekoodi (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon kauppamerenkulku');
 INSERT INTO toimenpidekoodi (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon muut');
-
--- TOIMENPIDEINSTANSSIT
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP',
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE koodi = '24104'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann muu vl, TP',
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE nimi = 'Rannikon muut'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann kmrk, TP',
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE nimi = 'Rannikon kauppamerenkulku'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, sampoid, alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann muu vl, TP',
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE koodi = '24103'), 'PR00008511', '2016-08-01', '2017-07-30');

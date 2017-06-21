@@ -17,47 +17,48 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
             [clojure.walk :as walk]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valinnat
-         (reaction {:urakka-id (:id @nav/valittu-urakka)
-                    :sopimus-id (first @urakka/valittu-sopimusnumero)
-                    :aikavali @urakka/valittu-aikavali}))
+  (reaction {:urakka-id (:id @nav/valittu-urakka)
+             :sopimus-id (first @urakka/valittu-sopimusnumero)
+             :aikavali @urakka/valittu-aikavali}))
 
 (defonce varusteet
-         (atom {:nakymassa? false
+  (atom {:nakymassa? false
 
-                :tienumero nil
+         :tienumero nil
 
-                ;; Valinnat (urakka, sopimus, hk, kuukausi)
-                :valinnat nil
+         ;; Valinnat (urakka, sopimus, hk, kuukausi)
+         :valinnat nil
 
-                ;; Ajastetun toteumahaun id
-                :toteumahaku-id nil
+         ;; Ajastetun toteumahaun id
+         :toteumahaku-id nil
 
-                ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
-                :toteumat nil
+         ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
+         :toteumat nil
 
-                ;; Karttataso varustetoteumille
-                :karttataso-nakyvissa? false
-                :karttataso nil
+         ;; Karttataso varustetoteumille
+         :karttataso-nakyvissa? false
+         :karttataso nil
 
-                ;; Valittu varustetoteuma
-                :varustetoteuma nil
+         ;; Valittu varustetoteuma
+         :varustetoteuma nil
 
-                ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
-                ;; id, joka valitaan kun haku on valmistunut
-                :valittu-toteumaid nil
+         ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
+         ;; id, joka valitaan kun haku on valmistunut
+         :valittu-toteumaid nil
 
 
-                ;; Tierekisterin varusteiden hakuehdot ja tulokset
-                :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
-                                                      :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
-                                          ;; Tällä hetkellä näytettävä tietolaji ja varusteet
-                                          :tietolaji nil
-                                          :varusteet nil}}))
+         ;; Tierekisterin varusteiden hakuehdot ja tulokset
+         :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
+                                               :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
+                                   ;; Tällä hetkellä näytettävä tietolaji ja varusteet
+                                   :tietolaji nil
+                                   :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]
   (swap! varusteet assoc :valittu-toteumaid toteumaid))
@@ -96,14 +97,6 @@
               (and (get-in valittu-varustetoteuma [:arvot :tunniste])
                    (= (get-in valittu-varustetoteuma [:arvot :tunniste])
                       (get-in % [:varuste :tunniste])))))))
-
-(defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
-  (k/post! :urakan-varustetoteumat
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :tienumero tienumero}))
 
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
@@ -209,15 +202,18 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
-      (go
-        (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat
-              vastaus (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero))]
-          (if (k/virhe? vastaus)
-            (t/send-async! (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe"))
-            (haku-valmis! vastaus))))
-      (assoc app
-        :toteumahaku-id nil)))
+
+    (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
+      (-> app
+          (tuck-tyokalut/palvelukutsu :urakan-varustetoteumat
+                                      {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id
+                                       :alkupvm (first aikavali)
+                                       :loppupvm (second aikavali)
+                                       :tienumero tienumero}
+                                      {:onnistui v/->VarusteToteumatHaettu
+                                       :epaonnistui (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe")})
+          (assoc :toteumahaku-id nil))))
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat}
@@ -321,8 +317,8 @@
   v/VarustetoteumatMuuttuneet
   (process-event [{varustetoteumat :varustetoteumat :as data} app]
     (kartalle (-> app
-         (dissoc :uudet-varustetoteumat)
-         (haetut-toteumat varustetoteumat))))
+                  (dissoc :uudet-varustetoteumat)
+                  (haetut-toteumat varustetoteumat))))
 
   v/LisaaLiitetiedosto
   (process-event [{liite :liite} app]
