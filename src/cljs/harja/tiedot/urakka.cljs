@@ -452,3 +452,6 @@
                   (= :valaistus urakkatyyppi)))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
+
+(defn ensimmainen-hoitokausi? [urakka hoitokausi]
+  (= hoitokausi (first (hoitokaudet urakka))))
