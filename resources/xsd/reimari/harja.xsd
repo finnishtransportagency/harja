@@ -237,7 +237,7 @@
       <!-- 1022541105      Peruttu -->
 
 
-      <xs:attribute type="xs:dateTime" name="havaittu" use="required"/> <!-- FAULT_OBSERVD_DTE+TME -->
+      <xs:attribute type="xs:dateTime" name="havaittu" use="optional"/> <!-- FAULT_OBSERVD_DTE+TME -->
       <xs:attribute type="xs:dateTime" name="kirjattu" use="required"/> <!-- FAULT_ENTRY_DTE+TME -->
       <xs:attribute type="xs:dateTime" name="korjattu" use="optional"/> <!-- FAULT_FIXED_DTE+TME -->
 
