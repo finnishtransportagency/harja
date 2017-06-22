@@ -44,6 +44,8 @@
             [harja.tiedot.urakka.urakan-tyotunnit-test]
             [harja.ui.validointi-test]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test]
+            [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test]
+            [harja.views.vesivaylat.urakka.materiaalit-test]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -90,5 +92,7 @@
            'harja.tiedot.urakka.urakan-tyotunnit-test
            'harja.ui.validointi-test
            'harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test
+           'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
+           'harja.views.vesivaylat.urakka.materiaalit-test
            ;; uusi testi tähän
            )

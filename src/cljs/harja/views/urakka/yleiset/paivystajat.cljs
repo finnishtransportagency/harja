@@ -106,7 +106,8 @@
   [paivystajat vain-urakoitsijat?]
   (let [ryhmitellyt-paivystykset (->> paivystajat
                                       (group-by (juxt :etunimi :sukunimi :organisaatio))
-                                      (sort-by first))]
+                                      (sort-by (fn [[[etunimi sukunimi {organisaation-nimi :nimi}] _]]
+                                                 [etunimi sukunimi organisaation-nimi])))]
     (for [[[etunimi sukunimi org] paivystykset] ryhmitellyt-paivystykset
           :when (or (not vain-urakoitsijat?)
                     (= :urakoitsija (:tyyppi org)))]

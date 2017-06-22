@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+-- Toimenpideinstanssille VV-spesifistä tietoa
+CREATE TABLE toimenpideinstanssi_vesivaylat (
+  "toimenpideinstanssi-id" integer NOT NULL REFERENCES toimenpideinstanssi(id),
+   vaylatyyppi VV_VAYLATYYPPI NOT NULL
+);
+
+CREATE INDEX toimenpideinstanssi_vesivaylat_index ON toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id");
+=======
 -- Luodaan vesiväylien materiaalitaulu ja näkymät
 -- Vesiväylien materiaalit ovat vapaasti kirjattavissa (ei koodistoa)
 
@@ -48,3 +57,4 @@ CREATE VIEW vv_materiaalilistaus AS
 	   WHERE l."urakka-id" = m1."urakka-id" AND m1.nimi = l.nimi) AS muutokset
     FROM vv_materiaali m1
     ORDER BY nimi ASC;
+>>>>>>> develop

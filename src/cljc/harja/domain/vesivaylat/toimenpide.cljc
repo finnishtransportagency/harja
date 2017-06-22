@@ -8,6 +8,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
@@ -261,6 +262,7 @@ reimari-tilat
     ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
     ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
@@ -319,7 +321,8 @@ reimari-tilat
     ::vayla-id
     ::m/muokkaaja-id
     ::m/luoja-id
-    ::m/poistaja-id})
+    ::m/poistaja-id
+    ::kiintio-id})
 
 (def hinnoittelu
   #{[::hinnoittelu-linkit (set/union
@@ -332,6 +335,7 @@ reimari-tilat
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
+(def kiintio #{[::kiintio kiintio/perustiedot]})
 
 
 (def viittaukset
@@ -341,7 +345,8 @@ reimari-tilat
     sopimus
     turvalaite
     urakka
-    vayla))
+    vayla
+    kiintio))
 
 (def perustiedot
   #{::id
