@@ -1,4 +1,4 @@
--- Lisää liitteelle UUID (fileyard)
+-- Lisää liitteelle hash (fileyard)
 
 ALTER TABLE liite
-  ADD COLUMN "fileyard-uuid" UUID;
+  ADD COLUMN "fileyard-hash" char(64);
