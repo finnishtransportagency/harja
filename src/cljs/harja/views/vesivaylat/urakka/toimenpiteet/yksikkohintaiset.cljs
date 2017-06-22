@@ -20,7 +20,8 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -156,10 +157,13 @@
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
 
-       (grid/erikoismuokattava-kentta
-         {:ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
+       (grid/arvo-ja-nappi
+         {:voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                     (get-in app* [:valinnat :urakka-id]))
+          :ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
           :nappi-teksti "Hinnoittele"
-          :toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :uusi-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :muokkaa-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
           :nappi-optiot {:disabled (listaus-tunniste (:infolaatikko-nakyvissa app*))}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
