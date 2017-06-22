@@ -154,21 +154,34 @@
                                     valitun-toimenpiteen-ja-hoitokauden-tyot))
         tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
         [hoitokauden-alku hoitokauden-loppu] valittu-hoitokausi
+        tyorivi #(luo-tyhja-tyo (:tyyppi urakka)
+                                (:tpi_id valittu-toimenpideinstanssi)
+                                valittu-hoitokausi
+                                %
+                                (first valittu-sopimusnumero))
         tyhjat-tyot (when hoitokauden-alku
-                      (keep #(luo-tyhja-tyo (:tyyppi urakka)
-                                            (:tpi_id valittu-toimenpideinstanssi)
-                                            valittu-hoitokausi
-                                            %
-                                            (first valittu-sopimusnumero))
-                            tyhjat-kkt))]
+                      (concat
+                              (keep tyorivi tyhjat-kkt)))]
 
     (prosenttiosuudet
-     (vec (sort-by (juxt :vuosi :kuukausi)
-                   (concat valitun-toimenpiteen-ja-hoitokauden-tyot
-                           ;; filteröidään pois hoitokauden ulkopuoliset kk:t
-                           (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
-                                                  hoitokauden-alku hoitokauden-loppu)
-                                   tyhjat-tyot)))))))
+     (into (if (and prosenttijako?
+                    (u/ensimmainen-hoitokausi? urakka valittu-hoitokausi)
+                    (not (some #(= -1 (:kuukausi %)) valitun-toimenpiteen-ja-hoitokauden-tyot)))
+             ;; Jos vesiväylien hoitourakan ensimmäisellä hoitokaudella ei ole
+             ;; "urakan alkaessa" erää, lisätään se
+             [{:toimenpideinstanssi (:tpi_id valittu-toimenpideinstanssi)
+               :summa nil
+               :kuukausi -1 :vuosi (pvm/vuosi hoitokauden-alku)
+               :maksupvm nil
+               :alkupvm hoitokauden-alku :loppupvm hoitokauden-alku
+               :sopimus (first valittu-sopimusnumero)}]
+             [])
+           (sort-by (juxt :vuosi :kuukausi)
+                    (concat valitun-toimenpiteen-ja-hoitokauden-tyot
+                            ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                            (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                   hoitokauden-alku hoitokauden-loppu)
+                                    tyhjat-tyot)))))))
 
 (defn- nayta-tehtavalista-ja-kustannukset? [tyyppi]
   (not (#{:tiemerkinta :vesivayla-hoito} tyyppi)))
@@ -328,7 +341,9 @@
              {:ohjaus g
               :otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
               :piilota-toiminnot? true
-              :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
+              :tyhja (if (nil? @toimenpiteet)
+                       [ajax-loader "Kokonaishintaisia töitä haetaan..."]
+                       "Ei kokonaishintaisia töitä")
               :tallenna (if (oikeudet/voi-kirjoittaa?
                               (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
                           (do
@@ -356,12 +371,13 @@
                                     (fmap (fn [rivi]
                                             (paivita-kk-arvo-prosentin-mukaan rivi @vuosisumma)) rivit)))
               :muokkaa-footer (fn [g]
-                                [:div.kok-hint-muokkaa-footer
-                                 [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
-                                              :toiminto #(swap! tuleville? not)
-                                              :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                              :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
-                                  @tuleville?]])
+                                (when-not prosenttijako?
+                                  [:div.kok-hint-muokkaa-footer
+                                   [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
+                                                :toiminto #(swap! tuleville? not)
+                                                :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                                :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
+                                    @tuleville?]]))
               :rivi-jalkeen-fn (when @prosenttijako?
                                  (fn [rivit]
                                    (let [prosentti-yht (reduce + 0 (map :prosentti rivit))]
@@ -378,7 +394,10 @@
                  :leveys 10})
 
               {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
-              {:otsikko "Kuukausi" :nimi "kk" :hae #(pvm/kuukauden-nimi (:kuukausi %)) :muokattava? (constantly false)
+              {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
+                                                      "urakan alkaessa"
+                                                      (pvm/kuukauden-nimi (:kuukausi %)))
+               :muokattava? (constantly false)
                :tyyppi  :numero :leveys 25}
               {:otsikko       "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
                :muokattava? (constantly (not @prosenttijako?))
