@@ -39,8 +39,7 @@
       (fetch db
             ::kiintio/kiintio
             (set/union kiintio/perustiedot
-                       kiintio/kiintion-toimenpiteet
-                       m/muokkauskentat)
+                       kiintio/kiintion-toimenpiteet)
             (op/and
               {::kiintio/urakka-id urakka-id}
               {::kiintio/sopimus-id sopimus-id}
@@ -61,7 +60,8 @@
                               ::m/muokattu (pvm/nyt)}
 
                              (id-olemassa? (::kiintio/id kiintio))
-                             {::m/muokkaaja-id (:id user)
+                             {::m/luoja-id (:id user)
+                              ::m/muokkaaja-id (:id user)
                               ::m/muokattu (pvm/nyt)}
 
                              :default

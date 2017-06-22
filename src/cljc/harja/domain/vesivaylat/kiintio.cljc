@@ -46,8 +46,7 @@
 
 (s/def ::tallennettava-kiintio
   (s/keys :req [::nimi ::koko]
-          :opt [::kuvaus ::urakka-id ::sopimus-id ::m/poistettu? ::toimenpiteet ::m/muokkaaja-id
-                ::m/muokattu ::m/luoja-id ::m/luotu ::m/poistaja-id]))
+          :opt [::id ::kuvaus ::urakka-id ::sopimus-id ::m/poistettu? ::toimenpiteet]))
 
 (s/def ::tallennettavat-kiintiot (s/coll-of ::tallennettava-kiintio))
 
