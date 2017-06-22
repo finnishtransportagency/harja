@@ -61,7 +61,6 @@ INSERT INTO reimari_toimenpide
  "reimari-turvalaite",
  "turvalaite-id",
  lisatieto,
- lisatyo,
  suoritettu,
  luotu,
  luoja,
