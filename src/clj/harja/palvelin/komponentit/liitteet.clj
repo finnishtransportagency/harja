@@ -91,7 +91,7 @@
         (first (liitteet/hae-liite-lataukseen db liitteen-id))]
 
     (dissoc
-     (if fileyard-uuid
+     (if fileyard-hash
        (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
        (assoc liite :data (lue-lob db (:liite_oid liite))))
      :liite_oid :fileyard-hash)))
