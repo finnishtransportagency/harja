@@ -23,13 +23,13 @@
     {:text (str "Käyttäjä " kayttajanimi " (" id ")" " raportoi yhteyskatkoksista palveluissa:")
      :fields (mapv (fn [palvelu]
                      {:title (str palvelu)
-                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl\n"
+                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl(slack-n)"
                                    "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
                                                         (sort t/after?)
-                                                        (first))
-                                   "\nviimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                        (sort t/after?)
-                                                        (last)))})
+                                                        (last))
+                                   "(slack-n)viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                               (sort t/after?)
+                                                               (first)))})
                   (keys palvelulla-ryhmiteltyna))}))
 
 (defn raportoi-selainvirhe
