@@ -81,15 +81,11 @@
       (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                         ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])
                         ::kiintio/tallennettavat-kiintiot
-                        (->>
-                          kiintiot
-                          ;; Ei lähetetä palvelimelle rivejä, jotka on gridiin lisätty, ja heti poistettu
-                          (remove #(and (not (id-olemassa? (::kiintio/id %)))
-                                        (:poistettu %)))
-                          ;; Muutetaan gridin sisäinen :poistettu avain oikeaan muotoon
-                          (map
-                           (fn [k]
-                             (set/rename-keys k {:poistettu ::m/poistettu?}))))}]
+                        ;; Muutetaan gridin sisäinen :poistettu avain oikeaan muotoon
+                        (map
+                          (fn [k]
+                            (set/rename-keys k {:poistettu ::m/poistettu?}))
+                          kiintiot)}]
         (-> app
             (tuck-apurit/palvelukutsu :tallenna-kiintiot
                                       parametrit
