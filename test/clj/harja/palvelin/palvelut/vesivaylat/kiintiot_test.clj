@@ -24,7 +24,8 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (compose-fixtures jarjestelma-fixture
+                                      tietokanta-fixture))
 
 (deftest kiintioiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -49,28 +50,31 @@
                                  +kayttaja-jvh+
                                  params)]
     (testing "Muokkaaminen"
-      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/kuvaus] "Testi")
+      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/kuvaus] "Testi123")
             params (assoc params ::kiintio/tallennettavat-kiintiot kiintiotiedot)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-kiintiot
                                     +kayttaja-jvh+
                                     params)]
-        (is (not (some (comp (partial = "Testi") ::kiintio/kuvaus) kiintiot)))
+        (is (not (some (comp (partial = "Testi123") ::kiintio/kuvaus) kiintiot)))
         (is (s/valid? ::kiintio/tallenna-kiintiot-kysely params))
         (is (s/valid? ::kiintio/tallenna-kiintiot-vastaus vastaus))
         (is (>= (count vastaus) 2))
-        (is (some (comp (partial = "Testi") ::kiintio/kuvaus) vastaus))))
+        (is (some (comp (partial = "Testi123") ::kiintio/kuvaus) vastaus))))
 
     (testing "Luominen"
-      (let [kiintiotiedot (conj kiintiot {::kiintio/nimi "Foo" ::kiintio/koko 30})
+      (let [kiintiot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_kiintio"))
+            kiintiotiedot (conj kiintiot {::kiintio/nimi "Foo" ::kiintio/koko 30})
             params (assoc params ::kiintio/tallennettavat-kiintiot kiintiotiedot)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-kiintiot
                                     +kayttaja-jvh+
-                                    params)]
+                                    params)
+            kiintiot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_kiintio"))]
         (is (s/valid? ::kiintio/tallenna-kiintiot-kysely params))
         (is (s/valid? ::kiintio/tallenna-kiintiot-vastaus vastaus))
         (is (>= (count vastaus) 3))
+        (is (= (+ kiintiot-ennen 1) kiintiot-jalkeen))
         (is (some (comp (partial = "Foo") ::kiintio/nimi) vastaus))))
 
     (testing "Poistaminen"

@@ -55,7 +55,8 @@
                       (dissoc kiintio ::kiintio/id))
             muokkaustiedot (cond
                              (::m/poistettu? kiintio)
-                             {::m/poistaja-id (:id user)
+                             {::m/luoja-id (:id user)
+                              ::m/poistaja-id (:id user)
                               ::m/poistettu? true
                               ::m/muokattu (pvm/nyt)}
 
