@@ -65,7 +65,7 @@
          })]
      hakuehdot]))
 
-(defn poista-varuste [e! tietolaji tunniste varuste]
+(defn poista-varuste [e! tietolaji tunniste]
   (yleiset/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
      :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
@@ -74,7 +74,7 @@
      :hyvaksy "Poista"
      :hyvaksy-ikoni (ikonit/livicon-trash)
      :hyvaksy-napin-luokka "nappi-kielteinen"
-     :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
+     :toiminto-fn (fn [] (e! (v/->PoistaVaruste tunniste)))}))
 
 (def kuntoluokka->selite {"1" "Ala-arvoinen"
                           "2" "Merkittäviä puutteita"
@@ -129,7 +129,7 @@
       tarkastus]]))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
-  (if oikeus-varusteiden-muokkaamiseen?
+  (if (oikeus-varusteiden-muokkaamiseen?)
     (let [toiminnot {:nimi :toiminnot
                      :otsikko "Toiminnot"
                      :tyyppi :komponentti
@@ -138,9 +138,9 @@
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
-                                       [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
-                                       [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus varuste))]
-                                       [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
+                                       [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji))]
+                                       [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste))]
+                                       [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
 
