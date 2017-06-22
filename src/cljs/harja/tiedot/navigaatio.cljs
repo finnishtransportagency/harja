@@ -341,7 +341,7 @@
             (comp (filter #(or (= :kaikki v-ur-tyyppi)
                                (= v-ur-tyyppi (:tyyppi %))
                                (and (= v-ur-tyyppi :vesivayla)
-                                    (urakka-domain/vesivayla-urakka? %))))
+                                    (urakka-domain/vesivaylaurakka? %))))
                   (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
                   (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
             urakkalista))))
@@ -414,3 +414,7 @@
                      (apply funktio urakka args)
                      urakka))
                  urakat))))
+
+;; HAR-5517 takia. Tilannekuvassa halutaan näyttää selite urakkarajoille, jos alueita on valittu. Syklisen riippuvuuden takia
+;; piti laittaa tänne.
+(def tilannekuvassa-alueita-valittu? (atom false))

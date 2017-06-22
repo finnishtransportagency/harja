@@ -30,7 +30,7 @@
             [tuck.core :as t :refer [tuck]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
-            [harja.views.tierekisteri.varusteet :refer [varustehaku]]
+            [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
@@ -38,14 +38,17 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.tierekisteri.varusteet :as tv])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 
 (def nayta-max-toteumaa 500)
 
-(defn oikeus-varusteiden-muokkaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
+(defn oikeus-varusteiden-muokkaamiseen? []
+   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -177,7 +180,6 @@
 (defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
   (let [tunniste (or (:tunniste varustetoteuma)
                      (get-in varustetoteuma [:arvot :tunniste]))]
-    (println varustetoteuma)
     (lomake/ryhma
       "Varusteen tunnistetiedot"
       (when tunniste
@@ -197,6 +199,7 @@
        :tyyppi :tierekisteriosoite
        :pakollinen? muokattava?
        :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+       :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
        :muokattava? (constantly muokattava?)}
       {:nimi :ajorata
        :otsikko "Ajorata"
@@ -239,6 +242,18 @@
                          ominaisuudet)]
       (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))))
 
+
+(defn varusteen-liitteet [e! muokattava? varustetoteuma]
+  {:otsikko "Liitteet" :nimi :liitteet
+   :palstoja 2
+   :tyyppi :komponentti
+   :komponentti (fn [_]
+                  [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
+                   {:uusi-liite-atom (when muokattava?
+                                       (r/wrap (:uusi-liite varustetoteuma)
+                                               #(e! (v/->LisaaLiitetiedosto %))))
+                    :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
+
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
@@ -271,7 +286,8 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet)]
+       (varusteen-ominaisuudet muokattava? ominaisuudet)
+       (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
@@ -283,7 +299,7 @@
    (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
-      (when oikeus-varusteiden-muokkaamiseen?
+      (when (oikeus-varusteiden-muokkaamiseen?)
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku e! app]])])
 
@@ -308,7 +324,16 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
                                                          (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
-                                             :teksti "Valitse varustetoteuma"}})
+                                             :teksti "Valitse varustetoteuma"}
+                            :varuste [{:teksti "Tarkasta"
+                                       :toiminto (fn [{:keys [tunniste tietolaji]}]
+                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji)))}
+                                      {:teksti "Muokkaa"
+                                       :toiminto (fn [{:keys [tunniste]}]
+                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste)))}
+                                      {:teksti "Poista"
+                                       :toiminto (fn [{:keys [tunniste tietolaji]}]
+                                                   (view/poista-varuste e! tietolaji tunniste))}]})
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))

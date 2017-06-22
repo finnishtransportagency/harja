@@ -166,14 +166,14 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :lisaa-siltatarkastus
+      http :api-lisaa-siltatarkastus
       (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
         (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request
                          json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db liitteiden-hallinta)))))
     (julkaise-reitti
-      http :poista-siltatarkastus
+      http :api-poista-siltatarkastus
       (DELETE "/api/urakat/:id/tarkastus/siltatarkastus" request
         (kasittele-kutsu db integraatioloki :poista-siltatarkastus request
                          json-skeemat/siltatarkastuksen-poisto json-skeemat/kirjausvastaus
@@ -183,5 +183,6 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :lisaa-siltatarkastus)
+                     :api-lisaa-siltatarkastus
+                     :api-poista-siltatarkastus)
     this))

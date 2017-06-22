@@ -9,7 +9,8 @@
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.ui.viesti :as viesti]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -47,7 +48,7 @@
        (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
        " siirretty."))
 
-(defn kyselyn-hakuargumentit [{:keys [urakka-id sopimus-id aikavali
+(defn hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide
                                       vain-vikailmoitukset?] :as valinnat}]
@@ -75,7 +76,7 @@
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
-(defrecord AsetaInfolaatikonTila [uusi-tila])
+(defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 
@@ -88,7 +89,7 @@
                                     (assoc :valittu? valinta))]
       (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
                                  (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                      toimenpiteet)))))
+                                       toimenpiteet)))))
 
   ValitseTyolaji
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
@@ -117,8 +118,12 @@
                                  (concat paivitetyt-toimenpiteet paivittamattomat)))))
 
   AsetaInfolaatikonTila
-  (process-event [{uusi-tila :uusi-tila} app]
-    (assoc app :infolaatikko-nakyvissa? uusi-tila))
+  (process-event [{tunniste :tunniste
+                   uusi-tila :uusi-tila} app]
+    (if tunniste
+      (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
+                                                {tunniste uusi-tila}))
+      app))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
@@ -130,16 +135,12 @@
   ToimenpiteetEiSiirretty
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
-    app))
+    (assoc app :siirto-kaynnissa? false)))
 
 (defn siirra-valitut! [palvelu app]
-  (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
-        fail! (tuck/send-async! ->ToimenpiteetEiSiirretty)]
-    (go (let [valitut (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))
-              vastaus (<! (k/post! palvelu
-                                   {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                                    ::to/idt valitut}))]
-          (if (k/virhe? vastaus)
-            (fail! vastaus)
-            (tulos! vastaus)))))
+  (tuck-tyokalut/palvelukutsu palvelu
+                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                               ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
+                              {:onnistui ->ToimenpiteetSiirretty
+                               :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))

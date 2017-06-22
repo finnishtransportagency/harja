@@ -22,12 +22,10 @@
     (map #(set/rename-keys % {::vv-toimenpide/reimari-tyolaji ::vv-toimenpide/tyolaji
                               ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
                               ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
-                              ::vv-toimenpide/reimari-toimenpidetyyppi ::vv-toimenpide/toimenpide
-                              ::vv-toimenpide/reimari-turvalaite ::vv-toimenpide/turvalaite}))
+                              ::vv-toimenpide/reimari-toimenpidetyyppi ::vv-toimenpide/toimenpide}))
     (map #(assoc % ::vv-toimenpide/tyolaji (get vv-toimenpide/reimari-tyolajit (::vv-toimenpide/tyolaji %))
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
                    ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
-                   ::vv-toimenpide/turvalaite {::vv-turvalaite/nimi (get-in % [::vv-toimenpide/turvalaite ::vv-turvalaite/r-nimi])}
                    ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
@@ -77,22 +75,35 @@
                                          true
                                          ::vv-toimenpide/hintaryhma))
 
+(defn ilman-poistettuja-linkkeja [toimenpiteet]
+  (map
+    (fn [t]
+      (update t
+              ::vv-toimenpide/hinnoittelu-linkit
+              (fn [linkit]
+                (remove ::m/poistettu? linkit))))
+    toimenpiteet))
+
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
   (->> (fetch db
               ::vv-toimenpide/reimari-toimenpide
               (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
               (op/and
                 {::vv-toimenpide/id (op/in toimenpide-idt)}))
-
+       (ilman-poistettuja-linkkeja)
        (toimenpiteet-omalla-hinnoittelulla)
        (toimenpiteet-hintaryhmalla)
        ;; Poistetaan turha hinnoittelu-linkit avain
        (map #(dissoc % ::vv-toimenpide/hinnoittelu-linkit))
-
        ;; Groupataan ja yhdistetään toimenpiteen tiedot
        (group-by ::vv-toimenpide/id)
        vals
-       (mapv (partial apply merge))))
+       (map (partial apply merge))
+       ;; Säilytetään hintaryhmästä vain hinnoittelu-id
+       (map #(if-let [hinnoitteluryhma-id (get-in % [::vv-toimenpide/hintaryhma ::vv-hinnoittelu/id])]
+               (assoc % ::vv-toimenpide/hintaryhma-id hinnoitteluryhma-id)
+               %))
+       (map #(dissoc % ::vv-toimenpide/hintaryhma))))
 
 (defn suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)

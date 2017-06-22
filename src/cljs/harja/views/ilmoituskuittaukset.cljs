@@ -226,6 +226,6 @@
 
 (defn pikakuittaus [e! pikakuittaus]
   [leijuke/leijuke
-   {:otsikko "Kuittauksen tekeminen"
+   {:otsikko "Kuittaa"
     :sulje! #(e! (v/->PeruutaPikakuittaus))}
    [pikakuittauslomake e! pikakuittaus]])

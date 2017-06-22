@@ -1,23 +1,26 @@
 (ns harja.domain.vesivaylat.toimenpide
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.organisaatio :as o]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
+            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.alus :as vv-alus]
-            [clojure.string :as str]
-            [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]]))
+            [clojure.future :refer :all]])
+            [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -233,8 +236,6 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
-
-
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
   (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
@@ -261,6 +262,7 @@ reimari-tilat
     ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
     ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
@@ -289,7 +291,7 @@ reimari-tilat
                                   ::vv-turvalaite/nro
                                   ::vv-turvalaite/ryhma]))
 (s/def ::oma-hinnoittelu ::h/hinnoittelu)
-(s/def ::hintaryhma ::h/hinnoittelu)
+(s/def ::hintaryhma-id ::h/id)
 (s/def ::vikakorjauksia? boolean?)
 (s/def ::idt (s/coll-of ::id))
 
@@ -319,10 +321,13 @@ reimari-tilat
     ::vayla-id
     ::m/muokkaaja-id
     ::m/luoja-id
-    ::m/poistaja-id})
+    ::m/poistaja-id
+    ::kiintio-id})
 
 (def hinnoittelu
-  #{[::hinnoittelu-linkit h/toimenpiteen-hinnoittelut]})
+  #{[::hinnoittelu-linkit (set/union
+                            m/muokkauskentat
+                            h/toimenpiteen-hinnoittelut)]})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
@@ -330,6 +335,8 @@ reimari-tilat
 (def turvalaite #{[::turvalaite vv-turvalaite/perustiedot]})
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
+(def kiintio #{[::kiintio kiintio/perustiedot]})
+
 
 (def viittaukset
   (clojure.set/union
@@ -338,7 +345,8 @@ reimari-tilat
     sopimus
     turvalaite
     urakka
-    vayla))
+    vayla
+    kiintio))
 
 (def perustiedot
   #{::id
@@ -346,7 +354,6 @@ reimari-tilat
     ::suoritettu
     ::lisatyo?
     ::hintatyyppi})
-
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))
@@ -360,8 +367,66 @@ reimari-tilat
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
 
+(defn- uusin-toimenpide [toimenpiteet]
+  (first (sort-by ::pvm pvm/jalkeen? toimenpiteet)))
+
+(defn hintaryhman-otsikko [hintaryhma toimenpiteet]
+  ;; Toimenpiteistä päivämäärää tms tähän mukaan?
+  (::h/nimi hintaryhma))
+
+(defn toimenpiteella-oma-hinnoittelu? [toimenpide]
+  (boolean (::oma-hinnoittelu toimenpide)))
+
+(defn- hintaryhmien-jarjestys-arvotettuna
+  "Palauttaa mäpin, jossa on avaimena hintaryhmä, ja arvona
+  ryhmän järjestys numerolla."
+  [ryhma-ja-toimenpiteet]
+  (into {}
+        (map-indexed
+          (fn [i [hintaryhma _]] [hintaryhma i])
+          (sort-by
+            (comp ::nimi key)
+            >
+            ryhma-ja-toimenpiteet)))
+
+  ;; Aiemmin haluttiin järjestää ryhmät siten, että otetaan ryhmien uusin toimenpide,
+  ;; ja järjestetään ryhmät tämän perusteella uusimmasta vanhimpaan. Kuitenkin kun ryhmien
+  ;; sisältöä vaihteli, niin ryhmät vaihteli järjestystä aika villisti. Tämän takia ainakin
+  ;; toistaiseksi vaihdettiin järjestykseksi aakkosjärjestys. Säilytetään tämä koodinpätkä
+  ;; toistaiseksi, kunnes todetaan, että aakkosjärjestys on todellakin parempi.
+  #_(let [ryhma-ja-uusin-toimenpide (map
+                                      (fn [[hintaryhma toimenpiteet]]
+                                        [hintaryhma (uusin-toimenpide toimenpiteet)])
+                                      ryhma-ja-toimenpiteet)]
+
+
+      (into {}
+            (map-indexed
+              (fn [i [hintaryhma _]] [hintaryhma i])
+              ;; Jarjesta ryhmät uusimman toimenpiteen mukaan, uusimmasta vanhimpaan
+              (sort-by
+                (comp ::pvm second)
+                pvm/jalkeen?
+
+                ryhma-ja-uusin-toimenpide)))))
+
+(defn jarjesta-hintaryhmat
+  "Ottaa mäpin, missä avain on hintaryhma-id, ja arvo on vektori toimenpiteitä.
+  Palauttaa sortatun mäpin. Hintaryhmät järjestetään tärkeimmästä vähiten tärkeään,
+  ja toimenpiteet hintaryhmän sisällä järjestetään uusimmasta vanhimpaan."
+  [ryhma-ja-toimenpiteet]
+  (let [jarjestys (hintaryhmien-jarjestys-arvotettuna ryhma-ja-toimenpiteet)]
+    (reduce-kv
+      ;; Järjestä toimenpiteet hintaryhmän sisällä
+      (fn [m k v] (assoc m k (sort-by ::pvm pvm/jalkeen? v)))
+      {}
+      (into
+        ;; Hintaryhmät tärkeimmästä vähiten tärkeään
+        (sorted-map-by (fn [eka toka] (< (jarjestys eka) (jarjestys toka))))
+        ryhma-ja-toimenpiteet))))
+
 (defn toimenpiteet-hintaryhmissa [toimenpiteet]
-  (group-by ::hintaryhma toimenpiteet))
+  (jarjesta-hintaryhmat (group-by ::hintaryhma-id toimenpiteet)))
 
 ;; Palvelut
 
@@ -375,11 +440,19 @@ reimari-tilat
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
-(s/def ::hae-vesivayilien-toimenpiteet-vastaus
+(s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
-                     :opt [::vikakorjauksia?])))
+                     :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
+                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
+
+(s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
+  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+                           ::tyoluokka ::toimenpide ::pvm
+                           ::turvalaite]
+                     :opt [::vikakorjauksia?
+                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys

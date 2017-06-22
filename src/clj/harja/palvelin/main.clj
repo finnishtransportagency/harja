@@ -131,7 +131,9 @@
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as vv-kokonaishintaiset]
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
-    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut])
+    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
+    [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
+    [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit])
 
   (:gen-class))
 
@@ -306,6 +308,12 @@
       :vv-hinnoittelut (component/using
                          (vv-hinnoittelut/->Hinnoittelut)
                          [:http-palvelin :db])
+      :vv-kiintiot (component/using
+                     (vv-kiintiot/->Kiintiot)
+                     [:http-palvelin :db])
+      :vv-materiaalit (component/using
+                       (vv-materiaalit/->Materiaalit)
+                       [:http-palvelin :db])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])
@@ -450,8 +458,14 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-              (let [{:keys [url kayttajatunnus salasana paivittainen-toimenpidehaku]} (:reimari asetukset)]
-                (reimari/->Reimari url kayttajatunnus salasana paivittainen-toimenpidehaku))
+                (let [{:keys [url kayttajatunnus salasana
+                              paivittainen-toimenpidehaku
+                              paivittainen-komponenttityyppihaku
+                              paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
+                  (reimari/->Reimari url kayttajatunnus salasana
+                                     paivittainen-toimenpidehaku
+                                     paivittainen-komponenttityyppihaku
+                                     paivittainen-turvalaitekomponenttihaku))
               [:db :integraatioloki])
 
       :vkm (component/using
@@ -641,6 +655,7 @@
 
 (defn log-level-info! []
   (log/set-config! [:appenders :standard-out :min-level] :info))
+
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten

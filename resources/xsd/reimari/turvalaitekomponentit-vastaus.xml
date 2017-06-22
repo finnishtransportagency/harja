@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
+<HaeTurvalaiteKomponentit xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+  <HaeTurvalaiteKomponentitResponse>
+      <turvalaitekomponentti id="9595"
+                             lisatiedot="asennettu kivasti"
+                             turvalaitenro="234"
+                             komponentti-id="4242"
+                             alkupvm="2011-05-01T01:00:00Z"
+                             loppupvm="2017-07-20T00:00:00Z"
+                             luontiaika="2010-05-01T01:00:00Z"
+                             muokattu="2016-07-20T00:00:00Z"
+                             sarjanumero="234234423"
+                             luoja="Aatos"
+                             muokkaaja="Vilho"
+                             valiaikainen="false"
+                             />
+  </HaeTurvalaiteKomponentitResponse>
+</HaeTurvalaiteKomponentit>
+</S:Body></S:Envelope>

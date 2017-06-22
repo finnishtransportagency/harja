@@ -37,6 +37,8 @@
       <xs:element name="alus" type="AlusType" minOccurs="0"/>
       <xs:element name="vayla" type="VaylaType"/>
       <xs:element name="turvalaite" type="TurvalaiteType"/>
+      <xs:element name="komponentit" type="KomponentitType" minOccurs="0"/>
+      <xs:element name="viat" type="ToimenpiteenViatType" minOccurs="0"/>
     </xs:all>
 
     <xs:attribute type="xs:string" name="id" use="required"/>
@@ -78,6 +80,171 @@
     <xs:attribute type="xs:token" name="nro" use="required"/>
     <xs:attribute type="xs:string" name="nimi" use="optional"/>
     <xs:attribute type="xs:integer" name="ryhma" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="KomponenttiType">
+      <xs:attribute type="xs:token" name="id" use="required"/> <!--SDCOMP_ID -->
+      <xs:attribute type="xs:string" name="nimi" use="optional"/>
+      <xs:attribute type="xs:token" name="tila" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="KomponentitType">
+      <xs:sequence>
+          <xs:element name="komponentti" type="KomponenttiType" maxOccurs="unbounded">
+          </xs:element>
+      </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ToimenpiteenViatType">
+      <xs:sequence>
+          <xs:element name="vika" type="ToimenpiteenVikaType" maxOccurs="unbounded">
+          </xs:element>
+      </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ToimenpiteenVikaType">
+      <xs:attribute type="xs:token" name="vika-id" use="required"/>
+      <xs:attribute type="xs:token" name="tila" use="required"/> <!-- arvot: kirjattu, avoin, korjattu, aiheeton, peruttu -->
+  </xs:complexType>
+
+  <!-- HaeKomponenttiTyypit -->
+
+  <xs:element name="HaeKomponenttiTyypit" type="HaeKomponenttiTyypitPayload"/>
+
+  <xs:complexType name="HaeKomponenttiTyypitPayload">
+    <xs:choice>
+      <xs:element name="HaeKomponenttiTyypitRequest" type="HaeKomponenttiTyypitRequestType"/>
+      <xs:element name="HaeKomponenttiTyypitResponse" type="HaeKomponenttiTyypitResponseType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- HaeKomponenttiTyypitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
+       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <xs:complexType name="HaeKomponenttiTyypitRequestType">
+    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut komponenttityypit
+       sekä niihin linkitetyt komponenttiluokat. -->
+  <xs:complexType name="HaeKomponenttiTyypitResponseType">
+    <xs:sequence>
+      <xs:element name="komponenttityyppi" type="KomponenttiTyyppiType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="KomponenttiTyyppiType">
+    <xs:attribute type="xs:token" name="id" use="required"/> <!-- T_COMPONENT id -->
+    <xs:attribute type="xs:string" name="nimi" use="required"/> <!-- komponentin nimi -->
+    <xs:attribute type="xs:string" name="lisatiedot" use="required"/> <!-- MEM eli muistiinpanot/lisätiedot -->
+    <xs:attribute type="xs:token" name="luokan-id" use="required"/> <!-- COMPCLASS_ID -->
+    <xs:attribute type="xs:token" name="luokan-nimi" use="required"/> <!-- compclass.COMPCLASS_NME -->
+    <xs:attribute type="xs:token" name="luokan-lisatiedot" use="required"/> <!-- compclass.COMPCLASS_MEM -->
+    <xs:attribute type="xs:dateTime" name="luokan-paivitysaika" use="required"/> <!-- compclass.COMPCLASS_UTS -->
+    <xs:attribute type="xs:dateTime" name="luokan-luontiaika" use="required"/> <!-- compclass.COMPCLASS_CTS -->
+    <xs:attribute type="xs:token" name="merk-cod" use="required"/> <!-- COMPONENT_MERK_COD -->
+    <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
+    <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
+    <xs:attribute type="xs:date" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:date" name="loppupvm" use="required"/> <!-- EDT -->
+  </xs:complexType>
+
+  <!-- HaeTurvalaiteKomponentit -->
+
+  <xs:element name="HaeTurvalaiteKomponentit" type="HaeTurvalaiteKomponentitPayload"/>
+
+  <xs:complexType name="HaeTurvalaiteKomponentitPayload">
+      <xs:choice>
+          <xs:element name="HaeTurvalaiteKomponentitRequest" type="HaeTurvalaiteKomponentitRequestType"/>
+          <xs:element name="HaeTurvalaiteKomponentitResponse" type="HaeTurvalaiteKomponentitResponseType"/>
+      </xs:choice>
+  </xs:complexType>
+
+  <!-- HaeTurvalaiteKomponentitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
+       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <xs:complexType name="HaeTurvalaiteKomponentitRequestType">
+    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="HaeTurvalaiteKomponentitResponseType">
+    <xs:sequence>
+      <xs:element name="turvalaitekomponentti" type="TurvalaiteKomponenttiType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteKomponenttiType">
+    <xs:attribute type="xs:token" name="id" use="required"/> <!-- SDCOMP_ID -->
+    <xs:attribute type="xs:string" name="lisatiedot" use="required"/> <!-- SDCOMP_MEM -->
+    <xs:attribute type="xs:token" name="turvalaitenro" use="required"/>
+    <xs:attribute type="xs:token" name="komponentti-id" use="required"/> <!-- COMPONENT_ID -->
+    <xs:attribute type="xs:date" name="alkupvm" use="required"/> <!-- SDT -->
+    <xs:attribute type="xs:date" name="loppupvm" use="required"/> <!-- EDT -->
+    <xs:attribute type="xs:string" name="sarjanumero" use="required"/> <!-- SERIAL_CHR -->
+    <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
+    <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
+    <xs:attribute type="xs:string" name="luoja" use="required"/> <!-- CUI -->
+    <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
+    <xs:attribute type="xs:boolean" name="valiaikainen" use="required"/> <!-- SDCOMP_TEMPORARY -->
+  </xs:complexType>
+
+  <!-- Viat-rajapinta -->
+
+  <xs:element name="HaeViat" type="HaeViatPayload"/>
+
+  <xs:complexType name="HaeViatPayload">
+    <xs:choice>
+      <xs:element name="HaeViatRequest" type="HaeViatRequestType"/>
+      <xs:element name="HaeViatResponse" type="HaeViatResponseType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- Muutosaika kuten muissakin pyynnöissä. Muutosajan jälkeen luodut
+       tai muokatut tulee palauttaa -->
+  <xs:complexType name="HaeViatRequestType">
+    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="HaeViatResponseType">
+    <xs:sequence>
+      <xs:element name="vika" type="VikaType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Itse vian tiedot -->
+  <xs:complexType name="VikaType">
+      <xs:attribute type="xs:token" name="id" use="required"/>
+      <xs:attribute type="xs:token" name="turvalaitenro" use="required"/>
+      <xs:attribute type="xs:string" name="lisatiedot" use="required"/>
+      <xs:attribute type="xs:string" name="ilmoittaja" use="required"/>
+      <xs:attribute type="xs:string" name="ilmoittajan-yhteystieto" use="required"/>
+      <xs:attribute type="xs:boolean" name="epakunnossa" use="required"/> <!-- FAULT_NOTWORKING -->
+      <xs:attribute type="xs:token" name="tyyppikoodi" use="required"/> <!-- FAULT_TYPE_CDE -->
+      <!-- fault_type_cde: -->
+      <!-- 1022541001      Valo pimeä                                        -->
+      <!-- 1022541002      Valo virheellinen                                 -->
+      <!-- 1022541003      Virheellinen sijainti                             -->
+      <!-- 1022541004      Tuhoutunut/kadonnut                               -->
+      <!-- 1022541005      Virheelliset sektorit                             -->
+      <!-- 1022541006      Rikkoutunut                                       -->
+      <!-- 1022541007      Näkymäeste                                        -->
+      <!-- 1022541008      Turvalaitetyö                                     -->
+
+      <xs:attribute type="xs:token" name="tilakoodi" use="required"/> <!-- FAULT_STATE_CDE -->
+      <!-- fault_state_cde: -->
+      <!-- 1022541101      Kirjattu                                          -->
+      <!-- 1022541102      Avoin                                              -->
+      <!-- 1022541103      Korjattu                                          -->
+      <!-- 1022541104      Aiheeton                                          -->
+      <!-- 1022541105      Peruttu -->
+
+
+      <xs:attribute type="xs:dateTime" name="havaittu" use="required"/> <!-- FAULT_OBSERVD_DTE+TME -->
+      <xs:attribute type="xs:dateTime" name="kirjattu" use="required"/> <!-- FAULT_ENTRY_DTE+TME -->
+      <xs:attribute type="xs:dateTime" name="korjattu" use="optional"/> <!-- FAULT_FIXED_DTE+TME -->
+
+      <xs:attribute type="xs:dateTime" name="muokattu" use="required"/> <!-- UTS -->
+      <xs:attribute type="xs:dateTime" name="luontiaika" use="required"/> <!-- CTS -->
+      <xs:attribute type="xs:string" name="luoja" use="required"/> <!-- CUI -->
+      <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
   </xs:complexType>
 
 </xs:schema>

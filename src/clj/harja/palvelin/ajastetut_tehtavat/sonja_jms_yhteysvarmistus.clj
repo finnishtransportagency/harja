@@ -1,11 +1,9 @@
 (ns harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus
   "Tekee ajastetun yhteysvarmistuksen API:n"
-  (:require [chime :refer [chime-ch]]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
             [taoensso.timbre :as log]
-            [chime :refer [chime-at]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]

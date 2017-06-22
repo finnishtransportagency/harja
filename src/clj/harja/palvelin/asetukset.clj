@@ -43,7 +43,6 @@
                                        (s/optional-key :suora?) s/Bool
                                        (s/optional-key :palvelin) s/Str
                                        :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
-                                               (s/optional-key :sahkoposti-sisaan-kuittausjono) s/Str
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
    (s/optional-key :sampo)                {:lahetysjono-sisaan       s/Str
@@ -137,6 +136,12 @@
 
    (s/optional-key :vkm)   {:url s/Str}
 
+   (s/optional-key :reimari)                {:url                     s/Str
+                                             :kayttajatunnus          s/Str
+                                             :salasana                s/Str
+                                             (s/optional-key :paivittainen-toimenpidehaku)  [s/Num]
+                                             (s/optional-key :paivittainen-komponenttityyppihaku)  [s/Num]
+                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]}
    })
 
 (def oletusasetukset

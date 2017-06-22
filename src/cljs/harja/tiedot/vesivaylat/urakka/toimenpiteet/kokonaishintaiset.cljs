@@ -15,7 +15,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,7 +32,7 @@
                     :vain-vikailmoitukset? false}
          :nakymassa? false
          :haku-kaynnissa? false
-         :infolaatikko-nakyvissa? false
+         :infolaatikko-nakyvissa {} ;; tunniste -> boolean
          :toimenpiteet nil}))
 
 (def valinnat
@@ -54,9 +55,6 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
-
-(defn kyselyn-hakuargumentit [valinnat]
-  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event
 
@@ -82,20 +80,11 @@
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-        (try
-          (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (go
-              (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                (if (k/virhe? vastaus)
-                  (fail! vastaus)
-                  (tulos! vastaus))))
-            (assoc app :haku-kaynnissa? true))
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (do (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
+                                      (jaettu/hakukyselyn-argumentit valinnat)
+                                      {:onnistui ->ToimenpiteetHaettu
+                                     :epaonnistui ->ToimenpiteetEiHaettu})
+          (assoc app :haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu
