@@ -160,8 +160,7 @@
                                 %
                                 (first valittu-sopimusnumero))
         tyhjat-tyot (when hoitokauden-alku
-                      (concat
-                              (keep tyorivi tyhjat-kkt)))]
+                      (keep tyorivi tyhjat-kkt))]
 
     (prosenttiosuudet
      (into (if (and prosenttijako?
