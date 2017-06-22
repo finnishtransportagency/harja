@@ -100,30 +100,37 @@
                           :alkuosa (:tr-alkuosa eka-kohde)
                           :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
                           :loppuosa (:tr-loppuosa eka-kohde)
-                          :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}]
+                          :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
+        viestin-otsikko (if (> (count yhden-paallystysurakan-kohteet) 1)
+                          (format "Urakan '%s' tiemerkintäkohteita merkitty valmistuneeksi" (:paallystysurakka-nimi eka-kohde))
+                          (format "Urakan '%s' kohteen '%s' tiemerkintä on merkitty valmistuneeksi %s"
+                                  (:paallystysurakka-nimi eka-kohde)
+                                  (or (:kohde-nimi eka-kohde)
+                                      (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
+                                  (get valmistumispvmt (:id eka-kohde))))
+        viestin-vartalo (if (> (count yhden-paallystysurakan-kohteet) 1)
+                          (viesti-kohteiden-tiemerkinta-valmis yhden-paallystysurakan-kohteet valmistumispvmt ilmoittaja)
+                          (viesti-kohteen-tiemerkinta-valmis
+                            {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
+                             :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
+                             :urakan-nimi (:paallystysurakka-nimi eka-kohde)
+                             :kohde-nimi (:kohde-nimi eka-kohde)
+                             :kohde-osoite (:kohde-osoite eka-kohde)
+                             :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
+                             :ilmoittaja (:ilmoittaja eka-kohde)}))]
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
        :urakka-sampoid urakka-sampoid
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
-       :viesti-otsikko
-       (if (> (count yhden-paallystysurakan-kohteet) 1)
-         (format "Urakan '%s' tiemerkintäkohteita merkitty valmistuneeksi" (:paallystysurakka-nimi eka-kohde))
-         (format "Urakan '%s' kohteen '%s' tiemerkintä on merkitty valmistuneeksi %s"
-                 (:paallystysurakka-nimi eka-kohde)
-                 (or (:kohde-nimi eka-kohde)
-                     (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
-                 (get valmistumispvmt (:id eka-kohde))))
-       :viesti-body (if (> (count yhden-paallystysurakan-kohteet) 1)
-                      (viesti-kohteiden-tiemerkinta-valmis yhden-paallystysurakan-kohteet valmistumispvmt ilmoittaja)
-                      (viesti-kohteen-tiemerkinta-valmis
-                        {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
-                         :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
-                         :urakan-nimi (:paallystysurakka-nimi eka-kohde)
-                         :kohde-nimi (:kohde-nimi eka-kohde)
-                         :kohde-osoite (:kohde-osoite eka-kohde)
-                         :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
-                         :ilmoittaja (:ilmoittaja eka-kohde)}))})))
+       :viesti-otsikko viestin-otsikko
+       :viesti-body viestin-vartalo})
+    ;; HAR-5555 lähetetään myös Harja-käyttäjälle joka aikaansai sähköpostin lähetyksen
+    (when (:sahkoposti ilmoittaja)
+      (viestinta/laheta-sahkoposti-itselle {:email email
+                                            :sahkoposti (:sahkoposti ilmoittaja)
+                                            :viesti-otsikko viestin-otsikko
+                                            :viesti-body viestin-vartalo}))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
@@ -152,7 +159,17 @@
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
                       :tr-loppuosa tr-loppuosa
-                      :tr-loppuetaisyys tr-loppuetaisyys}]
+                      :tr-loppuetaisyys tr-loppuetaisyys}
+        viestin-otsikko (format "Kohteen '%s' tiemerkinnän voi aloittaa %s"
+                                (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                                (fmt/pvm tiemerkintapvm))
+        viestin-vartalo (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
+                                                         :kohde-nimi kohde-nimi
+                                                         :kohde-osoite kohde-osoite
+                                                         :pituus pituus
+                                                         :tiemerkintapvm tiemerkintapvm
+                                                         :ilmoittaja ilmoittaja
+                                                         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})]
     (when tiemerkintaurakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
       (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
       (viestinta/laheta-sposti-fim-kayttajarooleille
@@ -160,16 +177,14 @@
          :email email
          :urakka-sampoid tiemerkintaurakka-sampo-id
          :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
-         :viesti-otsikko (format "Kohteen '%s' tiemerkinnän voi aloittaa %s"
-                                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                                 (fmt/pvm tiemerkintapvm))
-         :viesti-body (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
-                                                       :kohde-nimi kohde-nimi
-                                                       :kohde-osoite kohde-osoite
-                                                       :pituus pituus
-                                                       :tiemerkintapvm tiemerkintapvm
-                                                       :ilmoittaja ilmoittaja
-                                                       :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})}))))
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo})
+      ;; HAR-5555 lähetetään myös Harja-käyttäjälle joka aikaansai sähköpostin lähetyksen
+      (when (:sahkoposti ilmoittaja)
+        (viestinta/laheta-sahkoposti-itselle {:email email
+                                              :sahkoposti (:sahkoposti ilmoittaja)
+                                              :viesti-otsikko viestin-otsikko
+                                              :viesti-body viestin-vartalo})))))
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
