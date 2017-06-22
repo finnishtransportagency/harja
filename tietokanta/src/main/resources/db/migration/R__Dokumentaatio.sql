@@ -145,3 +145,6 @@ E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun
 
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun';
+
+COMMENT ON TABLE vv_materiaali IS
+E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle myötämien materiaalien\nkappalemäärien alkutilanteen sekä muutokset niissä. Esimerkiksi tilaaja luovuttaa\nurakoitsijalle 10kpl poijuja urakan alussa ja urakoitsija käyttää niitä urakan aikana.\nUrakan aikana käytetyt ja hankitut materiaalit tulevat riveiksi tähän tauluun.';
