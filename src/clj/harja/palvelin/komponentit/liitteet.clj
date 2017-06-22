@@ -87,14 +87,14 @@
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
 (defn- hae-liite [db fileyard-client liitteen-id]
-  (let [{:keys [fileyard-uuid] :as liite}
+  (let [{:keys [fileyard-hash] :as liite}
         (first (liitteet/hae-liite-lataukseen db liitteen-id))]
 
     (dissoc
      (if fileyard-uuid
-       (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-uuid))
+       (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
        (assoc liite :data (lue-lob db (:liite_oid liite))))
-     :liite_oid :fileyard-uuid)))
+     :liite_oid :fileyard-hash)))
 
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet/hae-pikkukuva-lataukseen db liitteen-id)))
