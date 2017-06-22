@@ -86,7 +86,6 @@ VALUES
     '(62, Hietasaaren poiju, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     '',
-    FALSE,
     '2017-05-05T23:23Z',
     '2017-05-05',
     (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
