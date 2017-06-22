@@ -60,7 +60,8 @@
         (is (s/valid? ::kiintio/tallenna-kiintiot-kysely params))
         (is (s/valid? ::kiintio/tallenna-kiintiot-vastaus vastaus))
         (is (>= (count vastaus) 2))
-        (is (some (comp (partial = "Testi123") ::kiintio/kuvaus) vastaus))))
+        (is (some (comp (partial = "Testi123") ::kiintio/kuvaus) vastaus))
+        (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) vastaus)))))
 
     (testing "Luominen"
       (let [kiintiot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_kiintio"))
@@ -86,4 +87,26 @@
                                     params)]
         (is (s/valid? ::kiintio/tallenna-kiintiot-kysely params))
         (is (s/valid? ::kiintio/tallenna-kiintiot-vastaus vastaus))
-        (is (>= (count vastaus) 1))))))
+        (is (>= (count vastaus) 1))))
+
+    (testing "Kiintiöiden tallennus ilman oikeutta"
+      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/kuvaus] "Testi123")
+            params (assoc params ::kiintio/tallennettavat-kiintiot kiintiotiedot)]
+
+
+        (is (thrown? Exception
+                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-kiintiot
+                                     +kayttaja-tero+
+                                     params)))))
+
+    (testing "Kiintiöiden tallennus eri urakkaan"
+      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/id] (hae-kiintio-nimella "Joku kiintiö Vantaalla"))
+            params (assoc params ::kiintio/tallennettavat-kiintiot kiintiotiedot)]
+
+
+        (is (thrown? SecurityException
+                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-kiintiot
+                                     +kayttaja-jvh+
+                                     params)))))))

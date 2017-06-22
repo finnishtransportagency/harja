@@ -20,6 +20,25 @@ INSERT INTO vv_kiintio
       30,
        (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
+INSERT INTO vv_kiintio
+("urakka-id", "sopimus-id", nimi, koko, luoja)
+VALUES
+  ((SELECT id FROM urakka WHERE nimi ILIKE 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+   (SELECT id FROM sopimus WHERE nimi = 'Vantaan väyläyksikön pääsopimus'),
+   'Joku kiintiö Vantaalla',
+   30,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_kiintio
+("urakka-id", "sopimus-id", nimi, koko, luoja, poistettu)
+VALUES
+  ((SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+   (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+   'POISTETTU KIINTIÖ EI SAA NÄKYÄ',
+   999999,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   TRUE);
+
 -- Tyhjä kiintiö
 INSERT INTO vv_kiintio
 ("urakka-id", "sopimus-id", nimi, koko, luoja)
