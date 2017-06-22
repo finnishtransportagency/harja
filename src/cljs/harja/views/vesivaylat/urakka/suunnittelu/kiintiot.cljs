@@ -49,6 +49,7 @@
        [debug app]
        [valinnat/urakkavalinnat
         {}
+        ^{:key "valinnat"}
         [suodattimet/urakan-sopimus @nav/valittu-urakka]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
