@@ -129,7 +129,7 @@
       tarkastus]]))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
-  (if oikeus-varusteiden-muokkaamiseen?
+  (if (oikeus-varusteiden-muokkaamiseen?)
     (let [toiminnot {:nimi :toiminnot
                      :otsikko "Toiminnot"
                      :tyyppi :komponentti
