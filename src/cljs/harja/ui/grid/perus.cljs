@@ -268,7 +268,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn]}]
+                                peruuta otsikko validoi-fn tunniste]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -313,7 +313,7 @@
                           (let [kaikki-rivit (mapv second @muokatut)
                                 ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
                                 tallennettavat (filter (fn [rivi]
-                                                         (not (and (neg-int? (:id rivi))
+                                                         (not (and (neg-int? (tunniste rivi))
                                                                    (:poistettu rivi))))
                                                        kaikki-rivit)
                                 tallennettavat
@@ -732,7 +732,6 @@
                                                    (prosessoi-muutos uusi-data)
                                                    uusi-data))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
-                       ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (reset! viimeisin-muokattu-id id)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset
                                              vanhat-huomautukset vanha-jarjestys])
@@ -910,6 +909,7 @@
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                              :peruuta peruuta :otsikko otsikko
+                             :tunniste tunniste
                              :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
