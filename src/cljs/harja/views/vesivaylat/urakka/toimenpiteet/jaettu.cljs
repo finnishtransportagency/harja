@@ -239,36 +239,37 @@
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti]}]
+  [:div
+   (when otsikko [:h1 otsikko])
+   (into [otsikkopaneeli
+          {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
+           :paneelikomponentit
+           [{:sijainti paneelin-checkbox-sijainti
+             :sisalto
+             (fn [{:keys [tunniste]}]
+               (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
+                 [kentat/tee-kentta
+                  {:tyyppi :checkbox}
+                  (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
+                          (fn [uusi]
+                            (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
+                                                          :valinta uusi}
+                                                         toimenpiteet))))]))}]}]
+         (luo-otsikkorivit
+           {:e! e!
+            :app app
+            :listaus-tunniste listaus-tunniste
+            :toimenpiteet toimenpiteet
+            :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
+            :gridin-sarakkeet gridin-sarakkeet
+            :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
+   (when footer
+     [:div.toimenpiteet-listaus-footer footer])])
+
+(defn tulokset [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app} sisalto]
   (cond (and toimenpiteiden-haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
-
-        :default
-        [:div
-         (when otsikko [:h1 otsikko])
-         (into [otsikkopaneeli
-                {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
-                 :paneelikomponentit
-                 [{:sijainti paneelin-checkbox-sijainti
-                   :sisalto
-                   (fn [{:keys [tunniste]}]
-                     (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
-                       [kentat/tee-kentta
-                        {:tyyppi :checkbox}
-                        (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
-                                (fn [uusi]
-                                  (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                                :valinta uusi}
-                                                               toimenpiteet))))]))}]}]
-               (luo-otsikkorivit
-                 {:e! e!
-                  :app app
-                  :listaus-tunniste listaus-tunniste
-                  :toimenpiteet toimenpiteet
-                  :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
-                  :gridin-sarakkeet gridin-sarakkeet
-                  :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
-         (when footer
-           [:div.toimenpiteet-listaus-footer footer])]))
+        :default sisalto))
 
 (defn listaus
   ([e! app] (listaus e! app {}))

@@ -7,6 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.leijuke :refer [leijuke]]
@@ -230,7 +231,7 @@
                                                           :aikavali (:aikavali valinnat)}))
                            (e! (tiedot/->HaeHintaryhmat)))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! {:keys [toimenpiteet] :as app}]
+    (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app}]
       (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
@@ -238,22 +239,24 @@
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
-         (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-               :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                     hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-                     listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
-           ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-           [jaettu/listaus e! app*
-            {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                               :komponentti (fn [rivi]
-                                              [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-             :listaus-tunniste listaus-tunniste
-             :footer (when hintaryhma
-                       [hintaryhman-hinnoittelu e! app* hintaryhma])
-             :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
-                          "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
-             :paneelin-checkbox-sijainti "95.2%"
-             :vaylan-checkbox-sijainti "95.2%"}])]))))
+         [jaettu/tulokset e! app
+          [:div
+           (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
+                :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                      hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+                      listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
+            ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+            [jaettu/listaus e! app*
+             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                :komponentti (fn [rivi]
+                                               [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+              :listaus-tunniste listaus-tunniste
+              :footer (when hintaryhma
+                        [hintaryhman-hinnoittelu e! app* hintaryhma])
+              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
+                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
+              :paneelin-checkbox-sijainti "95.2%"
+              :vaylan-checkbox-sijainti "95.2%"}])]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
