@@ -203,13 +203,17 @@
        :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
        :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
        :muokattava? (constantly muokattava?)}
-      (when (geo/geolokaatio-tuettu?)
+      (when (and muokattava? (geo/geolokaatio-tuettu?))
         {:nimi :kayttajan-sijainti
          :tyyppi :komponentti
          :komponentti (fn []
                         [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(e! (v/->AsetaKayttajanSijainti))}
-                         (ikonit/screenshot) " Käytä sijaintiani " (when paikannus-kaynnissa? [y/ajax-loader])])})
+                         {:on-click #(when
+                                       (not paikannus-kaynnissa?)
+                                       (e! (v/->AsetaKayttajanSijainti)))
+                          :disabled paikannus-kaynnissa?}
+                         (ikonit/screenshot) " Käytä sijaintiani "
+                         (when paikannus-kaynnissa? [y/ajax-loader])])})
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta

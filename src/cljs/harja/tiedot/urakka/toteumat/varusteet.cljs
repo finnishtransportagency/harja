@@ -198,9 +198,7 @@
 (defn hae-sijainnin-osoite [sijainti]
   (let [coords (.-coords sijainti)
         koordinaatit {:x (.-longitude coords)
-                      :y (.-latitude coords)}
-        ;; todo: Ota pultatut arvot pois
-        koordinaatit {:x 25.5684718564935M :y 65.04232170831756M}]
+                      :y (.-latitude coords)}]
     (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
 
 (extend-protocol t/Event
@@ -341,7 +339,7 @@
 
   v/HaeSijainninOsoite
   (process-event [{sijainti :sijainti} app]
-    (let [virhe! (t/send-async! v/->VirheTapahtui "Käyttäjän sijannin osoitteen haussa tapahtui virhe")
+    (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Osoitteen haku epäonnistui käyttäjän sijainnilla."))
           valmis! (t/send-async! v/->SijanninOsoiteHaettu)]
       (go
         (let [vastaus (<! (hae-sijainnin-osoite sijainti))]
@@ -360,7 +358,7 @@
                                         :loppuosa (:losa osoite)
                                         :loppuetaisyys (:let osoite)})]
       (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))
-         (assoc :paikannus-kaynnissa? false)))))
+          (assoc :paikannus-kaynnissa? false)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
