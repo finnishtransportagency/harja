@@ -46,7 +46,7 @@
     "4242",
     :harja.domain.vesivaylat.turvalaitekomponentti/id "9595",
     :harja.domain.vesivaylat.turvalaitekomponentti/alkupvm
-    #inst "2011-05-01T01:00:00.000-00:00",
+    #inst "2011-05-01T00:00:00.000-00:00",
     :harja.domain.vesivaylat.turvalaitekomponentti/muokkaaja "Vilho",
     :harja.domain.vesivaylat.turvalaitekomponentti/muokattu
     #inst "2016-07-20T00:00:00.000-00:00",
