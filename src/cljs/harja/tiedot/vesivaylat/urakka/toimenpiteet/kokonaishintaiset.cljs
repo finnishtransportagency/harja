@@ -3,9 +3,9 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log error]]
             [harja.domain.vesivaylat.toimenpide :as to]
-            [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.urakka :as ur]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -15,7 +15,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.tyokalut.tuck :as tuck-tyokalut])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,7 +32,7 @@
                     :vain-vikailmoitukset? false}
          :nakymassa? false
          :haku-kaynnissa? false
-         :infolaatikko-nakyvissa? false
+         :infolaatikko-nakyvissa {} ;; tunniste -> boolean
          :toimenpiteet nil}))
 
 (def valinnat
@@ -54,10 +55,6 @@
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
-(defrecord ToimenpiteetSiirretty [toimenpiteet])
-
-(defn kyselyn-hakuargumentit [valinnat]
-  (merge (jaettu/kyselyn-hakuargumentit valinnat) {:tyyppi :kokonaishintainen}))
 
 (extend-protocol tuck/Event
 
@@ -77,49 +74,22 @@
 
   SiirraValitutYksikkohintaisiin
   (process-event [_ app]
-    (let [tulos! (tuck/send-async! ->ToimenpiteetSiirretty)
-          fail! (tuck/send-async! jaettu/->ToimenpiteetEiSiirretty)]
-      (go (let [valitut (set (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app))))
-                vastaus (<! (k/post! :siirra-toimenpiteet-yksikkohintaisiin
-                                     {::tot/urakka-id (get-in app [:valinnat :urakka-id])
-                                      ::to/idt valitut}))]
-            (if (k/virhe? vastaus)
-              (fail! vastaus)
-              (tulos! vastaus)))))
-    (assoc app :siirto-kaynnissa? true))
-
-  ToimenpiteetSiirretty
-  (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! (jaettu/viesti-siirto-tehty (count toimenpiteet)) :success)
-    (assoc app :toimenpiteet (jaettu/poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
-               :siirto-kaynnissa? false))
+    (jaettu/siirra-valitut! :siirra-toimenpiteet-yksikkohintaisiin app))
 
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:haku-kaynnissa? app)
-      (let [tulos! (tuck/send-async! ->ToimenpiteetHaettu)
-            fail! (tuck/send-async! ->ToimenpiteetEiHaettu)]
-        (try
-          (let [hakuargumentit (kyselyn-hakuargumentit valinnat)]
-            (if (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)
-              (do
-                (go
-                  (let [vastaus (<! (k/post! :hae-kokonaishintaiset-toimenpiteet hakuargumentit))]
-                    (if (k/virhe? vastaus)
-                      (fail! vastaus)
-                      (tulos! vastaus))))
-                (assoc app :haku-kaynnissa? true))
-              (log "Hakuargumentit eivät ole validit: " (s/explain-str ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
-          (catch :default e
-            (fail! nil)
-            (throw e))))
-
+      (do (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
+                                      (jaettu/hakukyselyn-argumentit valinnat)
+                                      {:onnistui ->ToimenpiteetHaettu
+                                     :epaonnistui ->ToimenpiteetEiHaettu})
+          (assoc app :haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :toimenpiteet toimenpiteet
+    (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
                :haku-kaynnissa? false))
 
   ToimenpiteetEiHaettu

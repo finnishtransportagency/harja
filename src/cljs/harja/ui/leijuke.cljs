@@ -41,32 +41,42 @@
                    :alas-oikea))]
     suunta))
 
-
 (defn leijuke
   "Leijuke komponentti annetulla sisällöllä.
   Optiot:
 
   :sulje!   funktio, jota kutsutaan kun leijukkeen sulje-raksia tai ESC-näppäintä painetaan
   :luokka   optionaalinen lisäluokka
-  "
+  :otsikko  Leijukkeessa näytettävä otsikko-teksti"
   [optiot sisalto]
-  (let [suunta (r/atom nil)
+  (let [;; Avautuissuunta määritetään komponentin korkeuden perusteella, joka määrittyy sisällön mukaan.
+        ;; Tällöin komponentti rendataan aluksi piilotettuna, jotta suunta saadaan määritettyä.
+        ;; Useimmissa tilanteissa yläpuolella on tilaa ja alhaalla ei, joten suunta ylös on hyvä default.
+        suunta (r/atom :ylos-vasen)
         paivita-suunta! (fn [this _]
-                                     (reset! suunta
-                                             (maarita-suunta this)))
+                          (reset! suunta
+                                  (maarita-suunta this)))
         sulje-esc-napilla! (fn [_ event]
                              (when (= 27 (.-keyCode event))
                                ((:sulje! optiot))))]
     (komp/luo
-     (komp/piirretty paivita-suunta!)
-     (komp/dom-kuuntelija js/window
-                          EventType/SCROLL paivita-suunta!
-                          EventType/RESIZE paivita-suunta!
-                          EventType/KEYUP sulje-esc-napilla!)
-     (fn [{:keys [luokka sulje!] :as optiot} sisalto]
-       (let [suunta @suunta]
-         [:div.leijuke-wrapper
-          [:div.leijuke {:class luokka
-                         :style (avautumissuunta-tyyli (or suunta :alas-vasen))}
-           [napit/sulje-ruksi sulje!]
-           sisalto]])))))
+      (komp/piirretty paivita-suunta!)
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL paivita-suunta!
+                           EventType/RESIZE paivita-suunta!
+                           EventType/KEYUP sulje-esc-napilla!)
+      (fn [{:keys [luokka sulje! otsikko] :as optiot} sisalto]
+        (let [suunta @suunta]
+          [:div.leijuke-wrapper
+           [:div.leijuke {:class luokka
+                          :on-click #(.stopPropagation %)
+                          :style (if suunta
+                                   (avautumissuunta-tyyli suunta)
+                                   (merge
+                                     (avautumissuunta-tyyli :alas-vasen)
+                                     {:visibility "hidden"}))}
+            [:header
+             [napit/sulje-ruksi sulje!]
+             [:h4 otsikko]]
+            [:div.leijuke-sisalto
+             sisalto]]])))))

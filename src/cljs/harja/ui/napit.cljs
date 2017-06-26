@@ -103,23 +103,24 @@
    Yleensä kannattaa tämän sijaan käyttää tarkemmin määriteltyjä nappeja.
 
    Optiot:
+   ikoninappi?                Jos true, nappi piirretään pienenä ja siihen mahtuu yksi ikoni
    disabled                   boolean. Jos true, nappi on disabloitu.
    luokka                     Luokka napille (string, erota välilyönnillä jos useita).
    ikoni                      Nappiin piirrettävä ikonikomponentti.
    sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky? ikoninappi?] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
          maarita-sticky! (fn []
-                          (if (and
-                                sticky?
-                                (not @disabled?)
-                                (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
-                            (reset! naulattu? true)
-                            (reset! naulattu? false)))
+                           (if (and
+                                 sticky?
+                                 (not @disabled?)
+                                 (> (dom/scroll-sijainti-ylareunaan) (+ @napin-etaisyys-ylareunaan 20)))
+                             (reset! naulattu? true)
+                             (reset! naulattu? false)))
          kasittele-scroll-event (fn [this _]
                                   (maarita-sticky!))
          kasittele-resize-event (fn [this _]
@@ -138,10 +139,12 @@
          [:button
           {:class (str (when disabled "disabled ")
                        (when @naulattu? "nappi-naulattu ")
+                       (when ikoninappi? "nappi-ikoni ")
                        luokka)
            :disabled disabled
            :on-click #(do
                         (.preventDefault %)
+                        (.stopPropagation %)
                         (toiminto))}
           (when tallennus-kaynnissa?
             [y/ajax-loader])
@@ -188,6 +191,16 @@
                             optiot
                             {:luokka (str "nappi-kielteinen" " " luokka)
                              :ikoni (ikonit/livicon-ban)})]))
+
+(defn yleinen
+  ([teksti tyyppi toiminto] (yleinen teksti tyyppi toiminto {}))
+  ([teksti tyyppi toiminto {:keys [disabled luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (case tyyppi
+                                       :ensisijainen (str "nappi-ensisijainen" " " luokka)
+                                       :toissijainen (str "nappi-toissijainen" " " luokka))
+                             :disabled disabled})]))
 
 (defn yleinen-ensisijainen
   ([teksti toiminto] (yleinen-ensisijainen teksti toiminto {}))

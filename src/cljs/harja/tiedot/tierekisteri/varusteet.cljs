@@ -14,8 +14,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma
-  ([tiedot toiminto] (varustetoteuma tiedot toiminto nil nil))
-  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto]
+  ([tiedot toiminto]
+   (varustetoteuma tiedot toiminto nil nil nil))
+  ([tiedot toiminto kuntoluokitus lisatieto]
+   (varustetoteuma tiedot toiminto kuntoluokitus lisatieto nil))
+  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto uusi-liite]
    (let [tr-osoite (get-in tietue [:sijainti :tie])]
      {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
       :puoli (:puoli tr-osoite)
@@ -31,20 +34,26 @@
       :alkupvm (:alkupvm tietue)
       :loppupvm (:loppupvm tietue)
       :kuntoluokitus kuntoluokitus
-      :lisatieto lisatieto})))
+      :lisatieto lisatieto
+      :uusi-liite uusi-liite})))
 
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
   ([app tietolaji varusteet]
-   (-> app
-       (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
-       (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
-       (assoc-in [:tierekisterin-varusteet :listaus-skeema]
-                 (into [varusteet/varusteen-osoite-skeema]
-                       (comp (filter varusteet/kiinnostaa-listauksessa?)
-                             (map varusteet/varusteominaisuus->skeema))
-                       (:ominaisuudet tietolaji)))
-       (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))))
+   (varuste-tiedot/kartalle
+     (-> app
+         (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
+         (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
+         (assoc-in [:tierekisterin-varusteet :listaus-skeema]
+                   (into varusteet/varusteen-perustiedot-skeema
+                         (comp (filter varusteet/kiinnostaa-listauksessa?)
+                               (map varusteet/varusteominaisuus->skeema))
+                         (:ominaisuudet tietolaji)))
+         (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
+
+(defn hae-varuste [app tunniste ]
+  (:varuste (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
+                           (get-in app [:tierekisterin-varusteet :varusteet])))))
 
 ;; Määritellään varustehaun UI tapahtumat
 
@@ -54,16 +63,17 @@
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
+(defrecord LisaaLiitetiedosto [liite])
 
 ;; Toimenpiteet Tierekisteriin
-(defrecord PoistaVaruste [varuste])
-(defrecord AloitaVarusteenTarkastus [varuste tunniste tietolaji])
+(defrecord PoistaVaruste [tunniste])
+(defrecord AloitaVarusteenTarkastus [tunniste tietolaji])
 (defrecord PeruutaVarusteenTarkastus [])
 (defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
-(defrecord AloitaVarusteenMuokkaus [varuste])
+(defrecord AloitaVarusteenMuokkaus [tunniste])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
-(defrecord ToimintoOnnistui [vastaus])
+(defrecord ToimintoOnnistui [vastaus viesti])
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -99,23 +109,24 @@
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
-
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (-> app
         (hakutulokset)
         (assoc :uudet-varustetoteumat vastaus)))
 
   ToimintoOnnistui
-  (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
-
+  (process-event [{:keys [viesti vastaus]} app]
+    (when viesti
+      (viesti/nayta! viesti :success))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (-> app
         (hakutulokset)
         (assoc :uudet-varustetoteumat vastaus)))
 
   PoistaVaruste
-  (process-event [{varuste :varuste} app]
-    (let [tulos! (t/send-async! map->ToimintoOnnistui)
+  (process-event [{:keys [tunniste]} app]
+    (let [varuste (hae-varuste app tunniste)
+          tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
         (let [varustetoteuma (varustetoteuma varuste :poistettu)
@@ -129,20 +140,23 @@
     app)
 
   AloitaVarusteenTarkastus
-  (process-event [{:keys [varuste tunniste tietolaji]} app]
-    (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
+  (process-event [{:keys [tunniste tietolaji]} app]
+    (let [varuste (hae-varuste app tunniste)]
+      (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolaji tietolaji})))
 
   PeruutaVarusteenTarkastus
   (process-event [_ app]
     (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
 
   TallennaVarustetarkastus
-  (process-event [{varuste :varuste {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus} :tarkastus :as data} app]
+  (process-event [{varuste :varuste
+                   {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus uusi-liite :uusi-liite} :tarkastus
+                   :as data} app]
     (let [tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
         (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
-              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto)
+              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto uusi-liite)
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
@@ -157,5 +171,10 @@
     (assoc-in app [:tierekisterin-varusteet :tarkastus] (assoc tarkastus :tiedot uudet-tiedot)))
 
   AloitaVarusteenMuokkaus
-  (process-event [{varuste :varuste} app]
-    (assoc app :muokattava-varuste varuste)))
+  (process-event [{:keys [tunniste]} app]
+    (let [varuste (hae-varuste app tunniste)]
+      (assoc app :muokattava-varuste varuste)))
+
+  LisaaLiitetiedosto
+  (process-event [{liite :liite} app]
+    (assoc-in app [:tierekisterin-varusteet :tarkastus :uusi-liite] liite)))

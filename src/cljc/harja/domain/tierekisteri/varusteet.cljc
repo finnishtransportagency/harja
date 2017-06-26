@@ -1,7 +1,10 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])
+    #?@(:clj [
+            [clj-time.core :as t]])
+    #?@(:cljs [[harja.loki :refer [log]]
+               [cljs-time.core :as t]])
             [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
@@ -14,38 +17,50 @@
   (vec varuste-toimenpide->string))
 
 (def tietolaji->selitys
-  {"tl523" "Tekninen piste"
-   "tl501" "Kaiteet"
+  {"tl501" "Kaiteet"
    "tl517" "Portaat"
    "tl507" "Bussipysäkin varusteet"
    "tl508" "Bussipysäkin katos"
    "tl506" "Liikennemerkki"
    "tl522" "Reunakivet"
    "tl513" "Reunapaalut"
-   "tl196" "Bussipysäkit"
    "tl519" "Puomit ja kulkuaukot"
    "tl505" "Jätehuolto"
-   "tl195" "Tienkäyttäjien palvelualueet"
    "tl504" "WC"
-   "tl198" "Kohtaamispaikat ja levikkeet"
    "tl518" "Kivetyt alueet"
    "tl514" "Melurakenteet"
    "tl509" "Rummut"
    "tl515" "Aidat"
    "tl503" "Levähdysalueiden varusteet"
    "tl512" "Viemärit"
-   "tl165" "Välikaistat"
    "tl516" "Hiekkalaatikot"
    "tl524" "Viherkuviot"})
 
-(def tien-puolet
-  [0
-   1
-   2
-   3
-   7
-   8
-   9])
+(defn tien-puolet [tietolaji]
+  (case tietolaji
+    "tl523" [1 2 3]
+    "tl501" [1 2 3 8]
+    "tl517" [1 2]
+    "tl507" [1 2 7]
+    "tl508" [1 2 7]
+    "tl506" [1 2 3]
+    "tl522" [1 2 3 8]
+    "tl513" [1 2 3]
+    "tl196" [1 2 7]
+    "tl519" [1 2 3]
+    "tl505" [1 2 7 9]
+    "tl195" [1 2 7 9]
+    "tl504" [1 2 7 9]
+    "tl198" [1 2 3 7]
+    "tl518" [1 2 3 8]
+    "tl514" [1 2 3]
+    "tl515" [1 2 3]
+    "tl503" [1 2 7 9]
+    "tl512" [1 2 3 7 8 9]
+    "tl165" [1 2]
+    "tl516" [1 2 3 8]
+    "tl524" [1 2 3 4 7 8 9]
+    []))
 
 (def oletus-ajoradat
   [0])
@@ -59,12 +74,21 @@
     (and (not (#{"x" "y" "z" "urakka"} tunniste))
          (not (re-matches #".*tunn" tunniste)))))
 
-(def varusteen-osoite-skeema
-  {:otsikko "Tieosoite"
-   :tyyppi :tierekisteriosoite
-   :hae (comp :tie :sijainti :tietue :varuste)
-   :fmt tr/tierekisteriosoite-tekstina
-   :leveys 1})
+(def varusteen-perustiedot-skeema
+  [{:otsikko "Tietolaji"
+    :tyyppi :tunniste
+    :hae #(let [tietolaji (get-in % [:varuste :tietue :tietolaji :tunniste])]
+            (str (tietolaji->selitys tietolaji) " (" tietolaji ")"))
+    :leveys 1}
+   {:otsikko "Tunniste"
+    :tyyppi :tunniste
+    :hae (comp :tunniste :varuste)
+    :leveys 1}
+   {:otsikko "Tieosoite"
+    :tyyppi :tierekisteriosoite
+    :hae (comp :tie :sijainti :tietue :varuste)
+    :fmt tr/tierekisteriosoite-tekstina
+    :leveys 2}])
 
 (defn parsi-luku [s]
   #?(:cljs (js/parseInt s)
@@ -88,11 +112,24 @@
    :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
    :pituus-max (:pituus ominaisuus)})
 
+(defn tietolajin-koodi-voimassa? [koodi]
+  (if-let [{alkupvm :alkupvm loppupvm :loppupvm} (:voimassaolo koodi)]
+    (cond
+      (and alkupvm loppupvm) (t/within? (t/interval alkupvm loppupvm) (t/now))
+      alkupvm (t/after? (t/now) alkupvm)
+      loppupvm (t/before? (t/now) loppupvm)
+      :else true)
+    true))
+
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
                                 :koodi (str (:koodi %)))
                       (:koodisto ominaisuus))
+        ;; vanhat arvot saa näyttää vanhoille varusteille, mutta niitä ei saa käyttää muokatessa
+        koodisto (if muokattava?
+                   (filter tietolajin-koodi-voimassa? koodisto)
+                   koodisto)
         hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta

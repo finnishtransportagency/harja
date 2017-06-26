@@ -17,7 +17,6 @@
             [clojure.set :refer [rename-keys]]))
 
 (def avainmuunnokset {::toimenpide/id ::toimenpide/reimari-id
-
                       ::toimenpide/luotu ::toimenpide/reimari-luotu
                       ::toimenpide/muokattu ::toimenpide/reimari-muokattu
                       ::toimenpide/urakoitsija ::toimenpide/reimari-urakoitsija
@@ -34,14 +33,16 @@
                       })
 
 (defn kasittele-vastaus [db vastaus-xml]
-  (log/debug "kasittele-vastaus" vastaus-xml)
+  ;; (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
+                                       #{::toimenpide/reimari-id}
+                                       (merge (rename-keys toimenpide-tiedot avainmuunnokset))))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
+  (log/debug "formatoi-aika: saatiin" muutosaika)
   (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
     (if (s/ends-with? aika-ilman-vyohyketta "Z")
       aika-ilman-vyohyketta
@@ -52,8 +53,7 @@
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
      [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
-     ]]))
+      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]]]))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
   (let [otsikot {"Content-Type" "text/xml"
@@ -69,16 +69,17 @@
     (kasittele-vastaus db body)))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (last (sort-by ::integraatiotapahtuma/alkanut
-                 (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                               #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                 [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                      :harja.palvelin.integraatiot/jarjestelma}] }
-                               {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                   :harja.palvelin.integraatiot/nimi nimi}}))))
+  (::integraatiotapahtuma/alkanut
+   (last (sort-by ::integraatiotapahtuma/alkanut
+                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
+                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
+                                  [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
+                                                                        :harja.palvelin.integraatiot/jarjestelma}] }
+                                {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
+                                                                     :harja.palvelin.integraatiot/nimi nimi}})))))
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet" "reimari")]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" "hae-toimenpiteet")]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa

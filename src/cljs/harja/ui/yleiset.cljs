@@ -321,19 +321,24 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
    Optiot on mäppi, joka tukee seuraavia optioita:
   :class                        Asetetaan lisäluokaksi containerille
+  :tietokentan-leveys           Tietokentän minimileveys (oletus 150px)
   :kavenna?                     Jos true, jättää tyhjää tilaa tietorivien väliin
   :jata-kaventamatta            Setti otsikoita, joita ei kavenneta, vaikka 'kavenna?' olisi true
   :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
   :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
-  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi"
-  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla
-           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta]} & otsikot-ja-arvot]
+  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
+  :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)"
+  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys]} & otsikot-ja-arvot]
   (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
         otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
         jata-kaventamatta (or jata-kaventamatta #{})
-        attrs (if otsikot-omalla-rivilla?
-                {:style {:display "block"}}
-                {})]
+        tietokentta-attrs {:style
+                           (merge
+                             (when otsikot-omalla-rivilla?
+                               {:display "block"})
+                             (when tietokentan-leveys
+                               {:min-width tietokentan-leveys}))}]
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
@@ -341,10 +346,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
                                      {:style {:display "auto"}})]
              ^{:key (str i otsikko)}
-             [:div.tietorivi (when (and kavenna?
-                                        (not (jata-kaventamatta otsikko)))
-                               {:style {:margin-bottom "0.5em"}})
-              [:span.tietokentta (merge attrs rivin-attribuutit) otsikko]
+             [:div.tietorivi (merge
+                               (when-not piirra-viivat?
+                                 {:class "tietorivi-ilman-alaviivaa"})
+                               (when (and kavenna?
+                                          (not (jata-kaventamatta otsikko)))
+                                 {:style {:margin-bottom "0.5em"}}))
+              [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
               [:span.tietoarvo arvo]
               (when (tyhja-rivi-otsikon-jalkeen otsikko)
                 [:span [:br] [:br]])])))

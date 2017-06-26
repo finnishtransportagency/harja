@@ -7,14 +7,27 @@
 
 .leijuke {
   position: absolute;
+  cursor: auto;
   z-index: 99;
 
   background-color: @harjan-taustavari;
-  padding: 0.3em;
   border: solid 1px black;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-  //border-radius: 5px;
 
+  header {
+    padding: 0.3em;
+    background-color: @harmaa12;
+
+    h4 {
+      margin-top: 0.4em;
+      margin-bottom: 0.4em;
+    }
+  }
+
+  .leijuke-sisalto {
+    padding: 0.5em;
+    margin-top: 0.5em;
+  }
 
   /* Leijukkeessa olevat lomakkeet näytetään ilman borderia ja pienemmillä
    * margineilla. Tämä yhtenäistää leijukkeissa käytettävien lomakkeiden ulkoasua. */

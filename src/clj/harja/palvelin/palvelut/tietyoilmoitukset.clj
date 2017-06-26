@@ -20,7 +20,7 @@
             [harja.pvm :as pvm]
             [specql.op :as op]
             [harja.domain.tierekisteri :as tr]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.domain.roolit :as roolit]
             [slingshot.slingshot :refer [throw+]]))

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
 <HaeToimenpiteet xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
   <HaeToimenpiteetResponse>
     <toimenpide id="-123456"
@@ -8,9 +9,9 @@
 		lisatieto="vaihdettiin patterit lamppuun"
 		lisatyo="false"
 		tila="1022541202"
-		suoritettu="2017-04-24T09:42:04Z"
-		luotu="2017-04-24T13:00:00Z"
-		muokattu="2017-04-24T13:30:00Z"
+		suoritettu="2017-04-24T09:42:04.123Z"
+		luotu="2017-04-24T13:00:00.123Z"
+		muokattu="2017-04-24T13:30:00.123Z"
 		>
 
       <!-- Urakoitsijan ja sopimuksen tiedot -->
@@ -31,6 +32,12 @@
         <komponentti id="124" nimi="Erikoismerkki" tila="345"/>
       </komponentit>
 
+      <viat>
+        <vika vika-id="42" tila="korjattu"/>
+        <vika vika-id="43" tila="aiheeton"/>
+      </viat>
+
     </toimenpide>
   </HaeToimenpiteetResponse>
 </HaeToimenpiteet>
+</S:Body></S:Envelope>

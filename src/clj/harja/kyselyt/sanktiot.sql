@@ -136,17 +136,17 @@ SELECT
   nimi,
   toimenpidekoodi,
   sanktiolaji AS laji
-FROM sanktiotyyppi
+FROM sanktiotyyppi;
 
 --name: hae-urakkatyypin-sanktiolajit
 SELECT id, nimi, sanktiolaji, urakkatyyppi
   FROM sanktiotyyppi
- WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi]
+ WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
 
 --name: hae-sanktiotyyppi-sanktiolajilla
 SELECT id
   FROM sanktiotyyppi
- WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji]
+ WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];
 
 
 --name: hae-sanktion-urakka-id

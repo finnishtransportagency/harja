@@ -17,7 +17,7 @@
                             ::turvalaite/r-ryhma 514}
    ::toimenpide/vayla {::vayla/r-nro "12345"
                                ::vayla/r-nimi "Joku väylä"}
-   ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.000-00:00"
+   ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
    ::toimenpide/lisatyo? false
    ::toimenpide/id -123456
    ::toimenpide/reimari-sopimus {::sopimus/r-nro -666
@@ -29,10 +29,10 @@
    ::toimenpide/reimari-tyoluokka "1022541905"
    ::toimenpide/tila "1022541202"
    ::toimenpide/reimari-tyolaji "1022541802"
-   ::toimenpide/muokattu #inst "2017-04-24T13:30:00.000-00:00"
+   ::toimenpide/muokattu #inst "2017-04-24T13:30:00.123-00:00"
    ::toimenpide/alus {::alus/r-tunnus "omapaatti"
                       ::alus/r-nimi "MS Totally out of Gravitas"}
-   ::toimenpide/luotu #inst "2017-04-24T13:00:00.000-00:00"
+   ::toimenpide/luotu #inst "2017-04-24T13:00:00.123-00:00"
    ::toimenpide/komponentit [{:harja.domain.vesivaylat.komponentti/tila "234",
                               :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",
                               :harja.domain.vesivaylat.komponentti/id 123}
@@ -42,10 +42,11 @@
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
-        (-> "resources/xsd/reimari/vastaus.xml"
+        (-> "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
+
     (println (s/explain-str ::toimenpide/reimari-toimenpide luettu-toimenpide))
     (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))

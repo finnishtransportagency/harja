@@ -9,6 +9,7 @@
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
             [harja.views.urakka.laskutus :as laskutus]
+            [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.yllapitokohteet.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
@@ -25,6 +26,7 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.laadunseuranta :as laadunseuranta-vesivaylat]
             [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
+            [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.urakka :as u-domain]
             [harja.domain.oikeudet :as oikeudet]
@@ -40,21 +42,23 @@
     :yleiset true
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not= sopimustyyppi :kokonaisurakka)
-                      (not= tyyppi :tiemerkinta)
-                      (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
+                      (not= tyyppi :tiemerkinta))
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
-                   (not (u-domain/vesivayla-urakkatyyppi? tyyppi))
+                   (not (u-domain/vesivaylaurakkatyyppi? tyyppi))
                    (not= tyyppi :tiemerkinta))
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
-                    (u-domain/vesivayla-urakkatyyppi? tyyppi)
-                    (istunto/ominaisuus-kaytossa? :vesivayla))
+                       (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                       (istunto/ominaisuus-kaytossa? :vesivayla))
+    :vv-materiaalit (and
+                     (oikeudet/urakat-vesivayla-materiaalit id)
+                     (u-domain/vesivaylaurakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
     :turvalaitteet (and (oikeudet/urakat-vesivayla-turvalaitteet id)
-                     (u-domain/vesivayla-urakkatyyppi? tyyppi)
-                     (istunto/ominaisuus-kaytossa? :vesivayla))
+                        (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                        (istunto/ominaisuus-kaytossa? :vesivayla))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
@@ -64,15 +68,19 @@
                                      (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
                                  (= tyyppi :paikkaus))
     :laadunseuranta (and (oikeudet/urakat-laadunseuranta id)
-                         (not (u-domain/vesivayla-urakkatyyppi? tyyppi)))
+                         (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
     :laadunseuranta-vesivaylat (and (oikeudet/urakat-vesivaylalaadunseuranta id)
-                                 (u-domain/vesivayla-urakkatyyppi? tyyppi)
-                                 (istunto/ominaisuus-kaytossa? :vesivayla))
+                                    (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                                    (istunto/ominaisuus-kaytossa? :vesivayla))
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
-                   (not= tyyppi :tiemerkinta))
+                   (not= tyyppi :tiemerkinta)
+                   (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
+    :laskutus-vesivaylat (and #_(oikeudet/urakat-vesivaylalaskutus id) ; TODO OIKEUS
+                           (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                           (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
@@ -122,6 +130,12 @@
        (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
+
+       "Materiaalit"
+       :vv-materiaalit
+       (when (valilehti-mahdollinen? :vv-materiaalit ur)
+         ^{:key "vv-materiaalit"}
+         [vv-materiaalit/materiaalit ur])
 
        "Turvalaitteet"
        :turvalaitteet
@@ -183,6 +197,11 @@
          ^{:key "laskutus"}
          [laskutus/laskutus])
 
+       "Laskutus"
+       :laskutus-vesivaylat
+       (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
+         ^{:key "laskutus"}
+         [laskutus-vesivaylat/laskutus])
 
        "Kustannukset"
        :tiemerkinnan-kustannukset

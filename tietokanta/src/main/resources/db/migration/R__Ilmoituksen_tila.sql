@@ -13,6 +13,9 @@ BEGIN
   ELSEIF NEW.kuittaustyyppi = 'vastaanotto'
     THEN
       uusi_tila := 'vastaanotettu' :: ilmoituksen_tila;
+  ELSEIF NEW.kuittaustyyppi = 'vaara-urakka'
+    THEN
+      uusi_tila := 'lopetettu' :: ilmoituksen_tila;
   END IF;
 
   UPDATE ilmoitus
@@ -23,11 +26,13 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
--- CREATE TRIGGER tg_aseta_ilmoituksen_tila
--- AFTER INSERT ON ilmoitustoimenpide
--- FOR EACH ROW
--- WHEN (NEW.kuittaustyyppi != 'vastaus' AND
---       NEW.kuittaustyyppi != 'muutos' AND
---     NEW.kuittaustyyppi != 'valitys' AND
---     NEW.kuittaustyyppi IS NOT NULL)
--- EXECUTE PROCEDURE aseta_ilmoituksen_tila();
+
+DROP TRIGGER IF EXISTS tg_aseta_ilmoituksen_tila ON ilmoitustoimenpide;
+CREATE TRIGGER tg_aseta_ilmoituksen_tila
+AFTER INSERT ON ilmoitustoimenpide
+FOR EACH ROW
+WHEN (NEW.kuittaustyyppi != 'vastaus' AND
+      NEW.kuittaustyyppi != 'muutos' AND
+    NEW.kuittaustyyppi != 'valitys' AND
+    NEW.kuittaustyyppi IS NOT NULL)
+EXECUTE PROCEDURE aseta_ilmoituksen_tila();

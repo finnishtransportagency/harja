@@ -8,7 +8,8 @@
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu])
+            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn urakkatoiminnot [e! app]
@@ -34,7 +35,10 @@
         tiedot/vaylahaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/listaus e! app
-        {:jaottelu [{:otsikko "Kokonaishintaiset toimenpiteet" :jaottelu-fn identity}]}]])))
+        {:otsikko "Kokonaishintaiset toimenpiteet"
+         :listaus-tunniste :kokonaishintaiset-toimenpiteet
+         :paneelin-checkbox-sijainti "94.3%"
+         :vaylan-checkbox-sijainti "94.3%"}]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

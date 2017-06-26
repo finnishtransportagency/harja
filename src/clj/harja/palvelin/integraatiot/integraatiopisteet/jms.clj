@@ -70,7 +70,7 @@
     (catch Exception e
       (log/error e "Jono: %s kuittauskuuntelijassa tapahtui poikkeus."))))
 
-(defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
+(defn jms-kuuntelu [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
   (log/debug "Käynnistetään JMS kuuntelija jonolle: " jono-sisaan ", kuittaukset lähetetään jonoon: " jono-ulos)
   (try
     (sonja/kuuntele
@@ -88,10 +88,12 @@
           (if onnistui?
             ;; Viestin parsinta onnistui, yritetään käsitellä se
             (try
-              (let [vastaus (kasittelija data)
-                    vastauksen-sisalto (kuittausmuodostaja vastaus)]
-                (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "" jono-ulos)
-                (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
+              (let [vastaus (kasittelija data)]
+                (if (and jono-ulos kuittausmuodostaja)
+                  (let [vastauksen-sisalto (kuittausmuodostaja vastaus)]
+                    (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "" jono-ulos)
+                    (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
+                  (lokittaja :onnistunut nil "" tapahtuma-id ulkoinen-id)))
               (catch Exception e
                 ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
                 (lokittaja :epaonnistunut viestin-sisalto "" tapahtuma-id ulkoinen-id)))
@@ -99,3 +101,9 @@
             ;; Viestin parsinta epäonnistui, kirjataan suoraan epäonnistunut integraatio
             (lokittaja :epaonnistunut viestin-sisalto (str "Viestin lukeminen epäonnistui" (.getMessage data))
                        tapahtuma-id ulkoinen-id)))))))
+
+(defn kuuntele [lokittaja sonja jono-sisaan viestiparseri kasittelija]
+  (jms-kuuntelu lokittaja sonja jono-sisaan nil viestiparseri nil kasittelija))
+
+(defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
+  (jms-kuuntelu lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija))

@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.tierek-haku
+(ns harja.palvelin.palvelut.tierekisteri-haku
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]
@@ -93,12 +93,8 @@
               :losa-olemassa? (tr-domain/osa-olemassa-verkolla? losa osien-pituudet)
               :alkuosan-ajorata-olemassa? (ajorata-olemassa? aosa ajorata)
               :loppuosan-ajorata-olemassa? (ajorata-olemassa? losa ajorata)
-              :aosa-pituus-validi? (if ajorata
-                                     (tr-domain/ajoradan-pituus-sopiva-verkolla? aosa ajorata aet ajoratojen-pituudet)
-                                     (tr-domain/osan-pituus-sopiva-verkolla? aosa aet osien-pituudet))
-              :losa-pituus-validi? (if ajorata
-                                     (tr-domain/ajoradan-pituus-sopiva-verkolla? losa ajorata let ajoratojen-pituudet)
-                                     (tr-domain/osan-pituus-sopiva-verkolla? losa let osien-pituudet))
+              :aosa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? aosa aet ajoratojen-pituudet)
+              :losa-pituus-validi? (tr-domain/osan-pituus-sopiva-verkolla? losa let ajoratojen-pituudet)
               :geometria-validi? (some? (hae-tr-viiva db {:numero tienumero
                                                           :alkuosa aosa
                                                           :alkuetaisyys aet

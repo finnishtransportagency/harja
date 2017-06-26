@@ -226,5 +226,6 @@
 
 (defn pikakuittaus [e! pikakuittaus]
   [leijuke/leijuke
-   {:sulje! #(e! (v/->PeruutaPikakuittaus))}
+   {:otsikko "Kuittaa"
+    :sulje! #(e! (v/->PeruutaPikakuittaus))}
    [pikakuittauslomake e! pikakuittaus]])

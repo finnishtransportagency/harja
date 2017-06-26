@@ -3,7 +3,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -13,7 +13,7 @@
             [cljs.spec.alpha :as s]))
 
 (def testitila {:nakymassa? true
-                :infolaatikko-nakyvissa? false
+                :infolaatikko-nakyvissa {}
                 :valinnat {:urakka-id nil
                            :sopimus-id nil
                            :aikavali [nil nil]
@@ -150,53 +150,51 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :aikavali [alku loppu]
-                                                         :vaylatyyppi :muu
-                                                         :vayla 1
-                                                         :tyolaji :poijut
-                                                         :tyoluokka :asennus-ja-huolto
-                                                         :toimenpide :autot-traktorit
-                                                         :vain-vikailmoitukset? true})]
+          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
       (is (= (dissoc hakuargumentit :alku :loppu)
-             {::tot/urakka-id 666
+             {::to/urakka-id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
               ::to/vayla-id 1
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
               ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true
-              :tyyppi :kokonaishintainen}))
+              :vikailmoitukset? true}))
       (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
       (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777
-                                                         :tyolaji nil
-                                                         :tyoluokka nil
-                                                         :toimenpide nil})]
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777
+                                                                :tyolaji nil
+                                                                :tyoluokka nil
+                                                                :toimenpide nil})]
       (is (= hakuargumentit
-             {::tot/urakka-id 666
-              ::to/sopimus-id 777
-              :tyyppi :kokonaishintainen}))
+             {::to/urakka-id 666
+              ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (tiedot/kyselyn-hakuargumentit {:urakka-id 666
-                                                         :sopimus-id 777})]
-      (is (= hakuargumentit {::tot/urakka-id 666
-                             ::to/sopimus-id 777
-                             :tyyppi :kokonaishintainen}))
+    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+                                                                :sopimus-id 777})]
+      (is (= hakuargumentit {::to/urakka-id 666
+                             ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
 
 (deftest yksikkohintaisiin-siirto
   (testing "Siirron aloittaminen"
     (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
       (let [vanha-tila testitila
             uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
                           vanha-tila)]
@@ -206,7 +204,7 @@
   (let [vanha-tila testitila
         siirretyt #{1 2 3}
         toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (tiedot/->ToimenpiteetSiirretty siirretyt)
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
                       vanha-tila)
         toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
 
@@ -216,12 +214,6 @@
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hakemisen-aloitus
-  (testing "Haku ei lähde koska spec failaa"
-    (vaadi-async-kutsut
-      #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
-
-      (is (not (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {})))))))
-
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
