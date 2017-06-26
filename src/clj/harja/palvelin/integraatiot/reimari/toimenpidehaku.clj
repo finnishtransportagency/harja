@@ -29,12 +29,11 @@
                       ::toimenpide/tila ::toimenpide/reimari-tila
                       ::toimenpide/asiakas ::toimenpide/reimari-asiakas
                       ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
-                      ::toimenpide/komponentit ::toimenpide/reimari-komponentit
-                      })
+                      ::toimenpide/komponentit ::toimenpide/reimari-komponentit})
 
 (defn lisatyo->hintatyyppi [tiedot]
   (-> tiedot
-      (assoc ::toimenpide/hintatyyppi (if (= ::toimenpide/lisatyo? tiedot)
+      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
                                         :yksikkohintainen
                                         :kokonaishintainen))
       (dissoc ::toimenpide/lisatyo?)))
