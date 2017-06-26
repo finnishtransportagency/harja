@@ -196,13 +196,11 @@
                                                      (:varustetoteuma app))))
 
 (defn hae-sijainnin-osoite [sijainti]
-  (log "---->>>> SIJAINTI" (pr-str sijainti))
   (let [coords (.-coords sijainti)
         koordinaatit {:x (.-longitude coords)
                       :y (.-latitude coords)}
         ;; todo: Ota pultatut arvot pois
         koordinaatit {:x 25.5684718564935M :y 65.04232170831756M}]
-    (log "---->>>> koordinaatit" (pr-str koordinaatit))
     (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
 
 (extend-protocol t/Event
@@ -272,7 +270,6 @@
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
-          _ (log "--->>> KOORDINAATIT" (pr-str koordinaatit))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
                          :arvot (merge (or (:arvot tiedot) {}) koordinaatit))]
 
@@ -290,7 +287,6 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-      (log "--->> UUSI TOTEUMA" (pr-str uusi-toteuma))
       (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil)))
 
   v/TietolajinKuvaus
@@ -345,11 +341,9 @@
 
   v/HaeSijainninOsoite
   (process-event [{sijainti :sijainti} app]
-    (log "--->>> HAETAAN SIJANNIN OSOITE" (pr-str sijainti))
     (let [virhe! (t/send-async! v/->VirheTapahtui "Käyttäjän sijannin osoitteen haussa tapahtui virhe")
           valmis! (t/send-async! v/->SijanninOsoiteHaettu)]
       (go
-        ;; todo: käytä tuck palvelunkutsuapuria
         (let [vastaus (<! (hae-sijainnin-osoite sijainti))]
           (if (k/virhe? vastaus)
             (virhe!)
@@ -358,7 +352,6 @@
 
   v/SijanninOsoiteHaettu
   (process-event [{osoite :osoite} app]
-    (log "--->>> SIJAINNIN OSOITE HAETTU" (pr-str osoite))
     (let [tiedot (assoc (:varustetoteuma app)
                    :sijainti (:geometria osoite)
                    :tierekisteriosoite {:numero (:tie osoite)

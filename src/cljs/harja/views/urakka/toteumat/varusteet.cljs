@@ -208,7 +208,7 @@
        :komponentti (fn []
                       [:button.nappi-toissijainen.nappi-grid
                        {:on-click #(e! (v/->AsetaKayttajanSijainti))}
-                       (ikonit/map-marker) " Valitse nykyinen sijainti " (when paikannus-kaynnissa? [y/ajax-loader])])}
+                       (ikonit/screenshot) " Käytä sijaintiani " (when paikannus-kaynnissa? [y/ajax-loader])])}
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta
