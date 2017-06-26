@@ -157,7 +157,6 @@
     (jaettu/siirra-valitut! :siirra-toimenpiteet-kokonaishintaisiin app))
 
   HaeToimenpiteet
-  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:toimenpiteiden-haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet

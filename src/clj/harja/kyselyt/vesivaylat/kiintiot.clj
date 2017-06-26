@@ -17,9 +17,9 @@
 (defn kiintiot-kuuluvat-urakkaan? [db kiintio-idt urakka-id]
   (->>
     (fetch db
-          ::kiintio/kiintio
-          #{::kiintio/urakka-id}
-          {::kiintio/id (op/in kiintio-idt)})
+           ::kiintio/kiintio
+           #{::kiintio/urakka-id}
+           {::kiintio/id (op/in kiintio-idt)})
     (keep ::kiintio/urakka-id)
     (every? (partial = urakka-id))))
 
@@ -27,23 +27,26 @@
   (when-not (kiintiot-kuuluvat-urakkaan? db kiintio-idt urakka-id)
     (throw (SecurityException. (str "Kaikki kiintiöt " kiintio-idt " eivät kuulu urakkaan " urakka-id)))))
 
-(defn hae-kiintiot-ja-toimenpiteet [db tiedot]
+(defn hae-kiintiot [db {:keys [toimenpiteet?] :as tiedot}]
   (let [urakka-id (::kiintio/urakka-id tiedot)
         sopimus-id (::kiintio/sopimus-id tiedot)]
     (into
       []
       (comp
-        (map #(assoc % ::kiintio/toimenpiteet (into []
-                                                    harja.kyselyt.vesivaylat.toimenpiteet/toimenpiteet-xf
-                                                    (::kiintio/toimenpiteet %)))))
+        (map #(if toimenpiteet?
+                (assoc % ::kiintio/toimenpiteet (into []
+                                                      harja.kyselyt.vesivaylat.toimenpiteet/toimenpiteet-xf
+                                                      (::kiintio/toimenpiteet %)))
+                %)))
       (fetch db
-            ::kiintio/kiintio
-            (set/union kiintio/perustiedot
-                       kiintio/kiintion-toimenpiteet)
-            (op/and
-              {::kiintio/urakka-id urakka-id}
-              {::kiintio/sopimus-id sopimus-id}
-              {::m/poistettu? false})))))
+             ::kiintio/kiintio
+             (set/union kiintio/perustiedot
+                        (when toimenpiteet?
+                          kiintio/kiintion-toimenpiteet))
+             (op/and
+               {::kiintio/urakka-id urakka-id}
+               {::kiintio/sopimus-id sopimus-id}
+               {::m/poistettu? false})))))
 
 (defn tallenna-kiintiot! [db user tiedot]
   (jdbc/with-db-transaction [db db]
@@ -77,4 +80,4 @@
                        (dissoc ::kiintio/toimenpiteet))
                    muokkaustiedot))))
 
-    (hae-kiintiot-ja-toimenpiteet db tiedot)))
+    (hae-kiintiot db tiedot)))

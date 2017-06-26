@@ -60,6 +60,7 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
+       [debug/debug app]
        [jaettu/suodattimet e!
         tiedot/->PaivitaValinnat
         app (:urakka valinnat)

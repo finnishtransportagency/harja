@@ -49,9 +49,9 @@
        " siirretty."))
 
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
-                                      vaylatyyppi vayla
-                                      tyolaji tyoluokka toimenpide
-                                      vain-vikailmoitukset?] :as valinnat}]
+                                                     vaylatyyppi vayla
+                                                     tyolaji tyoluokka toimenpide
+                                                     vain-vikailmoitukset?] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi

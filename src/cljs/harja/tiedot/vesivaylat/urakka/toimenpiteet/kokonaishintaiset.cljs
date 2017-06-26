@@ -82,14 +82,13 @@
     (jaettu/siirra-valitut! :siirra-toimenpiteet-yksikkohintaisiin app))
 
   HaeToimenpiteet
-  ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:toimenpiteiden-haku-kaynnissa? app)
       (-> app
           (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
                                       (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu
-                                     :epaonnistui ->ToimenpiteetEiHaettu})
+                                       :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc :toimenpiteiden-haku-kaynnissa? true))
       app))
 
@@ -105,11 +104,10 @@
 
 
   HaeKiintiot
-  ;; Hakee kiintiöt annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
     (if-not (:kiintioiden-haku-kaynnissa? app)
       (-> app
-          (tuck-tyokalut/palvelukutsu :hae-kiintiot-ja-toimenpiteet
+          (tuck-tyokalut/palvelukutsu :hae-kiintiot
                                       {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}
                                       {:onnistui ->KiintiotHaettu

@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.vesivaylat.kiintiot-test
   (:require [clojure.test :refer :all]
             [clojure.spec.alpha :as s]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja
              [pvm :as pvm]
@@ -40,11 +41,27 @@
     (is (s/valid? ::kiintio/hae-kiintiot-vastaus vastaus))
     (is (>= (count vastaus) 2))))
 
-(deftest kiintioiden-tallennus
+(deftest kiintioiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
-           ::kiintio/sopimus-id sopimus-id}
+                ::kiintio/sopimus-id sopimus-id}
+        kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-kiintiot
+                                 +kayttaja-jvh+
+                                 params)]
+
+    (is (s/valid? ::kiintio/hae-kiintiot-kysely params))
+    (is (s/valid? ::kiintio/hae-kiintiot-vastaus kiintiot))
+
+    (is (>= (count kiintiot) 2))
+    (is (every? #(nil? (::kiintio/toimenpiteet %)) kiintiot))))
+
+(deftest kiintioiden-haku-ja-tallennus
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        params {::kiintio/urakka-id urakka-id
+                ::kiintio/sopimus-id sopimus-id}
         kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-kiintiot-ja-toimenpiteet
                                  +kayttaja-jvh+
@@ -56,9 +73,12 @@
                                     :tallenna-kiintiot
                                     +kayttaja-jvh+
                                     params)]
-        (is (not (some (comp (partial = "Testi123") ::kiintio/kuvaus) kiintiot)))
+
         (is (s/valid? ::kiintio/tallenna-kiintiot-kysely params))
         (is (s/valid? ::kiintio/tallenna-kiintiot-vastaus vastaus))
+
+        (is (not (some (comp (partial = "Testi123") ::kiintio/kuvaus) kiintiot)))
+        (is (some #(not (empty? (::kiintio/toimenpiteet %))) kiintiot))
         (is (>= (count vastaus) 2))
         (is (some (comp (partial = "Testi123") ::kiintio/kuvaus) vastaus))
         (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) vastaus)))))
