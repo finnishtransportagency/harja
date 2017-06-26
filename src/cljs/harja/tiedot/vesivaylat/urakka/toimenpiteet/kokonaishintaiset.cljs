@@ -56,7 +56,7 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
-(defrecord HaeKiintiot [valinnat])
+(defrecord HaeKiintiot [])
 (defrecord KiintiotHaettu [kiintiot])
 (defrecord KiintiotEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
@@ -104,7 +104,7 @@
 
 
   HaeKiintiot
-  (process-event [{valinnat :valinnat} app]
+  (process-event [_ app]
     (if-not (:kiintioiden-haku-kaynnissa? app)
       (-> app
           (tuck-tyokalut/palvelukutsu :hae-kiintiot
