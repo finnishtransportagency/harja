@@ -266,6 +266,10 @@
   (let [tulos (e! (tiedot/->KiintiotEiHaettu nil))]
     (is (false? (:kiintioiden-haku-kaynnissa? tulos)))))
 
+(deftest valitse-kiintio
+  (let [tulos (e! (tiedot/->ValitseKiintio 666))]
+    (is (= (:valittu-kiintio-id tulos) 666))))
+
 (deftest liita-toimenpiteet-kiintioon
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetLiitettyKiintioon tiedot/->ToimenpiteetEiLiitettyKiintioon}

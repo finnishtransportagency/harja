@@ -36,6 +36,7 @@
          :kiintioiden-haku-kaynnissa? false
          :liita-kiintioon nil ;; kiintiö-id
          :infolaatikko-nakyvissa {} ; tunniste -> boolean
+         :valittu-kiintio-id nil
          :kiintioon-liittaminen-kaynnissa? false
          :toimenpiteet nil}))
 
@@ -61,6 +62,7 @@
 (defrecord HaeKiintiot [])
 (defrecord KiintiotHaettu [kiintiot])
 (defrecord KiintiotEiHaettu [virhe])
+(defrecord ValitseKiintio [kiintio-id])
 (defrecord SiirraValitutYksikkohintaisiin [])
 (defrecord LiitaToimenpiteetKiintioon [toimenpide-idt])
 (defrecord ToimenpiteetLiitettyKiintioon [])
@@ -128,6 +130,10 @@
   (process-event [_ app]
     (viesti/nayta! "Kiintiöiden haku epäonnistui!" :danger)
     (assoc app :kiintioiden-haku-kaynnissa? false))
+
+  ValitseKiintio
+  (process-event [{kiintio-id :kiintio-id} app]
+    (assoc app :valittu-kiintio-id kiintio-id))
 
   LiitaToimenpiteetKiintioon
   (process-event [_ app]
