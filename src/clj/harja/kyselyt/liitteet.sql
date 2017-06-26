@@ -20,3 +20,15 @@ SELECT pikkukuva, urakka FROM liite WHERE id = :id;
 -- varmistamaan, että käyttäjän antama liitteen id kuuluu oikeaan urakkaan
 -- eikä liite id:tä manipuloimalla pääse käsiksi väärän urakan tietoihin.
 SELECT id FROM liite WHERE urakka = :urakka AND id = :id;
+
+-- name: hae-siirrettavat-liitteet
+-- Hakee liitteitä siirrettäväksi fileyard tallennukseen
+SELECT id, nimi, liite_oid FROM liite
+ WHERE "fileyard-hash" IS NULL AND
+       liite_oid IS NOT NULL
+ LIMIT 10;
+
+-- name: merkitse-liite-siirretyksi!
+-- Merkitsee annetulle liitteelle fileyard hash arvon ja poistaa OID:n
+UPDATE liite SET liite_oid = NULL, "fileyard-hash" = :fileyard-hash
+ WHERE id = :id;
