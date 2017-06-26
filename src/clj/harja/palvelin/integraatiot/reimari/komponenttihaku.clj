@@ -93,7 +93,7 @@
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
-       db "reimari-hae-turvalaitekomponentit"
+       db "reimari-hae-tl-komponentit"
        (fn []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" "hae-turvalaitekomponentit"
