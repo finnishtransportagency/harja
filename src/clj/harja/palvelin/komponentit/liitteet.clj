@@ -76,7 +76,7 @@
   (lataa-pikkukuva [this liitteen-id]))
 
 (defn- tallenna-liitteen-data [db fileyard-client lahde]
-  (if (ominaisuus-kaytossa? :fileyard)
+  (if (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
     ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
     {:liite_oid nil :fileyard-hash @(fileyard-client/save fileyard-client lahde)}
 
@@ -140,7 +140,8 @@
 (defrecord Liitteet [fileyard-url]
   component/Lifecycle
   (start [{db :db :as this}]
-    (when (ominaisuus-kaytossa? :fileyard)
+    (when (and (ominaisuus-kaytossa? :fileyard)
+               fileyard-url)
       (ajastettu-tehtava/ajasta-minuutin-valein
        5
        (fn [_]
@@ -153,7 +154,8 @@
   (luo-liite [{db :db virustarkistus :virustarkistus}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
     (tallenna-liite db
-                    (fileyard-client/new-client fileyard-url)
+                    (when fileyard-url
+                      (fileyard-client/new-client fileyard-url))
                     virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
     (hae-liite db (fileyard-client/new-client fileyard-url) liitteen-id))

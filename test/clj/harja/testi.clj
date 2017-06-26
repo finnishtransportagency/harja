@@ -764,7 +764,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet)
+                                                  (liitteet/->Liitteet nil)
                                                   [:db])
 
                            ~@omat))))
