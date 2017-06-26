@@ -102,9 +102,12 @@
                                                     (:tasaa sarake))}
                              (when raporttielementteja?
                                {:komponentti (fn [rivi]
-                                               (let [elementti (get rivi i)]
+                                               (let [elementti (get rivi i)
+                                                     liite? (if (vector? elementti)
+                                                              (= :liitteet (first elementti))
+                                                              false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
                                                  (muodosta-html
-                                                   (if (raportti-domain/formatoi-solu? elementti)
+                                                   (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
                                                      (raportti-domain/raporttielementti-formatterilla elementti format-fn)
                                                      elementti))))}))))
                         sarakkeet))
