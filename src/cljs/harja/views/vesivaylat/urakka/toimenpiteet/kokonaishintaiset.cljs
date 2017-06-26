@@ -15,13 +15,13 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- kiintiovaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet kiintiot] :as app}]
+(defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
    [yleiset/livi-pudotusvalikko
-    {:valitse-fn #(log "TODO Valitse kiintiö")
+    {:valitse-fn #(e! (tiedot/->ValitseKiintio (::kiintio/id %)))
      :format-fn #(or (::kiintio/nimi %) "Valitse kiintiö")
      :class "livi-alasveto-250"
-     :valinta valittu-hintaryhma
+     :valinta valittu-kiintio-id ;; FIXME Ei vaihdu!?
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     kiintiot]])
 
@@ -30,7 +30,7 @@
    (if kiintioon-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
      "Liitä")
-   #(log "TODO Liitä")
+   #(log "TODO Liitä") ; TODO
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   kiintioon-liittaminen-kaynnissa?)}])
 
