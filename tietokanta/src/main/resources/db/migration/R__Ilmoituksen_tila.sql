@@ -27,6 +27,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER tg_aseta_ilmoituksen_tila ON ilmoitustoimenpide;
 CREATE TRIGGER tg_aseta_ilmoituksen_tila
 AFTER INSERT ON ilmoitustoimenpide
 FOR EACH ROW
