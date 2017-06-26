@@ -5,9 +5,18 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.tyokalut.lukot :as lukko]))
+
+(defn aikaleima [text]
+  (when-not (str/blank? text)
+    (.toDate (xml/parsi-xsd-datetime-ms-aikaleimalla text))))
+
+(defn paivamaara [text]
+  (when-not (str/blank? text)
+    (xml/parsi-paivamaara text)))
 
 (defn formatoi-aika [muutosaika]
   (log/debug "formatoi-aika: saatiin" muutosaika)

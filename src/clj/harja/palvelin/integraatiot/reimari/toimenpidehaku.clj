@@ -13,6 +13,7 @@
             [harja.pvm :as pvm]
             [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
+            [harja.tyokalut.xml :as xml]
             [clojure.string :as s]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
