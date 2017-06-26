@@ -112,10 +112,13 @@
     (catch PSQLException e
       {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
 
-(defn hae-tr-osoite-gps-koordinaateilla [db params]
-  (println "--->>> PARAMS" params)
-
-  )
+(defn hae-tr-osoite-gps-koordinaateilla [db wg84-koordinaatit]
+  (println "--->>> koordinaatit" wg84-koordinaatit)
+  (let [euref-koordinaatit(geo/wgs84->euref wg84-koordinaatit)
+        ;; todo: Tässä kotaa josta syystä näyttäisi menevän koordinaatit mäpissä väärin päin
+        euref-koordinaatit {:x (:y euref-koordinaatit) :y (:x euref-koordinaatit)}]
+    (println "--->>> koordinaatit" euref-koordinaatit)
+    (hae-tr-pisteella db euref-koordinaatit)))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
@@ -143,9 +146,7 @@
                               (hae-tieosan-ajoradat db params))
       :hae-tr-gps-koordinaateilla (fn [_ params]
                                     (oikeudet/ei-oikeustarkistusta!)
-                                    (hae-tr-osoite-gps-koordinaateilla db params))
-      )
-
+                                    (hae-tr-osoite-gps-koordinaateilla db params)))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
