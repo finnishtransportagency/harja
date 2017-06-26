@@ -60,10 +60,11 @@
 
 (t/deftest kasittele-vastaus-kantatallennus
   (let [tarkista-fn  #(ht/tarkista-map-arvot
+                       referenssi-toimenpide-tietue
                        (first (tohaku/kasittele-vastaus
                                (:db ht/jarjestelma)
-                               (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml")))
-                       referenssi-toimenpide-tietue)]
+                               (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
+
 
 
     (tarkista-fn)
