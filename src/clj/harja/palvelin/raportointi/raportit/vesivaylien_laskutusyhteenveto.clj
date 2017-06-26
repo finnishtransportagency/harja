@@ -57,7 +57,10 @@
                                                                       :vaylatyyppi "muu"}))}
    :sanktiot (:summa (first (hae-sanktiot db {:urakkaid urakka-id
                                               :alkupvm alkupvm
-                                              :loppupvm loppupvm})))})
+                                              :loppupvm loppupvm})))
+   :erilliskustannukset (:summa (first (hae-erilliskustannukset db {:urakkaid urakka-id
+                                                                    :alkupvm alkupvm
+                                                                    :loppupvm loppupvm})))})
 
 
 
@@ -77,6 +80,7 @@
   [(kaikki-yhteensa-rivi "Toimenpiteet" (+ (vaylatyypin-summa tiedot "kauppamerenkulku")
                                            (vaylatyypin-summa tiedot "muu")))
    (kaikki-yhteensa-rivi "Sanktiot" (:sanktiot tiedot))
+   (kaikki-yhteensa-rivi "Erilliskustannukset" (:erilliskustannukset tiedot))
    (kaikki-yhteensa-rivi "Yhteensä"
                          (reduce + 0
                                  (concat

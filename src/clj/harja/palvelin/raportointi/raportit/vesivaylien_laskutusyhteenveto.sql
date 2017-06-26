@@ -61,3 +61,13 @@ WHERE s.poistettu IS NOT TRUE
       AND s.perintapvm <= :loppupvm
       AND s.perintapvm >= :alkupvm
       AND tpi.urakka = :urakkaid;
+
+-- name: hae-erilliskustannukset
+SELECT
+  COALESCE(SUM(rahasumma), 0) as summa
+FROM erilliskustannus ek
+  LEFT JOIN toimenpideinstanssi tpi ON ek.toimenpideinstanssi = tpi.id
+WHERE ek.poistettu IS NOT TRUE
+      AND ek.pvm <= :loppupvm
+      AND ek.pvm >= :alkupvm
+      AND tpi.urakka = :urakkaid;
