@@ -47,7 +47,7 @@
   (process-event [{val :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app) val)
           haku (tuck/send-async! ->HaeKiintiot)]
-      (go (haku uudet-valinnat))
+      (go (haku))
       (assoc app :valinnat uudet-valinnat)))
 
   HaeKiintiot
