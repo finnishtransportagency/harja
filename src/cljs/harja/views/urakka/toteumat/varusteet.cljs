@@ -196,24 +196,26 @@
        :valinta-nayta second
        :valinta-arvo first
        :muokattava? (constantly muokattava?)}
-      {:nimi :tierekisteriosoite
-       :otsikko "Tierekisteriosoite"
-       :tyyppi :tierekisteriosoite
-       :pakollinen? muokattava?
-       :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
-       :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
-       :muokattava? (constantly muokattava?)}
-      (when (and muokattava? (geo/geolokaatio-tuettu?))
-        {:nimi :kayttajan-sijainti
-         :tyyppi :komponentti
-         :komponentti (fn []
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(when
-                                       (not paikannus-kaynnissa?)
-                                       (e! (v/->AsetaKayttajanSijainti)))
-                          :disabled paikannus-kaynnissa?}
-                         (ikonit/screenshot) " Käytä sijaintiani "
-                         (when paikannus-kaynnissa? [y/ajax-loader])])})
+      (lomake/rivi
+        {:nimi :tierekisteriosoite
+         :otsikko "Tierekisteriosoite"
+         :tyyppi :tierekisteriosoite
+         :pakollinen? muokattava?
+         :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+         :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
+         :muokattava? (constantly muokattava?)}
+        (when (and muokattava? (geo/geolokaatio-tuettu?))
+          {:nimi :kayttajan-sijainti
+           :otsikko "GPS-sijainti"
+           :tyyppi :komponentti
+           :komponentti (fn []
+                          [napit/yleinen-ensisijainen
+                           "Paikanna"
+                           #(when (not paikannus-kaynnissa?)
+                              (e! (v/->AsetaKayttajanSijainti)))
+                           {:disabled paikannus-kaynnissa?
+                            :ikoni (ikonit/screenshot)
+                            :tallennus-kaynnissa? paikannus-kaynnissa?}])}))
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta
