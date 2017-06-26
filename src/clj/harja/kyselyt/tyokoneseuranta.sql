@@ -4,7 +4,7 @@ INSERT INTO tyokonehavainto
        (jarjestelma, organisaatio, viestitunniste, lahetysaika,
         tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
 VALUES (:jarjestelma,
-        (SELECT id FROM organisaatio WHERE nimi=:organisaationimi AND ytunnus=:ytunnus),
+        (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
         :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
 	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::POINT,
 	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
