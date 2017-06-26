@@ -5,6 +5,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.urakka :as ur]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
@@ -31,7 +32,8 @@
                     :toimenpide nil
                     :vain-vikailmoitukset? false}
          :nakymassa? false
-         :haku-kaynnissa? false
+         :toimenpiteiden-haku-kaynnissa? false
+         :kiintioiden-haku-kaynnissa? false
          :infolaatikko-nakyvissa {} ;; tunniste -> boolean
          :toimenpiteet nil}))
 
@@ -54,6 +56,9 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
+(defrecord HaeKiintiot [valinnat])
+(defrecord KiintiotHaettu [kiintiot])
+(defrecord KiintiotEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
 
 (extend-protocol tuck/Event
@@ -79,20 +84,43 @@
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
-    (if-not (:haku-kaynnissa? app)
+    (if-not (:toimenpiteiden-haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
-                                      (jaettu/hakukyselyn-argumentit valinnat)
+                                      (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu
                                      :epaonnistui ->ToimenpiteetEiHaettu})
-          (assoc app :haku-kaynnissa? true))
+          (assoc app :toimenpiteiden-haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
     (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
-               :haku-kaynnissa? false))
+               :toimenpiteiden-haku-kaynnissa? false))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    (assoc app :haku-kaynnissa? false)))
+    (assoc app :toimenpiteiden-haku-kaynnissa? false))
+
+
+  HaeKiintiot
+  ;; Hakee kiintiöt annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
+  (process-event [{valinnat :valinnat} app]
+    (if-not (:kiintioiden-haku-kaynnissa? app)
+      (do (tuck-tyokalut/palvelukutsu :hae-kiintiot
+                                      {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}
+                                      {:onnistui ->KiintiotHaettu
+                                       :epaonnistui ->KiintiotEiHaettu})
+          (assoc app :kiintioiden-haku-kaynnissa? true))
+      app))
+
+  KiintiotHaettu
+  (process-event [{kiintiot :kiintiot} app]
+    (assoc app :kiintiot kiintiot
+               :kiintioiden-haku-kaynnissa? false))
+
+  KiintiotEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Kiintiöiden haku epäonnistui!" :danger)
+    (assoc app :kiintioiden-haku-kaynnissa? false)))

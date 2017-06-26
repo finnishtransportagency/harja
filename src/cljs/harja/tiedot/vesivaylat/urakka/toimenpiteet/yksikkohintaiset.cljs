@@ -42,7 +42,7 @@
                     :toimenpide nil
                     :vain-vikailmoitukset? false}
          :nakymassa? false
-         :haku-kaynnissa? false
+         :toimenpiteiden-haku-kaynnissa? false
          :infolaatikko-nakyvissa {} ;; tunniste -> boolean
          :uuden-hintaryhman-lisays? false
          :valittu-hintaryhma nil
@@ -159,23 +159,23 @@
   HaeToimenpiteet
   ;; Hakee toimenpiteet annetuilla valinnoilla. Jos valintoja ei anneta, käyttää tilassa olevia valintoja.
   (process-event [{valinnat :valinnat} app]
-    (if-not (:haku-kaynnissa? app)
+    (if-not (:toimenpiteiden-haku-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
-                                      (jaettu/hakukyselyn-argumentit valinnat)
+                                      (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu
                                        :epaonnistui ->ToimenpiteetEiHaettu})
-          (assoc app :haku-kaynnissa? true))
+          (assoc app :toimenpiteiden-haku-kaynnissa? true))
       app))
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
     (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
-               :haku-kaynnissa? false))
+               :toimenpiteiden-haku-kaynnissa? false))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
-    (assoc app :haku-kaynnissa? false))
+    (assoc app :toimenpiteiden-haku-kaynnissa? false))
 
   UudenHintaryhmanLisays?
   (process-event [{lisays-auki? :lisays-auki?} app]

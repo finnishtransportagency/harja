@@ -150,7 +150,7 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
+          hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit
                            {:urakka-id 666
                             :sopimus-id 777
                             :aikavali [alku loppu]
@@ -174,7 +174,7 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
                                                                 :sopimus-id 777
                                                                 :tyolaji nil
                                                                 :tyoluokka nil
@@ -185,7 +185,7 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
                                                                 :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777}))
@@ -218,21 +218,21 @@
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
+      (is (true? (:toimenpiteiden-haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
 
   (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
       ;; Ei saa aloittaa uusia hakuja
       #{}
 
-      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
+      (let [tila {:foo :bar :id 1 :toimenpiteiden-haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:haku-kaynnissa? tulos)))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
 
 (deftest hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
-    (is (false? (:haku-kaynnissa? tulos)))))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))

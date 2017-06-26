@@ -169,24 +169,24 @@
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
+      (is (true? (:toimenpiteiden-haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
 
   (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
       ;; Ei saa aloittaa uusia hakuja
       #{}
 
-      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
+      (let [tila {:foo :bar :id 1 :toimenpiteiden-haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:haku-kaynnissa? tulos)))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
 
 (deftest hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
-    (is (false? (:haku-kaynnissa? tulos)))))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))
 
 (deftest uuden-hintaryhman-lisays
   (is (= {:foo :bar :uuden-hintaryhman-lisays? true}

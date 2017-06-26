@@ -263,7 +263,7 @@
                   :app app
                   :listaus-tunniste listaus-tunniste
                   :toimenpiteet toimenpiteet
-                  :haku-kaynnissa? haku-kaynnissa?
+                  :toimenpiteiden-haku-kaynnissa? haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
          (when footer

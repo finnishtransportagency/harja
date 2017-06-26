@@ -48,7 +48,7 @@
        (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
        " siirretty."))
 
-(defn hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
+(defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
                                       vaylatyyppi vayla
                                       tyolaji tyoluokka toimenpide
                                       vain-vikailmoitukset?] :as valinnat}]
