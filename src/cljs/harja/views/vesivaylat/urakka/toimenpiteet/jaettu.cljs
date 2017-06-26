@@ -212,7 +212,8 @@
    toimenpiteet])
 
 (defn- luo-otsikkorivit
-  [{:keys [e! app listaus-tunniste toimenpiteet haku-kaynnissa? gridin-sarakkeet vaylan-checkbox-sijainti]}]
+  [{:keys [e! app listaus-tunniste toimenpiteet toimenpiteiden-haku-kaynnissa?
+           gridin-sarakkeet vaylan-checkbox-sijainti]}]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -222,7 +223,7 @@
                                          (count (tiedot/toimenpiteet-tyolajilla
                                                   toimenpiteet
                                                   tyolaji)))
-               (when haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
+               (when toimenpiteiden-haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
               [paneelin-sisalto
                e!
                app
@@ -235,10 +236,10 @@
                gridin-sarakkeet]])
            tyolajit))))
 
-(defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa haku-kaynnissa?] :as app}
+(defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti]}]
-  (cond (and haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
+  (cond (and toimenpiteiden-haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
         (empty? toimenpiteet) [:div "Ei toimenpiteitä"]
 
         :default
@@ -263,7 +264,7 @@
                   :app app
                   :listaus-tunniste listaus-tunniste
                   :toimenpiteet toimenpiteet
-                  :toimenpiteiden-haku-kaynnissa? haku-kaynnissa?
+                  :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
                   :gridin-sarakkeet gridin-sarakkeet
                   :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
          (when footer
