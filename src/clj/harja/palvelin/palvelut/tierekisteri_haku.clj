@@ -115,7 +115,6 @@
 (defn hae-tr-osoite-gps-koordinaateilla [db wgs84-koordinaatit]
   (try
     (let [euref-koordinaatit (geo/wgs84->euref wgs84-koordinaatit)
-          ;; todo: Tässä kotaa josta syystä näyttäisi menevän koordinaatit mäpissä väärin päin
           euref-koordinaatit {:x (:y euref-koordinaatit) :y (:x euref-koordinaatit)}]
       (hae-tr-pisteella db euref-koordinaatit))
     (catch Exception e
