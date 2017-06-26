@@ -6,7 +6,8 @@
             [harja.domain.liitteet :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
-            [fileyard.client :as fileyard-client])
+            [fileyard.client :as fileyard-client]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]])
   (:import (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
            (com.mchange.v2.c3p0 C3P0ProxyConnection)
@@ -67,6 +68,14 @@
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
+(defn- tallenna-liitteen-data [db fileyard-client lahde]
+  (if (ominaisuus-kaytossa? :fileyard)
+    ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
+    {:liite_oid nil :fileyard-hash @(fileyard-client/save fileyard-client lahde)}
+
+    ;; Muuten tallennetaan paikalliseen tietokantaan
+    {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
+
 (defn- tallenna-liite [db fileyard-client virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
@@ -76,10 +85,19 @@
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
-              uuid @(fileyard-client/save fileyard-client lahde)
-              liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko uuid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
-            (log/debug "Liite tallennettu.")
-            liite))
+              liite (liitteet/tallenna-liite<!
+                     db
+                     (merge {:nimi tiedostonimi
+                             :tyyppi tyyppi
+                             :koko koko
+                             :pikkukuva pikkukuva
+                             :luoja luoja
+                             :urakka urakka
+                             :kuvaus kuvaus
+                             :lahdejarjestelma lahde-jarjestelma}
+                            (tallenna-liitteen-data db fileyard-client lahde)))]
+          (log/debug "Liite tallennettu.")
+          liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet

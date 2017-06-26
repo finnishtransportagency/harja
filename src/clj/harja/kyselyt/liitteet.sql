@@ -2,8 +2,8 @@
 -- Tallentaa uuden liitteen. Liitteen pitää olla tallennettuna jo ja fileyard UUID annettava.
 INSERT
   INTO liite
-       (nimi, tyyppi, koko, "fileyard-hash", pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
-VALUES (:nimi, :tyyppi, :koko, :fileyard-hash, :pikkukuva, :luoja, current_timestamp, :urakka,
+       (nimi, tyyppi, koko, liite_oid, "fileyard-hash", pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
+VALUES (:nimi, :tyyppi, :koko, :liite_oid, :fileyard-hash, :pikkukuva, :luoja, current_timestamp, :urakka,
         :kuvaus, :lahdejarjestelma::lahde);
 
 -- name: hae-liite-lataukseen
