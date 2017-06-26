@@ -304,6 +304,11 @@
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
 
+(defn hae-kiintio-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   vv_kiintio
+                   WHERE  nimi = '" nimi "'"))))
+
 (defn hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja []
   (ffirst (q (str "SELECT vv_hinnoittelu.id FROM vv_hinnoittelu
                   LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
