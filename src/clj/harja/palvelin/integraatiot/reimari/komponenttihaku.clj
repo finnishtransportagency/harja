@@ -23,15 +23,15 @@
 (defn kasittele-komponenttityypit-vastaus [db vastaus-xml]
   (log/debug "kasittele-komponenttityypit-vastaus" vastaus-xml)
   (let [sanoman-tiedot (kt-sanoma/lue-hae-komponenttityypit-vastaus vastaus-xml)
-        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::komponenttityyppi/komponenttityyppi toimenpide-tiedot))]
+        kanta-tiedot (for [kt-tiedot sanoman-tiedot]
+                       (specql/upsert! db ::komponenttityyppi/komponenttityyppi kt-tiedot))]
     (vec kanta-tiedot)))
 
 (defn kasittele-turvalaitekomponentit-vastaus [db vastaus-xml]
   (log/debug "kasittele-turvalaitekomponentit-vastaus" vastaus-xml)
   (let [sanoman-tiedot (tl-sanoma/lue-hae-turvalaitekomponentit-vastaus vastaus-xml)
-        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::turvalaitekomponentti/turvalaitekomponentti toimenpide-tiedot))]
+        kanta-tiedot (for [tlk-tiedot sanoman-tiedot]
+                       (specql/upsert! db ::turvalaitekomponentti/turvalaitekomponentti tlk-tiedot))]
     (vec kanta-tiedot)))
 
 (defn komponenttityypit-kysely-sanoma [muutosaika]
@@ -46,8 +46,8 @@
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
-     [:HaeTurvalaitekomponentit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeTurvalaitekomponentitRequest {:muutosaika (formatoi-aika muutosaika)}]]
+     [:HaeTurvalaiteKomponentit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+      [:HaeTurvalaiteKomponentitRequest {:muutosaika (formatoi-aika muutosaika)}]]
      ]]))
 
 (defn hae-komponenttityypit* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
