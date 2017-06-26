@@ -102,7 +102,6 @@
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false))
 
-
   HaeKiintiot
   (process-event [_ app]
     (if-not (:kiintioiden-haku-kaynnissa? app)
