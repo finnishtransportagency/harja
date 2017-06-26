@@ -299,6 +299,7 @@
     (let [toteumat (if toteumat toteumat [])]
       (kartalle
         (-> app
+            (assoc-in [:tierekisterin-varusteet :varusteet] nil)
             (dissoc :varustetoteuma :toteumahaku-id)
             (haetut-toteumat toteumat)))))
 
