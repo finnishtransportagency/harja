@@ -72,7 +72,7 @@
                  [org.apache.activemq/activemq-client "5.14.3"]
 
                  ;; Fileyard  liitetiedostojen tallennus
-                 [fileyard "0.2-SNAPSHOT" :exclusions [[com.taoensso/timbre]]]
+                 [fileyard "0.2"]
 
                  ;; Asiakas
                  [spyscope "0.1.6"]
