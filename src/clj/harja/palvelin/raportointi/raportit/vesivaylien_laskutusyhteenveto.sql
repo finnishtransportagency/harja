@@ -51,3 +51,13 @@ SELECT
          -- Työ on toteutunut, jos sen maksupvm on aikavälillä
          AND maksupvm >= :alkupvm
          AND maksupvm <= :loppupvm) AS "toteutunut-maara"
+
+-- name: hae-sanktiot
+SELECT
+  COALESCE(SUM(maara), 0) as summa
+FROM sanktio s
+  LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+WHERE s.poistettu IS NOT TRUE
+      AND s.perintapvm <= :loppupvm
+      AND s.perintapvm >= :alkupvm
+      AND tpi.urakka = :urakkaid;
