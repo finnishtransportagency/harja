@@ -26,18 +26,18 @@
 ;;;;;;;
 ;; Urakkatoiminnot: Hintaryhmän valitseminen
 
-(defn- hinnoittelu-vaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
+(defn- hinnoitteluvaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
    [yleiset/livi-pudotusvalikko
     {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
      :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
-     :class "livi-alasveto-250 inline-block"
+     :class "livi-alasveto-250"
      :valinta valittu-hintaryhma
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     hintaryhmat]])
 
-(defn- lisaysnappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                               hintaryhmien-liittaminen-kaynnissa?] :as app}]
+(defn- liita-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
+                                             hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
@@ -48,8 +48,8 @@
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   hintaryhmien-liittaminen-kaynnissa?)}])
 
-(defn- ryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
-                                 hintaryhman-tallennus-kaynnissa?] :as app}]
+(defn- hintaryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
+                                      hintaryhman-tallennus-kaynnissa?] :as app}]
   (if uuden-hintaryhman-lisays?
     [:span
      [:div.inline-block {:style {:margin-right "10px"}}
@@ -74,14 +74,13 @@
 (defn- hinnoittelu [e! app]
   [:span
    [:span {:style {:margin-right "10px"}} "Siirrä valitut ryhmään"]
-   [hinnoittelu-vaihtoehdot e! app]
-   [lisaysnappi e! app]
-   [ryhman-luonti e! app]])
+   [hinnoitteluvaihtoehdot e! app]
+   [liita-hinnoitteluun-nappi e! app]
+   [hintaryhman-luonti e! app]])
 
 (defn- urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [:span {:style {:margin-right "10px"}}
-   [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]]
+  [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 

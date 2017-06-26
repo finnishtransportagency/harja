@@ -122,14 +122,15 @@
     (or urakkatoiminnot [])]])
 
 (defn siirtonappi [e! {:keys [siirto-kaynnissa? toimenpiteet]} otsikko toiminto]
-  [napit/yleinen-ensisijainen (if siirto-kaynnissa?
+  [:div.inline-block {:style {:margin-right "10px"}}
+   [napit/yleinen-ensisijainen (if siirto-kaynnissa?
                                 [ajax-loader-pieni "Siirretään.."]
                                 (str otsikko
                                      (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
                                        (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
    toiminto
    {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
-                  siirto-kaynnissa?)}])
+                  siirto-kaynnissa?)}]])
 
 
 ;;;;;;;;;;;;;;;;;

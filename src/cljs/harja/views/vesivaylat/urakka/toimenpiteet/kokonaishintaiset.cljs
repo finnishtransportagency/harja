@@ -4,17 +4,46 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as yks-hint]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn- kiintiovaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet kiintiot] :as app}]
+  [:div.inline-block {:style {:margin-right "10px"}}
+   [yleiset/livi-pudotusvalikko
+    {:valitse-fn #(log "TODO Valitse kiintiö")
+     :format-fn #(or (::kiintio/nimi %) "Valitse kiintiö")
+     :class "livi-alasveto-250"
+     :valinta valittu-hintaryhma
+     :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
+    kiintiot]])
+
+(defn- liita-kiintioon-nappi [e! {:keys [kiintioon-liittaminen-kaynnissa?] :as app}]
+  [napit/yleinen-ensisijainen
+   (if kiintioon-liittaminen-kaynnissa?
+     [yleiset/ajax-loader-pieni "Liitetään.."]
+     "Liitä")
+   #(log "TODO Liitä")
+   {:disabled kiintioon-liittaminen-kaynnissa?}])
+
+(defn- liita-kiintioon [e! app]
+  [:span
+   [:span {:style {:margin-right "10px"}} "Liitä valitut kiintiöön"]
+   [kiintiovaihtoehdot e! app]
+   [liita-kiintioon-nappi e! app]])
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]])
+   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]
+   ^{:key "kiintio"}
+   [liita-kiintioon e! app]])
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
