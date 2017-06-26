@@ -41,7 +41,8 @@
             [harja.ui.debug :as debug]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.tierekisteri.varusteet :as tv]
-            [harja.ui.yleiset :as y])
+            [harja.ui.yleiset :as y]
+            [harja.geo :as geo])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -49,7 +50,7 @@
 (def nayta-max-toteumaa 500)
 
 (defn oikeus-varusteiden-muokkaamiseen? []
-   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
+  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -202,13 +203,13 @@
        :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
        :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
        :muokattava? (constantly muokattava?)}
-      ;; todo: piilota, jos geolocation ei ole käytössä
-      {:nimi :kayttajan-sijainti
-       :tyyppi :komponentti
-       :komponentti (fn []
-                      [:button.nappi-toissijainen.nappi-grid
-                       {:on-click #(e! (v/->AsetaKayttajanSijainti))}
-                       (ikonit/screenshot) " Käytä sijaintiani " (when paikannus-kaynnissa? [y/ajax-loader])])}
+      (when (geo/geolokaatio-tuettu?)
+        {:nimi :kayttajan-sijainti
+         :tyyppi :komponentti
+         :komponentti (fn []
+                        [:button.nappi-toissijainen.nappi-grid
+                         {:on-click #(e! (v/->AsetaKayttajanSijainti))}
+                         (ikonit/screenshot) " Käytä sijaintiani " (when paikannus-kaynnissa? [y/ajax-loader])])})
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta
