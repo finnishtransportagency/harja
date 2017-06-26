@@ -201,7 +201,7 @@
         koordinaatit {:x (.-longitude coords)
                       :y (.-latitude coords)}
         ;; todo: Ota pultatut arvot pois
-        koordinaatit {:x  25.5684718564935M  :y  65.04232170831756M}]
+        koordinaatit {:x 25.5684718564935M :y 65.04232170831756M}]
     (log "---->>>> koordinaatit" (pr-str koordinaatit))
     (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
 
@@ -272,8 +272,9 @@
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
+          _ (log "--->>> KOORDINAATIT" (pr-str koordinaatit))
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
-                         :arvot (merge (:arvot tiedot) koordinaatit))]
+                         :arvot (merge (or (:arvot tiedot) {}) koordinaatit))]
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
@@ -289,6 +290,7 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
+      (log "--->> UUSI TOTEUMA" (pr-str uusi-toteuma))
       (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil)))
 
   v/TietolajinKuvaus
@@ -357,9 +359,15 @@
   v/SijanninOsoiteHaettu
   (process-event [{osoite :osoite} app]
     (log "--->>> SIJAINNIN OSOITE HAETTU" (pr-str osoite))
-    (log "--->>> APP" (pr-str app))
-
-    (assoc app :paikannus-kaynnissa? false)))
+    (let [tiedot (assoc (:varustetoteuma app)
+                   :sijainti (:geometria osoite)
+                   :tierekisteriosoite {:numero (:tie osoite)
+                                        :alkuosa (:aosa osoite)
+                                        :alkuetaisyys (:aet osoite)
+                                        :loppuosa (:losa osoite)
+                                        :loppuetaisyys (:let osoite)})]
+      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))
+         (assoc :paikannus-kaynnissa? false)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
