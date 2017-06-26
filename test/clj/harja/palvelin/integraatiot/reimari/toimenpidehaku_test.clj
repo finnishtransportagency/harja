@@ -17,16 +17,14 @@
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
 
 (def referenssi-toimenpide-tietue
-  {::toimenpide/urakka-id (ht/hae-helsingin-vesivaylaurakan-id)
-   ::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
+  {::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
    ::toimenpide/reimari-id -123456,
    ::toimenpide/reimari-tila "1022541202",
-   ::toimenpide/hintatyyppi :kokonaishintainen,
+   ::toimenpide/hintatyyppi :yksikkohintainen,
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/reimari-vayla
    {:harja.domain.vesivaylat.vayla/r-nro "12345",
     :harja.domain.vesivaylat.vayla/r-nimi "Joku väylä"},
-    ::toimenpide/id 11,
    ::toimenpide/reimari-luotu
    #inst "2017-04-24T13:00:00.123-00:00",
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun",
@@ -39,7 +37,6 @@
    {:harja.domain.vesivaylat.sopimus/r-nro -666,
     :harja.domain.vesivaylat.sopimus/r-tyyppi "1022542301",
     :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
-   ::toimenpide/reimari-tyyppi "1022542001",
    ::toimenpide/reimari-muokattu
    #inst "2017-04-24T13:30:00.123-00:00",
    ::toimenpide/reimari-komponentit
@@ -56,19 +53,30 @@
    {:harja.domain.vesivaylat.turvalaite/r-nro "904",
      :harja.domain.vesivaylat.turvalaite/r-nimi
     "Glosholmsklacken pohjoinen",
-    :harja.domain.vesivaylat.turvalaite/r-ryhma 514}})
+    :harja.domain.vesivaylat.turvalaite/r-ryhma 555}})
 
 (t/deftest kasittele-vastaus-kantatallennus
-  (let [tarkista-fn  #(ht/tarkista-map-arvot
+  (let [db (:db ht/jarjestelma)
+        tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
-                       (first (tohaku/kasittele-vastaus
-                               (:db ht/jarjestelma)
-                               (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
+                       (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
 
 
 
     (tarkista-fn)
+    (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
+             (::toimenpide/urakka-id (first (specql/fetch db
+                                                          ::toimenpide/reimari-toimenpide #{::toimenpide/id ::toimenpide/reimari-id ::toimenpide/urakka-id}
+                                                          {::toimenpide/reimari-id -123456})))))
 
     ;; tarkistetaan että sama reimari-id luetussa toimenpiteessä päivittää tietuetta
-    (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide {::toimenpide/hintatyyppi :yksikkohintainen} {::toimenpide/id 10})
-    (tarkista-fn)))
+    (t/is (= 1
+             (count (specql/fetch db ::toimenpide/reimari-toimenpide
+                                  #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)}))))
+    (t/is (= 1
+           (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
+                           {::toimenpide/hintatyyppi :kokonaishintainen}
+                           {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
+    (tarkista-fn)
+
+    ))
