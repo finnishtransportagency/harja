@@ -33,7 +33,7 @@
         params {::kiintio/urakka-id urakka-id
                 ::kiintio/sopimus-id sopimus-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-kiintiot
+                                :hae-kiintiot-ja-toimenpiteet
                                 +kayttaja-jvh+
                                 params)]
     (is (s/valid? ::kiintio/hae-kiintiot-kysely params))
@@ -46,7 +46,7 @@
         params {::kiintio/urakka-id urakka-id
            ::kiintio/sopimus-id sopimus-id}
         kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-kiintiot
+                                 :hae-kiintiot-ja-toimenpiteet
                                  +kayttaja-jvh+
                                  params)]
     (testing "Muokkaaminen"

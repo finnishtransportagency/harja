@@ -56,7 +56,7 @@
       (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                         ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}]
         (-> app
-           (tuck-apurit/palvelukutsu :hae-kiintiot
+           (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
                                      parametrit
                                      {:onnistui ->KiintiotHaettu
                                :epaonnistui ->KiintiotEiHaettu})

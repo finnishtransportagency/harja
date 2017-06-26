@@ -41,6 +41,9 @@
 (s/def ::hae-kiintiot-kysely
   (s/keys :req [::urakka-id ::sopimus-id]))
 
+(s/def ::hae-kiintiot-ja-toimenpiteet-vastaus
+  (s/coll-of ::kiintio))
+
 (s/def ::hae-kiintiot-vastaus
   (s/coll-of ::kiintio))
 
@@ -53,4 +56,4 @@
 (s/def ::tallenna-kiintiot-kysely
   (s/keys :req [::sopimus-id ::urakka-id ::tallennettavat-kiintiot]))
 
-(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-vastaus)
+(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-ja-toimenpiteet-vastaus)

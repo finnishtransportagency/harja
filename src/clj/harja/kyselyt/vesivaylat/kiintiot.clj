@@ -27,7 +27,7 @@
   (when-not (kiintiot-kuuluvat-urakkaan? db kiintio-idt urakka-id)
     (throw (SecurityException. (str "Kaikki kiintiöt " kiintio-idt " eivät kuulu urakkaan " urakka-id)))))
 
-(defn hae-kiintiot [db tiedot]
+(defn hae-kiintiot-ja-toimenpiteet [db tiedot]
   (let [urakka-id (::kiintio/urakka-id tiedot)
         sopimus-id (::kiintio/sopimus-id tiedot)]
     (into
@@ -77,4 +77,4 @@
                        (dissoc ::kiintio/toimenpiteet))
                    muokkaustiedot))))
 
-    (hae-kiintiot db tiedot)))
+    (hae-kiintiot-ja-toimenpiteet db tiedot)))

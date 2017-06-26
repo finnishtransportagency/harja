@@ -53,7 +53,8 @@
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
                                                           :sopimus-id (first (:sopimus valinnat))
-                                                          :aikavali (:aikavali valinnat)})))
+                                                          :aikavali (:aikavali valinnat)}))
+                           (e! (tiedot/->HaeKiintiot (:valinnat app))))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! app]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.

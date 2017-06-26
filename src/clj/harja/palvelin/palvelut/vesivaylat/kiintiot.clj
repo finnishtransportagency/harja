@@ -16,12 +16,12 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.vesivaylat.kiintiot :as q]))
 
-(defn hae-kiintiot [db user tiedot]
+(defn hae-kiintiot-ja-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
-      (q/hae-kiintiot db tiedot))))
+      (q/hae-kiintiot-ja-toimenpiteet db tiedot))))
 
 (defn tallenna-kiintiot [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -39,11 +39,11 @@
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-kiintiot
+      :hae-kiintiot-ja-toimenpiteet
       (fn [user tiedot]
-        (hae-kiintiot db user tiedot))
+        (hae-kiintiot-ja-toimenpiteet db user tiedot))
       {:kysely-spec ::kiintio/hae-kiintiot-kysely
-       :vastaus-spec ::kiintio/hae-kiintiot-vastaus})
+       :vastaus-spec ::kiintio/hae-kiintiot-ja-toimenpiteet-vastaus})
 
     (julkaise-palvelu
       http
@@ -58,6 +58,6 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kiintiot
+      :hae-kiintiot-ja-toimenpiteet
       :tallenna-kiintiot)
     this))
