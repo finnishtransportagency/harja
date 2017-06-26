@@ -81,7 +81,7 @@
                                            (vaylatyypin-summa tiedot "muu")))
    (kaikki-yhteensa-rivi "Sanktiot" (:sanktiot tiedot))
    (kaikki-yhteensa-rivi "Erilliskustannukset" (:erilliskustannukset tiedot))
-   (kaikki-yhteensa-rivi "Yhteensä"
+   (kaikki-yhteensa-rivi "Kaikki yhteensä"
                          (reduce + 0
                                  (concat
                                    (map :summa (:yksikkohintaiset tiedot))
