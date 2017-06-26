@@ -112,6 +112,11 @@
     (catch PSQLException e
       {:ok? false :syy "Odottamaton virhe tieosoitteen validoinnissa"})))
 
+(defn hae-tr-osoite-gps-koordinaateilla [db params]
+  (println "--->>> PARAMS" params)
+
+  )
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -135,7 +140,11 @@
 
       :hae-tr-osan-ajoradat (fn [_ params]
                               (oikeudet/ei-oikeustarkistusta!)
-                              (hae-tieosan-ajoradat db params)))
+                              (hae-tieosan-ajoradat db params))
+      :hae-tr-gps-koordinaateilla (fn [_ params]
+                                    (oikeudet/ei-oikeustarkistusta!)
+                                    (hae-tr-osoite-gps-koordinaateilla db params))
+      )
 
     this)
   (stop [{http :http-palvelin :as this}]
@@ -144,5 +153,6 @@
                      :hae-tr-pisteella
                      :hae-tr-viivaksi
                      :hae-osien-pituudet
-                     :hae-tr-osan-ajoradat)
+                     :hae-tr-osan-ajoradat
+                     :hae-tr-gps-koordinaateilla)
     this))

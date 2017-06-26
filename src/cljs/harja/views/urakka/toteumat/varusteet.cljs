@@ -201,6 +201,13 @@
        :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
        :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
        :muokattava? (constantly muokattava?)}
+      ;; todo: piilota, jos geolocation ei ole käytössä
+      {:nimi :kayttajan-sijainti
+       :tyyppi :komponentti
+       :komponentti (fn []
+                      [:button.nappi-toissijainen.nappi-grid
+                       {:on-click #(e! (v/->AsetaKayttajanSijainti))}
+                       (ikonit/map-marker) " Valitse nykyinen sijainti"])}
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta

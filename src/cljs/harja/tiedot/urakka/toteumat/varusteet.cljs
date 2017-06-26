@@ -23,42 +23,42 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valinnat
-  (reaction {:urakka-id (:id @nav/valittu-urakka)
-             :sopimus-id (first @urakka/valittu-sopimusnumero)
-             :aikavali @urakka/valittu-aikavali}))
+         (reaction {:urakka-id (:id @nav/valittu-urakka)
+                    :sopimus-id (first @urakka/valittu-sopimusnumero)
+                    :aikavali @urakka/valittu-aikavali}))
 
 (defonce varusteet
-  (atom {:nakymassa? false
+         (atom {:nakymassa? false
 
-         :tienumero nil
+                :tienumero nil
 
-         ;; Valinnat (urakka, sopimus, hk, kuukausi)
-         :valinnat nil
+                ;; Valinnat (urakka, sopimus, hk, kuukausi)
+                :valinnat nil
 
-         ;; Ajastetun toteumahaun id
-         :toteumahaku-id nil
+                ;; Ajastetun toteumahaun id
+                :toteumahaku-id nil
 
-         ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
-         :toteumat nil
+                ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
+                :toteumat nil
 
-         ;; Karttataso varustetoteumille
-         :karttataso-nakyvissa? false
-         :karttataso nil
+                ;; Karttataso varustetoteumille
+                :karttataso-nakyvissa? false
+                :karttataso nil
 
-         ;; Valittu varustetoteuma
-         :varustetoteuma nil
+                ;; Valittu varustetoteuma
+                :varustetoteuma nil
 
-         ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
-         ;; id, joka valitaan kun haku on valmistunut
-         :valittu-toteumaid nil
+                ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
+                ;; id, joka valitaan kun haku on valmistunut
+                :valittu-toteumaid nil
 
 
-         ;; Tierekisterin varusteiden hakuehdot ja tulokset
-         :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
-                                               :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
-                                   ;; Tällä hetkellä näytettävä tietolaji ja varusteet
-                                   :tietolaji nil
-                                   :varusteet nil}}))
+                ;; Tierekisterin varusteiden hakuehdot ja tulokset
+                :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
+                                                      :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
+                                          ;; Tällä hetkellä näytettävä tietolaji ja varusteet
+                                          :tietolaji nil
+                                          :varusteet nil}}))
 
 (defn valitse-toteuman-idlla! [toteumaid]
   (swap! varusteet assoc :valittu-toteumaid toteumaid))
@@ -195,6 +195,14 @@
                                                      (get-in app [:tierekisterin-varusteet :varusteet])
                                                      (:varustetoteuma app))))
 
+(defn hae-sijainnin-osoite [sijainti]
+  (log "---->>>> SIJAINTI" (pr-str sijainti))
+  (let [coords (.-coords sijainti)
+        koordinaatit {:x (.-latitude coords)
+                      :y (.-longitude coords)}]
+    (log "---->>>> koordinaatit" (pr-str koordinaatit))
+    (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
+
 (extend-protocol t/Event
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -308,7 +316,7 @@
 
   v/VirheTapahtui
   (process-event [{virhe :virhe} app]
-    (assoc app :virhe virhe))
+    (assoc app :virhe virhe :paikannus-kaynnissa? false))
 
   v/VirheKasitelty
   (process-event [_ app]
@@ -322,7 +330,30 @@
 
   v/LisaaLiitetiedosto
   (process-event [{liite :liite} app]
-    (assoc-in app [:varustetoteuma :uusi-liite] liite)))
+    (assoc-in app [:varustetoteuma :uusi-liite] liite))
+
+  v/AsetaKayttajanSijainti
+  (process-event [_ app]
+    (let [onnistunut! (t/send-async! v/->HaeSijainninOsoite)
+          virhe! (t/send-async! v/->VirheTapahtui)]
+      (geo/nykyinen-geolokaatio (fn [sijainti] (onnistunut! sijainti)) (fn [virhe] (virhe! virhe)))
+      (assoc app :paikannus-kaynnissa? true)))
+
+  v/HaeSijainninOsoite
+  (process-event [{sijainti :sijainti} app]
+    (log "--->>> HAETAAN SIJANNIN OSOITE" (pr-str sijainti))
+    (let [virhe! (t/send-async! v/->VirheTapahtui "Käyttäjän sijannin osoitteen haussa tapahtui virhe")
+          valmis! (t/send-async! v/->SijanninOsoiteHaettu)]
+      (go
+        (let [vastaus (<! (hae-sijainnin-osoite sijainti))]
+          (if (k/virhe? vastaus)
+            (virhe!)
+            (valmis! vastaus))))))
+
+  v/SijanninOsoiteHaettu
+  (process-event [{osoite :osoite} app]
+    (log "--->>> SIJAINNIN OSOITE HAETTU" (pr-str osoite))
+    (assoc app :paikannus-kaynnissa? false)))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
