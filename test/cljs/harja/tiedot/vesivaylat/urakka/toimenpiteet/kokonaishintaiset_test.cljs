@@ -245,8 +245,7 @@
       #{tiedot/->KiintiotHaettu tiedot/->KiintiotEiHaettu}
 
       (is (true? (:kiintioiden-haku-kaynnissa?
-                   (e! (tiedot/->HaeKiintiot {::kiintio/urakka-id 1
-                                              ::kiintio/sopimus-id 1})))))))
+                   (e! (tiedot/->HaeKiintiot)))))))
 
   (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
@@ -254,7 +253,7 @@
       #{}
 
       (let [tila {:foo :bar :id 1 :kiintioiden-haku-kaynnissa? true}]
-        (is (= tila (e! (tiedot/->HaeKiintiot {}) tila)))))))
+        (is (= tila (e! (tiedot/->HaeKiintiot) tila)))))))
 
 (deftest kiintioiden-hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->KiintiotHaettu [{:id 1}])
