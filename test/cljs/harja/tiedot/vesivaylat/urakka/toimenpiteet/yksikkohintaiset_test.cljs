@@ -164,7 +164,7 @@
         (is (nil? (:valinnat vanha-tila)))
         (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu}))))))
 
-(deftest hakemisen-aloitus
+(deftest toimenpiteiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
@@ -179,12 +179,12 @@
       (let [tila {:foo :bar :id 1 :toimenpiteiden-haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
-(deftest hakemisen-valmistuminen
+(deftest toimenpiteiden-hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
 
-(deftest hakemisen-epaonnistuminen
+(deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))
 

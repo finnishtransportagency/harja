@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]))
 
@@ -213,7 +214,7 @@
                         (:toimenpiteet uusi-tila)))
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
-(deftest hakemisen-aloitus
+(deftest toimenpiteiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
@@ -228,11 +229,39 @@
       (let [tila {:foo :bar :id 1 :toimenpiteiden-haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
-(deftest hakemisen-valmistuminen
+(deftest toimenpiteiden-hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
 
-(deftest hakemisen-epaonnistuminen
+(deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))
+
+
+(deftest kiintioiden-hakemisen-aloitus
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->KiintiotHaettu tiedot/->KiintiotEiHaettu}
+
+      (is (true? (:kiintioiden-haku-kaynnissa?
+                   (e! (tiedot/->HaeKiintiot {::kiintio/urakka-id 1
+                                              ::kiintio/sopimus-id 1})))))))
+
+  (testing "Uusi haku kun haku on jo käynnissä"
+    (vaadi-async-kutsut
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
+
+      (let [tila {:foo :bar :id 1 :kiintioiden-haku-kaynnissa? true}]
+        (is (= tila (e! (tiedot/->HaeKiintiot {}) tila)))))))
+
+(deftest kiintioiden-hakemisen-valmistuminen
+  (let [tulos (e! (tiedot/->KiintiotHaettu [{:id 1}])
+                  {:kiintiot nil})]
+    (is (false? (:kiintioiden-haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:kiintiot tulos)))))
+
+(deftest kiintioiden-hakemisen-epaonnistuminen
+  (let [tulos (e! (tiedot/->KiintiotEiHaettu nil))]
+    (is (false? (:kiintioiden-haku-kaynnissa? tulos)))))
