@@ -74,8 +74,8 @@
   [otsikko summa])
 
 (defn- kaikki-yhteensa-rivit [tiedot]
-  [(kaikki-yhteensa-rivi "Kauppamerenkulku" (vaylatyypin-summa tiedot "kauppamerenkulku"))
-   (kaikki-yhteensa-rivi "Muu vesiliikenne" (vaylatyypin-summa tiedot "muu"))
+  [(kaikki-yhteensa-rivi "Toimenpiteet" (+ (vaylatyypin-summa tiedot "kauppamerenkulku")
+                                           (vaylatyypin-summa tiedot "muu")))
    (kaikki-yhteensa-rivi "Sanktiot" (:sanktiot tiedot))
    (kaikki-yhteensa-rivi "Yhteensä"
                          (reduce + 0
