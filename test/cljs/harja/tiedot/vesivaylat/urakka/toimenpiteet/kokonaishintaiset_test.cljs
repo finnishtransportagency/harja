@@ -176,10 +176,10 @@
 
   (testing "Kaikki-valinta toimii"
     (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
-                                                                :sopimus-id 777
-                                                                :tyolaji nil
-                                                                :tyoluokka nil
-                                                                :toimenpide nil})]
+                                                                               :sopimus-id 777
+                                                                               :tyolaji nil
+                                                                               :tyoluokka nil
+                                                                               :toimenpide nil})]
       (is (= hakuargumentit
              {::to/urakka-id 666
               ::to/sopimus-id 777}))
@@ -187,7 +187,7 @@
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
     (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
-                                                                :sopimus-id 777})]
+                                                                               :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
@@ -265,3 +265,17 @@
 (deftest kiintioiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->KiintiotEiHaettu nil))]
     (is (false? (:kiintioiden-haku-kaynnissa? tulos)))))
+
+(deftest liita-toimenpiteet-kiintioon
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetLiitettyKiintioon tiedot/->ToimenpiteetEiLiitettyKiintioon}
+    (let [tulos (e! (tiedot/->LiitaToimenpiteetKiintioon [1 2 3]))]
+      (is (true? (:kiintioon-liittaminen-kaynnissa? tulos))))))
+
+(deftest toimenpiteet-liitetty-kiintioon
+  (let [tulos (e! (tiedot/->ToimenpiteetLiitettyKiintioon))]
+    (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))))
+
+(deftest toimenpiteet-ei-liitetty-kiintioon
+  (let [tulos (e! (tiedot/->ToimenpiteetEiLiitettyKiintioon))]
+    (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))))

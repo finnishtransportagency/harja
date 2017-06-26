@@ -34,7 +34,9 @@
          :nakymassa? false
          :toimenpiteiden-haku-kaynnissa? false
          :kiintioiden-haku-kaynnissa? false
-         :infolaatikko-nakyvissa {} ;; tunniste -> boolean
+         :liita-kiintioon nil ;; kiintiö-id
+         :infolaatikko-nakyvissa {} ; tunniste -> boolean
+         :kiintioon-liittaminen-kaynnissa? false
          :toimenpiteet nil}))
 
 (def valinnat
@@ -60,6 +62,9 @@
 (defrecord KiintiotHaettu [kiintiot])
 (defrecord KiintiotEiHaettu [virhe])
 (defrecord SiirraValitutYksikkohintaisiin [])
+(defrecord LiitaToimenpiteetKiintioon [toimenpide-idt])
+(defrecord ToimenpiteetLiitettyKiintioon [])
+(defrecord ToimenpiteetEiLiitettyKiintioon [])
 
 (extend-protocol tuck/Event
 
@@ -122,4 +127,24 @@
   KiintiotEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Kiintiöiden haku epäonnistui!" :danger)
-    (assoc app :kiintioiden-haku-kaynnissa? false)))
+    (assoc app :kiintioiden-haku-kaynnissa? false))
+
+  LiitaToimenpiteetKiintioon
+  (process-event [_ app]
+    (if-not (:kiintioon-liittaminen-kaynnissa? app)
+      (-> app
+          (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-kiintioon
+                                      {} ;; TODO PARAMS
+                                      {:onnistui ->ToimenpiteetLiitettyKiintioon
+                                       :epaonnistui ->ToimenpiteetEiLiitettyKiintioon})
+          (assoc :kiintioon-liittaminen-kaynnissa? true))
+      app))
+
+  ToimenpiteetLiitettyKiintioon
+  (process-event [_ app]
+    (assoc app :kiintioon-liittaminen-kaynnissa? false))
+
+  ToimenpiteetEiLiitettyKiintioon
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden liittäminen kiintiöön epäonnistui!" :danger)
+    (assoc app :kiintioon-liittaminen-kaynnissa? false)))

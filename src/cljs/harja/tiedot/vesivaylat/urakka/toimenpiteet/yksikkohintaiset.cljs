@@ -43,7 +43,7 @@
                     :vain-vikailmoitukset? false}
          :nakymassa? false
          :toimenpiteiden-haku-kaynnissa? false
-         :infolaatikko-nakyvissa {} ;; tunniste -> boolean
+         :infolaatikko-nakyvissa {} ; tunniste -> boolean
          :uuden-hintaryhman-lisays? false
          :valittu-hintaryhma nil
          :uusi-hintaryhma ""
