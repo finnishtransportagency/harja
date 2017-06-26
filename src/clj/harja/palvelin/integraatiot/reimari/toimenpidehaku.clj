@@ -45,7 +45,7 @@
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
                                        #{::toimenpide/reimari-id}
-                                       (merge (rename-keys toimenpide-tiedot avainmuunnokset))))]
+                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
 (defn- formatoi-aika [muutosaika]
