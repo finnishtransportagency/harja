@@ -14,11 +14,11 @@
 (def toimenpide
   {::toimenpide/turvalaite {::turvalaite/r-nro "904"
                             ::turvalaite/r-nimi "Glosholmsklacken pohjoinen"
-                            ::turvalaite/r-ryhma 514}
+                            ::turvalaite/r-ryhma 555}
    ::toimenpide/vayla {::vayla/r-nro "12345"
                                ::vayla/r-nimi "Joku väylä"}
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
-   ::toimenpide/lisatyo? false
+   ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
    ::toimenpide/reimari-sopimus {::sopimus/r-nro -666
                                  ::sopimus/r-tyyppi "1022542301"
