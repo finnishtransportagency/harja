@@ -158,20 +158,17 @@
         params {::kiintio/id kiintio-id
                 ::kiintio/urakka-id urakka-id
                 ::to/idt #{toimenpide-id}}
-        kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :liita-toimenpiteet-kiintioon
                                  +kayttaja-jvh+
                                  params)
         toimenpiteen-kiintio-id-jalkeen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))]
 
     (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-kysely params))
-    (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-vastaus kiintiot))
+    (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-vastaus vastaus))
 
     (is (nil? toimenpiteen-kiintio-id-ennen) "Toimenpide ei kuulu kiintiöön ennen testiä")
-    (is (= toimenpiteen-kiintio-id-jalkeen kiintio-id) "Toimenpide liitettiin kiintiöön")
-    (is (some #(not (empty? (::kiintio/toimenpiteet %))) kiintiot)
-        "Kiintiöille palautuu toimenpiteet, kuten luvataan")
-    (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))))
+    (is (= toimenpiteen-kiintio-id-jalkeen kiintio-id) "Toimenpide liitettiin kiintiöön")))
 
 (deftest toimenpiteen-liittaminen-kiintioon-kun-toimenpide-ei-kuulu-urakkaan
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

@@ -69,5 +69,6 @@
 
 (s/def ::liita-toimenpiteet-kiintioon-kysely (s/keys :req [::id ::urakka-id
                                                            :harja.domain.vesivaylat.toimenpide/idt]))
-(s/def ::liita-toimenpiteet-kiintioon-vastaus (s/keys :req [::id ::urakka-id
-                                                            :harja.domain.vesivaylat.toimenpide/idt]))
+
+;; Palauttaa liitettyjen toimenpiteiden id:t (samat jotka annettiin)
+(s/def ::liita-toimenpiteet-kiintioon-vastaus (s/keys :req [:harja.domain.vesivaylat.toimenpide/idt]))
