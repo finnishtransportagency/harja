@@ -19,7 +19,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil) [:db])
     :turi (component/using
             (turi/->Turi {})
             [:db :integraatioloki :liitteiden-hallinta])
