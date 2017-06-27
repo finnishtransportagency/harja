@@ -34,8 +34,8 @@
                    :roolit "1242141-OULU2_vastuuhenkilo"
                    :organisaatio "urakoitsija"
                    :poistettu false}]
- ;; Muhoksen päällystysurakka (testiurakka)
- "4242523-TES2" [{:tunniste 133
+ ;; Muhoksen päällystysurakka (testiurakka), ota käyttöön poistamalla ao. #_ kommentit
+ #_"4242523-TES2" #_[{:tunniste 133
                    :kayttajatunnus "LXV"
                    :etunimi "Jarno"
                    :sukunimi "Ely"
@@ -54,7 +54,7 @@
                   :organisaatio "foo"
                   :poistettu false}]
  ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
- "4242523-TES4" [{:tunniste 133
+     #_"4242523-TES4" #_[{:tunniste 133
                    :kayttajatunnus "LXV"
                    :etunimi "Jarno"
                    :sukunimi "Ely TM"
@@ -71,6 +71,4 @@
                    :puhelin "012345666"
                    :roolit "4242523-TES4_vastuuhenkilo"
                    :organisaatio "foo"
-                   :poistettu false}]
-
- }
+                   :poistettu false}]}
