@@ -26,7 +26,8 @@
             [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -570,6 +571,8 @@
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
 
+(defn- vasta-muokatut-lihavoitu []
+  [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "inline-block bold pull-right"])
 
 (defn yllapitokohteet
   "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
@@ -594,7 +597,8 @@
       (fn [urakka kohteet-atom optiot]
         [:div.yllapitokohteet
          [grid/grid
-          {:otsikko (:otsikko optiot)
+          {:otsikko [:span (:otsikko optiot)
+                     [vasta-muokatut-lihavoitu]]
            :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :vetolaatikot
            (into {}
@@ -676,7 +680,8 @@
                                    [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                     "grid-solu-ennustettu")}
                                     (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
-          (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
+          (yllapitokohteet-domain/lihavoi-vasta-muokatut
+           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]

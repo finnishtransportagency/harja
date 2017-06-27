@@ -29,7 +29,8 @@
             [harja.domain.aikataulu :as aikataulu]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
             [harja.tiedot.raportit :as raportit]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -218,7 +219,9 @@
                  aikataulurivit)])
 
          [grid/grid
-          {:otsikko "Kohteiden aikataulu"
+          {:otsikko [:span
+                     "Kohteiden aikataulu"
+                     [yllapitokohteet-view/vasta-muokatut-lihavoitu]]
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
@@ -362,6 +365,6 @@
                               (if tietyoilmoitus-id
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
-          otsikoidut-aikataulurivit]
+          (yllapitokohteet-domain/lihavoi-vasta-muokatut otsikoidut-aikataulurivit)]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))
