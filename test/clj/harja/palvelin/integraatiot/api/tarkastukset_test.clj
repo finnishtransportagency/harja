@@ -16,7 +16,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil) [:db])
     :api-pistetoteuma (component/using
                         (api-tarkastukset/->Tarkastukset)
                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
