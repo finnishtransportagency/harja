@@ -7,7 +7,7 @@
 		tyoluokka="1022541905"
 		tyyppi="1022542001"
 		lisatieto="vaihdettiin patterit lamppuun"
-		lisatyo="false"
+		lisatyo="true"
 		tila="1022541202"
 		suoritettu="2017-04-24T09:42:04.123Z"
 		luotu="2017-04-24T13:00:00.123Z"
@@ -25,7 +25,7 @@
       <vayla nro="12345" nimi="Joku väylä"/>
 
       <!-- Turvalaitteen numero, nimi ja urakka (ryhmä) -->
-      <turvalaite nro="904" nimi="Glosholmsklacken pohjoinen" ryhma="514"/>
+      <turvalaite nro="904" nimi="Glosholmsklacken pohjoinen" ryhma="555"/>
 
       <komponentit>
         <komponentti id="123" nimi="Erikoispoiju" tila="234"/>
