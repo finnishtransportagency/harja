@@ -22,7 +22,7 @@
   (vaadi-async-kutsut
     #{tiedot/->KiintiotEiHaettu tiedot/->KiintiotHaettu}
     (is (= {:kiintioiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKiintiot)))))
+           (e! (tiedot/->HaeKiintiot)))))h
 
   (vaadi-async-kutsut
     #{}
