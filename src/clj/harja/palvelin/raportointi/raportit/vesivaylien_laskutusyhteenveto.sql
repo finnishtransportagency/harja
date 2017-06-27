@@ -2,7 +2,7 @@
 SELECT
   hinnoittelu.nimi                  AS "hinnoittelu",
   hinnoittelu.hintaryhma,
-  (SELECT SUM(maara)
+  (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = hinnoittelu.id
          AND poistettu IS NOT TRUE) AS "summa",
