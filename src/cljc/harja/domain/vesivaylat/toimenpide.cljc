@@ -255,7 +255,6 @@ reimari-tilat
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
-    "lisatyo" ::lisatyo?
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
@@ -352,7 +351,6 @@ reimari-tilat
   #{::id
     ::lisatieto
     ::suoritettu
-    ::lisatyo?
     ::hintatyyppi})
 
 (defn toimenpide-idlla [toimenpiteet id]
@@ -445,14 +443,14 @@ reimari-tilat
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
                      :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
-                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
+                           ::suoritettu ::hintatyyppi ::lisatieto])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite]
                      :opt [::vikakorjauksia?
-                           ::suoritettu ::hintatyyppi ::lisatieto ::lisatyo?])))
+                           ::suoritettu ::hintatyyppi ::lisatieto])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
