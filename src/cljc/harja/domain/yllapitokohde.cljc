@@ -5,6 +5,7 @@
     [clojure.string :as str]
     [harja.domain.tierekisteri :as tr-domain]
     [clojure.spec.alpha :as s]
+    [harja.pvm :as pvm]
     #?@(:clj
         [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
          [clojure.future :refer :all]
@@ -329,3 +330,7 @@ yllapitoluokkanimi->numero
                     (when-not (empty? tr-osoite)
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
+
+(defn lihavoi-vasta-muokatut [rivit]
+  (let [viikko-sitten (pvm/paivaa-sitten 7)]
+    (map #(assoc % :lihavoi (some->> % :muokattu (pvm/ennen? viikko-sitten))) rivit)))
