@@ -317,7 +317,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   padding: 1px 4px;
   z-index: 1;
 }
-
+.arvo-ja-nappi > * {
+  display: inline-block;
+  & :first-child {
+    margin-right: 5px;
+  }
+}
 .nappi-grid {
   width: 100%;
   max-width: 250px;

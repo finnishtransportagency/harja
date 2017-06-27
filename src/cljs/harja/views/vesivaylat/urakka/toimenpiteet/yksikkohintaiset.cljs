@@ -166,7 +166,8 @@
           :muokkaa-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
           :nappi-optiot {:disabled (listaus-tunniste (:infolaatikko-nakyvissa app*))}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
-                                (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))}))]))
+                                (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))
+          :ikoninappi? true}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])

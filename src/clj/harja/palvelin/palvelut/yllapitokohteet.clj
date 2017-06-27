@@ -96,7 +96,7 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
-  "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
+  "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä tai peruu valmiuden.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
    {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
@@ -117,7 +117,8 @@
          :id kohde-id
          :urakka urakka-id})
 
-      (when (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+      (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+                (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
         (let [kohteen-tiedot (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                       db {:idt [kohde-id]}))
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]

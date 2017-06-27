@@ -34,7 +34,7 @@
                    :roolit "1242141-OULU2_vastuuhenkilo"
                    :organisaatio "urakoitsija"
                    :poistettu false}]
- ;; Muhoksen päällystysurakka
+ ;; Muhoksen päällystysurakka (testiurakka)
  "4242523-TES2" [{:tunniste 133
                    :kayttajatunnus "LXV"
                    :etunimi "Jarno"
@@ -53,7 +53,7 @@
                   :roolit "4242523-TES2_vastuuhenkilo"
                   :organisaatio "foo"
                   :poistettu false}]
-
+ ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
  "4242523-TES4" [{:tunniste 133
                    :kayttajatunnus "LXV"
                    :etunimi "Jarno"

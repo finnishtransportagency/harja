@@ -1008,22 +1008,24 @@
    Jos ehto on false, piirtää kentän arvon tekstinä sekä napin kynä-ikonilla,
    jolla arvoa voi muokata."
   [{:keys [ehto-fn nappi-teksti nappi-optiot
-           uusi-fn muokkaa-fn arvo voi-muokata?] :as optiot}]
+           uusi-fn muokkaa-fn arvo voi-muokata?
+           muokkaa-ikoni ikoninappi?] :as optiot}]
   (if voi-muokata?
     (if (ehto-fn)
      [napit/yleinen-ensisijainen
       nappi-teksti
       uusi-fn
-      (merge {:luokka (str "nappi-grid ")}
+      (merge {:luokka (str "nappi-grid btn-xs")}
              nappi-optiot)]
-     [:div
-      [:div.pull-left {:style {:position :relative
+     [:div.arvo-ja-nappi
+      [:div #_{:style {:position :relative
                                :top "7px"}}
-       arvo]
+       [:span arvo]]
 
       [napit/yleinen-toissijainen
-       (ikonit/muokkaa)
+       (or muokkaa-ikoni (ikonit/muokkaa))
        muokkaa-fn
-       (merge {:luokka "pull-right"
-               :ikoninappi? true} nappi-optiot)]])
+       (merge {:ikoninappi? ikoninappi?
+               :luokka (str "btn-xs")}
+              nappi-optiot)]])
     [:span arvo]))
