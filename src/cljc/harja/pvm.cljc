@@ -758,9 +758,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (mapv t/year pvmt)))
 
 
-#?(:cljs
-   (defn paivaa-sitten [paivaa]
-     (-> paivaa t/days t/ago)))
+(defn paivaa-sitten [paivaa]
+  (-> paivaa d t/days t/ago))
+
 
 #?(:cljs
    (defn tuntia-sitten [tuntia]
