@@ -70,8 +70,8 @@
             (map :summa (filter #((:vaylatyyppi %) vaylatyyppi) (:yksikkohintaiset tiedot)))
             [(:toteutunut-maara ((keyword vaylatyyppi) (:kokonaishintaiset tiedot)))])))
 
-(defn- hinnoittelu-yhteensa-rivi [otsikko summa]
-  [otsikko "" summa ""])
+(defn- hinnoittelu-yhteensa-rivi [summa]
+  ["Yhteensä" "" summa ""])
 
 (defn- kaikki-yhteensa-rivi [otsikko summa]
   [otsikko summa])
@@ -103,8 +103,8 @@
            kauppamerenkulku-yks-hint-rivit (yks-hint-hinnoittelurivit
                                              (:yksikkohintaiset raportin-tiedot)
                                              "kauppamerenkulku")
-           kauppamerenkulku-yht-rivit (hinnoittelu-yhteensa-rivi "Kauppamerenkulku"
-                                                                 (vaylatyypin-summa raportin-tiedot "kauppamerenkulku"))]
+           kauppamerenkulku-yht-rivit (hinnoittelu-yhteensa-rivi
+                                        (vaylatyypin-summa raportin-tiedot "kauppamerenkulku"))]
        [:taulukko {:otsikko "Kauppamerenkulku"
                    :tyhja (if (empty? kauppamerenkulku-kok-hint-rivit) "Ei raportoitavaa.")
                    :sheet-nimi raportin-nimi
@@ -119,8 +119,8 @@
            muu-vesi-yks-hint-rivit (yks-hint-hinnoittelurivit
                                      (:yksikkohintaiset raportin-tiedot)
                                      "muu")
-           muu-vesi-yht-rivit (hinnoittelu-yhteensa-rivi "Muu"
-                                                         (vaylatyypin-summa raportin-tiedot "muu"))]
+           muu-vesi-yht-rivit (hinnoittelu-yhteensa-rivi
+                                (vaylatyypin-summa raportin-tiedot "muu"))]
        [:taulukko {:otsikko "Muu vesiliikenne"
                    :tyhja (if (empty? muu-vesi-yht-rivit) "Ei raportoitavaa.")
                    :sheet-nimi raportin-nimi
