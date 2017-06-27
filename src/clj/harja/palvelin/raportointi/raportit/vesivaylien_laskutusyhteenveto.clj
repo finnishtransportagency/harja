@@ -44,10 +44,11 @@
    (näin siksi, ettei toimenpiteiden omilla hinnoitteluilla ei ole nimeä)."
   [tiedot]
   (let [oma-hinnoittelurivi (fn [omat-hinnoittelut vaylatyyppi]
-                              {:hinnoittelu "Yksittäiset toimenpiteet"
+                              {:hinnoittelu "Muut (ei hintaryhmää)"
                                :hintaryhma false
                                :summa (reduce + 0 (map :summa (filter #((:vaylatyyppi %) vaylatyyppi)
                                                                       omat-hinnoittelut)))
+
                                :vaylatyyppi #{vaylatyyppi}})
         hintaryhmat (filter :hintaryhma tiedot)
         omat-hinnoittelut (filter (comp not :hintaryhma) tiedot)
