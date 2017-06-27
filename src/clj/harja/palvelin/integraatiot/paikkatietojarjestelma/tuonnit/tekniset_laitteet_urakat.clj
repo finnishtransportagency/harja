@@ -6,7 +6,9 @@
 
 (defn vie-urakka-entry [db {:keys [the_geom urakkanro] :as urakka}]
   (if the_geom
-    (urakat/luo-tekniset-laitteet-urakka<! db urakkanro (str the_geom))
+    (do
+      (urakat/luo-tekniset-laitteet-urakka<! db urakkanro (str the_geom))
+      (urakat/paivita-alue-urakalle! db (str the_geom) urakkanro))
     (log/warn "Tekniset laitteet urakkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error urakka))))
 
 (defn vie-tekniset-laitteet-urakat-kantaan [db shapefile]
