@@ -3,7 +3,8 @@
     "date": "2017-06-28",
     "title": "Päällystyskohteen tiemerkintävalmiuden voi nyt myös perua",
     "body": "Päällystysurakan aikataulunäkymässä voidaan asettaa kohde valmiiksi tiemerkintään, mistä seuraa sähköposti-ilmoitus tiemerkintäurakan urakanvalvojalle ja urakoitsijan vastuuhenkilölle. Nyt on mahdollista myös perua tämä toiminto, eli kertoa että kohde ei sittenkään ole vielä valmis tiemerkintään. Perumisesta niin ikään lähtee sähköpostitse tieto tiemerkintäurakkaan."
-  },{
+  },
+  {
     "date": "2017-06-05",
     "title": "Harja API: Osoitemuunnokset eri päivän verkolta toiselle",
     "body": "Jatkossa on mahdollista ilmoittaa Harja API:n ylläpitokohteiden osoitteiden mukana lähdejärjestelmän päivän verkko, jonka mukaisesti Harja muuntaa osoitteen uusimman päivän verkolle. Mikäli osoitetta ei anneta oletetaan, että osoite on uusimmalla verkolla ja muunnosta ei tehdä."
