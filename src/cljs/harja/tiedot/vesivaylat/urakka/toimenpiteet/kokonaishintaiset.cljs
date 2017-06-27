@@ -64,7 +64,7 @@
 (defrecord ValitseKiintio [kiintio-id])
 (defrecord SiirraValitutYksikkohintaisiin [])
 (defrecord LiitaToimenpiteetKiintioon [])
-(defrecord ToimenpiteetLiitettyKiintioon [])
+(defrecord ToimenpiteetLiitettyKiintioon [vastaus])
 (defrecord ToimenpiteetEiLiitettyKiintioon [])
 
 (extend-protocol tuck/Event
@@ -148,7 +148,8 @@
       app))
 
   ToimenpiteetLiitettyKiintioon
-  (process-event [_ app]
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! (jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus)) "liitetty") :success)
     (assoc app :kiintioon-liittaminen-kaynnissa? false
                :valittu-kiintio-id nil))
 
