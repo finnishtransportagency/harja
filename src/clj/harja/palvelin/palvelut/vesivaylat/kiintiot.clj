@@ -33,8 +33,9 @@
       (q/vaadi-kiintiot-kuuluvat-urakkaan! db
                                            (keep ::kiintio/id (::kiintio/tallennettavat-kiintiot tiedot))
                                            urakka-id)
-      (q/tallenna-kiintiot! db user tiedot)
-      (q/hae-kiintiot db tiedot))))
+      (jdbc/with-db-transaction [db db]
+        (q/tallenna-kiintiot! db user tiedot)
+        (q/hae-kiintiot db tiedot)))))
 
 (defn- liita-toimenpiteet-kiintioon [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -47,7 +48,8 @@
       (q-toimenpiteet/vaadi-toimenpiteet-kuuluvat-urakkaan db
                                                            (::to/idt tiedot)
                                                            urakka-id)
-      (q/liita-toimenpiteet-kiintioon db user tiedot)
+      (jdbc/with-db-transaction [db db]
+        (q/liita-toimenpiteet-kiintioon db user tiedot))
       {::to/idt (::to/idt tiedot)})))
 
 (defrecord Kiintiot []
