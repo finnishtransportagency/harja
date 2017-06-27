@@ -131,7 +131,7 @@
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
        :viesti-otsikko viestin-otsikko
        :viesti-body viestin-vartalo})
-    ;; HAR-5555 lähetetään myös Harja-käyttäjälle joka aikaansai sähköpostin lähetyksen
+    ;; HAR-5558 lähetetään myös Harja-käyttäjälle joka aikaansai sähköpostin lähetyksen
     (when (:sahkoposti ilmoittaja)
       (viestinta/laheta-sahkoposti-itselle {:email email
                                             :sahkoposti (:sahkoposti ilmoittaja)
