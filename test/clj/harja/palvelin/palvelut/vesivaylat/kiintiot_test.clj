@@ -8,6 +8,7 @@
              [testi :refer :all]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.domain.vesivaylat.kiintio :as kiintio]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.muokkaustiedot :as m]
             [harja.palvelin.palvelut.vesivaylat.kiintiot :as pal]))
 
@@ -148,3 +149,30 @@
                                      :tallenna-kiintiot
                                      +kayttaja-jvh+
                                      params)))))))
+
+(deftest kiintioiden-haku-toimenpiteineen
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
+        toimenpiteen-kiintio-id-ennen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))
+        params {::kiintio/id kiintio-id
+                ::kiintio/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}
+        kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :liita-toimenpiteet-kiintioon
+                                 +kayttaja-jvh+
+                                 params)
+        toimenpiteen-kiintio-id-jalkeen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))]
+
+    (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-kysely params))
+    (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-vastaus kiintiot))
+
+    (is (nil? toimenpiteen-kiintio-id-ennen) "Toimenpide ei kuulu kiintiöön ennen testiä")
+    (is (= toimenpiteen-kiintio-id-jalkeen kiintio-id) "Toimenpide liitettiin kiintiöön")
+    (is (some #(not (empty? (::kiintio/toimenpiteet %))) kiintiot)
+        "Kiintiöille palautuu toimenpiteet, kuten luvataan")
+    (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))))
+
+;; TODO Testi jossa toimenpide ei kuulu urakkaan
+;; TODO Testi jossa ei kirjoitusoikeutta urakkaan
+;; TODO Testi jossa yritetään liittää kiintiöön joka ei kuulu urakkaan

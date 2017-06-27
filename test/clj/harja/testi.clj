@@ -385,6 +385,11 @@
                    FROM   reimari_toimenpide
                    WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
 
+(defn hae-kiintio-siirtyneiden-poijujen-korjaus []
+  (ffirst (q (str "SELECT id
+                   FROM   vv_kiintio
+                   WHERE  nimi = 'Siirtyneiden poijujen siirto';"))))
+
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
                    FROM   lampotilat
