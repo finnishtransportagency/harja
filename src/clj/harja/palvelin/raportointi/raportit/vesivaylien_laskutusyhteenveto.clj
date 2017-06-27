@@ -46,9 +46,10 @@
   (let [oma-hinnoittelurivi (fn [omat-hinnoittelut vaylatyyppi]
                               {:hinnoittelu "Muut (ei hintaryhmää)"
                                :hintaryhma false
-                               :summa (reduce + 0 (map :summa (filter #((:vaylatyyppi %) vaylatyyppi)
-                                                                      omat-hinnoittelut)))
-
+                               :summa (->> omat-hinnoittelut
+                                           (filter #((:vaylatyyppi %) vaylatyyppi))
+                                           (map :summa)
+                                           (reduce + 0))
                                :vaylatyyppi #{vaylatyyppi}})
         hintaryhmat (filter :hintaryhma tiedot)
         omat-hinnoittelut (filter (comp not :hintaryhma) tiedot)
