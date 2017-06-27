@@ -71,6 +71,9 @@
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.14.3"]
 
+                 ;; Fileyard  liitetiedostojen tallennus
+                 [fileyard "0.2"]
+
                  ;; Asiakas
                  [spyscope "0.1.6"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
