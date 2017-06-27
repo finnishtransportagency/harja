@@ -5,6 +5,27 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(deftest KiintiotTallennettu
+  (async done
+    (go
+      (let [ch (chan)]
+        (is (= {:kiintiot [{:id 1}]
+                :kiintioiden-tallennus-kaynnissa? false}
+               (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))))
+        (= [{:id 1}] (<! ch))
+        (done)))))
+
+(deftest KiintiotEiTallennettu
+  (async done
+    (go
+      (let [ch (chan)]
+        (is (= {:kiintioiden-tallennus-kaynnissa? false
+                :kiintiot [{:foo :bar}]}
+               (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
+                   {:kiintiot [{:foo :bar}]})))
+        (= [{:foo :bar}] (<! ch))
+        (done)))))
+
 (deftest nakymassa
   (is (= {:nakymassa? true}
          (e! (tiedot/->Nakymassa? true))))
@@ -55,24 +76,3 @@
            (e! (tiedot/->TallennaKiintiot [{:id 1}] (chan))
                {:kiintioiden-tallennus-kaynnissa? true
                 :foo :bar})))))
-
-(deftest KiintiotTallennettu
-  (async done
-    (go
-      (let [ch (chan)]
-       (is (= {:kiintiot [{:id 1}]
-               :kiintioiden-tallennus-kaynnissa? false}
-              (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))))
-       (= [{:id 1}] (<! ch))
-       (done)))))
-
-(deftest KiintiotEiTallennettu
-  (async done
-    (go
-      (let [ch (chan)]
-       (is (= {:kiintioiden-tallennus-kaynnissa? false
-               :kiintiot [{:foo :bar}]}
-              (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
-                  {:kiintiot [{:foo :bar}]})))
-       (= [{:foo :bar}] (<! ch))
-       (done)))))
