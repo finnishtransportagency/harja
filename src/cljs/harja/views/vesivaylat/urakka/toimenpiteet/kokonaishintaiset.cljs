@@ -26,13 +26,14 @@
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     kiintiot]])
 
-(defn- liita-kiintioon-nappi [e! {:keys [toimenpiteet kiintioon-liittaminen-kaynnissa?] :as app}]
+(defn- liita-kiintioon-nappi [e! {:keys [toimenpiteet valittu-kiintio-id kiintioon-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if kiintioon-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
      "Liitä")
    #(e! (tiedot/->LiitaToimenpiteetKiintioon))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
+                  (not valittu-kiintio-id)
                   kiintioon-liittaminen-kaynnissa?)}])
 
 (defn- liita-kiintioon [e! app]
