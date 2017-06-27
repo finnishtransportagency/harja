@@ -38,6 +38,8 @@
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka
                                                :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi}]})
 
+(s/def ::idt (s/coll-of ::id))
+
 (defn kiintio-idlla [kiintiot id]
   (first (filter #(= (::id %) id) kiintiot)))
 
