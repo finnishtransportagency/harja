@@ -38,6 +38,11 @@
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka
                                                :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi}]})
 
+(defn kiintio-idlla [kiintiot id]
+  (first (filter #(= (::id %) id) kiintiot)))
+
+;; Palvelut
+
 (s/def ::hae-kiintiot-kysely
   (s/keys :req [::urakka-id ::sopimus-id]))
 

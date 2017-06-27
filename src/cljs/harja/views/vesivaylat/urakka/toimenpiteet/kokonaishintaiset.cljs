@@ -21,7 +21,7 @@
     {:valitse-fn #(e! (tiedot/->ValitseKiintio (::kiintio/id %)))
      :format-fn #(or (::kiintio/nimi %) "Valitse kiintiö")
      :class "livi-alasveto-250"
-     :valinta valittu-kiintio-id ;; FIXME Ei vaihdu!?
+     :valinta (kiintio/kiintio-idlla kiintiot valittu-kiintio-id)
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     kiintiot]])
 
