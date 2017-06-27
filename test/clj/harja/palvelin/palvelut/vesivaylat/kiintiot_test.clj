@@ -58,7 +58,7 @@
     (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))
     (is (every? #(nil? (::kiintio/toimenpiteet %)) kiintiot))))
 
-(deftest kiintioiden-haku-toimenpiteideen
+(deftest kiintioiden-haku-toimenpiteineen
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
