@@ -272,7 +272,7 @@
 (deftest liita-toimenpiteet-kiintioon
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetLiitettyKiintioon tiedot/->ToimenpiteetEiLiitettyKiintioon}
-    (let [tulos (e! (tiedot/->LiitaToimenpiteetKiintioon [1 2 3]))]
+    (let [tulos (e! (tiedot/->LiitaToimenpiteetKiintioon))]
       (is (true? (:kiintioon-liittaminen-kaynnissa? tulos))))))
 
 (deftest toimenpiteet-liitetty-kiintioon

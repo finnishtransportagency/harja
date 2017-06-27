@@ -64,7 +64,7 @@
 (defrecord KiintiotEiHaettu [virhe])
 (defrecord ValitseKiintio [kiintio-id])
 (defrecord SiirraValitutYksikkohintaisiin [])
-(defrecord LiitaToimenpiteetKiintioon [toimenpide-idt])
+(defrecord LiitaToimenpiteetKiintioon [])
 (defrecord ToimenpiteetLiitettyKiintioon [])
 (defrecord ToimenpiteetEiLiitettyKiintioon [])
 
@@ -140,7 +140,8 @@
     (if-not (:kiintioon-liittaminen-kaynnissa? app)
       (-> app
           (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-kiintioon
-                                      {} ;; TODO PARAMS
+                                      {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::kiintio/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
                                       {:onnistui ->ToimenpiteetLiitettyKiintioon
                                        :epaonnistui ->ToimenpiteetEiLiitettyKiintioon})
           (assoc :kiintioon-liittaminen-kaynnissa? true))

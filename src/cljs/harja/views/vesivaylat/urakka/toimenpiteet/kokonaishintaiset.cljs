@@ -5,6 +5,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as yks-hint]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
             [harja.domain.vesivaylat.kiintio :as kiintio]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
@@ -30,7 +31,7 @@
    (if kiintioon-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
      "Liitä")
-   #(log "TODO Liitä") ; TODO
+   #(e! (tiedot/->LiitaToimenpiteetKiintioon))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   kiintioon-liittaminen-kaynnissa?)}])
 
