@@ -55,9 +55,27 @@
     (is (s/valid? ::kiintio/hae-kiintiot-vastaus kiintiot))
 
     (is (>= (count kiintiot) 2))
+    (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))
     (is (every? #(nil? (::kiintio/toimenpiteet %)) kiintiot))))
 
-(deftest kiintioiden-haku-ja-tallennus
+(deftest kiintioiden-haku-toimenpiteideen
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        params {::kiintio/urakka-id urakka-id
+                ::kiintio/sopimus-id sopimus-id}
+        kiintiot (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-kiintiot-ja-toimenpiteet
+                                 +kayttaja-jvh+
+                                 params)]
+
+    (is (s/valid? ::kiintio/hae-kiintiot-kysely params))
+    (is (s/valid? ::kiintio/hae-kiintiot-ja-toimenpiteet-vastaus kiintiot))
+
+    (is (some #(not (empty? (::kiintio/toimenpiteet %))) kiintiot)
+        "Kiintiöille palautuu toimenpiteet, kuten luvataan")
+    (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))))
+
+(deftest kiintioiden-muokkaaminen
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
