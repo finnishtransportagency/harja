@@ -47,6 +47,7 @@
           valittu-hintaryhma
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
+                  (not valittu-hintaryhma)
                   hintaryhmien-liittaminen-kaynnissa?)}])
 
 (defn- hintaryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
