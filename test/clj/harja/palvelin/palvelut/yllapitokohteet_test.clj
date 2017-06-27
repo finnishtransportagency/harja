@@ -825,7 +825,7 @@
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
-        sahkoposti-valitetty (atom false)
+        sahkoposti-valitetty-atomi (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2017]
 
@@ -866,8 +866,8 @@
             leppajarven-ramppi-testin-jalkeen (kohde-nimella vastaus-kun-merkittu-valmiiksi "Leppäjärven ramppi")
             muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Leppäjärven ramppi") vastaus-kun-merkittu-valmiiksi))]
 
-        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty-atomi) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty-atomi) "Sähköposti lähetettiin")
 
         ;; Valmiiksi merkitsemisen jälkeen tilanne on sama kuin ennen merkintää, sillä erotuksella, että
         ;; valittu kohde merkittiin valmiiksi tiemerkintään
