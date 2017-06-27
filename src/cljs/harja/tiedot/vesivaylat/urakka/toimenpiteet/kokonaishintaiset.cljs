@@ -34,7 +34,6 @@
          :nakymassa? false
          :toimenpiteiden-haku-kaynnissa? false
          :kiintioiden-haku-kaynnissa? false
-         :liita-kiintioon nil ;; kiintiö-id
          :infolaatikko-nakyvissa {} ; tunniste -> boolean
          :valittu-kiintio-id nil
          :kiintioon-liittaminen-kaynnissa? false
@@ -140,7 +139,7 @@
     (if-not (:kiintioon-liittaminen-kaynnissa? app)
       (-> app
           (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-kiintioon
-                                      {::kiintio/id (:liita-kiintioon app)
+                                      {::kiintio/id (:valittu-kiintio-id app)
                                        ::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::to/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
                                       {:onnistui ->ToimenpiteetLiitettyKiintioon
@@ -151,7 +150,7 @@
   ToimenpiteetLiitettyKiintioon
   (process-event [_ app]
     (assoc app :kiintioon-liittaminen-kaynnissa? false
-               :liita-kiintioon nil))
+               :valittu-kiintio-id nil))
 
   ToimenpiteetEiLiitettyKiintioon
   (process-event [_ app]

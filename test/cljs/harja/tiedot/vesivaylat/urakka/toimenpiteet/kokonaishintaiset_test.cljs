@@ -277,12 +277,12 @@
 
 (deftest toimenpiteet-liitetty-kiintioon
   (let [tulos (e! (tiedot/->ToimenpiteetLiitettyKiintioon)
-                  {:liita-kiintioon 123})]
+                  {:valittu-kiintio-id 123})]
     (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))
-    (is (nil? (:liita-kiintioon tulos)))))
+    (is (nil? (:valittu-kiintio-id tulos)))))
 
 (deftest toimenpiteet-ei-liitetty-kiintioon
   (let [tulos (e! (tiedot/->ToimenpiteetEiLiitettyKiintioon)
-                  {:liita-kiintioon 123})]
+                  {:valittu-kiintio-id 123})]
     (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))
-    (is (nil? (:liita-kiintioon tulos)))))
+    (is (nil? (:valittu-kiintio-id tulos)))))
