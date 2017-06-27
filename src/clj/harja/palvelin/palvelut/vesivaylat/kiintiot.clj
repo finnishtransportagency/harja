@@ -10,20 +10,22 @@
             [harja.domain.urakka :as ur]
             [harja.domain.roolit :as roolit]
             [harja.domain.vesivaylat.kiintio :as kiintio]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.vesivaylat.kiintiot :as q]))
+            [harja.kyselyt.vesivaylat.kiintiot :as q]
+            [harja.kyselyt.vesivaylat.toimenpiteet :as q-toimenpiteet]))
 
-(defn hae-kiintiot [db user tiedot]
+(defn- hae-kiintiot [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
       (q/hae-kiintiot db tiedot))))
 
-(defn tallenna-kiintiot [db user tiedot]
+(defn- tallenna-kiintiot [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
@@ -32,6 +34,20 @@
                                            (keep ::kiintio/id (::kiintio/tallennettavat-kiintiot tiedot))
                                            urakka-id)
       (q/tallenna-kiintiot! db user tiedot))))
+
+(defn- liita-toimenpiteet-kiintioon [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::kiintio/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
+      (q/vaadi-kiintiot-kuuluvat-urakkaan! db
+                                           #{(::kiintio/id tiedot)}
+                                           urakka-id)
+      (q-toimenpiteet/vaadi-toimenpiteet-kuuluvat-urakkaan db
+                                                           (::to/idt tiedot)
+                                                           urakka-id)
+      ;; TODO liitä
+      )))
 
 (defrecord Kiintiot []
   component/Lifecycle
@@ -57,9 +73,17 @@
       http
       :tallenna-kiintiot
       (fn [user tiedot]
-       (tallenna-kiintiot db user tiedot))
+        (tallenna-kiintiot db user tiedot))
       {:kysely-spec ::kiintio/tallenna-kiintiot-kysely
        :vastaus-spec ::kiintio/tallenna-kiintiot-vastaus})
+
+    (julkaise-palvelu
+      http
+      :liita-toimenpiteet-kiintioon
+      (fn [user tiedot]
+        (liita-toimenpiteet-kiintioon db user tiedot))
+      {:kysely-spec ::kiintio/liita-toimenpiteet-kiintioon-kysely
+       :vastaus-spec ::kiintio/liita-toimenpiteet-kiintioon-vastaus})
 
     this)
 
