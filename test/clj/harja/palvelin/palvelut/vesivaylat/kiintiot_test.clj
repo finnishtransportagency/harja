@@ -140,7 +140,7 @@
                                      params)))))
 
     (testing "Kiintiöiden tallennus eri urakkaan"
-      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/id] (hae-kiintio-nimella "Joku kiintiö Vantaalla"))
+      (let [kiintiotiedot (assoc-in kiintiot [0 ::kiintio/id] (hae-kiintio-id-nimella "Joku kiintiö Vantaalla"))
             params (assoc params ::kiintio/tallennettavat-kiintiot kiintiotiedot)]
 
 
@@ -150,7 +150,7 @@
                                      +kayttaja-jvh+
                                      params)))))))
 
-(deftest kiintioiden-haku-toimenpiteineen
+(deftest toimenpiteen-liittaminen-kiintioon
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
@@ -173,6 +173,41 @@
         "Kiintiöille palautuu toimenpiteet, kuten luvataan")
     (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))))
 
-;; TODO Testi jossa toimenpide ei kuulu urakkaan
-;; TODO Testi jossa ei kirjoitusoikeutta urakkaan
-;; TODO Testi jossa yritetään liittää kiintiöön joka ei kuulu urakkaan
+(deftest toimenpiteen-liittaminen-kiintioon-kun-toimenpide-ei-kuulu-urakkaan
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
+        params {::kiintio/id kiintio-id
+                ::kiintio/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :liita-toimenpiteet-kiintioon
+                                                   +kayttaja-jvh+
+                                                   params)))))
+
+(deftest toimenpiteen-liittaminen-kiintioon-ilman-oikeutta
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
+        params {::kiintio/id kiintio-id
+                ::kiintio/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :liita-toimenpiteet-kiintioon
+                                           +kayttaja-tero+
+                                           params)))))
+
+(deftest toimenpiteen-liittaminen-kiintioon-joka-ei-kuulu-urakkaan
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
+        kiintio-id (hae-kiintio-id-nimella "Joku kiintiö Vantaalla")
+        params {::kiintio/id kiintio-id
+                ::kiintio/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :liita-toimenpiteet-kiintioon
+                                                   +kayttaja-jvh+
+                                                   params)))))

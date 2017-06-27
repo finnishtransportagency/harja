@@ -300,11 +300,13 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
-(defn hae-reimari-toimenpide-ilman-hinnoittelua []
+(defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
-                   WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
+                   WHERE
+                   \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   AND id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
 
-(defn hae-kiintio-nimella [nimi]
+(defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
                    FROM   vv_kiintio
                    WHERE  nimi = '" nimi "'"))))
