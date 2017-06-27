@@ -106,7 +106,7 @@
                         "tarkastus" (paivita-tietue this tiedot)
                         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide: %s."
                                           varustetoteuma-id (:toimenpide varustetoteuma))))]
-          (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "lahetetty" varustetoteuma-id nil)
+          (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "lahetetty" nil varustetoteuma-id)
           vastaus))
       (do
         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))

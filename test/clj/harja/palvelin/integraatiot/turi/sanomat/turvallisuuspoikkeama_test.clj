@@ -27,7 +27,7 @@
           :virustarkistus (virustarkistus/luo-virustarkistus
                             {:url "http://localhost:8080/scan"})
           :liitteiden-hallinta (component/using
-                                 (harja.palvelin.komponentit.liitteet/->Liitteet)
+                                 (harja.palvelin.komponentit.liitteet/->Liitteet nil)
                                  [:db :virustarkistus])))))
 
   (testit)
