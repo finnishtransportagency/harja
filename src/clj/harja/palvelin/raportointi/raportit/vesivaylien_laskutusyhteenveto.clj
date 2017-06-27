@@ -38,12 +38,33 @@
 (defn- yks-hint-hinnoittelurivit [tiedot vaylatyyppi]
   (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot)))
 
+(defn ryhmittele-yks-hint-hinnoittelurivit
+  "Ryhmittelee yks. hint. hinnoittelurivit niin, että hinnoitteluryhmät esiintyvät omilla
+   riveillä, ja toimenpiteiden omat hinnoittelut ovat omassa ryhmässä
+   (näin siksi, ettei toimenpiteiden omilla hinnoitteluilla ei ole nimeä)."
+  [tiedot]
+  (let [oma-hinnoittelurivi (fn [omat-hinnoittelut vaylatyyppi]
+                              {:hinnoittelu "Yksittäiset toimenpiteet"
+                               :hintaryhma false
+                               :summa (reduce + 0 (map :summa (filter #((:vaylatyyppi %) vaylatyyppi)
+                                                                      omat-hinnoittelut)))
+                               :vaylatyyppi #{vaylatyyppi}})
+        hintaryhmat (filter :hintaryhma tiedot)
+        omat-hinnoittelut (filter (comp not :hintaryhma) tiedot)
+        omat-hinnoittelut-kauppamerenkulku (oma-hinnoittelurivi omat-hinnoittelut "kauppamerenkulku")
+        omat-hinnoittelut-muu (oma-hinnoittelurivi omat-hinnoittelut "muu")]
+    (concat
+      hintaryhmat
+      [omat-hinnoittelut-kauppamerenkulku]
+      [omat-hinnoittelut-muu])))
+
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  {:yksikkohintaiset (into []
-                           (map #(konv/array->set % :vaylatyyppi))
-                           (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
-                                                                  :alkupvm alkupvm
-                                                                  :loppupvm loppupvm}))
+  {:yksikkohintaiset (ryhmittele-yks-hint-hinnoittelurivit
+                       (into []
+                             (map #(konv/array->set % :vaylatyyppi))
+                             (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                                    :alkupvm alkupvm
+                                                                    :loppupvm loppupvm})))
    :kokonaishintaiset {:kauppamerenkulku
                        (first (hae-kokonaishintaiset-toimenpiteet db
                                                                   {:urakkaid urakka-id

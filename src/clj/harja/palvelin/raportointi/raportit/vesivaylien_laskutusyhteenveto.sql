@@ -1,6 +1,7 @@
 -- name: hae-yksikkohintaiset-toimenpiteet
 SELECT
   hinnoittelu.nimi                  AS "hinnoittelu",
+  hinnoittelu.hintaryhma,
   (SELECT SUM(maara)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = hinnoittelu.id
@@ -8,6 +9,7 @@ SELECT
   -- Hinnoittelut, jotka ovat hinnoitteluryhmiä, sisältävät useita reimari-toimenpiteitä
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
+  -- Jos kyseessä on toimenpiteen oma hinnoittelu, taulukkoon tulee vain yksi väylätyyppi.
   (SELECT ARRAY(SELECT DISTINCT (tyyppi)
                 FROM vv_vayla
                 WHERE id IN
@@ -50,7 +52,7 @@ SELECT
          AND tpi_vv.vaylatyyppi = :vaylatyyppi::vv_vaylatyyppi
          -- Työ on toteutunut, jos sen maksupvm on aikavälillä
          AND maksupvm >= :alkupvm
-         AND maksupvm <= :loppupvm) AS "toteutunut-maara"
+         AND maksupvm <= :loppupvm) AS "toteutunut-maara";
 
 -- name: hae-sanktiot
 SELECT
