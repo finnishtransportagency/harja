@@ -64,3 +64,10 @@
   (s/keys :req [::sopimus-id ::urakka-id ::tallennettavat-kiintiot]))
 
 (s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-ja-toimenpiteet-vastaus)
+
+(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-ja-toimenpiteet-vastaus)
+
+(s/def ::liita-toimenpiteet-kiintioon-kysely (s/keys :req [::id ::urakka-id
+                                                           :harja.domain.vesivaylat.toimenpide/idt]))
+(s/def ::liita-toimenpiteet-kiintioon-vastaus (s/keys :req [::id ::urakka-id
+                                                            :harja.domain.vesivaylat.toimenpide/idt]))
