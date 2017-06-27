@@ -140,7 +140,7 @@
     (if-not (:kiintioon-liittaminen-kaynnissa? app)
       (-> app
           (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-kiintioon
-                                      {::kiintio/id (get-in app :liita-kiintioon)
+                                      {::kiintio/id (:liita-kiintioon app)
                                        ::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::to/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
                                       {:onnistui ->ToimenpiteetLiitettyKiintioon
@@ -150,7 +150,8 @@
 
   ToimenpiteetLiitettyKiintioon
   (process-event [_ app]
-    (assoc app :kiintioon-liittaminen-kaynnissa? false))
+    (assoc app :kiintioon-liittaminen-kaynnissa? false
+               :liita-kiintioon nil))
 
   ToimenpiteetEiLiitettyKiintioon
   (process-event [_ app]
