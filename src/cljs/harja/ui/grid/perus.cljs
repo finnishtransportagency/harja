@@ -993,6 +993,7 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
+                                :tunniste tunniste
                                 :validoi-fn validoi-fn})])])))))
 
 (defn otsikkorivin-tiedot [otsikko maara]
