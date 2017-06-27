@@ -11,6 +11,7 @@
             [harja.id :refer [id-olemassa?]]
 
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.pvm :as pvm]))
 
@@ -82,32 +83,6 @@
 
 (defn liita-toimenpiteet-kiintioon [db user tiedot]
   (jdbc/with-db-transaction [db db]
-    #_(doseq [kiintio (::kiintio/tallennettavat-kiintiot tiedot)]
-      (let [sopimus-id (::kiintio/sopimus-id tiedot)
-            urakka-id (::kiintio/urakka-id tiedot)
-            kiintio (if (id-olemassa? (::kiintio/id kiintio))
-                      kiintio
-                      (dissoc kiintio ::kiintio/id))
-            muokkaustiedot (cond
-                             (::m/poistettu? kiintio)
-                             {::m/luoja-id (:id user)
-                              ::m/poistaja-id (:id user)
-                              ::m/poistettu? true
-                              ::m/muokattu (pvm/nyt)}
-
-                             (id-olemassa? (::kiintio/id kiintio))
-                             {::m/luoja-id (:id user)
-                              ::m/muokkaaja-id (:id user)
-                              ::m/muokattu (pvm/nyt)}
-
-                             :default
-                             {::m/luoja-id (:id user)
-                              ::m/luotu (pvm/nyt)})]
-        (upsert! db
-                 ::kiintio/kiintio
-                 (merge
-                   (-> kiintio
-                       (assoc ::kiintio/sopimus-id sopimus-id
-                              ::kiintio/urakka-id urakka-id)
-                       (dissoc ::kiintio/toimenpiteet))
-                   muokkaustiedot))))))
+    (update! db ::to/reimari-toimenpide
+             {::to/kiintio-id (::kiintio/id tiedot)}
+             {::to/id (op/in (::to/idt tiedot))})))
