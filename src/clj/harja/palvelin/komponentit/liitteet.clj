@@ -5,7 +5,12 @@
             [taoensso.timbre :as log]
             [harja.domain.liitteet :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.komponentit.virustarkistus :as virustarkistus])
+            [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+            [fileyard.client :as fileyard-client]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukot]
+            [clojure.java.jdbc :as jdbc])
   (:import (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
            (com.mchange.v2.c3p0 C3P0ProxyConnection)
@@ -34,6 +39,11 @@
         (io/copy in out)
         (.toByteArray out)))))
 
+(defn- lue-fileyard-tiedosto [client uuid]
+  (with-open [out (ByteArrayOutputStream.)]
+    (io/copy (fileyard-client/fetch client uuid) out)
+    (.toByteArray out)))
+
 (defn- tallenna-lob [db ^InputStream in]
   (with-open [c (doto (.getConnection (:datasource db))
                   (.setAutoCommit false))]
@@ -46,6 +56,10 @@
           oid)
         (finally
           (.commit c))))))
+
+(defn- poista-lob [db oid]
+  (with-open [c (.getConnection (:datasource db))]
+    (.unlink (large-object-api c) oid)))
 
 (defn- muodosta-pikkukuva
   "Ottaa ison kuvan input streamin ja palauttaa pikkukuvan byte[] muodossa. Pikkukuva on aina png.
@@ -61,7 +75,15 @@
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liite [db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+(defn- tallenna-liitteen-data [db fileyard-client lahde]
+  (if (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
+    ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
+    {:liite_oid nil :fileyard-hash @(fileyard-client/save fileyard-client lahde)}
+
+    ;; Muuten tallennetaan paikalliseen tietokantaan
+    {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
+
+(defn- tallenna-liite [db fileyard-client virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
@@ -70,26 +92,60 @@
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
-                oid (tallenna-lob db (io/input-stream lahde))
-                liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
-            (log/debug "Liite tallennettu.")
-            liite))
+              liite (liitteet/tallenna-liite<!
+                     db
+                     (merge {:nimi tiedostonimi
+                             :tyyppi tyyppi
+                             :koko koko
+                             :pikkukuva pikkukuva
+                             :luoja luoja
+                             :urakka urakka
+                             :kuvaus kuvaus
+                             :lahdejarjestelma lahde-jarjestelma}
+                            (tallenna-liitteen-data db fileyard-client lahde)))]
+          (log/debug "Liite tallennettu.")
+          liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet
                  [{:koodi  virheet/+virheellinen-liite-koodi+
                    :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
-(defn- hae-liite [db liitteen-id]
-  (let [liite (first (liitteet/hae-liite-lataukseen db liitteen-id))]
-    (dissoc (assoc liite :data (lue-lob db (:liite_oid liite))) :liite_oid)))
+(defn- hae-liite [db fileyard-client liitteen-id]
+  (let [{:keys [fileyard-hash] :as liite}
+        (first (liitteet/hae-liite-lataukseen db liitteen-id))]
+
+    (dissoc
+     (if fileyard-hash
+       (assoc liite :data (lue-fileyard-tiedosto fileyard-client fileyard-hash))
+       (assoc liite :data (lue-lob db (:liite_oid liite))))
+     :liite_oid :fileyard-hash)))
 
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet/hae-pikkukuva-lataukseen db liitteen-id)))
 
-(defrecord Liitteet []
+(defn- siirra-liitteet-fileyard [db fileyard-url]
+  (lukot/aja-lukon-kanssa
+   db "fileyard-liitesiirto"
+   #(let [client (fileyard-client/new-client fileyard-url)]
+      (doseq [{:keys [id nimi liite_oid]} (liitteet/hae-siirrettavat-liitteet db)]
+        (log/info "Siirretään liite: " nimi " (id: " id ")")
+        (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
+          (if (not (string? result))
+            (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
+            (jdbc/with-db-transaction [db db]
+              (poista-lob db liite_oid)
+              (liitteet/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result}))))))))
+
+(defrecord Liitteet [fileyard-url]
   component/Lifecycle
-  (start [this]
+  (start [{db :db :as this}]
+    (when (and (ominaisuus-kaytossa? :fileyard)
+               fileyard-url)
+      (ajastettu-tehtava/ajasta-minuutin-valein
+       5
+       (fn [_]
+         (siirra-liitteet-fileyard db fileyard-url))))
     this)
   (stop [this]
     this)
@@ -97,8 +153,11 @@
   LiitteidenHallinta
   (luo-liite [{db :db virustarkistus :virustarkistus}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
-    (tallenna-liite db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+    (tallenna-liite db
+                    (when fileyard-url
+                      (fileyard-client/new-client fileyard-url))
+                    virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
-    (hae-liite db liitteen-id))
+    (hae-liite db (fileyard-client/new-client fileyard-url) liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))
