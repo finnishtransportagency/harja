@@ -176,6 +176,7 @@ WHERE id = :yllapitokohde_id;
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
   ypk.id,
+  ypk.muokattu,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
   pai.id                                AS "paikkausilmoitus-id",
@@ -486,6 +487,7 @@ WHERE yllapitokohde IN (SELECT id
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
+  ypk.muokattu,
   ypk.kohdenumero,
   ypk.nimi,
   ypk.urakka,
@@ -525,6 +527,7 @@ ORDER BY ypka.kohde_alku;
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
+  ypk.muokattu,
   ypk.kohdenumero,
   ypk.nimi,
   ypk.urakka,
