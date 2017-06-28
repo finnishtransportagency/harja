@@ -835,15 +835,14 @@ WHERE alue IS NULL AND
 
 -- name: paivita-valaistusurakan-geometria-kannasta!
 UPDATE urakka
-SET alue = st_union(SELECT alue
-                    FROM valaistusurakka
-                    WHERE valaistusurakkanro = :urakkanro)
+SET alue = (SELECT ST_Union(alue)
+            FROM valaistusurakka
+            WHERE valaistusurakkanro = :urakkanro)
 WHERE alue IS NULL AND
       urakkanro = :urakkanro AND
       tyyppi = 'valaistus' :: URAKKATYYPPI;
 
 -- name: paivita-tekniset-laitteet-urakan-geometria-kannasta!
--- todo: tämä ei toimi, sillä urakat ovat tiepaloina
 UPDATE urakka
 SET alue = (SELECT alue
             FROM tekniset_laitteet_urakka
