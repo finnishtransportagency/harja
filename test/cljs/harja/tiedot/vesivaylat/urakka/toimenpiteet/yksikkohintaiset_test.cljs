@@ -63,7 +63,7 @@
                                                                    ::hinta/maara 2
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 3
-                                                                   ::hinta/otsikko "Matkat"
+                                                                   ::hinta/otsikko "Matkakulut"
                                                                    ::hinta/maara 3
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 4
@@ -322,7 +322,7 @@
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
-                ::hinta/otsikko "Matkat"
+                ::hinta/otsikko "Matkakulut"
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
@@ -351,7 +351,7 @@
                 ::hinta/maara 2
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
-                ::hinta/otsikko "Matkat"
+                ::hinta/otsikko "Matkakulut"
                 ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
@@ -409,7 +409,7 @@
                 ::hinta/maara 666
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
-                ::hinta/otsikko "Matkat"
+                ::hinta/otsikko "Matkakulut"
                 ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
@@ -439,7 +439,7 @@
                 ::hinta/maara 2
                 ::hinta/yleiskustannuslisa 12}
                {::hinta/id 3
-                ::hinta/otsikko "Matkat"
+                ::hinta/otsikko "Matkakulut"
                 ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
@@ -498,7 +498,7 @@
                        {::hinta/otsikko "Yleiset materiaalit"
                         ::hinta/maara 30
                         ::hinta/yleiskustannuslisa 0}
-                       {::hinta/otsikko "Matkat"
+                       {::hinta/otsikko "Matkakulut"
                         ::hinta/maara 40
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Muut kulut"
@@ -515,7 +515,7 @@
                           {::hinta/otsikko "Yleiset materiaalit"
                            ::hinta/maara 30
                            ::hinta/yleiskustannuslisa 0}
-                          {::hinta/otsikko "Matkat"
+                          {::hinta/otsikko "Matkakulut"
                            ::hinta/maara 40
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Muut kulut"
@@ -546,7 +546,7 @@
              {::hinta/otsikko "Yleiset materiaalit"
               ::hinta/maara 30
               ::hinta/yleiskustannuslisa 0}
-             {::hinta/otsikko "Matkat"
+             {::hinta/otsikko "Matkakulut"
               ::hinta/maara 40
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Muut kulut"

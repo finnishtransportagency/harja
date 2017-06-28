@@ -114,7 +114,7 @@
   [(hintakentta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
    (hintakentta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
    (hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
-   (hintakentta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
+   (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")

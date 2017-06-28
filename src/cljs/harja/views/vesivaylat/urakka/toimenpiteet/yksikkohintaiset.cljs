@@ -89,7 +89,10 @@
 ;;;;;;;;;;;;
 ;; Hinnan antamisen leijuke
 
-(defn- kenttarivi [e! app* otsikko tunniste]
+(defn- kenttarivi
+  [e! app* otsikko]
+  ;; HOX Otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
+  ;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
   [:tr
    [:td [:b otsikko]]
    [:td
@@ -97,9 +100,9 @@
      [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
       (r/wrap (hinta/hinnan-maara
                 (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                tunniste)
+                otsikko)
               (fn [uusi]
-                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko tunniste
+                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
                                                            ::hinta/maara uusi}))))]
      [:span " "]
      "€"]]
@@ -107,12 +110,12 @@
     [tee-kentta {:tyyppi :checkbox}
      (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
                                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                                           tunniste)]
+                                           otsikko)]
                (pos? yleiskustannuslisa)
                false)
              (fn [uusi]
                (e! (tiedot/->HinnoitteleToimenpideKentta
-                     {::hinta/otsikko tunniste
+                     {::hinta/otsikko otsikko
                       ::hinta/yleiskustannuslisa (if uusi
                                                    hinta/yleinen-yleiskustannuslisa
                                                    0)}))))]]])
@@ -136,11 +139,11 @@
              [:th {:style {:width "35%"}} "Hinta"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
-            [kenttarivi e! app* "Työ" "Työ"]
-            [kenttarivi e! app* "Komponentit" "Komponentit"]
-            [kenttarivi e! app* "Yleiset materiaalit" "Yleiset materiaalit"]
-            [kenttarivi e! app* "Matkakulut" "Matkat"]
-            [kenttarivi e! app* "Muut kulut" "Muut kulut"]]]
+            [kenttarivi e! app* "Työ"]
+            [kenttarivi e! app* "Komponentit"]
+            [kenttarivi e! app* "Yleiset materiaalit"]
+            [kenttarivi e! app* "Matkakulut"]
+            [kenttarivi e! app* "Muut kulut"]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
