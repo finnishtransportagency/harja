@@ -5,16 +5,16 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.542"]
+                 [org.clojure/clojurescript "1.9.660"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [clojure-future-spec "1.9.0-alpha16-1"]
+                 [clojure-future-spec "1.9.0-alpha17"]
 
                  [prismatic/schema "1.1.6"]
-                 [org.clojure/core.async "0.2.395"]
+                 [org.clojure/core.async "0.3.443"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.239"]
-                 [com.cognitect/transit-clj "0.8.297"]
+                 [com.cognitect/transit-clj "0.8.300"]
 
                  [cljsjs/exif "2.1.1-1"]
 
@@ -26,10 +26,10 @@
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
-                 [com.taoensso/timbre "3.4.0"] ; TODO Voisi päivittää tämän (versiossa 4 on CLJS-tuki), mutta rajapinta muuttuu
+                 [com.taoensso/timbre "4.10.0"]
 
                  ;; Metriikkadata
-                 [org.clojure/java.jmx "0.3.3"]
+                 [org.clojure/java.jmx "0.3.4"]
 
                  ;; JSON encode/decode
                  [cheshire "5.7.0"]
@@ -78,26 +78,25 @@
                  [spyscope "0.1.6"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.5.8"]
+                 [cljs-ajax "0.6.0"]
                  [figwheel "0.5.10"]
 
-                 [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [reagent "0.7.0"]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
                  ; Lisäksi pitäisi ehkä poistaa custom IE11 :on-change eventtikäsittely, koska korjattu suoraan Reagenttiin.
-                 [cljsjs/react-with-addons "15.4.2-0"]
-                 [cljsjs/react-dom "15.4.2-0" :exclusions [cljsjs/react]]
+
 
                  [alandipert/storage-atom "2.0.1"]
 
                  [clj-time "0.13.0"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
 
-                 [cljsjs/openlayers "3.15.1"]
+                 [cljsjs/openlayers "4.0.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.15"]
-                 [org.apache.poi/poi-scratchpad "3.15"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.15"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.16"]
+                 [org.apache.poi/poi-scratchpad "3.16"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.16"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -113,7 +112,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.1"]
+                 [org.apache.xmlgraphics/fop "2.2"]
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
@@ -127,14 +126,14 @@
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.11.0"]
 
-                 [com.cemerick/piggieback "0.2.1"]
+                 [com.cemerick/piggieback "0.2.2"]
                  [figwheel-sidecar "0.5.10"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.3"]
+                 [webjure/tuck "0.4.1"]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
@@ -143,7 +142,7 @@
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
-                                  [org.apache.pdfbox/pdfbox "2.0.5"]]
+                                  [org.apache.pdfbox/pdfbox "2.0.6"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.1.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
@@ -177,6 +176,7 @@
                 :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
+                           :parallel-build true
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"
                            :output-dir "dev-resources/js/out"
@@ -192,6 +192,7 @@
                            :optimizations :none
                            :pretty-print true
                            :source-map true
+                           :parallel-build true
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
