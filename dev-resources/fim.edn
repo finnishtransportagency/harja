@@ -33,4 +33,42 @@
                    :puhelin "1122334455"
                    :roolit "1242141-OULU2_vastuuhenkilo"
                    :organisaatio "urakoitsija"
-                   :poistettu false}]}
+                   :poistettu false}]
+ ;; Muhoksen päällystysurakka (testiurakka)
+ "4242523-TES2" [{:tunniste 133
+                  :kayttajatunnus "LXV"
+                  :etunimi "Jarno"
+                  :sukunimi "Ely"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "0123456789"
+                  :roolit "4242523-TES2_ELY_Urakanvalvoja"
+                  :organisaatio "foo"
+                  :poistettu false}
+                 {:tunniste 233
+                  :kayttajatunnus "LXVV"
+                  :etunimi "Jarno"
+                  :sukunimi "Urakoitsija"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "012345666"
+                  :roolit "4242523-TES2_vastuuhenkilo"
+                  :organisaatio "foo"
+                  :poistettu false}]
+ ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
+ "4242523-TES4" [{:tunniste 133
+                  :kayttajatunnus "LXV"
+                  :etunimi "Jarno"
+                  :sukunimi "Ely TM"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "0123456789"
+                  :roolit "4242523-TES4_ELY_Urakanvalvoja"
+                  :organisaatio "foo"
+                  :poistettu false}
+                 {:tunniste 233
+                  :kayttajatunnus "LXVV"
+                  :etunimi "Jarno"
+                  :sukunimi "Urakoitsija TM"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "012345666"
+                  :roolit "4242523-TES4_vastuuhenkilo"
+                  :organisaatio "foo"
+                  :poistettu false}]}

@@ -96,13 +96,16 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
-  "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
+  "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä tai peruu valmiuden.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
    {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
-  (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
+  (if tiemerkintapvm
+    (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintään päivämäärällä " tiemerkintapvm)
+    (log/debug "Perutaan urakan " urakka-id " kohteen " kohde-id " valmius tiemerkintään, tiemerkintapvm:n oltava nil: " tiemerkintapvm))
+
   (jdbc/with-db-transaction [db db]
     (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
                                  (first (q/hae-yllapitokohteen-aikataulu
@@ -117,7 +120,8 @@
          :id kohde-id
          :urakka urakka-id})
 
-      (when (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+      (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
+                (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
         (let [kohteen-tiedot (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                       db {:idt [kohde-id]}))
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
