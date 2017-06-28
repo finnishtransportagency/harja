@@ -74,7 +74,10 @@
     :pohjavesialueet 2
     :sillat 3
     :tienakyma-muut 3
-    4))
+    :tilannekuva-paallystys 3
+    :tilannekuva-paikkaus 3
+    :tilannekuva-tietyomaat 4
+    5))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
   piirretään pienemmällä zindexillä." :const true}
@@ -278,7 +281,7 @@
      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
-                     {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
+                     {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
                    @(geometrioiden-atomit :tilannekuva)))))))
 
 (def ^{:private true} tasojen-nakyvyys-atomit

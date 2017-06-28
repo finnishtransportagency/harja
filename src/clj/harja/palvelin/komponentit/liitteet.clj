@@ -125,27 +125,27 @@
   (first (liitteet/hae-pikkukuva-lataukseen db liitteen-id)))
 
 (defn- siirra-liitteet-fileyard [db fileyard-url]
-  (lukot/aja-lukon-kanssa
-   db "fileyard-liitesiirto"
-   #(let [client (fileyard-client/new-client fileyard-url)]
-      (doseq [{:keys [id nimi liite_oid]} (liitteet/hae-siirrettavat-liitteet db)]
-        (log/info "Siirretään liite: " nimi " (id: " id ")")
-        (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
-          (if (not (string? result))
-            (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
-            (jdbc/with-db-transaction [db db]
-              (poista-lob db liite_oid)
-              (liitteet/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result}))))))))
+  (when (and (ominaisuus-kaytossa? :fileyard)
+             fileyard-url)
+    (lukot/aja-lukon-kanssa
+     db "fileyard-liitesiirto"
+     #(let [client (fileyard-client/new-client fileyard-url)]
+        (doseq [{:keys [id nimi liite_oid]} (liitteet/hae-siirrettavat-liitteet db)]
+          (log/info "Siirretään liite: " nimi " (id: " id ")")
+          (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
+            (if (not (string? result))
+              (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
+              (jdbc/with-db-transaction [db db]
+                (poista-lob db liite_oid)
+                (liitteet/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result})))))))))
 
 (defrecord Liitteet [fileyard-url]
   component/Lifecycle
   (start [{db :db :as this}]
-    (when (and (ominaisuus-kaytossa? :fileyard)
-               fileyard-url)
-      (ajastettu-tehtava/ajasta-minuutin-valein
-       5
-       (fn [_]
-         (siirra-liitteet-fileyard db fileyard-url))))
+    (ajastettu-tehtava/ajasta-minuutin-valein
+     5
+     (fn [_]
+       (siirra-liitteet-fileyard db fileyard-url)))
     this)
   (stop [this]
     this)
