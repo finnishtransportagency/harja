@@ -1,3 +1,30 @@
+-- Kopioi nykyisille käynnissä oleville urakoille geometriat suoraan tauluun
+
+-- Hoidon alueurakat
+UPDATE urakka u
+SET u.alue = (SELECT au.alue
+            FROM alueurakka au
+            WHERE au.alueurakkanro = u.urakkanro)
+WHERE u.alue IS NULL AND u.tyyppi = 'hoito' :: URAKKATYYPPI;
+
+-- Valaistusurakat
+UPDATE urakka u
+SET u.alue = (SELECT ST_Union(vu.alue)
+            FROM valaistusurakka vu
+            WHERE vu.valaistusurakkanro = u.urakkanro)
+WHERE u.alue IS NULL AND
+      tyyppi = 'valaistus' :: URAKKATYYPPI;
+
+-- Tekniset laitteet -urakat
+UPDATE urakka u
+SET u.alue = (SELECT tlu.alue
+            FROM tekniset_laitteet_urakka tlu
+            WHERE tlu.urakkanro = u.urakkanro)
+WHERE u.alue IS NULL AND
+      u.tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI;
+
+
+-- Päivitä pohjavesialueiden ja siltojen materialisoidut näkymät käyttämään urakkataulun geometriaa
 DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
 CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
   WITH
@@ -6,7 +33,7 @@ CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
           u.id,
           u.alue
         FROM urakka u
-        WHERE u.tyyppi = 'hoito' :: urakkatyyppi),
+        WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI),
       pohjavesialue_alue AS (
         SELECT
           p.nimi,
@@ -32,4 +59,6 @@ CREATE MATERIALIZED VIEW sillat_alueurakoittain AS
     s.id AS silta
   FROM urakka u
     JOIN silta s ON ST_CONTAINS(u.alue, s.alue)
-  WHERE u.tyyppi = 'hoito' :: urakkatyyppi
+  WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI;
+
+
