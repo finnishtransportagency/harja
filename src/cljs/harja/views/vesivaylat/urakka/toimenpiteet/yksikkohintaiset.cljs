@@ -31,7 +31,7 @@
   [:div.inline-block {:style {:margin-right "10px"}}
    [yleiset/livi-pudotusvalikko
     {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
-     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+     :format-fn #(or (::h/nimi %) "Valitse tilaus")
      :class "livi-alasveto-250 inline-block"
      :valinta valittu-hintaryhma
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
@@ -55,7 +55,7 @@
     [:span
      [:div.inline-block {:style {:margin-right "10px"}}
       [tee-kentta {:tyyppi :string
-                   :placeholder "Ryhmän nimi"
+                   :placeholder "Tilauksen nimi"
                    :pituus-max 160}
        (r/wrap
          uusi-hintaryhma
@@ -69,12 +69,12 @@
      [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
     [napit/yleinen-ensisijainen
-     "Luo uusi ryhmä"
+     "Luo uusi tilaus"
      #(e! (tiedot/->UudenHintaryhmanLisays? true))]))
 
 (defn- hinnoittelu [e! app]
   [:span
-   [:span {:style {:margin-right "10px"}} "Siirrä valitut ryhmään"]
+   [:span {:style {:margin-right "10px"}} "Siirrä valitut tilaukseen"]
    [hinnoittelu-vaihtoehdot e! app]
    [lisaysnappi e! app]
    [ryhman-luonti e! app]])
@@ -208,20 +208,20 @@
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        (if (empty? hinnat)
          [napit/yleinen-ensisijainen
-          "Määrittele yksi hinta koko ryhmälle"
+          "Määrittele yksi hinta koko tilaukselle"
           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
          [:div
           [:div.inline-block {:style {:margin-right "10px"}}
            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
              [:span
-              [:b "Ryhmähinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+              [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
              [yleiset/tietoja {:tietokentan-leveys "180px"}
               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-              "Ryhmähinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+              "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
           [:div.inline-block {:style {:vertical-align :top}}
            [napit/yleinen-toissijainen
@@ -260,7 +260,7 @@
              :footer (when hintaryhma
                        [hintaryhman-hinnoittelu e! app* hintaryhma])
              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
-                          "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
+                          "Kokonaishintaisista siirretyt, valitse tilaus.")
              :paneelin-checkbox-sijainti "95.2%"
              :vaylan-checkbox-sijainti "95.2%"}])]))))
 
