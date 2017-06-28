@@ -66,10 +66,12 @@
   [:div.vv-materiaalin-kirjaus
    [napit/yleinen-ensisijainen "Kirjaa käyttö"
     #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :-))
-    {:ikoni (ikonit/livicon-minus)}]
+    {:ikoni (ikonit/livicon-minus)
+     :luokka "materiaalin-kaytto"}]
    [napit/yleinen-ensisijainen "Kirjaa lisäys"
     #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+))
-    {:ikoni (ikonit/livicon-plus)}]
+    {:ikoni (ikonit/livicon-plus)
+     :luokka "materiaalin-lisays"}]
 
    (when (= nimi (::m/nimi kirjaa-materiaali))
      (let [tyyppi (:tyyppi kirjaa-materiaali)]
