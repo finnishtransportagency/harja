@@ -640,9 +640,9 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet kohteet})]
-        ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
+        ;; Maili lähtee, koska kopio itselle
         (<!! (timeout 5000))
-        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+        (is (true? @sahkoposti-valitetty) "Maili lähtee, koska kopio itselle")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
