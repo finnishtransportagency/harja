@@ -22,7 +22,6 @@
                               (mapv #(assoc % :value (str/replace (:value %) #"\(slack-n\)" "\n")) (:fields msg))
                               [{:title (str/upper-case (name level))
                                 :value msg}])}]
-    (println (pr-str "ATTACHMENT: " attachment))
     (http/post
      webhook-url
      {:headers {"Content-Type" "application/json"}
