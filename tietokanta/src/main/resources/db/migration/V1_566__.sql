@@ -1,44 +1,44 @@
 -- Kopioi nykyisille käynnissä oleville urakoille geometriat suoraan tauluun
 
 -- Hoidon alueurakat
-UPDATE urakka u
-SET u.alue = (SELECT au.alue
+UPDATE urakka
+SET alue = (SELECT au.alue
               FROM alueurakka au
-              WHERE au.alueurakkanro = u.urakkanro)
-WHERE u.alue IS NULL AND u.tyyppi = 'hoito' :: URAKKATYYPPI;
+              WHERE au.alueurakkanro = urakkanro)
+WHERE alue IS NULL AND tyyppi = 'hoito' :: URAKKATYYPPI;
 
 -- Valaistusurakat
-UPDATE urakka u
-SET u.alue = (SELECT ST_Union(vu.alue)
+UPDATE urakka
+SET alue = (SELECT ST_Union(vu.alue)
               FROM valaistusurakka vu
-              WHERE vu.valaistusurakkanro = u.urakkanro)
-WHERE u.alue IS NULL AND
+              WHERE vu.valaistusurakkanro = urakkanro)
+WHERE alue IS NULL AND
       tyyppi = 'valaistus' :: URAKKATYYPPI;
 
 -- Tekniset laitteet -urakat
-UPDATE urakka u
-SET u.alue = (SELECT tlu.alue
+UPDATE urakka
+SET alue = (SELECT tlu.alue
               FROM tekniset_laitteet_urakka tlu
-              WHERE tlu.urakkanro = u.urakkanro)
-WHERE u.alue IS NULL AND
-      u.tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI;
+              WHERE tlu.urakkanro = urakkanro)
+WHERE alue IS NULL AND
+      tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI;
 
 -- Siltakorjausurakat
-UPDATE urakka u
-SET u.alue = (SELECT sps.alue
+UPDATE urakka
+SET alue = (SELECT sps.alue
               FROM siltapalvelusopimus sps
-              WHERE sps.urakkanro = u.urakkanro)
-WHERE u.alue IS NULL AND
-      u.tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
+              WHERE sps.urakkanro = urakkanro)
+WHERE alue IS NULL AND
+      tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
 
 -- Päällystyksen palvelusopimukset
-UPDATE urakka u
-SET u.alue = (SELECT pps.alue
+UPDATE urakka
+SET alue = (SELECT pps.alue
               FROM paallystyspalvelusopimus pps
-              WHERE pps.urakkanro = u.urakkanro)
-WHERE u.alue IS NULL AND
-      u.sopimustyyppi = 'palvelusopimus' :: SOPIMUSTYYPPI AND
-      u.tyyppi = 'paallystys' :: URAKKATYYPPI;
+              WHERE pps.paallystyspalvelusopimusnro = urakkanro)
+WHERE alue IS NULL AND
+      sopimustyyppi = 'palvelusopimus' :: SOPIMUSTYYPPI AND
+      tyyppi = 'paallystys' :: URAKKATYYPPI;
 
 -- Päivitä pohjavesialueiden ja siltojen materialisoidut näkymät käyttämään urakkataulun geometriaa
 DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
