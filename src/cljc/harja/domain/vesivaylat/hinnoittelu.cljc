@@ -67,8 +67,7 @@
      #{[::toimenpiteet
         #{:harja.domain.vesivaylat.toimenpide/id
           :harja.domain.vesivaylat.toimenpide/urakka-id
-          :harja.domain.vesivaylat.toimenpide/hintatyyppi
-          :harja.domain.vesivaylat.toimenpide/lisatyo?}]}]})
+          :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
 
 (defn hinnoittelu-idlla [hinnoittelut id]
   (first (filter #(= (::id %) id) hinnoittelut)))

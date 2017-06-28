@@ -89,7 +89,7 @@
   (tietokanta/luo-tietokanta temppitietokanta))
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet))
+  (liitteet/->Liitteet nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -303,6 +303,11 @@
 (defn hae-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
+
+(defn hae-kiintio-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   vv_kiintio
+                   WHERE  nimi = '" nimi "'"))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja []
   (ffirst (q (str "SELECT vv_hinnoittelu.id FROM vv_hinnoittelu
@@ -759,7 +764,7 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet)
+                                                  (liitteet/->Liitteet nil)
                                                   [:db])
 
                            ~@omat))))

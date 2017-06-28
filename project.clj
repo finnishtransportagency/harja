@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-                 [specql "0.6-alpha23"]
+                 [specql "0.6-alpha24"]
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -70,6 +70,9 @@
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.14.3"]
+
+                 ;; Fileyard  liitetiedostojen tallennus
+                 [fileyard "0.2"]
 
                  ;; Asiakas
                  [spyscope "0.1.6"]

@@ -40,11 +40,17 @@ SELECT
   y.sahkoposti,
   y.tyopuhelin,
   y.matkapuhelin,
-  y.organisaatio,
-  org.id      AS urakoitsija_id,
-  org.nimi    AS urakoitsija_nimi,
-  org.tyyppi  AS urakoitsija_tyyppi,
-  org.ytunnus AS urakoitsija_ytunnus,
+
+  urk.id      AS urakoitsija_id,
+  urk.nimi    AS urakoitsija_nimi,
+  urk.tyyppi  AS urakoitsija_tyyppi,
+  urk.ytunnus AS urakoitsija_ytunnus,
+
+  org.id      AS organisaatio_id,
+  org.nimi    AS organisaatio_nimi,
+  org.tyyppi  AS organisaatio_tyyppi,
+  org.ytunnus AS organisaatio_ytunnus,
+
   u.id        AS urakka_id,
   u.nimi      AS urakka_nimi,
   u.alkupvm   AS urakka_alkupvm,
@@ -53,7 +59,8 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON u.id = :urakka
-  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+  LEFT JOIN organisaatio org ON y.organisaatio = org.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE p.urakka = :urakka AND
       (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: TIMESTAMP) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: TIMESTAMP);

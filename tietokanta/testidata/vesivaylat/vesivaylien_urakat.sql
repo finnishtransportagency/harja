@@ -78,8 +78,9 @@ VALUES ('Helsingin väyläyksikön sivusopimus',
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Meriväylien sopimus','2016-08-01', '2018-07-30', true, NOW());
 
-INSERT INTO sopimus (nimi,  paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Vantaan väyläyksikön pääsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
         NULL,
         '2021-08-01', '2024-07-30',
         true, NOW());

@@ -26,6 +26,7 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.laadunseuranta :as laadunseuranta-vesivaylat]
             [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
+            [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.urakka :as u-domain]
             [harja.domain.oikeudet :as oikeudet]
@@ -49,6 +50,9 @@
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
                        (u-domain/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
+    :vv-materiaalit (and
+                     (oikeudet/urakat-vesivayla-materiaalit id)
+                     (u-domain/vesivaylaurakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
@@ -126,6 +130,12 @@
        (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
+
+       "Materiaalit"
+       :vv-materiaalit
+       (when (valilehti-mahdollinen? :vv-materiaalit ur)
+         ^{:key "vv-materiaalit"}
+         [vv-materiaalit/materiaalit ur])
 
        "Turvalaitteet"
        :turvalaitteet
