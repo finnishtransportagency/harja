@@ -51,7 +51,7 @@
                    (when (some #(= nimi (::m/nimi %)) materiaalilistaus)
                      "Materiaali on jo käytössä urakassa"))]}
       {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
-       :palstoja 1
+       :palstoja 1 :kokonaisluku? true
        :pakollinen? true ::lomake/col-luokka "col-lg-6"}
       {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"
        :pakollinen? true}
@@ -64,41 +64,55 @@
                                 tallennus-kaynnissa? :tallennus-kaynnissa?
                                 :as app} nimi]
   [:div.vv-materiaalin-kirjaus
-   [napit/yleinen-ensisijainen "Kirjaa"
-    #(e! (tiedot/->AloitaMateriaalinKirjaus nimi))
-    {:ikoni (ikonit/pencil)}]
+   [napit/yleinen-ensisijainen "Kirjaa käyttö"
+    #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :-))
+    {:ikoni (ikonit/livicon-minus)}]
+   [napit/yleinen-ensisijainen "Kirjaa lisäys"
+    #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+))
+    {:ikoni (ikonit/livicon-plus)}]
 
    (when (= nimi (::m/nimi kirjaa-materiaali))
-     [leijuke/leijuke {:otsikko (str "Kirjaa " nimi " käyttö")
-                       :sulje! #(e! (tiedot/->PeruMateriaalinKirjaus))}
-      [:div
-       [lomake/lomake {:muokkaa! #(e! (tiedot/->PaivitaMateriaalinKirjaus %))
-                       :footer-fn (fn [tiedot]
-                                    [napit/tallenna "Tallenna"
-                                     #(e! (tiedot/->KirjaaMateriaali))
-                                     {:disabled
-                                      (or
-                                       tallennus-kaynnissa?
-                                       (not (lomake/voi-tallentaa-ja-muokattu? tiedot)))
-                                      :ikoni (if tallennus-kaynnissa?
-                                               [yleiset/ajax-loader-pieni]
-                                               [ikonit/tallenna])}])}
-        [{:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero
-          ::lomake/col-luokka "col-lg-6"
-          :pakollinen? true}
-         {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm
-          ::lomake/col-luokka "col-lg-6"
-          :pakollinen? true}
-         {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3]
-          :pituus-max 2000 :palstoja 3}]
-        kirjaa-materiaali]
-       (let [maara-nyt (some #(when (= nimi (::m/nimi %))
-                                (::m/maara-nyt %)) listaus)
-             kaytettava-maara (::m/maara kirjaa-materiaali)]
-         [yleiset/tietoja {}
-          "Määrä nyt: " maara-nyt
-          "Muutos: " (or kaytettava-maara "")
-          "Määrä jälkeen:" (+ maara-nyt (or kaytettava-maara 0))])]])])
+     (let [tyyppi (:tyyppi kirjaa-materiaali)]
+       [leijuke/leijuke {:otsikko (str "Kirjaa " nimi
+                                       (case tyyppi
+                                         :- " käyttö"
+                                         :+ " lisäys"))
+                         :sulje! #(e! (tiedot/->PeruMateriaalinKirjaus))}
+        [:div
+         [lomake/lomake {:muokkaa! #(e! (tiedot/->PaivitaMateriaalinKirjaus %))
+                         :footer-fn (fn [tiedot]
+                                      [napit/tallenna "Tallenna"
+                                       #(e! (tiedot/->KirjaaMateriaali))
+                                       {:disabled
+                                        (or
+                                         tallennus-kaynnissa?
+                                         (not (lomake/voi-tallentaa-ja-muokattu? tiedot)))
+                                        :ikoni (if tallennus-kaynnissa?
+                                                 [yleiset/ajax-loader-pieni]
+                                                 [ikonit/tallenna])}])}
+          [{:otsikko "Määrä" :nimi ::m/maara :tyyppi :positiivinen-numero
+            ::lomake/col-luokka "col-lg-6"
+            :pakollinen? true
+            :kokonaisluku? true}
+           {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm
+            ::lomake/col-luokka "col-lg-6"
+            :pakollinen? true}
+           {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3]
+            :pituus-max 2000 :palstoja 3}]
+          kirjaa-materiaali]
+         (let [maara-nyt (some #(when (= nimi (::m/nimi %))
+                                  (::m/maara-nyt %)) listaus)
+               kaytettava-maara (::m/maara kirjaa-materiaali)]
+           [yleiset/tietoja {}
+            "Määrä nyt: " maara-nyt
+            "Muutos: "  (case tyyppi
+                          :- (if kaytettava-maara (- kaytettava-maara) "")
+                          :+ (or kaytettava-maara ""))
+            "Määrä jälkeen:" ((case tyyppi
+                                :- -
+                                :+ +)
+                              maara-nyt
+                              (or kaytettava-maara 0))])]]))])
 
 (defn materiaalit* [e! app]
   (komp/luo
@@ -139,7 +153,7 @@
           {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
           {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
           (when voi-kirjata?
-            {:otsikko "Kirjaa" :leveys 10 :tyyppi :komponentti
+            {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
              :komponentti (fn [{nimi ::m/nimi}]
                             [materiaalin-kirjaus e! app nimi])})]
          materiaalilistaus]]))))
