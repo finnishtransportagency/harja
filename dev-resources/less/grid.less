@@ -317,12 +317,36 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   padding: 1px 4px;
   z-index: 1;
 }
-.arvo-ja-nappi > * {
-  display: inline-block;
-  & :first-child {
-    margin-right: 5px;
+
+.arvo-ja-nappi-container {
+  .arvo-ja-nappi-arvo {
+    float: left;
+    position: relative;
+    top: 5px;
+  }
+
+  .arvo-ja-nappi-nappi {
+    float: right;
   }
 }
+
+@media (max-width: @screen-sm-min) {
+  .arvo-ja-nappi-container {
+    .arvo-ja-nappi-arvo {
+      display: inline-block;
+      float: none;
+      position: static;
+      top: auto;
+    }
+
+    .arvo-ja-nappi-nappi {
+      display: inline-block;
+      margin-left: 5px;
+      float: none;
+    }
+  }
+}
+
 .nappi-grid {
   width: 100%;
   max-width: 250px;

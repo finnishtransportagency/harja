@@ -302,32 +302,32 @@
         (let [validointivirhe (when validoi-fn
                                 (validoi-fn (vals @muokatut)))]
           (y/wrap-if
-           validointivirhe
-           [y/tooltip {} :% validointivirhe]
-           [:button.nappi-myonteinen.grid-tallenna
-            {:disabled (or validointivirhe
-                           (not (empty? @virheet))
-                           @tallennus-kaynnissa
-                           (not muokattu?))
-             :on-click #(when-not @tallennus-kaynnissa
-                          (let [kaikki-rivit (mapv second @muokatut)
-                                ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
-                                tallennettavat (filter (fn [rivi]
-                                                         (not (and (neg-int? (tunniste rivi))
-                                                                   (:poistettu rivi))))
-                                                       kaikki-rivit)
-                                tallennettavat
-                                (if tallenna-vain-muokatut
-                                  (do (log "TALLENNA VAIN MUOKATUT")
-                                      (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
-                                  tallennettavat)]
-                            (do (.preventDefault %)
-                                (reset! tallennus-kaynnissa true)
-                                (go
-                                  (when-not (empty? tallennettavat)
-                                    (<! (tallenna tallennettavat)))
-                                  (nollaa-muokkaustiedot!)))))}
-            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
+            validointivirhe
+            [y/tooltip {} :% validointivirhe]
+            [:button.nappi-myonteinen.grid-tallenna
+             {:disabled (or validointivirhe
+                            (not (empty? @virheet))
+                            @tallennus-kaynnissa
+                            (not muokattu?))
+              :on-click #(when-not @tallennus-kaynnissa
+                           (let [kaikki-rivit (mapv second @muokatut)
+                                 ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
+                                 tallennettavat (filter (fn [rivi]
+                                                          (not (and (neg-int? (tunniste rivi))
+                                                                    (:poistettu rivi))))
+                                                        kaikki-rivit)
+                                 tallennettavat
+                                 (if tallenna-vain-muokatut
+                                   (do (log "TALLENNA VAIN MUOKATUT")
+                                       (filter (fn [rivi] (not (:koskematon rivi))) tallennettavat))
+                                   tallennettavat)]
+                             (do (.preventDefault %)
+                                 (reset! tallennus-kaynnissa true)
+                                 (go
+                                   (when-not (empty? tallennettavat)
+                                     (<! (tallenna tallennettavat)))
+                                   (nollaa-muokkaustiedot!)))))}
+             [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
         [:button.nappi-kielteinen.grid-peru
@@ -964,9 +964,9 @@
                                          :skeema skeema :vetolaatikot-auki vetolaatikot-auki}))
                 (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
                                              ((:rivi-jalkeen-fn opts)
-                                              (if muokataan
-                                                (vals @muokatut)
-                                                alkup-tiedot)))]
+                                               (if muokataan
+                                                 (vals @muokatut)
+                                                 alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
                    (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
                          [:td {:colSpan (or sarakkeita 1) :class luokka}
@@ -1012,21 +1012,20 @@
            uusi-fn muokkaa-fn arvo voi-muokata?
            muokkaa-ikoni ikoninappi?] :as optiot}]
   (if voi-muokata?
-    (if (ehto-fn)
-     [napit/yleinen-ensisijainen
-      nappi-teksti
-      uusi-fn
-      (merge {:luokka (str "nappi-grid")}
-             nappi-optiot)]
-     [:div.arvo-ja-nappi
-      [:div #_{:style {:position :relative
-                               :top "7px"}}
-       [:span arvo]]
-
-      [napit/yleinen-toissijainen
-       (or muokkaa-ikoni (ikonit/muokkaa))
-       muokkaa-fn
-       (merge {:ikoninappi? ikoninappi?
-               :luokka (str "btn-xs")}
-              nappi-optiot)]])
+    [:div.arvo-ja-nappi-container
+     (if (ehto-fn)
+       [napit/yleinen-ensisijainen
+        nappi-teksti
+        uusi-fn
+        (merge {:luokka (str "nappi-grid")}
+               nappi-optiot)]
+       [:div.arvo-ja-nappi
+        [:span.arvo-ja-nappi-arvo
+         arvo]
+        [napit/yleinen-toissijainen
+         (or muokkaa-ikoni (ikonit/muokkaa))
+         muokkaa-fn
+         (merge {:ikoninappi? ikoninappi?
+                 :luokka (str "btn-xs arvo-ja-nappi-nappi")}
+                nappi-optiot)]])]
     [:span arvo]))
