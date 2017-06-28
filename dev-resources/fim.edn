@@ -34,16 +34,16 @@
                    :roolit "1242141-OULU2_vastuuhenkilo"
                    :organisaatio "urakoitsija"
                    :poistettu false}]
- ;; Muhoksen päällystysurakka (testiurakka), ota käyttöön poistamalla ao. #_ kommentit
- #_"4242523-TES2" #_[{:tunniste 133
-                   :kayttajatunnus "LXV"
-                   :etunimi "Jarno"
-                   :sukunimi "Ely"
-                   :sahkoposti "sinunmailisi@solita.fi"
-                   :puhelin "0123456789"
-                   :roolit "4242523-TES2_ELY_Urakanvalvoja"
-                   :organisaatio "foo"
-                   :poistettu false}
+ ;; Muhoksen päällystysurakka (testiurakka)
+ "4242523-TES2" [{:tunniste 133
+                  :kayttajatunnus "LXV"
+                  :etunimi "Jarno"
+                  :sukunimi "Ely"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "0123456789"
+                  :roolit "4242523-TES2_ELY_Urakanvalvoja"
+                  :organisaatio "foo"
+                  :poistettu false}
                  {:tunniste 233
                   :kayttajatunnus "LXVV"
                   :etunimi "Jarno"
@@ -54,21 +54,21 @@
                   :organisaatio "foo"
                   :poistettu false}]
  ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
-     #_"4242523-TES4" #_[{:tunniste 133
-                   :kayttajatunnus "LXV"
-                   :etunimi "Jarno"
-                   :sukunimi "Ely TM"
-                   :sahkoposti "sinunmailisi@solita.fi"
-                   :puhelin "0123456789"
-                   :roolit "4242523-TES4_ELY_Urakanvalvoja"
-                   :organisaatio "foo"
-                   :poistettu false}
-                  {:tunniste 233
-                   :kayttajatunnus "LXVV"
-                   :etunimi "Jarno"
-                   :sukunimi "Urakoitsija TM"
-                   :sahkoposti "sinunmailisi@solita.fi"
-                   :puhelin "012345666"
-                   :roolit "4242523-TES4_vastuuhenkilo"
-                   :organisaatio "foo"
-                   :poistettu false}]}
+ "4242523-TES4" [{:tunniste 133
+                  :kayttajatunnus "LXV"
+                  :etunimi "Jarno"
+                  :sukunimi "Ely TM"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "0123456789"
+                  :roolit "4242523-TES4_ELY_Urakanvalvoja"
+                  :organisaatio "foo"
+                  :poistettu false}
+                 {:tunniste 233
+                  :kayttajatunnus "LXVV"
+                  :etunimi "Jarno"
+                  :sukunimi "Urakoitsija TM"
+                  :sahkoposti "sinunmailisi@solita.fi"
+                  :puhelin "012345666"
+                  :roolit "4242523-TES4_vastuuhenkilo"
+                  :organisaatio "foo"
+                  :poistettu false}]}
