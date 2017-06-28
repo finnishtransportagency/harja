@@ -7,17 +7,21 @@ SELECT
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
-         -- Hae hintaryhmään kuuluvien toimenpiteiden kaikki hinnoittelut, eli
+         -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
          -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
          (SELECT "hinnoittelu-id"
           FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
-                -- Hae hintatyhmän kaikki toimenpiteet
-                (SELECT "toimenpide-id"
-                 FROM vv_hinnoittelu_toimenpide
-                 WHERE "hinnoittelu-id" = hintaryhma.id))
+                -- Hae hintaryhmän kaikki ei-poistetut toimenpiteet
+                (SELECT id
+                 FROM reimari_toimenpide
+                 WHERE id IN (SELECT "toimenpide-id"
+                              FROM vv_hinnoittelu_toimenpide
+                              WHERE "hinnoittelu-id" = hintaryhma.id)
+                       AND poistettu IS NOT TRUE)
+                AND poistettu IS NOT TRUE)
          AND poistettu IS NOT TRUE) AS "summa",
-  -- Hinnoittelut, jotka ovat hinnoitteluryhmiä, sisältävät useita reimari-toimenpiteitä
+  -- Hinnoitteluryhmät sisältävät useita reimari-toimenpiteitä
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
   (SELECT ARRAY(SELECT DISTINCT (tyyppi)
@@ -40,6 +44,7 @@ WHERE "urakka-id" = :urakkaid
                  WHERE suoritettu >= :alkupvm
                        AND suoritettu <= :loppupvm
                        AND hintatyyppi = 'yksikkohintainen'
+                       AND poistettu IS NOT TRUE
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
                                   WHERE "hinnoittelu-id" = hintaryhma.id));
@@ -67,24 +72,31 @@ FROM vv_hinnoittelu oma_hinnoittelu
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
       AND hintaryhma IS FALSE
-      -- Toimenpide ei kuulu mihinkään hintaryhmään
+      -- Tarkista, ettei hinnoittelun toimenpide ei kuulu mihinkään hintaryhmään
       AND (SELECT id
            FROM vv_hinnoittelu
            WHERE id IN
-                 -- Hae toimenpiteen hinnoittelujen id:t ja valitse vain ne, jotka ovat hintaryhmiä (pitäisi olla yksi)
+                 -- Hae toimenpiteen hinnoittelujen id:t ja valitse vain ne, joita ei ole poistettu
+                 -- ja jotka ovat hintaryhmiä (pitäisi olla yksi)
                  (SELECT "hinnoittelu-id"
                   FROM vv_hinnoittelu_toimenpide
                   WHERE "toimenpide-id" =
-                        -- Hae hinnoittelun toimenpide (kyseessä toimenpiteen oma hinnoittelu, eli löytyy vain yksi)
-                        (SELECT "toimenpide-id"
-                         FROM vv_hinnoittelu_toimenpide
-                         WHERE "hinnoittelu-id" = oma_hinnoittelu.id))
-                 AND hintaryhma IS TRUE) IS NULL
+                        -- Hae hinnoittelun toimenpide, joka ei ole poistettu
+                        -- Kyseessä toimenpiteen oma hinnoittelu, eli löytyy vain yksi
+                        (SELECT id
+                         FROM reimari_toimenpide
+                         WHERE id = (SELECT "toimenpide-id"
+                                     FROM vv_hinnoittelu_toimenpide
+                                     WHERE "hinnoittelu-id" = oma_hinnoittelu.id)
+                               AND poistettu IS NOT TRUE))
+                 AND hintaryhma IS TRUE
+                 AND poistettu IS NOT TRUE) IS NULL
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä
       AND EXISTS(SELECT id
                  FROM reimari_toimenpide
                  WHERE suoritettu >= :alkupvm
                        AND suoritettu <= :loppupvm
+                       AND poistettu IS NOT TRUE
                        AND hintatyyppi = 'yksikkohintainen'
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
