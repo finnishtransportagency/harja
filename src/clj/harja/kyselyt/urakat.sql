@@ -859,3 +859,12 @@ SET alue = (SELECT alue
 WHERE alue IS NULL AND
       urakkanro = :urakkanro AND
       tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
+
+-- name: paivita-paallystyksen-palvelusopimuksen-geometria-kannasta!
+UPDATE urakka
+SET alue = (SELECT alue
+            FROM siltapalvelusopimus
+            WHERE urakkanro = :urakkanro)
+WHERE alue IS NULL AND
+      urakkanro = :urakkanro AND
+      tyyppi = 'siltakorjaus' :: URAKKATYYPPI;

@@ -31,6 +31,15 @@ SET u.alue = (SELECT sps.alue
 WHERE u.alue IS NULL AND
       u.tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
 
+-- Päällystyksen palvelusopimukset
+UPDATE urakka u
+SET u.alue = (SELECT pps.alue
+              FROM paallystyspalvelusopimus pps
+              WHERE pps.urakkanro = u.urakkanro)
+WHERE u.alue IS NULL AND
+      u.sopimustyyppi = 'palvelusopimus' :: SOPIMUSTYYPPI AND
+      u.tyyppi = 'paallystys' :: URAKKATYYPPI;
+
 -- Päivitä pohjavesialueiden ja siltojen materialisoidut näkymät käyttämään urakkataulun geometriaa
 DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
 CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
