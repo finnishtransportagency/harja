@@ -17,7 +17,8 @@ SELECT
                  FROM reimari_toimenpide
                  WHERE id IN (SELECT "toimenpide-id"
                               FROM vv_hinnoittelu_toimenpide
-                              WHERE "hinnoittelu-id" = hintaryhma.id)
+                              WHERE "hinnoittelu-id" = hintaryhma.id
+                                    AND poistettu IS NOT TRUE)
                        AND poistettu IS NOT TRUE)
                 AND poistettu IS NOT TRUE)
          AND poistettu IS NOT TRUE) AS "summa",
@@ -32,7 +33,8 @@ SELECT
                        WHERE id IN
                              (SELECT "toimenpide-id"
                               FROM vv_hinnoittelu_toimenpide
-                              WHERE "hinnoittelu-id" = hintaryhma.id))))
+                              WHERE "hinnoittelu-id" = hintaryhma.id
+                                    AND poistettu IS NOT TRUE))))
                                     AS vaylatyyppi
 FROM vv_hinnoittelu hintaryhma
 WHERE "urakka-id" = :urakkaid
@@ -47,18 +49,19 @@ WHERE "urakka-id" = :urakkaid
                        AND poistettu IS NOT TRUE
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
-                                  WHERE "hinnoittelu-id" = hintaryhma.id));
+                                  WHERE "hinnoittelu-id" = hintaryhma.id
+                                        AND poistettu IS NOT TRUE));
 
 -- name: hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa
 -- Hakee toimenpiteiden omat hinnoittelut ja laskee niiden hintojen summan.
 -- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään;
 -- tällaiset tapaukset summataan jo hintaryhmien hintaan (ks. kysely: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat)
 SELECT
-  oma_hinnoittelu.nimi                                          AS "hinnoittelu",
+  oma_hinnoittelu.nimi                              AS "hinnoittelu",
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = oma_hinnoittelu.id
-         AND poistettu IS NOT TRUE)                             AS "summa",
+         AND poistettu IS NOT TRUE)                 AS "summa",
   (SELECT tyyppi
    FROM vv_vayla
    WHERE id =
@@ -67,7 +70,8 @@ SELECT
           WHERE id =
                 (SELECT "toimenpide-id"
                  FROM vv_hinnoittelu_toimenpide
-                 WHERE "hinnoittelu-id" = oma_hinnoittelu.id))) AS vaylatyyppi
+                 WHERE "hinnoittelu-id" = oma_hinnoittelu.id
+                       AND poistettu IS NOT TRUE))) AS vaylatyyppi
 FROM vv_hinnoittelu oma_hinnoittelu
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
@@ -88,7 +92,8 @@ WHERE "urakka-id" = :urakkaid
                          WHERE id = (SELECT "toimenpide-id"
                                      FROM vv_hinnoittelu_toimenpide
                                      WHERE "hinnoittelu-id" = oma_hinnoittelu.id)
-                               AND poistettu IS NOT TRUE))
+                               AND poistettu IS NOT TRUE)
+                        AND poistettu IS NOT TRUE)
                  AND hintaryhma IS TRUE
                  AND poistettu IS NOT TRUE) IS NULL
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä
@@ -100,7 +105,8 @@ WHERE "urakka-id" = :urakkaid
                        AND hintatyyppi = 'yksikkohintainen'
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
-                                  WHERE "hinnoittelu-id" = oma_hinnoittelu.id));
+                                  WHERE "hinnoittelu-id" = oma_hinnoittelu.id
+                                        AND poistettu IS NOT TRUE));
 
 -- name: hae-kokonaishintaiset-toimenpiteet
 SELECT
