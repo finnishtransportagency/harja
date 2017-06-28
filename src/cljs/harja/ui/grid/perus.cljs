@@ -1016,7 +1016,7 @@
      [napit/yleinen-ensisijainen
       nappi-teksti
       uusi-fn
-      (merge {:luokka (str "nappi-grid btn-xs")}
+      (merge {:luokka (str "nappi-grid")}
              nappi-optiot)]
      [:div.arvo-ja-nappi
       [:div #_{:style {:position :relative
