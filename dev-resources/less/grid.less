@@ -330,7 +330,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 }
 
-@media (max-width: @screen-sm-min) {
+// Oikeasti tämän pitäisi toimia niin, että vaihdetaan inline-blockiksi kun sarakkeesta
+// alkaa loppua tila. Tämä on kuitenkin vaikeaa toteuttaa CSS:llä, joten tehdään yleispätevä
+// ratkaisu: tehdään vasen-oikea jaottelu silloin kun tilaa on varmuudela
+// riittävästi, ja epävarmassa tapauksessa mennään inline-blockilla.
+@media (max-width: @screen-lg) {
   .arvo-ja-nappi-container {
     .arvo-ja-nappi-arvo {
       display: inline-block;
