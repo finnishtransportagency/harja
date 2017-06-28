@@ -445,7 +445,6 @@
                                                                :sopimus-id sopimus-id
                                                                :yllapitokohde-id yllapitokohde-id})
             urakan-geometria-muutoksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
-        (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (every? :sijainti kohdeosat-kannassa) "Geometria muodostettiin")
         (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
@@ -854,7 +853,6 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi})
             leppajarven-ramppi-ennen-testia (kohde-nimella aikataulu-ennen-testia "Leppäjärven ramppi")
-            _ (log/debug "leppajarven-ramppi-ennen-testia" leppajarven-ramppi-ennen-testia)
             muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu-ennen-testia))
             vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
