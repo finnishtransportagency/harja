@@ -44,7 +44,7 @@
    (näin siksi, ettei toimenpiteiden omilla hinnoitteluilla ei ole nimeä)."
   [tiedot]
   (let [oma-hinnoittelurivi (fn [omat-hinnoittelut vaylatyyppi]
-                              {:hinnoittelu "Muut (ei hintaryhmää)"
+                              {:hinnoittelu "Yksittäiset toimenpiteet"
                                :hintaryhma false
                                :summa (->> omat-hinnoittelut
                                            (filter #((:vaylatyyppi %) vaylatyyppi))
