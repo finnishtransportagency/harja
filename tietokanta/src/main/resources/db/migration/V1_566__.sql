@@ -3,42 +3,59 @@
 -- Hoidon alueurakat
 UPDATE urakka
 SET alue = (SELECT au.alue
-              FROM alueurakka au
-              WHERE au.alueurakkanro = urakkanro)
+            FROM alueurakka au
+            WHERE au.alueurakkanro = urakkanro)
 WHERE alue IS NULL AND tyyppi = 'hoito' :: URAKKATYYPPI;
 
 -- Valaistusurakat
 UPDATE urakka
 SET alue = (SELECT ST_Union(vu.alue)
-              FROM valaistusurakka vu
-              WHERE vu.valaistusurakkanro = urakkanro)
+            FROM valaistusurakka vu
+            WHERE vu.valaistusurakkanro = urakkanro)
 WHERE alue IS NULL AND
       tyyppi = 'valaistus' :: URAKKATYYPPI;
 
 -- Tekniset laitteet -urakat
 UPDATE urakka
 SET alue = (SELECT tlu.alue
-              FROM tekniset_laitteet_urakka tlu
-              WHERE tlu.urakkanro = urakkanro)
+            FROM tekniset_laitteet_urakka tlu
+            WHERE tlu.urakkanro = urakkanro)
 WHERE alue IS NULL AND
       tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI;
 
 -- Siltakorjausurakat
 UPDATE urakka
 SET alue = (SELECT sps.alue
-              FROM siltapalvelusopimus sps
-              WHERE sps.urakkanro = urakkanro)
+            FROM siltapalvelusopimus sps
+            WHERE sps.urakkanro = urakkanro)
 WHERE alue IS NULL AND
       tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
 
 -- Päällystyksen palvelusopimukset
 UPDATE urakka
 SET alue = (SELECT pps.alue
-              FROM paallystyspalvelusopimus pps
-              WHERE pps.paallystyspalvelusopimusnro = urakkanro)
+            FROM paallystyspalvelusopimus pps
+            WHERE pps.paallystyspalvelusopimusnro = urakkanro)
 WHERE alue IS NULL AND
       sopimustyyppi = 'palvelusopimus' :: SOPIMUSTYYPPI AND
       tyyppi = 'paallystys' :: URAKKATYYPPI;
+
+-- Kopioi geometriat 28.6.2017 ennen päättyneiltä hoidon alueurakoille niitä vastaavilta uusilta urakoilta
+UPDATE urakka
+SET alue = arvot.uusi_alue
+FROM (SELECT
+        vanha.urakkanro AS vanha_urakkanro,
+        uusi.alue       AS uusi_alue
+      FROM urakka vanha
+        JOIN (SELECT
+                urakkanro,
+                nimi,
+                alue
+              FROM urakka
+              WHERE tyyppi = 'hoito' AND loppupvm > '2017-06-28') uusi
+          ON upper(substring(vanha.nimi FROM 1 FOR 5)) = upper(substring(uusi.nimi FROM 1 FOR 5))
+      WHERE vanha.tyyppi = 'hoito' AND vanha.loppupvm < '2017-06-28') arvot
+WHERE urakka.urakkanro = arvot.vanha_urakkanro;
 
 -- Päivitä pohjavesialueiden ja siltojen materialisoidut näkymät käyttämään urakkataulun geometriaa
 DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
