@@ -132,6 +132,7 @@
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as vv-yksikkohintaiset]
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
+    [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
     [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit])
 
   (:gen-class))
@@ -169,7 +170,8 @@
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet)
+                            (harja.palvelin.komponentit.liitteet/->Liitteet
+                             (get-in asetukset [:liitteet :fileyard-url]))
                              [:db :virustarkistus])
 
       :kehitysmoodi (component/using
@@ -306,6 +308,9 @@
       :vv-hinnoittelut (component/using
                          (vv-hinnoittelut/->Hinnoittelut)
                          [:http-palvelin :db])
+      :vv-kiintiot (component/using
+                     (vv-kiintiot/->Kiintiot)
+                     [:http-palvelin :db])
       :vv-materiaalit (component/using
                        (vv-materiaalit/->Materiaalit)
                        [:http-palvelin :db])

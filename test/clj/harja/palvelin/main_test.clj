@@ -50,7 +50,12 @@
     :urakan-tyotuntimuistutukset
     :hankkeet
     :urakan-tyotunnit
-    :vv-yksikkohintaiset :vv-kokonaishintaiset :vv-vaylat :vv-hinnoittelut :vv-materiaalit
+    :vv-yksikkohintaiset
+    :vv-kokonaishintaiset
+    :vv-vaylat
+    :vv-kiintiot
+    :vv-hinnoittelut
+    :vv-materiaalit
     :reimari
     :vkm})
 

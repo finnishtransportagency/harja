@@ -268,7 +268,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn]}]
+                                peruuta otsikko validoi-fn tunniste]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -313,7 +313,7 @@
                           (let [kaikki-rivit (mapv second @muokatut)
                                 ;; rivejä jotka ensin lisätään ja samantien poistetaan (id < 0), ei pidä lähettää
                                 tallennettavat (filter (fn [rivi]
-                                                         (not (and (neg-int? (:id rivi))
+                                                         (not (and (neg-int? (tunniste rivi))
                                                                    (:poistettu rivi))))
                                                        kaikki-rivit)
                                 tallennettavat
@@ -550,11 +550,11 @@
   :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
-  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
+                                        Funktion pitää palauttaa kanava.
+                                        Jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
   :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
                                         virheilmoituksen, jos tallennus estetään.
-
-                                        jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
@@ -732,7 +732,6 @@
                                                    (prosessoi-muutos uusi-data)
                                                    uusi-data))))]
                      (when-not (= vanhat-tiedot uudet-tiedot)
-                       ;;(log "VANHAT: " (pr-str vanhat-tiedot) "\nUUDET: " (pr-str uudet-tiedot))
                        (reset! viimeisin-muokattu-id id)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset
                                              vanhat-huomautukset vanha-jarjestys])
@@ -910,6 +909,7 @@
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                              :peruuta peruuta :otsikko otsikko
+                             :tunniste tunniste
                              :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
@@ -993,6 +993,7 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
+                                :tunniste tunniste
                                 :validoi-fn validoi-fn})])])))))
 
 (defn otsikkorivin-tiedot [otsikko maara]
