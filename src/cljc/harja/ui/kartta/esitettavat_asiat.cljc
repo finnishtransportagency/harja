@@ -464,7 +464,7 @@
                          toimenpiteet
                          [(get-in toteuma [:tehtava :nimi])])
           _ (when (empty? toimenpiteet)
-              (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+              (log/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)
@@ -566,8 +566,8 @@
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
-    (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
-    (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
+    (log/warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
+    (log/warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
           "sain: " (pr-str asia)))
   nil)
 
