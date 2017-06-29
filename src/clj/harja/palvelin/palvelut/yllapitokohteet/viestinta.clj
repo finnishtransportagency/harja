@@ -245,5 +245,7 @@
            kopio-itselle? saate kayttaja]}]
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
-     :tiemerkintapvm tiemerkintapvm :kopio-itselle? kopio-itselle? :saate saate
+     :tiemerkintapvm tiemerkintapvm
+     :kopio-itselle? kopio-itselle?
+     :saate saate
      :ilmoittaja kayttaja}))
