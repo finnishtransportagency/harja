@@ -44,38 +44,37 @@
                                    true)]
     [modal/modal
      {:otsikko (if valmis-tiemerkintaan-lomake?
-                (str "Kohteen " kohde-nimi " merkitseminen valmiiksi tiemerkintään")
-                (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen"))
+                 (str "Kohteen " kohde-nimi " merkitseminen valmiiksi tiemerkintään")
+                 (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen"))
       :luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
       :footer [:div
                [napit/peruuta
                 (if valmis-tiemerkintaan-lomake?
-                                "Peruuta"
-                                "Älä perukaan")
-                #(do (.preventDefault %)
-                     (reset! tiedot/modal-data (merge data {:nakyvissa? false})))]
+                  "Peruuta"
+                  "Älä perukaan")
+                #(reset! tiedot/modal-data (merge data {:nakyvissa? false}))]
 
-                [napit/palvelinkutsu-nappi
-                 (if valmis-tiemerkintaan-lomake?
-                   "Merkitse"
-                   "Vahvista peruutus")
-                 #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
-                      (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                        {:kohde-id kohde-id
-                         :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
-                         :kopio-itselle? (:kopio-itselle? (:lomakedata data))
-                         :saate (:saate (:lomakedata data))
-                         :urakka-id urakka-id
-                         :sopimus-id (first @u/valittu-sopimusnumero)
-                         :vuosi vuosi}))
-                 {:disabled (not valmis-tallennettavaksi?)
-                  :luokka "nappi-myonteinen"
-                  :ikoni (ikonit/check)
-                  :kun-onnistuu (fn [vastaus]
-                                  (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
-                                  (reset! tiedot/aikataulurivit vastaus)
-                                  (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}]]}
+               [napit/palvelinkutsu-nappi
+                (if valmis-tiemerkintaan-lomake?
+                  "Merkitse"
+                  "Vahvista peruutus")
+                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                     (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                       {:kohde-id kohde-id
+                        :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
+                        :kopio-itselle? (:kopio-itselle? (:lomakedata data))
+                        :saate (:saate (:lomakedata data))
+                        :urakka-id urakka-id
+                        :sopimus-id (first @u/valittu-sopimusnumero)
+                        :vuosi vuosi}))
+                {:disabled (not valmis-tallennettavaksi?)
+                 :luokka "nappi-myonteinen"
+                 :ikoni (ikonit/check)
+                 :kun-onnistuu (fn [vastaus]
+                                 (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
+                                 (reset! tiedot/aikataulurivit vastaus)
+                                 (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
                "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."
