@@ -27,8 +27,6 @@ WHERE urakka.urakkanro = arvot.vanha_urakkanro AND
 CREATE FUNCTION paivita_alueurakan_geometria()
   RETURNS TRIGGER AS $$
 BEGIN
-  uusi_alue = NULL;
-
   UPDATE urakka
   SET alue = (SELECT alue
               FROM alueurakka
