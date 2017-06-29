@@ -1,9 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
             #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
-            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-               :clj
-               [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
@@ -14,10 +12,6 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]))
 
-#?(:clj (defn log [& things]
-          (log/info things)))
-#?(:clj (defn warn [& things]
-          (log/warn things)))
 
 (defn- laske-skaala [valittu?]
   (if valittu? ulkoasu/+valitun-skaala+ ulkoasu/+normaali-skaala+))
@@ -358,7 +352,7 @@
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
-    (log "WARN: " tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (log/warn tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
@@ -496,7 +490,7 @@
         kulma)))
 
 (defmethod asia-kartalle :tietyomaa [aita valittu?]
-  (log "Asia kartalle: tietyömaa: " (pr-str aita))
+  (log/info "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
      :type :tietyomaa
