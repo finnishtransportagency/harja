@@ -40,8 +40,8 @@
                          ")")
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
-    "Työluokka" (::to/tyoluokka toimenpide)
-    "Toimenpide" (::to/toimenpide toimenpide)
+    "Työluokka" (to/reimari-tyoluokka-fmt (::to/tyoluokka toimenpide))
+    "Toimenpide" (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
     "Urakoitsijan vastuuhenkilö" "?"
