@@ -49,9 +49,18 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                 kysely-params)]
+
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus vastaus))
-    (is (>= (count vastaus) 2))))
+
+    (is (>= (count vastaus) 2))
+
+    (is (every? #(integer? (::toi/id %)) vastaus))
+    (is (every? #(string? (::toi/lisatieto %)) vastaus))
+    (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
+    (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
+    (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
+    (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
