@@ -81,7 +81,6 @@
                  [cljs-ajax "0.6.0"]
                  [figwheel "0.5.10"]
 
-                 [reagent "0.7.0"]
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.6.1-0"]
                  [cljsjs/react-dom "15.6.1-0" :exclusions [cljsjs/react]]
@@ -96,7 +95,8 @@
                  [clj-time "0.13.0"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
 
-                 [cljsjs/openlayers "4.0.1-1"]
+                 ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
+                 [cljsjs/openlayers "3.15.1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.16"]
