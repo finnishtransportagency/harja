@@ -181,7 +181,8 @@
         turvalaitekomponentit (fetch
                                 db
                                 ::tkomp/turvalaitekomponentti
-                                (set/union tkomp/kentat tkomp/komponenttityyppi)
+                                (set/union #{::tkomp/sarjanumero ::tkomp/turvalaitenro}
+                                           tkomp/komponenttityyppi)
                                 {::tkomp/turvalaitenro
                                  (op/in (set (map
                                                #(get-in % [::vv-toimenpide/reimari-turvalaite
