@@ -83,8 +83,6 @@
                                                   " päivämäärällä "
                                                   (pvm/pvm (:perintapvm @muokattu)) "?")
                                     :hyvaksy "Poista"
-                                    :hyvaksy-ikoni (ikonit/livicon-trash)
-                                    :hyvaksy-napin-luokka "nappi-kielteinen"
                                     :toiminto-fn #(do
                                                     (let [res (tiedot/tallenna-sanktio
                                                                 (assoc @muokattu

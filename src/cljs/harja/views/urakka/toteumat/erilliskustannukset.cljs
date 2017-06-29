@@ -183,8 +183,6 @@
                                                   (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
                                                   (pvm/pvm (:pvm @muokattu)) "?")
                                     :hyvaksy "Poista"
-                                    :hyvaksy-ikoni (ikonit/livicon-trash)
-                                    :hyvaksy-napin-luokka "nappi-kielteinen"
                                     :toiminto-fn #(go
                                                     (let [res (tallenna-erilliskustannus
                                                                 (assoc @muokattu :poistettu true))]

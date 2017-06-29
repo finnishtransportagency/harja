@@ -49,7 +49,7 @@
       :luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
       :footer [:div
-               [:span [:button.nappi-toissijainen
+               [:span [:button.nappi-kielteinen
                        {:type "button"
                         :on-click #(do (.preventDefault %)
                                        (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}
@@ -71,9 +71,7 @@
                          :sopimus-id (first @u/valittu-sopimusnumero)
                          :vuosi vuosi}))
                  {:disabled (not valmis-tallennettavaksi?)
-                  :luokka (if valmis-tiemerkintaan-lomake?
-                            "nappi-myonteinen"
-                            "nappi-kielteinen")
+                  :luokka "nappi-myonteinen"
                   :kun-onnistuu (fn [vastaus]
                                   (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
                                   (reset! tiedot/aikataulurivit vastaus)

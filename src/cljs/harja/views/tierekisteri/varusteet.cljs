@@ -72,8 +72,6 @@
                [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
                [:b tunniste] "."]
      :hyvaksy "Poista"
-     :hyvaksy-ikoni (ikonit/livicon-trash)
-     :hyvaksy-napin-luokka "nappi-kielteinen"
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste tunniste)))}))
 
 (def kuntoluokka->selite {"1" "Ala-arvoinen"
