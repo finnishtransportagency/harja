@@ -59,12 +59,12 @@
      (is (= "saatiin pajalta 2 lisää" (u/text (u/sel1 ".vv-materiaaliloki tr:nth-child(3) td:nth-child(3)"))))
      --
      "Kirjataan uusi poijun käyttö"
-     (u/click ".vv-materiaalin-kirjaus button")
+     (u/click ".vv-materiaalin-kirjaus button.materiaalin-kaytto")
      --
      (is (u/sel1 ".vv-materiaalin-kirjaus .lomake"))
-     (u/change (u/lomake-input "maara") "-10")
+     (u/change (u/lomake-input "maara") "10")
      --
-     (is (= -10 (get-in @app [:kirjaa-materiaali ::m/maara])))
+     (is (= 10 (get-in @app [:kirjaa-materiaali ::m/maara])))
      (u/change (u/sel1 "label[for='lisatieto'] + .kentta-text textarea") "hukattiin 10kpl")
      --
      (u/click ".leijuke-sisalto button.nappi-ensisijainen")
