@@ -50,16 +50,18 @@
     "Lisätiedot" (::to/lisatieto toimenpide)]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Turvalaitteen komponentit"]
-    [:table
-     [:thead
-      [:tr
-       [:th {:style {:width "25%"}} "Sarja\u00ADnumero"]
-       [:th {:style {:width "75%"}} "Kompo\u00ADnent\u00ADti"]]]
-     [:tbody
-      (for* [turvalaitekomponentti (::to/turvalaitekomponentit toimenpide)]
-            [:tr
-             [:td (::tkomp/sarjanumero turvalaitekomponentti)]
-             [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi ])]])]]]])
+    (if (empty? (::to/turvalaitekomponentit toimenpide))
+      [:p "Ei komponentteja"]
+      [:table
+       [:thead
+        [:tr
+         [:th {:style {:width "25%"}} "Sarja\u00ADnumero"]
+         [:th {:style {:width "75%"}} "Kompo\u00ADnent\u00ADti"]]]
+       [:tbody
+        (for* [turvalaitekomponentti (::to/turvalaitekomponentit toimenpide)]
+          [:tr
+           [:td (::tkomp/sarjanumero turvalaitekomponentti)]
+           [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]])]])]])
 
 (defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
