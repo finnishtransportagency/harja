@@ -17,6 +17,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.organisaatio :as o]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
+            [harja.domain.vesivaylat.sopimus :as sop]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [harja.fmt :as fmt]))
 
@@ -33,7 +34,10 @@
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     ;; TODO Osa tiedoista puuttuu
     "Urakoitsija" (get-in toimenpide [::to/reimari-urakoitsija ::urakoitsija/nimi])
-    "Sopimusnumero" "?"
+    "Sopimusnumero" (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])
+                         " ("
+                         (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro])
+                         ")")
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (::to/tyoluokka toimenpide)

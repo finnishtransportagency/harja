@@ -441,7 +441,8 @@ reimari-tilat
 (s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite ::reimari-urakoitsija]
+                           ::turvalaite ::reimari-urakoitsija
+                           ::reimari-sopimus]
                      :opt [::vikakorjauksia?
                            ::suoritettu ::hintatyyppi ::lisatieto
                            ::oma-hinnoittelu ::hintaryhma-id])))
@@ -449,7 +450,8 @@ reimari-tilat
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite ::reimari-urakoitsija]
+                           ::turvalaite ::reimari-urakoitsija
+                           ::reimari-sopimus]
                      :opt [::vikakorjauksia?
                            ::suoritettu ::hintatyyppi ::lisatieto])))
 
