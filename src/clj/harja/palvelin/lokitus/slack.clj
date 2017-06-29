@@ -8,7 +8,6 @@
 
 
 (defn laheta [webhook-url level msg]
-  (println "LÄHETETÄÄN: " (pr-str msg))
   (let [attachment {:fallback ""
 
                     ;; Käytetään slackin esimääriteltyjä värejä levelin mukaan
@@ -20,6 +19,7 @@
                     ;; Näytetään viesti kenttänä, jonka otsikkona on taso
                     ;; ja arvona virheviesti
                     :fields (if (map? msg)
+                              ;; FIXME: "(slack-n)" erikoisuus pois
                               (mapv #(assoc % :value (str/replace (:value %) #"\(slack-n\)" "\n")) (:fields msg))
                               [{:title (str/upper-case (name level))
                                 :value msg}])}]
