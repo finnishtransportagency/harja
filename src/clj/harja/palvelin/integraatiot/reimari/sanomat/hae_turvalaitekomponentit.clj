@@ -7,16 +7,13 @@
             [clojure.data.zip.xml :as z]
             [taoensso.timbre :as log]
             [harja.domain.vesivaylat.turvalaitekomponentti :as turvalaitekomponentti]
+            [harja.palvelin.integraatiot.reimari.apurit :refer [paivamaara aikaleima]]
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
             [harja.domain.vesivaylat.vayla :as vayla]
             [clojure.string :as str]
             [clojure.set :refer [rename-keys]]
             [harja.pvm :as pvm]))
-
-(defn- aikaleima [text]
-  (when-not (str/blank? text)
-    (.toDate (xml/parsi-xsd-datetime-aikaleimalla text))))
 
 (def attribuutit {:id identity
                   :lisatiedot identity
@@ -28,8 +25,8 @@
                   :luontiaika aikaleima
                   :muokattu aikaleima
                   :muokkaaja identity
-                  :alkupvm aikaleima
-                  :loppupvm aikaleima})
+                  :alkupvm paivamaara
+                  :loppupvm paivamaara})
 
 (defn- lue-turvalaitekomponentti [turvalaitekomponentti]
   (xml/lue-attribuutit turvalaitekomponentti
