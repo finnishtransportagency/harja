@@ -53,7 +53,7 @@
 (deftest numero
   (let [data (r/atom nil)
         val! #(u/change :input %)
-        val #(some-> :input u/sel1 .-value)]
+        val #(some-> :input u/sel1 (.getAttribute "value"))]
     (komponenttitesti
      [kentat/tee-kentta {:desimaalien-maara 2
                          :nimi :foo :tyyppi :numero}
@@ -105,7 +105,7 @@
 (deftest positiivinen-numero
   (let [data (r/atom nil)
         val! #(u/change :input %)
-        val #(some-> :input u/sel1 .-value)]
+        val #(some-> :input u/sel1 (.getAttribute "value"))]
     (komponenttitesti
      [kentat/tee-kentta {:nimi :foo :tyyppi :positiivinen-numero}
       data]
@@ -128,7 +128,7 @@
 (deftest pvm
   (let [data (r/atom nil)
         val! #(u/change :input %)
-        val #(some-> :input u/sel1 .-value)]
+        val #(some-> :input u/sel1 (.getAttribute "value"))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :pvm :placeholder "anna pvm"} data]
 
@@ -153,7 +153,7 @@
      --
      (is (= "7.7.2010" (val)))
      (is (nil? @data)) ;; arvoa ei aseteta ennen blur tai selectiä
-     (sim/blur (u/sel1 :input) nil)
+     (sim/blur (u/sel1 :input) {:target {:value "7.7.2010"}})
      --
      (is (= (pvm/->pvm "7.7.2010") @data))
 
