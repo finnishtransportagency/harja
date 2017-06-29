@@ -10,8 +10,7 @@
       (let [alueurakkanro (str alueurakkanro)
             valaistusurakkanro (str (int (Double/parseDouble valaistusurakkanro)))
             geometria (.toString geometria)]
-        (u/luo-valaistusurakka<! db alueurakkanro geometria valaistusurakkanro)
-        (u/paivita-alue-urakalle! db geometria valaistusurakkanro))
+        (u/luo-valaistusurakka<! db alueurakkanro geometria valaistusurakkanro))
       (log/warn (format "Urakkalle (valaistusurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
                         valaistusurakkanro)))
     (log/warn "Geometriaa ei voida tuoda ilman valaistusurakkanumeroa")))

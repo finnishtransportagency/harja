@@ -5,10 +5,8 @@
             [harja.kyselyt.urakat :as urakat]))
 
 (defn vie-urakka-entry [db {:keys [the_geom siltapalve] :as urakka}]
-  (if-let [geometria (str the_geom)]
-    (do
-      (urakat/luo-siltapalvelusopimus<! db siltapalve geometria)
-      (urakat/paivita-alue-urakalle! db geometria (str siltapalve)))
+  (if the_geom
+    (urakat/luo-siltapalvelusopimus<! db siltapalve (str the_geom))
     (log/warn "Siltapalvelusopimusta ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error urakka))))
 
 (defn vie-siltojen-palvelusopimukset-kantaan [db shapefile]
