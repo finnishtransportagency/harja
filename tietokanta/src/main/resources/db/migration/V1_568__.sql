@@ -99,7 +99,7 @@ BEGIN
   END IF;
 
   UPDATE urakka
-  SET alue = uusi_alue, nimi = 'HEIJAKKAA-' || new.nimi
+  SET alue = uusi_alue
   WHERE alue IS NULL AND
         urakkanro = NEW.urakkanro;
 
