@@ -4,7 +4,6 @@ SET alue = (SELECT au.alue
             FROM alueurakka au
             WHERE au.alueurakkanro = urakkanro)
 WHERE alue IS NULL AND tyyppi = 'hoito' :: URAKKATYYPPI;
-;
 
 -- Kopioi geometriat 28.6.2017 ennen päättyneiltä hoidon alueurakoille niitä vastaavilta uusilta urakoilta
 UPDATE urakka
@@ -21,7 +20,8 @@ FROM (SELECT
               WHERE tyyppi = 'hoito' AND loppupvm > '2017-06-28') uusi
           ON upper(substring(vanha.nimi FROM 1 FOR 5)) = upper(substring(uusi.nimi FROM 1 FOR 5))
       WHERE vanha.tyyppi = 'hoito' AND vanha.loppupvm < '2017-06-28') arvot
-WHERE urakka.urakkanro = arvot.vanha_urakkanro;
+WHERE urakka.urakkanro = arvot.vanha_urakkanro AND
+      urakka.alkupvm <= '2017-10-01';
 
 -- Luo triggeri, joka päivittää urakan geometrian luomisen jälkeen
 CREATE FUNCTION paivita_alueurakan_geometria()
