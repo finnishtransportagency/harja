@@ -819,4 +819,4 @@ SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
 -- name: paivita-alue-urakalle!
 UPDATE urakka
 SET alue = ST_GeomFromText(:alue) :: GEOMETRY
-WHERE harja.public.urakka.urakkanro = :urakkanro;
+WHERE urakka.urakkanro = :urakkanro;
