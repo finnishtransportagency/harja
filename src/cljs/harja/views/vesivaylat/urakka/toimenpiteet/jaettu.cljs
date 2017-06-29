@@ -44,8 +44,7 @@
     "Toimenpide" (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
-    "Urakoitsijan vastuuhenkilö" "?"
-    "Henkilölukumaara" "?"]
+    "Lisätiedot" (::to/lisatieto toimenpide)]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Käytetyt komponentit"]
     [:table

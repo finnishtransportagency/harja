@@ -38,7 +38,8 @@
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?
                           ::vv-toimenpide/reimari-urakoitsija
-                          ::vv-toimenpide/reimari-sopimus]))))
+                          ::vv-toimenpide/reimari-sopimus
+                          ::vv-toimenpide/lisatieto]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
