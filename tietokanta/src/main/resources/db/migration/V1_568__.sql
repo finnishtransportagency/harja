@@ -92,7 +92,7 @@ BEGIN
 
   ELSEIF NEW.tyyppi = 'paallystys' :: URAKKATYYPPI
     THEN
-      uusi_alue :=  (SELECT alue
+      uusi_alue :=  (SELECT st_union(alue)
                      FROM paallystyspalvelusopimus
                      WHERE paallystyspalvelusopimusnro = NEW.urakkanro);
 
