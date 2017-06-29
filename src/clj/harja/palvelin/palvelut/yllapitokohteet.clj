@@ -128,7 +128,9 @@
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
           (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
             {:fim fim :email email :kohteen-tiedot kohteen-tiedot
-             :tiemerkintapvm tiemerkintapvm :kopio-itselle? kopio-itselle? :saate saate
+             :tiemerkintapvm tiemerkintapvm
+             :kopio-itselle? kopio-itselle?
+             :saate saate
              :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
