@@ -49,15 +49,14 @@
       :luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
       :footer [:div
-               [:span [:button.nappi-kielteinen
-                       {:type "button"
-                        :on-click #(do (.preventDefault %)
-                                       (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}
-                       (if valmis-tiemerkintaan-lomake?
-                         "Peruuta"
-                         "Älä perukaan")]
-                [napit/palvelinkutsu-nappi
+               [napit/peruuta
+                (if valmis-tiemerkintaan-lomake?
+                                "Peruuta"
+                                "Älä perukaan")
+                #(do (.preventDefault %)
+                     (reset! tiedot/modal-data (merge data {:nakyvissa? false})))]
 
+                [napit/palvelinkutsu-nappi
                  (if valmis-tiemerkintaan-lomake?
                    "Merkitse"
                    "Vahvista peruutus")
@@ -72,10 +71,11 @@
                          :vuosi vuosi}))
                  {:disabled (not valmis-tallennettavaksi?)
                   :luokka "nappi-myonteinen"
+                  :ikoni (ikonit/check)
                   :kun-onnistuu (fn [vastaus]
                                   (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
                                   (reset! tiedot/aikataulurivit vastaus)
-                                  (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}]]]}
+                                  (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
                "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."
