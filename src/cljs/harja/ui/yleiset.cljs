@@ -654,6 +654,6 @@ jatkon."
                  :footer [:span
                           [harja.ui.napit/peruuta "Peruuta" #(modal/piilota!)]
                           [harja.ui.napit/hyvaksy hyvaksy #(do
-                                                    (modal/piilota!)
-                                                    (toiminto-fn))]]}
+                                                             (modal/piilota!)
+                                                             (toiminto-fn))]]}
                 sisalto))
