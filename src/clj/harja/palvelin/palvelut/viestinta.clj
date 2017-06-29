@@ -13,6 +13,21 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn laheta-sahkoposti-itselle
+  "Lähettää sähköpostivahvistuksen itse käyttäjälle joka sai aikaan mailin lähetyksen Harjasta"
+  [{:keys [email sahkoposti viesti-otsikko viesti-body]}]
+  (try
+    (sahkoposti/laheta-viesti!
+      email
+      (sahkoposti/vastausosoite email)
+      sahkoposti
+      (str "Harja-viesti lähetetty: " viesti-otsikko)
+      (str "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle.\n"
+           viesti-body))
+    (catch Exception e
+      (log/error (format "Sähköpostin lähetys osoitteeseen %s epäonnistui. Virhe: %s"
+                         (pr-str sahkoposti) (pr-str e))))))
+
 (defn laheta-sposti-fim-kayttajarooleille
   "Yrittää lähettää sähköpostin annetun urakan FIM-käyttäjille, jotka ovat
    annetussa roolissa. Jos viestin lähetys epäonnistuu, logittaa virheen.

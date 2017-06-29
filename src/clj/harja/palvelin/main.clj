@@ -170,7 +170,8 @@
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet)
+                            (harja.palvelin.komponentit.liitteet/->Liitteet
+                             (get-in asetukset [:liitteet :fileyard-url]))
                              [:db :virustarkistus])
 
       :kehitysmoodi (component/using
