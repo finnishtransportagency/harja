@@ -654,7 +654,8 @@
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
 
 (defn log-level-info! []
-  (log/set-config! [:appenders :standard-out :min-level] :info))
+  (log/merge-config!
+   {:appenders {:println {:min-level :info}}}))
 
 
 (def figwheel-repl-options
