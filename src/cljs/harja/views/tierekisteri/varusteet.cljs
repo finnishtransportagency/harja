@@ -12,6 +12,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.modal :as modal]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [clojure.string :as str]
             [reagent.core :refer [atom] :as r]
             [harja.ui.liitteet :as liitteet]
@@ -66,7 +67,7 @@
      hakuehdot]))
 
 (defn poista-varuste [e! tietolaji tunniste]
-  (yleiset/varmista-kayttajalta
+  (varmista-kayttajalta/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
      :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
                [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "

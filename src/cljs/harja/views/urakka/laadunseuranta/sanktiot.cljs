@@ -25,7 +25,7 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.urakka :as u-domain]
-            [harja.ui.modal :as modal]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -76,7 +76,7 @@
                                :on-click
                                (fn [e]
                                  (.preventDefault e)
-                                 (yleiset/varmista-kayttajalta
+                                 (varmista-kayttajalta/varmista-kayttajalta
                                    {:otsikko "Sanktion poistaminen"
                                     :sisalto (str "Haluatko varmasti poistaa sanktion "
                                                   (or (str (:summa @muokattu) "€") "")
