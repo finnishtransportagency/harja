@@ -90,7 +90,7 @@ BEGIN
                      FROM siltapalvelusopimus
                      WHERE urakkanro = NEW.urakkanro);
 
-  ELSEIF NEW.tyyppi = 'siltakorjaus' :: URAKKATYYPPI
+  ELSEIF NEW.tyyppi = 'paallystys' :: URAKKATYYPPI
     THEN
       uusi_alue :=  (SELECT alue
                      FROM paallystyspalvelusopimus
