@@ -19,6 +19,8 @@
 
 (def toimenpiteet-xf
   (comp
+    ;; reimari-prefixatut ovat Reimari-dataa (monet tekstikoodeja), Harjassa käytetään
+    ;; useimmiten keywordeja ja siksi nimimuunnos
     (map #(set/rename-keys % {::vv-toimenpide/reimari-tyolaji ::vv-toimenpide/tyolaji
                               ::vv-toimenpide/reimari-tyoluokka ::vv-toimenpide/tyoluokka
                               ::vv-toimenpide/suoritettu ::vv-toimenpide/pvm
@@ -34,7 +36,8 @@
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
-                          ::vv-toimenpide/vikakorjauksia?]))))
+                          ::vv-toimenpide/vikakorjauksia?
+                          ::vv-toimenpide/reimari-urakoitsija]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
