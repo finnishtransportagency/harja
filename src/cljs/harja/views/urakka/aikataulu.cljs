@@ -41,8 +41,7 @@
         valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan (:valittu-lomake data))
         valmis-tallennettavaksi? (if valmis-tiemerkintaan-lomake?
                                    (some? (:valmis-tiemerkintaan (:lomakedata data)))
-                                   true)
-        ]
+                                   true)]
     [modal/modal
      {:otsikko (if valmis-tiemerkintaan-lomake?
                 (str "Kohteen " kohde-nimi " merkitseminen valmiiksi tiemerkintään")
