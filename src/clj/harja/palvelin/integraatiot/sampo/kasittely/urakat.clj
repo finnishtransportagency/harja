@@ -63,7 +63,8 @@
       "tekniset-laitteet" (urakat-q/paivita-tekniset-laitteet-urakan-geometria-kannasta! db urakkanro)
       "hoito" (urakat-q/paivita-alueurakan-geometria-kannasta! db urakkanro)
       "siltakorjaus" (urakat-q/paivita-siltakorjausurakan-geometria-kannasta! db urakkanro)
-      "paallystys" (urakat-q/paivita-paallystyksen-palvelusopimuksen-geometria-kannasta! db urakkanro))
+      "paallystys" (urakat-q/paivita-paallystyksen-palvelusopimuksen-geometria-kannasta! db urakkanro)
+      :default)
     urakka-id))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
