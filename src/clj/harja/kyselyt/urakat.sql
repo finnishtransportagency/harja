@@ -34,21 +34,21 @@ SELECT
   u.tyyppi,
   u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
-           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
+  st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
-  LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
-  -- Urakka on käynnissä
-  (u.alkupvm <= now() AND
-   u.loppupvm > now())
-  OR
-  -- Urakka on käynnissä (loppua ei tiedossa)
-  (u.alkupvm <= now() AND
-   u.loppupvm IS NULL)
-  OR
-  -- Urakan takuuaika on voimassa
-  (u.alkupvm <= now() AND
-   u.takuu_loppupvm > now())
+-- Urakka on käynnissä
+(u.alkupvm <= now() AND
+u.loppupvm > now())
+OR
+-- Urakka on käynnissä (loppua ei tiedossa)
+(u.alkupvm <= now() AND
+u.loppupvm IS NULL)
+OR
+-- Urakan takuuaika on voimassa
+(u.alkupvm <= now() AND
+u.takuu_loppupvm > now())
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
@@ -126,11 +126,11 @@ SELECT
   k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-    THEN '*'
+                            THEN '*'
                             ELSE '' END),
-                           id,
-                           '=',
-                           COALESCE (sampoid, nimi)))
+                            id,
+                            '=',
+                            COALESCE (sampoid, nimi)))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
 
@@ -525,30 +525,30 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
       AND
       ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
-       OR
-       (:urakkatyyppi = 'valaistus' AND
-        exists(SELECT id
-               FROM valaistusurakka vu
-               WHERE vu.valaistusurakkanro = u.urakkanro AND
-                     st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-        exists(SELECT id
-               FROM paallystyspalvelusopimus pps
-               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
-                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'tekniset-laitteet') AND
-        exists(SELECT id
-               FROM tekniset_laitteet_urakka tlu
-               WHERE tlu.urakkanro = u.urakkanro AND
-                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
-       OR
-       ((:urakkatyyppi = 'siltakorjaus') AND
-        exists(SELECT id
-               FROM siltapalvelusopimus sps
-               WHERE sps.urakkanro = u.urakkanro AND
-                     st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
+      OR
+      (:urakkatyyppi = 'valaistus' AND
+       exists(SELECT id
+              FROM valaistusurakka vu
+              WHERE vu.valaistusurakkanro = u.urakkanro AND
+                    st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+exists(SELECT id
+FROM paallystyspalvelusopimus pps
+WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
+st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'tekniset-laitteet') AND
+exists(SELECT id
+FROM tekniset_laitteet_urakka tlu
+WHERE tlu.urakkanro = u.urakkanro AND
+st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+OR
+((:urakkatyyppi = 'siltakorjaus') AND
+exists(SELECT id
+FROM siltapalvelusopimus sps
+WHERE sps.urakkanro = u.urakkanro AND
+st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -558,7 +558,7 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
-  elynumero = :elynumero
+elynumero = :elynumero
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: hae-alueurakka-numerolla
@@ -647,11 +647,11 @@ SELECT
   u.id,
   st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
 FROM urakka u
-  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
-  u.alkupvm <= now() AND
-  u.loppupvm > now() AND
-  st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+u.alkupvm <= now() AND
+u.loppupvm > now() AND
+st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
 
@@ -820,48 +820,3 @@ SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
 UPDATE urakka
 SET alue = ST_GeomFromText(:alue) :: GEOMETRY
 WHERE harja.public.urakka.urakkanro = :urakkanro;
-
--- name: paivita-alueurakan-geometria-kannasta!
-UPDATE urakka
-SET alue = (SELECT alue
-            FROM alueurakka
-            WHERE alueurakkanro = :urakkanro)
-WHERE alue IS NULL AND
-      urakkanro = :urakkanro AND
-      tyyppi = 'hoito' :: URAKKATYYPPI;
-
--- name: paivita-valaistusurakan-geometria-kannasta!
-UPDATE urakka
-SET alue = (SELECT ST_Union(alue)
-            FROM valaistusurakka
-            WHERE valaistusurakkanro = :urakkanro)
-WHERE alue IS NULL AND
-      urakkanro = :urakkanro AND
-      tyyppi = 'valaistus' :: URAKKATYYPPI;
-
--- name: paivita-tekniset-laitteet-urakan-geometria-kannasta!
-UPDATE urakka
-SET alue = (SELECT alue
-            FROM tekniset_laitteet_urakka
-            WHERE urakkanro = :urakkanro)
-WHERE alue IS NULL AND
-      urakkanro = :urakkanro AND
-      tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI;
-
--- name: paivita-siltakorjausurakan-geometria-kannasta!
-UPDATE urakka
-SET alue = (SELECT alue
-            FROM siltapalvelusopimus
-            WHERE urakkanro = :urakkanro)
-WHERE alue IS NULL AND
-      urakkanro = :urakkanro AND
-      tyyppi = 'siltakorjaus' :: URAKKATYYPPI;
-
--- name: paivita-paallystyksen-palvelusopimuksen-geometria-kannasta!
-UPDATE urakka
-SET alue = (SELECT alue
-            FROM siltapalvelusopimus
-            WHERE urakkanro = :urakkanro)
-WHERE alue IS NULL AND
-      urakkanro = :urakkanro AND
-      tyyppi = 'siltakorjaus' :: URAKKATYYPPI;

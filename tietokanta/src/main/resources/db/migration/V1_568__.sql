@@ -57,43 +57,7 @@ FROM (SELECT
       WHERE vanha.tyyppi = 'hoito' AND vanha.loppupvm < '2017-06-28') arvot
 WHERE urakka.urakkanro = arvot.vanha_urakkanro;
 
--- Päivitä pohjavesialueiden ja siltojen materialisoidut näkymät käyttämään urakkataulun geometriaa
-DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
-CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
-  WITH
-      urakat_alueet AS (
-        SELECT
-          u.id,
-          u.alue
-        FROM urakka u
-        WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI),
-      pohjavesialue_alue AS (
-        SELECT
-          p.nimi,
-          p.tunnus,
-          ST_UNION(ST_SNAPTOGRID(p.alue, 0.0001)) AS alue,
-          p.suolarajoitus
-        FROM pohjavesialue p
-        GROUP BY nimi, tunnus, suolarajoitus)
-  SELECT
-    pa.nimi,
-    pa.tunnus,
-    pa.alue,
-    pa.suolarajoitus,
-    ua.id AS urakka
-  FROM pohjavesialue_alue pa
-    CROSS JOIN urakat_alueet ua
-  WHERE ST_CONTAINS(ua.alue, pa.alue);
-
-DROP MATERIALIZED VIEW sillat_alueurakoittain;
-CREATE MATERIALIZED VIEW sillat_alueurakoittain AS
-  SELECT
-    u.id AS urakka,
-    s.id AS silta
-  FROM urakka u
-    JOIN silta s ON ST_CONTAINS(u.alue, s.alue)
-  WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI;
-
+-- Luo triggeri, joka päivittää urakan geometrian luomisen jälkeen
 CREATE FUNCTION paivita_urakan_geometria()
   RETURNS TRIGGER AS $$
 DECLARE
@@ -102,37 +66,40 @@ DECLARE
 BEGIN
   uusi_alue = NULL;
 
-  IF NEW.tyyppi = 'valaistus' :: URAKKATYYPPI
+  IF NEW.tyyppi = 'hoito' :: URAKKATYYPPI
   THEN
-    uusi_alue :=  (SELECT ST_Union(uusi_alue)
-                   FROM valaistusurakka
-                   WHERE valaistusurakkanro = NEW.urakkanro);
+    uusi_alue :=  (SELECT alue
+                   FROM alueurakka
+                   WHERE alueurakkanro = NEW.urakkanro);
 
-    -- name: paivita-tekniset-laitteet-urakan-geometria-kannasta!
+  ELSEIF NEW.tyyppi = 'valaistus' :: URAKKATYYPPI
+    THEN
+      uusi_alue :=  (SELECT ST_Union(alue)
+                     FROM valaistusurakka
+                     WHERE valaistusurakkanro = NEW.urakkanro);
+
   ELSEIF NEW.tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI
     THEN
-      uusi_alue :=  (SELECT uusi_alue
+      uusi_alue :=  (SELECT alue
                      FROM tekniset_laitteet_urakka
                      WHERE urakkanro = NEW.urakkanro);
 
-      -- name: paivita-siltakorjausurakan-geometria-kannasta!
   ELSEIF NEW.tyyppi = 'siltakorjaus' :: URAKKATYYPPI
     THEN
-      uusi_alue :=  (SELECT uusi_alue
+      uusi_alue :=  (SELECT alue
                      FROM siltapalvelusopimus
                      WHERE urakkanro = NEW.urakkanro);
 
-      -- name: paivita-paallystyksen-palvelusopimuksen-geometria-kannasta!
   ELSEIF NEW.tyyppi = 'siltakorjaus' :: URAKKATYYPPI
     THEN
-      uusi_alue :=  (SELECT uusi_alue
-                     FROM siltapalvelusopimus
-                     WHERE urakkanro = NEW.urakkanro);
+      uusi_alue :=  (SELECT alue
+                     FROM paallystyspalvelusopimus
+                     WHERE paallystyspalvelusopimusnro = NEW.urakkanro);
 
   END IF;
 
   UPDATE urakka
-  SET alue = uusi_alue
+  SET alue = uusi_alue, nimi = 'HEIJAKKAA-' || new.nimi
   WHERE alue IS NULL AND
         urakkanro = NEW.urakkanro;
 
@@ -153,11 +120,3 @@ WHEN (NEW.tyyppi IN ('valaistus' :: URAKKATYYPPI,
                      'siltakorjaus' :: URAKKATYYPPI,
                      'paallystys' :: URAKKATYYPPI))
 EXECUTE PROCEDURE paivita_urakan_geometria();
-
-
-
-
-
-
-
-
