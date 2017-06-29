@@ -33,57 +33,70 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn valmis-tiemerkintaan [{:keys [kohde-id urakka-id vuosi paallystys-valmis? suorittava-urakka-annettu?]}]
+(defn valmis-tiemerkintaan [{:keys [kohde-id kohde-nimi urakka-id vuosi paallystys-valmis? suorittava-urakka-annettu?]}]
   (let [valmis-tiemerkintaan-lomake (atom nil)
         valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
-    (fn [{:keys [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]}]
+    (modal/nayta!
+      {:otsikko (str "Kohteen " kohde-nimi " merkitseminen valmiiksi tiemerkintään")
+       :luokka "merkitse-valmiiksi-tiemerkintaan"
+       :footer [:div
+                [:span [:button.nappi-toissijainen
+                        {:type "button"
+                         :on-click #(do (.preventDefault %)
+                                        (modal/piilota!))}
+                        "Peruuta"]
+                 [napit/palvelinkutsu-nappi
+                  "Merkitse"
+                  #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                       (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                         {:kohde-id kohde-id
+                          :tiemerkintapvm (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
+                          :urakka-id urakka-id
+                          :sopimus-id (first @u/valittu-sopimusnumero)
+                          :vuosi vuosi}))
+                  {                                         ;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
+                   :luokka "nappi-myonteinen"
+                   :kun-onnistuu (fn [vastaus]
+                                   (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
+                                   (reset! tiedot/aikataulurivit vastaus)
+                                   (modal/piilota!))}]]]}
       [:div
-       {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
-                     (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
-                     :default nil)}
-       [:button.nappi-ensisijainen.nappi-grid
-        {:type "button"
-         :disabled (or (not paallystys-valmis?)
-                       (not suorittava-urakka-annettu?))
-         :on-click
-         (fn []
-           (modal/nayta!
-             {:otsikko "Kohteen merkitseminen valmiiksi tiemerkintään"
-              :luokka "merkitse-valmiiksi-tiemerkintaan"
-              :sulje-fn #(reset! valmis-tiemerkintaan-lomake nil) ; FIXME ei toimi?
-              :footer [:div
-                       [:span [:button.nappi-toissijainen
-                               {:type "button"
-                                :on-click #(do (.preventDefault %)
-                                               (reset! valmis-tiemerkintaan-lomake nil)
-                                               (modal/piilota!))}
-                               "Peruuta"]
-                        [napit/palvelinkutsu-nappi
-                         "Merkitse"
-                         #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
-                              (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                                {:kohde-id kohde-id
-                                 :tiemerkintapvm (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
-                                 :urakka-id urakka-id
-                                 :sopimus-id (first @u/valittu-sopimusnumero)
-                                 :vuosi vuosi}))
-                         {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
-                          :luokka "nappi-myonteinen"
-                          :kun-onnistuu (fn [vastaus]
-                                          (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
-                                          (reset! tiedot/aikataulurivit vastaus)
-                                          (modal/piilota!))}]]]}
-             [:div
-              [vihje "Toimintoa ei voi perua. Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]
-              [lomake/lomake {:otsikko ""
-                              :muokkaa! (fn [uusi-data]
-                                          (reset! valmis-tiemerkintaan-lomake uusi-data))}
-               [{:otsikko "Tiemerkinnän saa aloittaa"
-                 :nimi :valmis-tiemerkintaan
-                 :pakollinen? true
-                 :tyyppi :pvm}]
-               @valmis-tiemerkintaan-lomake]]))}
-        "Aseta päivä\u00ADmäärä"]])))
+       [vihje "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]
+       [lomake/lomake {:otsikko ""
+                       :muokkaa! (fn [uusi-data]
+                                   (reset! valmis-tiemerkintaan-lomake uusi-data))}
+        [{:otsikko "Tiemerkinnän saa aloittaa"
+          :nimi :valmis-tiemerkintaan
+          :pakollinen? true
+          :tyyppi :pvm}]
+        @valmis-tiemerkintaan-lomake]])))
+
+(defn peru-valmius-tiemerkintaan [{:keys [kohde-id kohde-nimi urakka-id vuosi]}]
+  (modal/nayta!
+    {:otsikko (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen")
+     :luokka "merkitse-valmiiksi-tiemerkintaan"
+     :footer [:div
+              [:span [:button.nappi-toissijainen
+                      {:type "button"
+                       :on-click #(do (.preventDefault %)
+                                      (modal/piilota!))}
+                      "Älä perukaan"]
+               [napit/palvelinkutsu-nappi
+                "Vahvista peruminen"
+                #(do (log "[AIKATAULU] Perutaan kohteen valmius tiemerkintään")
+                     (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                       {:kohde-id kohde-id
+                        :tiemerkintapvm nil
+                        :urakka-id urakka-id
+                        :sopimus-id (first @u/valittu-sopimusnumero)
+                        :vuosi vuosi}))
+                {:luokka "nappi-kielteinen"
+                 :kun-onnistuu (fn [vastaus]
+                                 (log "[AIKATAULU] Kohteen tiemerkintävalmius peruttu")
+                                 (reset! tiedot/aikataulurivit vastaus)
+                                 (modal/piilota!))}]]]}
+    [:div
+     [vihje "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]]))
 
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
@@ -142,13 +155,13 @@
 
 (defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (tiedot/tallenna-yllapitokohteiden-aikataulu
-   {:urakka-id urakka-id
-    :sopimus-id sopimus-id
-    :vuosi vuosi
-    :kohteet kohteet
-    :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
-                                    :warning
-                                    viesti/viestin-nayttoaika-lyhyt)}))
+    {:urakka-id urakka-id
+     :sopimus-id sopimus-id
+     :vuosi vuosi
+     :kohteet kohteet
+     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
+                                     :warning
+                                     viesti/viestin-nayttoaika-lyhyt)}))
 
 (defn valinnat [ur]
   (let [{aikajana? :nayta-aikajana?
@@ -171,9 +184,9 @@
       "Järjestä kohteet"
       {:valinta jarjestys
        :valitse-fn tiedot/jarjesta-kohteet!
-       :format-fn  {:aika "Aloistusajan mukaan"
-                    :kohdenumero "Kohdenumeron mukaan"
-                    :tr "Tieosoitteen mukaan"}}
+       :format-fn {:aika "Aloistusajan mukaan"
+                   :kohdenumero "Kohdenumeron mukaan"
+                   :tr "Tieosoitteen mukaan"}}
       [:aika :kohdenumero :tr]]
 
      [upotettu-raportti/raportin-vientimuodot
@@ -268,7 +281,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt pvm/pvm-opt
               :muokattava? voi-muokata-paallystys?})
@@ -293,8 +306,8 @@
               :tyyppi :valinta
               :fmt (fn [arvo]
                      (:nimi (some
-                             #(when (= (:id %) arvo) %)
-                             @tiedot/tiemerkinnan-suorittavat-urakat)))
+                              #(when (= (:id %) arvo) %)
+                              @tiedot/tiemerkinnan-suorittavat-urakat)))
               :valinta-arvo :id
               :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
               :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
@@ -310,21 +323,37 @@
             :fmt pvm/pvm-opt
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
-                           (if (:valmis-tiemerkintaan rivi)
-                             [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
-                             (if (= (:nakyma optiot) :paallystys)
-                               ;; Voi merkitä valmiiksi tiemerkintään vain päällystysurakassa
-                               ;; Ei kuitenkaan jos gridi on muokkaustilassa, sillä päivämäärän asettaminen
-                               ;; dialogista resetoi muokkaustilan.
+                           (let [paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
+                                 suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))
+                                 modalin-params {:kohde-id (:id rivi)
+                                                 :kohde-nimi (:nimi rivi)
+                                                 :urakka-id urakka-id
+                                                 :vuosi vuosi
+                                                 :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
+                                                 :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))}]
+                             ;; Jos ei olla päällystyksessä, read only
+                             (if-not (= (:nakyma optiot) :paallystys)
+                               (if (:valmis-tiemerkintaan rivi)
+                                 [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
+                                 [:span "Ei"])
+                               ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
                                (if muokataan?
-                                 [:span]
-                                 [valmis-tiemerkintaan
-                                  {:kohde-id (:id rivi)
-                                   :urakka-id urakka-id
-                                   :vuosi vuosi
-                                   :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
-                                   :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))}])
-                               [:span "Ei"])))}
+                                 [:div (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
+                                 [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
+                                                     (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
+                                                     :default nil)}
+
+                                  (grid/arvo-ja-nappi
+                                    {:voi-muokata? voi-muokata-paallystys?
+                                     :ehto-fn #(not (:valmis-tiemerkintaan rivi))
+                                     :nappi-teksti "Aseta päivä\u00ADmäärä"
+                                     :uusi-fn #(valmis-tiemerkintaan modalin-params)
+                                     :muokkaa-ikoni "Peru"
+                                     :muokkaa-fn #(peru-valmius-tiemerkintaan modalin-params)
+                                     :nappi-optiot {:disabled (or
+                                                                (not paallystys-valmis?)
+                                                                (not suorittava-urakka-annettu?))}
+                                     :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})]))))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :fmt pvm/pvm-opt
