@@ -31,9 +31,8 @@
 
 ;; Viestien muodostukset
 
-(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
-                                                                   tiemerkintapvm ilmoittaja tiemerkintaurakka-nimi
-                                                                   pituus]}]
+(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite pituus
+                                                                   tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
   (let [peruminen? (nil? tiemerkintapvm)
         tiivistelma (if peruminen?
                   (format "Peruutus: kohde '%s' ei sittenkään ole vielä valmis tiemerkintään."
@@ -44,6 +43,7 @@
     (html
      [:div
       [:p tiivistelma]
+      (when saate [:p saate])
       (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                               kohde-osoite
@@ -156,7 +156,7 @@
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm ilmoittaja]}]
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
                 tiemerkintaurakka-nimi pituus]} kohteen-tiedot
@@ -177,6 +177,7 @@
                         :kohde-osoite kohde-osoite
                         :pituus pituus
                         :tiemerkintapvm tiemerkintapvm
+                        :saate saate
                         :ilmoittaja ilmoittaja
                         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi}
         viestin-vartalo (viesti-kohde-valmis-merkintaan-tai-valmius-peruttu viestin-params)]
@@ -189,7 +190,7 @@
          :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
-      (when (:sahkoposti ilmoittaja)
+      (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle {:email email
                                               :sahkoposti (:sahkoposti ilmoittaja)
                                               :viesti-otsikko viestin-otsikko
@@ -239,9 +240,10 @@
                                      :ilmoittaja kayttaja}))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
-  "Välittää tiedon kohteen valmiudesta tiemerkintään."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm kayttaja]}]
-  (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu {:fim fim :email email
-                                          :kohteen-tiedot kohteen-tiedot
-                                          :tiemerkintapvm tiemerkintapvm
-                                          :ilmoittaja kayttaja}))
+  "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm
+           kopio-itselle? saate kayttaja]}]
+  (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
+    {:fim fim :email email :kohteen-tiedot kohteen-tiedot
+     :tiemerkintapvm tiemerkintapvm :kopio-itselle? kopio-itselle? :saate saate
+     :ilmoittaja kayttaja}))

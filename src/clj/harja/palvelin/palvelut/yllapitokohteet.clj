@@ -99,7 +99,8 @@
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä tai peruu valmiuden.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
-   {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
+   {:keys [urakka-id sopimus-id vuosi tiemerkintapvm
+           kopio-itselle? saate kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
   (if tiemerkintapvm
@@ -127,7 +128,7 @@
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
           (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
             {:fim fim :email email :kohteen-tiedot kohteen-tiedot
-             :tiemerkintapvm tiemerkintapvm
+             :tiemerkintapvm tiemerkintapvm :kopio-itselle? kopio-itselle? :saate saate
              :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
