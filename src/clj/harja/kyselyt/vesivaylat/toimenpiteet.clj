@@ -13,6 +13,7 @@
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
             [harja.domain.urakka :as ur]))
@@ -39,7 +40,8 @@
                           ::vv-toimenpide/vikakorjauksia?
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
-                          ::vv-toimenpide/lisatieto]))))
+                          ::vv-toimenpide/lisatieto
+                          ::vv-toimenpide/turvalaitekomponentit]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
@@ -174,7 +176,23 @@
                                  {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
-                      (suodata-vikakorjaukset vikailmoitukset?))]
+                      (suodata-vikakorjaukset vikailmoitukset?))
+        ;; Hae toimenpiteiden turvalaitteenn kaikki turvalaitekomponentit
+        turvalaitekomponentit (fetch
+                                db
+                                ::tkomp/turvalaitekomponentti
+                                (set/union tkomp/kentat tkomp/komponenttityyppi)
+                                {::tkomp/turvalaitenro
+                                 (op/in (set (map
+                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
+                                                           ::vv-turvalaite/r-nro])
+                                               fetchattu)))})
+        ;; Liitä toimenpiteisiin tieto turvalaitteen komponenteista
+        fetchattu (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
+                                 (tkomp/turvalaitekomponentit-turvalaitenumerolla
+                                   turvalaitekomponentit
+                                   (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
+                       fetchattu)]
     (cond->> (into [] toimenpiteet-xf fetchattu)
              yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
              kokonaishintaiset? (identity))))

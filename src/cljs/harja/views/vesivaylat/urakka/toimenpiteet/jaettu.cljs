@@ -18,8 +18,12 @@
             [harja.domain.organisaatio :as o]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.sopimus :as sop]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
+            [harja.domain.vesivaylat.komponenttityyppi :as ktyyppi]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 ;;;;;;;;;;;;;;
 ;; SUODATTIMET
@@ -32,7 +36,6 @@
                      :jata-kaventamatta #{"Työlaji" "Työluokka" "Toimenpide"}
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
-    ;; TODO Osa tiedoista puuttuu
     "Urakoitsija" (get-in toimenpide [::to/reimari-urakoitsija ::urakoitsija/nimi])
     "Sopimusnumero" (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])
                          " ("
@@ -46,19 +49,17 @@
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
     "Lisätiedot" (::to/lisatieto toimenpide)]
    [:footer.livi-grid-infolaatikko-footer
-    [:h5 "Käytetyt komponentit"]
+    [:h5 "Turvalaitteen komponentit"]
     [:table
      [:thead
       [:tr
-       [:th {:style {:width "50%"}} "Kompo\u00ADnent\u00ADti"]
-       [:th {:style {:width "25%"}} "Määrä"]
-       [:th {:style {:width "25%"}} "Jäljellä"]]]
+       [:th {:style {:width "25%"}} "Sarja\u00ADnumero"]
+       [:th {:style {:width "75%"}} "Kompo\u00ADnent\u00ADti"]]]
      [:tbody
-      [:tr
-       ;; TODO Komponenttitiedot puuttuu
-       [:td "?"]
-       [:td "?"]
-       [:td "?"]]]]]])
+      (for* [turvalaitekomponentti (::to/turvalaitekomponentit toimenpide)]
+            [:tr
+             [:td (::tkomp/sarjanumero turvalaitekomponentti)]
+             [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi ])]])]]]])
 
 (defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
