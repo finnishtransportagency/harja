@@ -128,7 +128,7 @@
   (try
     (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
       (if (not (string? result))
-        (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
+        (log/error "Virhe siirrettäessä liitettä " nimi "(id: " id ") fileyardiin: " result)
         (do
           (jdbc/with-db-transaction [db db]
             (poista-lob db liite_oid)
