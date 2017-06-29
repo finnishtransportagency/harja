@@ -94,4 +94,70 @@ CREATE MATERIALIZED VIEW sillat_alueurakoittain AS
     JOIN silta s ON ST_CONTAINS(u.alue, s.alue)
   WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI;
 
+CREATE FUNCTION paivita_urakan_geometria()
+  RETURNS TRIGGER AS $$
+DECLARE
+  uusi_alue GEOMETRY;
+
+BEGIN
+  uusi_alue = NULL;
+
+  IF NEW.tyyppi = 'valaistus' :: URAKKATYYPPI
+  THEN
+    uusi_alue :=  (SELECT ST_Union(uusi_alue)
+                   FROM valaistusurakka
+                   WHERE valaistusurakkanro = NEW.urakkanro);
+
+    -- name: paivita-tekniset-laitteet-urakan-geometria-kannasta!
+  ELSEIF NEW.tyyppi = 'tekniset-laitteet' :: URAKKATYYPPI
+    THEN
+      uusi_alue :=  (SELECT uusi_alue
+                     FROM tekniset_laitteet_urakka
+                     WHERE urakkanro = NEW.urakkanro);
+
+      -- name: paivita-siltakorjausurakan-geometria-kannasta!
+  ELSEIF NEW.tyyppi = 'siltakorjaus' :: URAKKATYYPPI
+    THEN
+      uusi_alue :=  (SELECT uusi_alue
+                     FROM siltapalvelusopimus
+                     WHERE urakkanro = NEW.urakkanro);
+
+      -- name: paivita-paallystyksen-palvelusopimuksen-geometria-kannasta!
+  ELSEIF NEW.tyyppi = 'siltakorjaus' :: URAKKATYYPPI
+    THEN
+      uusi_alue :=  (SELECT uusi_alue
+                     FROM siltapalvelusopimus
+                     WHERE urakkanro = NEW.urakkanro);
+
+  END IF;
+
+  UPDATE urakka
+  SET alue = uusi_alue
+  WHERE alue IS NULL AND
+        urakkanro = NEW.urakkanro;
+
+  RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Luo triggeri, joka päivittää urakoiden geometriat automaattisesti luonnin jälkeen
+CREATE TRIGGER tg_paivita_urakan_geometriat_luonnin_jalkeen
+AFTER INSERT
+  ON urakka
+FOR EACH ROW
+WHEN (NEW.tyyppi IN ('valaistus' :: URAKKATYYPPI,
+                     'tekniset-laitteet' :: URAKKATYYPPI,
+                     'hoito' :: URAKKATYYPPI,
+                     'siltakorjaus' :: URAKKATYYPPI,
+                     'paallystys' :: URAKKATYYPPI))
+EXECUTE PROCEDURE paivita_urakan_geometria();
+
+
+
+
+
+
+
 
