@@ -244,7 +244,23 @@
        {:x (.y c) :y (.x c)})))
 
 
+#?(:cljs
+   (defn geolocation-api []
+     (.-geolocation js/navigator)))
 
+#?(:cljs
+   (defn geolokaatio-tuettu? []
+     (not (nil? (geolocation-api)))))
+
+#?(:cljs
+   (defn nykyinen-geolokaatio [sijainti-saatu-fn virhe-fn]
+     (let [paikannusoptiot {:enableHighAccuracy true
+                            :maximumAge 1000
+                            :timeout 10000}]
+       (.getCurrentPosition (geolocation-api)
+                            sijainti-saatu-fn
+                            virhe-fn
+                            paikannusoptiot))))
 
 (defn- laske-pisteiden-extent
   "Laskee pisteiden alueen."
@@ -487,3 +503,4 @@ pisteen [px py]."
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/atan2 dy dx)))
+

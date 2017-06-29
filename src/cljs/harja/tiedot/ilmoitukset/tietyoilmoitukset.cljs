@@ -266,12 +266,15 @@
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
-          (let [vastaus-kanava (k/post! :tallenna-tietyoilmoitus
-                                 (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet
-                                             ::t/kohteen-aikataulu
-                                             :urakan-kohteet
-                                             :komponentissa-virheita?)))
+          (let [ilmoitus (-> ilmoitus
+                             (dissoc ::t/tyovaiheet
+                                     ::t/kohteen-aikataulu
+                                     :urakan-kohteet
+                                     :komponentissa-virheita?
+                                     :aihe
+                                     :type
+                                     :alue))
+                vastaus-kanava (k/post! :tallenna-tietyoilmoitus ilmoitus)
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
             (if (k/virhe? vastaus)

@@ -45,4 +45,9 @@
 
 (defrecord LisaaLiitetiedosto [liite])
 
+(defrecord AsetaKayttajanSijainti [])
+
+(defrecord HaeSijainninOsoite [sijainti])
+
+(defrecord SijanninOsoiteHaettu [osoite])
 
