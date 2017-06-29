@@ -8,3 +8,18 @@
 
 (define-tables
   ["reimari_turvalaitekomponentti" ::turvalaitekomponentti])
+
+(def kentat
+  #{::id
+    ::lisatiedot
+    ::turvalaitenro
+    ::komponentti-id
+    ::sarjanumero
+    ::paivitysaika
+    ::luontiaika
+    ::luoja
+    ::muokkaaja
+    ::muokattu
+    ::alkupvm
+    ::loppupvm
+    ::valiaikainen})
