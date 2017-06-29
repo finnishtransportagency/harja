@@ -98,33 +98,6 @@
 
        (:lomakedata data)]]]))
 
-(defn peru-valmius-tiemerkintaan [{:keys [kohde-id kohde-nimi urakka-id vuosi]}]
-  (modal/nayta!
-    {:otsikko (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen")
-     :luokka "merkitse-valmiiksi-tiemerkintaan"
-     :footer [:div
-              [:span [:button.nappi-toissijainen
-                      {:type "button"
-                       :on-click #(do (.preventDefault %)
-                                      (modal/piilota!))}
-                      "Älä perukaan"]
-               [napit/palvelinkutsu-nappi
-                "Vahvista peruminen"
-                #(do (log "[AIKATAULU] Perutaan kohteen valmius tiemerkintään")
-                     (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                       {:kohde-id kohde-id
-                        :tiemerkintapvm nil
-                        :urakka-id urakka-id
-                        :sopimus-id (first @u/valittu-sopimusnumero)
-                        :vuosi vuosi}))
-                {:luokka "nappi-kielteinen"
-                 :kun-onnistuu (fn [vastaus]
-                                 (log "[AIKATAULU] Kohteen tiemerkintävalmius peruttu")
-                                 (reset! tiedot/aikataulurivit vastaus)
-                                 (modal/piilota!))}]]]}
-    [:div
-     [vihje "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]]))
-
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
   [optiot]
