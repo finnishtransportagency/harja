@@ -7,7 +7,6 @@
             [goog.events :as events]
             [goog.events.EventType :as EventType]
             [harja.ui.dom :as dom]
-            [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.modal :as modal])
@@ -653,8 +652,8 @@ jatkon."
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä"
   (modal/nayta! {:otsikko otsikko
                  :footer [:span
-                          [napit/peruuta "Peruuta" #(modal/piilota!)]
-                          [napit/hyvaksy hyvaksy #(do
+                          [harja.ui.napit/peruuta "Peruuta" #(modal/piilota!)]
+                          [harja.ui.napit/hyvaksy hyvaksy #(do
                                                     (modal/piilota!)
                                                     (toiminto-fn))]]}
                 sisalto))
