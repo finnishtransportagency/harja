@@ -136,6 +136,8 @@
 
    (s/optional-key :vkm)   {:url s/Str}
 
+   (s/optional-key :liitteet)   {:fileyard-url s/Str}
+
    (s/optional-key :reimari)                {:url                     s/Str
                                              :kayttajatunnus          s/Str
                                              :salasana                s/Str

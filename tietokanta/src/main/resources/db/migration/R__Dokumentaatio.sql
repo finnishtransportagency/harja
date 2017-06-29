@@ -44,7 +44,7 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
   - valmis, päällystysilmoituksen tiedot on täytetty, mutta sitä ei ole vielä hyväksytty
   - lukittu, tilaaja on hyväksynyt tehdyn päällystysilmoituksen. Lukittua ilmoitusta ei tulisi enää muokata.';
 
-  -- Ylläpito (tiemerkintä)
+-- Ylläpito (tiemerkintä)
 
 COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
 E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus. Jos linkittyy poistettuun ylläpitokohteeseen, tulkitaan myös itse toteuman olevan poistettu, vaikkei olisikaan eksplisiittisesti merkitty poistetuksi.\n\n
@@ -93,12 +93,12 @@ E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava näkymä/asia (
  - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';
 
- -- Toteumat
+-- Toteumat
 
 COMMENT ON TABLE toteuma_tehtava IS
 E'- Toteuman tehtävä linkittyy aina toteumaan. Jos toteuma on poistettu, tulkitaan myös tehtävän olevan poistettu, vaikkei itse tehtävää olisikaan eksplisiittisesti merkitty poistetuksi.';
 
- -- Laadunseuranta
+-- Laadunseuranta
 
 COMMENT ON TABLE tarkastus IS
 E'- Tarkastus voi linkittyä ylläpitokohteeseen. Jos ylläpitokohde on poistettu, tulkitaan myös tarkastuksen olevan poistettu, vaikkei itse tarkastusta olisikaan eksplisiittisesti merkitty poistetuksi.';
@@ -158,3 +158,6 @@ Urakoitsija merkitsee kokonaishintaisia toimenpiteitä kiintiöihin kuuluvaksi, 
 
 COMMENT ON TABLE vv_materiaali IS
 E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle myötämien materiaalien\nkappalemäärien alkutilanteen sekä muutokset niissä. Esimerkiksi tilaaja luovuttaa\nurakoitsijalle 10kpl poijuja urakan alussa ja urakoitsija käyttää niitä urakan aikana.\nUrakan aikana käytetyt ja hankitut materiaalit tulevat riveiksi tähän tauluun.';
+
+COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
+E'Taulun tarkoitus ON liittää toimenpideinstanssiin vesiväylä - spesifistä tietoa';

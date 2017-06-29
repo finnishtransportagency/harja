@@ -187,15 +187,18 @@
               yllapitokohde))
           yllapitokohteet)))
 
+(def urakan-yllapitokohde-xf
+  (comp
+   yllapitokohteet-domain/yllapitoluokka-xf
+   (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+   (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
+
 (defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
   (let [yllapitokohteet (into []
-                              (comp
-                                yllapitokohteet-domain/yllapitoluokka-xf
-                                (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
-                                (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                                (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-                                (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                                (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
+                              urakan-yllapitokohde-xf
                               (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                            :sopimus sopimus-id
                                                                            :vuosi vuosi}))
