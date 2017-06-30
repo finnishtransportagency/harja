@@ -13,13 +13,21 @@
 (defn tietoja
   "Luo yksinkertaisen kenttä-arvo pareja sisältävän listauksen.
    Arvo voi olla tekstiä tai HTML-elementti.
-   HUOM! Arvojen sanitointi on kutsujapään vastuulla!"
-  [kentta-arvo-parit]
-  [:table
-   (for [[kentta arvo] kentta-arvo-parit]
-     [:tr
-      [:td [:b kentta]]
-      [:td arvo]])])
+
+   Optiot:
+   sanitoi?       Sanitoi kentän ja arvon, jottei taulukossa voi esittää HTML-koodia. Oletuksena true.
+                  Arvojen tulee olla tekstiä tai tekstinä esitettäviä.
+                  Jos kentän tai arvojen halutaan olevan komponentteja tai muusta syystä ei haluta
+                  sanitoida, voidaan sanitoinniksi asettaa false,
+                  jolloin arvojen sanitointi on kutsujapään vastuulla."
+  ([kentta-arvo-parit] (tietoja {} kentta-arvo-parit))
+  ([{:keys [sanitoi?] :as optiot} kentta-arvo-parit]
+   (let [sanitoi? (or sanitoi? true)]
+     [:table
+      (for [[kentta arvo] kentta-arvo-parit]
+        [:tr
+         [:td [:b (if sanitoi? (h kentta) kentta)]]
+         [:td (if sanitoi? (h arvo) arvo)]])])))
 
 (defn nappilinkki
   "Luo yksinkertaisen nappi-linkin.

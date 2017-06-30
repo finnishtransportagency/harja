@@ -70,17 +70,17 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
     [:div
      [:table
       (html-tyokalut/tietoja
-        [["Urakka" (h (:urakkanimi ilmoitus))]
-         ["Tunniste" (h (:tunniste ilmoitus))]
-         ["Ilmoitettu" (h (:ilmoitettu ilmoitus))]
-         ["Yhteydenottopyyntö" (h (fmt/totuus (:yhteydenottopyynto ilmoitus)))]
-         ["Otsikko" (h (:otsikko ilmoitus))]
-         ["Tierekisteriosoite" (h (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false}))]
-         ["Paikan kuvaus" (h (:paikankuvaus ilmoitus))]
-         ["Selitteet" (h (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
-         ["Ilmoittaja" (h (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus)))]
-         ["Lähettäjä" (h (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus)))]])]
-     [:blockquote ((:lisatieto ilmoitus))]
+        [["Urakka" (:urakkanimi ilmoitus)]
+         ["Tunniste" (:tunniste ilmoitus)]
+         ["Ilmoitettu" (:ilmoitettu ilmoitus)]
+         ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
+         ["Otsikko" (:otsikko ilmoitus)]
+         ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+         ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+         ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+         ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+         ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
+     [:blockquote ((h (:lisatieto ilmoitus)))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:img {:src (format goole-static-map-url-template

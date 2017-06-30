@@ -26,17 +26,17 @@
     (html
       [:div
        [:p "Seuraavasta laatupoikkeamasta on pyydetty selvitys urakoitsijalta:"]
-       (html-tyokalut/tietoja [["Urakka" (h urakka-nimi)]
-                               ["Raportoija" (h raportoija)]
-                               ["Kuvaus" (h kuvaus)]
-                               ["Sijainti" (h (tierekisteri/tierekisteriosoite-tekstina
-                                                {:tr-numero (:numero tr-osoite)
-                                                 :tr-alkuosa (:alkuosa tr-osoite)
-                                                 :tr-alkuetaisyys (:alkuetaisyys tr-osoite)
-                                                 :tr-loppuosa (:loppuosa tr-osoite)
-                                                 :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
-                                                {:teksti-tie? false}))]
-                               ["Aika" (h (pvm/pvm-aika-opt aika))]])
+       (html-tyokalut/tietoja [["Urakka" urakka-nimi]
+                               ["Raportoija" raportoija]
+                               ["Kuvaus" kuvaus]
+                               ["Sijainti" (tierekisteri/tierekisteriosoite-tekstina
+                                             {:tr-numero (:numero tr-osoite)
+                                              :tr-alkuosa (:alkuosa tr-osoite)
+                                              :tr-alkuetaisyys (:alkuetaisyys tr-osoite)
+                                              :tr-loppuosa (:loppuosa tr-osoite)
+                                              :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
+                                             {:teksti-tie? false})]
+                               ["Aika" (pvm/pvm-aika-opt aika)]])
        [:p "Laatupoikkeamat Harjassa: "
         [:a {:href linkki} linkki]]])))
 

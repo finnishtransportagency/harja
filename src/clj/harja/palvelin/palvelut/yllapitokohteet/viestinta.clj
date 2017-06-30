@@ -44,17 +44,17 @@
       [:div
        [:p (h tiivistelma)]
        (when saate [:p (h saate)])
-       (html-tyokalut/tietoja [["Kohde" (h kohde-nimi)]
-                                ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
-                                                  kohde-osoite
-                                                  {:teksti-tie? false}))]
-                                ["Pituus" (h pituus)]
-                                ["Valmis tiemerkintään" (h (if peruminen?
-                                                             "Ei vielä tiedossa"
-                                                             (fmt/pvm tiemerkintapvm)))]
-                                ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]
-                                ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
-                                ["Merkitsijän urakka" (h paallystysurakka-nimi)]])])))
+       (html-tyokalut/tietoja [["Kohde" kohde-nimi]
+                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                               kohde-osoite
+                                               {:teksti-tie? false})]
+                                ["Pituus" pituus]
+                                ["Valmis tiemerkintään" (if peruminen?
+                                                          "Ei vielä tiedossa"
+                                                          (fmt/pvm tiemerkintapvm))]
+                                ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
+                                ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
+                                ["Merkitsijän urakka" paallystysurakka-nimi]])])))
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
@@ -64,13 +64,13 @@
                     paallystysurakka-nimi
                     (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                     (fmt/pvm tiemerkinta-valmis)))]
-     (html-tyokalut/tietoja [["Kohde" (h kohde-nimi)]
-                              ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
-                                                kohde-osoite
-                                                {:teksti-tie? false}))]
-                              ["Tiemerkintä valmistunut" (h (fmt/pvm tiemerkinta-valmis))]
-                              ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
-                              ["Merkitsijän urakka" (h tiemerkintaurakka-nimi)]])]))
+     (html-tyokalut/tietoja [["Kohde" kohde-nimi]
+                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                             kohde-osoite
+                                             {:teksti-tie? false})]
+                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
+                              ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
+                              ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
@@ -78,20 +78,20 @@
      [:p "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:"]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
-       [:div (html-tyokalut/tietoja [["Tiemerkintäurakka" (h paallystysurakka-nimi)]
-                                      ["Kohde" (h kohde-nimi)]
-                                      ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
-                                                        {:tr-numero tr-numero
-                                                         :tr-alkuosa tr-alkuosa
-                                                         :tr-alkuetaisyys tr-alkuetaisyys
-                                                         :tr-loppuosa tr-loppuosa
-                                                         :tr-loppuetaisyys tr-loppuetaisyys}
-                                                        {:teksti-tie? false}))]
-                                      ["Tiemerkintä valmistunut" (h (fmt/pvm (get valmistumispvmt id)))]
-                                      ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]])
+       [:div (html-tyokalut/tietoja [["Tiemerkintäurakka" paallystysurakka-nimi]
+                                      ["Kohde" kohde-nimi]
+                                      ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                                     {:tr-numero tr-numero
+                                                      :tr-alkuosa tr-alkuosa
+                                                      :tr-alkuetaisyys tr-alkuetaisyys
+                                                      :tr-loppuosa tr-loppuosa
+                                                      :tr-loppuetaisyys tr-loppuetaisyys}
+                                                     {:teksti-tie? false})]
+                                      ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
+                                      ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
         [:br]])
      [:div
-      (html-tyokalut/tietoja [["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]])
+      (html-tyokalut/tietoja [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]])
       [:br]]]))
 
 ;; Sisäinen käsittely
