@@ -10,7 +10,7 @@
   (let [pko @pois-kytketyt-ominaisuudet]
     (if (nil? pko)
       (do
-        (log/warn "ominaisuus-kaytossa? " k " kutsuttu ennen ko asetusten lukemista")
+        (log/error "ominaisuus-kaytossa? " k " kutsuttu ennen ko asetusten lukemista - kutusvasta komponentista puuttuu ominaisuuskomponetntin riippuvuus?")
         false) ;; ei alustetu vielä -> väitetään kaikkea pois kytketyksi
       (not (contains? pko k)))))
 
