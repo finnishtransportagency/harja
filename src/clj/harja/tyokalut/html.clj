@@ -13,7 +13,7 @@
 (defn sanitoi
   "Sanitoi tekstin käyttämällä Hiccupin escape-html funktiota.
    escape-html sanitoi hipsumerkin (') tuloksella &apos;
-   Tämä ei toimi HTML4:ssä eikä esim. Macin Outlookissa (ainakaan tätä kirjoittaessa),
+   Tämä ei tiettävästi toimi HTML4:ssä eikä esim. Macin Outlookissa (ainakaan tätä kirjoittaessa),
    joten &apos; korvataan toimivalla entiteetillä: &#39;"
   [teksti]
   (let [sanitoitu (h teksti)
