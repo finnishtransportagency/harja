@@ -35,26 +35,26 @@
                                                                    tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
   (let [peruminen? (nil? tiemerkintapvm)
         tiivistelma (if peruminen?
-                  (format "Peruutus: kohde %s ei sittenkään ole vielä valmis tiemerkintään."
-                          (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite)))
-                  (format "Kohde %s on valmis tiemerkintään %s."
-                          (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                          (fmt/pvm tiemerkintapvm)))]
+                      (format "Peruutus: kohde %s ei sittenkään ole vielä valmis tiemerkintään."
+                              (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite)))
+                      (format "Kohde %s on valmis tiemerkintään %s."
+                              (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                              (fmt/pvm tiemerkintapvm)))]
     (html
-     [:div
-      [:p (h tiivistelma)]
-      (when saate [:p (h saate)])
-      (html-tyokalut/taulukko [["Kohde" (h kohde-nimi)]
-                               ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
-                                                 kohde-osoite
-                                                 {:teksti-tie? false}))]
-                               ["Pituus" (h pituus)]
-                               ["Valmis tiemerkintään" (h (if peruminen?
-                                                            "Ei vielä tiedossa"
-                                                            (fmt/pvm tiemerkintapvm)))]
-                               ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]
-                               ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
-                               ["Merkitsijän urakka" (h paallystysurakka-nimi)]])])))
+      [:div
+       [:p (h tiivistelma)]
+       (when saate [:p (h saate)])
+       (html-tyokalut/taulukko [["Kohde" (h kohde-nimi)]
+                                ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
+                                                  kohde-osoite
+                                                  {:teksti-tie? false}))]
+                                ["Pituus" (h pituus)]
+                                ["Valmis tiemerkintään" (h (if peruminen?
+                                                             "Ei vielä tiedossa"
+                                                             (fmt/pvm tiemerkintapvm)))]
+                                ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]
+                                ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
+                                ["Merkitsijän urakka" (h paallystysurakka-nimi)]])])))
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
@@ -78,20 +78,20 @@
      [:p "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:"]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
-       [:div (html-tyokalut/taulukko [["Tiemerkintäurakka" paallystysurakka-nimi]
-                                      ["Kohde" kohde-nimi]
-                                      ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                                     {:tr-numero tr-numero
-                                                      :tr-alkuosa tr-alkuosa
-                                                      :tr-alkuetaisyys tr-alkuetaisyys
-                                                      :tr-loppuosa tr-loppuosa
-                                                      :tr-loppuetaisyys tr-loppuetaisyys}
-                                                     {:teksti-tie? false})]
-                                      ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
-                                      ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
+       [:div (html-tyokalut/taulukko [["Tiemerkintäurakka" (h paallystysurakka-nimi)]
+                                      ["Kohde" (h kohde-nimi)]
+                                      ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
+                                                        {:tr-numero tr-numero
+                                                         :tr-alkuosa tr-alkuosa
+                                                         :tr-alkuetaisyys tr-alkuetaisyys
+                                                         :tr-loppuosa tr-loppuosa
+                                                         :tr-loppuetaisyys tr-loppuetaisyys}
+                                                        {:teksti-tie? false}))]
+                                      ["Tiemerkintä valmistunut" (h (fmt/pvm (get valmistumispvmt id)))]
+                                      ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]])
         [:br]])
      [:div
-      (html-tyokalut/taulukko [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]])
+      (html-tyokalut/taulukko [["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]])
       [:br]]]))
 
 ;; Sisäinen käsittely
@@ -132,10 +132,12 @@
        :viesti-otsikko viestin-otsikko
        :viesti-body viestin-vartalo})
     (when (:sahkoposti ilmoittaja)
-      (viestinta/laheta-sahkoposti-itselle {:email email
-                                            :sahkoposti (:sahkoposti ilmoittaja)
-                                            :viesti-otsikko viestin-otsikko
-                                            :viesti-body viestin-vartalo}))))
+      (viestinta/laheta-sahkoposti-itselle
+        {:email email
+         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle."
+         :sahkoposti (:sahkoposti ilmoittaja)
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo}))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
@@ -170,8 +172,8 @@
                           (format "Kohteen '%s' tiemerkintävalmius peruttu"
                                   (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite)))
                           (format "Kohteen '%s' tiemerkinnän voi aloittaa %s"
-                                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                                 (fmt/pvm tiemerkintapvm)))
+                                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                                  (fmt/pvm tiemerkintapvm)))
         viestin-params {:paallystysurakka-nimi paallystysurakka-nimi
                         :kohde-nimi kohde-nimi
                         :kohde-osoite kohde-osoite
@@ -191,10 +193,12 @@
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
-        (viestinta/laheta-sahkoposti-itselle {:email email
-                                              :sahkoposti (:sahkoposti ilmoittaja)
-                                              :viesti-otsikko viestin-otsikko
-                                              :viesti-body viestin-vartalo})))))
+        (viestinta/laheta-sahkoposti-itselle
+          {:email email
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle."
+           :sahkoposti (:sahkoposti ilmoittaja)
+           :viesti-otsikko viestin-otsikko
+           :viesti-body viestin-vartalo})))))
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
