@@ -55,17 +55,6 @@ goole-static-map-url-template
        (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
        (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
 
-(defn- html-nappi [napin-teksti linkki]
-  [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}
-   [:tr
-    [:td
-     [:table {:border "0" :cellspacing "0" :cellpadding "0"}
-      [:tr
-       [:td {:bgcolor "#EB7035" :style "padding: 12px; border-radius: 3px;" :align "center"}
-        [:a {:href linkki
-             :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
-         (h napin-teksti)]]]]]]])
-
 (def +vastausohje+ (str "Läheta tämä viesti kuitataksesi. Älä muuta otsikkoa tai hakasuluissa "
                         "olevaa kuittaustyyppiä. Voit kirjoittaa myös kommentin viestin alkuun."))
 
@@ -73,14 +62,14 @@ goole-static-map-url-template
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
   [vastausosoite napin-teksti subject body]
-  (html-nappi napin-teksti
-              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
+  (html-tyokalut/nappilinkki napin-teksti
+                             (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
     [:div
      [:table
-      (html-tyokalut/taulukko
+      (html-tyokalut/tietoja
         [["Urakka" (h (:urakkanimi ilmoitus))]
          ["Tunniste" (h (:tunniste ilmoitus))]
          ["Ilmoitettu" (h (:ilmoitettu ilmoitus))]
@@ -91,7 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
          ["Selitteet" (h (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
          ["Ilmoittaja" (h (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus)))]
          ["Lähettäjä" (h (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus)))]])]
-     [:blockquote ( (:lisatieto ilmoitus))]
+     [:blockquote ((:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:img {:src (format goole-static-map-url-template

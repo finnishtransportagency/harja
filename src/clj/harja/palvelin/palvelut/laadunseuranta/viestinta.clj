@@ -25,7 +25,7 @@
     (html
       [:div
        [:p "Seuraavasta laatupoikkeamasta on pyydetty selvitys urakoitsijalta:"]
-       (html-tyokalut/taulukko [["Urakka" urakka-nimi]
+       (html-tyokalut/tietoja [["Urakka" urakka-nimi]
                                 ["Raportoija" raportoija]
                                 ["Kuvaus" kuvaus]
                                 ["Sijainti" (tierekisteri/tierekisteriosoite-tekstina
