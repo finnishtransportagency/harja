@@ -43,15 +43,15 @@
         (mitaan-ei-valittu? tyolajin-toimenpiteet) false
         :default :harja.ui.kentat/indeterminate))
 
-(defn viesti-siirto-tehty [siirrettyjen-lkm]
-  (str siirrettyjen-lkm " "
-       (if (= 1 siirrettyjen-lkm) "toimenpide" "toimenpidettä")
-       " siirretty."))
+(defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
+  (str toimenpiteiden-lkm " "
+       (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
+       " " toiminto "."))
 
-(defn hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
-                                      vaylatyyppi vayla
-                                      tyolaji tyoluokka toimenpide
-                                      vain-vikailmoitukset?] :as valinnat}]
+(defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
+                                                     vaylatyyppi vayla
+                                                     tyolaji tyoluokka toimenpide
+                                                     vain-vikailmoitukset?] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
@@ -127,7 +127,7 @@
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! (viesti-siirto-tehty (count toimenpiteet)) :success)
+    (viesti/nayta! (toimenpiteiden-toiminto-suoritettu (count toimenpiteet) "siirretty") :success)
     (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
                                (poista-toimenpiteet (:toimenpiteet app) toimenpiteet))
                :siirto-kaynnissa? false))

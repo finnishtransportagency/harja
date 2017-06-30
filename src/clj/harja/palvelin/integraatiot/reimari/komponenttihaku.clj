@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.reimari.komponenttihaku
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.reimari.apurit :refer [edellisen-integraatiotapahtuman-alkuaika
+                                                                formatoi-aika]]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.komponenttityyppi :as komponenttityyppi]
             [harja.domain.vesivaylat.turvalaitekomponentti :as turvalaitekomponentti]
@@ -21,22 +23,16 @@
 (defn kasittele-komponenttityypit-vastaus [db vastaus-xml]
   (log/debug "kasittele-komponenttityypit-vastaus" vastaus-xml)
   (let [sanoman-tiedot (kt-sanoma/lue-hae-komponenttityypit-vastaus vastaus-xml)
-        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::komponenttityyppi/komponenttityyppi toimenpide-tiedot))]
+        kanta-tiedot (for [kt-tiedot sanoman-tiedot]
+                       (specql/upsert! db ::komponenttityyppi/komponenttityyppi kt-tiedot))]
     (vec kanta-tiedot)))
 
 (defn kasittele-turvalaitekomponentit-vastaus [db vastaus-xml]
   (log/debug "kasittele-turvalaitekomponentit-vastaus" vastaus-xml)
   (let [sanoman-tiedot (tl-sanoma/lue-hae-turvalaitekomponentit-vastaus vastaus-xml)
-        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::turvalaitekomponentti/turvalaitekomponentti toimenpide-tiedot))]
+        kanta-tiedot (for [tlk-tiedot sanoman-tiedot]
+                       (specql/upsert! db ::turvalaitekomponentti/turvalaitekomponentti tlk-tiedot))]
     (vec kanta-tiedot)))
-
-(defn- formatoi-aika [muutosaika]
-  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
-    (if (s/ends-with? aika-ilman-vyohyketta "Z")
-      aika-ilman-vyohyketta
-      (str aika-ilman-vyohyketta "Z"))))
 
 (defn komponenttityypit-kysely-sanoma [muutosaika]
   (xml/tee-xml-sanoma
@@ -50,8 +46,8 @@
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
-     [:HaeTurvalaitekomponentit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeTurvalaitekomponentitRequest {:muutosaika (formatoi-aika muutosaika)}]]
+     [:HaeTurvalaiteKomponentit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+      [:HaeTurvalaiteKomponentitRequest {:muutosaika (formatoi-aika muutosaika)}]]
      ]]))
 
 (defn hae-komponenttityypit* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
@@ -80,17 +76,8 @@
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet turvalaitekomponentit alkaen " muutosaika))
     (kasittele-turvalaitekomponentit-vastaus db body)))
 
-(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (last (sort-by ::integraatiotapahtuma/alkanut
-                 (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                               #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                 [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                      :harja.palvelin.integraatiot/jarjestelma}] }
-                               {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                   :harja.palvelin.integraatiot/nimi nimi}}))))
-
 (defn hae-komponenttityypit [db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-komponenttityypit" "reimari")]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db  "reimari" "hae-komponenttityypit")]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
@@ -106,8 +93,22 @@
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa
-       db "reimari-hae-turvalaitekomponentit"
+       db "reimari-hae-tl-komponentit"
        (fn []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" "hae-turvalaitekomponentit"
           #(hae-turvalaitekomponentit* % db pohja-url kayttajatunnus salasana muutosaika)))))))
+
+
+;; käyttö:
+;; (kutsu-interaktiivisesti hae-komponenttityypit harja.palvelin.main/harja-jarjestelma #inst "2017-06-01T00:00:00")
+(defn kutsu-interaktiivisesti [fn j alkuaika]
+  (let [[db il rk] (as-> j x
+                     (select-keys x [:db :integraatioloki :reimari])
+                     (map second x))
+        [kt ss pu] (as-> rk x
+                     (select-keys x [:kayttajatunnus :salasana :pohja-url])
+                     (map second x))]
+    (log/debug "tunnus" kt "url" pu)
+    (with-redefs [edellisen-integraatiotapahtuman-alkuaika (constantly alkuaika)]
+      (fn db il pu kt ss))))
