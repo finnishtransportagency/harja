@@ -171,7 +171,7 @@
             [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
-            [lein-doo "0.1.6"]]
+            [lein-doo "0.1.7"]]
 
 
   ;; Asiakaspuolen cljs buildin tietoja
