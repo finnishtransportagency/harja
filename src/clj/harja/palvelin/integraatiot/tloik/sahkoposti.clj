@@ -98,7 +98,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                              lat lon google-static-maps-key)}]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
-        (html-mailto-nappi vastausosoite teksti otsikko (str "[" (teksti) "] " +vastausohje+))])]))
+        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
   (let [otsikko (otsikko ilmoitus)
