@@ -13,6 +13,7 @@
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+            [hiccup.core :refer [html h]]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -68,7 +69,8 @@
             (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
               (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
                                          (:lahettaja viesti)
-                                         (:otsikko vastaus) (:sisalto vastaus)))
+                                         (:otsikko vastaus)
+                                         (h (:sisalto vastaus))))
             (catch Throwable t
               (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
