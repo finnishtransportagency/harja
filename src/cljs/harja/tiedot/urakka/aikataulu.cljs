@@ -19,6 +19,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
+(defonce modal-data (atom {}))
+
 (defonce aikataulu-nakymassa? (atom false))
 
 (defonce valinnat
@@ -44,9 +46,12 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
-(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm urakka-id sopimus-id vuosi]}]
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
+                                                      urakka-id sopimus-id vuosi]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
+                                                    :kopio-itselle? kopio-itselle?
+                                                    :saate saate
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))

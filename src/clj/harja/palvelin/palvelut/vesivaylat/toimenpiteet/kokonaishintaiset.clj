@@ -28,7 +28,8 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user urakka-id)
-      (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen))
+      (jdbc/with-db-transaction [db db]
+        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
     (::to/idt tiedot)))
 
 (defrecord KokonaishintaisetToimenpiteet []

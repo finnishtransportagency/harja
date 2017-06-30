@@ -49,7 +49,7 @@
 
 (deftest tallenna-toimenpiteelle-hinta
   (testing "Uusien hintojen lisäys"
-    (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+    (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
           urakka-id (hae-helsingin-vesivaylaurakan-id)
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
@@ -103,7 +103,7 @@
           (is (= hinnat-ennen hinnat-jalkeen)))))))
 
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
-  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
@@ -114,7 +114,7 @@
                                            kysely-params)))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
-  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
@@ -125,7 +125,7 @@
                                                    kysely-params)))))
 
 (deftest tallenna-toimenpiteelle-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
-  (let [toimenpide-id (hae-reimari-toimenpide-ilman-hinnoittelua)
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id

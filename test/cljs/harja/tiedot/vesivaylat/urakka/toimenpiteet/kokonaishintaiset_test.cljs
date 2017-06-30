@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.kiintio :as kiintio]
             [cljs-time.core :as t]
             [cljs.spec.alpha :as s]))
 
@@ -150,7 +151,7 @@
   (testing "Hakuargumenttien muodostus toimii"
     (let [alku (t/now)
           loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit
+          hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit
                            {:urakka-id 666
                             :sopimus-id 777
                             :aikavali [alku loppu]
@@ -174,19 +175,19 @@
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                                :sopimus-id 777
-                                                                :tyolaji nil
-                                                                :tyoluokka nil
-                                                                :toimenpide nil})]
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
+                                                                               :sopimus-id 777
+                                                                               :tyolaji nil
+                                                                               :tyoluokka nil
+                                                                               :toimenpide nil})]
       (is (= hakuargumentit
              {::to/urakka-id 666
               ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
 
   (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (jaetut-tiedot/hakukyselyn-argumentit {:urakka-id 666
-                                                                :sopimus-id 777})]
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
+                                                                               :sopimus-id 777})]
       (is (= hakuargumentit {::to/urakka-id 666
                              ::to/sopimus-id 777}))
       (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
@@ -213,26 +214,74 @@
                         (:toimenpiteet uusi-tila)))
         "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
-(deftest hakemisen-aloitus
+(deftest toimenpiteiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
       #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
 
-      (is (true? (:haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
+      (is (true? (:toimenpiteiden-haku-kaynnissa? (e! (tiedot/->HaeToimenpiteet {:urakka-id 1})))))))
 
   (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
       ;; Ei saa aloittaa uusia hakuja
       #{}
 
-      (let [tila {:foo :bar :id 1 :haku-kaynnissa? true}]
+      (let [tila {:foo :bar :id 1 :toimenpiteiden-haku-kaynnissa? true}]
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
-(deftest hakemisen-valmistuminen
+(deftest toimenpiteiden-hakemisen-valmistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:haku-kaynnissa? tulos)))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
     (is (= [{:id 1}] (:toimenpiteet tulos)))))
 
-(deftest hakemisen-epaonnistuminen
+(deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
-    (is (false? (:haku-kaynnissa? tulos)))))
+    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))
+
+
+(deftest kiintioiden-hakemisen-aloitus
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->KiintiotHaettu tiedot/->KiintiotEiHaettu}
+
+      (is (true? (:kiintioiden-haku-kaynnissa?
+                   (e! (tiedot/->HaeKiintiot)))))))
+
+  (testing "Uusi haku kun haku on jo käynnissä"
+    (vaadi-async-kutsut
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
+
+      (let [tila {:foo :bar :id 1 :kiintioiden-haku-kaynnissa? true}]
+        (is (= tila (e! (tiedot/->HaeKiintiot) tila)))))))
+
+(deftest kiintioiden-hakemisen-valmistuminen
+  (let [tulos (e! (tiedot/->KiintiotHaettu [{:id 1}])
+                  {:kiintiot nil})]
+    (is (false? (:kiintioiden-haku-kaynnissa? tulos)))
+    (is (= [{:id 1}] (:kiintiot tulos)))))
+
+(deftest kiintioiden-hakemisen-epaonnistuminen
+  (let [tulos (e! (tiedot/->KiintiotEiHaettu nil))]
+    (is (false? (:kiintioiden-haku-kaynnissa? tulos)))))
+
+(deftest valitse-kiintio
+  (let [tulos (e! (tiedot/->ValitseKiintio 666))]
+    (is (= (:valittu-kiintio-id tulos) 666))))
+
+(deftest liita-toimenpiteet-kiintioon
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetLiitettyKiintioon tiedot/->ToimenpiteetEiLiitettyKiintioon}
+    (let [tulos (e! (tiedot/->LiitaToimenpiteetKiintioon))]
+      (is (true? (:kiintioon-liittaminen-kaynnissa? tulos))))))
+
+(deftest toimenpiteet-liitetty-kiintioon
+  (let [tulos (e! (tiedot/->ToimenpiteetLiitettyKiintioon {::to/idt #{1 2 3}})
+                  {:valittu-kiintio-id 123})]
+    (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))
+    (is (nil? (:valittu-kiintio-id tulos)))))
+
+(deftest toimenpiteet-ei-liitetty-kiintioon
+  (let [tulos (e! (tiedot/->ToimenpiteetEiLiitettyKiintioon)
+                  {:valittu-kiintio-id 123})]
+    (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))))
