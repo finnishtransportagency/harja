@@ -70,7 +70,7 @@
               (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
                                          (:lahettaja viesti)
                                          (:otsikko vastaus)
-                                         (h (:sisalto vastaus))))
+                                         (:sisalto vastaus)))
             (catch Throwable t
               (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
