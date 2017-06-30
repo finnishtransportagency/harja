@@ -78,7 +78,13 @@
 (defn- tallenna-liitteen-data [db fileyard-client lahde]
   (if (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
     ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
-    {:liite_oid nil :fileyard-hash @(fileyard-client/save fileyard-client lahde)}
+    (let [hash @(fileyard-client/save fileyard-client lahde)]
+      (if (string? hash)
+        {:liite_oid nil :fileyard-hash hash}
+        (do
+          (log/error "Uuden liitteen tallennus fileyard epäonnistui, tallennetaan tietokantaan. "
+                     hash)
+          (tallenna-liitteen-data db nil lahde))))
 
     ;; Muuten tallennetaan paikalliseen tietokantaan
     {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
@@ -128,7 +134,7 @@
   (try
     (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
       (if (not (string? result))
-        (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
+        (log/error "Virhe siirrettäessä liitettä " nimi "(id: " id ") fileyardiin: " result)
         (do
           (jdbc/with-db-transaction [db db]
             (poista-lob db liite_oid)
