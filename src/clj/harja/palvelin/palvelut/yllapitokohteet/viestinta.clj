@@ -9,8 +9,9 @@
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [hiccup.core :refer [html h]]
+            [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim]
+            [harja.tyokalut.html :refer [sanitoi]]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c])
@@ -42,8 +43,8 @@
                               (fmt/pvm tiemerkintapvm)))]
     (html
       [:div
-       [:p (h tiivistelma)]
-       (when saate [:p (h saate)])
+       [:p (sanitoi tiivistelma)]
+       (when saate [:p (sanitoi saate)])
        (html-tyokalut/tietoja [["Kohde" kohde-nimi]
                                 ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                                kohde-osoite
@@ -60,7 +61,7 @@
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (h (format "Päällystysurakan %s kohteen %s tiemerkintä on valmistunut %s."
+     [:p (sanitoi (format "Päällystysurakan %s kohteen %s tiemerkintä on valmistunut %s."
                     paallystysurakka-nimi
                     (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                     (fmt/pvm tiemerkinta-valmis)))]

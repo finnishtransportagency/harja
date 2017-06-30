@@ -8,7 +8,7 @@
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.domain.tieliikenneilmoitukset :as ilm]
             [taoensso.timbre :as log]
-            [hiccup.core :refer [html h]]
+            [hiccup.core :refer [html]]
             [harja.tyokalut.html :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]
@@ -80,7 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
          ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
          ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
-     [:blockquote (h (:lisatieto ilmoitus))]
+     [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:img {:src (format goole-static-map-url-template
