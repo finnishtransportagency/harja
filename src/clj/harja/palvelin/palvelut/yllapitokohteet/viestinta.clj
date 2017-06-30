@@ -35,42 +35,42 @@
                                                                    tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
   (let [peruminen? (nil? tiemerkintapvm)
         tiivistelma (if peruminen?
-                  (format "Peruutus: kohde '%s' ei sittenkään ole vielä valmis tiemerkintään."
+                  (format "Peruutus: kohde %s ei sittenkään ole vielä valmis tiemerkintään."
                           (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite)))
-                  (format "Kohde '%s' on valmis tiemerkintään %s."
+                  (format "Kohde %s on valmis tiemerkintään %s."
                           (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                           (fmt/pvm tiemerkintapvm)))]
     (html
      [:div
-      [:p tiivistelma]
+      [:p (h tiivistelma)]
       (when saate [:p (h saate)])
-      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
-                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                              kohde-osoite
-                                              {:teksti-tie? false})]
-                               ["Pituus" pituus]
-                               ["Valmis tiemerkintään" (if peruminen?
-                                                         "Ei vielä tiedossa"
-                                                         (fmt/pvm tiemerkintapvm))]
-                               ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
-                               ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
-                               ["Merkitsijän urakka" paallystysurakka-nimi]])])))
+      (html-tyokalut/taulukko [["Kohde" (h kohde-nimi)]
+                               ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
+                                                 kohde-osoite
+                                                 {:teksti-tie? false}))]
+                               ["Pituus" (h pituus)]
+                               ["Valmis tiemerkintään" (h (if peruminen?
+                                                            "Ei vielä tiedossa"
+                                                            (fmt/pvm tiemerkintapvm)))]
+                               ["Tiemerkintäurakka" (h tiemerkintaurakka-nimi)]
+                               ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
+                               ["Merkitsijän urakka" (h paallystysurakka-nimi)]])])))
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (format "Päällystysurakan '%s' kohteen '%s' tiemerkintä on valmistunut %s."
-                 paallystysurakka-nimi
-                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                 (fmt/pvm tiemerkinta-valmis))]
-     (html-tyokalut/taulukko [["Kohde" kohde-nimi]
-                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                             kohde-osoite
-                                             {:teksti-tie? false})]
-                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
-                              ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
+     [:p (h (format "Päällystysurakan %s kohteen %s tiemerkintä on valmistunut %s."
+                    paallystysurakka-nimi
+                    (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                    (fmt/pvm tiemerkinta-valmis)))]
+     (html-tyokalut/taulukko [["Kohde" (h kohde-nimi)]
+                              ["TR-osoite" (h (tierekisteri/tierekisteriosoite-tekstina
+                                                kohde-osoite
+                                                {:teksti-tie? false}))]
+                              ["Tiemerkintä valmistunut" (h (fmt/pvm tiemerkinta-valmis))]
+                              ["Merkitsijä" (h (formatoi-ilmoittaja ilmoittaja))]
+                              ["Merkitsijän urakka" (h tiemerkintaurakka-nimi)]])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
