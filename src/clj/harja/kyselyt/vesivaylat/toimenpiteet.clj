@@ -111,10 +111,9 @@
         :default toimenpiteet))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
-  (jdbc/with-db-transaction [db db]
-    (update! db ::vv-toimenpide/reimari-toimenpide
-             {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
-             {::vv-toimenpide/id (op/in toimenpide-idt)})))
+  (update! db ::vv-toimenpide/reimari-toimenpide
+           {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
+           {::vv-toimenpide/id (op/in toimenpide-idt)}))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
   (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}

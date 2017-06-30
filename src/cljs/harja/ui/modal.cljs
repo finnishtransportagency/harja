@@ -2,6 +2,7 @@
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.dom :as dom]
+            [harja.loki :refer [log logt]]
             [harja.asiakas.tapahtumat :as t]))
 
 (defn- avaa-modal-linkki
@@ -32,11 +33,18 @@
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 (defn- modal-container* [optiot sisalto]
-  (let [{:keys [otsikko footer nakyvissa? luokka leveys]} optiot]
+  (let [{:keys [otsikko footer nakyvissa? luokka leveys sulje-fn]} optiot
+        sulje!  #(do
+                  ;; estää file-open dialogin poistamisen
+                  #_(.preventDefault %)
+                  (.stopPropagation %)
+                  (when sulje-fn
+                    (sulje-fn))
+                  (piilota!))]
     (if nakyvissa?
       ^{:key "modaali"}
       [:div.modal.fade.in.harja-modal {:style {:display "block"}
-                                       :on-click piilota!}
+                                       :on-click sulje!}
        [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
        [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
                     (when leveys
@@ -44,11 +52,11 @@
         [:div.modal-content {:on-click #(do
                                           ;; estää file-open dialogin poistamisen
                                           #_(.preventDefault %)
-                                          (.stopPropagation %)
-                                          piilota!)}
+                                          ;; syödään eventti että modalin sisällön click ei sulje
+                                          (.stopPropagation %))}
          (when otsikko
            [:div.modal-header
-            [:button.close {:on-click piilota!
+            [:button.close {:on-click sulje!
                             :type "button" :data-dismiss "modal" :aria-label "Sulje"}
              [:span {:aria-hidden "true"} "×"]]
             [:h4.modal-title otsikko]])

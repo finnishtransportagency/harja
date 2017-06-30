@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.modal :as modal]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
@@ -177,14 +177,12 @@
                                :on-click
                                (fn [e]
                                  (.preventDefault e)
-                                 (yleiset/varmista-kayttajalta
+                                 (varmista-kayttajalta/varmista-kayttajalta
                                    {:otsikko "Erilliskustannuksen poistaminen"
                                     :sisalto (str "Haluatko varmasti poistaa erilliskustannuksen "
                                                   (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
                                                   (pvm/pvm (:pvm @muokattu)) "?")
                                     :hyvaksy "Poista"
-                                    :hyvaksy-ikoni (ikonit/livicon-trash)
-                                    :hyvaksy-napin-luokka "nappi-kielteinen"
                                     :toiminto-fn #(go
                                                     (let [res (tallenna-erilliskustannus
                                                                 (assoc @muokattu :poistettu true))]

@@ -51,8 +51,7 @@
   [optiot sisalto]
   (let [;; Avautuissuunta määritetään komponentin korkeuden perusteella, joka määrittyy sisällön mukaan.
         ;; Tällöin komponentti rendataan aluksi piilotettuna, jotta suunta saadaan määritettyä.
-        ;; Useimmissa tilanteissa yläpuolella on tilaa ja alhaalla ei, joten suunta ylös on hyvä default.
-        suunta (r/atom :ylos-vasen)
+        suunta (r/atom nil)
         paivita-suunta! (fn [this _]
                           (reset! suunta
                                   (maarita-suunta this)))
@@ -73,6 +72,9 @@
                           :style (if suunta
                                    (avautumissuunta-tyyli suunta)
                                    (merge
+                                     ;; Suunta voidaan määrittää vasta kun komponentti on mountattu
+                                     ;; ja sen ulottuvuudet määritetty. Siksi piilotetaan ekan
+                                     ;; renderin ajaksi.
                                      (avautumissuunta-tyyli :alas-vasen)
                                      {:visibility "hidden"}))}
             [:header
