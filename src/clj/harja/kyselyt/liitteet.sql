@@ -24,8 +24,10 @@ SELECT id FROM liite WHERE urakka = :urakka AND id = :id;
 -- name: hae-siirrettavat-liitteet
 -- Hakee liitteitä siirrettäväksi fileyard tallennukseen
 SELECT id, nimi, liite_oid FROM liite
- WHERE "fileyard-hash" IS NULL AND
-       liite_oid IS NOT NULL
+ WHERE "fileyard-hash" IS NULL
+   AND liite_oid IS NOT NULL
+   AND koko > 0
+ ORDER BY random()
  LIMIT 10;
 
 -- name: merkitse-liite-siirretyksi!

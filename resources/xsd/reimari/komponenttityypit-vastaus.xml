@@ -8,13 +8,13 @@
                          luokan-id="283748923"
                          luokan-nimi="lamput"
                          luokan-lisatiedot="sähköllä toimivat"
-                         luokan-paivitysaika="2017-04-24T09:42:04Z"
-                         luokan-luontiaika="2012-02-24T09:42:04Z"
+                         luokan-paivitysaika="2017-04-24T09:42:04.000+00:00"
+                         luokan-luontiaika="2012-02-24T09:42:04.000+00:00"
                          merk-cod="234"
-                         luontiaika="2012-03-24T09:11:04Z"
-                         muokattu="2017-04-29T00:00:00Z"
-                         alkupvm="2011-04-25T00:00:00Z"
-                         loppupvm="2017-08-25T00:00:00Z"/>
+                         luontiaika="2012-03-24T09:11:04.000+00:00"
+                         muokattu="2017-04-29T00:00:00.000+00:00"
+                         alkupvm="2011-04-25+00:00"
+                         loppupvm="2017-08-25+00:00"/>
   </HaeKomponenttiTyypitResponse>
 </HaeKomponenttiTyypit>
 

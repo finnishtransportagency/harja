@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.reimari.apurit :refer [edellisen-integraatiotapahtuman-alkuaika
+                                                                formatoi-aika]]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
@@ -11,8 +13,8 @@
             [harja.pvm :as pvm]
             [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
-            [clojure.string :as s]
             [harja.tyokalut.xml :as xml]
+            [clojure.string :as s]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
 
@@ -48,13 +50,6 @@
                                        (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
 
-(defn- formatoi-aika [muutosaika]
-  (log/debug "formatoi-aika: saatiin" muutosaika)
-  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
-    (if (s/ends-with? aika-ilman-vyohyketta "Z")
-      aika-ilman-vyohyketta
-      (str aika-ilman-vyohyketta "Z"))))
-
 (defn kysely-sanoma [muutosaika]
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
@@ -74,16 +69,6 @@
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset (kysely-sanoma muutosaika))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
     (kasittele-vastaus db body)))
-
-(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (::integraatiotapahtuma/alkanut
-   (last (sort-by ::integraatiotapahtuma/alkanut
-                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                  [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                        :harja.palvelin.integraatiot/jarjestelma}] }
-                                {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                     :harja.palvelin.integraatiot/nimi nimi}})))))
 
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" "hae-toimenpiteet")]
