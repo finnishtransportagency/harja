@@ -8,6 +8,7 @@
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.domain.tieliikenneilmoitukset :as ilm]
             [taoensso.timbre :as log]
+            [hiccup.core :refer [html h]]
             [harja.tyokalut.html :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]
@@ -72,7 +73,7 @@ goole-static-map-url-template
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
   [vastausosoite napin-teksti subject body]
-  (html-nappi napin-teksti
+  (html-nappi (h napin-teksti)
               (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
@@ -80,24 +81,24 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
     [:div
      [:table
       (html-tyokalut/taulukko
-        [["Urakka" (:urakkanimi ilmoitus)]
-         ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-         ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
-         ["Otsikko" (:otsikko ilmoitus)]
-         ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
-         ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-         ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-         ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
-         ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
-     [:blockquote (:lisatieto ilmoitus)]
+        [["Urakka" (h (:urakkanimi ilmoitus))]
+         ["Tunniste" (h (:tunniste ilmoitus))]
+         ["Ilmoitettu" (h (:ilmoitettu ilmoitus))]
+         ["Yhteydenottopyyntö" (h (fmt/totuus (:yhteydenottopyynto ilmoitus)))]
+         ["Otsikko" (h (:otsikko ilmoitus))]
+         ["Tierekisteriosoite" (h (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false}))]
+         ["Paikan kuvaus" (h (:paikankuvaus ilmoitus))]
+         ["Selitteet" (h (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus))))]
+         ["Ilmoittaja" (h (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus)))]
+         ["Lähettäjä" (h (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus)))]])]
+     [:blockquote ( (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:img {:src (format goole-static-map-url-template
                              lat lon google-static-maps-key)}]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
-        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
+        (html-mailto-nappi vastausosoite teksti otsikko (str "[" (teksti) "] " +vastausohje+))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
   (let [otsikko (otsikko ilmoitus)
