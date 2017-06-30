@@ -13,9 +13,9 @@
   :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä"
   (modal/nayta! {:otsikko otsikko
-           :footer [:span
-                    [napit/peruuta "Peruuta" #(modal/piilota!)]
-                    [napit/hyvaksy hyvaksy #(do
-                                              (modal/piilota!)
-                                              (toiminto-fn))]]}
-          sisalto))
+                 :footer [:span
+                          [napit/peruuta "Peruuta" #(modal/piilota!)]
+                          [napit/hyvaksy hyvaksy #(do
+                                                    (modal/piilota!)
+                                                    (toiminto-fn))]]}
+                sisalto))
