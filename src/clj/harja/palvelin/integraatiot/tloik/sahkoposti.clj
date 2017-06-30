@@ -9,7 +9,7 @@
             [harja.domain.tieliikenneilmoitukset :as ilm]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.html :as html-tyokalut]
+            [harja.tyokalut.html :refer [sanitoi] :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri :as tierekisteri]))
