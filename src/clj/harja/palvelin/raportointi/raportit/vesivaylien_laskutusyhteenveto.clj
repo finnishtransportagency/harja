@@ -38,52 +38,57 @@
 (defn- yks-hint-hinnoittelurivit [tiedot vaylatyyppi]
   (mapv yks-hint-hinnoittelurivi (filter #((:vaylatyyppi %) vaylatyyppi) tiedot)))
 
-(defn ryhmittele-yks-hint-hinnoittelurivit
-  "Ryhmittelee yks. hint. hinnoittelurivit niin, että hinnoitteluryhmät esiintyvät omilla
-   riveillä, ja toimenpiteiden omat hinnoittelut ovat omassa ryhmässä
-   (näin siksi, ettei toimenpiteiden omilla hinnoitteluilla ei ole nimeä)."
-  [tiedot]
-  (let [oma-hinnoittelurivi (fn [omat-hinnoittelut vaylatyyppi]
-                              {:hinnoittelu "Yksittäiset toimenpiteet"
-                               :hintaryhma false
-                               :summa (->> omat-hinnoittelut
-                                           (filter #((:vaylatyyppi %) vaylatyyppi))
-                                           (map :summa)
-                                           (reduce + 0))
-                               :vaylatyyppi #{vaylatyyppi}})
-        hintaryhmat (filter :hintaryhma tiedot)
-        omat-hinnoittelut (filter (comp not :hintaryhma) tiedot)
-        omat-hinnoittelut-kauppamerenkulku (oma-hinnoittelurivi omat-hinnoittelut "kauppamerenkulku")
-        omat-hinnoittelut-muu (oma-hinnoittelurivi omat-hinnoittelut "muu")]
-    (concat
-      hintaryhmat
-      [omat-hinnoittelut-kauppamerenkulku]
-      [omat-hinnoittelut-muu])))
+(defn yhdista-yks-hint-rivit
+  [hintaryhmat omat-hinnoittelut]
+  (let [omat-hinnoittelut-kauppamerenkulku (filter #((:vaylatyyppi %) "kauppamerenkulku") omat-hinnoittelut)
+        omat-hinnoittelut-muu-vesi (filter #((:vaylatyyppi %) "muu") omat-hinnoittelut)
+        vaylatyypin-omat-hinnoittelut-summattuna (fn [hinnoittelut]
+                                                   {:hinnoittelu "Yksittäiset toimenpiteet ilman hintaryhmää"
+                                                    :summa (->> hinnoittelut
+                                                                (map :summa)
+                                                                (reduce + 0))
+                                                    :vaylatyyppi (:vaylatyyppi (first hinnoittelut))})]
+    (remove nil? (concat
+                   hintaryhmat
+                   (when-not (empty? omat-hinnoittelut-kauppamerenkulku)
+                     [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-kauppamerenkulku)])
+                   (when-not (empty? omat-hinnoittelut-muu-vesi)
+                     [(vaylatyypin-omat-hinnoittelut-summattuna omat-hinnoittelut-muu-vesi)])))))
 
 (defn- hinnoittelutiedot [{:keys [db urakka-id alkupvm loppupvm]}]
-  {:yksikkohintaiset (ryhmittele-yks-hint-hinnoittelurivit
-                       (into []
-                             (map #(konv/array->set % :vaylatyyppi))
-                             (hae-yksikkohintaiset-toimenpiteet db {:urakkaid urakka-id
-                                                                    :alkupvm alkupvm
-                                                                    :loppupvm loppupvm})))
-   :kokonaishintaiset {:kauppamerenkulku
-                       (first (hae-kokonaishintaiset-toimenpiteet db
-                                                                  {:urakkaid urakka-id
-                                                                   :alkupvm alkupvm
-                                                                   :loppupvm loppupvm
-                                                                   :vaylatyyppi "kauppamerenkulku"}))
-                       :muu
-                       (first (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+  (let [hintaryhmat (into []
+                          (map #(konv/array->set % :vaylatyyppi))
+                          (hae-yksikkohintaisten-toimenpiteiden-hintaryhmat db
+                                                                            {:urakkaid urakka-id
+                                                                             :alkupvm alkupvm
+                                                                             :loppupvm loppupvm}))
+        omat-hinnoittelut (into []
+                                ;; Väylätyyppi setiksi, vaikka onkin vain yksi.
+                                ;; Helpompi käsitellä, kun kaikilla yks. hint. riveillä sama.
+                                (map #(assoc % :vaylatyyppi #{(:vaylatyyppi %)}))
+                                (hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa
+                                  db
+                                  {:urakkaid urakka-id
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm}))]
+    {:yksikkohintaiset (yhdista-yks-hint-rivit hintaryhmat omat-hinnoittelut)
+     :kokonaishintaiset {:kauppamerenkulku
+                         (first (hae-kokonaishintaiset-toimenpiteet db
+                                                                    {:urakkaid urakka-id
+                                                                     :alkupvm alkupvm
+                                                                     :loppupvm loppupvm
+                                                                     :vaylatyyppi "kauppamerenkulku"}))
+                         :muu
+                         (first (hae-kokonaishintaiset-toimenpiteet db {:urakkaid urakka-id
+                                                                        :alkupvm alkupvm
+                                                                        :loppupvm loppupvm
+                                                                        :vaylatyyppi "muu"}))}
+     :sanktiot (:summa (first (hae-sanktiot db {:urakkaid urakka-id
+                                                :alkupvm alkupvm
+                                                :loppupvm loppupvm})))
+     :erilliskustannukset (:summa (first (hae-erilliskustannukset db {:urakkaid urakka-id
                                                                       :alkupvm alkupvm
-                                                                      :loppupvm loppupvm
-                                                                      :vaylatyyppi "muu"}))}
-   :sanktiot (:summa (first (hae-sanktiot db {:urakkaid urakka-id
-                                              :alkupvm alkupvm
-                                              :loppupvm loppupvm})))
-   :erilliskustannukset (:summa (first (hae-erilliskustannukset db {:urakkaid urakka-id
-                                                                    :alkupvm alkupvm
-                                                                    :loppupvm loppupvm})))})
+                                                                      :loppupvm loppupvm})))}))
 
 
 

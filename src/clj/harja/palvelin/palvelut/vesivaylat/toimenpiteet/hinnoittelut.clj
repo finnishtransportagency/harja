@@ -25,7 +25,8 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
-      (q/luo-hinnoittelu! db user tiedot))))
+      (jdbc/with-db-transaction [db db]
+        (q/luo-hinnoittelu! db user tiedot)))))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -36,7 +37,8 @@
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
       (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))
-      (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot)))))
+      (jdbc/with-db-transaction [db db]
+        (q/liita-toimenpiteet-hinnoitteluun! db user (::to/idt tiedot) (::h/id tiedot))))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -47,10 +49,11 @@
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
       (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot)))
                                              (::h/id tiedot))
-      (q/tallenna-hintaryhmalle-hinta! db user
-                                       (::h/id tiedot)
-                                       (::h/hintaelementit tiedot))
-      (hae-hinnoittelut db user urakka-id))))
+      (jdbc/with-db-transaction [db db]
+        (q/tallenna-hintaryhmalle-hinta! db user
+                                         (::h/id tiedot)
+                                         (::h/hintaelementit tiedot))
+        (hae-hinnoittelut db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -63,11 +66,12 @@
       (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]
         (when-not (empty? hinta-idt)
           (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
-      (q/tallenna-toimenpiteelle-hinta! db user
-                                        (::to/id tiedot)
-                                        (::h/hintaelementit tiedot)
-                                        urakka-id)
-      (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot)))))
+      (jdbc/with-db-transaction [db db]
+        (q/tallenna-toimenpiteelle-hinta! db user
+                                          (::to/id tiedot)
+                                          (::h/hintaelementit tiedot)
+                                          urakka-id)
+        (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot))))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
