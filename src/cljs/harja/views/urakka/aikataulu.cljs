@@ -48,12 +48,13 @@
                  (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen"))
       :luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
+      :sulje-fn #(swap! tiedot/modal-data assoc :nakyvissa? false)
       :footer [:div
                [napit/peruuta
                 (if valmis-tiemerkintaan-lomake?
                   "Peruuta"
                   "Älä perukaan")
-                #(reset! tiedot/modal-data (merge data {:nakyvissa? false}))]
+                #(swap! tiedot/modal-data assoc :nakyvissa? false)]
 
                [napit/palvelinkutsu-nappi
                 (if valmis-tiemerkintaan-lomake?
@@ -74,7 +75,7 @@
                  :kun-onnistuu (fn [vastaus]
                                  (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
                                  (reset! tiedot/aikataulurivit vastaus)
-                                 (reset! tiedot/modal-data (merge data {:nakyvissa? false})))}]]}
+                                 (swap! tiedot/modal-data assoc :nakyvissa? false))}]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
                "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."

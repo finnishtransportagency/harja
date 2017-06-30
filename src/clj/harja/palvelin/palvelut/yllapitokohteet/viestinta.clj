@@ -9,7 +9,7 @@
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [hiccup.core :refer [html]]
+            [hiccup.core :refer [html h]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.pvm :as pvm]
@@ -43,7 +43,7 @@
     (html
      [:div
       [:p tiivistelma]
-      (when saate [:p saate])
+      (when saate [:p (h saate)])
       (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                               kohde-osoite
