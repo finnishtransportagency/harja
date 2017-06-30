@@ -23,7 +23,7 @@
 
 (defn nappilinkki
   "Luo yksinkertaisen nappi-linkin.
-   Napin teksti on sanitoitu."
+   Napin teksti sanitoidaan."
   [napin-teksti linkki]
   [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}
    [:tr
