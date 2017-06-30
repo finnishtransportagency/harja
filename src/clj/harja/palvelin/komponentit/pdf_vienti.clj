@@ -8,6 +8,7 @@
              :refer
              [julkaise-palvelu poista-palvelu]]
             [harja.transit :as t]
+            [hiccup.core :refer [html]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
             [taoensso.timbre :as log]
