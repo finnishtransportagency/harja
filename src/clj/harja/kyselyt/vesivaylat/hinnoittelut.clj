@@ -85,34 +85,32 @@
                      ::h/hinnoittelu-id (op/in hintaryhma-idt)})))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
-  (jdbc/with-db-transaction [db db]
-    (doall
-      (for [id toimenpide-idt]
-        (specql/insert! db
-                        ::h/hinnoittelu<->toimenpide
-                        {::h/toimenpide-id id
-                         ::h/hinnoittelu-id hinnoittelu
-                         ::m/luoja-id (:id user)})))))
+  (doall
+    (for [id toimenpide-idt]
+      (specql/insert! db
+                      ::h/hinnoittelu<->toimenpide
+                      {::h/toimenpide-id id
+                       ::h/hinnoittelu-id hinnoittelu
+                       ::m/luoja-id (:id user)}))))
 
 (defn tallenna-hintaryhmalle-hinta! [db user hinnoittelu-id hinnat]
-  (jdbc/with-db-transaction [db db]
-    (doseq [hinta hinnat]
-      (if (id-olemassa? (::hinta/id hinta))
-        (specql/update! db
-                        ::hinta/hinta
-                        (merge
-                          hinta
-                          {::hinta/hinnoittelu-id hinnoittelu-id
-                           ::m/muokkaaja-id (:id user)
-                           ::m/muokattu (pvm/nyt)})
-                        {::hinta/id (::hinta/id hinta)})
+  (doseq [hinta hinnat]
+    (if (id-olemassa? (::hinta/id hinta))
+      (specql/update! db
+                      ::hinta/hinta
+                      (merge
+                        hinta
+                        {::hinta/hinnoittelu-id hinnoittelu-id
+                         ::m/muokkaaja-id (:id user)
+                         ::m/muokattu (pvm/nyt)})
+                      {::hinta/id (::hinta/id hinta)})
 
-        (specql/insert! db
-                        ::hinta/hinta
-                        (merge
-                          hinta
-                          {::hinta/hinnoittelu-id hinnoittelu-id
-                           ::m/luoja-id (:id user)}))))))
+      (specql/insert! db
+                      ::hinta/hinta
+                      (merge
+                        hinta
+                        {::hinta/hinnoittelu-id hinnoittelu-id
+                         ::m/luoja-id (:id user)})))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
   (::to/oma-hinnoittelu (to/toimenpide-idlla (to-q/hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
@@ -133,29 +131,28 @@
     hinnoittelu))
 
 (defn tallenna-toimenpiteelle-hinta! [db user toimenpide-id hinnat urakka-id]
-  (jdbc/with-db-transaction [db db]
-    (let [hinnoittelu-id (::h/id
-                           (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-                             hinnoittelu
-                             (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
-      (doseq [hinta hinnat]
-        (if (id-olemassa? (::hinta/id hinta))
-          (specql/update! db
-                          ::hinta/hinta
-                          (merge
-                            hinta
-                            ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
-                            (if ((some-fn nil? zero?) (::hinta/maara hinta))
-                              {::m/poistettu? true
-                               ::m/poistaja-id (:id user)}
-                              {::m/muokattu (pvm/nyt)
-                               ::m/muokkaaja-id (:id user)}))
-                          {::hinta/id (::hinta/id hinta)})
+  (let [hinnoittelu-id (::h/id
+                         (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
+                           hinnoittelu
+                           (luo-toimenpiteelle-oma-hinnoittelu db user toimenpide-id urakka-id)))]
+    (doseq [hinta hinnat]
+      (if (id-olemassa? (::hinta/id hinta))
+        (specql/update! db
+                        ::hinta/hinta
+                        (merge
+                          hinta
+                          ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
+                          (if ((some-fn nil? zero?) (::hinta/maara hinta))
+                            {::m/poistettu? true
+                             ::m/poistaja-id (:id user)}
+                            {::m/muokattu (pvm/nyt)
+                             ::m/muokkaaja-id (:id user)}))
+                        {::hinta/id (::hinta/id hinta)})
 
-          (specql/insert! db
-                          ::hinta/hinta
-                          (merge
-                            hinta
-                            {::m/luotu (pvm/nyt)
-                             ::m/luoja-id (:id user)
-                             ::hinta/hinnoittelu-id hinnoittelu-id})))))))
+        (specql/insert! db
+                        ::hinta/hinta
+                        (merge
+                          hinta
+                          {::m/luotu (pvm/nyt)
+                           ::m/luoja-id (:id user)
+                           ::hinta/hinnoittelu-id hinnoittelu-id}))))))

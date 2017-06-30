@@ -38,8 +38,18 @@
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka
                                                :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi}]})
 
+(s/def ::idt (s/coll-of ::id))
+
+(defn kiintio-idlla [kiintiot id]
+  (first (filter #(= (::id %) id) kiintiot)))
+
+;; Palvelut
+
 (s/def ::hae-kiintiot-kysely
   (s/keys :req [::urakka-id ::sopimus-id]))
+
+(s/def ::hae-kiintiot-ja-toimenpiteet-vastaus
+  (s/coll-of ::kiintio))
 
 (s/def ::hae-kiintiot-vastaus
   (s/coll-of ::kiintio))
@@ -53,4 +63,12 @@
 (s/def ::tallenna-kiintiot-kysely
   (s/keys :req [::sopimus-id ::urakka-id ::tallennettavat-kiintiot]))
 
-(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-vastaus)
+(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-ja-toimenpiteet-vastaus)
+
+(s/def ::tallenna-kiintiot-vastaus ::hae-kiintiot-ja-toimenpiteet-vastaus)
+
+(s/def ::liita-toimenpiteet-kiintioon-kysely (s/keys :req [::id ::urakka-id
+                                                           :harja.domain.vesivaylat.toimenpide/idt]))
+
+;; Palauttaa liitettyjen toimenpiteiden id:t (samat jotka annettiin)
+(s/def ::liita-toimenpiteet-kiintioon-vastaus (s/keys :req [:harja.domain.vesivaylat.toimenpide/idt]))
