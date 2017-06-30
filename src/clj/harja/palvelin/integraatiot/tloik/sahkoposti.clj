@@ -64,7 +64,7 @@ goole-static-map-url-template
        [:td {:bgcolor "#EB7035" :style "padding: 12px; border-radius: 3px;" :align "center"}
         [:a {:href linkki
              :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
-         napin-teksti]]]]]]])
+         (h napin-teksti)]]]]]]])
 
 (def +vastausohje+ (str "Läheta tämä viesti kuitataksesi. Älä muuta otsikkoa tai hakasuluissa "
                         "olevaa kuittaustyyppiä. Voit kirjoittaa myös kommentin viestin alkuun."))
@@ -73,7 +73,7 @@ goole-static-map-url-template
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
   [vastausosoite napin-teksti subject body]
-  (html-nappi (h napin-teksti)
+  (html-nappi napin-teksti
               (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
