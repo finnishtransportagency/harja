@@ -335,7 +335,7 @@
   (process-event [_ app]
     (let [onnistunut! (t/send-async! v/->HaeSijainninOsoite)
           virhe! (t/send-async! v/->VirheTapahtui)]
-      (geo/nykyinen-geolokaatio (fn [sijainti] (onnistunut! sijainti)) (fn [virhe] (virhe! virhe)))
+      (geo/nykyinen-geolokaatio onnistunut! virhe!)
       (assoc app :paikannus-kaynnissa? true)))
 
   v/HaeSijainninOsoite
