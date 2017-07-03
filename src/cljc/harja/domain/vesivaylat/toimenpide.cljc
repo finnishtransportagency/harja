@@ -12,6 +12,7 @@
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
@@ -282,6 +283,7 @@ reimari-tilat
 (s/def ::reimari-toimenpidetyyppi (set (keys reimari-toimenpidetyypit)))
 (s/def ::reimari-toimenpidetyypit (s/and set? (s/every ::reimari-toimenpidetyyppi)))
 
+(s/def ::turvalaitekomponentit (s/every ::tkomp/turvalaitekomponentti))
 (s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
                              ::vv-vayla/id
                              ::vv-vayla/nimi]))
@@ -441,14 +443,17 @@ reimari-tilat
 (s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite]
-                     :opt [::vikakorjauksia? ::oma-hinnoittelu ::hintaryhma-id
-                           ::suoritettu ::hintatyyppi ::lisatieto])))
+                           ::turvalaite ::reimari-urakoitsija
+                           ::reimari-sopimus ::turvalaitekomponentit]
+                     :opt [::vikakorjauksia?
+                           ::suoritettu ::hintatyyppi ::lisatieto
+                           ::oma-hinnoittelu ::hintaryhma-id])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite]
+                           ::turvalaite ::reimari-urakoitsija
+                           ::reimari-sopimus ::turvalaitekomponentit]
                      :opt [::vikakorjauksia?
                            ::suoritettu ::hintatyyppi ::lisatieto])))
 
