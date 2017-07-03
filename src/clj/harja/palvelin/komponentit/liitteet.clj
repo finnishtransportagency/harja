@@ -78,7 +78,13 @@
 (defn- tallenna-liitteen-data [db fileyard-client lahde]
   (if (and (ominaisuus-kaytossa? :fileyard) fileyard-client)
     ;; Jos fileyard tallennus on käytössä, tallennetaan ulkoiseen palveluun
-    {:liite_oid nil :fileyard-hash @(fileyard-client/save fileyard-client lahde)}
+    (let [hash @(fileyard-client/save fileyard-client lahde)]
+      (if (string? hash)
+        {:liite_oid nil :fileyard-hash hash}
+        (do
+          (log/error "Uuden liitteen tallennus fileyard epäonnistui, tallennetaan tietokantaan. "
+                     hash)
+          (tallenna-liitteen-data db nil lahde))))
 
     ;; Muuten tallennetaan paikalliseen tietokantaan
     {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
@@ -124,20 +130,27 @@
 (defn- hae-pikkukuva [db liitteen-id]
   (first (liitteet/hae-pikkukuva-lataukseen db liitteen-id)))
 
+(defn- siirra-liite-fileyard [db client {:keys [id nimi liite_oid]}]
+  (try
+    (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
+      (if (not (string? result))
+        (log/error "Virhe siirrettäessä liitettä " nimi "(id: " id ") fileyardiin: " result)
+        (do
+          (jdbc/with-db-transaction [db db]
+            (poista-lob db liite_oid)
+            (liitteet/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result}))
+          (log/info "Siirretty liite: " nimi " (id: " id ")"))))
+    (catch Exception e
+      (log/error e "Poikkeus siirrettäessä liitettä fileyardiin " nimi " (id: " id ")"))))
+
 (defn- siirra-liitteet-fileyard [db fileyard-url]
   (when (and (ominaisuus-kaytossa? :fileyard)
              fileyard-url)
     (lukot/aja-lukon-kanssa
      db "fileyard-liitesiirto"
      #(let [client (fileyard-client/new-client fileyard-url)]
-        (doseq [{:keys [id nimi liite_oid]} (liitteet/hae-siirrettavat-liitteet db)]
-          (log/info "Siirretään liite: " nimi " (id: " id ")")
-          (let [result @(fileyard-client/save client (lue-lob db liite_oid))]
-            (if (not (string? result))
-              (log/error "Virhe siirrettäessä liitettä fileyardiin: " result)
-              (jdbc/with-db-transaction [db db]
-                (poista-lob db liite_oid)
-                (liitteet/merkitse-liite-siirretyksi! db {:id id :fileyard-hash result})))))))))
+        (doseq [liite (liitteet/hae-siirrettavat-liitteet db)]
+          (siirra-liite-fileyard db client liite))))))
 
 (defrecord Liitteet [fileyard-url]
   component/Lifecycle
