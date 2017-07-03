@@ -444,7 +444,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::lisatieto ::turvalaitekomponentit]
+                           ::reimari-sopimus ::turvalaitekomponentit]
                      :opt [::vikakorjauksia?
                            ::suoritettu ::hintatyyppi ::lisatieto
                            ::oma-hinnoittelu ::hintaryhma-id])))
@@ -453,7 +453,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::lisatieto ::turvalaitekomponentit]
+                           ::reimari-sopimus ::turvalaitekomponentit]
                      :opt [::vikakorjauksia?
                            ::suoritettu ::hintatyyppi ::lisatieto])))
 
