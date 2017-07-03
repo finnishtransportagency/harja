@@ -56,7 +56,9 @@
     (is (>= (count vastaus) 2))
 
     (is (every? #(integer? (::toi/id %)) vastaus))
-    (is (every? #(string? (::toi/lisatieto %)) vastaus))
+    (is (every? #(or (and (string? (::toi/lisatieto %))
+                          (>= (count (::toi/lisatieto %)) 1))
+                     (nil? (::toi/lisatieto %))) vastaus))
     (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
     (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
     (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
