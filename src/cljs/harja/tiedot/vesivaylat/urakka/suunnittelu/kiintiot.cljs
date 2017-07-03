@@ -96,7 +96,6 @@
                                        :epaonnistui ->KiintiotEiTallennettu
                                        :epaonnistui-parametrit [ch]})
             (assoc :kiintioiden-tallennus-kaynnissa? true)))
-
       app))
 
   KiintiotTallennettu

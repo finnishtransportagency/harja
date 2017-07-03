@@ -76,3 +76,16 @@
                   {:kiintiot [{:foo :bar}]})))
        (= [{:foo :bar}] (<! ch))
        (done)))))
+
+(deftest ToimenpiteenValinta
+  (is (= {:valitut-toimenpide-idt #{1}}
+         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true}))))
+  (is (= {:valitut-toimenpide-idt #{1}}
+         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true})
+             {:valitut-toimenpide-idt #{1}})))
+  (is (= {:valitut-toimenpide-idt #{1}}
+         (e! (tiedot/->ValitseToimenpide {:id 2 :valittu? true})
+             {:valitut-toimenpide-idt #{1 2}})))
+  (is (= {:valitut-toimenpide-idt #{}}
+         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? false})
+             {:valitut-toimenpide-idt #{1}}))))
