@@ -27,7 +27,9 @@
                              :tila identity
                              :lisatyo #(Boolean/valueOf %)
                              :suoritettu aikaleima
-                             :lisatieto identity
+                             :lisatieto #(if (empty? %)
+                                           nil
+                                           %)
                              :luotu aikaleima
                              :muokattu aikaleima})
 
