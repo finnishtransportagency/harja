@@ -202,7 +202,7 @@
 
       (u/change (u/grid-solu "mg1" 2 1 "input") "Haskell")
       --
-      (is (= "Haskell" (.-value (u/grid-solu "mg1" 2 1))))
+      (is (= "Haskell" (.getAttribute (u/grid-solu "mg1" 2 1) "value")))
 
       "Toimintonappeja ei ole"
       (is (= "Kumoa" (u/text (u/sel1 :button)))))))

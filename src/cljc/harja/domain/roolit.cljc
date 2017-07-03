@@ -4,8 +4,7 @@
   (:require
    [clojure.set :refer [intersection]]
     #?(:cljs [harja.tiedot.istunto :as istunto])
-    #?(:cljs [harja.loki :as frontlog])
-    #?(:clj [taoensso.timbre :as backlog])
+    [taoensso.timbre :as log]
     #?(:clj [slingshot.slingshot :refer [throw+]])))
 
 (defrecord EiOikeutta [syy])
@@ -43,13 +42,6 @@
 ;; Esimääriteltyjä settejä rooleista
 (def urakoitsijan-urakkaroolit-kirjoitus #{urakoitsijan-paakayttaja urakoitsijan-urakan-vastuuhenkilo
                                            urakoitsijan-laatuvastaava})
-
-
-(defn- lokita [& sisalto]
-  #?(:clj
-     (backlog/log :debug [sisalto])
-     :cljs
-     (apply frontlog/log sisalto)))
 
 
 ;; YHTEISET
@@ -169,7 +161,7 @@ rooleista."
      [kayttaja rooli]
      (when-not (roolissa? kayttaja rooli)
        (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s'", (:kayttajanimi kayttaja) rooli)]
-         (backlog/warn viesti)
+         (log/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
 #?(:clj
@@ -178,7 +170,7 @@ rooleista."
      (when-not (rooli-urakassa? kayttaja rooli urakka-id)
        (let [viesti (format "Käyttäjällä '%1$s' ei vaadittua roolia '%2$s' urakassa jonka id on %3$s",
                             (:kayttajanimi kayttaja) rooli urakka-id)]
-         (backlog/warn viesti)
+         (log/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
 (defn voi-kirjata-toteumia?
@@ -232,7 +224,7 @@ rooleista."
       (if (rooli-urakassa? @istunto/kayttaja rooli urakka-id)
         sitten
         (let [viesti (str "Käyttäjällä '" (:kayttajanimi @istunto/kayttaja) "' ei vaadittua roolia '" rooli "' urakassa " urakka-id)]
-          (lokita viesti)
+          (log/debug viesti)
           muutoin)))))
 
 #?(:cljs
@@ -249,5 +241,5 @@ käyttäjällä on joku annetuista rooleista."
                    (roolissa? rooli)))
         sitten
         (let [viesti (str "Käyttäjällä '" (:kayttajanimi @istunto/kayttaja) "' ei vaadittua roolia '" rooli)]
-          (lokita viesti)
+          (log/debug viesti)
           muutoin)))))
