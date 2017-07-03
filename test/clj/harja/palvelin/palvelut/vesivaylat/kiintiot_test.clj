@@ -159,9 +159,9 @@
                 ::kiintio/urakka-id urakka-id
                 ::to/idt #{toimenpide-id}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :liita-toimenpiteet-kiintioon
-                                 +kayttaja-jvh+
-                                 params)
+                                :liita-toimenpiteet-kiintioon
+                                +kayttaja-jvh+
+                                params)
         toimenpiteen-kiintio-id-jalkeen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))]
 
     (is (s/valid? ::kiintio/liita-toimenpiteet-kiintioon-kysely params))
@@ -226,3 +226,23 @@
 
     (is (integer? toimenpiteen-kiintio-id-ennen) "Toimenpide kuului kiintiöön ennen testiä")
     (is (nil? toimenpiteen-kiintio-id-jalkeen) "Toimenpide irrotettiin kiintiöstä")))
+
+(deftest toimenpiteen-irrotus-kun-toimenpiteet-eivat-kuulu-urakkaan
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
+        params {::to/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :irrota-toimenpiteet-kiintiosta
+                                                   +kayttaja-jvh+
+                                                   params)))))
+
+(deftest toimenpiteen-irrotus-ilman-oikeuksia
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
+        params {::to/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :irrota-toimenpiteet-kiintiosta
+                                           +kayttaja-tero+
+                                           params)))))
