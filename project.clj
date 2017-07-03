@@ -251,9 +251,6 @@
                             {:file "resources/public/laadunseuranta/js/epsg3067.js"
                              :provides ["epsg3067"]}]}}
 
-               ;; This next build is an compressed minified build for
-               ;; production. You can build this with:
-               ;; lein cljsbuild once min
                {:id "laadunseuranta-min"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
                 :jar true
