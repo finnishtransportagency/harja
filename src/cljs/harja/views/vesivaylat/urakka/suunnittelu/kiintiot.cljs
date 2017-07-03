@@ -19,7 +19,8 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -61,7 +62,15 @@
        [valinnat/urakkavalinnat
         {}
         ^{:key "valinnat"}
-        [suodattimet/urakan-sopimus @nav/valittu-urakka]]
+        [suodattimet/urakan-sopimus @nav/valittu-urakka]
+        ^{:key "urakkatoiminnot"}
+        [valinnat/urakkatoiminnot {:sticky? true}
+         ^{:key "irrotusnappi"}
+         [napit/yleinen-ensisijainen (str "Irrota kiintiöstä"
+                                          (when-not (empty? (:valitut-toimenpide-idt app))
+                                            (str " (" (count (:valitut-toimenpide-idt app)) ")")))
+          #(log "Painoit nappia")
+          {:disabled (empty? (:valitut-toimenpide-idt app))}]]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
                           kiintioiden-tallennus-kaynnissa?)
