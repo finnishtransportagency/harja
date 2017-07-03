@@ -78,8 +78,8 @@
        (done)))))
 
 (deftest ToimenpiteenValinta
-  (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true} {:valitut-toimenpide-idt #{}}))
-         {:valitut-toimenpide-idt #{1}}))
+  (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true}) {:valitut-toimenpide-idt #{}}))
+         {:valitut-toimenpide-idt #{1}})
   (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true}) {:valitut-toimenpide-idt #{1}})
          {:valitut-toimenpide-idt #{1}}))
   (is (= (e! (tiedot/->ValitseToimenpide {:id 2 :valittu? true}) {:valitut-toimenpide-idt #{1}})
