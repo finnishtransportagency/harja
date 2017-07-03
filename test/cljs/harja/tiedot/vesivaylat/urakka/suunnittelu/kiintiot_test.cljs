@@ -6,63 +6,63 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (deftest nakymassa
-  (is (= {:nakymassa? true}
-         (e! (tiedot/->Nakymassa? true))))
+  (is (= (e! (tiedot/->Nakymassa? true))
+         {:nakymassa? true}))
 
-  (is (= {:nakymassa? false}
-         (e! (tiedot/->Nakymassa? false)))))
+  (is (= (e! (tiedot/->Nakymassa? false))
+         {:nakymassa? false})))
 
 (deftest PaivitaValinnat
   (vaadi-async-kutsut
     #{tiedot/->HaeKiintiot}
-    (is (= {:valinnat {:foo :bar}}
-          (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
+    (is (= (e! (tiedot/->PaivitaValinnat {:foo :bar}))
+           {:valinnat {:foo :bar}}))))
 
 (deftest HaeKiintiot
   (vaadi-async-kutsut
     #{tiedot/->KiintiotEiHaettu tiedot/->KiintiotHaettu}
-    (is (= {:kiintioiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKiintiot)))))
+    (is (= (e! (tiedot/->HaeKiintiot))
+           {:kiintioiden-haku-kaynnissa? true})))
 
   (vaadi-async-kutsut
     #{}
-    (is (= {:kiintioiden-haku-kaynnissa? true
-            :foo :bar}
-           (e! (tiedot/->HaeKiintiot) {:kiintioiden-haku-kaynnissa? true
-                                       :foo :bar})))))
+    (is (= (e! (tiedot/->HaeKiintiot) {:kiintioiden-haku-kaynnissa? true
+                                       :foo :bar})
+           {:kiintioiden-haku-kaynnissa? true
+            :foo :bar}))))
 
 (deftest KiintiotHaettu
-  (is (= {:kiintioiden-haku-kaynnissa? false
-          :kiintiot [{:id 1}]}
-         (e! (tiedot/->KiintiotHaettu [{:id 1}])))))
+  (is (= (e! (tiedot/->KiintiotHaettu [{:id 1}]))
+         {:kiintioiden-haku-kaynnissa? false
+          :kiintiot [{:id 1}]})))
 
 (deftest KiintiotEiHaettu
-  (is (= {:kiintioiden-haku-kaynnissa? false
-          :kiintiot []}
-         (e! (tiedot/->KiintiotEiHaettu)))))
+  (is (= (e! (tiedot/->KiintiotEiHaettu))
+         {:kiintioiden-haku-kaynnissa? false
+          :kiintiot []})))
 
 (deftest TallennaKiintiot
   (vaadi-async-kutsut
     #{tiedot/->KiintiotEiTallennettu tiedot/->KiintiotTallennettu}
 
-    (is (= {:kiintioiden-tallennus-kaynnissa? true}
-           (e! (tiedot/->TallennaKiintiot [{:id 1}] (chan))))))
+    (is (= (e! (tiedot/->TallennaKiintiot [{:id 1}] (chan)))
+           {:kiintioiden-tallennus-kaynnissa? true})))
 
   (vaadi-async-kutsut
     #{}
-    (is (= {:kiintioiden-tallennus-kaynnissa? true
-            :foo :bar}
-           (e! (tiedot/->TallennaKiintiot [{:id 1}] (chan))
+    (is (= (e! (tiedot/->TallennaKiintiot [{:id 1}] (chan))
                {:kiintioiden-tallennus-kaynnissa? true
-                :foo :bar})))))
+                :foo :bar})
+           {:kiintioiden-tallennus-kaynnissa? true
+            :foo :bar}))))
 
 (deftest KiintiotTallennettu
   (async done
     (go
       (let [ch (chan)]
-       (is (= {:kiintiot [{:id 1}]
-               :kiintioiden-tallennus-kaynnissa? false}
-              (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))))
+       (is (= (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))
+              {:kiintiot [{:id 1}]
+               :kiintioiden-tallennus-kaynnissa? false}))
        (= [{:id 1}] (<! ch))
        (done)))))
 
@@ -70,22 +70,19 @@
   (async done
     (go
       (let [ch (chan)]
-       (is (= {:kiintioiden-tallennus-kaynnissa? false
-               :kiintiot [{:foo :bar}]}
-              (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
-                  {:kiintiot [{:foo :bar}]})))
+       (is (= (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
+                  {:kiintiot [{:foo :bar}]})
+              {:kiintioiden-tallennus-kaynnissa? false
+               :kiintiot [{:foo :bar}]}))
        (= [{:foo :bar}] (<! ch))
        (done)))))
 
 (deftest ToimenpiteenValinta
-  (is (= {:valitut-toimenpide-idt #{1}}
-         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true}))))
-  (is (= {:valitut-toimenpide-idt #{1}}
-         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true})
-             {:valitut-toimenpide-idt #{1}})))
-  (is (= {:valitut-toimenpide-idt #{1}}
-         (e! (tiedot/->ValitseToimenpide {:id 2 :valittu? true})
-             {:valitut-toimenpide-idt #{1 2}})))
-  (is (= {:valitut-toimenpide-idt #{}}
-         (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? false})
-             {:valitut-toimenpide-idt #{1}}))))
+  (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true} {:valitut-toimenpide-idt #{}}))
+         {:valitut-toimenpide-idt #{1}}))
+  (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? true}) {:valitut-toimenpide-idt #{1}})
+         {:valitut-toimenpide-idt #{1}}))
+  (is (= (e! (tiedot/->ValitseToimenpide {:id 2 :valittu? true}) {:valitut-toimenpide-idt #{1}})
+         {:valitut-toimenpide-idt #{1 2}}))
+  (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? false}) {:valitut-toimenpide-idt #{1}})
+         {:valitut-toimenpide-idt #{}})))
