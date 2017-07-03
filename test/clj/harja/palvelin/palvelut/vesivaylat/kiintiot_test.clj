@@ -208,3 +208,21 @@
                                                    :liita-toimenpiteet-kiintioon
                                                    +kayttaja-jvh+
                                                    params)))))
+
+(deftest toimenpiteen-irrotus-kiintiosta
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
+        toimenpiteen-kiintio-id-ennen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))
+        params {::to/urakka-id urakka-id
+                ::to/idt #{toimenpide-id}}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :irrota-toimenpiteet-kiintiosta
+                                +kayttaja-jvh+
+                                params)
+        toimenpiteen-kiintio-id-jalkeen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))]
+
+    (is (s/valid? ::kiintio/irrota-toimenpiteet-kiintiosta-kysely params))
+    (is (s/valid? ::kiintio/irrota-toimenpiteet-kiintiosta-vastaus vastaus))
+
+    (is (integer? toimenpiteen-kiintio-id-ennen) "Toimenpide kuului kiintiöön ennen testiä")
+    (is (nil? toimenpiteen-kiintio-id-jalkeen) "Toimenpide irrotettiin kiintiöstä")))
