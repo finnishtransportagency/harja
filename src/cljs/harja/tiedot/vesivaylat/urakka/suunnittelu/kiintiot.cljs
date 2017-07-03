@@ -11,6 +11,7 @@
             [harja.tiedot.urakka :as u]
 
             [harja.domain.vesivaylat.kiintio :as kiintio]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.muokkaustiedot :as m]
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -20,6 +21,7 @@
                 {:nakymassa? false
                  :kiintioiden-haku-kaynnissa? false
                  :kiintioiden-tallennus-kaynnissa? false
+                 :kiintiosta-irrotus-kaynnissa? false
                  :kiintiot nil
                  :valitut-toimenpide-idt #{}
                  :valinnat nil}))
@@ -36,8 +38,11 @@
 (defrecord KiintiotHaettu [tulos])
 (defrecord KiintiotEiHaettu [])
 (defrecord TallennaKiintiot [grid paluukanava])
+(defrecord IrrotaKiintiosta [tiedot])
 (defrecord KiintiotTallennettu [tulos paluukanava])
 (defrecord KiintiotEiTallennettu [virhe paluukanava])
+(defrecord IrrotettuKiintiosta [vastaus])
+(defrecord EiIrrotettuKiintiosta [])
 (defrecord ValitseToimenpide [tiedot])
 
 (extend-protocol tuck/Event
@@ -116,4 +121,32 @@
           valittu? (:valittu? tiedot)
           aseta-valinta (if valittu? conj disj)]
       (assoc app :valitut-toimenpide-idt
-                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id)))))
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  IrrotaKiintiosta
+  (process-event [{toimenpide-idt :toimenpide-idt} app]
+    ;; TODO TESTI
+    (if-not (:kiintiosta-irrotus-kaynnissa? app)
+      (let [parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                        ::to/idt #{toimenpide-idt}}]
+        (-> app
+            (tuck-apurit/palvelukutsu :irrota-toimenpiteet-kiintiosta
+                                      parametrit
+                                      {:onnistui ->IrrotettuKiintiosta
+                                       :epaonnistui ->EiIrrotettuKiintiosta})
+            (assoc :kiintiosta-irrotus-kaynnissa? true)))
+      app))
+
+  IrrotettuKiintiosta
+  (process-event [{vastaus :vastaus} app]
+    ;; TODO DISSOC TOIMENPITEET KIINTIÖSTÄ
+    ;; TODO TESTI
+    (viesti/nayta! "Toimenpiteet irrotettu kiintiöstä." :success)
+    (assoc app :valitut-toimenpide-idt #{}
+               :kiintiosta-irrotus-kaynnissa? false))
+
+  EiIrrotettuKiintiosta
+  (process-event [_ app]
+    ;; TODO TESTI
+    (viesti/nayta! "Irrotus epäonnistui!" :danger)
+    (assoc app :kiintiosta-irrotus-kaynnissa? false)))
