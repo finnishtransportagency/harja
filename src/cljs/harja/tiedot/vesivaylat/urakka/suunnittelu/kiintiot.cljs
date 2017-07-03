@@ -21,6 +21,7 @@
                  :kiintioiden-haku-kaynnissa? false
                  :kiintioiden-tallennus-kaynnissa? false
                  :kiintiot nil
+                 :valitut-toimenpide-idt #{}
                  :valinnat nil}))
 
 (defonce valinnat
@@ -37,6 +38,7 @@
 (defrecord TallennaKiintiot [grid paluukanava])
 (defrecord KiintiotTallennettu [tulos paluukanava])
 (defrecord KiintiotEiTallennettu [virhe paluukanava])
+(defrecord ValitseToimenpide [tiedot])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -56,11 +58,11 @@
       (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                         ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}]
         (-> app
-           (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
-                                     parametrit
-                                     {:onnistui ->KiintiotHaettu
-                               :epaonnistui ->KiintiotEiHaettu})
-           (assoc :kiintioiden-haku-kaynnissa? true)))
+            (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
+                                      parametrit
+                                      {:onnistui ->KiintiotHaettu
+                                       :epaonnistui ->KiintiotEiHaettu})
+            (assoc :kiintioiden-haku-kaynnissa? true)))
 
       app))
 
@@ -107,4 +109,12 @@
   (process-event [{ch :paluukanava} app]
     (viesti/nayta! "Kiintiöiden tallennus epäonnistui!" :danger)
     (go (>! ch (:kiintiot app)))
-    (assoc app :kiintioiden-tallennus-kaynnissa? false)))
+    (assoc app :kiintioiden-tallennus-kaynnissa? false))
+
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id)))))
