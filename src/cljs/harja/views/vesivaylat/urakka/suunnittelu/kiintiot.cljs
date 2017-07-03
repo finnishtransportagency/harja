@@ -69,7 +69,7 @@
          [napit/yleinen-ensisijainen (str "Irrota kiintiöstä"
                                           (when-not (empty? (:valitut-toimenpide-idt app))
                                             (str " (" (count (:valitut-toimenpide-idt app)) ")")))
-          #(log "Painoit nappia")
+          #(e! (tiedot/->IrrotaKiintiosta (:valitut-toimenpide-idt app)))
           {:disabled (empty? (:valitut-toimenpide-idt app))}]]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
