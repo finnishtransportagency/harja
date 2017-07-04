@@ -180,7 +180,7 @@ VALUES
     (SELECT id
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
-    '',
+    NULL,
     '2017-05-05T23:23Z',
     '2017-05-05',
     (SELECT id
@@ -237,7 +237,7 @@ VALUES
     (SELECT id
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
-    '',
+    NULL,
     '2017-05-08T23:23Z',
     '2017-05-08',
     (SELECT id
@@ -294,7 +294,7 @@ VALUES
     (SELECT id
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
-    '',
+    NULL,
     '2017-05-08T23:23Z',
     '2017-05-08',
     (SELECT id
@@ -427,7 +427,7 @@ VALUES
     (SELECT id
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
-    '',
+    NULL,
     '2017-05-03T23:23Z',
     '2017-05-03',
     (SELECT id
@@ -488,7 +488,7 @@ VALUES
     (SELECT id
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
-    '',
+    NULL,
     '2017-05-08T23:23Z',
     '2017-05-08',
     (SELECT id
@@ -797,10 +797,11 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
-   'POISTETTUUN HINNOITTELUUN KUULUVA HINTA JOKA EI OLE POISTETTU EI SAA NÄKYÄ MISSÄÄN', 99999999, (SELECT id
-                                                                                                    FROM kayttaja
-                                                                                                    WHERE kayttajanimi =
-                                                                                                          'tero'),
+   'POISTETTUUN HINNOITTELUUN KUULUVA HINTA JOKA EI OLE POISTETTU EI SAA NÄKYÄ MISSÄÄN', 99999999,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi =
+          'tero'),
    TRUE);
 
 INSERT INTO vv_hinta
