@@ -14,15 +14,15 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-sahkoposti-itselle
-  "Lähettää sähköpostivahvistuksen itse käyttäjälle joka sai aikaan mailin lähetyksen Harjasta"
-  [{:keys [email sahkoposti viesti-otsikko viesti-body]}]
+  "Lähettää sähköpostivahvistuksen itse käyttäjälle joka sai aikaan mailin lähetyksen Harjasta."
+  [{:keys [kopio-viesti email sahkoposti viesti-otsikko viesti-body]}]
   (try
     (sahkoposti/laheta-viesti!
       email
       (sahkoposti/vastausosoite email)
       sahkoposti
       (str "Harja-viesti lähetetty: " viesti-otsikko)
-      (str "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle.\n"
+      (str kopio-viesti "\n"
            viesti-body))
     (catch Exception e
       (log/error (format "Sähköpostin lähetys osoitteeseen %s epäonnistui. Virhe: %s"
