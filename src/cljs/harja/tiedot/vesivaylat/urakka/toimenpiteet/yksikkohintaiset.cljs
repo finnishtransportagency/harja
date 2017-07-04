@@ -114,7 +114,7 @@
   [(hintakentta "Työ" (hinta/hinta-otsikolla "Työ" hinnat))
    (hintakentta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
    (hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
-   (hintakentta "Matkat" (hinta/hinta-otsikolla "Matkat" hinnat))
+   (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
@@ -205,7 +205,7 @@
 
   HintaryhmaEiLuotu
   (process-event [_ app]
-    (viesti/nayta! "Hintaryhmän tallennus epäonnistui!" :danger)
+    (viesti/nayta! "Tilauksen tallennus epäonnistui!" :danger)
     (assoc app :hintaryhman-tallennus-kaynnissa? false
                :uusi-hintaryhma nil
                :uuden-hintaryhman-lisays? false))
@@ -227,7 +227,7 @@
 
   HintaryhmatEiHaettu
   (process-event [_ app]
-    (viesti/nayta! "Hintaryhmien haku epäonnistui!" :danger)
+    (viesti/nayta! "Tilauksien haku epäonnistui!" :danger)
     (assoc app :hintaryhmien-haku-kaynnissa? false))
 
   ValitseHintaryhma
@@ -255,7 +255,7 @@
 
   ValitutEiLiitetty
   (process-event [_ app]
-    (viesti/nayta! "Toimenpiteiden liittäminen hintaryhmiin epäonnistui!" :danger)
+    (viesti/nayta! "Toimenpiteiden liittäminen tilaukseen epäonnistui!" :danger)
     (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
 
   AloitaToimenpiteenHinnoittelu

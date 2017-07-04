@@ -32,7 +32,7 @@
   [:div.inline-block {:style {:margin-right "10px"}}
    [yleiset/livi-pudotusvalikko
     {:valitse-fn #(e! (tiedot/->ValitseHintaryhma %))
-     :format-fn #(or (::h/nimi %) "Valitse hintaryhmä")
+     :format-fn #(or (::h/nimi %) "Valitse tilaus")
      :class "livi-alasveto-250"
      :valinta valittu-hintaryhma
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
@@ -57,7 +57,7 @@
     [:span
      [:div.inline-block {:style {:margin-right "10px"}}
       [tee-kentta {:tyyppi :string
-                   :placeholder "Ryhmän nimi"
+                   :placeholder "Tilauksen nimi"
                    :pituus-max 160}
        (r/wrap
          uusi-hintaryhma
@@ -71,12 +71,12 @@
      [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
     [napit/yleinen-ensisijainen
-     "Luo uusi ryhmä"
+     "Luo uusi tilaus"
      #(e! (tiedot/->UudenHintaryhmanLisays? true))]))
 
 (defn- hinnoittelu [e! app]
   [:span
-   [:span {:style {:margin-right "10px"}} "Siirrä valitut ryhmään"]
+   [:span {:style {:margin-right "10px"}} "Siirrä valitut tilaukseen"]
    [hinnoitteluvaihtoehdot e! app]
    [liita-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
@@ -90,7 +90,10 @@
 ;;;;;;;;;;;;
 ;; Hinnan antamisen leijuke
 
-(defn- kenttarivi [e! app* otsikko]
+(defn- kenttarivi
+  [e! app* otsikko]
+  ;; HOX Otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
+  ;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
   [:tr
    [:td [:b otsikko]]
    [:td
@@ -140,7 +143,7 @@
             [kenttarivi e! app* "Työ"]
             [kenttarivi e! app* "Komponentit"]
             [kenttarivi e! app* "Yleiset materiaalit"]
-            [kenttarivi e! app* "Matkat"]
+            [kenttarivi e! app* "Matkakulut"]
             [kenttarivi e! app* "Muut kulut"]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
@@ -160,7 +163,7 @@
 
        (grid/arvo-ja-nappi
          {:voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                     (get-in app* [:valinnat :urakka-id]))
+                                                  (get-in app* [:valinnat :urakka-id]))
           :ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
           :nappi-teksti "Hinnoittele"
           :uusi-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
@@ -206,20 +209,20 @@
          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
        (if (empty? hinnat)
          [napit/yleinen-ensisijainen
-          "Määrittele yksi hinta koko ryhmälle"
+          "Määrittele yksi hinta koko tilaukselle"
           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
          [:div
           [:div.inline-block {:style {:margin-right "10px"}}
            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
              [:span
-              [:b "Ryhmähinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+              [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
              [yleiset/tietoja {:tietokentan-leveys "180px"}
               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-              "Ryhmähinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+              "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
           [:div.inline-block {:style {:vertical-align :top}}
            [napit/yleinen-toissijainen
@@ -248,21 +251,21 @@
          [jaettu/tulokset e! app
           [:div
            (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-                :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                      hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-                      listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
-            ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-            [jaettu/listaus e! app*
-             {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                :komponentti (fn [rivi]
-                                               [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-              :listaus-tunniste listaus-tunniste
-              :footer (when hintaryhma
-                        [hintaryhman-hinnoittelu e! app* hintaryhma])
-              :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
-                           "Kokonaishintaisista siirretyt, valitse hintaryhmä.")
-              :paneelin-checkbox-sijainti "95.2%"
-              :vaylan-checkbox-sijainti "95.2%"}])]]]))))
+                 :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                       hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
+             ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+             [jaettu/listaus e! app*
+              {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                 :komponentti (fn [rivi]
+                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+               :listaus-tunniste listaus-tunniste
+               :footer (when hintaryhma
+                         [hintaryhman-hinnoittelu e! app* hintaryhma])
+               :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
+                            "Kokonaishintaisista siirretyt, valitse tilaus.")
+               :paneelin-checkbox-sijainti "95.2%"
+               :vaylan-checkbox-sijainti "95.2%"}])]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

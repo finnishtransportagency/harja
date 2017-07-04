@@ -1,18 +1,18 @@
 -- Ylläpito
 
 COMMENT ON TABLE yllapitokohde IS
-E'Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (päällystys, paikkaus, tiemerkintä). Taulua käytetään em. tyyppisissä urakoissa kohteiden osoitteiden ja niihin kohdistuvien töiden hallintaan. Sana "ylläpitokohde" on keksitty tietomallia varten, muutoin käytetään yleensä käsitteitä päällystys-, paikkaus- ja tiemerkintäkohde.\n\n
+E'Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (päällystys, paikkaus, tiemerkintä). Taulua käytetään em. tyyppisissä urakoissa kohteiden osoitteiden ja niihin kohdistuvien töiden hallintaan. Sana "ylläpitokohde" on keksitty tietomallia varten, muutoin käytetään yleensä käsitteitä päällystys-, paikkaus- ja tiemerkintäkohde.\n
 
-Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllopitokohdetyotyyppi-sarakkeesta. Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä. Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä, millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne).\n\n
+Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllopitokohdetyotyyppi-sarakkeesta. Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä. Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä, millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne).\n
 
-Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n\n
+Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n
 
 Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-10, koodit menevät YHA:an.\n
-Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n\n
+Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
 
 COMMENT ON TABLE yllapitokohdeosa IS
-E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohde) kuvaa tienosaa ylläpitokohteen sisällä. Kohdeosien avulla voidaan tarkemmin määrittää, miten ylläpitokohde jakaantuu osiin ja mitä toimenpiteitä eri osilla suoritetaan.\n\n
+E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohde) kuvaa tienosaa ylläpitokohteen sisällä. Kohdeosien avulla voidaan tarkemmin määrittää, miten ylläpitokohde jakaantuu osiin ja mitä toimenpiteitä eri osilla suoritetaan.\n
 
 Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
 - paallystetyyppi\n
@@ -32,11 +32,11 @@ E'Sisältää ylläpitokohteeseen kuuluvien maksuerien tiedot (yksi rivi = yksi 
 -- Ylläpito (päällystys)
 
 COMMENT ON TABLE paallystysilmoitus IS
-E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä ilmoitus tehdystä työstä.\n\n
+E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä ilmoitus tehdystä työstä.\n
 
-  Päällystysilmoituksen varsinaiset tiedot tallentuvat ilmoitustiedot-sarakkeeseen JSONB-muodossa. Tässä JSONissa on listattu jokaiselle osoitteelle erikseen tieto siitä, mitä työtä kyseisessä osoitteessa on tehty. Osoite viittaa ylläpitokohteen kohdeosaan kohdeosa-id:llä.\n\n
+  Päällystysilmoituksen varsinaiset tiedot tallentuvat ilmoitustiedot-sarakkeeseen JSONB-muodossa. Tässä JSONissa on listattu jokaiselle osoitteelle erikseen tieto siitä, mitä työtä kyseisessä osoitteessa on tehty. Osoite viittaa ylläpitokohteen kohdeosaan kohdeosa-id:llä.\n
 
-  Päällystysilmoituksen muut tiedot tallentuvat normaalisti taulun eri sarakkeisiin. Päällystysilmoituksen päätös-sarakkeet kertovat tilaajan ilmoitukselle tekemän hyväksyntäprosessin tiedot. Asiakatarkastus-sarakkeet kertovat konsultin ilmoitukselle tekemästä asiatarkastuksesta.\n\n
+  Päällystysilmoituksen muut tiedot tallentuvat normaalisti taulun eri sarakkeisiin. Päällystysilmoituksen päätös-sarakkeet kertovat tilaajan ilmoitukselle tekemän hyväksyntäprosessin tiedot. Asiakatarkastus-sarakkeet kertovat konsultin ilmoitukselle tekemästä asiatarkastuksesta.\n
 
   Päällystysilmoituksella on seuraavat tilat:\n
   - (ei tilaa), päällystysilmoitusta ei ole aloitettu
@@ -47,7 +47,7 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
 -- Ylläpito (tiemerkintä)
 
 COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
-E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus. Jos linkittyy poistettuun ylläpitokohteeseen, tulkitaan myös itse toteuman olevan poistettu, vaikkei olisikaan eksplisiittisesti merkitty poistetuksi.\n\n
+E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus. Jos linkittyy poistettuun ylläpitokohteeseen, tulkitaan myös itse toteuman olevan poistettu, vaikkei olisikaan eksplisiittisesti merkitty poistetuksi.\n
 
 hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettiin. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
 
@@ -57,14 +57,14 @@ E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (t
 -- Mobiili laadunseuranta
 
 COMMENT ON TABLE tarkastusajo IS
-E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityökalulla aloitetusta tarkastusajosta, kuten ajon aloitus- ja lopetusaika. Käynnissä olevasta ajosta kerätään raakadataa tarkastusreitti-tauluun\n\n
+E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityökalulla aloitetusta tarkastusajosta, kuten ajon aloitus- ja lopetusaika. Käynnissä olevasta ajosta kerätään raakadataa tarkastusreitti-tauluun\n
 
 tyyppi-sarake kertoo ajon tyypin. Nykyään tämä sarake ei ole enää käytössä.';
 
 COMMENT ON TABLE tarkastusreitti IS
-E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n\n
+E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n
 
-Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun.\n\n
+Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun.\n
 
 Sarakkeiden selitykset:\n
 - sijainti_tarkkuus       HTML5-API:n palauttama GPS-pisteen tarkkuus (säde, metreinä)';
@@ -77,11 +77,11 @@ E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joit
 
 
 COMMENT ON TABLE valitavoite IS
-E'Välitavoite kuvaa urakkaan liittyvää tehtävää asiaa, joka pyritään saamaan valmiiksi urakan aikana. Välitavoite sisältää mm. tehtävän asian kuvauksen sekä tiedot välitavoitteen valmistumisesta.\n\n
+E'Välitavoite kuvaa urakkaan liittyvää tehtävää asiaa, joka pyritään saamaan valmiiksi urakan aikana. Välitavoite sisältää mm. tehtävän asian kuvauksen sekä tiedot välitavoitteen valmistumisesta.\n
 
-Välitavoite liitetään urakkaan urakka-sarakkeen kautta. Jos urakka-sarakkeessa on tyhjä arvo, välitavoitetta ei ole sidottu tällöin mihinkään urakkaan, vaan kyseessä on ns. valtakunnallinen välitavoite.\n\n
+Välitavoite liitetään urakkaan urakka-sarakkeen kautta. Jos urakka-sarakkeessa on tyhjä arvo, välitavoitetta ei ole sidottu tällöin mihinkään urakkaan, vaan kyseessä on ns. valtakunnallinen välitavoite.\n
 
-Valtakunnalliset välitavoitteet ovat välitavoitteita, jotka koskevat kaikkia tietyntyyppisiä urakoita ja niistä kopioidaan oma rivi tavoitetta koskeviin urakoihin. Urakkaan kopioidulla välitavoitteella on tieto siitä, mistä valtakunnallisesta välitavoitteesta kyseinen välitavoite on luotu. Valtakunnallinen välitavoite voi olla joko kertaluontoinen tai vuosittain toistuva, jolloin toisto-sarakkeet kertovat, minkä kuukauden päivänä välitavoite toistuu joka vuosi.\n\n
+Valtakunnalliset välitavoitteet ovat välitavoitteita, jotka koskevat kaikkia tietyntyyppisiä urakoita ja niistä kopioidaan oma rivi tavoitetta koskeviin urakoihin. Urakkaan kopioidulla välitavoitteella on tieto siitä, mistä valtakunnallisesta välitavoitteesta kyseinen välitavoite on luotu. Valtakunnallinen välitavoite voi olla joko kertaluontoinen tai vuosittain toistuva, jolloin toisto-sarakkeet kertovat, minkä kuukauden päivänä välitavoite toistuu joka vuosi.\n
 
 Tiemerkintäurakoissa valtakunnallisia välitavoitteita kutsutaan termillä "välitavoitepohja", mutta tietomallimielessä kyse on samasta asiasta.';
 
@@ -140,24 +140,30 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
+COMMENT ON TABLE reimari_turvalaitekomponentti IS
+E'Kuvaa turvalaitteeseen liittyvää komponenttia. Kaikki tiedot tulevat tähän tauluun Reimarista.';
+
+COMMENT ON TABLE reimari_komponenttityyppi IS
+E'Kuvaa turvalaitteen komponentin tyyppiä. Kaikki tiedot tulevat tähän tauluun Reimarista.';
+
 COMMENT ON TABLE vv_hinnoittelu_toimenpide IS
 E'Linkkitaulu, jolla toimenpiteet ja hinnoittelut liitetään toisiinsa.';
 
 COMMENT ON TABLE vv_hinnoittelu IS
-E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun kautta. Jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä. Tällaisenkin toimenpiteen pitää kuitenkin kuulua hinnoitteluun, joka on hintaryhmä. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä. Esimerkiksi, voi olla hinnoittelu (joka on hintaryhmä) *Skikkebön majakan korjaus*, ja tälle hinnoittelulle on suoraan määritelty hinta "Työ 60k e". Siihen ryhmään kuuluu toimenpiteitä, ja yhdelle toimenpiteelle on määritelty lisäksi oma hinta "Komponentti 15k"';
+E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun kautta. Kaikki hinnoittelut koskevat vain yksikköhintaisia Reimarin toimenpiteitä.\n
+
+  Hinnoittelu voi olla hintaryhmä, jolla on useita hintoja ja johon voi kuulua useita toimenpiteitä. Tällaisella hinnoittelulla on hintaryhmä-sarakkeessa arvo true.\n
+
+  Hinnoittelu voi kuvata myös toimenpiteen omaa hintaa. Eli jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä, sekä hinnoitteluun kuuluvat hinnat.';
 
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun';
 
 COMMENT ON TABLE vv_kiintio IS
-E'Vesiväylien sopimuksissa mainitaan usein kiintiöitä, jotka voivat olla hyvin vapaamuotoisia. Esimerkiksi (ei oikeasta sopimuksesta), sopimukseen\n
-Voi kuulua 15 kappaletta talvella vaurioituneen viitan korjausta, ja 5 kappaletta vanhentuneen aurinkopaneelin päivitystä. Kokonaishintaiset toimenpiteet\n
-täyttävät näitä kiintiöitä, ja kun kiintiö täyttyy, aletaan toimenpiteistä maksamaan yksikköhintoja. Tässä vaiheessa tilaaja/urakoitsija yhdessä määrittelevät,\n
-tarkalleen mitkä toimenpiteet kuuluvat kiintiöön, ja mitkä eivät, koska esimerkiksi kauas tehdystä toimenpiteestä joudutaan maksamaan suurempi yksikköhinta matkoista. \n
-Urakoitsija merkitsee kokonaishintaisia toimenpiteitä kiintiöihin kuuluvaksi, ja tilaaja seuraa kiintiöiden täyttymistä.';
+E'Vesiväylien sopimuksissa mainitaan usein kiintiöitä, jotka voivat olla hyvin vapaamuotoisia. Esimerkiksi sopimukseen voisi kuulua 15 kappaletta talvella vaurioituneen viitan korjausta ja 5 kappaletta vanhentuneen aurinkopaneelin päivitystä. Kokonaishintaiset toimenpiteet täyttävät näitä kiintiöitä, ja kun kiintiö täyttyy, aletaan toimenpiteistä maksamaan yksikköhintoja. Tässä vaiheessa tilaaja/urakoitsija yhdessä määrittelevät tarkalleen mitkä toimenpiteet kuuluvat kiintiöön, ja mitkä eivät, koska esimerkiksi kauas tehdystä toimenpiteestä joudutaan maksamaan suurempi yksikköhinta matkoista. Urakoitsija merkitsee kokonaishintaisia toimenpiteitä kiintiöihin kuuluvaksi, ja tilaaja seuraa kiintiöiden täyttymistä.';
 
 COMMENT ON TABLE vv_materiaali IS
-E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle myötämien materiaalien\nkappalemäärien alkutilanteen sekä muutokset niissä. Esimerkiksi tilaaja luovuttaa\nurakoitsijalle 10kpl poijuja urakan alussa ja urakoitsija käyttää niitä urakan aikana.\nUrakan aikana käytetyt ja hankitut materiaalit tulevat riveiksi tähän tauluun.';
+E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle myötämien materiaalien kappalemäärien alkutilanteen sekä muutokset. Esimerkiksi tilaaja luovuttaa urakoitsijalle 10kpl poijuja urakan alussa ja urakoitsija käyttää niitä urakan aikana. Urakan aikana käytetyt ja hankitut materiaalit tulevat riveiksi tähän tauluun.';
 
 COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
-E'Taulun tarkoitus ON liittää toimenpideinstanssiin vesiväylä - spesifistä tietoa';
+E'Taulun tarkoitus on liittää toimenpideinstanssiin vesiväylä -spesifistä tietoa.';
