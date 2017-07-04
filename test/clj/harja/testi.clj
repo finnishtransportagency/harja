@@ -8,6 +8,7 @@
    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
    [harja.palvelin.komponentit.http-palvelin :as http]
    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
    [harja.palvelin.komponentit.tietokanta :as tietokanta]
    [harja.palvelin.komponentit.liitteet :as liitteet]
    [com.stuartsierra.component :as component]
@@ -749,6 +750,10 @@
 (def portti nil)
 (def urakka nil)
 
+(def testi-pois-kytketyt-ominaisuudet  (component/using
+                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                        [:http-palvelin]))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -779,6 +784,9 @@
                            :liitteiden-hallinta (component/using
                                                   (liitteet/->Liitteet nil)
                                                   [:db])
+                           :pois-kytketyt-ominaisuudet (component/using
+                                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                                        [:http-palvelin])
 
                            ~@omat))))
 
