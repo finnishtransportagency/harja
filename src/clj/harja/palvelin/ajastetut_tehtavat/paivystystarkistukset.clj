@@ -11,6 +11,7 @@
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]
+            [harja.tyokalut.html :refer [sanitoi]]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.fmt :as fmt]
@@ -23,7 +24,7 @@
            Päivystäjätietoja tarvitaan tieliikennekeskusilmoitusten välittämiseen. \n\n
            Ystävällisin terveisin,\n
            Harja-järjestelmä"
-          urakka-nimi
+          (sanitoi urakka-nimi)
           (fmt/pvm (c/to-date pvm))))
 
 (defn- laheta-ilmoitus-henkiloille [email urakka-nimi henkilot pvm]
