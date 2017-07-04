@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.slack :as slack]
-            [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
+            [taoensso.timbre.appenders.postal :refer [postal-appender]]))
 
 
 (def Tietokanta {:palvelin s/Str
@@ -206,12 +206,7 @@
     (log/merge-config!
      {:appenders
       {:postal
-       (make-postal-appender
-        {:enabled?   true
-         :rate-limit [1 30000]               ; 1 viesti / 30 sekuntia rajoitus
-         :async?     true
-         :min-level  (:taso email)}
-        {:postal-config
+       (postal-appender
          ^{:host (:palvelin email)}
          {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-          :to   (:vastaanottaja email)}})}})))
+          :to   (:vastaanottaja email)})}})))
