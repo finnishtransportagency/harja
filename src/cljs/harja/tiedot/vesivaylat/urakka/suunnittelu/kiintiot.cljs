@@ -134,10 +134,10 @@
 
   IrrotaKiintiosta
   (process-event [{toimenpide-idt :toimenpide-idt} app]
-    ;; TODO TESTI
     (if-not (:kiintiosta-irrotus-kaynnissa? app)
       (let [parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/idt toimenpide-idt}]
+
         (-> app
             (tuck-apurit/palvelukutsu :irrota-toimenpiteet-kiintiosta
                                       parametrit
@@ -159,6 +159,5 @@
 
   EiIrrotettuKiintiosta
   (process-event [_ app]
-    ;; TODO TESTI
     (viesti/nayta! "Irrotus epäonnistui!" :danger)
     (assoc app :kiintiosta-irrotus-kaynnissa? false)))

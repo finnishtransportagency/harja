@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
   (:require [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot :as tiedot]
             [cljs.core.async :refer [chan <!]]
-            [cljs.test :refer-macros [deftest is async use-fixtures]]
+            [cljs.test :refer-macros [deftest is async testing use-fixtures]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -86,3 +86,22 @@
          {:valitut-toimenpide-idt #{1 2}}))
   (is (= (e! (tiedot/->ValitseToimenpide {:id 1 :valittu? false}) {:valitut-toimenpide-idt #{1}})
          {:valitut-toimenpide-idt #{}})))
+
+(deftest IrrotaKiintiosta
+  (testing "Kiintiöstä irrotuksen aloittaminen"
+           (vaadi-async-kutsut
+             #{tiedot/->IrrotettuKiintiosta tiedot/->EiIrrotettuKiintiosta}
+
+             (is (true? (:kiintiosta-irrotus-kaynnissa?
+                          (e! (tiedot/->IrrotaKiintiosta #{1})
+                              {:valinnat {:urakka-id 5} }))))))
+
+  (testing "Irrotus jo käynnissä"
+           (vaadi-async-kutsut #{} ;; Ei saa aloittaa uusia kutsuja
+             (let [tila {:valinnat {:urakka-id 5}
+                         :kiintiosta-irrotus-kaynnissa? true}]
+               (is (= tila (e! (tiedot/->IrrotaKiintiosta #{1}) tila)))))))
+
+(deftest kiintioista-irrotus-epaonnistui
+  (let [tulos (e! (tiedot/->EiIrrotettuKiintiosta))]
+    (is (false? (:kiintiosta-irrotus-kaynnissa? tulos)))))
