@@ -641,28 +641,3 @@ jatkon."
              containee
              %) container-component)
     containee))
-
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn
-                                    hyvaksy hyvaksy-ikoni hyvaksy-napin-luokka]}]
-  "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
-
-  Parametrimap:
-  :otsikko = dialogin otsikko
-  :sisalto = dialogin sisältö
-  :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
-  :hyvaksy-ikoni = hyvaksy-ikoni
-  :hyvaksy-napin-luokka = hyvaksy-napin-luokka
-  :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä"
-  (modal/nayta! {:otsikko otsikko
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           [:span (ikonit/livicon-ban) " Peruuta"]]
-                          [:button {:class hyvaksy-napin-luokka
-                                    :type "button"
-                                    :on-click #(do (.preventDefault %)
-                                                   (modal/piilota!)
-                                                   (toiminto-fn))}
-                           [:span hyvaksy-ikoni hyvaksy]]]}
-                sisalto))

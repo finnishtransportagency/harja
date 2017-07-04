@@ -20,7 +20,7 @@
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
 
-(defrecord AloitaMateriaalinKirjaus [nimi])
+(defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
@@ -81,10 +81,11 @@
     (dissoc app :lisaa-materiaali))
 
   AloitaMateriaalinKirjaus
-  (process-event [{nimi :nimi} app]
+  (process-event [{nimi :nimi tyyppi :tyyppi} app]
     (assoc app :kirjaa-materiaali {::m/urakka-id (:urakka-id app)
                                    ::m/nimi nimi
-                                   ::m/pvm (pvm/nyt)}))
+                                   ::m/pvm (pvm/nyt)
+                                   :tyyppi tyyppi}))
 
   PaivitaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
@@ -98,7 +99,14 @@
   (process-event [_ {kirjaa-materiaali :kirjaa-materiaali :as app}]
     (-> app
         (assoc :tallennus-kaynnissa? true)
-        (palvelukutsu :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja kirjaa-materiaali)
+        (palvelukutsu :kirjaa-vesivayla-materiaali
+                      (as-> kirjaa-materiaali m
+                        (lomake/ilman-lomaketietoja m)
+                        ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
+                        (if (= :- (:tyyppi m))
+                          (update m ::m/maara -)
+                          m)
+                        (dissoc m :tyyppi))
                       {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
 

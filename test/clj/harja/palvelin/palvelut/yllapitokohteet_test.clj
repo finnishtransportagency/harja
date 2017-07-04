@@ -415,8 +415,8 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-ennen-testia))
-             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-testin-jalkeen)))))))
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
