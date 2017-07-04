@@ -8,10 +8,12 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.tiedot.urakka :as u]
 
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as to-jaettu]
             [harja.domain.muokkaustiedot :as m]
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -31,6 +33,13 @@
     (when (:nakymassa? @tila)
       {:urakka-id (:id @nav/valittu-urakka)
        :sopimus-id (first @u/valittu-sopimusnumero)})))
+
+(defn- kiintiot-ilman-toimenpiteita [kiintiot irrotettavat-toimenpide-idt]
+  (fmap (fn [kiintio]
+          (assoc kiintio ::kiintio/toimenpiteet (to/ilman-toimenpiteita
+                                                  (::kiintio/toimenpiteet kiintio)
+                                                  irrotettavat-toimenpide-idt)))
+        kiintiot))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
@@ -138,12 +147,15 @@
       app))
 
   IrrotettuKiintiosta
-  (process-event [{vastaus :vastaus} app]
-    ;; TODO DISSOC TOIMENPITEET KIINTIÖSTÄ
+  (process-event [{vastaus :vastaus} app] harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu
     ;; TODO TESTI
-    (viesti/nayta! "Toimenpiteet irrotettu kiintiöstä." :success)
+    (viesti/nayta! (to-jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus))
+                                                                 "irrotettu kiintiöstä")
+                   :success)
     (assoc app :valitut-toimenpide-idt #{}
-               :kiintiosta-irrotus-kaynnissa? false))
+               :kiintiosta-irrotus-kaynnissa? false
+               :kiintiot (kiintiot-ilman-toimenpiteita (:kiintiot app)
+                                                       (::to/idt vastaus))))
 
   EiIrrotettuKiintiosta
   (process-event [_ app]
