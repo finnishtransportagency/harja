@@ -137,7 +137,6 @@
     (if-not (:kiintiosta-irrotus-kaynnissa? app)
       (let [parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/idt toimenpide-idt}]
-
         (-> app
             (tuck-apurit/palvelukutsu :irrota-toimenpiteet-kiintiosta
                                       parametrit
@@ -148,7 +147,6 @@
 
   IrrotettuKiintiosta
   (process-event [{vastaus :vastaus} app] harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu
-    ;; TODO TESTI
     (viesti/nayta! (to-jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus))
                                                                  "irrotettu kiintiöstä")
                    :success)
