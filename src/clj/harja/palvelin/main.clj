@@ -142,7 +142,9 @@
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
     (if-let [virheet (tarkista-asetukset asetukset)]
-      (log/error "Validointivirhe asetuksissa:" virheet))
+      (do
+        (println "[DEBUG] VALIDOINTIONGELMA: " (pr-str virheet))
+        (log/error "Validointivirhe asetuksissa:" virheet)))
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
