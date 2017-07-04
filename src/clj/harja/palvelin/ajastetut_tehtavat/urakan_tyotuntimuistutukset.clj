@@ -10,6 +10,8 @@
             [clj-time.core :as t]
             [harja.pvm :as pvm]
             [harja.kyselyt.urakan-tyotunnit :as q]
+            [harja.tyokalut.html :refer [sanitoi]]
+            [hiccup.core :refer [html h]]
             [harja.fmt :as fmt]))
 
 (defn laheta-muistutukset-urakoille [fim email urakat vuosi kolmannes kuluvan-kolmanneksen-paattymispaiva]
@@ -30,10 +32,10 @@
           sisalto (format "Urakan <a href=%s>%s</a> työtunnit vuoden <b>%s</b> välille <b>%s</b> on kirjaamatta.
                            Työtunnit täytyy kirjata <b>%s</b> mennessä."
                           url
-                          nimi
-                          vuosi
-                          kuukausivali
-                          paattymispvm)
+                          (sanitoi nimi)
+                          (sanitoi vuosi)
+                          (sanitoi kuukausivali)
+                          (sanitoi paattymispvm))
           viesti {:fim fim
                   :email email
                   :urakka-sampoid sampoid
