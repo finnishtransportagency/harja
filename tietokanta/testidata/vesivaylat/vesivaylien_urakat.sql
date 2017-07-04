@@ -69,6 +69,8 @@ VALUES ('Helsingin väyläyksikön pääsopimus',
         NULL,
         '2016-08-01', '2018-07-30', true, NOW());
 
+INSERT INTO reimari_sopimuslinkki VALUES ((SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'), -5);
+
 INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Helsingin väyläyksikön sivusopimus',
         (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
