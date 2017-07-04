@@ -38,7 +38,7 @@
 (defrecord KiintiotHaettu [tulos])
 (defrecord KiintiotEiHaettu [])
 (defrecord TallennaKiintiot [grid paluukanava])
-(defrecord IrrotaKiintiosta [tiedot])
+(defrecord IrrotaKiintiosta [toimenpide-idt])
 (defrecord KiintiotTallennettu [tulos paluukanava])
 (defrecord KiintiotEiTallennettu [virhe paluukanava])
 (defrecord IrrotettuKiintiosta [vastaus])
@@ -128,7 +128,7 @@
     ;; TODO TESTI
     (if-not (:kiintiosta-irrotus-kaynnissa? app)
       (let [parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                        ::to/idt #{toimenpide-idt}}]
+                        ::to/idt toimenpide-idt}]
         (-> app
             (tuck-apurit/palvelukutsu :irrota-toimenpiteet-kiintiosta
                                       parametrit
