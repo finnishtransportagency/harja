@@ -18,7 +18,8 @@
             [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
             [clojure.walk :as walk]
             [clojure.string :as str]
-            [harja.tyokalut.tuck :as tuck-tyokalut])
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -155,7 +156,7 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))]
+   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet/muokattavat-tietolajit)))]
      {:toiminto toiminto
       :tietolaji tietolaji
       :alkupvm (or (:alkupvm tietue) (pvm/nyt))
