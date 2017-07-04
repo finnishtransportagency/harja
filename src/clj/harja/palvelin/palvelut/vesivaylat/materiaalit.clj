@@ -32,6 +32,9 @@
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 
-  (stop [{http :http-palvelin :as this}]
-    (http-palvelin/poista-palvelu http :hae-vesivayla-materiaalilistaus)
+  (stop [this]
+    (http-palvelin/poista-palvelut
+      (:http-palvelin this)
+      :hae-vesivayla-materiaalilistaus
+      :kirjaa-vesivayla-materiaali)
     this))
