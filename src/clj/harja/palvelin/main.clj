@@ -142,7 +142,7 @@
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
     (if-let [virheet (tarkista-asetukset asetukset)]
-      (do
+      (do ;; TODO POISTA DEBUG KUN TOIMII
         (println "[DEBUG] VALIDOINTIONGELMA: " (pr-str virheet))
         (log/error "Validointivirhe asetuksissa:" virheet)))
 
