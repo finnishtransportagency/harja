@@ -114,7 +114,6 @@
                               {::kiintio/toimenpiteet [{::to/id 2}
                                                        {::to/id 3}
                                                        {::to/id 4}]}]})]
-    (println "VASTAUS: " (pr-str tulos))
     (is (= tulos
            {:foo 1
             :kiintiosta-irrotus-kaynnissa? false
