@@ -250,10 +250,32 @@
     (is (= "Ei pääkohteen sisällä" (p/tr-vali-paakohteen-sisalla? {:tr-alkuosa 1
                                                                    :tr-alkuetaisyys 1
                                                                    :tr-loppuosa 1
-                                                                   :tr-loppuetaisyys 100}
+                                                                   :tr-loppuetaisyys 1}
                                                                   nil
                                                                   {:tr-alkuosa 1
                                                                    :tr-alkuetaisyys 112
                                                                    :tr-loppuosa 1
-                                                                   :tr-loppuetaisyys 1}))
-        "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")))
+                                                                   :tr-loppuetaisyys 100}))
+        "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")
+
+
+    (is (nil? (p/tr-vali-paakohteen-sisalla? {:tr-alkuosa 3
+                                              :tr-alkuetaisyys 4815
+                                              :tr-loppuosa 5
+                                              :tr-loppuetaisyys 4520}
+                                             nil
+                                             {:tr-alkuosa 3
+                                              :tr-alkuetaisyys 4815
+                                              :tr-loppuosa 5
+                                              :tr-loppuetaisyys 4520}))
+        "Eri osilla olevat etäisyydet ovat ok")
+
+    (is (nil? (p/tr-vali-paakohteen-sisalla? {:tr-alkuosa 3
+                                              :tr-alkuetaisyys 4815
+                                              :tr-loppuosa 5
+                                              :tr-loppuetaisyys 4520}
+                                             nil
+                                             {:tr-alkuosa 5
+                                              :tr-alkuetaisyys 4520
+                                              :tr-loppuosa 3
+                                              :tr-loppuetaisyys 4815})) "Sama väli eri suuntiin on ok")))
