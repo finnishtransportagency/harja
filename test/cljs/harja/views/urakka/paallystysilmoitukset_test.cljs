@@ -256,5 +256,4 @@
                                                                    :tr-alkuetaisyys 112
                                                                    :tr-loppuosa 1
                                                                    :tr-loppuetaisyys 1}))
-        "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")
-    ))
+        "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")))

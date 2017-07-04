@@ -209,29 +209,30 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-(defn- tr-vali-paakohteen-sisalla? [{paa-alkuosa :tr-alkuosa
-                                     paa-alkuetaisyys :tr-alkuetaisyys
-                                     paa-loppuosa :tr-loppuosa
-                                     paa-loppuetaisyys :tr-loppuetaisyys
-                                     :as paakohde}
-                                    _
-                                    {ali-alkuosa :tr-alkuosa
-                                     ali-alkuetaisyys :tr-alkuetaisyys
-                                     ali-loppuosa :tr-loppuosa
-                                     ali-loppuetaisyys :tr-loppuetaisyys
-                                     :as alikohde}]
-  (when-not
-    (and (<= paa-alkuosa ali-alkuosa paa-loppuosa)
-         (<= paa-alkuosa ali-loppuosa paa-loppuosa)
-         (if (= paa-alkuosa ali-loppuosa)
-           (and (>= ali-alkuetaisyys paa-alkuetaisyys)
-                (<= ali-alkuetaisyys paa-loppuetaisyys))
-           (>= ali-alkuetaisyys paa-alkuetaisyys))
-         (if (= paa-loppuosa ali-loppuosa)
-           (and (<= ali-loppuetaisyys paa-loppuetaisyys)
-                (>= ali-loppuetaisyys paa-alkuetaisyys))
-           (<= ali-loppuetaisyys paa-loppuetaisyys)))
-    "Ei pääkohteen sisällä"))
+(defn- tr-osoite-kasvusuuntaan [{alkuosa :tr-alkuosa
+                                 alkuetaisyys :tr-alkuetaisyys
+                                 loppuosa :tr-loppuosa
+                                 loppuetaisyys :tr-loppuetaisyys}]
+  {:tr-alkuosa (if (> alkuosa loppuosa) loppuosa alkuosa)
+   :tr-alkuetaisyys (if (> alkuosa loppuosa) loppuetaisyys alkuetaisyys)
+   :tr-loppuosa (if (> alkuosa loppuosa) alkuosa loppuosa)
+   :tr-loppuetaisyys (if (> alkuosa loppuosa) alkuetaisyys loppuetaisyys)})
+
+(defn- tr-vali-paakohteen-sisalla? [paakohde _ alikohde]
+  (let [{paa-alkuosa :tr-alkuosa
+         paa-alkuetaisyys :tr-alkuetaisyys
+         paa-loppuosa :tr-loppuosa
+         paa-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan paakohde)
+        {ali-alkuosa :tr-alkuosa
+         ali-alkuetaisyys :tr-alkuetaisyys
+         ali-loppuosa :tr-loppuosa
+         ali-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan alikohde)]
+
+    (when-not (and (>= ali-alkuosa paa-alkuosa)
+                   (<= ali-loppuosa paa-loppuosa)
+                   (>= ali-alkuetaisyys paa-alkuetaisyys)
+                   (<= ali-loppuetaisyys paa-loppuetaisyys))
+      "Ei pääkohteen sisällä")))
 
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
   (r/wrap (zipmap (iterate inc 1) (get-in lomakedata-nyt polku))
