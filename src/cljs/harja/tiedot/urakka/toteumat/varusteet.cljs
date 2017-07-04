@@ -164,7 +164,8 @@
       :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-      :tierekisteriosoite (varusteen-osoite varuste)})))
+      :tierekisteriosoite (varusteen-osoite varuste)
+      :sijainti (:sijainti varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
