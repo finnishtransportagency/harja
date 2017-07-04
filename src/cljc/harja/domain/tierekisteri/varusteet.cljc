@@ -63,14 +63,14 @@
     "tl524" [1 2 3 4 7 8 9]
     []))
 
-(defn tarkastaminen-sallittu [tietolaji]
+(defn tarkastaminen-sallittu? [tietolaji]
   (nil? (#{"tl524" "tl523"} tietolaji)))
 
-(defn muokkaaminen-sallittu [tietolaji]
+(defn muokkaaminen-sallittu? [tietolaji]
   (nil? (#{"tl523"} tietolaji)))
 
 (defn muokattavat-tietolajit[]
-  (filter #(muokkaaminen-sallittu (first %)) tietolaji->selitys ))
+  (filter #(muokkaaminen-sallittu? (first %)) tietolaji->selitys))
 
 (def oletus-ajoradat
   [0])
