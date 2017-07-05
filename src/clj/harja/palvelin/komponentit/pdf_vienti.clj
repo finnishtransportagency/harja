@@ -8,10 +8,11 @@
              :refer
              [julkaise-palvelu poista-palvelu]]
             [harja.transit :as t]
-            [hiccup.core :refer [html h]]
+            [hiccup.core :refer [html]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
             [taoensso.timbre :as log]
+            [harja.tyokalut.html :refer [sanitoi]]
             [ring.util.io :refer [piped-input-stream]]
             [harja.palvelin.komponentit.vienti :as vienti]
             [clojure.walk :as walk]
@@ -68,7 +69,7 @@
 (defn- escape [hiccup]
   (walk/postwalk #(if (and (string? %)
                            (not (str/starts-with? % "<![CDATA[")))
-                    (h %)
+                    (sanitoi %)
                     %) hiccup))
 
 (defn- hiccup->pdf [fop-factory hiccup out]

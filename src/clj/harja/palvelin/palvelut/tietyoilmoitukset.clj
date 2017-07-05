@@ -44,7 +44,7 @@
                                              kaynnissa-loppuaika
                                              kaynnissa-vakioaikavali
                                              sijainti
-                                             urakka
+                                             urakka-id
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
@@ -61,10 +61,10 @@
                           :luotu-loppu luotu-loppu
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
-                          :urakat (if urakka
-                                    #{urakka}
+                          :urakat (if urakka-id
+                                    #{urakka-id}
                                     kayttajan-urakat)
-                          :urakattomat? (nil? urakka)
+                          :urakattomat? (nil? urakka-id)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara
