@@ -6,6 +6,7 @@
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.hanke :as hanke]
@@ -22,10 +23,10 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :hankkeet (component/using
                                     (hankkeet/->Hankkeet)
-                                    [:db :http-palvelin])))))
-
+                                    [:db :http-palvelin :pois-kytketyt-ominaisuudet])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

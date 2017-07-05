@@ -60,7 +60,7 @@
          :alkuaika :kaynnissa-alkuaika
          :loppuaika :kaynnissa-loppuaika}
          true)
-      {:nimi :urakka
+      {:nimi :urakka-id
        :otsikko "Urakka"
        :tyyppi :valinta
        :pakollinen? true
