@@ -66,12 +66,11 @@
     (reset! valittu-toimenpideinstanssi tpi)
     (valitse-toimenpideinstanssi-koodilla! koodi)))
 
-
-(defn- vesivaylien-hoitokaudet [ensimmainen-vuosi viimeinen-vuosi]
+(defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
            (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
-        (range ensimmainen-vuosi viimeinen-vuosi)))
+        (range ensimmainen-vuosi (inc viimeinen-vuosi))))
 
 (defn hoito-tai-sopimuskaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
@@ -89,7 +88,7 @@
             (range ensimmainen-vuosi viimeinen-vuosi))
 
       (= :vesivayla-hoito tyyppi)
-      (vesivaylien-hoitokaudet ensimmainen-vuosi viimeinen-vuosi)
+      (vesivaylien-sopimuskaudet ensimmainen-vuosi viimeinen-vuosi)
 
       :default
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
@@ -109,6 +108,7 @@
 
 (defonce valitun-urakan-hoitokaudet
   (reaction (when-let [ur @nav/valittu-urakka]
+              (log "MUODOSTA VALITUN URAKAN SOPPARIKAUDET " (pr-str ur))
               (hoito-tai-sopimuskaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]
