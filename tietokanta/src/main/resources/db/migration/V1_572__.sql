@@ -5,7 +5,10 @@ CREATE TABLE reimari_sopimuslinkki (
 "reimari-sopimus-id"   INTEGER
                        UNIQUE);
 
-CREATE OR REPLACE FUNCTION toimenpiteen_sopimus_id_trigger_proc()
+DROP TRIGGER IF EXISTS toimenpiteen_sopimus_id_trigger ON reimari_toimenpide;
+DROP FUNCTION IF EXISTS toimenpiteen_sopimus_id_trigger_proc();
+
+CREATE OR REPLACE FUNCTION toimenpiteen_linkit_trigger_proc()
   RETURNS TRIGGER AS
 $$
 DECLARE id_temp INTEGER;
@@ -17,12 +20,20 @@ BEGIN
 
   NEW."sopimus-id" = id_temp;
                 -- id:ksi tulee NULL jos ei löydy, joka on ok
-  RAISE NOTICE 'trigger: sopimus-id arvoksi %', NEW."sopimus-id";
+  RAISE NOTICE 'reimari_toimenpide linkit trigger: sopimus-id arvoksi %', NEW."sopimus-id";
+
+  id_temp := (SELECT id FROM vv_turvalaite
+               WHERE tunniste IS NOT NULL AND tunniste = (NEW."reimari-turvalaite").nro LIMIT 1);
+
+  NEW."turvalaite-id" = id_temp;
+                -- id:ksi tulee NULL jos ei löydy, joka on ok
+  RAISE NOTICE 'reimari_toimenpide linkit trigger: turvalaite-id arvoksi %', NEW."turvalaite-id";
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS toimenpiteen_sopimus_id_trigger ON reimari_toimenpide;
-CREATE TRIGGER toimenpiteen_sopimus_id_trigger
+DROP TRIGGER IF EXISTS toimenpiteen_linkit_trigger ON reimari_toimenpide;
+CREATE TRIGGER toimenpiteen_linkit_trigger
   BEFORE INSERT OR UPDATE ON reimari_toimenpide
   FOR EACH ROW
-  EXECUTE PROCEDURE toimenpiteen_sopimus_id_trigger_proc();
+  EXECUTE PROCEDURE toimenpiteen_linkit_trigger_proc();
