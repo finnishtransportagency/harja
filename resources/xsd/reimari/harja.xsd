@@ -53,6 +53,7 @@
     <xs:attribute type="xs:dateTime" name="muokattu" use="optional"/> <!-- muokkausaika, jos muokattu luonnin jälkeen -->
     <xs:attribute type="xs:string" name="asiakas" use="optional"/> <!-- asiakkaan nimi, jos merkitty -->
     <xs:attribute type="xs:string" name="vastuuhenkilo" use="optional"/> <!-- vastuuhenkilön nimi, jos tiedossa -->
+    <xs:attribute type="xs:integer" name="henkilo-lkm" use="optional"/>  <!-- henkilöiden määrä -->
   </xs:complexType>
 
   <xs:complexType name="UrakoitsijaType">
