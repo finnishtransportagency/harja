@@ -344,23 +344,23 @@
                                        :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
                                                    (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
                                                      (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji))
-                                                     (viesti/nayta! "Tarkastaminen ei ole sallittu"
+                                                     (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
                                                                     :warning
-                                                                    viesti/viestin-nayttoaika-lyhyt)))}
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}
                                       {:teksti "Muokkaa"
                                        :toiminto (fn [{:keys [tunniste tietolajin-tunniste]}]
                                                    (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
                                                      (e! (tv/->AloitaVarusteenMuokkaus tunniste))
-                                                     (viesti/nayta! "Muokkaaminen ei ole sallittu"
+                                                     (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
                                                                     :warning
-                                                                    viesti/viestin-nayttoaika-lyhyt)))}
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}
                                       {:teksti "Poista"
                                        :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
                                                    (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
                                                      (view/poista-varuste e! tietolaji tunniste)
-                                                     (viesti/nayta! "Poistaminen ei ole sallittu"
+                                                     (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
                                                                     :warning
-                                                                    viesti/viestin-nayttoaika-lyhyt)))}]})
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}]})
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
