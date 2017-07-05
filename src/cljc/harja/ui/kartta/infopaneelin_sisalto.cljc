@@ -140,6 +140,7 @@
               {:otsikko "Kuntoluokitus" :tyyppi :string :nimi :kuntoluokitus}]
      :data {:tunniste (get-in varuste [:varuste :tunniste])
             :tietolaji (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")
+            :tietolajin-tunniste tietolaji
             :osoite (tr-domain/tierekisteriosoite-tekstina (get-in varuste [:varuste :tietue :sijainti :tie]))
             :kuntoluokitus (get-in varuste [:varuste :tietue :kuntoluokitus])}}))
 

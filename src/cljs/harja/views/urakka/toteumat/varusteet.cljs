@@ -192,7 +192,7 @@
       {:nimi :tietolaji
        :otsikko "Varusteen tyyppi"
        :tyyppi :valinta
-       :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
+       :valinnat (vec (tierekisteri-varusteet/muokattavat-tietolajit))
        :valinta-nayta second
        :valinta-arvo first
        :muokattava? (constantly muokattava?)}
@@ -341,14 +341,26 @@
                                                          (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
                                              :teksti "Valitse varustetoteuma"}
                             :varuste [{:teksti "Tarkasta"
-                                       :toiminto (fn [{:keys [tunniste tietolaji]}]
-                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji)))}
+                                       :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                                   (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
+                                                     (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji))
+                                                     (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}
                                       {:teksti "Muokkaa"
-                                       :toiminto (fn [{:keys [tunniste]}]
-                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste)))}
+                                       :toiminto (fn [{:keys [tunniste tietolajin-tunniste]}]
+                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                     (e! (tv/->AloitaVarusteenMuokkaus tunniste))
+                                                     (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}
                                       {:teksti "Poista"
-                                       :toiminto (fn [{:keys [tunniste tietolaji]}]
-                                                   (view/poista-varuste e! tietolaji tunniste))}]})
+                                       :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                     (view/poista-varuste e! tietolaji tunniste)
+                                                     (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                    :warning
+                                                                    viesti/viestin-nayttoaika-keskipitka)))}]})
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
