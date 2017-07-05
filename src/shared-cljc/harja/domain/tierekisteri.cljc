@@ -258,7 +258,7 @@
                ;; Etäisyydet sisällä jos samalla osalla
                (or
                  (not= ali-alkuosa paa-alkuosa)
-                 (<= ali-alkuetaisyys paa-alkuetaisyys))
+                 (>= ali-alkuetaisyys paa-alkuetaisyys))
                (or
                  (not= ali-loppuosa paa-loppuosa)
                  (<= ali-loppuetaisyys paa-loppuetaisyys))))))
