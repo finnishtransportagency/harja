@@ -91,53 +91,67 @@
                   :tr-alkuetaisyys 1
                   :tr-loppuosa 3
                   :tr-loppuetaisyys 1}]
-    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla? paakohde nil alikohde))
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil alikohde))
         "Sama tieväli on pääkohteen sisällä")
-    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla? (assoc paakohde :tr-loppuetaisyys 10) nil (assoc alikohde :tr-alkuetaisyys 10 :tr-loppuetaisyys 2)))
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori (assoc paakohde :tr-loppuetaisyys 10) nil (assoc alikohde :tr-alkuetaisyys 10 :tr-loppuetaisyys 2)))
         "Lyhempi osuus on pääkohteen sisällä")
 
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-alkuosa 1)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-alkuosa 1)))
         "Pienempi alkuosa ei ole kohteen sisällä")
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-alkuetaisyys 0)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-alkuetaisyys 0)))
         "Lyhyempi alkuetäisyys ei ole kohteen sisällä")
 
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-loppuosa 4)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-loppuosa 4)))
         "Suurempi loppuosa ei ole kohteen sisällä")
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla? paakohde nil (assoc alikohde :tr-loppuetaisyys 10)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-loppuetaisyys 10)))
         "Pidempi loppuetäisyys ei ole kohteen sisällä")
 
 
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla? {:tr-alkuosa 1
-                                                                              :tr-alkuetaisyys 1
-                                                                              :tr-loppuosa 1
-                                                                              :tr-loppuetaisyys 1}
-                                                                             nil
-                                                                             {:tr-alkuosa 1
-                                                                              :tr-alkuetaisyys 112
-                                                                              :tr-loppuosa 1
-                                                                              :tr-loppuetaisyys 100}))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                                     {:tr-alkuosa 1
+                                      :tr-alkuetaisyys 1
+                                      :tr-loppuosa 1
+                                      :tr-loppuetaisyys 1}
+                                     nil
+                                     {:tr-alkuosa 1
+                                      :tr-alkuetaisyys 112
+                                      :tr-loppuosa 1
+                                      :tr-loppuetaisyys 100}))
         "Pääkohteen loppuetäisyyttä suurempi osan alkuetäisyyttä ei katsota sisältyväksi")
 
 
-    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla? {:tr-alkuosa 3
-                                                         :tr-alkuetaisyys 4815
-                                                         :tr-loppuosa 5
-                                                         :tr-loppuetaisyys 4520}
-                                                        nil
-                                                        {:tr-alkuosa 3
-                                                         :tr-alkuetaisyys 4815
-                                                         :tr-loppuosa 5
-                                                         :tr-loppuetaisyys 4520}))
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 4815
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 4520}
+                nil
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 4815
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 4520}))
         "Eri osilla olevat etäisyydet ovat ok")
 
-    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla? {:tr-alkuosa 3
-                                                         :tr-alkuetaisyys 4815
-                                                         :tr-loppuosa 5
-                                                         :tr-loppuetaisyys 4520}
-                                                        nil
-                                                        {:tr-alkuosa 5
-                                                         :tr-alkuetaisyys 4520
-                                                         :tr-loppuosa 3
-                                                         :tr-loppuetaisyys 4815}))
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 0}
+                nil
+                {:tr-alkuosa 2
+                 :tr-alkuetaisyys 1
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 0})))
+
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 4815
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 4520}
+                nil
+                {:tr-alkuosa 5
+                 :tr-alkuetaisyys 4520
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 4815}))
         "Sama väli eri suuntiin on ok")))
 

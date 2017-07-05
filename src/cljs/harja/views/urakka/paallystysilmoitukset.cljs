@@ -367,7 +367,7 @@
             :pituus-max 256}]
           paallystystoimenpiteet]
 
-         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla? lomakedata-nyt)]
+         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :voi-muokata? alustatoimet-voi-muokata?
