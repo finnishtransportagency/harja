@@ -31,7 +31,7 @@
   jossa haetaan palvelimelta payload, jolle yritetään luoda onnistuneesti skeema."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
-    #?(:cljs [harja.loki :as log :refer [log warn]])
+            [taoensso.timbre :as log]
     #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
@@ -46,12 +46,6 @@
 
 #?(:clj
    (defn kuvaile-paatostyyppi [_] "Tämä on olemassa vain testejä varten"))
-
-#?(:clj
-   (def warn println))
-
-#?(:clj
-   (def log println))
 
 #?(:clj
    (def clj->js identity))
@@ -529,13 +523,13 @@
    :data tietyomaa})
 
 (defmethod infopaneeli-skeema :default [x]
-  (warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
+  (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
         ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do
-    (log viesti
+    (log/debug viesti
          ", rivin-skeema: " (pr-str rivin-skeema)
          ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
     nil))
@@ -596,20 +590,20 @@
          epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
      (cond
        (nil? otsikko)
-       (do (warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
+       (do (log/warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
            nil)
 
        (nil? jarjesta-fn)
-       (do (warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
+       (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
            nil)
 
        (empty? validit-skeemat)
-       (do (warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
+       (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
            nil)
 
        (and vaadi-kaikki-skeemat? (pos? epaonnistuneet-skeemat-lkm))
        (do
-         (warn
+         (log/warn
            (str
              epaonnistuneet-skeemat-lkm
              " puutteellista skeemaa, kun yksikään ei saisi epäonnistua "
@@ -619,7 +613,7 @@
        ;; Järjestäminen yritetään tehdä avaimella, jota ei datasta löydy
        (nil? (jarjesta-fn data))
        (do
-         (warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema)))
+         (log/warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema)))
          nil)
 
        :default

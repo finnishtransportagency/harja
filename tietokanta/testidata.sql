@@ -12,10 +12,13 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
-\i testidata/vesivaylat/vesivaylien_urakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
+
+\i testidata/vesivaylat/vesivaylien_urakat.sql
+
+
 
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql

@@ -81,7 +81,6 @@
           eka-haluttu-pituus (int (Math/ceil (/ haluttu-pituus 2)))
           toka (apply str (second patkat))
           toka-haluttu-pituus (int (Math/floor (/ haluttu-pituus 2)))]
-      #?(:cljs (harja.loki/log "Lyhennetään " teksti))
       (str
         ;; Otetaan haluttu pituus -1, jotta pisteet mahtuu mukaan
         (apply str (take (dec eka-haluttu-pituus) eka))

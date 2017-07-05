@@ -5,7 +5,7 @@
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.slack :as slack]
-            [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
+            [taoensso.timbre.appenders.postal :refer [postal-appender]]))
 
 
 (def Tietokanta {:palvelin s/Str
@@ -188,26 +188,25 @@
                          (:args msg))))
 
 (defn konfiguroi-lokitus [asetukset]
-  (log/set-config! [:middleware] [crlf-filter])
+  (log/merge-config! {:middleware [crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
-    (log/set-config! [:appenders :standard-out :min-level] :info))
+    (log/merge-config! {:appenders {:println {:min-level :info}}}))
 
   (when-let [gelf (-> asetukset :log :gelf)]
-    (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
+    (log/merge-config! {:shared-appender-config {:gelf {:host (:palvelin gelf)}}}))
 
   (when-let [slack (-> asetukset :log :slack)]
-    (log/set-config! [:appenders :slack]
-                     (slack/luo-slack-appender (str/trim (:webhook-url slack)) (:taso slack))))
+    (log/merge-config! {:appenders
+                        {:slack
+                         (slack/luo-slack-appender (str/trim (:webhook-url slack))
+                                                   (:taso slack))}}))
 
   (when-let [email (-> asetukset :log :email)]
-    (log/set-config! [:appenders :postal]
-                     (make-postal-appender
-                       {:enabled?   true
-                        :rate-limit [1 30000]               ; 1 viesti / 30 sekuntia rajoitus
-                        :async?     true
-                        :min-level  (:taso email)}
-                       {:postal-config
-                        ^{:host (:palvelin email)}
-                        {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-                         :to   (:vastaanottaja email)}}))))
+    (log/merge-config!
+     {:appenders
+      {:postal
+       (postal-appender
+         ^{:host (:palvelin email)}
+         {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
+          :to   (:vastaanottaja email)})}})))
