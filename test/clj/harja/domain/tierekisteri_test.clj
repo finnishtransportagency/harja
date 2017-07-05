@@ -205,6 +205,18 @@
            "Ei pääkohteen sisällä"))
 
     (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+             {:tr-alkuosa 19
+              :tr-alkuetaisyys 5
+              :tr-loppuosa 21
+              :tr-loppuetaisyys 15}
+             nil
+             {:tr-alkuosa 19
+              :tr-alkuetaisyys 20
+              :tr-loppuosa 21
+              :tr-loppuetaisyys 15})
+           "Ei pääkohteen sisällä"))
+
+    (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
              {:tr-alkuosa 1
               :tr-alkuetaisyys 10
               :tr-loppuosa 3
