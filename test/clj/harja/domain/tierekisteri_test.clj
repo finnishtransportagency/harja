@@ -156,7 +156,65 @@
                 {:tr-alkuosa 2
                  :tr-alkuetaisyys 1
                  :tr-loppuosa 3
-                 :tr-loppuetaisyys 0})))
+                 :tr-loppuetaisyys 0}))
+        "Alikohteen alkuosa eri, alkuetäisyys pidempi, silti sisällä")
+
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 10
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 5}
+                nil
+                {:tr-alkuosa 2
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 2})))
+
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 10
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 5}
+                nil
+                {:tr-alkuosa 2
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 2
+                 :tr-loppuetaisyys 30})))
+
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 10
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 30}
+                nil
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 10
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 30})))
+
+    (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 10
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 5}
+                nil
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 5
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 2})
+           "Ei pääkohteen sisällä"))
+
+    (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+             {:tr-alkuosa 1
+              :tr-alkuetaisyys 10
+              :tr-loppuosa 3
+              :tr-loppuetaisyys 5}
+             nil
+             {:tr-alkuosa 1
+              :tr-alkuetaisyys 5
+              :tr-loppuosa 3
+              :tr-loppuetaisyys 10})
+           "Ei pääkohteen sisällä"))
 
     (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
                 {:tr-alkuosa 3
