@@ -93,17 +93,32 @@
                   :tr-loppuetaisyys 1}]
     (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil alikohde))
         "Sama tieväli on pääkohteen sisällä")
-    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori (assoc paakohde :tr-loppuetaisyys 10) nil (assoc alikohde :tr-alkuetaisyys 10 :tr-loppuetaisyys 2)))
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                (assoc paakohde :tr-loppuetaisyys 10)
+                nil
+                (assoc alikohde :tr-alkuetaisyys 10 :tr-loppuetaisyys 2)))
         "Lyhempi osuus on pääkohteen sisällä")
 
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-alkuosa 1)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                                     paakohde
+                                     nil
+                                     (assoc alikohde :tr-alkuosa 1)))
         "Pienempi alkuosa ei ole kohteen sisällä")
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-alkuetaisyys 0)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                                     paakohde
+                                     nil
+                                     (assoc alikohde :tr-alkuetaisyys 0)))
         "Lyhyempi alkuetäisyys ei ole kohteen sisällä")
 
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-loppuosa 4)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                                     paakohde
+                                     nil
+                                     (assoc alikohde :tr-loppuosa 4)))
         "Suurempi loppuosa ei ole kohteen sisällä")
-    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori paakohde nil (assoc alikohde :tr-loppuetaisyys 10)))
+    (is (= "Ei pääkohteen sisällä" (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                                     paakohde
+                                     nil
+                                     (assoc alikohde :tr-loppuetaisyys 10)))
         "Pidempi loppuetäisyys ei ole kohteen sisällä")
 
 
