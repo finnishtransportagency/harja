@@ -209,30 +209,6 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-(defn- tr-osoite-kasvusuuntaan [{alkuosa :tr-alkuosa
-                                 alkuetaisyys :tr-alkuetaisyys
-                                 loppuosa :tr-loppuosa
-                                 loppuetaisyys :tr-loppuetaisyys}]
-  {:tr-alkuosa (if (> alkuosa loppuosa) loppuosa alkuosa)
-   :tr-alkuetaisyys (if (> alkuosa loppuosa) loppuetaisyys alkuetaisyys)
-   :tr-loppuosa (if (> alkuosa loppuosa) alkuosa loppuosa)
-   :tr-loppuetaisyys (if (> alkuosa loppuosa) alkuetaisyys loppuetaisyys)})
-
-(defn- tr-vali-paakohteen-sisalla? [paakohde _ alikohde]
-  (let [{paa-alkuosa :tr-alkuosa
-         paa-alkuetaisyys :tr-alkuetaisyys
-         paa-loppuosa :tr-loppuosa
-         paa-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan paakohde)
-        {ali-alkuosa :tr-alkuosa
-         ali-alkuetaisyys :tr-alkuetaisyys
-         ali-loppuosa :tr-loppuosa
-         ali-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan alikohde)]
-
-    (when-not (and (>= ali-alkuosa paa-alkuosa)
-                   (<= ali-loppuosa paa-loppuosa)
-                   (>= ali-alkuetaisyys paa-alkuetaisyys)
-                   (<= ali-loppuetaisyys paa-loppuetaisyys))
-      "Ei pääkohteen sisällä")))
 
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
   (r/wrap (zipmap (iterate inc 1) (get-in lomakedata-nyt polku))
@@ -391,7 +367,7 @@
             :pituus-max 256}]
           paallystystoimenpiteet]
 
-         (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
+         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla? lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :voi-muokata? alustatoimet-voi-muokata?
