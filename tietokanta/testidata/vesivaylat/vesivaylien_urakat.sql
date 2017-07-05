@@ -84,9 +84,3 @@ VALUES ('Vantaan väyläyksikön pääsopimus',
         NULL,
         '2021-08-01', '2024-07-30',
         true, NOW());
-
--- TOIMENPIDEKOODIT
-INSERT INTO toimenpidekoodi (taso, emo, nimi)
-VALUES (3, 132, 'Rannikon kauppamerenkulku');
-INSERT INTO toimenpidekoodi (taso, emo, nimi)
-VALUES (3, 132, 'Rannikon muut');

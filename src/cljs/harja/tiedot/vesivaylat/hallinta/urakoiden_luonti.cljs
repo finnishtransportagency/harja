@@ -124,7 +124,7 @@
           fail! (tuck/send-async! ->UrakkaEiTallennettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/post! :tallenna-urakka
+          (let [vastaus (async/<! (k/post! :tallenna-vesivaylaurakka
                                            (update urakka
                                                    ::u/sopimukset
                                                    #(->> %

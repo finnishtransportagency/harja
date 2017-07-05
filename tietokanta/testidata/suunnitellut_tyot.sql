@@ -213,68 +213,55 @@ INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP',
+        'Kauppamerenkulun kustannukset',
         (SELECT id
          FROM toimenpidekoodi
-         WHERE koodi = '24104'), '2016-08-01', '2017-07-30');
+         WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-    VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'),
+    VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'),
              'kauppamerenkulku'::vv_vaylatyyppi);
 
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann muu vl, TP',
+        'Muun vesiliikenteen kustannukset',
         (SELECT id
          FROM toimenpidekoodi
-         WHERE nimi = 'Rannikon muut'), '2016-08-01', '2017-07-30');
+         WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann muu vl, TP'),
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Muun vesiliikenteen kustannukset'),
         'muu'::vv_vaylatyyppi);
 
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka
          WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann kmrk, TP',
+        'Urakan yhteiset kustannukset',
         (SELECT id
          FROM toimenpidekoodi
-         WHERE nimi = 'Rannikon kauppamerenkulku'), '2016-08-01', '2017-07-30');
+         WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann kmrk, TP'),
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Urakan yhteiset kustannukset'),
         'kauppamerenkulku'::vv_vaylatyyppi);
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, sampoid, alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-        'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann muu vl, TP',
-        (SELECT id
-         FROM toimenpidekoodi
-         WHERE koodi = '24103'), 'PR00008511', '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti,erikseen tilattavat työt, rann muu vl, TP'),
-        'muu'::vv_vaylatyyppi);
 
 -- Vesiväylien suunnitellut työt
 
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 8, 0.3, '2016-08-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 1, 1.8, '2017-01-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 10, 0.9, '2016-10-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 4, 2.7, '2017-04-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 2, 2.1, '2017-02-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 9, 0.6, '2016-09-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 6, 6, '2017-06-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 7, 1.5, '2017-07-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 12, 1.5, '2016-12-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 11, 1.2, '2016-11-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 5, 9, '2017-05-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Väylänhoito, Itäinen Suomenlahti, sopimuksen kok.hintaiset työt, rann kmrk, TP'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 8, 0.3, '2016-08-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 1, 1.8, '2017-01-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 10, 0.9, '2016-10-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 4, 2.7, '2017-04-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 2, 2.1, '2017-02-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 9, 0.6, '2016-09-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 6, 6, '2017-06-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 7, 1.5, '2017-07-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 12, 1.5, '2016-12-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 11, 1.2, '2016-11-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 5, 9, '2017-05-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
+INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'), 34);
 
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm)
   SELECT id, (select id from toimenpidekoodi where koodi='VV111'), nimi, alkupvm, loppupvm
