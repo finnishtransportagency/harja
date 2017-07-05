@@ -55,7 +55,7 @@
        :maksupvm nil :alkupvm alkupvm :loppupvm loppupvm :sopimus sn})))
 
 (defn tallenna-tyot [ur sopimusnumero valittu-hoitokausi tyot uudet-tyot tuleville?]
-  (go (let [hoitokaudet (u/hoitokaudet ur)
+  (go (let [hoitokaudet (u/hoito-tai-sopimuskaudet ur)
             muuttuneet
             (into []
                   (if @tuleville?
@@ -246,7 +246,7 @@
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
                         sopimuksen-tyot (filter #(= sopimus-id (:sopimus %))
                                                 @urakan-kok-hint-tyot)]
-                    (u/ryhmittele-hoitokausittain sopimuksen-tyot (u/hoitokaudet @urakka))))
+                    (u/ryhmittele-hoitokausittain sopimuksen-tyot (u/hoito-tai-sopimuskaudet @urakka))))
 
 
         ;; valitaan materiaaleista vain valitun hoitokauden

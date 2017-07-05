@@ -28,7 +28,7 @@
    :tyyppi :hoito})
 
 (deftest hae-urakan-hoitokaudet []
-         (let [hoitokaudet (u/hoitokaudet +testi-urakka+)
+         (let [hoitokaudet (u/hoito-tai-sopimuskaudet +testi-urakka+)
                viesti "hae-urakan-hoitokaudet"]
            (is (= 5 (count hoitokaudet)) viesti)
            (is (= 5 (count (into #{} (map #(first %) hoitokaudet)))) viesti)
@@ -203,7 +203,7 @@
     ))
 
 (deftest hoitokausittain-ryhmittely-tyhjat-mukana
-  (let [hoitokaudet (u/hoitokaudet {:alkupvm (pvm/hoitokauden-alkupvm 2005)
+  (let [hoitokaudet (u/hoito-tai-sopimuskaudet {:alkupvm (pvm/hoitokauden-alkupvm 2005)
                                     :loppupvm (pvm/hoitokauden-loppupvm 2008)
                                     :tyyppi :hoito})
         r (u/ryhmittele-hoitokausittain +ryhmiteltava+ hoitokaudet)
@@ -248,27 +248,27 @@
 
 
 (deftest aseta-hoitokausi-testi-1 []
-  (let [hoitokaudet (u/hoitokaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)})
+  (let [hoitokaudet (u/hoito-tai-sopimuskaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)})
         rivi {:vuosi 2013
               :kuukausi 6}]
     (is (= (pvm/hoitokauden-alkupvm 2012) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
     (is (= (pvm/hoitokauden-loppupvm 2013) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
 
 (deftest aseta-hoitokausi-testi-2 []
-  (let [hoitokaudet (u/hoitokaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)})
+  (let [hoitokaudet (u/hoito-tai-sopimuskaudet {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2012) :loppupvm (pvm/hoitokauden-loppupvm 2015)})
         rivi {:vuosi 2013
               :kuukausi 11}]
     (is (= (pvm/hoitokauden-alkupvm 2013) (:alkupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))
     (is (= (pvm/hoitokauden-loppupvm 2014) (:loppupvm (kokhint-tyot/aseta-hoitokausi hoitokaudet rivi))))))
 
 (deftest yllapitourakan-sopimuskaudet-monta-vuotta
-  (let [kaudet (u/hoitokaudet {:tyyppi :tiemerkinta
+  (let [kaudet (u/hoito-tai-sopimuskaudet {:tyyppi :tiemerkinta
                                :alkupvm (pvm/->pvm "1.10.2007")
                                :loppupvm (pvm/->pvm "30.9.2012")})]
     (is (= 6 (count kaudet)) "kuusi sopimuskautta")))
 
 (deftest yllapitourakan-sopimuskaudet-yksi-vuosi
-  (let [kaudet (u/hoitokaudet {:tyyppi :valaistus
+  (let [kaudet (u/hoito-tai-sopimuskaudet {:tyyppi :valaistus
                                :alkupvm (pvm/->pvm "7.7.2012")
                                :loppupvm (pvm/->pvm "1.8.2012")})]
     (is (= 1 (count kaudet)) "1 sopimuskausi")
@@ -277,7 +277,7 @@
       (is (pvm/sama-pvm? loppu (pvm/->pvm "1.8.2012"))))))
 
 (deftest yllapitourakan-sopimuskaudet-kaksi-vuotta
-  (let [kaudet (u/hoitokaudet {:tyyppi :paallystys
+  (let [kaudet (u/hoito-tai-sopimuskaudet {:tyyppi :paallystys
                                :alkupvm (pvm/->pvm "1.11.2014")
                                :loppupvm (pvm/->pvm "8.4.2015")})]
     (is (= 2 (count kaudet)))
@@ -342,6 +342,6 @@
   (is (= [[(pvm/->pvm "1.8.2015") (pvm/->pvm "31.7.2016")]
           [(pvm/->pvm "1.8.2016") (pvm/->pvm "31.7.2017")]
           [(pvm/->pvm "1.8.2017") (pvm/->pvm "31.7.2018")]]
-         (u/hoitokaudet {:alkupvm (pvm/->pvm "1.8.2015")
+         (u/hoito-tai-sopimuskaudet {:alkupvm (pvm/->pvm "1.8.2015")
                          :loppupvm (pvm/->pvm "31.7.2018")
                          :tyyppi :vesivayla-hoito}))))

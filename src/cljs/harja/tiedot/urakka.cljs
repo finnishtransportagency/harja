@@ -73,7 +73,7 @@
            (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
         (range ensimmainen-vuosi viimeinen-vuosi)))
 
-(defn hoitokaudet
+(defn hoito-tai-sopimuskaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
   urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
   ja viimeinen voivat olla vajaat)."
@@ -109,14 +109,14 @@
 
 (defonce valitun-urakan-hoitokaudet
   (reaction (when-let [ur @nav/valittu-urakka]
-              (hoitokaudet ur))))
+              (hoito-tai-sopimuskaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]
   (pvm/valissa? (pvm/nyt) alku loppu))
 
 (defn urakka-kaynnissa? [urakka]
   (->> urakka
-       hoitokaudet
+       hoito-tai-sopimuskaudet
        (some hoitokausi-kaynnissa?)))
 
 (defonce valittu-urakka-kaynnissa?
@@ -233,7 +233,7 @@
 
 (defn tulevat-hoitokaudet [ur hoitokausi]
   (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
-              (hoitokaudet ur)))
+              (hoito-tai-sopimuskaudet ur)))
 
 (defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
   (into []
@@ -454,4 +454,4 @@
 (def paallystysurakan-indeksitiedot (atom nil))
 
 (defn ensimmainen-hoitokausi? [urakka hoitokausi]
-  (= hoitokausi (first (hoitokaudet urakka))))
+  (= hoitokausi (first (hoito-tai-sopimuskaudet urakka))))
