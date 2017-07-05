@@ -298,13 +298,13 @@
                 :alkupvm (::u/alkupvm urakka)
                 :loppupvm (::u/loppupvm urakka)}]
     (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Kauppamerenkulun kustannukset"
+      db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
                         :toimenpide_nimi "Kauppamerenkulun kustannukset"}))
     (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Muun vesiliikenteen kustannukset"
+      db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
                         :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))
     (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Urakan yhteiset kustannukset"
+      db (merge params {:nimi "Urakan yhteiset kustannukset TP"
                         :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
 
 (defn tallenna-vesivaylaurakka [db user urakka]
