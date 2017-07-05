@@ -5,3 +5,5 @@ INSERT INTO toimenpidekoodi (taso, emo, nimi) VALUES (3, (SELECT id FROM toimenp
 INSERT INTO toimenpidekoodi (taso, emo, nimi) VALUES (3, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Väylänhoito'), 'Urakan yhteiset kustannukset');
 
 -- Lisää olemassa oleville VV-urakoille toimenpideinstanssit
+
+-- TODO

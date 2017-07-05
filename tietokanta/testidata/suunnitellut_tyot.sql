@@ -219,7 +219,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-    VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset'),
+    VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP'),
              'kauppamerenkulku'::vv_vaylatyyppi);
 
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
@@ -232,7 +232,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Muun vesiliikenteen kustannukset'),
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Muun vesiliikenteen kustannukset TP'),
         'muu'::vv_vaylatyyppi);
 
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
@@ -245,7 +245,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
 
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Urakan yhteiset kustannukset'),
+VALUES ((SELECT id FROM toimenpideinstanssi WHERE nimi = 'Urakan yhteiset kustannukset TP'),
         'kauppamerenkulku'::vv_vaylatyyppi);
 
 -- Vesiväylien suunnitellut työt

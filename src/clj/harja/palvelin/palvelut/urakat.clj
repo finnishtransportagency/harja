@@ -297,6 +297,7 @@
   (let [params {:urakka_id (::u/id urakka)
                 :alkupvm (::u/alkupvm urakka)
                 :loppupvm (::u/loppupvm urakka)}]
+    ;; TODO Pitäisikö luoda myös tieto väylätyypistä? Miten?
     (q/luo-vesivaylaurakan-toimenpideinstanssi<!
       db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
                         :toimenpide_nimi "Kauppamerenkulun kustannukset"}))
