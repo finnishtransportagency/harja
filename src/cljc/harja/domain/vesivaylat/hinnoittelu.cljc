@@ -72,6 +72,12 @@
 (defn hinnoittelu-idlla [hinnoittelut id]
   (first (filter #(= (::id %) id) hinnoittelut)))
 
+(defn jarjesta-hintaryhmat [hintaryhmat]
+  (sort-by ::nimi hintaryhmat))
+
+(defn hintaryhman-otsikko [hintaryhma]
+  (::nimi hintaryhma))
+
 ;; Palvelut
 
 (s/def ::hae-hinnoittelut-kysely

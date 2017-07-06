@@ -240,19 +240,23 @@
                                                           :aikavali (:aikavali valinnat)}))
                            (e! (tiedot/->HaeHintaryhmat)))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app}]
-      (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
+    (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa? hintaryhmat] :as app}]
+      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
+      (let [hintaryhmat (concat
+                          [{}] ;; Tyhjä hintaryhmä, kuvaa toimenpiteitä, joita ei ole liitetty hintaryhmään
+                          (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
          [jaettu/tulokset e! app
           [:div
-           (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-                 :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                       hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+           (for [hintaryhma hintaryhmat
+                 :let [hintaryhma-id (::h/id hintaryhma)
+                       hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
+                       app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                       _ (log "HINTARYHMÄ: " (pr-str hintaryhma))
                        listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
              ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
              [jaettu/listaus e! app*
@@ -260,9 +264,9 @@
                                  :komponentti (fn [rivi]
                                                 [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
                :listaus-tunniste listaus-tunniste
-               :footer (when hintaryhma
-                         [hintaryhman-hinnoittelu e! app* hintaryhma])
-               :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
+               :footer [hintaryhman-hinnoittelu e! app* hintaryhma]
+               ;; TODO Tämän voi näyttää vain jos se ei ole tyhjä
+               :otsikko (or (h/hintaryhman-otsikko hintaryhma)
                             "Kokonaishintaisista siirretyt, valitse tilaus.")
                :paneelin-checkbox-sijainti "95.2%"
                :vaylan-checkbox-sijainti "95.2%"}])]]]))))
