@@ -1,7 +1,6 @@
 (ns harja.domain.tieliikenneilmoitukset
   "Selain- ja palvelinpuolen yhteisiä tieliikenneilmoituksiin liittyviä asioita"
   (:require
-    #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.core :as t])
     #?(:clj [clj-time.core :as t])
             [clojure.string :as string]))
