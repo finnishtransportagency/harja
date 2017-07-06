@@ -86,7 +86,7 @@
                   ::h/hinnoittelu
                   {::m/poistettu? true
                    ::m/poistaja-id (:id user)}
-                  {}))
+                  {::h/id hinnoittelu-id}))
 
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt]
   (let [hintaryhma-idt (set (map ::h/id (specql/fetch db

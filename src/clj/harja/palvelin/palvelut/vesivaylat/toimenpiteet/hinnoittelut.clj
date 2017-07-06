@@ -113,7 +113,7 @@
       (fn [user tiedot]
         (poista-tyhjat-hinnoittelut! db user tiedot))
       {:kysely-spec ::h/poista-tyhjat-hinnoittelut-kysely
-       :vastaus-spec ::h/poista-tyhja-hinnoittelu-vastaus})
+       :vastaus-spec ::h/poista-tyhjat-hinnoittelut-vastaus})
 
     (julkaise-palvelu
       http
