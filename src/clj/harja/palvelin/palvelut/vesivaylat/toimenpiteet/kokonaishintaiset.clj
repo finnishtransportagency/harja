@@ -54,5 +54,6 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kokonaishintaiset-toimenpiteet)
+      :hae-kokonaishintaiset-toimenpiteet
+      :siirra-toimenpiteet-yksikkohintaisiin)
     this))

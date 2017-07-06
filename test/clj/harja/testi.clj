@@ -8,6 +8,7 @@
    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
    [harja.palvelin.komponentit.http-palvelin :as http]
    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
    [harja.palvelin.komponentit.tietokanta :as tietokanta]
    [harja.palvelin.komponentit.liitteet :as liitteet]
    [com.stuartsierra.component :as component]
@@ -35,16 +36,19 @@
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
-(log/set-config! [:appenders :standard-out :min-level]
-                 (cond
-                   (or (ollaanko-jenkinsissa?)
-                       (travis?)
-                       (circleci?)
-                       (= "true" (System/getenv "NOLOG")))
-                   :fatal
+(log/merge-config!
+ {:appenders
+  {:println
+   {:min-level
+    (cond
+      (or (ollaanko-jenkinsissa?)
+          (travis?)
+          (circleci?)
+          (= "true" (System/getenv "NOLOG")))
+      :fatal
 
-                   :default
-                   :debug))
+      :default
+      :debug)}}})
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
@@ -743,6 +747,10 @@
 (def portti nil)
 (def urakka nil)
 
+(def testi-pois-kytketyt-ominaisuudet  (component/using
+                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                        [:http-palvelin]))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -773,6 +781,9 @@
                            :liitteiden-hallinta (component/using
                                                   (liitteet/->Liitteet nil)
                                                   [:db])
+                           :pois-kytketyt-ominaisuudet (component/using
+                                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                                        [:http-palvelin])
 
                            ~@omat))))
 

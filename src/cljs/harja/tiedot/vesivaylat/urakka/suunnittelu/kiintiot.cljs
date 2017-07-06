@@ -31,7 +31,7 @@
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
-(defrecord HaeKiintiot [])
+(defrecord HaeKiintiot [valinnat])
 (defrecord KiintiotHaettu [tulos])
 (defrecord KiintiotEiHaettu [])
 (defrecord TallennaKiintiot [grid paluukanava])
@@ -47,20 +47,21 @@
   (process-event [{val :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app) val)
           haku (tuck/send-async! ->HaeKiintiot)]
-      (go (haku nil))
+      (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
   HaeKiintiot
-  (process-event [_ app]
-    (if-not (:kiintioiden-haku-kaynnissa? app)
-      (let [parametrit {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
-                        ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}]
+  (process-event [{valinnat :valinnat} app]
+    (if (and (not (:kiintioiden-haku-kaynnissa? app))
+             (some? (:urakka-id valinnat)))
+      (let [parametrit {::kiintio/urakka-id (:urakka-id valinnat)
+                        ::kiintio/sopimus-id (:sopimus-id valinnat)}]
         (-> app
-           (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
-                                     parametrit
-                                     {:onnistui ->KiintiotHaettu
-                               :epaonnistui ->KiintiotEiHaettu})
-           (assoc :kiintioiden-haku-kaynnissa? true)))
+            (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
+                                      parametrit
+                                      {:onnistui ->KiintiotHaettu
+                                       :epaonnistui ->KiintiotEiHaettu})
+            (assoc :kiintioiden-haku-kaynnissa? true)))
 
       app))
 
