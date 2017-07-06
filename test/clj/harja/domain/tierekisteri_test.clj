@@ -215,6 +215,29 @@
                  :tr-loppuosa 21
                  :tr-loppuetaisyys 15})))
 
+    (is (nil? (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 19
+                 :tr-alkuetaisyys 5
+                 :tr-loppuosa 21
+                 :tr-loppuetaisyys 15}
+                nil
+                {:tr-alkuosa 21
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 19
+                 :tr-loppuetaisyys 5})))
+
+    (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
+                {:tr-alkuosa 21
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 19
+                 :tr-loppuetaisyys 5}
+                nil
+                {:tr-alkuosa 21
+                 :tr-alkuetaisyys 15
+                 :tr-loppuosa 19
+                 :tr-loppuetaisyys 5})
+           "Ei pääkohteen sisällä"))
+
     (is (= (tierekisteri/tr-vali-paakohteen-sisalla-validaattori
              {:tr-alkuosa 1
               :tr-alkuetaisyys 10
