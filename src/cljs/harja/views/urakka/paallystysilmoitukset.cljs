@@ -209,29 +209,6 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-(defn- tr-vali-paakohteen-sisalla? [{paa-alkuosa :tr-alkuosa
-                                     paa-alkuetaisyys :tr-alkuetaisyys
-                                     paa-loppuosa :tr-loppuosa
-                                     paa-loppuetaisyys :tr-loppuetaisyys
-                                     :as paakohde}
-                                    _
-                                    {ali-alkuosa :tr-alkuosa
-                                     ali-alkuetaisyys :tr-alkuetaisyys
-                                     ali-loppuosa :tr-loppuosa
-                                     ali-loppuetaisyys :tr-loppuetaisyys
-                                     :as alikohde}]
-  (when-not
-    (and (<= paa-alkuosa ali-alkuosa paa-loppuosa)
-         (<= paa-alkuosa ali-loppuosa paa-loppuosa)
-         (if (= paa-alkuosa ali-loppuosa)
-           (and (>= ali-alkuetaisyys paa-alkuetaisyys)
-                (<= ali-alkuetaisyys paa-loppuetaisyys))
-           (>= ali-alkuetaisyys paa-alkuetaisyys))
-         (if (= paa-loppuosa ali-loppuosa)
-           (and (<= ali-loppuetaisyys paa-loppuetaisyys)
-                (>= ali-loppuetaisyys paa-alkuetaisyys))
-           (<= ali-loppuetaisyys paa-loppuetaisyys)))
-    "Ei pääkohteen sisällä"))
 
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
   (r/wrap (zipmap (iterate inc 1) (get-in lomakedata-nyt polku))
@@ -351,8 +328,7 @@
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero 0 100]]}
-           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30
-                                                      :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
+           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30)
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
@@ -391,7 +367,7 @@
             :pituus-max 256}]
           paallystystoimenpiteet]
 
-         (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
+         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :voi-muokata? alustatoimet-voi-muokata?

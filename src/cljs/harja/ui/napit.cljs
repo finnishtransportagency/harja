@@ -253,3 +253,11 @@
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)
                              :ikoni (ikonit/livicon-pen)})]))
+
+(defn avaa
+  ([teksti toiminto] (avaa teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)
+                             :ikoni (ikonit/eye-open)})]))
