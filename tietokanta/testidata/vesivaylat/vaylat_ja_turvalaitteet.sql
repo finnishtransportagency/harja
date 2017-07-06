@@ -50,7 +50,7 @@ VALUES
 INSERT INTO vv_turvalaite
 (nimi, tunniste, tyyppi, vayla)
 VALUES
-  ('Akonniemen kyltti', '12348', 'kiintea', (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
+  ('Akonniemen kyltti', '123', 'kiintea', (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
 
 -- ***********************************************
 -- TURVALAITEKOMPONENTTITYYPIT
