@@ -180,8 +180,7 @@
   AvaaVaruste
   (process-event [{:keys [tunniste]} app]
     (let [varuste (hae-varuste app tunniste)]
-      (-> app
-          (assoc :naytettava-varuste varuste))))
+      (assoc app :naytettava-varuste varuste)))
 
   LisaaLiitetiedosto
   (process-event [{liite :liite} app]
