@@ -257,24 +257,31 @@
                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
                        listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
+                       hintaryhma-tyhja? (empty? hintaryhman-toimenpiteet)
                        nayta-hintaryhma? (boolean (or hintaryhma-id
-                                                      (not (empty? hintaryhman-toimenpiteet))))
+                                                      (not hintaryhma-tyhja?)))
                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
-                                                                   (not (empty? hintaryhman-toimenpiteet))))]]
+                                                                   (not hintaryhma-tyhja?)))]]
 
              (when nayta-hintaryhma?
-               ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-               [jaettu/listaus e! app*
-                {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                   :komponentti (fn [rivi]
-                                                  [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-                 :listaus-tunniste listaus-tunniste
-                 :footer (when nayta-hintaryhman-yhteenveto?
-                           [hintaryhman-hinnoittelu e! app* hintaryhma])
-                 :otsikko (or (h/hintaryhman-nimi hintaryhma)
-                              "Kokonaishintaisista siirretyt, valitse tilaus.")
-                 :paneelin-checkbox-sijainti "95.2%"
-                 :vaylan-checkbox-sijainti "95.2%"}]))]]]))))
+               (if hintaryhma-tyhja?
+                 [:div
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                  [:p "Ei toimenpiteitä - Lisää ryhmään toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                  [napit/poista "Poista tyhjä tilaus" #(log "TODO")]]
+                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                 [jaettu/listaus e! app*
+                  {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                     :komponentti (fn [rivi]
+                                                    [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                   :listaus-tunniste listaus-tunniste
+                   :footer (when nayta-hintaryhman-yhteenveto?
+                             [hintaryhman-hinnoittelu e! app* hintaryhma])
+                   :otsikko (or (h/hintaryhman-nimi hintaryhma)
+                                "Kokonaishintaisista siirretyt, valitse tilaus.")
+                   :paneelin-checkbox-sijainti "95.2%"
+                   :vaylan-checkbox-sijainti "95.2%"}])))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
