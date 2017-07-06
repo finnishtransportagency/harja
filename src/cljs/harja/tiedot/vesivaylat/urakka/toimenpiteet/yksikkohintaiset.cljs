@@ -390,7 +390,7 @@
     ;; TODO TESTI
     (assoc app :hintaryhmien-poisto-kaynnissa? false
                :hintaryhmat
-               (h/hinnoittelut-idlla (:hintaryhmat app)
+               (h/hinnoittelut-ilman (:hintaryhmat app)
                                      (::h/idt vastaus))))
 
   HintaryhmatEiPoistettu

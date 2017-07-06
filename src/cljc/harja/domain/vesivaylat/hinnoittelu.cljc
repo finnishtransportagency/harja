@@ -76,8 +76,8 @@
 (defn hinnoittelu-idlla [hinnoittelut id]
   (first (filter #(= (::id %) id) hinnoittelut)))
 
-(defn hinnoittelut-idlla [hinnoittelut idt]
-  (filter #(idt (::id %)) hinnoittelut))
+(defn hinnoittelut-ilman [hinnoittelut idt]
+  (filter (comp not #(idt (::id %))) hinnoittelut))
 
 (defn jarjesta-hintaryhmat [hintaryhmat]
   (sort-by ::nimi hintaryhmat))
