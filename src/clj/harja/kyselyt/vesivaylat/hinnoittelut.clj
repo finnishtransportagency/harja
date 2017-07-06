@@ -80,8 +80,7 @@
                      ::h/hintaryhma? true
                      ::m/luoja-id (:id user)})))
 
-(defn poista-tyhja-hinnoittelu! [db user hinnoittelu-id]
-  (vaadi-hinnoitteluun-ei-kuulu-toimenpiteita db hinnoittelu-id)
+(defn poista-hinnoittelu! [db user hinnoittelu-id]
   (specql/update! db
                   ::h/hinnoittelu
                   {::m/poistettu? true

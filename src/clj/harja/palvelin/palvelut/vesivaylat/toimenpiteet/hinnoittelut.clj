@@ -36,10 +36,12 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db hinnoittelu-idt urakka-id)
+      (doseq [hinnoittelu-id hinnoittelu-idt]
+        (q/vaadi-hinnoitteluun-ei-kuulu-toimenpiteita db hinnoittelu-id))
 
       (jdbc/with-db-transaction [db db]
         (doseq [hinnoittelu-id hinnoittelu-idt]
-          (q/poista-tyhja-hinnoittelu! db user hinnoittelu-id))
+          (q/poista-hinnoittelu! db user hinnoittelu-id))
 
         {::h/idt hinnoittelu-idt}))))
 
