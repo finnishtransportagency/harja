@@ -386,7 +386,7 @@
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat
-  "Tallentaa ylläpitokohdeosat kantaan niin.
+  "Tallentaa ylläpitokohdeosat kantaan.
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
