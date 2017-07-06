@@ -88,8 +88,8 @@
 (defrecord HintaryhmatEiHaettu [virhe])
 (defrecord ValitseHintaryhma [hintaryhma])
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
-(defrecord ValitutLiitetty [vastaus])
-(defrecord ValitutEiLiitetty [virhe])
+(defrecord ValitutLiitettyHintaryhmaan [vastaus])
+(defrecord ValitutEiLiitettyHintaryhmaan [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
@@ -246,19 +246,20 @@
                                       {::to/idt (map ::to/id valitut)
                                        ::h/id (::h/id hintaryhma)
                                        ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                      {:onnistui ->ValitutLiitetty
-                                       :epaonnistui ->ValitutEiLiitetty})
+                                      {:onnistui ->ValitutLiitettyHintaryhmaan
+                                       :epaonnistui ->ValitutEiLiitettyHintaryhmaan})
           (assoc app :hintaryhmien-liittaminen-kaynnissa? true))
       app))
 
-  ValitutLiitetty
+  ValitutLiitettyHintaryhmaan
   (process-event [{vastaus :vastaus} app]
-    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku (:valinnat app)))
-
+    (let [toimenpidehaku (tuck/send-async! ->HaeToimenpiteet)
+          hintaryhmahaku (tuck/send-async! ->HaeHintaryhmat)]
+      (go (toimenpidehaku (:valinnat app)))
+      (go (hintaryhmahaku))
       (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
-  ValitutEiLiitetty
+  ValitutEiLiitettyHintaryhmaan
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden liittäminen tilaukseen epäonnistui!" :danger)
     (assoc app :hintaryhmien-liittaminen-kaynnissa? false))

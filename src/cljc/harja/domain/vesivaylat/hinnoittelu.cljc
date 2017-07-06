@@ -70,6 +70,7 @@
           :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
 
 (s/def ::idt (s/coll-of ::id))
+(s/def ::tyhja? boolean?) ;; ;; Ei sisällä lainkaan toimenpiteitä kannassa
 
 ;; Apurit
 
@@ -93,7 +94,7 @@
 
 (s/def ::hae-hinnoittelut-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys

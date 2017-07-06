@@ -244,7 +244,7 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          [{}] ;; Tyhjä hintaryhmä, kuvaa toimenpiteitä, joita ei ole liitetty hintaryhmään
+                          [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."}]
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
@@ -257,11 +257,14 @@
                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
                        listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
-                       hintaryhma-tyhja? (empty? hintaryhman-toimenpiteet)
-                       nayta-hintaryhma? (boolean (or hintaryhma-id
-                                                      (not hintaryhma-tyhja?)))
+                       hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
+                       nayta-hintaryhma?
+                       (boolean
+                         (or (not hintaryhma-id) ;; Kok. hint. siirretyt -ryhmä
+                             hintaryhma-tyhja?
+                             (not (empty? hintaryhman-toimenpiteet)))) ;; Toimenpiteitä käytetyillä suodattimilla
                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
-                                                                   (not hintaryhma-tyhja?)))]]
+                                                                   (not (empty? hintaryhman-toimenpiteet))))]]
 
              (when nayta-hintaryhma?
                (if hintaryhma-tyhja?
@@ -281,8 +284,7 @@
                    :listaus-tunniste listaus-tunniste
                    :footer (when nayta-hintaryhman-yhteenveto?
                              [hintaryhman-hinnoittelu e! app* hintaryhma])
-                   :otsikko (or (h/hintaryhman-nimi hintaryhma)
-                                "Kokonaishintaisista siirretyt, valitse tilaus.")
+                   :otsikko (h/hintaryhman-nimi hintaryhma)
                    :paneelin-checkbox-sijainti "95.2%"
                    :vaylan-checkbox-sijainti "95.2%"}])))]]]))))
 
