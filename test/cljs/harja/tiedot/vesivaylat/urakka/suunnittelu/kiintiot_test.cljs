@@ -1,6 +1,7 @@
 (ns harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
   (:require [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot :as tiedot]
             [cljs.core.async :refer [chan <!]]
+            [harja.domain.vesivaylat.toimenpide :as to]
             [cljs.test :refer-macros [deftest is async use-fixtures testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
