@@ -377,7 +377,7 @@
     (is (s/valid? ::h/poista-tyhjat-hinnoittelut-vastaus vastaus))
 
     ;; Hinnoittelu poistui
-    (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen))
+    (is (= hinnoittelut-ennen (+ hinnoittelut-jalkeen 1)))
     (is hinnoittelu-poistettu?)))
 
 (deftest poista-hintaryhma-ilman-oikeuksia
