@@ -38,12 +38,12 @@
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     hintaryhmat]])
 
-(defn- liita-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
+(defn- siirra-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
                                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
-     "Liitä")
+     "Siirrä")
    #(e! (tiedot/->LiitaValitutHintaryhmaan
           valittu-hintaryhma
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
@@ -78,7 +78,7 @@
   [:span
    [:span {:style {:margin-right "10px"}} "Siirrä valitut tilaukseen"]
    [hinnoitteluvaihtoehdot e! app]
-   [liita-hinnoitteluun-nappi e! app]
+   [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
 (defn- urakkatoiminnot [e! app]
