@@ -146,17 +146,19 @@
             (:lahetysvirhe varustetoteuma))
     (lomake/ryhma
       ""
-      {:nimi :toimenpide
-       :otsikko "Toimenpide"
-       :tyyppi :valinta
-       :valinnat (vec tierekisteri-varusteet/varuste-toimenpide->string)
-       :valinta-nayta second
-       :valinta-arvo first
-       :muokattava? (constantly false)}
-      {:nimi :alkanut
-       :otsikko "Kirjattu"
-       :tyyppi :pvm
-       :muokattava? (constantly false)}
+      (when (:toimenpide varustetoteuma)
+        {:nimi :toimenpide
+         :otsikko "Toimenpide"
+         :tyyppi :valinta
+         :valinnat (vec tierekisteri-varusteet/varuste-toimenpide->string)
+         :valinta-nayta second
+         :valinta-arvo first
+         :muokattava? (constantly false)})
+      (when (:alkanut varustetoteuma)
+        {:nimi :alkanut
+         :otsikko "Kirjattu"
+         :tyyppi :pvm
+         :muokattava? (constantly false)})
       (when (or (:luojan-etunimi varustetoteuma) (:luojan-sukunimi varustetoteuma))
         {:nimi :tekija
          :otsikko "Tekijä"
@@ -284,6 +286,7 @@
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
                   :paivitetty "Muokkaa varustetta"
+                  :nayta "Varuste"
                   "Varustetoteuma")
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
@@ -318,12 +321,15 @@
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku e! app]])])
 
-(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste]}]
+(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat
     (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
 
   (when muokattava-varuste
-    (e! (v/->UusiVarusteToteuma :paivitetty muokattava-varuste))))
+    (e! (v/->UusiVarusteToteuma :paivitetty muokattava-varuste)))
+
+  (when naytettava-varuste
+    (e! (v/->UusiVarusteToteuma :nayta naytettava-varuste))))
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))

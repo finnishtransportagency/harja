@@ -136,11 +136,13 @@
                      :komponentti (fn [{varuste :varuste}]
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
-                                      (when (varusteet/muokkaaminen-sallittu? tietolaji)
+                                      (if (varusteet/muokkaaminen-sallittu? tietolaji)
                                         [:div
                                          (when (varusteet/tarkastaminen-sallittu? tietolaji) [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus tunniste tietolaji))])
                                          [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus tunniste))]
-                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste)]])))}]
+                                         [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste)]]
+                                        [:div
+                                         [napit/avaa "Avaa" #(e! (v/->AvaaVaruste tunniste))]])))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
 
