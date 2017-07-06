@@ -394,7 +394,7 @@
                                      (::h/idt vastaus))))
 
   HintaryhmatEiPoistettu
-  (process-event [{vastaus :vastaus} app]
+  (process-event [_ app]
     ;; TODO TESTI
     (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
     (assoc app :hintaryhmien-poisto-kaynnissa? false)))
