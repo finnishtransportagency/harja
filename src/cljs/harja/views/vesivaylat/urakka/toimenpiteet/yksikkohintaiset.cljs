@@ -272,7 +272,7 @@
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
                   [:p "Ei toimenpiteitä - Lisää ryhmään toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
-                  [napit/poista "Poista tyhjä tilaus" #(log "TODO")]]
+                  [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))]]
                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                  [jaettu/listaus e! app*
                   {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10

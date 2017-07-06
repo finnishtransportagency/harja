@@ -69,8 +69,15 @@
           :harja.domain.vesivaylat.toimenpide/urakka-id
           :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
 
+(s/def ::idt (s/coll-of ::id))
+
+;; Apurit
+
 (defn hinnoittelu-idlla [hinnoittelut id]
   (first (filter #(= (::id %) id) hinnoittelut)))
+
+(defn hinnoittelut-idlla [hinnoittelut idt]
+  (filter #(idt (::id %)) hinnoittelut))
 
 (defn jarjesta-hintaryhmat [hintaryhmat]
   (sort-by ::nimi hintaryhmat))

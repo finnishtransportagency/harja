@@ -48,6 +48,7 @@
          :valittu-hintaryhma nil
          :uusi-hintaryhma ""
          :hintaryhman-tallennus-kaynnissa? false
+         :hintaryhmien-poisto-kaynnissa? false
          :hintaryhmat nil
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
@@ -101,6 +102,9 @@
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord PeruHintaryhmanHinnoittelu [])
+(defrecord PoistaHintaryhmat [hintaryhma-idt])
+(defrecord HintaryhmatPoistettu [vastaus])
+(defrecord HintaryhmatEiPoistettu [])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -367,4 +371,30 @@
   PeruHintaryhmanHinnoittelu
   (process-event [_ app]
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
-               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))
+               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
+
+  PoistaHintaryhmat
+  (process-event [{hintaryhma-idt :hintaryhma-idt} app]
+    ;; TODO TESTI
+    (if-not (:hintaryhmien-poisto-kaynnissa? app)
+      (do (tuck-tyokalut/palvelukutsu :poista-hintaryhma
+                                      {::h/id (get-in app [:valinnat :urakka-id])
+                                       ::h/idt hintaryhma-idt}
+                                      {:onnistui ->HintaryhmatPoistettu
+                                       :epaonnistui ->HintaryhmatEiPoistettu})
+          (assoc app :hintaryhmien-poisto-kaynnissa? true))
+      app))
+
+  HintaryhmatPoistettu
+  (process-event [{vastaus :vastaus} app]
+    ;; TODO TESTI
+    (assoc app :hintaryhmien-poisto-kaynnissa? false
+               :hintaryhmat
+               (h/hinnoittelut-idlla (:hintaryhmat app)
+                                     (::h/idt vastaus))))
+
+  HintaryhmatEiPoistettu
+  (process-event [{vastaus :vastaus} app]
+    ;; TODO TESTI
+    (viesti/nayta! "Tilausken poisto epäonnistui!" :danger)
+    (assoc app :hintaryhmien-poisto-kaynnissa? false)))
