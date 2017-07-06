@@ -350,3 +350,13 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :liita-toimenpiteet-hinnoitteluun +kayttaja-tero+
                                            kysely-params)))))
+
+(deftest liita-toimenpiteet-hinnoitteluun-vaaraan-urakkaan
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/idt #{1 2 3}
+                       ::h/id hinnoittelu-id
+                       ::u/id urakka-id}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                                           kysely-params)))))

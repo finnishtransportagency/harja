@@ -396,5 +396,5 @@
   HintaryhmatEiPoistettu
   (process-event [{vastaus :vastaus} app]
     ;; TODO TESTI
-    (viesti/nayta! "Tilausken poisto epäonnistui!" :danger)
+    (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
     (assoc app :hintaryhmien-poisto-kaynnissa? false)))
