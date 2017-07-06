@@ -325,12 +325,14 @@
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
                         WHERE EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
-                                      WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id);"))))
+                                      WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
                         WHERE NOT EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
-                                          WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id);"))))
+                                          WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
 
 (defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
   (ffirst (q (str "SELECT id FROM vv_hinnoittelu
