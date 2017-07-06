@@ -51,9 +51,10 @@
                          (:ominaisuudet tietolaji)))
          (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
 
-(defn hae-varuste [app tunniste ]
-  (:varuste (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
-                           (get-in app [:tierekisterin-varusteet :varusteet])))))
+(defn hae-varuste [app tunniste]
+  (let [arvot (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
+                             (get-in app [:tierekisterin-varusteet :varusteet])))]
+    (assoc (:varuste arvot) :sijainti (:sijainti arvot))))
 
 ;; Määritellään varustehaun UI tapahtumat
 

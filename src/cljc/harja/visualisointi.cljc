@@ -7,7 +7,7 @@
          [cljs-time.coerce :as tc]])
 
     [harja.pvm :as pvm]
-    [harja.lokitus :refer [log]]))
+    [taoensso.timbre :as log]))
 
 (def pi #?(:cljs js/Math.PI :clj Math/PI))
 (defn cos
@@ -190,7 +190,7 @@
                                1
                                (Math/ceil (/ number-of-items 12)))
         hide-value? (or hide-value? (constantly false))]
-    (log "Value range " min-value " -- " max-value " == " value-range)
+    (log/debug "Value range " min-value " -- " max-value " == " value-range)
     [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
      [:g
       (for [i (range (count data))]

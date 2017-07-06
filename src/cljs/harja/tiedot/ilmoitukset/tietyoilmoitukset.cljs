@@ -201,7 +201,7 @@
                                                   :kaynnissa-loppuaika
                                                   :kaynnissa-vakioaikavali
                                                   :sijainti
-                                                  :urakka
+                                                  :urakka-id
                                                   :vain-kayttajan-luomat])]
             {:tietyoilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
     (assoc app :tietyoilmoitukset nil))
@@ -234,9 +234,9 @@
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
     (let [urakat (sort-by :nimi (mapcat :urakat urakat))
-          urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
+          urakka @nav/valittu-urakka-id]
       (assoc app :kayttajan-urakat urakat
-                 :valinnat (assoc (:valinnat app) :urakka urakka))))
+                 :valinnat (assoc (:valinnat app) :urakka-id urakka))))
 
   PaivitaSijainti
   (process-event [{sijainti :sijainti} app]
