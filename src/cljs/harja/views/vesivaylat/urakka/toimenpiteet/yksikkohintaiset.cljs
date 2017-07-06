@@ -256,20 +256,23 @@
                  :let [hintaryhma-id (::h/id hintaryhma)
                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                       _ (log "HINTARYHMÄ: " (pr-str hintaryhma))
+                       hintaryhman-nimi (h/hintaryhman-nimi hintaryhma)
                        listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
-             ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-             [jaettu/listaus e! app*
-              {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                 :komponentti (fn [rivi]
-                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-               :listaus-tunniste listaus-tunniste
-               :footer [hintaryhman-hinnoittelu e! app* hintaryhma]
-               ;; TODO Tämän voi näyttää vain jos se ei ole tyhjä
-               :otsikko (or (h/hintaryhman-otsikko hintaryhma)
-                            "Kokonaishintaisista siirretyt, valitse tilaus.")
-               :paneelin-checkbox-sijainti "95.2%"
-               :vaylan-checkbox-sijainti "95.2%"}])]]]))))
+
+             (when (or hintaryhman-nimi
+                       (not (empty? hintaryhman-toimenpiteet)))
+               ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+               [jaettu/listaus e! app*
+               {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                  :komponentti (fn [rivi]
+                                                 [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                :listaus-tunniste listaus-tunniste
+                :footer [hintaryhman-hinnoittelu e! app* hintaryhma]
+                ;; TODO Tämän voi näyttää vain jos se ei ole tyhjä
+                :otsikko (or (h/hintaryhman-nimi hintaryhma)
+                             "Kokonaishintaisista siirretyt, valitse tilaus.")
+                :paneelin-checkbox-sijainti "95.2%"
+                :vaylan-checkbox-sijainti "95.2%"}]))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

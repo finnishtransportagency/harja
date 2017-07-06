@@ -75,7 +75,7 @@
 (defn jarjesta-hintaryhmat [hintaryhmat]
   (sort-by ::nimi hintaryhmat))
 
-(defn hintaryhman-otsikko [hintaryhma]
+(defn hintaryhman-nimi [hintaryhma]
   (::nimi hintaryhma))
 
 ;; Palvelut
