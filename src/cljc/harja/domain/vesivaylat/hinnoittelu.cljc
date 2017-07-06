@@ -81,7 +81,7 @@
   (filter (comp not #(idt (::id %))) hinnoittelut))
 
 (defn jarjesta-hintaryhmat [hintaryhmat]
-  (sort-by ::nimi hintaryhmat))
+  (sort-by #(str/lower-case (::nimi %)) hintaryhmat))
 
 (defn hintaryhman-nimi [hintaryhma]
   (::nimi hintaryhma))
