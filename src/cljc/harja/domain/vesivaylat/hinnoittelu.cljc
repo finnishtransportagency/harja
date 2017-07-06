@@ -102,7 +102,7 @@
 
 (s/def ::luo-hinnoittelu-vastaus
   (s/keys
-    :req [::nimi ::hintaryhma? ::id]))
+    :req [::id ::nimi ::hintaryhma? ::tyhja?]))
 
 (s/def ::liita-toimenpiteet-hinnotteluun-kysely
   (s/keys

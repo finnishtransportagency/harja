@@ -78,12 +78,13 @@
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
         nimi (::h/nimi tiedot)]
-    (specql/insert! db
-                    ::h/hinnoittelu
-                    {::h/urakka-id urakka-id
-                     ::h/nimi nimi
-                     ::h/hintaryhma? true
-                     ::m/luoja-id (:id user)})))
+    (assoc (specql/insert! db
+                           ::h/hinnoittelu
+                           {::h/urakka-id urakka-id
+                            ::h/nimi nimi
+                            ::h/hintaryhma? true
+                            ::m/luoja-id (:id user)})
+      ::h/tyhja? true)))
 
 (defn poista-hinnoittelu! [db user hinnoittelu-id]
   (specql/update! db

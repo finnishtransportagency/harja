@@ -274,7 +274,7 @@
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
                   [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
-                  [:p "Ei toimenpiteitä - Lisää ryhmään toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                  [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
                   [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
                    {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
