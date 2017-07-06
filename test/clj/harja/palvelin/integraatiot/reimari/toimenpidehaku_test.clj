@@ -71,13 +71,12 @@
                (count (specql/fetch db ::toimenpide/reimari-toimenpide
                                     #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))))
 
-
     (t/testing "Trigger täytti sopimus-id:n"
       (t/is (= 1
                (count (specql/fetch db ::toimenpide/reimari-toimenpide
-                                    #{::toimenpide/reimari-id}
+                                    #{::toimenpide/reimari-id ::toimenpide/sopimus-id}
                                     {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)
-                                     ::toimenpide/sopimus-id 3})))))
+                                     ::toimenpide/sopimus-id (ht/hae-helsingin-vesivaylaurakan-paasopimuksen-id)})))))
 
     (t/is (= 1
              (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
