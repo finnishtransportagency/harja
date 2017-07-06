@@ -39,7 +39,9 @@
 
       (jdbc/with-db-transaction [db db]
         (doseq [hinnoittelu-id hinnoittelu-idt]
-          (q/poista-tyhja-hinnoittelu! db user hinnoittelu-id))))))
+          (q/poista-tyhja-hinnoittelu! db user hinnoittelu-id))
+
+        {::h/idt hinnoittelu-idt}))))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
