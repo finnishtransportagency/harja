@@ -58,7 +58,8 @@
                       db
                       ::h/hinnoittelu<->toimenpide
                       #{::h/hinnoittelu-id}
-                      {::h/hinnoittelu-id (op/in #{hinnoittelu-id})}))
+                      {::h/hinnoittelu-id (op/in #{hinnoittelu-id})
+                       ::m/poistettu? (op/not false)}))
     (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
 
 (defn hae-hinnoittelut [db urakka-id]
