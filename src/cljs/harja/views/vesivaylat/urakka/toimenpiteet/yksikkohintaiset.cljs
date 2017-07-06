@@ -265,10 +265,13 @@
 
              (when nayta-hintaryhma?
                (if hintaryhma-tyhja?
+                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
                  [:div
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
                   [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
                   [:p "Ei toimenpiteitä - Lisää ryhmään toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
                   [napit/poista "Poista tyhjä tilaus" #(log "TODO")]]
                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                  [jaettu/listaus e! app*
