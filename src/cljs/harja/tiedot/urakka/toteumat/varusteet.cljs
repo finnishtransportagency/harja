@@ -18,7 +18,8 @@
             [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
             [clojure.walk :as walk]
             [clojure.string :as str]
-            [harja.tyokalut.tuck :as tuck-tyokalut])
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -155,16 +156,17 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))]
+   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet/muokattavat-tietolajit)))]
      {:toiminto toiminto
       :tietolaji tietolaji
       :alkupvm (or (:alkupvm tietue) (pvm/nyt))
-      :muokattava? true
+      :muokattava? (not (= :nayta toiminto))
       :ajoradat varusteet-domain/oletus-ajoradat
       :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
       :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
       :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-      :tierekisteriosoite (varusteen-osoite varuste)})))
+      :tierekisteriosoite (varusteen-osoite varuste)
+      :sijainti (:sijainti varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (reverse
@@ -256,7 +258,7 @@
   v/UusiVarusteToteuma
   (process-event [{:keys [toiminto varuste]} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
-      (kartalle (dissoc (tulos!) :muokattava-varuste))))
+      (kartalle (dissoc (tulos!) :muokattava-varuste :naytettava-varuste))))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
@@ -285,7 +287,7 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil)))
+      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil :naytettava-varuste nil)))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]

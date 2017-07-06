@@ -141,6 +141,7 @@
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
+
     (if-let [virheet (tarkista-asetukset asetukset)]
       (log/error "Validointivirhe asetuksissa:" virheet))
 
@@ -655,7 +656,8 @@
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
 
 (defn log-level-info! []
-  (log/set-config! [:appenders :standard-out :min-level] :info))
+  (log/merge-config!
+   {:appenders {:println {:min-level :info}}}))
 
 
 (def figwheel-repl-options

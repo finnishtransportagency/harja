@@ -6,7 +6,6 @@
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
     #?(:cljs [cljs-time.coerce :as tc])
-    #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
     #?(:clj
@@ -15,9 +14,9 @@
             [clj-time.coerce :as tc])
     #?(:clj
             [clj-time.local :as l])
-    #?(:clj
-            [taoensso.timbre :as log])
-            [clojure.string :as str])
+
+    [taoensso.timbre :as log]
+    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
