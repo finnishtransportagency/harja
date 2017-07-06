@@ -53,6 +53,14 @@
                  (every? (partial = hinnoittelu-id)))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
+(defn vaadi-hinnoitteluun-ei-kuulu-toimenpiteita [db hinnoittelu-id]
+  (when-not (empty? (specql/fetch
+                      db
+                      ::h/hinnoittelu<->toimenpide
+                      #{::h/hinnoittelu-id}
+                      {::h/hinnoittelu-id (op/in #{hinnoittelu-id})}))
+    (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
+
 (defn hae-hinnoittelut [db urakka-id]
   (->> (specql/fetch db
                      ::h/hinnoittelu
@@ -71,6 +79,14 @@
                      ::h/nimi nimi
                      ::h/hintaryhma? true
                      ::m/luoja-id (:id user)})))
+
+(defn poista-tyhja-hinnoittelu! [db user hinnoittelu-id]
+  (vaadi-hinnoitteluun-ei-kuulu-toimenpiteita db hinnoittelu-id)
+  (specql/update! db
+                  ::h/hinnoittelu
+                  {::m/poistettu? true
+                   ::m/poistaja-id (:id user)}
+                  {}))
 
 (defn poista-toimenpiteet-hintaryhmistaan! [db user toimenpide-idt]
   (let [hintaryhma-idt (set (map ::h/id (specql/fetch db

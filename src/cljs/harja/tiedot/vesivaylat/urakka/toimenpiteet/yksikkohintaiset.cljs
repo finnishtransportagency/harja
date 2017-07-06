@@ -377,7 +377,7 @@
   (process-event [{hintaryhma-idt :hintaryhma-idt} app]
     ;; TODO TESTI
     (if-not (:hintaryhmien-poisto-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :poista-hintaryhma
+      (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
                                       {::h/id (get-in app [:valinnat :urakka-id])
                                        ::h/idt hintaryhma-idt}
                                       {:onnistui ->HintaryhmatPoistettu

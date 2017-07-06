@@ -368,13 +368,13 @@
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :poista-hintaryhma +kayttaja-jvh+
+                                :poista-tyhjat-hinnoittelut +kayttaja-jvh+
                                 kysely-params)
         hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
         hinnoittelu-poistettu? (ffirst (q "SELECT poistettu FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";"))]
 
-    (is (s/valid? ::h/poista-hintaryhma-kysely kysely-params))
-    (is (s/valid? ::h/poista-hintaryhma-vastaus vastaus))
+    (is (s/valid? ::h/poista-tyhjat-hinnoittelut-kysely kysely-params))
+    (is (s/valid? ::h/poista-tyhjat-hinnoittelut-vastaus vastaus))
 
     ;; Hinnoittelu poistui
     (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen))
@@ -386,7 +386,7 @@
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :poista-hintaryhma +kayttaja-tero+
+                                           :poista-tyhjat-hinnoittelut +kayttaja-tero+
                                            kysely-params)))))
 
 (deftest poista-hintaryhma-vaarasta-urakkaan
@@ -395,7 +395,7 @@
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :poista-hintaryhma +kayttaja-jvh+
+                                                   :poista-tyhjat-hinnoittelut +kayttaja-jvh+
                                                    kysely-params)))))
 
 (deftest poista-hintaryhma-jolla-toimenpiteita
@@ -404,5 +404,5 @@
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :poista-hintaryhma +kayttaja-jvh+
+                                           :poista-tyhjat-hinnoittelut +kayttaja-jvh+
                                            kysely-params)))))

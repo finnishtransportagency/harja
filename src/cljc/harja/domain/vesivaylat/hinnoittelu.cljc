@@ -130,8 +130,8 @@
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
 
-(s/def ::poista-hintaryhma-kysely
+(s/def ::poista-tyhjat-hinnoittelut-kysely
   (s/keys :req [::urakka-id ::idt]))
 
 ;; Poistetut hintaryhmät-idt
-(s/def ::poista-hintaryhma-vastaus (s/keys :req [::idt]))
+(s/def ::poista-tyhjat-hinnoittelut-vastaus (s/keys :req [::idt]))
