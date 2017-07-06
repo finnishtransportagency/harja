@@ -310,7 +310,7 @@
                                                  (q-map "SELECT \"hinnoittelu-id\"
                                               FROM vv_hinnoittelu_toimenpide
                                               WHERE \"toimenpide-id\" = " toimenpide-id
-                                              "AND poistettu IS NOT TRUE;")))
+                                                        "AND poistettu IS NOT TRUE;")))
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
@@ -358,5 +358,48 @@
                        ::h/id hinnoittelu-id
                        ::u/id urakka-id}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                                                   :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest poista-hintaryhma
+  (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
+        kysely-params {::h/id urakka-id
+                       ::h/idt #{hinnoittelu-id}}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :poista-hintaryhma +kayttaja-jvh+
+                          kysely-params)
+        hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
+        hinnoittelu-poistettu? (ffirst (q "SELECT poistettu FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";"))]
+
+    ;; Hinnoittelu poistui
+    (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen))
+    (is hinnoittelu-poistettu?)))
+
+(deftest poista-hintaryhma-ilman-oikeuksia
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::h/id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-hintaryhma +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest poista-hintaryhma-vaarasta-urakkaan
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::h/id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :poista-hintaryhma +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest poista-hintaryhma-jolla-toimenpiteita
+  (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::h/id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-hintaryhma +kayttaja-jvh+
                                            kysely-params)))))
