@@ -158,7 +158,8 @@
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
-    (if-not (:toimenpiteiden-haku-kaynnissa? app)
+    (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
+             (some? (:urakka-id valinnat)))
       (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
                                       (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu

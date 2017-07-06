@@ -16,20 +16,21 @@
   (vaadi-async-kutsut
     #{tiedot/->HaeKiintiot}
     (is (= {:valinnat {:foo :bar}}
-          (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
+           (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
 
 (deftest HaeKiintiot
   (vaadi-async-kutsut
     #{tiedot/->KiintiotEiHaettu tiedot/->KiintiotHaettu}
     (is (= {:kiintioiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKiintiot)))))
+           (e! (tiedot/->HaeKiintiot {:urakka-id 1})))))
 
   (vaadi-async-kutsut
     #{}
     (is (= {:kiintioiden-haku-kaynnissa? true
             :foo :bar}
-           (e! (tiedot/->HaeKiintiot) {:kiintioiden-haku-kaynnissa? true
-                                       :foo :bar})))))
+           (e! (tiedot/->HaeKiintiot {:urakka-id 1})
+               {:kiintioiden-haku-kaynnissa? true
+                :foo :bar})))))
 
 (deftest KiintiotHaettu
   (is (= {:kiintioiden-haku-kaynnissa? false
@@ -60,19 +61,19 @@
   (async done
     (go
       (let [ch (chan)]
-       (is (= {:kiintiot [{:id 1}]
-               :kiintioiden-tallennus-kaynnissa? false}
-              (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))))
-       (= [{:id 1}] (<! ch))
-       (done)))))
+        (is (= {:kiintiot [{:id 1}]
+                :kiintioiden-tallennus-kaynnissa? false}
+               (e! (tiedot/->KiintiotTallennettu [{:id 1}] ch))))
+        (= [{:id 1}] (<! ch))
+        (done)))))
 
 (deftest KiintiotEiTallennettu
   (async done
     (go
       (let [ch (chan)]
-       (is (= {:kiintioiden-tallennus-kaynnissa? false
-               :kiintiot [{:foo :bar}]}
-              (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
-                  {:kiintiot [{:foo :bar}]})))
-       (= [{:foo :bar}] (<! ch))
-       (done)))))
+        (is (= {:kiintioiden-tallennus-kaynnissa? false
+                :kiintiot [{:foo :bar}]}
+               (e! (tiedot/->KiintiotEiTallennettu {:msg :error} ch)
+                   {:kiintiot [{:foo :bar}]})))
+        (= [{:foo :bar}] (<! ch))
+        (done)))))
