@@ -65,8 +65,9 @@
      [napit/yleinen-ensisijainen
       (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."] "Luo")
       #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
-      {:disabled (or ;; Disabloidaan nappi jos hintaryhmän nimi on jo olemassa, tai liittäminen menossa
+      {:disabled (or ;; Disabloidaan nappi jos nimi on jo olemassa, liittäminen menossa tai teksti puuttuu
                    ((set (map ::h/nimi hintaryhmat)) uusi-hintaryhma)
+                   (empty? uusi-hintaryhma)
                    hintaryhman-tallennus-kaynnissa?)}]
      [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
