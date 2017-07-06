@@ -60,23 +60,27 @@
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
                        (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
-
-
-
     (tarkista-fn)
     (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
              (::toimenpide/urakka-id (first (specql/fetch db
                                                           ::toimenpide/reimari-toimenpide #{::toimenpide/id ::toimenpide/reimari-id ::toimenpide/urakka-id}
                                                           {::toimenpide/reimari-id -123456})))))
 
-    ;; tarkistetaan että sama reimari-id luetussa toimenpiteessä päivittää tietuetta
-    (t/is (= 1
-             (count (specql/fetch db ::toimenpide/reimari-toimenpide
-                                  #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)}))))
-    (t/is (= 1
-           (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
-                           {::toimenpide/hintatyyppi :kokonaishintainen}
-                           {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
-    (tarkista-fn)
+    (t/testing "Sama reimari-id luetussa toimenpiteessä päivittää tietuetta"
+      (t/is (= 1
+               (count (specql/fetch db ::toimenpide/reimari-toimenpide
+                                    #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))))
 
-    ))
+    (t/testing "Trigger täyttää sopimus-id:n"
+      (t/is (= 1
+               (count (specql/fetch db ::toimenpide/reimari-toimenpide
+                                    #{::toimenpide/reimari-id}
+                                    {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)
+                                     ::toimenpide/sopimus-id 3})))))
+
+    (t/is (= 1
+             (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
+                             {::toimenpide/hintatyyppi :kokonaishintainen}
+                             {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
+    (tarkista-fn))
+    (println (ht/q "select \"sopimus-id\" from reimari_toimenpide where \"reimari-id\" = -123456")))
