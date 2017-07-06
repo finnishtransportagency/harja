@@ -1,8 +1,8 @@
 CREATE TABLE reimari_sopimuslinkki (
-"harja-sopimus-id"     INTEGER
+"harja-sopimus-id"     INTEGER NOT NULL
                        UNIQUE
                        REFERENCES sopimus,
-"reimari-sopimus-id"   INTEGER
+"reimari-sopimus-id"   INTEGER NOT NULL
                        UNIQUE);
 
 DROP TRIGGER IF EXISTS toimenpiteen_sopimus_id_trigger ON reimari_toimenpide;
