@@ -378,7 +378,7 @@
     ;; TODO TESTI
     (if-not (:hintaryhmien-poisto-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
-                                      {::h/id (get-in app [:valinnat :urakka-id])
+                                      {::h/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::h/idt hintaryhma-idt}
                                       {:onnistui ->HintaryhmatPoistettu
                                        :epaonnistui ->HintaryhmatEiPoistettu})
