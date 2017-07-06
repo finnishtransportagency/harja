@@ -39,7 +39,7 @@
     hintaryhmat]])
 
 (defn- siirra-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                                             hintaryhmien-liittaminen-kaynnissa?] :as app}]
+                                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
@@ -256,23 +256,25 @@
                  :let [hintaryhma-id (::h/id hintaryhma)
                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                       hintaryhman-nimi (h/hintaryhman-nimi hintaryhma)
-                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
+                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
+                       nayta-hintaryhma? (boolean (or hintaryhma-id
+                                                      (not (empty? hintaryhman-toimenpiteet))))
+                       nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
+                                                                   (not (empty? hintaryhman-toimenpiteet))))]]
 
-             (when (or hintaryhman-nimi
-                       (not (empty? hintaryhman-toimenpiteet)))
+             (when nayta-hintaryhma?
                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                [jaettu/listaus e! app*
-               {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                  :komponentti (fn [rivi]
-                                                 [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-                :listaus-tunniste listaus-tunniste
-                :footer [hintaryhman-hinnoittelu e! app* hintaryhma]
-                ;; TODO Tämän voi näyttää vain jos se ei ole tyhjä
-                :otsikko (or (h/hintaryhman-nimi hintaryhma)
-                             "Kokonaishintaisista siirretyt, valitse tilaus.")
-                :paneelin-checkbox-sijainti "95.2%"
-                :vaylan-checkbox-sijainti "95.2%"}]))]]]))))
+                {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                   :komponentti (fn [rivi]
+                                                  [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                 :listaus-tunniste listaus-tunniste
+                 :footer (when nayta-hintaryhman-yhteenveto?
+                           [hintaryhman-hinnoittelu e! app* hintaryhma])
+                 :otsikko (or (h/hintaryhman-nimi hintaryhma)
+                              "Kokonaishintaisista siirretyt, valitse tilaus.")
+                 :paneelin-checkbox-sijainti "95.2%"
+                 :vaylan-checkbox-sijainti "95.2%"}]))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
