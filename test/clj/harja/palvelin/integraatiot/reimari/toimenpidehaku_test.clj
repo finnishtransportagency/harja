@@ -34,7 +34,7 @@
    {:harja.domain.vesivaylat.urakoitsija/id 2,
     :harja.domain.vesivaylat.urakoitsija/nimi "Merimiehet Oy"},
    ::toimenpide/reimari-sopimus
-   {:harja.domain.vesivaylat.sopimus/r-nro -666,
+   {:harja.domain.vesivaylat.sopimus/r-nro -5,
     :harja.domain.vesivaylat.sopimus/r-tyyppi "1022542301",
     :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
    ::toimenpide/reimari-muokattu
@@ -71,7 +71,8 @@
                (count (specql/fetch db ::toimenpide/reimari-toimenpide
                                     #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))))
 
-    (t/testing "Trigger täyttää sopimus-id:n"
+
+    (t/testing "Trigger täytti sopimus-id:n"
       (t/is (= 1
                (count (specql/fetch db ::toimenpide/reimari-toimenpide
                                     #{::toimenpide/reimari-id}

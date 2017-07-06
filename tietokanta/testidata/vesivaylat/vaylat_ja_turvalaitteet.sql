@@ -52,6 +52,17 @@ INSERT INTO vv_turvalaite
 VALUES
   ('Akonniemen kyltti', '123', 'kiintea', (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
 
+
+-- testitoimenpiteissä käytetyt turvalaitenro-viittaukset
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (8881, 'poiju', 'poiju 1', 1);
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (8882, 'poiju', 'poiju 2', 1);
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (8884, 'poiju', 'poiju 4', 1);
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (8890, 'poiju', 'poiju 10', 1);
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (8891, 'poiju', 'poiju 11', 1);
+INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vayla) VALUES (666, 'poiju', 'poiju 666', 1);
+
+
+
 -- ***********************************************
 -- TURVALAITEKOMPONENTTITYYPIT
 -- ***********************************************
@@ -85,3 +96,12 @@ VALUES ('-4556365653', 'Hieno komponentti juu',	'3', '3', '123', '2016-02-18 10:
 
 INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
 VALUES ('-6785597846', 'Hieno komponentti se on',	'4', '4', '123', '2016-02-18 10:39:14.39',	'2017-05-31', 'PASISA', 'PASISA', '2016-02-18 10:39:14.39', '2017-01-01', false, '2017-12-12');
+
+INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
+VALUES ('-2139967544', 'Hieno komponentti 1',	'8881', '1', '123', '2016-02-18 10:39:14.39',	'2017-05-31', 'MERITAITO', 'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', false, '2017-12-12');
+INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
+VALUES ('-2139967545', 'Hieno komponentti 2',	'8882', '1', '123', '2016-02-18 10:39:14.39',	'2017-05-31', 'MERITAITO', 'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', false, '2017-12-12');
+INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
+VALUES ('-2139967546', 'Hieno komponentti 3',	'8883', '1', '123', '2016-02-18 10:39:14.39',	'2017-05-31', 'MERITAITO', 'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', false, '2017-12-12');
+INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
+VALUES ('-2139967547', 'Hieno komponentti 4',	'8884', '1', '123', '2016-02-18 10:39:14.39',	'2017-05-31', 'MERITAITO', 'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', false, '2017-12-12');
