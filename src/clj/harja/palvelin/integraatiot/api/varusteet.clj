@@ -15,6 +15,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet-q]
+            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset-q]
             [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.pvm :as pvm]
@@ -23,7 +24,11 @@
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+            [clojure.set :as set]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -166,10 +171,26 @@
         muunnettu-vastausdata
         {:varusteet []}))))
 
-(defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
+(defn muunna-sijainti [vkm db tiedot]
+  (let [harjan-karttapvm (geometriapaivitykset-q/harjan-verkon-pvm db)
+        karttapvm (some->
+                    (get-in tiedot [:varuste :tietue :karttapvm])
+                    (parametrit/pvm-aika))
+        vanha-sijainti (set/rename-keys (get-in tiedot [:varuste :tietue :sijainti :tie]) {:numero :tie})]
+    (if (and karttapvm (not= karttapvm harjan-karttapvm))
+      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti] karttapvm harjan-karttapvm))
+            uusi-sijainti (set/rename-keys uusi-sijainti {:tie :numero})]
+        (if uusi-sijainti
+          (-> tiedot
+              (assoc-in [:varuste :tietue :karttapvm] (pvm/aika-iso8601-aikavyohykkeen-kanssa harjan-karttapvm))
+              (assoc-in [:varuste :tietue :sijainti :tie] uusi-sijainti))
+          tiedot))
+      tiedot)))
+
+(defn lisaa-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
-        toimenpiteen-tiedot (:varusteen-lisays data)
+        toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-lisays data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietolajin-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste livitunniste)
         arvot-string (when tietolajin-arvot
@@ -187,9 +208,9 @@
       {:id livitunniste
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
-(defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
+(defn paivita-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
-  (let [toimenpiteen-tiedot (:varusteen-paivitys data)
+  (let [toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-paivitys data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietueen-tunniste (get-in toimenpiteen-tiedot [:varuste :tunniste])
         tietueen-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste tietueen-tunniste)
@@ -254,7 +275,7 @@
 
 (defrecord Varusteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri vkm :vkm :as this}]
     (julkaise-reitti
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
@@ -281,14 +302,14 @@
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/varusteen-lisays json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
-                                 (lisaa-varuste tierekisteri db data kayttaja)))))
+                                 (lisaa-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
       http :paivita-tietue
       (PUT "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/varusteen-paivitys json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
-                                 (paivita-varuste tierekisteri data kayttaja)))))
+                                 (paivita-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue

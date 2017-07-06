@@ -523,7 +523,7 @@
                                    [:db])
       :api-varusteet (component/using
                        (api-varusteet/->Varusteet)
-                       [:http-palvelin :db :integraatioloki :tierekisteri])
+                       [:http-palvelin :db :integraatioloki :tierekisteri :vkm])
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
                          [:http-palvelin :db :integraatioloki :klusterin-tapahtumat
