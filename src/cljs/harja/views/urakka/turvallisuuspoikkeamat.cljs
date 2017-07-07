@@ -270,8 +270,8 @@
                                             koordinaatit {:x (.-longitude coords)
                                                           :y (.-latitude coords)}]
                                         (swap! turvallisuuspoikkeama assoc :sijainti
-                                               {:type :point, :coordinates [(:x koordinaatit)
-                                                                            (:y koordinaatit)]}))
+                                               {:type :point :coordinates [(:x koordinaatit)
+                                                                           (:y koordinaatit)]}))
               :paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)}
              {:otsikko "Tierekisteriosoite"
               :nimi :tr
