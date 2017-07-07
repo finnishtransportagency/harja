@@ -166,7 +166,7 @@
        (komp/karttakontrollit
         :tr-karttavalitsin
         (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila]
-          {:class "kartan-tr-kontrollit"}))
+          {:class "kartan-sijaintivalintakontrollit"}))
 
        (komp/sisaan-ulos #(do
                             (log "TR karttavalitsin - sisään!")
@@ -188,8 +188,8 @@
                         :enter-painettu
                         valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-         [:div.tr-valitsin-teksti
-          [:div (ikonit/livicon-info-sign) (case @tila
-                                             :ei-valittu " Valitse alkupiste kartalta"
-                                             :alku-valittu " Valitse loppupiste kartalta"
-                                             "")]])))))
+         [:div.karttasijaintivalitsin-teksti
+          [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) (case @tila
+                                                               :ei-valittu " Valitse alkupiste kartalta"
+                                                               :alku-valittu " Valitse loppupiste kartalta"
+                                                               "")]])))))

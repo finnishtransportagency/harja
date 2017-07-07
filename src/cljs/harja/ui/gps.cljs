@@ -18,6 +18,10 @@
    [harja.makrot :refer [nappaa-virhe with-loop-from-channel with-items-from-channel]]
    [cljs.core.async.macros :refer [go go-loop]]))
 
+(defn valintakontrollit [peruttu]
+  [:div
+   [napit/peruuta "Peruuta" peruttu]])
+
 (defn karttavalitsin
   "Komponentti GPS-pisteen valitsemiseen kartalta.
    Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
@@ -27,96 +31,37 @@
 
    :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
    :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan."
-  [optiot]
+  [{:keys [kun-valmis kun-peruttu]}]
   (let [tapahtumat (chan)
-        vkm-haku (chan)
-        tila (atom :ei-valittu)
-        alkupiste (atom nil)
-        tr-osoite (atom {})
-        optiot (cljs.core/atom optiot)
         valinta-peruttu (fn [_]
-                          ((:kun-peruttu @optiot))
-                          (poistu-tr-valinnasta!))
+                          (kun-peruttu))
         valinta-hyvaksytty #(go (>! tapahtumat {:tyyppi :enter}))]
 
-    (with-items-from-channel [{:keys [tyyppi sijainti x y]} tapahtumat]
+    (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (case tyyppi
-                               ;; Hiirtä liikutellaan kartan yllä, aseta tilan mukainen tooltip
-                               :hover
-                               (kartta/aseta-tooltip! x y
-                                                      (luo-tooltip (case @tila
-                                                                     :ei-valittu "Klikkaa alkupiste"
-                                                                     :alku-valittu "Klikkaa loppupiste tai hyväksy pistemäinen painamalla Enter")))
-
-                               ;; Enter näppäimellä voi hyväksyä pistemäisen osoitteen
-                               :enter
-                               (when (= @tila :alku-valittu)
-                                 ((:kun-valmis @optiot) @tr-osoite)
-                                 (poistu-tr-valinnasta!))
-
                                :click
-                               (if (= :alku-valittu @tila)
-                                 (do
-                                   (kartta/aseta-kursori! :progress)
-                                   (>! vkm-haku (<! (vkm/koordinaatti->trosoite-kahdella @alkupiste sijainti))))
-                                 (do
-                                   (reset! alkupiste sijainti)
-                                   (kartta/aseta-kursori! :progress)
-                                   (>! vkm-haku (<! (vkm/koordinaatti->trosoite sijainti)))))))
-
-    (with-loop-from-channel vkm-haku osoite
-                            (kartta/aseta-kursori! :crosshair)
-                            (if (vkm/virhe? osoite)
-                              (pisteelle-ei-loydy-tieta-ilmoitus!)
-                              (let [{:keys [kun-valmis paivita]} @optiot]
-                                (kartta/tyhjenna-ohjelaatikko!)
-                                (case @tila
-                                  :ei-valittu
-                                  (let [osoite (reset! tr-osoite (konvertoi-pistemaiseksi-tr-osoitteeksi osoite))]
-                                    (paivita osoite)
-                                    (karttatasot/taso-paalle! :tr-valitsin)
-                                    (reset! tila :alku-valittu)
-                                    (reset! tierekisteri/valittu-alkupiste (:geometria osoite))
-                                    (nayta-alkupiste-ohjelaatikossa! osoite))
-
-                                  :alku-valittu
-                                  (let [osoite (reset! tr-osoite (konvertoi-tr-osoitteeksi osoite))]
-                                    (poistu-tr-valinnasta!)
-                                    (kun-valmis osoite))))))
+                               (log "VIESTI KARTALTA: " (pr-str viesti))))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
-        {:component-will-receive-props
-         (fn [_ _ uudet-optiot]
-           (reset! optiot uudet-optiot))}
-
         (komp/karttakontrollit
-          :tr-karttavalitsin
-          (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila]
-                     {:class "kartan-tr-kontrollit"}))
+          :sijaintivalintakontrollit
+          (with-meta [valintakontrollit valinta-peruttu]
+                     {:class "kartan-sijaintivalintakontrollit"}))
 
         (komp/sisaan-ulos #(do
-                             (log "TR karttavalitsin - sisään!")
                              (reset! kartta/pida-geometriat-nakyvilla? false) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                              (reset! nav/kartan-edellinen-koko kartan-koko)
-                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
+                             (when-not (= :XL kartan-koko) ; ;ei syytä pienentää karttaa
                                (nav/vaihda-kartan-koko! :L))
-                             (kartta/aseta-kursori! :crosshair)
-                             (nayta-ohjeet-ohjelaatikossa!))
+                             (kartta/aseta-kursori! :crosshair))
                           #(do
-                             (log "TR karttavalitsin - ulos!")
                              (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                              (reset! nav/kartan-edellinen-koko nil)
-                             (poistu-tr-valinnasta!)
                              (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
         (komp/kuuntelija :esc-painettu
-                         valinta-peruttu
-                         :enter-painettu
-                         valinta-hyvaksytty)
-        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-          [:div.tr-valitsin-teksti
-           [:div (ikonit/livicon-info-sign) (case @tila
-                                              :ei-valittu " Valitse alkupiste kartalta"
-                                              :alku-valittu " Valitse loppupiste kartalta"
-                                              "")]])))))
+                         valinta-peruttu)
+        (fn [_]
+          [:div.inline-block.karttasijaintivalitsin-teksti
+           [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Valitse sijainti kartalta"]])))))
