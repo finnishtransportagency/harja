@@ -81,7 +81,7 @@
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
-  Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
+   Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
   löytyneeseen pisteeseen.
 
   Optiot on mäppi parametreja, jossa seuraavat avaimet:
