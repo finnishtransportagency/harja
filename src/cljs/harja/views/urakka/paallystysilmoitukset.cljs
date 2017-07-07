@@ -191,8 +191,12 @@
       "Tallenna"
       #(let [lahetettava-data (-> lomake
                                   lomake/ilman-lomaketietoja
+                                  ;; POT-lomake tallentuu kantaan JSONina, eikä se tarvitse id-tietoja.
                                   (grid/poista-idt [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :alustatoimet]))]
+                                  (grid/poista-idt [:ilmoitustiedot :alustatoimet])
+                                  ;; Poistetaan poistetut elementit
+                                  (grid/poista-poistetut [:ilmoitustiedot :osoitteet])
+                                  (grid/poista-poistetut [:ilmoitustiedot :alustatoimet]))]
          (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
          (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
          (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
