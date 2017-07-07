@@ -72,8 +72,8 @@
                      {::h/urakka-id urakka-id
                       ::h/hintaryhma? true
                       ::m/poistettu? false})
-       (map #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))
-       (map #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))))
+       (mapv #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))
+       (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
