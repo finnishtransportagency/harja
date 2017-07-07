@@ -238,7 +238,6 @@
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))))
 
-
 (deftest kiintioiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut

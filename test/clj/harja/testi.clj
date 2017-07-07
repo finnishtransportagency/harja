@@ -391,6 +391,12 @@
                    FROM   reimari_toimenpide
                    WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
 
+(defn hae-kiintioon-kuuluva-reimari-toimenpide []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Kiintiöön kuuluva jutska'
+                          AND \"kiintio-id\" IS NOT NULL;"))))
+
 (defn hae-kiintio-siirtyneiden-poijujen-korjaus []
   (ffirst (q (str "SELECT id
                    FROM   vv_kiintio

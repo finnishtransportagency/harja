@@ -370,9 +370,11 @@ reimari-tilat
 (defn- uusin-toimenpide [toimenpiteet]
   (first (sort-by ::pvm pvm/jalkeen? toimenpiteet)))
 
-(defn hintaryhman-otsikko [hintaryhma toimenpiteet]
-  ;; Toimenpiteistä päivämäärää tms tähän mukaan?
+(defn hintaryhman-otsikko [hintaryhma]
   (::h/nimi hintaryhma))
+
+(defn ilman-toimenpiteita [toimenpiteet poistettavat-idt]
+  (filter (comp not poistettavat-idt ::id) toimenpiteet))
 
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
   (boolean (::oma-hinnoittelu toimenpide)))

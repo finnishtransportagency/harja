@@ -170,6 +170,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn poista-idt
   "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
   Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu id"
-  [lomake polku] (assoc-in lomake polku (mapv
-                                          (fn [rivi] (dissoc rivi :id))
-                                          (get-in lomake polku))))
+  [lomake polku]
+  (assoc-in lomake polku (mapv
+                           (fn [rivi] (dissoc rivi :id))
+                           (get-in lomake polku))))
+
+(defn poista-poistetut
+  "Ottaa mapin ja polun. Olettaa, että polun päässä on vector.
+   Palauttaa mapin, jossa polussa olevasta vectorista on jokaisesta itemistä poistettu elementit, joilla
+   on :poistettu true."
+  [lomake polku]
+  (assoc-in lomake polku (filter (comp not :poistettu) (get-in lomake polku))))
