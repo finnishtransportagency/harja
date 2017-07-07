@@ -19,6 +19,10 @@
 (def kayttajahakutulokset-data (atom []))
 
 (defonce valittu-turvallisuuspoikkeama (atom nil))
+
+(add-watch valittu-turvallisuuspoikkeama :asd (fn [_ _ _ uusi]
+                                                (log "UUSI TURPO: " (pr-str uusi))))
+
 (def turvallisuuspoikkeaman-luonti-kesken? (atom false))
 
 (defn hae-urakan-turvallisuuspoikkeamat
