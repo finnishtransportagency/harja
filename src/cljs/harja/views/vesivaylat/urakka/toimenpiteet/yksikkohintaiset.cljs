@@ -262,7 +262,7 @@
                :listaus-tunniste listaus-tunniste
                :footer (when hintaryhma
                          [hintaryhman-hinnoittelu e! app* hintaryhma])
-               :otsikko (or (to/hintaryhman-otsikko hintaryhma hintaryhman-toimenpiteet)
+               :otsikko (or (to/hintaryhman-otsikko hintaryhma)
                             "Kokonaishintaisista siirretyt, valitse tilaus.")
                :paneelin-checkbox-sijainti "95.2%"
                :vaylan-checkbox-sijainti "95.2%"}])]]]))))
