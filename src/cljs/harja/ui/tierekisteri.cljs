@@ -20,7 +20,9 @@
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn tieosoite
-  "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
+  "DEPRECATED Käytä harja.domain.tierekisteri/tierekisteriosoite-tekstina
+
+  Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
   Jos ei kaikkia kenttiä ole saatavilla, palauttaa 'ei saatavilla' -viestin"
   [numero aosa aet losa lopet]
   (let [laita (fn [arvo]
