@@ -189,7 +189,7 @@
        :turvallisuuspoikkeamat
        (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
          ^{:key "turvallisuuspoikkeamat"}
-         [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
+         [turvallisuuspoikkeamat/turvallisuuspoikkeamat ur])
 
        "Laskutus"
        :laskutus

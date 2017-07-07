@@ -192,10 +192,11 @@
        (empty? toimenpiteet-virheet)
        (lomake/voi-tallentaa-ja-muokattu? tp)))
 
-(defn turvallisuuspoikkeaman-tiedot []
+(defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
         toimenpiteet-virheet (atom nil)]
-    (fnc []
+    (fnc [urakka]
+      (log "URAKKA: " (pr-str urakka))
          (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                             ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
                vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
@@ -459,7 +460,7 @@
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
 
-(defn turvallisuuspoikkeamat []
+(defn turvallisuuspoikkeamat [urakka]
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
@@ -477,9 +478,9 @@
                       #(do
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
-    (fn []
+    (fn [urakka]
       [:span
        [kartta/kartan-paikka]
        (if @tiedot/valittu-turvallisuuspoikkeama
-         [turvallisuuspoikkeaman-tiedot]
+         [turvallisuuspoikkeaman-tiedot urakka]
          [turvallisuuspoikkeamalistaus])])))
