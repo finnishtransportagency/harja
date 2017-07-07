@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-07-07",
+    "title": "Ylläpidon aikataulun tulostaminen PDF:ksi korjattu",
+    "body": "Käyttöoikeuksiin liittyvä ongelma ylläpidon aikataulun tulostamisessa on saatu korjattua. Korjaus on tuotannossa käytettävissä maanantaina 10.7. aamulla."
+  }
+  {
     "date": "2017-06-28",
     "title": "Päällystyskohteen tiemerkintävalmiuden voi nyt myös perua",
     "body": "Päällystysurakan aikataulunäkymässä voidaan asettaa kohde valmiiksi tiemerkintään, mistä seuraa sähköposti-ilmoitus tiemerkintäurakan urakanvalvojalle ja urakoitsijan vastuuhenkilölle. Nyt on mahdollista myös perua tämä toiminto, eli kertoa että kohde ei sittenkään ole vielä valmis tiemerkintään. Perumisesta niin ikään lähtee sähköpostitse tieto tiemerkintäurakkaan."
