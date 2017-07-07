@@ -82,22 +82,22 @@
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
    Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
-  löytyneeseen pisteeseen.
+   löytyneeseen pisteeseen.
 
-  Optiot on mäppi parametreja, jossa seuraavat avaimet:
+   Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
-  :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
-               Parametrina valittu osoite mäppi, jossa avaimet:
-               :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys
-               Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
-               avaimia ei ole mäpissä.
+   :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
+                Parametrina valittu osoite mäppi, jossa avaimet:
+                :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys
+                Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
+                avaimia ei ole mäpissä.
 
-  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
-               ilman TR-osoitteen päivittämistä. Ei parametrejä.
+   :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
+                ilman TR-osoitteen päivittämistä. Ei parametrejä.
 
-  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
-               kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
-               osoitteella, jossa ei ole vielä loppupistettä."
+   :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
+                kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
+                osoitteella, jossa ei ole vielä loppupistettä."
   [optiot]
   (let [tapahtumat (chan)
         vkm-haku (chan)
