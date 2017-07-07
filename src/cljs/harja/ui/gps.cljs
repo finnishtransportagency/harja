@@ -42,9 +42,8 @@
 
     ;; Kuunnellaan kartan viestejä
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
-                             (case tyyppi
-                               :click (kun-valmis sijainti)
-                               nil))
+                             (when (= tyyppi :click)
+                               (kun-valmis sijainti)))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo

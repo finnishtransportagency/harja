@@ -270,13 +270,12 @@
                                             koordinaatit {:x (.-longitude coords)
                                                           :y (.-latitude coords)}]
                                         (swap! turvallisuuspoikkeama assoc :sijainti
+                                               ;; TODO ONKO NÄMÄ OIKEIN PÄIN!?
                                                {:type :point :coordinates [(:x koordinaatit)
                                                                            (:y koordinaatit)]}))
               :paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
-              :karttavalinta-tehty #(do
-                                     (log "ASETA SIJAINTI: " (pr-str {:type :point :coordinates %}))
-                                     (swap! turvallisuuspoikkeama assoc :sijainti
-                                          {:type :point :coordinates %}))}
+              :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti
+                                              {:type :point :coordinates %})}
              {:otsikko "Tierekisteriosoite"
               :nimi :tr
               :pakollinen? true

@@ -1075,8 +1075,7 @@
                                   (paikannus-epaonnistui-fn %))))
         lopeta-karttavalinta #(reset! karttavalinta-kaynnissa? false)
         aloita-karttavalinta (fn []
-                               (reset! karttavalinta-kaynnissa? true)
-                               (log "TODO KARTTAVALINTA"))]
+                               (reset! karttavalinta-kaynnissa? true))]
 
     (fn [_ _]
       [:div
