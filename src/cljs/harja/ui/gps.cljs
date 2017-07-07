@@ -43,7 +43,7 @@
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (case tyyppi
                                :click (kun-valmis sijainti))
-                               nil))
+                               nil)
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
