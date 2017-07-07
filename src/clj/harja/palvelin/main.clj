@@ -290,7 +290,7 @@
                                [:http-palvelin :db])
       :kokonaishintaiset-tyot (component/using
                                 (kokonaishintaiset-tyot/->Kokonaishintaiset-tyot)
-                                [:http-palvelin :db])
+                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :muut-tyot (component/using
                    (muut-tyot/->Muut-tyot)
                    [:http-palvelin :db])
