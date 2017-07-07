@@ -40,10 +40,11 @@
         valinta-peruttu (fn [_]
                           (kun-peruttu))]
 
+    ;; Kuunnellaan kartan viestejä
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (case tyyppi
-                               :click (kun-valmis sijainti))
-                               nil)
+                               :click (kun-valmis sijainti)
+                               nil))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo

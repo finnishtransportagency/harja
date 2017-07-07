@@ -273,8 +273,10 @@
                                                {:type :point :coordinates [(:x koordinaatit)
                                                                            (:y koordinaatit)]}))
               :paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
-              :karttavainta-tehty #(swap! turvallisuuspoikkeama assoc :sijainti
-                                          {:type :point :coordinates %})}
+              :karttavalinta-tehty #(do
+                                     (log "ASETA SIJAINTI: " (pr-str {:type :point :coordinates %}))
+                                     (swap! turvallisuuspoikkeama assoc :sijainti
+                                          {:type :point :coordinates %}))}
              {:otsikko "Tierekisteriosoite"
               :nimi :tr
               :pakollinen? true
