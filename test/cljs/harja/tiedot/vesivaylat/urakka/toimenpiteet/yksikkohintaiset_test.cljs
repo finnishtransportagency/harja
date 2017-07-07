@@ -279,7 +279,7 @@
 
 (deftest hintaryhmaan-liittaminen
   (vaadi-async-kutsut
-    #{tiedot/->ValitutLiitetty tiedot/->ValitutEiLiitetty}
+    #{tiedot/->ValitutLiitettyHintaryhmaan tiedot/->ValitutEiLiitettyHintaryhmaan}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? true}
            (e! (tiedot/->LiitaValitutHintaryhmaan {::h/id 1} [{::to/id 1}])
@@ -293,11 +293,11 @@
     #{tiedot/->HaeToimenpiteet}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
-           (e! (tiedot/->ValitutLiitetty {:foo :bar}))))))
+           (e! (tiedot/->ValitutLiitettyHintaryhmaan {:foo :bar}))))))
 
 (deftest hintaryhmaan-ei-liitetty
   (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
-         (e! (tiedot/->ValitutEiLiitetty {:msg :error})))))
+         (e! (tiedot/->ValitutEiLiitettyHintaryhmaan {:msg :error})))))
 
 (deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
