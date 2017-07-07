@@ -256,7 +256,7 @@
     (let [toimenpidehaku (tuck/send-async! ->HaeToimenpiteet)
           hintaryhmahaku (tuck/send-async! ->HaeHintaryhmat)]
       (go (toimenpidehaku (:valinnat app)))
-      (go (hintaryhmahaku))
+      (go (hintaryhmahaku)) ;; Tarvitaan tieto siitä, miten tieto tyhjistä hintaryhmistä muuttuu
       (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
   ValitutEiLiitettyHintaryhmaan
