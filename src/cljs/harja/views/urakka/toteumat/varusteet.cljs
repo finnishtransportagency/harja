@@ -210,6 +210,7 @@
           {:nimi :kayttajan-sijainti
            :otsikko "GPS-sijainti"
            :tyyppi :gps-sijainti
+           :karttavalinta? false
            :paikannus-onnistui-fn #(e! (v/->HaeSijainninOsoite %))
            :paikannus-epaonnistui-fn #(e! (v/->VirheTapahtui %))}))
       {:nimi :ajorata

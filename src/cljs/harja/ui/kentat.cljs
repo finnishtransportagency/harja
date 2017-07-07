@@ -1054,25 +1054,46 @@
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
 
-(defmethod tee-kentta :gps-sijainti [{:keys [paikannus-onnistui-fn paikannus-epaonnistui-fn]} data]
-  (let [paikannus-kaynnissa? (atom false)
+(defmethod tee-kentta :gps-sijainti
+  ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
+  ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
+  [{:keys [karttavalinta? paikannus?
+           paikannus-onnistui-fn paikannus-epaonnistui-fn]} data]
+  (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
+        paikannus? (if (some? paikannus?) paikannus? true)
+
+        paikannus-kaynnissa? (atom false)
+        karttavalinta-kaynnissa? (atom false)
         lopeta-paikannus #(reset! paikannus-kaynnissa? false)
-        aloita-paikannus (fn [] (do (reset! paikannus-kaynnissa? true)
-                                    (geo/nykyinen-geolokaatio
-                                      #(do (lopeta-paikannus)
-                                           (paikannus-onnistui-fn %))
-                                      #(do (lopeta-paikannus)
-                                           (paikannus-epaonnistui-fn %)))))]
+        aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
+                           (geo/nykyinen-geolokaatio
+                             #(do (lopeta-paikannus)
+                                  (paikannus-onnistui-fn %))
+                             #(do (lopeta-paikannus)
+                                  (paikannus-epaonnistui-fn %))))
+        lopeta-karttavalinta #(reset! karttavalinta-kaynnissa? false)
+        aloita-karttavalinta (fn []
+                               (reset! karttavalinta-kaynnissa? true)
+                               (log "TODO KARTTAVALINTA"))]
 
     (fn [_ _]
       [:div
-       [napit/yleinen-ensisijainen
-        "Paikanna"
-        #(when-not @paikannus-kaynnissa?
-           (aloita-paikannus))
-        {:disabled @paikannus-kaynnissa?
-         :ikoni (ikonit/screenshot)
-         :tallennus-kaynnissa? @paikannus-kaynnissa?}]])))
+       (when paikannus?
+         [napit/yleinen-ensisijainen
+          "Paikanna"
+          #(when-not @paikannus-kaynnissa?
+             (aloita-paikannus))
+          {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+           :ikoni (ikonit/screenshot)
+           :tallennus-kaynnissa? @paikannus-kaynnissa?}])
+
+       (when karttavalinta?
+         [napit/yleinen-ensisijainen
+          "Valitse kartalta"
+          #(when-not @karttavalinta-kaynnissa?
+             (aloita-karttavalinta))
+          {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+           :ikoni (ikonit/map-marker)}])])))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
