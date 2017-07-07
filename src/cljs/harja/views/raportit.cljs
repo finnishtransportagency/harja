@@ -322,7 +322,7 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset (:id urakka))]
                                  (when (and urakka nakymassa? oikeus?)
                                   (k/post! :hae-urakan-sillat
                                            {:urakka-id (:id urakka)
@@ -342,9 +342,10 @@
                                                  (:id %))}))
       :format-fn #(case %
                    :kaikki "Kaikki"
+                   :ei-siltoja "Ei siltoja"
                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
-     (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
+     (into [] (cons (if (empty? @urakan-sillat) :ei-siltoja :kaikki) (sort-by :siltanimi @urakan-sillat)))]))
 
 (def urakan-vuodet (reaction
                      (let [urakka @nav/valittu-urakka]
