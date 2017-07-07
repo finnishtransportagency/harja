@@ -341,11 +341,10 @@
                                                  :kaikki
                                                  (:id %))}))
       :format-fn #(case %
-                   :kaikki "Kaikki"
-                   :ei-siltoja "Ei siltoja"
-                   (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
+                    :kaikki (if (empty? @urakan-sillat) "Ei siltoja" "Kaikki")
+                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
-     (into [] (cons (if (empty? @urakan-sillat) :ei-siltoja :kaikki) (sort-by :siltanimi @urakan-sillat)))]))
+     (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
 
 (def urakan-vuodet (reaction
                      (let [urakka @nav/valittu-urakka]
