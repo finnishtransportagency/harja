@@ -299,6 +299,31 @@
   (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
          (e! (tiedot/->ValitutEiLiitettyHintaryhmaan {:msg :error})))))
 
+(deftest poista-hintaryhmat
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmatPoistettu tiedot/->HintaryhmatEiPoistettu}
+
+    (testing "Poista hintaryhmät"
+      (is (= (e! (tiedot/->PoistaHintaryhmat #{1 2 3})
+                 {:hintaryhmien-poisto-kaynnissa? false})
+             {:hintaryhmien-poisto-kaynnissa? true}))))
+
+  (testing "Poisto on jo käynnissä"
+    (let [app {:hintaryhmien-poisto-kaynnissa? true :foo :bar}]
+      (is (= app (e! (tiedot/->PoistaHintaryhmat #{1 2 3}) app))))))
+
+(deftest hintaryhmat-poistettu
+  (is (= (e! (tiedot/->HintaryhmatPoistettu {::h/idt #{2}})
+             {:hintaryhmien-poisto-kaynnissa? true
+              :hintaryhmat [{::h/id 1} {::h/id 2} {::h/id 3}]})
+         ;; Poistetut poistuu sovelluksen tilasta
+         {:hintaryhmien-poisto-kaynnissa? false
+          :hintaryhmat [{::h/id 1} {::h/id 3}]})))
+
+(deftest hintaryhmat-ei-poistettu
+  (is (= {:hintaryhmien-poisto-kaynnissa? false}
+         (e! (tiedot/->HintaryhmatEiPoistettu)))))
+
 (deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"
     (let [vanha-tila testitila

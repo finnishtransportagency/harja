@@ -376,7 +376,6 @@
 
   PoistaHintaryhmat
   (process-event [{hintaryhma-idt :hintaryhma-idt} app]
-    ;; TODO TESTI
     (if-not (:hintaryhmien-poisto-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
                                       {::h/urakka-id (get-in app [:valinnat :urakka-id])
@@ -388,14 +387,11 @@
 
   HintaryhmatPoistettu
   (process-event [{vastaus :vastaus} app]
-    ;; TODO TESTI
     (assoc app :hintaryhmien-poisto-kaynnissa? false
-               :hintaryhmat
-               (h/hinnoittelut-ilman (:hintaryhmat app)
-                                     (::h/idt vastaus))))
+               :hintaryhmat (h/hinnoittelut-ilman (:hintaryhmat app)
+                                                  (::h/idt vastaus))))
 
   HintaryhmatEiPoistettu
   (process-event [_ app]
-    ;; TODO TESTI
     (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
     (assoc app :hintaryhmien-poisto-kaynnissa? false)))
