@@ -290,7 +290,7 @@
 
 (deftest hintaryhmaan-liitetty
   (vaadi-async-kutsut
-    #{tiedot/->HaeToimenpiteet}
+    #{tiedot/->HaeToimenpiteet {}}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
            (e! (tiedot/->ValitutLiitettyHintaryhmaan {:foo :bar}))))))
