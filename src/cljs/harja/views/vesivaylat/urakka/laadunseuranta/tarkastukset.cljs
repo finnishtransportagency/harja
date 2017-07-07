@@ -26,7 +26,7 @@
 
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:sticky? true}
-    ^{:key "siirtonappi"}
+    ^{:key "lisaysnappi"}
     [napit/uusi "Lisää uusi tarkastus" #(log "Painoit nappia")]]])
 
 

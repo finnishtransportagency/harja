@@ -13,12 +13,12 @@ VALUES
 
 INSERT INTO vv_kiintio
 ("urakka-id", "sopimus-id", nimi, koko, luoja)
-    VALUES
-      ((SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-       (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
-      'Siirtyneiden poijujen siirto',
-      30,
-       (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+VALUES
+  ((SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+   (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+   'Siirtyneiden poijujen siirto',
+   30,
+   (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_kiintio
 ("urakka-id", "sopimus-id", nimi, koko, luoja)
@@ -53,7 +53,7 @@ INSERT INTO reimari_toimenpide
 (hintatyyppi,
  "urakka-id",
  "reimari-id",
-  "kiintio-id",
+ "kiintio-id",
  "reimari-urakoitsija",
  "urakoitsija-id",
  "reimari-sopimus",
@@ -85,7 +85,7 @@ VALUES
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
-    NULL,
+    'Kiintiöön kuuluva jutska',
     '2017-05-05T23:23Z',
     '2017-05-05',
     (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
@@ -147,7 +147,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
@@ -194,7 +194,7 @@ VALUES
     '1022541802',
     '1022541903',
     '(123, Akonniemen väylät, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
@@ -241,7 +241,7 @@ VALUES
     '1022541803',
     '1022541903',
     '(123, Akonniemen väylät, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Akonniemen väylät'));
 
 -- ***********************************************
 -- KOKONAISHINTAISET TOIMENPITEET VIALLA
@@ -292,7 +292,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 INSERT INTO vv_vikailmoitus
 ("reimari-id", kuvaus, pvm, "turvalaite-id", "toimenpide-id")
@@ -352,7 +352,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 -- ***********************************************
 -- YKSIKKÖHINTAISIIN SIIRRETYT TYÖT, ILMAN HINTAERITTELYÄ
@@ -403,7 +403,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
 
 -- ***********************************************
@@ -465,7 +465,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
   ('yksikkohintainen',
     (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     73,
@@ -488,7 +488,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
+    (SELECT id FROM vv_vayla WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
   ('yksikkohintainen',
     (SELECT id FROM urakka WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
     74,
@@ -511,7 +511,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
-   (SELECT id FROM vv_vayla WHERE nimi = 'Oulaisten meriväylä'));
+    (SELECT id FROM vv_vayla WHERE nimi = 'Oulaisten meriväylä'));
 
 -- Hintaryhmät
 
