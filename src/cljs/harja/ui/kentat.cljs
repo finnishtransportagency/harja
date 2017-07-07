@@ -800,7 +800,7 @@
       (tasot/poista-geometria! :tr-valittu-osoite)
       (reset! virheet nil))))
 
-(defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
+(defn tr-kentan-elementti [lomake? muuta! blur placeholder value key disabled?]
   [:input.tierekisteri {:class (str
                                  "tr-" (name key) " "
                                  (when lomake? "form-control ")
@@ -905,7 +905,7 @@
         alkuperainen-sijainti (atom (when sijainti @sijainti))
 
         osoite-ennen-karttavalintaa (atom nil)
-        karttavalinta-kaynnissa (atom false)
+        karttavalinta-kaynnissa? (atom false)
 
         keskita-kartta! (fn [sijainti]
                           (when sijainti
@@ -999,8 +999,8 @@
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
-              kartta? @karttavalinta-kaynnissa
-              valinta-kaynnissa? @karttavalinta-kaynnissa
+              kartta? @karttavalinta-kaynnissa?
+              valinta-kaynnissa? @karttavalinta-kaynnissa?
 
               normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
                            {numero-avain numero
@@ -1016,12 +1016,17 @@
 
            [tierekisterikentat
             pakollinen?
-            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero numero-avain valinta-kaynnissa?]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa alkuosa-avain valinta-kaynnissa?]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys alkuetaisyys-avain valinta-kaynnissa?]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa loppuosa-avain valinta-kaynnissa?]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys loppuetaisyys-avain valinta-kaynnissa?]
-            (when (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
+            [tr-kentan-elementti lomake? muuta! blur
+             "Tie" numero numero-avain @karttavalinta-kaynnissa?]
+            [tr-kentan-elementti lomake? muuta! blur
+             "aosa" alkuosa alkuosa-avain @karttavalinta-kaynnissa?]
+            [tr-kentan-elementti lomake? muuta! blur
+             "aet" alkuetaisyys alkuetaisyys-avain @karttavalinta-kaynnissa?]
+            [tr-kentan-elementti lomake? muuta! blur
+             "losa" loppuosa loppuosa-avain @karttavalinta-kaynnissa?]
+            [tr-kentan-elementti lomake? muuta! blur
+             "let" loppuetaisyys loppuetaisyys-avain @karttavalinta-kaynnissa?]
+            (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu?)
               [napit/poista nil
                #(do (tasot/poista-geometria! :tr-valittu-osoite)
                     (reset! data {})
@@ -1029,21 +1034,22 @@
                     (reset! virheet nil))
                {:luokka "nappi-tyhjenna"
                 :disabled (empty? @data)}])
-            (if-not @karttavalinta-kaynnissa
+
+            (if-not @karttavalinta-kaynnissa?
               [napit/yleinen-ensisijainen
                (tr-valintanapin-teksti osoite-alussa osoite)
                #(do
                   (reset! osoite-ennen-karttavalintaa osoite)
                   (reset! data {})
-                  (reset! karttavalinta-kaynnissa true))
+                  (reset! karttavalinta-kaynnissa? true))
                {:ikoni (ikonit/map-marker)}]
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
-                                                  (reset! karttavalinta-kaynnissa false))
+                                                  (reset! karttavalinta-kaynnissa? false))
                                   :paivita #(swap! data merge (normalisoi %))
                                   :kun-valmis #(do
                                                  (reset! data (normalisoi %))
-                                                 (reset! karttavalinta-kaynnissa false)
+                                                 (reset! karttavalinta-kaynnissa? false)
                                                  (log "Saatiin tr-osoite! " (pr-str %))
                                                  (go (>! tr-osoite-ch %)))}])
 
