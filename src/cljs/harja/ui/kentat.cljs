@@ -1059,7 +1059,8 @@
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
   [{:keys [karttavalinta? paikannus?
-           paikannus-onnistui-fn paikannus-epaonnistui-fn]} data]
+           paikannus-onnistui-fn paikannus-epaonnistui-fn
+           karttavalinta-tehty-fn]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
@@ -1096,11 +1097,10 @@
                (aloita-karttavalinta))
             {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
              :ikoni (ikonit/map-marker)}]
-           [gps/karttavalitsin {:kun-peruttu #(do
-                                                (reset! karttavalinta-kaynnissa? false))
+           [gps/karttavalitsin {:kun-peruttu #(lopeta-karttavalinta)
                                 :kun-valmis #(do
-                                               (reset! karttavalinta-kaynnissa? false)
-                                               (log "Saatiin sijainti: " (pr-str %)))}]))])))
+                                               (lopeta-karttavalinta)
+                                               (karttavalinta-tehty-fn %))}]))])))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

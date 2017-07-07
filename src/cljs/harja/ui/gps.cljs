@@ -38,13 +38,11 @@
   [{:keys [kun-valmis kun-peruttu]}]
   (let [tapahtumat (chan)
         valinta-peruttu (fn [_]
-                          (kun-peruttu))
-        valinta-hyvaksytty #(go (>! tapahtumat {:tyyppi :enter}))]
+                          (kun-peruttu))]
 
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (case tyyppi
-                               :enter (log "VIESTI KARTALTA, ENTER: " (pr-str viesti))
-                               :click (log "VIESTI KARTALTA, CLICK: " (pr-str viesti))
+                               :click (kun-valmis sijainti))
                                nil))
 
     (let [kartan-koko @nav/kartan-koko]
