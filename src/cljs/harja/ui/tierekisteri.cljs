@@ -47,9 +47,9 @@
 
 (defn pisteelle-ei-loydy-tieta-ilmoitus! []
   (kartta/aseta-ohjelaatikon-sisalto! [:span
-                                      [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
+                                      [:span.karttavalitsin-virhe vkm/pisteelle-ei-loydy-tieta]
                                       " "
-                                      [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
+                                      [:span.karttavalitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
 
 (defn konvertoi-tr-osoitteeksi [osoite]
   {:numero (:tie osoite)
@@ -66,18 +66,18 @@
    :geometria (:geometria osoite)})
 
 (defn nayta-alkupiste-ohjelaatikossa! [osoite]
-  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
                                       (str "Valittu alkupiste: "
                                            (:numero osoite) " / "
                                            (:alkuosa osoite) " / "
                                            (:alkuetaisyys osoite))]))
 
 (defn nayta-ohjeet-ohjelaatikossa! []
-  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
                                        "Valitse alkupiste kartalta."]))
 
 (defn tr-kontrollit [peruttu hyvaksytty tila]
-  [:span.tr-valitsin-ohje
+  [:span.karttavalitsin-ohje
    [napit/peruuta "Peruuta" peruttu]
    [napit/hyvaksy "OK" hyvaksytty {:disabled (= @tila :ei-valittu)}]])
 

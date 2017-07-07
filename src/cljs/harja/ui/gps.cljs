@@ -18,6 +18,10 @@
    [harja.makrot :refer [nappaa-virhe with-loop-from-channel with-items-from-channel]]
    [cljs.core.async.macros :refer [go go-loop]]))
 
+(defn nayta-ohjeet-ohjelaatikossa! []
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
+                                       "Valitse piste kartalta."]))
+
 (defn valintakontrollit [peruttu]
   [:div
    [napit/peruuta "Peruuta" peruttu]])
@@ -39,8 +43,9 @@
 
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (case tyyppi
-                               :click
-                               (log "VIESTI KARTALTA: " (pr-str viesti))))
+                               :enter (log "VIESTI KARTALTA, ENTER: " (pr-str viesti))
+                               :click (log "VIESTI KARTALTA, CLICK: " (pr-str viesti))
+                               nil))
 
     (let [kartan-koko @nav/kartan-koko]
       (komp/luo
@@ -54,10 +59,12 @@
                              (reset! nav/kartan-edellinen-koko kartan-koko)
                              (when-not (= :XL kartan-koko) ; ;ei syytä pienentää karttaa
                                (nav/vaihda-kartan-koko! :L))
+                             (nayta-ohjeet-ohjelaatikossa!)
                              (kartta/aseta-kursori! :crosshair))
                           #(do
                              (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                              (reset! nav/kartan-edellinen-koko nil)
+                             (kartta/tyhjenna-ohjelaatikko!)
                              (kartta/aseta-kursori! nil)))
         (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
         (komp/kuuntelija :esc-painettu
