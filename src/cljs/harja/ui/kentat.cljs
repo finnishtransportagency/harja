@@ -999,9 +999,6 @@
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
-              kartta? @karttavalinta-kaynnissa?
-              valinta-kaynnissa? @karttavalinta-kaynnissa?
-
               normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
                            {numero-avain numero
                             alkuosa-avain alkuosa
