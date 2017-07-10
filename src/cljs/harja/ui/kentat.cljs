@@ -7,7 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
-            [harja.ui.gps :as gps]
+            [harja.ui.sijaintivalitsin :as sijaintivalitsin]
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta
                                       maarita-pudotusvalikon-suunta-ja-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
             [harja.ui.napit :as napit]
@@ -1096,10 +1096,10 @@
                (aloita-karttavalinta))
             {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
              :ikoni (ikonit/map-marker)}]
-           [gps/karttavalitsin {:kun-peruttu #(lopeta-karttavalinta)
-                                :kun-valmis #(do
-                                               (lopeta-karttavalinta)
-                                               (karttavalinta-tehty-fn %))}]))])))
+           [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
+                                               :kun-valmis #(do
+                                                              (lopeta-karttavalinta)
+                                                              (karttavalinta-tehty-fn %))}]))])))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

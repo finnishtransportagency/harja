@@ -1,4 +1,4 @@
-(ns harja.ui.gps
+(ns harja.ui.sijaintivalitsin
   "GPS-sijainnin karttavalintaan liittyvät komponentit."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -7,7 +7,6 @@
             [harja.views.kartta.tasot :as karttatasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]
-            [harja.tiedot.tierekisteri :as tierekisteri]
             [cljs.core.async :refer [>! <! alts! chan] :as async]
             [harja.geo :as geo]
             [harja.asiakas.kommunikaatio :as k]
@@ -26,8 +25,8 @@
   [:div
    [napit/peruuta "Peruuta" peruttu]])
 
-(defn karttavalitsin
-  "Komponentti GPS-pisteen valitsemiseen kartalta.
+(defn sijaintivalitsin
+  "Komponentti sijainnin valitsemiseen kartalta.
    Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
    löytyneeseen pisteeseen.
 

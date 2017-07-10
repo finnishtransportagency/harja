@@ -4,6 +4,7 @@
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
             [harja.math :as math]
+            [harja.geo :as geo]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
@@ -30,7 +31,7 @@
   (let [coords (.-coords position)
         wgs84-lat (.-latitude coords)
         wgs84-lon (.-longitude coords)
-        latlon (projektiot/wgs84->etrsfin [wgs84-lon wgs84-lat])]
+        latlon (geo/wgs84->etrsfin [wgs84-lon wgs84-lat])]
     {:lat (aget latlon 1)
      :lon (aget latlon 0)
      :heading (or (.-heading coords) 0)
@@ -66,7 +67,9 @@
                                           (not @ensimmainen-sijainti-saatu-atom))
                                  (reset! ensimmainen-sijainti-saatu-atom true))
                                (swap! sijainti-atom (fn [entinen]
-                                                      (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
+                                                      (paivita-sijainti entinen
+                                                                        (konvertoi-latlon sijainti)
+                                                                        (timestamp)))))
               sijainti-epaonnistui (fn [virhe]
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-yritys-atom

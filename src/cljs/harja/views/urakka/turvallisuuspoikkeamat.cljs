@@ -23,7 +23,8 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.urakan-tyotunnit :as ut]
             [harja.domain.urakka :as u-domain]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -266,14 +267,15 @@
              {:nimi :sijainti
               :otsikko "Sijainti"
               :tyyppi :gps-sijainti
-              :paikannus-onnistui-fn #(let [coords (.-coords %)
-                                            koordinaatit {:x (.-longitude coords)
-                                                          :y (.-latitude coords)}]
-                                        (swap! turvallisuuspoikkeama assoc :sijainti
-                                               ;; TODO ONKO NÄMÄ OIKEIN PÄIN!?
-                                               {:type :point :coordinates [(:x koordinaatit)
-                                                                           (:y koordinaatit)]}))
-              :paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
+              :paikannus? false
+              ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa toimii!?
+              ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
+              ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
+              ;;                                                         (.-latitude coords)])]
+              ;;                         (swap! turvallisuuspoikkeama assoc :sijainti
+              ;;                                {:type :point :coordinates [(aget latlon 1)
+              ;;                                                            (aget latlon 0)]}))
+              ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
               :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti
                                               {:type :point :coordinates %})}
              {:otsikko "Tierekisteriosoite"
