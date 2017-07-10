@@ -31,7 +31,8 @@
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.roolit :as roolit]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -426,7 +427,19 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
-(defrecord Yllapitokohteet []
+(defn tee-ajastettu-sahkopostin-lahetys-tehtava [db fim email paivittainen-lahetysaika]
+  (if paivittainen-lahetysaika
+    (do
+      (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: "
+                 paivittainen-lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain
+        paivittainen-lahetysaika
+        (fn [_]
+          (let [lahetettavat-kohteet ()])
+          )))
+    (constantly nil)))
+
+(defrecord Yllapitokohteet [asetukset]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
@@ -463,7 +476,13 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-
+      (julkaise-palvelu http :sahkopostin-lahetys
+                        (fn [_ _]
+                          (tee-ajastettu-sahkopostin-lahetys-tehtava
+                            db
+                            fim
+                            email
+                            (:paivittainen-sahkopostin-lahetysaika asetukset))))
       this))
 
   (stop [this]
@@ -475,5 +494,6 @@
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu)
+      :tallenna-yllapitokohteiden-aikataulu
+      :sahkopostin-lahetys)
     this))
