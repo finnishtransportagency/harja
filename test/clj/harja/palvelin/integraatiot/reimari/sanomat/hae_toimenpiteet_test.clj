@@ -45,7 +45,7 @@
                               :harja.domain.vesivaylat.komponentti/id 124}]
    ::toimenpide/asiakas "Asko Asiakas"
    ::toimenpide/vastuuhenkilo "Väiski Vastuullinen"
-   ::toimenpide/reimari-henkilo-lkm 2})
+   ::toimenpide/henkilo-lkm 2})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
@@ -53,6 +53,6 @@
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-
+    (clojure.pprint/pprint luettu-toimenpide)
     (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))
