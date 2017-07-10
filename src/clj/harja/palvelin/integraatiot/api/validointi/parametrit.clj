@@ -3,7 +3,7 @@
 
   (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.domain.oikeudet :as oikeudet]
-)
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn heita-virheelliset-parametrit-poikkeus [viesti]
@@ -19,3 +19,9 @@
 (defn tarkista-parametrit [parametrit pakolliset]
   (doseq [pakollinen (seq pakolliset)]
     (tarkista-parametri parametrit (first pakollinen) (second pakollinen))))
+
+(defn tarkista-ominaisuus [ominaisuus]
+  (ominaisuus-kaytossa? ominaisuus)
+  (throw+ {:type    virheet/+viallinen-kutsu+
+           :virheet [{:koodi  virheet/+ominaisuus-ei-kaytossa+
+                      :viesti (str "Ominaisuus: " ominaisuus " ei ole käytössä")}]}))

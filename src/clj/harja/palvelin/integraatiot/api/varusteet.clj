@@ -245,6 +245,7 @@
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (hae-tietolajit tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -252,6 +253,7 @@
       (GET "/api/varusteet/haku" request
         (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (hae-varusteet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -259,6 +261,7 @@
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (hae-varuste tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
@@ -266,6 +269,7 @@
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/varusteen-lisays json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (lisaa-varuste tierekisteri db data kayttaja)))))
 
     (julkaise-reitti
@@ -273,6 +277,7 @@
       (PUT "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/varusteen-paivitys json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (paivita-varuste tierekisteri data kayttaja)))))
 
     (julkaise-reitti
@@ -280,15 +285,18 @@
       (DELETE "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (poista-varuste tierekisteri data kayttaja)))))
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
+                        (validointi/tarkista-ominaisuus :varuste-api)
                         (let [tietolajit (hae-tietolajit tierekisteri {"tunniste" tietolaji} user)]
                           (:tietolaji (first (:tietolajit tietolajit))))))
 
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
+                        (validointi/tarkista-ominaisuus :varuste-api)
                         (async
                           (hae-varusteita user tierekisteri tiedot))))
     this)

@@ -142,7 +142,8 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  ;; :vesivayla
- :pois-kytketyt-ominaisuudet #{}
+ ;; :varuste-api
+ :pois-kytketyt-ominaisuudet #{:varuste-api}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
