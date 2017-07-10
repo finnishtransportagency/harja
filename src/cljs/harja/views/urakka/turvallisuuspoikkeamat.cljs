@@ -267,7 +267,7 @@
            (if vesivaylaurakka?
              {:nimi :sijainti
               :otsikko "Sijainti"
-              :tyyppi :gps-sijainti
+              :tyyppi :sijaintivalitsin
               :paikannus? false
               ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
               ;;:paikannus-onnistui-fn #(let [coords (.-coords %)

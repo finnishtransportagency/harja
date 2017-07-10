@@ -1057,7 +1057,7 @@
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
 
-(defmethod tee-kentta :gps-sijainti
+(defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
   [{:keys [karttavalinta? paikannus?

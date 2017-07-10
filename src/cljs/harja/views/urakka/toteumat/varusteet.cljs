@@ -209,7 +209,7 @@
         (when (and muokattava? (geo/geolokaatio-tuettu?))
           {:nimi :kayttajan-sijainti
            :otsikko "GPS-sijainti"
-           :tyyppi :gps-sijainti
+           :tyyppi :sijaintivalitsin
            :karttavalinta? false
            :paikannus-onnistui-fn #(e! (v/->HaeSijainninOsoite %))
            :paikannus-epaonnistui-fn #(e! (v/->VirheTapahtui %))}))
