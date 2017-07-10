@@ -444,7 +444,7 @@
                  (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
                    {:fim fim
                     :email email
-                    :valmistuneet-kohteet urakan-kohteet})))))))
+                    :valmistuneet-kohteet (second urakan-kohteet)})))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]

@@ -76,20 +76,22 @@
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
     [:div
-     [:p "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:"]
+     [:p (if (every? #(pvm/tanaan? %) (vals valmistumispvmt))
+           "Seuraavat tiemerkintäkohteet on merkitty valmistuvaksi tänään:"
+           "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:")]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
        [:div (html-tyokalut/tietoja [["Tiemerkintäurakka" paallystysurakka-nimi]
-                                      ["Kohde" kohde-nimi]
-                                      ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                                     {:tr-numero tr-numero
-                                                      :tr-alkuosa tr-alkuosa
-                                                      :tr-alkuetaisyys tr-alkuetaisyys
-                                                      :tr-loppuosa tr-loppuosa
-                                                      :tr-loppuetaisyys tr-loppuetaisyys}
-                                                     {:teksti-tie? false})]
-                                      ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
-                                      ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
+                                     ["Kohde" kohde-nimi]
+                                     ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                                    {:tr-numero tr-numero
+                                                     :tr-alkuosa tr-alkuosa
+                                                     :tr-alkuetaisyys tr-alkuetaisyys
+                                                     :tr-loppuosa tr-loppuosa
+                                                     :tr-loppuetaisyys tr-loppuetaisyys}
+                                                    {:teksti-tie? false})]
+                                     ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
+                                     ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
         [:br]])
      [:div
       (html-tyokalut/tietoja [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]])
