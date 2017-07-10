@@ -1,17 +1,16 @@
--- name: poista-turvalaitteet!
-UPDATE vv_turvalaite
-SET poistettu = TRUE;
+-- name: poista-vaylat!
+UPDATE vv_vayla
+SET poistettu = TRUE
+WHERE tunniste IS NOT NULL;
 
--- name: luo-turvalaite<!
-INSERT INTO vv_turvalaite
+-- name: luo-vayla<!
+INSERT INTO vv_vayla
 (sijainti,
  tunniste,
- turvalaitenro,
  arvot,
  poistettu)
 VALUES (:sijainti :: GEOMETRY,
         :tunniste,
-        :turvalaitenro
         :arvot :: JSONB,
         FALSE)
 ON CONFLICT (tunniste)

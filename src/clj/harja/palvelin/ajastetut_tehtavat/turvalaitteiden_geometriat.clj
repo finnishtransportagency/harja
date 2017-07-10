@@ -20,12 +20,14 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-(defn tallenna-turvalaite [db {:keys [id geometry properties]}]
+(defn tallenna-turvalaite [db {:keys [id geometry tlnumero properties]}]
   (let [koordinaatit (:coordinates geometry)
         geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
         arvot (cheshire/encode properties)
+        turvalaitenro (:tlnumero properties)
         sql-parametrit {:sijainti geometria
                         :tunniste id
+                        :turvalaitenro turvalaitenro
                         :arvot arvot}]
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
