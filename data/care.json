@@ -3,7 +3,7 @@
     "date": "2017-07-10",
     "title": "Osoitemuunnoksille tuki Harja API:n varusteidenhallintaan",
     "body": "Jatkossa Harjaan voi tehdä varustekirjaukset vanhan päivän verkolla ilmoittamalla karttapäivämäärän varusteen tierekisteriosoitteen mukana, jolloin Harja muuntaa osoitteen uusimman päivän verkolle."
-  }
+  },
   {
     "date": "2017-06-08",
     "title": "Aikajana lisätty Päivystystiedot –taulukkoon",
