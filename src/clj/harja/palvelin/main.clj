@@ -171,8 +171,8 @@
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet
-                               (get-in asetukset [:liitteet :fileyard-url]))
+                            (harja.palvelin.komponentit.liitteet/->Liitteet
+                             (get-in asetukset [:liitteet :fileyard-url]))
                              [:db :virustarkistus :pois-kytketyt-ominaisuudet])
 
       :kehitysmoodi (component/using
@@ -301,8 +301,8 @@
                               (vv-kokonaishintaiset/->KokonaishintaisetToimenpiteet)
                               [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :vv-vaylat (component/using
-                   (vv-vaylat/->Vaylat)
-                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                              (vv-vaylat/->Vaylat)
+                              [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :vv-yksikkohintaiset (component/using
                              (vv-yksikkohintaiset/->YksikkohintaisetToimenpiteet)
                              [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -313,8 +313,8 @@
                      (vv-kiintiot/->Kiintiot)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :vv-materiaalit (component/using
-                        (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                       (vv-materiaalit/->Materiaalit)
+                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -441,11 +441,11 @@
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :hankkeet (component/using
-                  (hankkeet/->Hankkeet)
-                  [:db :pois-kytketyt-ominaisuudet :http-palvelin])
+                   (hankkeet/->Hankkeet)
+                   [:db :pois-kytketyt-ominaisuudet :http-palvelin])
       :sopimukset (component/using
-                    (sopimukset/->Sopimukset)
-                    [:db :pois-kytketyt-ominaisuudet :http-palvelin])
+                  (sopimukset/->Sopimukset)
+                  [:db :pois-kytketyt-ominaisuudet :http-palvelin])
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
@@ -462,15 +462,15 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana
-                               paivittainen-toimenpidehaku
-                               paivittainen-komponenttityyppihaku
-                               paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana
-                                      paivittainen-toimenpidehaku
-                                      paivittainen-komponenttityyppihaku
-                                      paivittainen-turvalaitekomponenttihaku))
-                 [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+                (let [{:keys [url kayttajatunnus salasana
+                              paivittainen-toimenpidehaku
+                              paivittainen-komponenttityyppihaku
+                              paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
+                  (reimari/->Reimari url kayttajatunnus salasana
+                                     paivittainen-toimenpidehaku
+                                     paivittainen-komponenttityyppihaku
+                                     paivittainen-turvalaitekomponenttihaku))
+              [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -659,7 +659,7 @@
 
 (defn log-level-info! []
   (log/merge-config!
-    {:appenders {:println {:min-level :info}}}))
+   {:appenders {:println {:min-level :info}}}))
 
 
 (def figwheel-repl-options
