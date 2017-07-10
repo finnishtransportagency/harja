@@ -61,14 +61,13 @@
     :harja.domain.vesivaylat.turvalaite/r-ryhma 555}
    ::toimenpide/reimari-asiakas "Asko Asiakas"
    ::toimenpide/reimari-vastuuhenkilo "Väiski Vastuullinen"
-   ::toimenpide/henkilo-lkm 2})
+   ::toimenpide/reimari-henkilo-lkm 2})
 
 (t/deftest kasittele-vastaus-kantatallennus
   (let [db (:db ht/jarjestelma)
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
                        (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
-    (clojure.pprint/pprint (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))
     (tarkista-fn)
     (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
              (::toimenpide/urakka-id (first (specql/fetch db

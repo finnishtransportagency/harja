@@ -45,7 +45,7 @@
                               :harja.domain.vesivaylat.komponentti/id 124}]
    ::toimenpide/asiakas "Asko Asiakas"
    ::toimenpide/vastuuhenkilo "Väiski Vastuullinen"
-   ::toimenpide/henkilo-lkm 2})
+   ::toimenpide/reimari-henkilo-lkm 2})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
