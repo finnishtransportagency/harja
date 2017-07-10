@@ -128,7 +128,7 @@
   (maarittele-feature juttu val? (pinni-ikoni 'vihrea'))
     Juttu on todennäköisesti pistemäinen asia. Käytetään vihreää pinniä.
     Jos juttu onkin reitillinen, käytetään reitin piirtämiseen puhtaasti
-    oletlusasetuksia.
+    oletusasetuksia.
 
   (maarittele-feature homma val? (sijainti-ikoni 'magenta')
                       {:color (if (val? homma) varit/vihrea varit/keltainen)})
