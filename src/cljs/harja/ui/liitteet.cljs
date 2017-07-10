@@ -10,7 +10,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.img-with-exif :refer [img-with-exif]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
@@ -51,19 +52,19 @@
    nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
   ([liite teksti] (liite-linkki liite teksti {}))
   ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
-  (if (naytettava-liite? liite)
-    [:a.klikattava {:title    (let [tooltip (:nimi liite)]
-                                (if (nil? nayta-tooltip?)
-                                  tooltip
-                                  (when nayta-tooltip? tooltip)))
-                    :on-click #(do
-                                 (.stopPropagation %)
-                                 (nayta-liite-modalissa liite))}
-     teksti]
-    [:a.klikattava {:title (:nimi liite)
-                    :href (k/liite-url (:id liite))
-                    :target "_blank"}
-     teksti])))
+   (if (naytettava-liite? liite)
+     [:a.klikattava {:title (let [tooltip (:nimi liite)]
+                              (if (nil? nayta-tooltip?)
+                                tooltip
+                                (when nayta-tooltip? tooltip)))
+                     :on-click #(do
+                                  (.stopPropagation %)
+                                  (nayta-liite-modalissa liite))}
+      teksti]
+     [:a.klikattava {:title (:nimi liite)
+                     :href (k/liite-url (:id liite))
+                     :target "_blank"}
+      teksti])))
 
 (defn liitteet-numeroina
   "Listaa liitteet numeroina."
@@ -97,7 +98,6 @@
 
 (defn liitteet-listalla
   "Listaa liitteet leijuvalla listalla."
-  ;; PENDING Voisi ehkä generisöidä yleisluontoiseksi 'minilistaksi', mutta toistaiseksi ei käytetä muualla.
   [liitteet]
   [:ul.livi-alasvetolista.liitelistaus
    (doall
@@ -108,6 +108,25 @@
          liite
          (:nimi liite)
          {:nayta-tooltip? false}]]))])
+
+(defn liitteet-ikonilistana
+  "Listaa liitteen ikonina, jota klikkaamalla liitteen voi avata.
+   Jos liitteitä on useita, näyttää silti vain yhden ikonin, josta aukeaa lista liitteistä."
+  [liitteet]
+  (let [lista-auki? (atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! lista-auki? false))
+      (fn [liitteet]
+        [:span
+         (cond (= (count liitteet) 1)
+               [liite-linkki (first liitteet) (ikonit/file)]
+               (> (count liitteet) 1)
+               [:a.klikattava
+                {:on-click (fn []
+                             (swap! lista-auki? not))}
+                (ikonit/file)])
+         (when @lista-auki?
+           [liitteet-listalla liitteet])]))))
 
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
@@ -145,23 +164,23 @@
            [:input.upload
             {:type "file"
              :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
-                          (go
-                            (loop [ed (<! ch)]
-                              (if (number? ed)
-                                (do (reset! edistyminen ed)
-                                    (recur (<! ch)))
-                                (if (and ed (not (k/virhe? ed)))
-                                  (do
-                                    (reset! edistyminen nil)
-                                    (reset! virheviesti nil)
-                                    (when liite-ladattu
-                                      (liite-ladattu (reset! tiedosto ed))))
-                                  (do
-                                    (log "Virhe: " (pr-str ed))
-                                    (reset! edistyminen nil)
-                                    (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
-                                                             (if (:viesti ed)
-                                                               (str " (" (:viesti ed) ")"))))))))))}]]
+                           (go
+                             (loop [ed (<! ch)]
+                               (if (number? ed)
+                                 (do (reset! edistyminen ed)
+                                     (recur (<! ch)))
+                                 (if (and ed (not (k/virhe? ed)))
+                                   (do
+                                     (reset! edistyminen nil)
+                                     (reset! virheviesti nil)
+                                     (when liite-ladattu
+                                       (liite-ladattu (reset! tiedosto ed))))
+                                   (do
+                                     (log "Virhe: " (pr-str ed))
+                                     (reset! edistyminen nil)
+                                     (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
+                                                              (if (:viesti ed)
+                                                                (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
 
 (defn liitteet
