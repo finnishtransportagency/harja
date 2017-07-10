@@ -20,6 +20,12 @@
   (when-not (str/blank? text)
     (.toDate (xml/parsi-xsd-datetime-ms-aikaleimalla text))))
 
+(defn- numeroksi [teksti]
+  (try
+    (Integer/parseInt teksti)
+    (catch NumberFormatException e
+      nil)))
+
 (def toimenpide-attribuutit {:id #(Integer/parseInt %)
                              :tyolaji identity
                              :tyoluokka identity
@@ -31,7 +37,10 @@
                                            nil
                                            %)
                              :luotu aikaleima
-                             :muokattu aikaleima})
+                             :muokattu aikaleima
+                             :asiakas identity
+                             :vastuuhenkilo identity
+                             :henkilo-lkm #(numeroksi %)})
 
 (def alus-avainmuunnos
   {:harja.domain.vesivaylat.alus/tunnus :harja.domain.vesivaylat.alus/r-tunnus

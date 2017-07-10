@@ -31,6 +31,7 @@
                       ::toimenpide/tila ::toimenpide/reimari-tila
                       ::toimenpide/asiakas ::toimenpide/reimari-asiakas
                       ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
+                      ::toimenpide/henkilo-lkm ::toimenpide/reimari-henkilo-lkm
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit})
 
 (defn lisatyo->hintatyyppi [tiedot]

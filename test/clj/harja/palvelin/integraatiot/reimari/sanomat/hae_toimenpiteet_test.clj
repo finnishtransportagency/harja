@@ -16,7 +16,7 @@
                             ::turvalaite/r-nimi "Glosholmsklacken pohjoinen"
                             ::turvalaite/r-ryhma 555}
    ::toimenpide/vayla {::vayla/r-nro "12345"
-                               ::vayla/r-nimi "Joku väylä"}
+                       ::vayla/r-nimi "Joku väylä"}
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
    ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
@@ -42,7 +42,10 @@
                               :harja.domain.vesivaylat.komponentti/id 123}
                              {:harja.domain.vesivaylat.komponentti/tila "345",
                               :harja.domain.vesivaylat.komponentti/nimi "Erikoismerkki",
-                              :harja.domain.vesivaylat.komponentti/id 124}]})
+                              :harja.domain.vesivaylat.komponentti/id 124}]
+   ::toimenpide/asiakas "Asko Asiakas"
+   ::toimenpide/vastuuhenkilo "Väiski Vastuullinen"
+   ::toimenpide/henkilo-lkm 2})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide

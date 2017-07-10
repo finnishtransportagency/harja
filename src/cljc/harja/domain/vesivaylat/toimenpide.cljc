@@ -311,7 +311,9 @@ reimari-tilat
     ::reimari-urakoitsija
     ::reimari-sopimus
     ::reimari-turvalaite
-    ::reimari-vayla})
+    ::reimari-vayla
+    ::reimari-viat
+    ::henkilo-lkm})
 
 (def metatiedot m/muokkauskentat)
 
