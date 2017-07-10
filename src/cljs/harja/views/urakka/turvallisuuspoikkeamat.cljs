@@ -260,15 +260,15 @@
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                           :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
-                                      "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
-                                      "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
+                          :vihje-leijuke (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
+                                              "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
+                                              "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
            (if vesivaylaurakka?
              {:nimi :sijainti
               :otsikko "Sijainti"
               :tyyppi :gps-sijainti
               :paikannus? false
-              ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa toimii!?
+              ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
               ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
               ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
               ;;                                                         (.-latitude coords)])]
