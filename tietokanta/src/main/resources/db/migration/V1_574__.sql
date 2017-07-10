@@ -1,0 +1,3 @@
+ALTER TABLE vv_vayla
+  ADD COLUMN tunniste VARCHAR(128),
+  ADD COLUMN arvot JSONB;
