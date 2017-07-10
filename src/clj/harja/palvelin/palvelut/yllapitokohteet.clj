@@ -30,7 +30,8 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.pvm :as pvm])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -192,7 +193,11 @@
   (jdbc/with-db-transaction [db db]
     (let [nykyiset-kohteet-kannassa (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                db {:idt (map :id kohteet)}))
-          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)]
+          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
+          lahetettavat-kohteet (filter #(pvm/sama-tai-jalkeen?
+                                          (pvm/joda-timeksi (pvm/nyt))
+                                          (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
+                                       valmistuneet-kohteet)]
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
@@ -213,7 +218,7 @@
          :email email
          :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db
-                                          {:idt (map :id valmistuneet-kohteet)}))}))))
+                                          {:idt (map :id lahetettavat-kohteet)}))}))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
