@@ -34,6 +34,7 @@
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
                           ::vv-toimenpide/tyoluokka
+                          ::vv-toimenpide/kiintio
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
