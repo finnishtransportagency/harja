@@ -13,6 +13,7 @@
             [harja.ui.napit :as napit]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
             [clojure.string :as str]
             [clojure.set :as s]
             [goog.string :as gstr]
@@ -34,7 +35,8 @@
             [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.ui.yleiset :as y]
-            [harja.domain.tierekisteri :as trd])
+            [harja.domain.tierekisteri :as trd]
+            [harja.views.kartta.tasot :as karttatasot])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -1077,29 +1079,34 @@
         aloita-karttavalinta (fn []
                                (reset! karttavalinta-kaynnissa? true))]
 
-    (fn [_ _]
-      [:div
-       (when paikannus?
-         [napit/yleinen-ensisijainen
-          "Paikanna"
-          #(when-not @paikannus-kaynnissa?
-             (aloita-paikannus))
-          {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-           :ikoni (ikonit/screenshot)
-           :tallennus-kaynnissa? @paikannus-kaynnissa?}])
+    (komp/luo
+      (komp/sisaan #(do
+                      (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                      (karttatasot/taso-paalle! :sijaintivalitsin)))
+      (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
+      (fn [_ _]
+       [:div
+        (when paikannus?
+          [napit/yleinen-ensisijainen
+           "Paikanna"
+           #(when-not @paikannus-kaynnissa?
+              (aloita-paikannus))
+           {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+            :ikoni (ikonit/screenshot)
+            :tallennus-kaynnissa? @paikannus-kaynnissa?}])
 
-       (when karttavalinta?
-         (if-not @karttavalinta-kaynnissa?
-           [napit/yleinen-ensisijainen
-            "Valitse kartalta"
-            #(when-not @karttavalinta-kaynnissa?
-               (aloita-karttavalinta))
-            {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-             :ikoni (ikonit/map-marker)}]
-           [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
-                                               :kun-valmis #(do
-                                                              (lopeta-karttavalinta)
-                                                              (karttavalinta-tehty-fn %))}]))])))
+        (when karttavalinta?
+          (if-not @karttavalinta-kaynnissa?
+            [napit/yleinen-ensisijainen
+             "Valitse kartalta"
+             #(when-not @karttavalinta-kaynnissa?
+                (aloita-karttavalinta))
+             {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+              :ikoni (ikonit/map-marker)}]
+            [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
+                                                :kun-valmis #(do
+                                                               (lopeta-karttavalinta)
+                                                               (karttavalinta-tehty-fn %))}]))]))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

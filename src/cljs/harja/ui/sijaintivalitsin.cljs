@@ -6,6 +6,7 @@
             [harja.tiedot.kartta :as kartta]
             [harja.views.kartta.tasot :as karttatasot]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.sijaintivalitsin :as sijaintivalitsin]
             [harja.tyokalut.vkm :as vkm]
             [cljs.core.async :refer [>! <! alts! chan] :as async]
             [harja.geo :as geo]
@@ -13,9 +14,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit])
   (:require-macros
-   [reagent.ratom :refer [reaction run!]]
-   [harja.makrot :refer [nappaa-virhe with-loop-from-channel with-items-from-channel]]
-   [cljs.core.async.macros :refer [go go-loop]]))
+    [reagent.ratom :refer [reaction run!]]
+    [harja.makrot :refer [nappaa-virhe with-loop-from-channel with-items-from-channel]]
+    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn nayta-ohjeet-ohjelaatikossa! []
   (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
@@ -42,6 +43,9 @@
     ;; Kuunnellaan kartan viestejä
     (with-items-from-channel [{:keys [tyyppi sijainti x y] :as viesti} tapahtumat]
                              (when (= tyyppi :click)
+                               (reset! sijaintivalitsin/valittu-sijainti
+                                       {:sijainti
+                                        {:type :point :coordinates sijainti}})
                                (kun-valmis sijainti)))
 
     (let [kartan-koko @nav/kartan-koko]
