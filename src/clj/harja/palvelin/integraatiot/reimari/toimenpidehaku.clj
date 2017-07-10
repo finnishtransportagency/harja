@@ -31,9 +31,11 @@
                       ::toimenpide/tila ::toimenpide/reimari-tila
                       ::toimenpide/asiakas ::toimenpide/reimari-asiakas
                       ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
-                      ::toimenpide/komponentit ::toimenpide/reimari-komponentit})
+                      ::toimenpide/komponentit ::toimenpide/reimari-komponentit
+                      ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?
+                      })
 
-(defn lisatyo->hintatyyppi [tiedot]
+#_(defn lisatyo->hintatyyppi [tiedot]
   (-> tiedot
       (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
                                         :yksikkohintainen
@@ -43,7 +45,7 @@
 (defn kasittele-vastaus [db vastaus-xml]
   ;; (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
-        sanoman-tiedot (mapv lisatyo->hintatyyppi sanoman-tiedot)
+        ;; sanoman-tiedot (mapv lisatyo->hintatyyppi sanoman-tiedot)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
                                        #{::toimenpide/reimari-id}

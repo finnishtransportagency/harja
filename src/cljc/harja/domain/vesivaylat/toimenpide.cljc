@@ -256,6 +256,7 @@ reimari-tilat
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
+    "reimari-lisatyo" ::reimari-lisatyo?
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
