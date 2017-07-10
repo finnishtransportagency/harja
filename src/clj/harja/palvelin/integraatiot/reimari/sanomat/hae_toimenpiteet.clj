@@ -71,6 +71,13 @@
                         :nimi identity
                         :id #(Integer/parseInt %)}))
 
+(defn- lue-vika [v]
+  (let [m (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vika" (name %))
+                               {:vika-id #(Integer/parseInt %)
+                                :tila identity})]
+    (println "rename-keys" m {:vika-id :id})
+    (rename-keys m {:harja.domain.vesivaylat.vika/vika-id :harja.domain.vesivaylat.vika/id})))
+
 (def vayla-avainmuunnos
   {:harja.domain.vesivaylat.vayla/nro :harja.domain.vesivaylat.vayla/r-nro
    :harja.domain.vesivaylat.vayla/nimi :harja.domain.vesivaylat.vayla/r-nimi})
@@ -106,7 +113,8 @@
       {::toimenpide/vayla  (lue-vayla v)})
     (when-let [v (z/xml1-> toimenpide :urakoitsija)]
       {::toimenpide/urakoitsija (lue-urakoitsija v)})
-    {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}))
+    {::toimenpide/komponentit (vec (z/xml-> toimenpide :komponentit :komponentti lue-komponentti))}
+    {::toimenpide/reimari-viat (vec (z/xml-> toimenpide :viat :vika lue-vika))}))
 
 (defn hae-toimenpiteet-vastaus [vastaus-xml]
   (if-let [ht (z/xml1-> vastaus-xml :S:Body :HaeToimenpiteet)]

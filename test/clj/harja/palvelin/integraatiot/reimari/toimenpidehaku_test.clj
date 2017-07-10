@@ -39,6 +39,11 @@
     :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
    ::toimenpide/reimari-muokattu
    #inst "2017-04-24T13:30:00.123-00:00",
+   ::toimenpide/reimari-viat [{:harja.domain.vesivaylat.vika/id 42
+                       :harja.domain.vesivaylat.vika/tila "korjattu"}
+                      {:harja.domain.vesivaylat.vika/id 43
+                       :harja.domain.vesivaylat.vika/tila "aiheeton"}
+                      ]
    ::toimenpide/reimari-komponentit
    [{:harja.domain.vesivaylat.komponentti/tila "234",
      :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",

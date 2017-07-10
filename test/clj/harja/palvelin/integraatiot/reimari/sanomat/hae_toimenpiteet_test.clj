@@ -20,10 +20,14 @@
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
    ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
+
    ::toimenpide/reimari-sopimus {::sopimus/r-nro -5
                                  ::sopimus/r-tyyppi "1022542301"
                                  ::sopimus/r-nimi "Hoitosopimus"}
-
+   ::toimenpide/reimari-viat [{:harja.domain.vesivaylat.vika/id 42
+                               :harja.domain.vesivaylat.vika/tila "korjattu"}
+                              {:harja.domain.vesivaylat.vika/id 43
+                               :harja.domain.vesivaylat.vika/tila "aiheeton"}]
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun"
    ::toimenpide/reimari-tyoluokka "1022541905"
