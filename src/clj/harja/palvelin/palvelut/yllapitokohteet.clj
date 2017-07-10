@@ -438,11 +438,13 @@
           (lukot/yrita-ajaa-lukon-kanssa
             db
             "yllapitokohteiden-sahkoposti"
-            #(let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)]
-               (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-                 {:fim fim
-                  :email email
-                  :valmistuneet-kohteet lahetettavat-kohteet}))))))
+            #(let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)
+                   kohteet-urakoittain (group-by :paallystysurakka-sampo-id lahetettavat-kohteet)]
+               (doseq [urakan-kohteet kohteet-urakoittain]
+                 (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                   {:fim fim
+                    :email email
+                    :valmistuneet-kohteet urakan-kohteet})))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]

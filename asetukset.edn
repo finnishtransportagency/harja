@@ -163,5 +163,5 @@
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
- :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [10 10 00]}
+ :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [10 39 00]}
  }

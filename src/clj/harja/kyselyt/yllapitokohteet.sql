@@ -834,15 +834,10 @@ SELECT
   pu.sampoid             AS "paallystysurakka-sampo-id",
   tu.id                  AS "tiemerkintaurakka-id",
   tu.nimi                AS "tiemerkintaurakka-nimi",
-  tu.sampoid             AS "tiemerkintaurakka-sampo-id",
-  k.etunimi              AS "ilmoittaja-etunimi",
-  k.sukunimi             AS "ilmoittaja-sukunimi",
-  k.puhelin              AS "ilmoittaja-puhelin",
-  k.sahkoposti           AS "ilmoittaja-sahkoposti"
+  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN kayttaja k ON ypka.muokkaaja = k.id
 WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
