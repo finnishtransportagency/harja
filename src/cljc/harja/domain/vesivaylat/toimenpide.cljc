@@ -313,7 +313,7 @@ reimari-tilat
     ::reimari-turvalaite
     ::reimari-vayla
     ::reimari-viat
-    ::henkilo-lkm})
+    ::reimari-henkilo-lkm})
 
 (def metatiedot m/muokkauskentat)
 
