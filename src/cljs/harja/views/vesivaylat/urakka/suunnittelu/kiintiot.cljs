@@ -18,7 +18,9 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -28,7 +30,17 @@
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}]
+    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
+    {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+     :komponentti (fn [rivi]
+                    ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta (sama juttu toimenpidenäkymässä)
+                    [kentat/tee-kentta
+                     {:tyyppi :checkbox}
+                     (r/wrap (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))
+                             (fn [uusi]
+                               (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                                :valittu? uusi}))))])
+     :leveys 5}]
    (::kiintio/toimenpiteet kiintio)])
 
 (defn kiintiot* [e! app]
@@ -50,7 +62,15 @@
        [valinnat/urakkavalinnat
         {}
         ^{:key "valinnat"}
-        [suodattimet/urakan-sopimus @nav/valittu-urakka]]
+        [suodattimet/urakan-sopimus @nav/valittu-urakka]
+        ^{:key "urakkatoiminnot"}
+        [valinnat/urakkatoiminnot {:sticky? true}
+         ^{:key "irrotusnappi"}
+         [napit/yleinen-ensisijainen (str "Irrota kiintiöstä"
+                                          (when-not (empty? (:valitut-toimenpide-idt app))
+                                            (str " (" (count (:valitut-toimenpide-idt app)) ")")))
+          #(e! (tiedot/->IrrotaKiintiosta (:valitut-toimenpide-idt app)))
+          {:disabled (empty? (:valitut-toimenpide-idt app))}]]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
                           kiintioiden-tallennus-kaynnissa?)

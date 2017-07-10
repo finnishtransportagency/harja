@@ -16,7 +16,7 @@
 
       <!-- Urakoitsijan ja sopimuksen tiedot -->
       <urakoitsija id="2" nimi="Merimiehet Oy"/>
-      <sopimus nro="-666" tyyppi="1022542301" nimi="Hoitosopimus"/>
+      <sopimus nro="-5" tyyppi="1022542301" nimi="Hoitosopimus"/>
 
       <!-- Aluksen tiedot. Jos ei alustietoja, jätetään elementti pois -->
       <alus tunnus="omapaatti" nimi="MS Totally out of Gravitas"/>

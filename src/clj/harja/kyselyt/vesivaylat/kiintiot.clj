@@ -10,10 +10,12 @@
             [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
 
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.kiintio :as kiintio]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]))
 
 (defn kiintiot-kuuluvat-urakkaan? [db kiintio-idt urakka-id]
   (->>
@@ -36,7 +38,7 @@
       (comp
         (map #(if toimenpiteet?
                 (assoc % ::kiintio/toimenpiteet (into []
-                                                      harja.kyselyt.vesivaylat.toimenpiteet/toimenpiteet-xf
+                                                      to-q/toimenpiteet-xf
                                                       (::kiintio/toimenpiteet %)))
                 %)))
       (fetch db
@@ -82,5 +84,14 @@
 
 (defn liita-toimenpiteet-kiintioon [db user tiedot]
   (update! db ::to/reimari-toimenpide
-           {::to/kiintio-id (::kiintio/id tiedot)}
+           {::to/kiintio-id (::kiintio/id tiedot)
+            ::m/muokattu (pvm/nyt)
+            ::m/muokkaaja-id (:id user)}
+           {::to/id (op/in (::to/idt tiedot))}))
+
+(defn irrota-toimenpiteet-kiintiosta [db user tiedot]
+  (update! db ::to/reimari-toimenpide
+           {::to/kiintio-id nil
+            ::m/muokattu (pvm/nyt)
+            ::m/muokkaaja-id (:id user)}
            {::to/id (op/in (::to/idt tiedot))}))
