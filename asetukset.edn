@@ -154,7 +154,7 @@
            }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
-                 :paivittainen-tarkistusaika [11 00 00]
+                 :paivittainen-tarkistusaika [9 35 00]
                  :paivitysvali-paivissa 60}
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
@@ -163,5 +163,5 @@
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
- :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [11 00 00]}
+ :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [10 10 00]}
  }

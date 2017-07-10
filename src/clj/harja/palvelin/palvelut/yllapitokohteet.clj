@@ -32,7 +32,8 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukot])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -427,21 +428,21 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
-(defn tee-ajastettu-sahkopostin-lahetys-tehtava [db fim email paivittainen-lahetysaika]
-  (if paivittainen-lahetysaika
+(defn tee-ajastettu-sahkopostin-lahetys-tehtava [db fim email lahetysaika]
+  (if lahetysaika
     (do
-      (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: "
-                 paivittainen-lahetysaika)
+      (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
-        paivittainen-lahetysaika
+        lahetysaika
         (fn [_]
-          (let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)]
-            (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-              {:kayttaja user :fim fim
-               :email email
-               :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                db
-                                                {:idt (map :id lahetettavat-kohteet)}))})))))
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "yllapitokohteiden-sahkoposti"
+            #(let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)]
+               (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                 {:fim fim
+                  :email email
+                  :valmistuneet-kohteet lahetettavat-kohteet}))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]
@@ -482,12 +483,11 @@
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
       (julkaise-palvelu http :sahkopostin-lahetys
-                        (fn [_ _]
-                          (tee-ajastettu-sahkopostin-lahetys-tehtava
-                            db
-                            fim
-                            email
-                            (:paivittainen-sahkopostin-lahetysaika asetukset))))
+                        (tee-ajastettu-sahkopostin-lahetys-tehtava
+                          db
+                          fim
+                          email
+                          (:paivittainen-sahkopostin-lahetysaika asetukset)))
       this))
 
   (stop [this]
