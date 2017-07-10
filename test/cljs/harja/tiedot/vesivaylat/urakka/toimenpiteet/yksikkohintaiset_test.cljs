@@ -293,7 +293,7 @@
     #{tiedot/->HaeToimenpiteet tiedot/->HaeHintaryhmat}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
-           (e! (tiedot/->ValitutLiitettyHintaryhmaan {:foo :bar}))))))
+           (e! (tiedot/->ValitutLiitettyHintaryhmaan))))))
 
 (deftest hintaryhmaan-ei-liitetty
   (is (= {:hintaryhmien-liittaminen-kaynnissa? false}

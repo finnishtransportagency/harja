@@ -88,7 +88,7 @@
 (defrecord HintaryhmatEiHaettu [virhe])
 (defrecord ValitseHintaryhma [hintaryhma])
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
-(defrecord ValitutLiitettyHintaryhmaan [vastaus])
+(defrecord ValitutLiitettyHintaryhmaan [])
 (defrecord ValitutEiLiitettyHintaryhmaan [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
@@ -252,11 +252,11 @@
       app))
 
   ValitutLiitettyHintaryhmaan
-  (process-event [{vastaus :vastaus} app]
+  (process-event [_ app]
     (let [toimenpidehaku (tuck/send-async! ->HaeToimenpiteet)
           hintaryhmahaku (tuck/send-async! ->HaeHintaryhmat)]
       (go (toimenpidehaku (:valinnat app)))
-      (go (hintaryhmahaku)) ;; Tarvitaan tieto siitä, miten tieto tyhjistä hintaryhmistä muuttuu
+      (go (hintaryhmahaku nil)) ;; Tarvitaan tieto siitä, miten tieto tyhjistä hintaryhmistä muuttuu
       (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
   ValitutEiLiitettyHintaryhmaan
