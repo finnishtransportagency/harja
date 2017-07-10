@@ -279,7 +279,7 @@
 
 (deftest hintaryhmaan-liittaminen
   (vaadi-async-kutsut
-    #{tiedot/->ValitutLiitetty tiedot/->ValitutEiLiitetty}
+    #{tiedot/->ValitutLiitettyHintaryhmaan tiedot/->ValitutEiLiitettyHintaryhmaan}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? true}
            (e! (tiedot/->LiitaValitutHintaryhmaan {::h/id 1} [{::to/id 1}])
@@ -290,14 +290,39 @@
 
 (deftest hintaryhmaan-liitetty
   (vaadi-async-kutsut
-    #{tiedot/->HaeToimenpiteet}
+    #{tiedot/->HaeToimenpiteet tiedot/->HaeHintaryhmat}
 
     (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
-           (e! (tiedot/->ValitutLiitetty {:foo :bar}))))))
+           (e! (tiedot/->ValitutLiitettyHintaryhmaan))))))
 
 (deftest hintaryhmaan-ei-liitetty
   (is (= {:hintaryhmien-liittaminen-kaynnissa? false}
-         (e! (tiedot/->ValitutEiLiitetty {:msg :error})))))
+         (e! (tiedot/->ValitutEiLiitettyHintaryhmaan {:msg :error})))))
+
+(deftest poista-hintaryhmat
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmatPoistettu tiedot/->HintaryhmatEiPoistettu}
+
+    (testing "Poista hintaryhmät"
+      (is (= (e! (tiedot/->PoistaHintaryhmat #{1 2 3})
+                 {:hintaryhmien-poisto-kaynnissa? false})
+             {:hintaryhmien-poisto-kaynnissa? true}))))
+
+  (testing "Poisto on jo käynnissä"
+    (let [app {:hintaryhmien-poisto-kaynnissa? true :foo :bar}]
+      (is (= app (e! (tiedot/->PoistaHintaryhmat #{1 2 3}) app))))))
+
+(deftest hintaryhmat-poistettu
+  (is (= (e! (tiedot/->HintaryhmatPoistettu {::h/idt #{2}})
+             {:hintaryhmien-poisto-kaynnissa? true
+              :hintaryhmat [{::h/id 1} {::h/id 2} {::h/id 3}]})
+         ;; Poistetut poistuu sovelluksen tilasta
+         {:hintaryhmien-poisto-kaynnissa? false
+          :hintaryhmat [{::h/id 1} {::h/id 3}]})))
+
+(deftest hintaryhmat-ei-poistettu
+  (is (= {:hintaryhmien-poisto-kaynnissa? false}
+         (e! (tiedot/->HintaryhmatEiPoistettu)))))
 
 (deftest toimenpiteen-hinnoittelu
   (testing "Aloita toimenpiteen hinnoittelu, ei aiempia hinnoittelutietoja"

@@ -69,8 +69,22 @@
           :harja.domain.vesivaylat.toimenpide/urakka-id
           :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
 
+(s/def ::idt (s/coll-of ::id))
+(s/def ::tyhja? boolean?) ;; ;; Ei sisällä lainkaan toimenpiteitä kannassa
+
+;; Apurit
+
 (defn hinnoittelu-idlla [hinnoittelut id]
   (first (filter #(= (::id %) id) hinnoittelut)))
+
+(defn hinnoittelut-ilman [hinnoittelut idt]
+  (filter (comp not #(idt (::id %))) hinnoittelut))
+
+(defn jarjesta-hintaryhmat [hintaryhmat]
+  (sort-by #(str/lower-case (::nimi %)) hintaryhmat))
+
+(defn hintaryhman-nimi [hintaryhma]
+  (::nimi hintaryhma))
 
 ;; Palvelut
 
@@ -80,7 +94,7 @@
 
 (s/def ::hae-hinnoittelut-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys
@@ -88,7 +102,7 @@
 
 (s/def ::luo-hinnoittelu-vastaus
   (s/keys
-    :req [::nimi ::hintaryhma? ::id]))
+    :req [::id ::nimi ::hintaryhma? ::tyhja?]))
 
 (s/def ::liita-toimenpiteet-hinnotteluun-kysely
   (s/keys
@@ -116,3 +130,9 @@
           ::hintaelementit]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
+
+(s/def ::poista-tyhjat-hinnoittelut-kysely
+  (s/keys :req [::urakka-id ::idt]))
+
+;; Poistetut hintaryhmät-idt
+(s/def ::poista-tyhjat-hinnoittelut-vastaus (s/keys :req [::idt]))
