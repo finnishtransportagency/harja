@@ -16,3 +16,6 @@
         (pvm/jalkeen?
           (time-coerce/from-sql-time tiedoston-muutospvm)
           (time-coerce/from-sql-time viimeisin-paivitys)))))
+
+(defn harjan-verkon-pvm [db]
+  (or (hae-karttapvm db) (pvm/nyt)))
