@@ -73,13 +73,15 @@
         {:otsikko "Kokonaishintaiset toimenpiteet"
          :sarakkeet [jaettu/sarake-tyoluokka
                      jaettu/sarake-toimenpide
+                     {:otsikko "Kiintiö" :tyyppi :string :leveys 10
+                      :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
                      jaettu/sarake-pvm
                      jaettu/sarake-turvalaite
                      jaettu/sarake-vikakorjaus
                      (jaettu/sarake-checkbox e! app)]
          :listaus-tunniste :kokonaishintaiset-toimenpiteet
-         :paneelin-checkbox-sijainti "94.3%"
-         :vaylan-checkbox-sijainti "94.3%"}]]])))
+         :paneelin-checkbox-sijainti "95.25%"
+         :vaylan-checkbox-sijainti "95.25%"}]]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

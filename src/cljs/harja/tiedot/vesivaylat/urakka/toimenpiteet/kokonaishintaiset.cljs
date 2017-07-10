@@ -150,9 +150,11 @@
 
   ToimenpiteetLiitettyKiintioon
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! (jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus)) "liitetty") :success)
-    (assoc app :kiintioon-liittaminen-kaynnissa? false
-               :valittu-kiintio-id nil))
+    (let [toimenpidehaku (tuck/send-async! ->HaeToimenpiteet)]
+      (viesti/nayta! (jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus)) "liitetty") :success)
+      (go (toimenpidehaku (:valinnat app)))
+      (assoc app :kiintioon-liittaminen-kaynnissa? false
+                 :valittu-kiintio-id nil)))
 
   ToimenpiteetEiLiitettyKiintioon
   (process-event [_ app]
