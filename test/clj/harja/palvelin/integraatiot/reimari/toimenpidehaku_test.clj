@@ -20,7 +20,6 @@
   {::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
    ::toimenpide/reimari-id -123456,
    ::toimenpide/reimari-tila "1022541202",
-   ;; ::toimenpide/hintatyyppi :yksikkohintainen,
    ::toimenpide/reimari-lisatyo? true,
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/reimari-vayla
