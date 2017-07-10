@@ -435,8 +435,13 @@
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
         (fn [_]
-          (let [lahetettavat-kohteet ()])
-          )))
+          (let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)]
+            (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+              {:kayttaja user :fim fim
+               :email email
+               :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                db
+                                                {:idt (map :id lahetettavat-kohteet)}))})))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]
