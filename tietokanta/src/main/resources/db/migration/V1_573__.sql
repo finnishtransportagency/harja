@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+-- Korjaa virheelliset uniikkius-säännöt
+ALTER TABLE vv_hinnoittelu DROP CONSTRAINT "vv_hinnoittelu_urakka-id_nimi_key";
+CREATE UNIQUE INDEX vv_hinnoittelu_uniikki_yhdistelma on vv_hinnoittelu ("urakka-id", nimi) WHERE poistettu IS NOT TRUE;
+
+ALTER INDEX uniikki_yhdistelma RENAME TO vv_hinnoittelu_toimenpide_uniikki_yhdistelma
+=======
 CREATE TABLE reimari_sopimuslinkki (
 "harja-sopimus-id"     INTEGER NOT NULL
                        UNIQUE
@@ -37,3 +44,4 @@ CREATE TRIGGER toimenpiteen_linkit_trigger
   BEFORE INSERT OR UPDATE ON reimari_toimenpide
   FOR EACH ROW
   EXECUTE PROCEDURE toimenpiteen_linkit_trigger_proc();
+>>>>>>> develop

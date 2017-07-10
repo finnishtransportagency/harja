@@ -20,7 +20,7 @@
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
    ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
-   ::toimenpide/reimari-sopimus {::sopimus/r-nro -666
+   ::toimenpide/reimari-sopimus {::sopimus/r-nro -5
                                  ::sopimus/r-tyyppi "1022542301"
                                  ::sopimus/r-nimi "Hoitosopimus"}
 
