@@ -178,9 +178,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           [:div.vihjeen-lisarivi (str "  " vihje)])
         (rest vihjeet))]]))
 
-(defn kentan-vihje-leijuke [vihje-teksti]
+(defn kentan-vihje-leijuke [leijuke-sisalto]
   (let [nakyvissa? (atom false)]
-    (fn [vihje-teksti]
+    (fn [leijuke-sisalto]
       [:div {:class
              (str "inline-block yleinen-pikkuvihje klikattava")}
        [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
@@ -188,7 +188,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           [leijuke/leijuke {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
                             :sulje! #(reset! nakyvissa? false)}
            [:div {:style {:min-width "300px"}}
-            vihje-teksti]]
+            leijuke-sisalto]]
           (harja.ui.ikonit/livicon-info-sign))]])))
 
 (defn kentan-vihje [{:keys [vihje vihje-leijuke] :as skeema}]

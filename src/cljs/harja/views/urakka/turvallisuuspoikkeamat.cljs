@@ -260,9 +260,10 @@
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                           :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje-leijuke (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
-                                              "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
-                                              "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
+                          :vihje-leijuke [:div
+                                          [:p "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma."]
+                                          [:p "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma."]
+                                          [:p "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen."]]})
            (if vesivaylaurakka?
              {:nimi :sijainti
               :otsikko "Sijainti"
