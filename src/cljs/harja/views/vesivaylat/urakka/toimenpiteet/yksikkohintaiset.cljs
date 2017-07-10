@@ -280,9 +280,15 @@
                    {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                  [jaettu/listaus e! app*
-                  {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                     :komponentti (fn [rivi]
-                                                    [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                  {:sarakkeet [jaettu/sarake-tyoluokka
+                               jaettu/sarake-toimenpide
+                               jaettu/sarake-pvm
+                               jaettu/sarake-turvalaite
+                               jaettu/sarake-vikakorjaus
+                               {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                :komponentti (fn [rivi]
+                                               [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                               (jaettu/sarake-checkbox e! app)]
                    :listaus-tunniste listaus-tunniste
                    :footer (when nayta-hintaryhman-yhteenveto?
                              [hintaryhman-hinnoittelu e! app* hintaryhma])

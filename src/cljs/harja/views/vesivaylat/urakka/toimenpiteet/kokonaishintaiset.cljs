@@ -71,6 +71,12 @@
        [jaettu/tulokset e! app
         [jaettu/listaus e! app
         {:otsikko "Kokonaishintaiset toimenpiteet"
+         :sarakkeet [jaettu/sarake-tyoluokka
+                     jaettu/sarake-toimenpide
+                     jaettu/sarake-pvm
+                     jaettu/sarake-turvalaite
+                     jaettu/sarake-vikakorjaus
+                     (jaettu/sarake-checkbox e! app)]
          :listaus-tunniste :kokonaishintaiset-toimenpiteet
          :paneelin-checkbox-sijainti "94.3%"
          :vaylan-checkbox-sijainti "94.3%"}]]])))

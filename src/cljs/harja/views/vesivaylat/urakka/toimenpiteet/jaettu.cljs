@@ -145,6 +145,28 @@
 ;; GRID / LISTAUS
 ;;;;;;;;;;;;;;;;;
 
+(def sarake-tyoluokka {:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
+(def sarake-toimenpide {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
+(def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10})
+(def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
+(def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
+(defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
+  {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+   :komponentti (fn [rivi]
+                  ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
+                  ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
+                  ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
+                  ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
+                  ;; Ja entäs otsikkorivit?
+                  [kentat/tee-kentta
+                   {:tyyppi :checkbox}
+                   (r/wrap (:valittu? rivi)
+                           (fn [uusi]
+                             (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                              :valinta uusi}
+                                                             toimenpiteet))))])
+   :leveys 5})
+
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
     (grid/otsikkorivin-tiedot
@@ -180,30 +202,6 @@
   (as-> toimenpiteet $
         (tiedot/toimenpiteet-tyolajilla $ tyolaji)
         (ryhmittele-toimenpiteet-vaylalla e! $ vaylan-checkbox-sijainti)))
-
-(defn valinta-checkbox [e! {:keys [toimenpiteet] :as app}]
-  {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-   :komponentti (fn [rivi]
-                  ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
-                  ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
-                  ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
-                  ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
-                  ;; Ja entäs otsikkorivit?
-                  [kentat/tee-kentta
-                   {:tyyppi :checkbox}
-                   (r/wrap (:valittu? rivi)
-                           (fn [uusi]
-                             (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                              :valinta uusi}
-                                                             toimenpiteet))))])
-   :leveys 5})
-
-(def oletussarakkeet
-  [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
-   {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
-   {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-   {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
-   {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5}])
 
 (defn- paneelin-sisalto [e! app listaus-tunniste toimenpiteet sarakkeet]
   [grid/grid
@@ -284,12 +282,11 @@
 
 (defn listaus
   ([e! app] (listaus e! app {}))
-  ([e! app {:keys [lisa-sarakkeet otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   footer listaus-tunniste]}]
+  ([e! app {:keys [otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
+                   footer listaus-tunniste sarakkeet]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
-    (conj (vec (concat oletussarakkeet (or lisa-sarakkeet [])))
-          (valinta-checkbox e! app))
+    sarakkeet
     {:otsikko otsikko
      :footer footer
      :listaus-tunniste listaus-tunniste
