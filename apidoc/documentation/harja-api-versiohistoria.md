@@ -1,7 +1,19 @@
-<b>Nykyinen versio: 1.0.20</b>  
-<b>Julkaistu: 4.4.2017</b>
+<b>Nykyinen versio: 1.0.26</b>  
+<b>Julkaistu: 15.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.26 Julkaistu: 26.5.2017:
+    - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle. Samoin ylläpitokohteiden mukana välitetään tieto, minkä päivän verkolla ylläpitokohteet ovat Harjassa.
+- Versionumero: 1.0.25 Julkaistu: 15.5.2017:
+    - Mahdollisuus raportoida urakan työtunnit vuosikolmanneksittain
+- Versionumero: 1.0.24 Julkaistu: 5.5.2017:
+    - Siltatarkastuksille on mahdollista tallentaa tarkastuskohtaisesti liitteitä 
+- Versionumero: 1.0.23 Julkaistu: 19.4.2017:
+    - Ylläpidon urakoiden aikataulun kirjauksesta poistettu kenttä tiemerkinta-takaraja. Vain tilaaja voi muuttaa kyseistä arvoa, joten tätä ei ole tarkoitus muokata urakoitsijan rajapinnasta.
+- Versionumero: 1.0.22 Julkaistu: 18.4.2017:
+    - Päällystyksen aikataulun kirjaus ei enää huomioi kellonaikaa päällystyksen aloitus- ja lopetuskentälle. Aika on syytä antaa jatkossa pelkästään päivämääränä.
+- Versionumero: 1.0.21 Julkaistu: 13.4.2017:
+    - Viheralueiden ja -kuvioiden tietolajitunnisteet korvattu uusilla.
 - Versionumero: 1.0.20 Julkaistu: 4.4.2017:
     - Ylläpitokohteelle on jatkossa mahdollista raportoida tieto, sisältääkö se poikkeamaraportin.
 - Versionumero: 1.0.19 Julkaistu: 22.3.2017:

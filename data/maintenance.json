@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-07-10",
+    "title": "Tiemerkinnän suunnitellun päivämäärän merkitseminen & sähköposti-ilmoitukset",
+    "body": "Jatkossa sähköposti tiemerkinnän valmistumisesta lähetetään vasta tiemerkinnän valmistumispäivänä. Jos tiemerkintä merkitään valmistuneeksi kuluvana päivänä tai menneisyydessä, lähetetään viesti heti. Kyseinen toiminnallisuus tulee käyttöön kuluvan viikon aikana."
+  },
+  {
     "date": "2017-07-07",
     "title": "Ylläpidon aikataulun tulostaminen PDF:ksi korjattu",
     "body": "Käyttöoikeuksiin liittyvä ongelma ylläpidon aikataulun tulostamisessa on saatu korjattua. Korjaus on tuotannossa käytettävissä maanantaina 10.7. aamulla."

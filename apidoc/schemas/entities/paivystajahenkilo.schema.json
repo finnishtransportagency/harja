@@ -33,7 +33,7 @@
     },
     "liviTunnus": {
       "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
-      "type": "string"
+      "type": ["string","null"]
     }
   }
 }
