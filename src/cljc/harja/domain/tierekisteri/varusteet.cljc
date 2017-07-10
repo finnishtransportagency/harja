@@ -1,11 +1,9 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-    #?@(:clj [
-            [clj-time.core :as t]])
-    #?@(:cljs [[harja.loki :refer [log]]
-               [cljs-time.core :as t]])
-            [harja.domain.tierekisteri :as tr]))
+    #?@(:clj [[clj-time.core :as t]])
+    #?@(:cljs [[cljs-time.core :as t]])
+    [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
                                  :lisatty "Lisätty"
@@ -34,7 +32,8 @@
    "tl503" "Levähdysalueiden varusteet"
    "tl512" "Viemärit"
    "tl516" "Hiekkalaatikot"
-   "tl524" "Viherkuviot"})
+   "tl524" "Viherkuviot"
+   "tl523" "Tekninen piste"})
 
 (defn tien-puolet [tietolaji]
   (case tietolaji
@@ -61,6 +60,15 @@
     "tl516" [1 2 3 8]
     "tl524" [1 2 3 4 7 8 9]
     []))
+
+(defn tarkastaminen-sallittu? [tietolaji]
+  (nil? (#{"tl524" "tl523"} tietolaji)))
+
+(defn muokkaaminen-sallittu? [tietolaji]
+  (nil? (#{"tl523"} tietolaji)))
+
+(defn muokattavat-tietolajit[]
+  (filter #(muokkaaminen-sallittu? (first %)) tietolaji->selitys))
 
 (def oletus-ajoradat
   [0])

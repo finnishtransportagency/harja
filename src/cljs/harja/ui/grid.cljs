@@ -15,6 +15,7 @@
 (def hae-virheet protokollat/hae-virheet)
 (def filteroi-uudet-poistetut protokollat/filteroi-uudet-poistetut)
 (def poista-idt protokollat/poista-idt)
+(def poista-poistetut protokollat/poista-poistetut)
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)

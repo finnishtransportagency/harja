@@ -28,6 +28,23 @@
       (jdbc/with-db-transaction [db db]
         (q/luo-hinnoittelu! db user tiedot)))))
 
+(defn poista-tyhjat-hinnoittelut! [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::h/urakka-id tiedot)
+          hinnoittelu-idt (::h/idt tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                      user urakka-id)
+      (q/vaadi-hinnoittelut-kuuluvat-urakkaan db hinnoittelu-idt urakka-id)
+      (doseq [hinnoittelu-id hinnoittelu-idt]
+        (q/vaadi-hinnoitteluun-ei-kuulu-toimenpiteita db hinnoittelu-id))
+
+      (jdbc/with-db-transaction [db db]
+        (doseq [hinnoittelu-id hinnoittelu-idt]
+          (q/poista-hinnoittelu! db user hinnoittelu-id))
+
+        {::h/idt hinnoittelu-idt}))))
+
 (defn liita-toimenpiteet-hinnoitteluun! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
@@ -96,6 +113,14 @@
 
     (julkaise-palvelu
       http
+      :poista-tyhjat-hinnoittelut
+      (fn [user tiedot]
+        (poista-tyhjat-hinnoittelut! db user tiedot))
+      {:kysely-spec ::h/poista-tyhjat-hinnoittelut-kysely
+       :vastaus-spec ::h/poista-tyhjat-hinnoittelut-vastaus})
+
+    (julkaise-palvelu
+      http
       :liita-toimenpiteet-hinnoitteluun
       (fn [user tiedot]
         (liita-toimenpiteet-hinnoitteluun! db user tiedot))
@@ -116,6 +141,7 @@
         (tallenna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/tallenna-toimenpiteelle-hinta-kysely
        :vastaus-spec ::h/tallenna-toimenpiteelle-hinta-vastaus})
+
     this)
 
   (stop [this]
@@ -123,6 +149,7 @@
       (:http-palvelin this)
       :hae-hinnoittelut
       :luo-hinnoittelu
+      :poista-tyhjat-hinnoittelut
       :liita-toimenpiteet-hinnoitteluun
       :tallenna-hintaryhmalle-hinta
       :tallenna-toimenpiteelle-hinta)

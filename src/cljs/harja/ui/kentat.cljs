@@ -40,11 +40,6 @@
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
 
-(def ^{:doc "IE11 React 15 kanssa ei aina triggeröi on-change eventtiä oikein.
-Jos kirjoittaa nopeasti peräkkäin kaksi kirjainta on-change käyttö voi syödä
-toisen eventin kokonaan (react eventtiä ei laukea)."}
-  on-change* (if dom/ie? :on-input :on-change))
-
 ;; r/wrap skeeman arvolle
 (defn atomina [{:keys [nimi hae aseta]} data vaihda!]
   (let [hae (or hae #(get % nimi))
@@ -104,7 +99,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                   :value       @teksti
                   :placeholder placeholder
                   :size        pituus
-                  on-change*   #(when (= (.-activeElement js/document) (.-target %))
+                  :on-change   #(when (= (.-activeElement js/document) (.-target %))
                                  ;; tehdään haku vain jos elementti on fokusoitu
                                  ;; IE triggeröi on-change myös ohjelmallisista muutoksista
                                  (let [v (-> % .-target .-value str/triml)]
@@ -179,7 +174,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                 :as kentta} data]
   [:input {:class (when lomake? "form-control")
            :placeholder (placeholder kentta data)
-           on-change* #(let [v (-> % .-target .-value)]
+           :on-change #(let [v (-> % .-target .-value)]
                          (when (or (not regex) (re-matches regex v))
                            (reset! data v)))
            :on-focus on-focus
@@ -222,7 +217,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       (fn [{:keys [nimi koko on-focus lomake?]} data]
         [:span.kentta-text
          [:textarea {:value       @data
-                     on-change*   #(muuta! data %)
+                     :on-change   #(muuta! data %)
                      :on-focus    on-focus
                      :cols        (or koko-sarakkeet 80)
                      :rows        @rivit
@@ -264,7 +259,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
-                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))
+                 :on-change   #(let [v (normalisoi-numero (-> % .-target .-value))
                                      v (if vaadi-ei-negatiivinen?
                                          (str/replace v #"-" "")
                                          v)]
@@ -299,7 +294,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
            :type      "email"
            :value     @data
            :on-focus  on-focus
-           on-change* #(reset! data (-> % .-target .-value))}])
+           :on-change #(reset! data (-> % .-target .-value))}])
 
 
 
@@ -310,7 +305,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
            :max-length pituus
            :on-focus   on-focus
            :placeholder placeholder
-           on-change*  #(let [uusi (-> % .-target .-value)]
+           :on-change  #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"\+?(\s|\d)*" uusi)
                            (reset! data uusi)))}])
 
@@ -329,7 +324,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:input {:type      "radio"
                   :value 1
                   :checked   (= nykyinen-arvo arvo)
-                  on-change* valitse}]
+                  :on-change valitse}]
          (when-not (str/blank? label)
            [:span.radiovalinta-label.klikattava {:on-click valitse} label])])
       [:span.radiovalinnat
@@ -509,7 +504,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:input.kombo {:class     (when lomake? "form-control")
                         :type      "text" :value nykyinen-arvo
                         :on-focus  on-focus
-                        on-change* #(reset! data (-> % .-target .-value))}]
+                        :on-change #(reset! data (-> % .-target .-value))}]
          [:button {:on-click #(do (swap! auki not) nil)}
           [:span.caret ""]]
          [:ul.dropdown-menu {:role "menu"}
@@ -604,7 +599,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value       nykyinen-teksti
                          :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                         on-change*   #(muuta! data (-> % .-target .-value))
+                         :on-change   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                          (teksti-paivamaaraksi! data nykyinen-teksti)
@@ -738,7 +733,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                              %)
                            :value       nykyinen-pvm-teksti
                            :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                           on-change*   #(muuta-pvm! (-> % .-target .-value))
+                           :on-change   #(muuta-pvm! (-> % .-target .-value))
                            ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                            :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
@@ -760,7 +755,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                        :placeholder "tt:mm"
                        :size        5 :max-length 5
                        :value       nykyinen-aika-teksti
-                       on-change*   #(muuta-aika! (-> % .-target .-value))
+                       :on-change   #(muuta-aika! (-> % .-target .-value))
                        :on-blur     #(do (koske-aika!) (aseta! false))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
@@ -814,7 +809,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                         :placeholder placeholder
                         :value       value
                         :disabled disabled?
-                        on-change*   (muuta! key)
+                        :on-change   (muuta! key)
                         :on-blur     blur}])
 
 (defn piste-tai-eka [arvo]
@@ -1104,7 +1099,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     [:input {:class (str (when lomake? "form-control")
                          (when-not (:tunnit @data) " puuttuva-arvo"))
              :placeholder placeholder
-             on-change* (fn [e]
+             :on-change (fn [e]
                           (let [v1 (-> e .-target .-value)
                                 [v aika] (aseta-aika! v1 (juxt identity parsi-aika))]
                             (if-not aika

@@ -51,9 +51,10 @@
                          (:ominaisuudet tietolaji)))
          (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
 
-(defn hae-varuste [app tunniste ]
-  (:varuste (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
-                           (get-in app [:tierekisterin-varusteet :varusteet])))))
+(defn hae-varuste [app tunniste]
+  (let [arvot (first (filter #(= tunniste (get-in % [:varuste :tunniste]))
+                             (get-in app [:tierekisterin-varusteet :varusteet])))]
+    (assoc (:varuste arvot) :sijainti (:sijainti arvot))))
 
 ;; Määritellään varustehaun UI tapahtumat
 
@@ -72,6 +73,7 @@
 (defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
 (defrecord AloitaVarusteenMuokkaus [tunniste])
+(defrecord AvaaVaruste [tunniste])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus viesti])
 
@@ -174,6 +176,11 @@
   (process-event [{:keys [tunniste]} app]
     (let [varuste (hae-varuste app tunniste)]
       (assoc app :muokattava-varuste varuste)))
+
+  AvaaVaruste
+  (process-event [{:keys [tunniste]} app]
+    (let [varuste (hae-varuste app tunniste)]
+      (assoc app :naytettava-varuste varuste)))
 
   LisaaLiitetiedosto
   (process-event [{liite :liite} app]

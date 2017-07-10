@@ -22,7 +22,7 @@
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
-       ;; :slack {:taso :warn
+       ;;:slack {:taso :warn
        ;;        :webhook-url #=(slurp "../.harja/slack-webhook-url")}
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
@@ -141,6 +141,8 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  ;; :vesivayla
+ ;; :fileyard
+ ;; :varuste-api
  :pois-kytketyt-ominaisuudet #{:fileyard}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
