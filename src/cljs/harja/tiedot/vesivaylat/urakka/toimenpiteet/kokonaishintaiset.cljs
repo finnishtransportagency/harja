@@ -25,7 +25,7 @@
   (atom {:valinnat {:urakka-id nil
                     :sopimus-id nil
                     :aikavali [nil nil]
-                    :vaylatyyppi :kauppamerenkulku
+                    :vaylatyyppi nil
                     :vayla nil
                     :tyolaji nil
                     :tyoluokka nil
