@@ -7,16 +7,18 @@ WHERE tunniste IS NOT NULL;
 INSERT INTO vv_vayla
 (sijainti,
  tunniste,
+ nimi,
  arvot,
  poistettu)
-VALUES (:sijainti :: GEOMETRY,
+VALUES (ST_GeomFromGeoJSON(:sijainti),
         :tunniste,
+        :nimi,
         :arvot :: JSONB,
         FALSE)
 ON CONFLICT (tunniste)
   DO UPDATE
     SET
-      sijainti  = :sijainti :: GEOMETRY,
+      sijainti  = ST_GeomFromGeoJSON(:sijainti),
       arvot     = :arvot :: JSONB,
       poistettu = FALSE;
 

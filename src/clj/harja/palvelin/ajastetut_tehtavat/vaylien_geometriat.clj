@@ -9,8 +9,7 @@
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.vaylat :as q-vaylat]
-            [harja.geo :as geo])
-  (:import (org.postgis Point)))
+            [harja.pvm :as pvm]))
 
 (def geometriapaivitystunnus "vaylat")
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
@@ -21,8 +20,10 @@
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
 (defn tallenna-vayla [db {:keys [id geometry properties]}]
-  (let [arvot (cheshire/encode properties)
-        sql-parametrit {:sijainti geometry
+  (let [nimi (:VAY_NIMISU properties)
+        arvot (cheshire/encode properties)
+        sql-parametrit {:sijainti (cheshire/encode geometry)
+                        :nimi nimi
                         :tunniste id
                         :arvot arvot}]
     (q-vaylat/luo-vayla<! db sql-parametrit)))
@@ -34,7 +35,7 @@
       (q-vaylat/poista-vaylat! db)
       (doseq [vayla vaylat]
         (tallenna-vayla db vayla))
-      (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt)))))
+      (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (pvm/nyt)))))
 
 (defn paivita-vaylat [integraatioloki db url]
   (log/debug "Päivitetään väylien geometriat")

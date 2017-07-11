@@ -11,7 +11,7 @@ INSERT INTO vv_turvalaite
  poistettu)
 VALUES (:sijainti :: GEOMETRY,
         :tunniste,
-        :turvalaitenro
+        :turvalaitenro,
         :arvot :: JSONB,
         FALSE)
 ON CONFLICT (tunniste)
