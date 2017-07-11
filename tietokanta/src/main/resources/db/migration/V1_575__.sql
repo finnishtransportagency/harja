@@ -36,5 +36,4 @@ ALTER TABLE vv_turvalaite
 DROP TYPE TURVALAITTEEN_TYYPPI;
 
 ALTER INDEX uniikki_tunniste
-RENAME TO vesivaylaturvalaite_uniikki_tunniste
-
+RENAME TO vesivaylaturvalaite_uniikki_tunniste;
