@@ -124,9 +124,13 @@
                              :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
                              :urakan-nimi (:paallystysurakka-nimi eka-kohde)
                              :kohde-nimi (:kohde-nimi eka-kohde)
-                             :kohde-osoite (:kohde-osoite eka-kohde)
+                             :kohde-osoite {:tr-numero (:tr-numero eka-kohde)
+                                            :tr-alkuosa (:tr-alkuosa eka-kohde)
+                                            :tr-alkuetaisyys (:tr-alkuetaisyys eka-kohde)
+                                            :tr-loppuosa (:tr-loppuosa eka-kohde)
+                                            :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                              :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
-                             :ilmoittaja (:ilmoittaja eka-kohde)}))]
+                             :ilmoittaja ilmoittaja}))]
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
