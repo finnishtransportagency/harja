@@ -21,7 +21,8 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.komponenttityyppi :as ktyyppi]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -132,13 +133,13 @@
 (defn siirtonappi [e! {:keys [siirto-kaynnissa? toimenpiteet]} otsikko toiminto]
   [:div.inline-block {:style {:margin-right "10px"}}
    [napit/yleinen-ensisijainen (if siirto-kaynnissa?
-                                [ajax-loader-pieni "Siirretään.."]
-                                (str otsikko
-                                     (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
-                                       (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
-   toiminto
-   {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
-                  siirto-kaynnissa?)}]])
+                                 [ajax-loader-pieni "Siirretään.."]
+                                 (str otsikko
+                                      (when-not (empty? (tiedot/valitut-toimenpiteet toimenpiteet))
+                                        (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
+    toiminto
+    {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
+                   siirto-kaynnissa?)}]])
 
 
 ;;;;;;;;;;;;;;;;;
@@ -150,17 +151,17 @@
 (def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10})
 (def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
-(def sarake-liitteet {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
-                      :komponentti (fn [rivi]
-                                     [:span] ;; TODO
-                                     #_[liitteet/liitteet
-                                      (:id @nav/valittu-urakka)
-                                      (:liitteet @taulukon-rivit)
-                                      {:uusi-liite-atom (r/wrap nil
-                                                                (fn [uusi-arvo]
-                                                                  (reset! uudet-liitteet
-                                                                          (assoc @uudet-liitteet (:kohdenro rivi) uusi-arvo))))
-                                       :grid? true}])})
+(defn sarake-liitteet [e! app]
+  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+   :komponentti (fn [rivi]
+                  [liitteet/liitteet
+                   (get-in app [:valinnat :valittu-urakka])
+                   (::to/liitteet rivi)
+                   {:uusi-liite-atom (r/wrap nil
+                                             (fn [uusi-arvo]
+                                               ;; TODO Kutsu eventtiä joka lisää liitteen riville
+                                               (log "UUSI LIITE LISÄTTY")))
+                    :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
    :komponentti (fn [rivi]

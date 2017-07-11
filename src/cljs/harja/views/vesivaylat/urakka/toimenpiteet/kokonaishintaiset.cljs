@@ -78,7 +78,7 @@
                      jaettu/sarake-pvm
                      jaettu/sarake-turvalaite
                      jaettu/sarake-vikakorjaus
-                     jaettu/sarake-liitteet
+                     (jaettu/sarake-liitteet e! app)
                      (jaettu/sarake-checkbox e! app)]
          :listaus-tunniste :kokonaishintaiset-toimenpiteet
          :paneelin-checkbox-sijainti "95.5%"

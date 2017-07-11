@@ -285,7 +285,7 @@
                                jaettu/sarake-pvm
                                jaettu/sarake-turvalaite
                                jaettu/sarake-vikakorjaus
-                               jaettu/sarake-liitteet
+                               (jaettu/sarake-liitteet e! app)
                                {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                 :komponentti (fn [rivi]
                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
