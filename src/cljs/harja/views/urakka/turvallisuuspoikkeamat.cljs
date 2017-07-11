@@ -269,6 +269,7 @@
               :otsikko "Sijainti"
               :tyyppi :sijaintivalitsin
               :paikannus? false
+              :pakollinen? true
               ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
               ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
               ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
