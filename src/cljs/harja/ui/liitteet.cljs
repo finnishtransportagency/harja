@@ -152,7 +152,8 @@
        (if-let [edistyminen @edistyminen]
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
-          [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))}
+          [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))
+                 :on-click #(.stopPropagation %)}
            [ikonit/ikoni-ja-teksti
             (ikonit/livicon-upload)
             (if @tiedosto
