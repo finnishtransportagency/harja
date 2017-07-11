@@ -6,7 +6,6 @@
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.img-with-exif :refer [img-with-exif]]

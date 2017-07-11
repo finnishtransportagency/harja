@@ -1,4 +1,4 @@
-(ns harja.domain.liitteet)
+(ns harja.domain.liite)
 
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 32000000
