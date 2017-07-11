@@ -24,4 +24,7 @@
 (def perustiedot
   #{::id
     ::nimi
-    ::tyyppi})
+    ::tyyppi
+    ::turvalaitenro
+    ::kiintea
+    ::vaylat})
