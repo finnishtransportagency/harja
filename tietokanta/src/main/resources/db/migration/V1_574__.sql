@@ -8,9 +8,32 @@ ALTER TABLE vv_vayla
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('inspire', 'vaylien-haku');
 
+
+CREATE TYPE VV_TURVALAITETYYPPI AS ENUM (
+  'tuntematon',
+  'merimajakka',
+  'sektoriloisto',
+  'linjamerkki',
+  'suuntaloisto',
+  'apuloisto',
+  'muu merkki',
+  'reunamerkki',
+  'tutkamerkki',
+  'poiju',
+  'viitta',
+  'tunnusmajakka',
+  'kummeli');
+
 ALTER TABLE vv_turvalaite
   ADD COLUMN turvalaitenro INT,
-  ADD COLUMN vaylat INT [];
+  ADD COLUMN vaylat INT [],
+  ADD COLUMN kiintea BOOLEAN,
+  DROP COLUMN tyyppi,
+  ADD COLUMN tyyppi VV_TURVALAITETYYPPI,
+  DROP COLUMN vayla;
+
+
+DROP TYPE TURVALAITTEEN_TYYPPI;
 
 ALTER INDEX uniikki_tunniste
 RENAME TO vesivaylaturvalaite_uniikki_tunniste
