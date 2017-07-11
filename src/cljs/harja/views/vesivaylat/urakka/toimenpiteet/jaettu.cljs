@@ -150,6 +150,17 @@
 (def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10})
 (def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
+(def sarake-liitteet {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+                      :komponentti (fn [rivi]
+                                     [:span] ;; TODO
+                                     #_[liitteet/liitteet
+                                      (:id @nav/valittu-urakka)
+                                      (:liitteet @taulukon-rivit)
+                                      {:uusi-liite-atom (r/wrap nil
+                                                                (fn [uusi-arvo]
+                                                                  (reset! uudet-liitteet
+                                                                          (assoc @uudet-liitteet (:kohdenro rivi) uusi-arvo))))
+                                       :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
    :komponentti (fn [rivi]

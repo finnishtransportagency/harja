@@ -285,6 +285,7 @@
                                jaettu/sarake-pvm
                                jaettu/sarake-turvalaite
                                jaettu/sarake-vikakorjaus
+                               jaettu/sarake-liitteet
                                {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                                 :komponentti (fn [rivi]
                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
@@ -293,8 +294,8 @@
                    :footer (when nayta-hintaryhman-yhteenveto?
                              [hintaryhman-hinnoittelu e! app* hintaryhma])
                    :otsikko (h/hintaryhman-nimi hintaryhma)
-                   :paneelin-checkbox-sijainti "95.2%"
-                   :vaylan-checkbox-sijainti "95.2%"}])))]]]))))
+                   :paneelin-checkbox-sijainti "95.5%"
+                   :vaylan-checkbox-sijainti "95.5%"}])))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
