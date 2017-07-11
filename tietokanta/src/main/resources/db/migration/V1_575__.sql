@@ -16,10 +16,11 @@ BEGIN
       sl."harja-sopimus-id" = hs.id AND
       sl."reimari-sopimus-id" = (NEW."reimari-sopimus").nro LIMIT 1);
   IF id_temp IS NULL THEN
-    id_temp := (SELECT id FROM sopimus hs, reimari_sopimuslinkki sl
+    id_temp := (SELECT hs.id FROM sopimus hs, reimari_sopimuslinkki sl
                   WHERE
                   sl."harja-sopimus-id" = hs.id AND
-                  sl."reimari-diaarinro" = (NEW."reimari-sopimus").diaarinro LIMIT 1);
+                  btrim(sl."reimari-diaarinro") = btrim((NEW."reimari-sopimus").diaarinro) LIMIT 1);
+    -- RAISE NOTICE 'sopimus-id:ksi toimenpiteelle %', id_temp;
   END IF;
   NEW."sopimus-id" = id_temp;
                 -- id:ksi tulee NULL jos ei löydy, joka on ok
