@@ -362,74 +362,20 @@ reimari-tilat
 (defn toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filter #(= (::tyolaji %) tyolaji) toimenpiteet))
 
+(defn toimenpiteet-hintaryhmalla [toimenpiteet hintaryhma-id]
+  (filter #(= (::hintaryhma-id %) hintaryhma-id) toimenpiteet))
+
 (defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
   (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
 
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
 
-(defn- uusin-toimenpide [toimenpiteet]
-  (first (sort-by ::pvm pvm/jalkeen? toimenpiteet)))
-
-(defn hintaryhman-otsikko [hintaryhma]
-  (::h/nimi hintaryhma))
-
 (defn ilman-toimenpiteita [toimenpiteet poistettavat-idt]
   (filter (comp not poistettavat-idt ::id) toimenpiteet))
 
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
   (boolean (::oma-hinnoittelu toimenpide)))
-
-(defn- hintaryhmien-jarjestys-arvotettuna
-  "Palauttaa mäpin, jossa on avaimena hintaryhmä, ja arvona
-  ryhmän järjestys numerolla."
-  [ryhma-ja-toimenpiteet]
-  (into {}
-        (map-indexed
-          (fn [i [hintaryhma _]] [hintaryhma i])
-          (sort-by
-            (comp ::nimi key)
-            >
-            ryhma-ja-toimenpiteet)))
-
-  ;; Aiemmin haluttiin järjestää ryhmät siten, että otetaan ryhmien uusin toimenpide,
-  ;; ja järjestetään ryhmät tämän perusteella uusimmasta vanhimpaan. Kuitenkin kun ryhmien
-  ;; sisältöä vaihteli, niin ryhmät vaihteli järjestystä aika villisti. Tämän takia ainakin
-  ;; toistaiseksi vaihdettiin järjestykseksi aakkosjärjestys. Säilytetään tämä koodinpätkä
-  ;; toistaiseksi, kunnes todetaan, että aakkosjärjestys on todellakin parempi.
-  #_(let [ryhma-ja-uusin-toimenpide (map
-                                      (fn [[hintaryhma toimenpiteet]]
-                                        [hintaryhma (uusin-toimenpide toimenpiteet)])
-                                      ryhma-ja-toimenpiteet)]
-
-
-      (into {}
-            (map-indexed
-              (fn [i [hintaryhma _]] [hintaryhma i])
-              ;; Jarjesta ryhmät uusimman toimenpiteen mukaan, uusimmasta vanhimpaan
-              (sort-by
-                (comp ::pvm second)
-                pvm/jalkeen?
-
-                ryhma-ja-uusin-toimenpide)))))
-
-(defn jarjesta-hintaryhmat
-  "Ottaa mäpin, missä avain on hintaryhma-id, ja arvo on vektori toimenpiteitä.
-  Palauttaa sortatun mäpin. Hintaryhmät järjestetään tärkeimmästä vähiten tärkeään,
-  ja toimenpiteet hintaryhmän sisällä järjestetään uusimmasta vanhimpaan."
-  [ryhma-ja-toimenpiteet]
-  (let [jarjestys (hintaryhmien-jarjestys-arvotettuna ryhma-ja-toimenpiteet)]
-    (reduce-kv
-      ;; Järjestä toimenpiteet hintaryhmän sisällä
-      (fn [m k v] (assoc m k (sort-by ::pvm pvm/jalkeen? v)))
-      {}
-      (into
-        ;; Hintaryhmät tärkeimmästä vähiten tärkeään
-        (sorted-map-by (fn [eka toka] (< (jarjestys eka) (jarjestys toka))))
-        ryhma-ja-toimenpiteet))))
-
-(defn toimenpiteet-hintaryhmissa [toimenpiteet]
-  (jarjesta-hintaryhmat (group-by ::hintaryhma-id toimenpiteet)))
 
 ;; Palvelut
 

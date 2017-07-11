@@ -38,12 +38,12 @@
      :disabled (not (jaettu-tiedot/joku-valittu? toimenpiteet))}
     hintaryhmat]])
 
-(defn- liita-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                                             hintaryhmien-liittaminen-kaynnissa?] :as app}]
+(defn- siirra-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
+                                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
    (if hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
-     "Liitä")
+     "Siirrä")
    #(e! (tiedot/->LiitaValitutHintaryhmaan
           valittu-hintaryhma
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
@@ -65,8 +65,9 @@
      [napit/yleinen-ensisijainen
       (if hintaryhman-tallennus-kaynnissa? [yleiset/ajax-loader-pieni "Luodaan.."] "Luo")
       #(e! (tiedot/->LuoHintaryhma uusi-hintaryhma))
-      {:disabled (or ;; Disabloidaan nappi jos hintaryhmän nimi on jo olemassa, tai liittäminen menossa
+      {:disabled (or ;; Disabloidaan nappi jos nimi on jo olemassa, liittäminen menossa tai teksti puuttuu
                    ((set (map ::h/nimi hintaryhmat)) uusi-hintaryhma)
+                   (empty? uusi-hintaryhma)
                    hintaryhman-tallennus-kaynnissa?)}]
      [napit/peruuta "Peruuta" #(e! (tiedot/->UudenHintaryhmanLisays? false))]]
 
@@ -78,7 +79,7 @@
   [:span
    [:span {:style {:margin-right "10px"}} "Siirrä valitut tilaukseen"]
    [hinnoitteluvaihtoehdot e! app]
-   [liita-hinnoitteluun-nappi e! app]
+   [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
 (defn- urakkatoiminnot [e! app]
@@ -240,32 +241,54 @@
                                                           :aikavali (:aikavali valinnat)}))
                            (e! (tiedot/->HaeHintaryhmat)))
                       #(e! (tiedot/->Nakymassa? false)))
-    (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app}]
-      (let [toimenpiteet-ryhmissa (to/toimenpiteet-hintaryhmissa toimenpiteet)]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
+    (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa? hintaryhmat] :as app}]
+      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
+      (let [hintaryhmat (concat
+                          [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."}]
+                          (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
          [jaettu/tulokset e! app
           [:div
-           (for [[hintaryhma-id hintaryhman-toimenpiteet] toimenpiteet-ryhmissa
-                 :let [app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                       hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))]]
-             ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-             [jaettu/listaus e! app*
-              {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                 :komponentti (fn [rivi]
-                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
-               :listaus-tunniste listaus-tunniste
-               :footer (when hintaryhma
-                         [hintaryhman-hinnoittelu e! app* hintaryhma])
-               :otsikko (or (to/hintaryhman-otsikko hintaryhma)
-                            "Kokonaishintaisista siirretyt, valitse tilaus.")
-               :paneelin-checkbox-sijainti "95.2%"
-               :vaylan-checkbox-sijainti "95.2%"}])]]]))))
+           (for [hintaryhma hintaryhmat
+                 :let [hintaryhma-id (::h/id hintaryhma)
+                       hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
+                       app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
+                       hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
+                       nayta-hintaryhma?
+                       (boolean
+                         (or (not hintaryhma-id) ;; Kok. hint. siirretyt -ryhmä
+                             hintaryhma-tyhja?
+                             (not (empty? hintaryhman-toimenpiteet)))) ;; Toimenpiteitä käytetyillä suodattimilla
+                       nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
+                                                                   (not (empty? hintaryhman-toimenpiteet))))]]
+
+             (when nayta-hintaryhma?
+               (if hintaryhma-tyhja?
+                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
+                 [:div
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
+                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
+                  [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
+                  [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
+                   {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
+                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                 [jaettu/listaus e! app*
+                  {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                     :komponentti (fn [rivi]
+                                                    [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                   :listaus-tunniste listaus-tunniste
+                   :footer (when nayta-hintaryhman-yhteenveto?
+                             [hintaryhman-hinnoittelu e! app* hintaryhma])
+                   :otsikko (h/hintaryhman-nimi hintaryhma)
+                   :paneelin-checkbox-sijainti "95.2%"
+                   :vaylan-checkbox-sijainti "95.2%"}])))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

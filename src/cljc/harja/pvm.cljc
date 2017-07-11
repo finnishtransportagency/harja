@@ -285,6 +285,10 @@
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
 
+(defn aika-iso8601-aikavyohykkeen-kanssa
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ssZ") pvm))
+
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
 
