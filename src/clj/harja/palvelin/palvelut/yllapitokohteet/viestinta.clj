@@ -4,6 +4,7 @@
             [clojure.core.match :refer [match]]
             [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-q]
+            [taoensso.timbre :as log]
             [harja.tyokalut.html :as html-tyokalut]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.kyselyt.yllapitokohteet :as q]
@@ -46,32 +47,36 @@
        [:p (sanitoi tiivistelma)]
        (when saate [:p (sanitoi saate)])
        (html-tyokalut/tietoja [["Kohde" kohde-nimi]
-                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                               kohde-osoite
-                                               {:teksti-tie? false})]
-                                ["Pituus" pituus]
-                                ["Valmis tiemerkintään" (if peruminen?
-                                                          "Ei vielä tiedossa"
-                                                          (fmt/pvm tiemerkintapvm))]
-                                ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
-                                ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
-                                ["Merkitsijän urakka" paallystysurakka-nimi]])])))
+                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                              kohde-osoite
+                                              {:teksti-tie? false})]
+                               ["Pituus" pituus]
+                               ["Valmis tiemerkintään" (if peruminen?
+                                                         "Ei vielä tiedossa"
+                                                         (fmt/pvm tiemerkintapvm))]
+                               ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
+                               ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
+                               ["Merkitsijän urakka" paallystysurakka-nimi]])])))
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
+  (when (some nil? [paallystysurakka-nimi kohde-nimi kohde-osoite tiemerkinta-valmis ilmoittaja
+                    tiemerkintaurakka-nimi])
+    (log/error "Lähetetään sähköposti tiemerkintäkohteen valmistumisesta puutteellisilla tiedoilla: " tiedot))
+
   (html
     [:div
      [:p (sanitoi (format "Päällystysurakan %s kohteen %s tiemerkintä on valmistunut %s."
-                    paallystysurakka-nimi
-                    (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                    (fmt/pvm tiemerkinta-valmis)))]
+                          paallystysurakka-nimi
+                          (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
+                          (fmt/pvm tiemerkinta-valmis)))]
      (html-tyokalut/tietoja [["Kohde" kohde-nimi]
-                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                             kohde-osoite
-                                             {:teksti-tie? false})]
-                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
-                              ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
+                             ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                            kohde-osoite
+                                            {:teksti-tie? false})]
+                             ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
+                             ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
+                             ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
