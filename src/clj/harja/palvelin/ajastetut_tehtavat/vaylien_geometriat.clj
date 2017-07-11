@@ -21,10 +21,8 @@
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
 (defn tallenna-vayla [db {:keys [id geometry properties]}]
-  (let [koordinaatit (:coordinates geometry)
-        geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
-        arvot (cheshire/encode properties)
-        sql-parametrit {:sijainti geometria
+  (let [arvot (cheshire/encode properties)
+        sql-parametrit {:sijainti geometry
                         :tunniste id
                         :arvot arvot}]
     (q-vaylat/luo-vayla<! db sql-parametrit)))
@@ -55,13 +53,12 @@
   (log/debug (format "Ajastetaan väylien geometrioiden haku tehtäväksi %s päivän välein osoitteesta: %s."
                      paivitysvali-paivissa
                      url))
-
   (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
     (ajastettu-tehtava/ajasta-paivittain
-     paivittainen-tarkistusaika
-     (fn [_]
-       (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-         (paivita-vaylat integraatioloki db url))))))
+      paivittainen-tarkistusaika
+      (fn [_]
+        (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+          (paivita-vaylat integraatioloki db url))))))
 
 (defrecord VaylienGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle

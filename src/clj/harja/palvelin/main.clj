@@ -571,7 +571,7 @@
 
       :vaylien-geometriahaku
       (component/using
-        (let [asetukset (:turvalaitteet asetukset)]
+        (let [asetukset (:vaylat asetukset)]
           (vaylien-geometriat/->VaylienGeometriahaku
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)

@@ -160,7 +160,7 @@
                  :paivitysvali-paivissa 60}
 
  :vaylat {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
-          :paivittainen-tarkistusaika [15 45 00]
+          :paivittainen-tarkistusaika [8 51 00]
           :paivitysvali-paivissa 60}
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
