@@ -148,17 +148,19 @@
 
 (def sarake-tyoluokka {:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
 (def sarake-toimenpide {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
-(def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10})
+(def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
 (def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
 (defn sarake-liitteet [e! app]
-  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
    :komponentti (fn [rivi]
                   [liitteet/liitteet-ja-lisays
                    (get-in app [:valinnat :urakka-id])
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
+                                               ;; TODO Toisin kuin yleensä, uusi liite-linkitys pitää tallentaa
+                                               ;; kantaan heti, koska näkymässä ei ole omaa "Tallenna" nappia.
                                                ;; TODO Nyt ei indikoida onko liite lisäys vai vanhan vaihto
                                                ;; Voisi assocata aina vanhan tilalle, mutta jos tehdäänkin
                                                ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
