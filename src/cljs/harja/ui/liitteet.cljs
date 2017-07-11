@@ -136,8 +136,16 @@
   grid?              Jos true, optimoidaan näytettäväksi gridissä
   nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
   liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
-                     Parametriksi annetaan mäppi, jossa liitteen tiedot:
-                     :id, :nimi, :tyyppi, :pikkukuva-url, :url"
+                     Parametriksi annetaan mäppi, jossa liitteen tiedot. Esim.
+
+                     :kuvaus, :fileyard-hash, :urakka, :nimi,
+                     :id,:lahde,:tyyppi, :koko 65528
+
+                     Metatietona annetaan tieto siitä, oliko kyseessä uuden liitteen
+                     lisäys vai vanhan vaihto:
+
+                     :lisays? true/false
+                     :vanha-liite { ... }"
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
@@ -146,11 +154,14 @@
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid?] :as opts}]
       [:span
-       ;; Tiedosto ladattu palvelimelle, näytetään se
-       (if-let [tiedosto @tiedosto]
-         (if-not grid? [liitetiedosto tiedosto]))
+       ;; Tiedosto ladattu palvelimelle, näytetään se (paitsi gridissä)
+       (when (and @tiedosto (not grid?))
+         [liitetiedosto @tiedosto])
+
        (if-let [edistyminen @edistyminen]
-         [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
+         ;; Siirto menossa, näytetään progress
+         [:progress {:value edistyminen :max 100}]
+         ;; Näytetään liitteen lisäys
          [:span.liitekomponentti
           [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))
                  :on-click #(.stopPropagation %)}
@@ -174,7 +185,11 @@
                                      (reset! edistyminen nil)
                                      (reset! virheviesti nil)
                                      (when liite-ladattu
-                                       (liite-ladattu (reset! tiedosto ed))))
+                                       (let [tiedosto-ennen-latausta @tiedosto
+                                             tiedosto-nyt (reset! tiedosto ed)]
+                                         (liite-ladattu (with-meta tiedosto-nyt
+                                                                   {:uusi-liite? (nil? tiedosto-ennen-latausta)
+                                                                    :vanha-liite tiedosto-ennen-latausta})))))
                                    (do
                                      (log "Virhe: " (pr-str ed))
                                      (reset! edistyminen nil)
@@ -193,7 +208,7 @@
   [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
-   (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
+   (when (and (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id) )
      (for [liite liitteet]
        ^{:key (:id liite)}
        [liitetiedosto liite]))
