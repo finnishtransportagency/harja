@@ -244,6 +244,11 @@
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
+
+#?(:clj
+   (defn tanaan? [pvm]
+     (sama-pvm? (suomen-aikavyohykkeeseen (joda-timeksi pvm)) (nyt-suomessa))))
+
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
      :clj  (SimpleDateFormat. str)))

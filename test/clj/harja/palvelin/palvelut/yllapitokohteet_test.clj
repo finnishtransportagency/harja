@@ -45,7 +45,7 @@
                                             [:sonja :db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
                         :yllapitokohteet (component/using
-                                           (yllapitokohteet/->Yllapitokohteet)
+                                           (yllapitokohteet/->Yllapitokohteet {})
                                            [:http-palvelin :db :fim :sonja-sahkoposti])))))
 
   (testit)

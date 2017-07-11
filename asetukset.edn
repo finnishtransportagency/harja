@@ -164,4 +164,6 @@
  :vkm  {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos"}
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
+
+ :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
  }
