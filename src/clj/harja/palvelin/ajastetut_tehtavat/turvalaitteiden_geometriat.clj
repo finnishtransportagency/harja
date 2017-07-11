@@ -48,11 +48,13 @@
         tyyppi (turvalaitetyyppi (:TY_JNR properties))
         turvalaitenro (:TLNUMERO properties)
         kiintea? (= "KIINTE" (:SUBTYPE properties))
+        nimi (:NIMIS properties)
         sql-parametrit {:sijainti geometria
                         :tunniste id
                         :tyyppi tyyppi
                         :turvalaitenro turvalaitenro
                         :kiintea kiintea?
+                        :nimi nimi
                         :arvot arvot
                         :vaylat vaylat}]
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))

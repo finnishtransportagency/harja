@@ -156,11 +156,11 @@
            }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
-                 :paivittainen-tarkistusaika [11 00 00]
+                 :paivittainen-tarkistusaika [12 22 00]
                  :paivitysvali-paivissa 60}
 
  :vaylat {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
-          :paivittainen-tarkistusaika [8 51 00]
+          :paivittainen-tarkistusaika [12 22 00]
           :paivitysvali-paivissa 60}
 
  :tyotunti-muistutukset {:paivittainen-aika nil}

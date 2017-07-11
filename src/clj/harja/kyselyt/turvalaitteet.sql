@@ -9,6 +9,7 @@ INSERT INTO vv_turvalaite
  turvalaitenro,
  tyyppi,
  kiintea,
+ nimi,
  vaylat,
  arvot,
  poistettu)
@@ -17,6 +18,7 @@ VALUES (:sijainti :: GEOMETRY,
         :turvalaitenro,
         :tyyppi :: VV_TURVALAITETYYPPI,
         :kiintea,
+        :nimi,
         :vaylat :: INTEGER [],
         :arvot :: JSONB,
         FALSE)
@@ -28,6 +30,7 @@ ON CONFLICT (tunniste)
       turvalaitenro = :turvalaitenro,
       tyyppi        = :tyyppi :: VV_TURVALAITETYYPPI,
       kiintea       = :kiintea,
+      nimi          = :nimi,
       vaylat        = :vaylat :: INTEGER [],
       arvot         = :arvot :: JSONB,
       poistettu     = FALSE;
