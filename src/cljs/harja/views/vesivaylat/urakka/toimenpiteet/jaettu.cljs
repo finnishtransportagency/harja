@@ -159,8 +159,11 @@
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
-                                               ;; TODO Kutsu eventtiä joka lisää liitteen riville
-                                               (log "UUSI LIITE LISÄTTY: " (pr-str uusi-arvo))))
+                                               ;; TODO Nyt ei indikoida onko liite lisäys vai vanhan vaihto
+                                               ;; Voisi assocata aina vanhan tilalle, mutta jos tehdäänkin
+                                               ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
+                                               (e! (tiedot/->LisaaLiiteToimenpiteelle {:liite uusi-arvo
+                                                                                       :toimenpide-id (::to/id rivi)}))))
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
