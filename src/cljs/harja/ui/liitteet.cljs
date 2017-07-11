@@ -198,7 +198,7 @@
                                                                 (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
 
-(defn liitteet
+(defn liitteet-ja-lisays
   "Listaa liitteet ja näyttää Lisää liite -napin.
 
   Optiot voi sisältää:

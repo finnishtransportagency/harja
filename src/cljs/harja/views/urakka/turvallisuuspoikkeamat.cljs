@@ -326,7 +326,7 @@
                :tyyppi :komponentti
                :komponentti
                (fn [_]
-                 [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
+                 [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
                   {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                             #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
                    :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}

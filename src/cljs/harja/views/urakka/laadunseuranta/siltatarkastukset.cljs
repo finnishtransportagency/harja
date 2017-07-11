@@ -429,7 +429,7 @@
                     :pituus-max 255}
                    {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
                     :komponentti (fn [rivi]
-                                   [liitteet/liitteet
+                                   [liitteet/liitteet-ja-lisays
                                     (:id @nav/valittu-urakka)
                                     (:liitteet @taulukon-rivit)
                                     {:uusi-liite-atom (r/wrap nil

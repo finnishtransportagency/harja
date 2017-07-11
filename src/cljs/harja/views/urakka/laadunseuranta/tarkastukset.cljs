@@ -441,7 +441,7 @@
            {:otsikko "Liitteet" :nimi :liitteet
             :tyyppi :komponentti
             :komponentti (fn [_]
-                           [liitteet/liitteet urakka-id (:liitteet tarkastus)
+                           [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
                             {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                       #(swap! tarkastus-atom assoc :uusi-liite %))
                              :uusi-liite-teksti "Lisää liite tarkastukseen"}])})

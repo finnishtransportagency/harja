@@ -120,7 +120,7 @@
         :nimi :liitteet
         :tyyppi :komponentti
         :komponentti (fn [_]
-                       [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet tarkastus)
+                       [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet tarkastus)
                         {:uusi-liite-teksti "Lisää liite tarkastukseen"
                          :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                   #(e! (v/->LisaaLiitetiedosto %)))

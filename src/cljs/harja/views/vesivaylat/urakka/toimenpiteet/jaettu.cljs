@@ -154,7 +154,7 @@
 (defn sarake-liitteet [e! app]
   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
    :komponentti (fn [rivi]
-                  [liitteet/liitteet
+                  [liitteet/liitteet-ja-lisays
                    (get-in app [:valinnat :urakka-id])
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil

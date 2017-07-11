@@ -265,7 +265,7 @@
    :palstoja 2
    :tyyppi :komponentti
    :komponentti (fn [_]
-                  [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
+                  [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet varustetoteuma)
                    {:uusi-liite-atom (when muokattava?
                                        (r/wrap (:uusi-liite varustetoteuma)
                                                #(e! (v/->LisaaLiitetiedosto %))))
