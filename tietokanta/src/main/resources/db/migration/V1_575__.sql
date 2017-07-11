@@ -4,7 +4,7 @@ DROP FUNCTION IF EXISTS toimenpiteen_sopimus_id_trigger_proc();
 ALTER TABLE reimari_sopimuslinkki ALTER COLUMN "reimari-sopimus-id" DROP NOT NULL;
 ALTER TABLE reimari_sopimuslinkki DROP CONSTRAINT "reimari_sopimuslinkki_harja-sopimus-id_key";
 ALTER TABLE reimari_sopimuslinkki DROP CONSTRAINT "reimari_sopimuslinkki_reimari-sopimus-id_key";
-ALTER TABLE reimari_sopimuslinkki ALTER COLUMN "reimari-diaarinro" DROP NOT NULL;
+ALTER TABLE reimari_sopimuslinkki ADD COLUMN "reimari-diaarinro" TEXT;
 
 CREATE OR REPLACE FUNCTION toimenpiteen_linkit_trigger_proc()
   RETURNS TRIGGER AS
