@@ -87,8 +87,9 @@ VALUES ('Vantaan väyläyksikön pääsopimus',
         true, NOW());
 
 -- reimarin sopimus-id linkkaukset
-INSERT INTO reimari_sopimuslinkki VALUES ((SELECT id FROM sopimus WHERE nimi = 'Meriväylien sopimus'), -666);
-INSERT INTO reimari_sopimuslinkki VALUES ((SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'), -5);
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Meriväylien sopimus'), -666);
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'), -5);
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-diaarinro") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Vantaan väyläyksikön pääsopimus'), '123/45');
 
 -- TOIMENPIDEKOODIT
 INSERT INTO toimenpidekoodi (taso, emo, nimi)
