@@ -134,12 +134,14 @@
           [[:tilaajanvastuuhenkiloetunimi (:tilaajanvastuuhenkilo-etunimi data)]]
           [[:tilaajanvastuuhenkilosukunimi (:tilaajanvastuuhenkilo-sukunimi data)]]
           [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
-          [[:sampourakkanimi (:urakka-nimi  data)]]
+          [[:sampourakkanimi (:urakka-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
-          [[:urakkatyyppi  (:urakka-tyyppi data)]]
-          (when (:urakka-ely data) [[:elyalue (str (:urakka-ely data) " ELY")]])
+          [[:urakkatyyppi (:urakka-tyyppi data)]]
+          (when (and (:urakka-ely data)
+                     (not (= "Vesiväylä" (urakan-vaylamuoto (:vaylamuoto data)))))
+            [[:elyalue (str (:urakka-ely data) " ELY")]])
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
@@ -147,16 +149,17 @@
            [:kuvaus (:kuvaus data)]])))
 
 (defn rakenna-tapahtumapaikka [data]
-  (let [[x y] (first (geo/pisteet (:sijainti data)))]
+  (let [[x y] (first (geo/pisteet (:sijainti data)))
+        tieosoite (:tr data)]
     [:tapahtumapaikka
      [:paikka (:paikan-kuvaus data)]
      [:eureffinn y]
      [:eureffine x]
-     [:tienumero (get-in data [:tr :numero])]
-     [:tieaosa (get-in data [:tr :alkuosa])]
-     (when (get-in data [:tr :loppuosa]) [:tielosa (get-in data [:tr :loppuosa])])
-     [:tieaet (get-in data [:tr :alkuetaisyys])]
-     (when (get-in data [:tr :loppuetaisyys]) [:tielet (get-in data [:tr :loppuetaisyys])])]))
+     (when (:numero tieosoite) [:tienumero (:numero tieosoite)])
+     (when (:alkuosa tieosoite) [:tieaosa (:alkuosa tieosoite)])
+     (when (:loppuosa tieosoite) [:tielosa (:loppuosa tieosoite)])
+     (when (:alkuetaisyys tieosoite) [:tieaet (:alkuetaisyys tieosoite)])
+     (when (:loppuetaisyys tieosoite) [:tielet (:loppuetaisyys tieosoite)])]))
 
 (defn rakenna-syyt-ja-seuraukset [data]
   (into [:syytjaseuraukset]

@@ -8,7 +8,9 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.pvm :as pvm]
             [harja.domain.urakan-tyotunnit :as urakan-tyotunnit]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.urakka :as urakka-d])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -88,7 +90,6 @@
   ^{:uusi? true}
   {:tila :avoin
    :vakavuusaste :lieva
-   :vaylamuoto :tie
    :tyontekijanammatti :muu_tyontekija})
 
 (defn uusi-turvallisuuspoikkeama [urakka-id]
@@ -100,6 +101,10 @@
         (if (k/virhe? vastaus)
           (viesti/nayta! "Urakan työtuntien haku epäonnistui!" :warning viesti/viestin-nayttoaika-lyhyt)
           (let [tyotunnit (get-in vastaus [::urakan-tyotunnit/urakan-tyotunnit ::urakan-tyotunnit/tyotunnit])]
-            (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+ :urakan-tyotunnit tyotunnit))))
+            (reset! valittu-turvallisuuspoikkeama (assoc +uusi-turvallisuuspoikkeama+
+                                                    :urakan-tyotunnit tyotunnit
+                                                    :vaylamuoto (if (urakka-d/vesivaylaurakka? @nav/valittu-urakka)
+                                                                  :vesi
+                                                                  :tie)))))
 
         (reset! turvallisuuspoikkeaman-luonti-kesken? false)))))
