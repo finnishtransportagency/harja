@@ -132,6 +132,8 @@
   Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
   tiedoston lataamisesta.
 
+  HUOM! Oikeustarkistuksen tekeminen on kutsujan vastuulla!
+
   Optiot voi sisältää:
   grid?              Jos true, optimoidaan näytettäväksi gridissä
   nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
@@ -199,7 +201,7 @@
           [:div.liite-virheviesti @virheviesti]])])))
 
 (defn liitteet-ja-lisays
-  "Listaa liitteet ja näyttää Lisää liite -napin.
+  "Listaa liitteet ja näyttää Lisää liite -napin. Tekee myös oikeustarkistuksen.
 
   Optiot voi sisältää:
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
@@ -212,6 +214,7 @@
      (for [liite liitteet]
        ^{:key (:id liite)}
        [liitetiedosto liite]))
+
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
