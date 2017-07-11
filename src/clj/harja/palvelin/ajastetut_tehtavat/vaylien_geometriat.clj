@@ -20,11 +20,21 @@
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
 (defn tallenna-vayla [db {:keys [id geometry properties]}]
+  ;; Tietosisällön kuvaus löytyy http://docplayer.fi/20620576-Vesivaylaaineistojen-tietosisallon-kuvaus.html
   (let [nimi (:VAY_NIMISU properties)
+        tyyppi (case (:VAYLALAJI properties)
+                 ;; Meriväylä
+                 1 "kauppamerenkulku"
+                 ;; Sisävesiväylä
+                 2 "muu"
+                 "muu")
+        vaylanro (:JNRO properties)
         arvot (cheshire/encode properties)
         sql-parametrit {:sijainti (cheshire/encode geometry)
                         :nimi nimi
                         :tunniste id
+                        :vaylanro vaylanro
+                        :tyyppi tyyppi
                         :arvot arvot}]
     (q-vaylat/luo-vayla<! db sql-parametrit)))
 

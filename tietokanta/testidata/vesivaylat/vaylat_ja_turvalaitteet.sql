@@ -3,25 +3,25 @@
 -- ***********************************************
 
 INSERT INTO vv_vayla
-(nimi, "vatu-id", tyyppi)
+(nimi, tyyppi)
 VALUES
-  ('Hietasaaren läntinen rinnakkaisväylä', 1, 'kauppamerenkulku'::vv_vaylatyyppi);
+  ('Hietasaaren läntinen rinnakkaisväylä', 'kauppamerenkulku'::vv_vaylatyyppi);
 
 INSERT INTO vv_vayla
-(nimi, "vatu-id", tyyppi)
+(nimi, tyyppi)
 VALUES
-  ('Oulaisten meriväylä', 1, 'muu'::vv_vaylatyyppi);
+  ('Oulaisten meriväylä', 'muu'::vv_vaylatyyppi);
 
 
 INSERT INTO vv_vayla
-(nimi, "vatu-id", tyyppi)
+(nimi, tyyppi)
 VALUES
-  ('Akonniemen väylät', 2, 'kauppamerenkulku'::vv_vaylatyyppi);
+  ('Akonniemen väylät', 'kauppamerenkulku'::vv_vaylatyyppi);
 
 INSERT INTO vv_vayla
-(nimi, "vatu-id", tyyppi)
+(nimi, tyyppi)
 VALUES
-  ('Muu väylä', 3, 'muu'::vv_vaylatyyppi);
+  ('Muu väylä', 'muu'::vv_vaylatyyppi);
 
 -- ***********************************************
 -- TURVALAITTEET
