@@ -20,7 +20,7 @@
 (defrecord PoisKytketytOminaisuudet [pois-kytketyt-ominaisuudet-joukko]
   component/Lifecycle
   (start [this]
-    (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko)
+    (reset! pois-kytketyt-ominaisuudet (or pois-kytketyt-ominaisuudet-joukko #{}))
     (let [http (:http-palvelin this)]
       (julkaise-palvelu http :pois-kytketyt-ominaisuudet
                         (fn [user tiedot]

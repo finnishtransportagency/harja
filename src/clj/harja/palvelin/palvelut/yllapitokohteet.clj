@@ -30,7 +30,10 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.pvm :as pvm]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukot])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -192,7 +195,11 @@
   (jdbc/with-db-transaction [db db]
     (let [nykyiset-kohteet-kannassa (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                db {:idt (map :id kohteet)}))
-          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)]
+          valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
+          lahetettavat-kohteet (filter #(pvm/sama-tai-jalkeen?
+                                          (pvm/joda-timeksi (pvm/nyt))
+                                          (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
+                                       valmistuneet-kohteet)]
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
@@ -213,7 +220,7 @@
          :email email
          :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db
-                                          {:idt (map :id valmistuneet-kohteet)}))}))))
+                                          {:idt (map :id lahetettavat-kohteet)}))}))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
@@ -421,7 +428,27 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
-(defrecord Yllapitokohteet []
+(defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
+  (if lahetysaika
+    (do
+      (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
+      (ajastettu-tehtava/ajasta-paivittain
+        lahetysaika
+        (fn [_]
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "yllapitokohteiden-sahkoposti"
+            #(let [lahetettavat-kohteet
+                   (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen db)
+                   kohteet-urakoittain (group-by :paallystysurakka-sampo-id lahetettavat-kohteet)]
+               (doseq [urakan-kohteet kohteet-urakoittain]
+                 (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                   {:fim fim
+                    :email email
+                    :valmistuneet-kohteet (second urakan-kohteet)})))))))
+    (constantly nil)))
+
+(defrecord Yllapitokohteet [asetukset]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
@@ -458,7 +485,12 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-
+      (julkaise-palvelu http :sahkopostin-lahetys
+                        (tee-ajastettu-sahkopostin-lahetystehtava
+                          db
+                          fim
+                          email
+                          (:paivittainen-sahkopostin-lahetysaika asetukset)))
       this))
 
   (stop [this]
@@ -470,5 +502,6 @@
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu)
+      :tallenna-yllapitokohteiden-aikataulu
+      :sahkopostin-lahetys)
     this))
