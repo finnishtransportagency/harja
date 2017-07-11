@@ -155,7 +155,7 @@
   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
    :komponentti (fn [rivi]
                   [liitteet/liitteet
-                   (get-in app [:valinnat :valittu-urakka])
+                   (get-in app [:valinnat :urakka-id])
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
