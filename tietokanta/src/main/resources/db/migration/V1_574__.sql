@@ -1,4 +1,4 @@
-ALTER TABLE reimari_toimenpide ADD COLUMN "reimari-lisatyo" BOOLEAN;
+ALTER TABLE reimari_toimenpide ADD COLUMN "reimari-lisatyo" BOOLEAN NOT NULL DEFAULT FALSE;
 UPDATE reimari_toimenpide SET "reimari-lisatyo" = FALSE WHERE hintatyyppi = 'kokonaishintainen';
 UPDATE reimari_toimenpide SET "reimari-lisatyo" = TRUE WHERE hintatyyppi = 'yksikkohintainen';
 CREATE OR REPLACE FUNCTION toimenpiteen_hintatyyppi_trigger_proc()
