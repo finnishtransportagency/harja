@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.pvm :as pvm]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [clojure.core :as core])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defprotocol Tieosoitemuunnos
@@ -29,15 +30,20 @@
   (first (filter #(= hakutunnus (get % "tunniste")) vkm-kohteet)))
 
 (defn paivita-osoite [{:keys [tie aosa aet losa let ajorata] :as tieosoite} alkuosanosoite loppuosanosoite virhe?]
-  (if (or virhe? (not alkuosanosoite) (not loppuosanosoite))
-    tieosoite
-    (-> tieosoite
-        (assoc :tie (get alkuosanosoite "tie" tie))
-        (assoc :ajorata (get alkuosanosoite "ajorata" ajorata))
-        (assoc :aosa (get alkuosanosoite "osa" aosa))
-        (assoc :aet (get alkuosanosoite "etaisyys" aet))
-        (assoc :losa (get loppuosanosoite "osa" losa))
-        (assoc :let (get loppuosanosoite "etaisyys" let)))))
+  (if (and (not virhe?)
+           alkuosanosoite
+           (or (nil? aosa) tieosoite))
+    (core/let [uusi-osoite
+               (assoc tieosoite
+                 :tie (get alkuosanosoite "tie" tie)
+                 :ajorata (get alkuosanosoite "ajorata" ajorata)
+                 :aosa (get alkuosanosoite "osa" aosa)
+                 :aet (get alkuosanosoite "etaisyys" aet))]
+      (if loppuosanosoite
+        (assoc uusi-osoite :losa (get loppuosanosoite "osa" losa)
+                           :let (get loppuosanosoite "etaisyys" let))
+        uusi-osoite))
+    tieosoite))
 
 (defn osoitteet-vkm-vastauksesta [tieosoitteet vastaus]
   (if vastaus
@@ -57,8 +63,18 @@
 (defn pura-tieosoitteet [tieosoitteet]
   (reduce into []
           (map (fn [{:keys [tie aosa aet losa let ajr vkm-id]}]
-                 [{:tunniste (alkuosan-vkm-tunniste vkm-id) :tie tie :osa aosa :ajorata ajr :etaisyys aet}
-                  {:tunniste (loppuosan-vkm-tunniste vkm-id) :tie tie :osa losa :ajorata ajr :etaisyys let}])
+                 (core/let [osoitteet [{:tunniste (alkuosan-vkm-tunniste vkm-id)
+                                        :tie tie
+                                        :osa aosa
+                                        :ajorata ajr
+                                        :etaisyys aet}]]
+                   (if (and losa let)
+                     (conj osoitteet {:tunniste (loppuosan-vkm-tunniste vkm-id)
+                                      :tie tie
+                                      :osa losa
+                                      :ajorata ajr
+                                      :etaisyys let})
+                     osoitteet)))
                tieosoitteet)))
 
 (defn vkm-parametrit [tieosoitteet paivan-verkolta paivan-verkolle]

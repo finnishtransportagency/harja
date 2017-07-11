@@ -310,7 +310,7 @@
                                                  (q-map "SELECT \"hinnoittelu-id\"
                                               FROM vv_hinnoittelu_toimenpide
                                               WHERE \"toimenpide-id\" = " toimenpide-id
-                                              "AND poistettu IS NOT TRUE;")))
+                                                        "AND poistettu IS NOT TRUE;")))
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
@@ -349,4 +349,60 @@
                        ::u/id urakka-id}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :liita-toimenpiteet-hinnoitteluun +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest liita-toimenpiteet-hinnoitteluun-vaaraan-urakkaan
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/idt #{1 2 3}
+                       ::h/id hinnoittelu-id
+                       ::u/id urakka-id}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :liita-toimenpiteet-hinnoitteluun +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest poista-hintaryhma
+  (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
+        kysely-params {::h/urakka-id urakka-id
+                       ::h/idt #{hinnoittelu-id}}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :poista-tyhjat-hinnoittelut +kayttaja-jvh+
+                                kysely-params)
+        hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
+        hinnoittelu-poistettu? (ffirst (q "SELECT poistettu FROM vv_hinnoittelu WHERE id = " hinnoittelu-id ";"))]
+
+    (is (s/valid? ::h/poista-tyhjat-hinnoittelut-kysely kysely-params))
+    (is (s/valid? ::h/poista-tyhjat-hinnoittelut-vastaus vastaus))
+
+    ;; Hinnoittelu poistui
+    (is (= hinnoittelut-ennen (+ hinnoittelut-jalkeen 1)))
+    (is hinnoittelu-poistettu?)))
+
+(deftest poista-hintaryhma-ilman-oikeuksia
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::h/urakka-id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-tyhjat-hinnoittelut +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest poista-hintaryhma-vaarasta-urakkaan
+  (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::h/urakka-id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :poista-tyhjat-hinnoittelut +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest poista-hintaryhma-jolla-toimenpiteita
+  (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::h/urakka-id urakka-id
+                       ::h/idt #{hinnoittelu-id}}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-tyhjat-hinnoittelut +kayttaja-jvh+
                                            kysely-params)))))
