@@ -201,7 +201,9 @@
           [:div.liite-virheviesti @virheviesti]])])))
 
 (defn liitteet-ja-lisays
-  "Listaa liitteet ja näyttää Lisää liite -napin. Tekee myös oikeustarkistuksen.
+  "Listaa nykyiset (kantaan tallennetut) liitteet ja näyttää Lisää liite -napin,
+   jolla voi lisätä yhden uuden liitteen. Mahdollistaa lisätyn liitteen vaihtamisen.
+   Tekee myös oikeustarkistuksen.
 
   Optiot voi sisältää:
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
