@@ -208,7 +208,7 @@
   [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
-   (when (and (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id) )
+   (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite liitteet]
        ^{:key (:id liite)}
        [liitetiedosto liite]))
