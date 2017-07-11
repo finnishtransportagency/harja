@@ -9,7 +9,8 @@
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konv])
   (:import (org.postgis Point)))
 
 (def geometriapaivitystunnus "turvalaitteet")
@@ -20,15 +21,21 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-(defn tallenna-turvalaite [db {:keys [id geometry tlnumero properties]}]
+(defn tallenna-turvalaite [db {:keys [id geometry properties]}]
+  ;; tietosisällön kuvaus löytyy: http://docplayer.fi/20620576-Vesivaylaaineistojen-tietosisallon-kuvaus.html
   (let [koordinaatit (:coordinates geometry)
         geometria (geo/geometry (Point. (first koordinaatit) (second koordinaatit)))
         arvot (cheshire/encode properties)
+        _ (println "--->>>>" (:VAYLAT properties))
+        _ (println "--->>>>" (type (:VAYLAT properties)))
+
+        vaylat nil ;;(konv/seq->array (:VAYLAT properties))
         turvalaitenro (:tlnumero properties)
         sql-parametrit {:sijainti geometria
                         :tunniste id
                         :turvalaitenro turvalaitenro
-                        :arvot arvot}]
+                        :arvot arvot
+                        :vaylat vaylat}]
     (q-turvalaitteet/luo-turvalaite<! db sql-parametrit)))
 
 (defn kasittele-turvalaitteet [db vastaus]
@@ -60,10 +67,10 @@
 
   (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
     (ajastettu-tehtava/ajasta-paivittain
-     paivittainen-tarkistusaika
-     (fn [_]
-       (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-         (paivita-turvalaitteet integraatioloki db url))))))
+      paivittainen-tarkistusaika
+      (fn [_]
+        (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+          (paivita-turvalaitteet integraatioloki db url))))))
 
 (defrecord TurvalaitteidenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
