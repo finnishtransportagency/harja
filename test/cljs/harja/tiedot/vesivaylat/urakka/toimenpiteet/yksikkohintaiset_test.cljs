@@ -636,6 +636,17 @@
                       vanha-tila)]
     (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))))
 
+(deftest liitteen-lisaaminen-toimenpiteelle
+  (testing "Uuden liitteen lisääminen toimenpiteelle"
+    (let [vanha-tila testitila
+          toimenpide-id 2
+          uusi-tila (e! (jaetut-tiedot/->LisaaLiiteToimenpiteelle {:liite {:id 1}
+                                                                   :toimenpide-id toimenpide-id})
+                        vanha-tila)]
+      (is (= (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet uusi-tila)))
+             (-> (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet vanha-tila)))
+                 (assoc ::to/liitteet [{:id 1}])))))))
+
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
     (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))

@@ -79,6 +79,7 @@
 (defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
+(defrecord LisaaLiiteToimenpiteelle [tiedot])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -135,7 +136,18 @@
   ToimenpiteetEiSiirretty
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
-    (assoc app :siirto-kaynnissa? false)))
+    (assoc app :siirto-kaynnissa? false))
+
+  LisaaLiiteToimenpiteelle
+  (process-event [{tiedot :tiedot} app]
+    (let [liite (:liite tiedot)
+          toimenpide-id (:toimenpide-id tiedot)]
+      (assoc app :toimenpiteet (map (fn [toimenpide]
+                                      (if (= (::to/id toimenpide) toimenpide-id)
+                                        (assoc toimenpide ::to/liitteet (conj (::to/liitteet toimenpide)
+                                                                              liite))
+                                        toimenpide))
+                                    (:toimenpiteet app))))))
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu

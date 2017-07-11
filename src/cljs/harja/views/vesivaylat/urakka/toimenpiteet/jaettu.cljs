@@ -160,7 +160,7 @@
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
                                                ;; TODO Kutsu eventtiä joka lisää liitteen riville
-                                               (log "UUSI LIITE LISÄTTY")))
+                                               (log "UUSI LIITE LISÄTTY: " (pr-str uusi-arvo))))
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
