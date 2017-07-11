@@ -23,6 +23,7 @@
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.tierekisteri :as tierekisteri]
+            [harja.tiedot.sijaintivalitsin :as sijaintivalitsin]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
@@ -50,6 +51,7 @@
     :paallystyskohteet
     :paikkauskohteet
     :tr-valitsin
+    :sijaintivalitsin
     :nakyman-geometriat
     :infopaneelin-merkki
     :tilannekuva
@@ -65,7 +67,8 @@
   #{:organisaatio
     :nakyman-geometriat
     :infopaneelin-merkki
-    :tr-valitsin})
+    :tr-valitsin
+    :sijaintivalitsin})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -209,6 +212,7 @@
    :paallystyskohteet paallystys/paallystyskohteet-kartalla
    :paikkauskohteet paikkaus/paikkauskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
+   :sijaintivalitsin sijaintivalitsin/sijainti-kartalla
    :nakyman-geometriat nakyman-geometriat
    :infopaneelin-merkki infopaneelin-merkki
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
@@ -269,6 +273,7 @@
        :paallystyskohteet (taso :paallystyskohteet)
        :paikkauskohteet (taso :paikkauskohteet)
        :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+       :sijaintivalitsin (taso :sijaintivalitsin (inc oletus-zindex))
        :tienakyma-valitut (taso :tienakyma-valitut)
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
@@ -300,6 +305,7 @@
    :paallystyskohteet paallystys/karttataso-paallystyskohteet
    :paikkauskohteet paikkaus/karttataso-paikkauskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
+   :sijaintivalitsin sijaintivalitsin/karttataso-sijainti
    :tilannekuva tilannekuva/karttataso-tilannekuva
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
    :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
