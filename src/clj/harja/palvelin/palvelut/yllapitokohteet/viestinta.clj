@@ -75,8 +75,9 @@
                                             kohde-osoite
                                             {:teksti-tie? false})]
                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                             ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
-                             ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
+                             (when ilmoittaja
+                               ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)])
+                             ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
@@ -85,21 +86,26 @@
            "Seuraavat tiemerkintäkohteet on merkitty valmistuvaksi tänään:"
            "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:")]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                   tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
-       [:div (html-tyokalut/tietoja [["Tiemerkintäurakka" paallystysurakka-nimi]
-                                     ["Kohde" kohde-nimi]
-                                     ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                                    {:tr-numero tr-numero
-                                                     :tr-alkuosa tr-alkuosa
-                                                     :tr-alkuetaisyys tr-alkuetaisyys
-                                                     :tr-loppuosa tr-loppuosa
-                                                     :tr-loppuetaisyys tr-loppuetaisyys}
-                                                    {:teksti-tie? false})]
-                                     ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
-                                     ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
-        [:br]])
+                   tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohde} kohteet]
+       (do
+         (when (some nil? [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                           tiemerkintaurakka-nimi paallystysurakka-nimi])
+           (log/error "Lähetetään sähköposti tiemerkintäkohteen valmistumisesta puutteellisilla tiedoilla: " kohde))
+         [:div (html-tyokalut/tietoja [["Tiemerkintäurakka" paallystysurakka-nimi]
+                                       ["Kohde" kohde-nimi]
+                                       ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                                      {:tr-numero tr-numero
+                                                       :tr-alkuosa tr-alkuosa
+                                                       :tr-alkuetaisyys tr-alkuetaisyys
+                                                       :tr-loppuosa tr-loppuosa
+                                                       :tr-loppuetaisyys tr-loppuetaisyys}
+                                                      {:teksti-tie? false})]
+                                       ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
+                                       ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
+          [:br]]))
      [:div
-      (html-tyokalut/tietoja [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]])
+      (when ilmoittaja
+        (html-tyokalut/tietoja [["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]]))
       [:br]]]))
 
 ;; Sisäinen käsittely

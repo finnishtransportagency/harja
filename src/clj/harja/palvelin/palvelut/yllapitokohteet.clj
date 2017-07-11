@@ -428,7 +428,7 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
-(defn tee-ajastettu-sahkopostin-lahetys-tehtava [db fim email lahetysaika]
+(defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
       (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
@@ -438,7 +438,8 @@
           (lukot/yrita-ajaa-lukon-kanssa
             db
             "yllapitokohteiden-sahkoposti"
-            #(let [lahetettavat-kohteet (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet db)
+            #(let [lahetettavat-kohteet
+                   (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen db)
                    kohteet-urakoittain (group-by :paallystysurakka-sampo-id lahetettavat-kohteet)]
                (doseq [urakan-kohteet kohteet-urakoittain]
                  (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
@@ -485,7 +486,7 @@
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
       (julkaise-palvelu http :sahkopostin-lahetys
-                        (tee-ajastettu-sahkopostin-lahetys-tehtava
+                        (tee-ajastettu-sahkopostin-lahetystehtava
                           db
                           fim
                           email
