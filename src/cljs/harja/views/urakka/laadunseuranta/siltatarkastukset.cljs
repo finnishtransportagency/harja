@@ -431,7 +431,7 @@
                     :komponentti (fn [rivi]
                                    [liitteet/liitteet-ja-lisays
                                     (:id @nav/valittu-urakka)
-                                    (:liitteet @taulukon-rivit)
+                                    nil ;; Lisätyt liitteet näytetään eri sarakkeessa
                                     {:uusi-liite-atom (r/wrap nil
                                                               (fn [uusi-arvo]
                                                                 (reset! uudet-liitteet
