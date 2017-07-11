@@ -398,5 +398,5 @@
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
           (yllapitokohteet-domain/lihavoi-vasta-muokatut otsikoidut-aikataulurivit)]
          (if (= (:nakyma optiot) :tiemerkinta)
-           [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])
+           [vihje "Tänään tai aiemmin valmistuneista kohteista lähetetään heti sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."])
          [tiemerkintavalmius-modal @tiedot/modal-data]]))))
