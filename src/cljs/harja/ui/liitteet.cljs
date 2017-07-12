@@ -34,14 +34,15 @@
 
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen."
-  [tiedosto]
+  ([tiedosto] (liitetiedosto tiedosto {}))
+  ([tiedosto {:keys [grid?] :as optiot}]
   [:div.liite
-   (if (naytettava-liite? tiedosto)
+   (if (and (naytettava-liite? tiedosto) (not grid?))
      [:span
       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
                                   :on-click #(nayta-liite-modalissa tiedosto)}]
       [:span.liite-nimi (:nimi tiedosto)]]
-     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
+     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
 
 (defn liite-linkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
@@ -215,7 +216,7 @@
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite liitteet]
        ^{:key (:id liite)}
-       [liitetiedosto liite]))
+       [liitetiedosto liite {:grid? grid?}]))
 
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
