@@ -376,7 +376,7 @@
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
 
-(deftest yksikkohintaisiin-siirto
+(deftest liitteen-lisaaminen-toimenpiteelle
   (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
         liitteet-ennen (ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite;"))
         urakka-id (hae-helsingin-vesivaylaurakan-id)
