@@ -38,6 +38,19 @@
      :luokka "kuva-modal"}
     (liitekuva-modalissa liite)))
 
+(defn liitteen-poisto [liite poista-fn]
+  [:span
+   {:style {:padding-left "5px"}
+    :on-click #(do
+                 (.stopPropagation %)
+                 (varmista-kayttajalta/varmista-kayttajalta
+                   {:otsikko "Poista liite?"
+                    :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
+                    :hyvaksy "Poista"
+                    :toiminto-fn (fn []
+                                   (poista-fn (:id liite)))}))}
+   (ikonit/livicon-trash)])
+
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen.
 
@@ -53,8 +66,13 @@
         [:span
          [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
                                      :on-click #(nayta-liite-modalissa tiedosto)}]
-         [:span.liite-nimi nimi]]
-        [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi])])))
+         [:span.liite-nimi nimi]
+         (when salli-poistaa-tallennettu-liite?
+           [liitteen-poisto tiedosto poista-tallennettu-liite-fn])]
+        [:span
+         [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi]
+         (when salli-poistaa-tallennettu-liite?
+           [liitteen-poisto tiedosto poista-tallennettu-liite-fn])])])))
 
 (defn liitelinkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
@@ -68,36 +86,26 @@
   ([liite teksti] (liitelinkki liite teksti {}))
   ([liite teksti {:keys [nayta-tooltip? rivita? salli-poistaa-tallennettu-liite?
                          poista-tallennettu-liite-fn] :as optiot}]
-   (let [roskis (fn []
-                  (when salli-poistaa-tallennettu-liite?
-                    [:span
-                     {:on-click #(do
-                                   (.stopPropagation %)
-                                   (varmista-kayttajalta/varmista-kayttajalta
-                                     {:otsikko "Poista liitä?"
-                                      :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
-                                      :hyvaksy "Poista"
-                                      :toiminto-fn (fn []
-                                                     (poista-tallennettu-liite-fn (:id liite)))}))}
-                     (ikonit/livicon-trash)]))]
-     [:span {:style (when rivita? {:display "block"})}
-      (if (naytettava-liite? liite)
-        [:span
-         [:a.klikattava {:title (let [tooltip (:nimi liite)]
-                                  (if (nil? nayta-tooltip?)
-                                    tooltip
-                                    (when nayta-tooltip? tooltip)))
-                         :on-click #(do
-                                      (.stopPropagation %)
-                                      (nayta-liite-modalissa liite))}
-          teksti]
-         [roskis]]
-        [:span
-         [:a.klikattava {:title (:nimi liite)
-                         :href (k/liite-url (:id liite))
-                         :target "_blank"}
-          teksti]
-         [roskis]])])))
+   [:span {:style (when rivita? {:display "block"})}
+    (if (naytettava-liite? liite)
+      [:span
+       [:a.klikattava {:title (let [tooltip (:nimi liite)]
+                                (if (nil? nayta-tooltip?)
+                                  tooltip
+                                  (when nayta-tooltip? tooltip)))
+                       :on-click #(do
+                                    (.stopPropagation %)
+                                    (nayta-liite-modalissa liite))}
+        teksti]
+       (when salli-poistaa-tallennettu-liite?
+         [liitteen-poisto liite poista-tallennettu-liite-fn])]
+      [:span
+       [:a.klikattava {:title (:nimi liite)
+                       :href (k/liite-url (:id liite))
+                       :target "_blank"}
+        teksti]
+       (when salli-poistaa-tallennettu-liite?
+         [liitteen-poisto liite poista-tallennettu-liite-fn])])]))
 
 (defn liitteet-numeroina
   "Listaa liitteet numeroina."
