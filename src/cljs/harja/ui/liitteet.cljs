@@ -265,7 +265,7 @@
   lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen.
   nayta-lisatyt-liitteet?             Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
                                       tallennuksen yhteydessä tehtävää linkitystä).
-                                      Oletus true. Voi olla false, mikäli liite-linkitykset tehdään
+                                      Oletus true. Tulisi olla false, mikäli liite-linkitykset tehdään
                                       välittömästi sen jälkeen kun liite on ladattu palvelimelle.
   salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
   poista-tallennettu-liite-fn         Funktio, jota kutsutaan roskakorista."
