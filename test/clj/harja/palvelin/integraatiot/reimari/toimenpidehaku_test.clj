@@ -34,7 +34,8 @@
    {:harja.domain.vesivaylat.urakoitsija/id 2,
     :harja.domain.vesivaylat.urakoitsija/nimi "Merimiehet Oy"},
    ::toimenpide/reimari-sopimus
-   {:harja.domain.vesivaylat.sopimus/r-nro -5,
+   {:harja.domain.vesivaylat.sopimus/r-diaarinro "5/5"
+    :harja.domain.vesivaylat.sopimus/r-nro -5,
     :harja.domain.vesivaylat.sopimus/r-tyyppi "1022542301",
     :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
    ::toimenpide/reimari-muokattu
