@@ -131,7 +131,7 @@
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
   Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
-  tiedoston lataamisesta.
+  tiedoston lataamisesta. Mahdollistaa myös annetun liitteen vaihtamisen.
 
   HUOM! Oikeustarkistuksen tekeminen on kutsujan vastuulla!
 
@@ -139,7 +139,7 @@
   grid?              Jos true, optimoidaan näytettäväksi gridissä
   nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
   liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
-                     Parametriksi annetaan mäppi, jossa liitteen tiedot. Esim.
+                     Parametriksi annetaan mäppi, jossa liitteen tiedot:
 
                      :kuvaus, :fileyard-hash, :urakka, :nimi,
                      :id,:lahde,:tyyppi, :koko 65528
