@@ -231,7 +231,8 @@
   grid?                           Jos true, optimoidaan näytettäväksi gridissä
   disabled?                       Disabloidaanko lisäysnappi, true tai false
   lisaa-usea-liite?               Jos true, mahdollistaa usean liitteen lisäämisen.
-  nayta-lisatyt-liitteet?         Listaa juuri lisätyt liitteet (jotka odottavat yhä linkitystä).
+  nayta-lisatyt-liitteet?         Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
+                                  tallennuksen yhteydessä tehtävää linkitystä).
                                   Oletus true. Voi olla false, mikäli liite-linkitykset tehdään
                                   välittömästi sen jälkeen kun liite on ladattu palvelimelle."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
