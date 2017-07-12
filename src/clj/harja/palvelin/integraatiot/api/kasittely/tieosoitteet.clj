@@ -9,9 +9,6 @@
 (defn- hae-sijainti [osoitteet vkm-id]
   (first (filter #(= vkm-id (:vkm-id %)) osoitteet)))
 
-(defn harjan-verkon-pvm [db]
-  (or (q-geometriapaivitykset/hae-karttapvm db) (pvm/nyt)))
-
 (defn yhdista-osoitteet [alkuperaiset muunnetut-sijainnit]
   (mapv (fn [{:keys [sijainti vkm-id] :as a}]
           (if (sisaltaa-sijainnin? muunnetut-sijainnit vkm-id)
@@ -37,7 +34,7 @@
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettavat-sijainnit
-                                (harjan-verkon-pvm db)
+                                (q-geometriapaivitykset/harjan-verkon-pvm db)
                                 karttapvm)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
@@ -58,7 +55,7 @@
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
                                 muunnettevat-alustatoimenpiteet
-                                (harjan-verkon-pvm db)
+                                (q-geometriapaivitykset/harjan-verkon-pvm db)
                                 karttapvm)
           muunnetut-alustatoimenpiteet (yhdista-osoitteet muunnettevat-alustatoimenpiteet muunnetut-sijainnit)]
       muunnetut-alustatoimenpiteet)

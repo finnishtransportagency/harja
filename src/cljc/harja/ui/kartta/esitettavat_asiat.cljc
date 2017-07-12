@@ -126,7 +126,7 @@
   Esimerkkejä:
 
   (maarittele-feature juttu val? (pinni-ikoni 'vihrea'))
-    Juttu on todennäköisesti pistemäinen asia. Käytetään vihrää pinniä.
+    Juttu on todennäköisesti pistemäinen asia. Käytetään vihreää pinniä.
     Jos juttu onkin reitillinen, käytetään reitin piirtämiseen puhtaasti
     oletusasetuksia.
 

@@ -20,7 +20,7 @@
   {::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
    ::toimenpide/reimari-id -123456,
    ::toimenpide/reimari-tila "1022541202",
-   ::toimenpide/hintatyyppi :yksikkohintainen,
+   ::toimenpide/reimari-lisatyo? true,
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/reimari-vayla
    {:harja.domain.vesivaylat.vayla/r-nro "12345",
@@ -75,7 +75,7 @@
                                                           ::toimenpide/reimari-toimenpide #{::toimenpide/id ::toimenpide/reimari-id ::toimenpide/urakka-id}
                                                           {::toimenpide/reimari-id -123456})))))
 
-    (t/testing "Sama reimari-id luetussa toimenpiteessä päivittää tietuetta"
+    (t/testing "Haku reimari-id:llä toimii"
       (t/is (= 1
                (count (specql/fetch db ::toimenpide/reimari-toimenpide
                                     #{::toimenpide/reimari-id} {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))))
@@ -87,9 +87,16 @@
                                     {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)
                                      ::toimenpide/sopimus-id (ht/hae-helsingin-vesivaylaurakan-paasopimuksen-id)})))))
 
-    (t/is (= 1
-             (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
-                             {::toimenpide/hintatyyppi :kokonaishintainen}
-                             {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
-    (tarkista-fn))
-    (println (ht/q "select \"sopimus-id\" from reimari_toimenpide where \"reimari-id\" = -123456")))
+    (t/testing "Trigger täytti hintatyypin"
+      (t/is (= 1
+               (count (specql/fetch db ::toimenpide/reimari-toimenpide
+                                    #{::toimenpide/reimari-id ::toimenpide/hintatyyppi}
+                                    {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)
+                                     ::toimenpide/hintatyyppi :yksikkohintainen})))))
+
+    (t/testing "Tietueen päivitys reimari-id:llä toimii"
+      (t/is (= 1
+               (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
+                               {::toimenpide/reimari-lisatyo? false}
+                               {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
+      (tarkista-fn))))
