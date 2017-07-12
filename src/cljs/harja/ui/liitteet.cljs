@@ -55,11 +55,10 @@
   "Näyttää liitteen pikkukuvan ja nimen.
 
   Optiot:
-  salli-poistaa-tallennettu-liite?   Piirtää roskakorin liitteen nimen viereen
-  poista-tallennettu-liite-fn        Funktio, jota kutsutaan roskakorista"
+  salli-poisto?                      Piirtää roskakorin liitteen nimen viereen
+  poista-liite-fn                    Funktio, jota kutsutaan roskakorista"
   ([tiedosto] (liitetiedosto tiedosto {}))
-  ([tiedosto {:keys [salli-poistaa-tallennettu-liite?
-                     poista-tallennettu-liite-fn] :as optiot}]
+  ([tiedosto {:keys [salli-poisto? poista-liite-fn] :as optiot}]
    (let [nimi (:nimi tiedosto)]
      [:div.liite
       (if (naytettava-liite? tiedosto)
@@ -67,12 +66,12 @@
          [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
                                      :on-click #(nayta-liite-modalissa tiedosto)}]
          [:span.liite-nimi nimi]
-         (when salli-poistaa-tallennettu-liite?
-           [liitteen-poisto tiedosto poista-tallennettu-liite-fn])]
+         (when salli-poisto?
+           [liitteen-poisto tiedosto poista-liite-fn])]
         [:span
          [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi]
-         (when salli-poistaa-tallennettu-liite?
-           [liitteen-poisto tiedosto poista-tallennettu-liite-fn])])])))
+         (when salli-poisto?
+           [liitteen-poisto tiedosto poista-liite-fn])])])))
 
 (defn liitelinkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
@@ -81,11 +80,10 @@
    Optiot:
    nayta-tooltip?                     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)
    rivita?                            Rivittää liitelinkit omille riveille
-   salli-poistaa-tallennettu-liite?   Piirtää roskakorin liitteen nimen viereen
-   poista-tallennettu-liite-fn        Funktio, jota kutsutaan roskakorista"
+   salli-poisto?                      Piirtää roskakorin liitteen nimen viereen
+   poista-liite-fn        Funktio, jota kutsutaan roskakorista"
   ([liite teksti] (liitelinkki liite teksti {}))
-  ([liite teksti {:keys [nayta-tooltip? rivita? salli-poistaa-tallennettu-liite?
-                         poista-tallennettu-liite-fn] :as optiot}]
+  ([liite teksti {:keys [nayta-tooltip? rivita? salli-poisto? poista-liite-fn] :as optiot}]
    [:span {:style (when rivita? {:display "block"})}
     (if (naytettava-liite? liite)
       [:span
@@ -97,15 +95,15 @@
                                     (.stopPropagation %)
                                     (nayta-liite-modalissa liite))}
         teksti]
-       (when salli-poistaa-tallennettu-liite?
-         [liitteen-poisto liite poista-tallennettu-liite-fn])]
+       (when salli-poisto?
+         [liitteen-poisto liite poista-liite-fn])]
       [:span
        [:a.klikattava {:title (:nimi liite)
                        :href (k/liite-url (:id liite))
                        :target "_blank"}
         teksti]
-       (when salli-poistaa-tallennettu-liite?
-         [liitteen-poisto liite poista-tallennettu-liite-fn])])]))
+       (when salli-poisto?
+         [liitteen-poisto liite poista-liite-fn])])]))
 
 (defn liitteet-numeroina
   "Listaa liitteet numeroina."
@@ -282,11 +280,11 @@
          ^{:key (:id liite)}
          [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))
           {:rivita? true
-           :salli-poistaa-tallennettu-liite? salli-poistaa-tallennettu-liite?
-           :poista-tallennettu-liite-fn poista-tallennettu-liite-fn}]
+           :salli-poisto? salli-poistaa-tallennettu-liite?
+           :poista-liite-fn poista-tallennettu-liite-fn}]
          ^{:key (:id liite)}
-         [liitetiedosto liite {:salli-poistaa-tallennettu-liite? salli-poistaa-tallennettu-liite?
-                               :poista-tallennettu-liite-fn poista-tallennettu-liite-fn}])))
+         [liitetiedosto liite {:salli-poisto? salli-poistaa-tallennettu-liite?
+                               :poista-liite-fn poista-tallennettu-liite-fn}])))
 
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
