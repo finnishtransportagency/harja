@@ -15,6 +15,7 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.sopimus :as sopimus]
+            [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
@@ -267,7 +268,17 @@ reimari-tilat
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
-                           ::h/toimenpide-id)}])
+                           ::h/toimenpide-id)}]
+  ["reimari_toimenpide_liite" ::toimenpide<->liite
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   {::toimenpiteet (specql.rel/has-one
+                     ::toimenpide-id
+                     :harja.domain.toimenpide/toimenpide
+                     :harja.domain.toimenpide/id)
+    ::liitteet (specql.rel/has-one
+                     ::liite-id
+                     :harja.domain.liite/liite
+                     :harja.domain.liite/id)}])
 
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))

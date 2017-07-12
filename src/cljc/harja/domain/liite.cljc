@@ -1,4 +1,16 @@
-(ns harja.domain.liite)
+(ns harja.domain.liite
+  (:require [clojure.spec.alpha :as s]
+            [specql.rel :as rel]
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+
+(define-tables
+  ["liite" ::liite
+   {"liite_oid" ::liite-oid
+    "urakka" ::urakka-id}])
 
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 32000000
