@@ -13,6 +13,11 @@
             [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn lyhenna-pitkan-liitteen-nimi [nimi]
+  (if (> (count nimi) 20)
+    (str (subs nimi 0 20) "...")
+    nimi))
+
 (defn naytettava-liite?
   "Kertoo, voidaanko liite näyttää käyttäjälle modaalissa (esim. kuvat)
    vai onko tarkoitus tarjota puhdas latauslinkki"
@@ -34,23 +39,23 @@
 
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen."
-  ([tiedosto] (liitetiedosto tiedosto {}))
-  ([tiedosto {:keys [grid?] :as optiot}]
-   [:div.liite
-    (if (and (naytettava-liite? tiedosto) (not grid?))
-      [:span
-       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                   :on-click #(nayta-liite-modalissa tiedosto)}]
-       [:span.liite-nimi (:nimi tiedosto)]]
-      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
+  [tiedosto]
+  (let [nimi (:nimi tiedosto)]
+    [:div.liite
+     (if (naytettava-liite? tiedosto)
+       [:span
+        [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                    :on-click #(nayta-liite-modalissa tiedosto)}]
+        [:span.liite-nimi nimi]]
+       [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi])]))
 
-(defn liite-linkki
+(defn liitelinkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
    Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki.
 
    Optiot:
    nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
-  ([liite teksti] (liite-linkki liite teksti {}))
+  ([liite teksti] (liitelinkki liite teksti {}))
   ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
    (if (naytettava-liite? liite)
      [:a.klikattava {:title (let [tooltip (:nimi liite)]
@@ -74,7 +79,7 @@
      (fn [index liite]
        ^{:key (:id liite)}
        [:span
-        [liite-linkki liite (inc index)]
+        [liitelinkki liite (inc index)]
         [:span " "]])
      liitteet)])
 
@@ -83,7 +88,7 @@
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
   [liite]
   [:span
-   [liite-linkki liite (ikonit/file)]
+   [liitelinkki liite (ikonit/file)]
    [:span " "]])
 
 (defn liitteet-ikoneina
@@ -104,7 +109,7 @@
      (for [liite liitteet]
        ^{:key (hash liite)}
        [:li.harja-alasvetolistaitemi
-        [liite-linkki
+        [liitelinkki
          liite
          (:nimi liite)
          {:nayta-tooltip? false}]]))])
@@ -119,7 +124,7 @@
       (fn [liitteet]
         [:span
          (cond (= (count liitteet) 1)
-               [liite-linkki (first liitteet) (ikonit/file)]
+               [liitelinkki (first liitteet) (ikonit/file)]
                (> (count liitteet) 1)
                [:a.klikattava
                 {:on-click (fn []
@@ -166,7 +171,9 @@
          (when (and nayta-lisatyt-liitteet? lisaa-usea-liite? (not (empty? @tiedostot)))
            (for [liite @tiedostot]
              ^{:key (:id liite)}
-             [liitetiedosto liite {:grid? grid?}]))
+             (if grid?
+               [:div [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))]]
+               [liitetiedosto liite])))
 
          (if-let [edistyminen @edistyminen]
            ;; Siirto menossa, näytetään progress
@@ -231,7 +238,9 @@
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite tallennetut-liitteet]
        ^{:key (:id liite)}
-       [liitetiedosto liite {:grid? grid?}]))
+       (if grid?
+         [:div [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))]]
+         [liitetiedosto liite])))
 
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
