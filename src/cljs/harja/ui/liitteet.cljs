@@ -148,14 +148,15 @@
                      lisäys vai vanhan vaihto:
 
                      :lisays? true/false
-                     :vanha-liite { ... }"
+                     :vanha-liite { ... }
+  disabled?          Nappi disabloitu, true tai false"
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)
         virheviesti (atom nil)]
-    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid?] :as opts}]
+    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled?] :as opts}]
       [:span
        ;; Tiedosto ladattu palvelimelle, näytetään se (paitsi gridissä)
        (when (and @tiedosto (not grid?))
@@ -166,7 +167,9 @@
          [:progress {:value edistyminen :max 100}]
          ;; Näytetään liitteen lisäys
          [:span.liitekomponentti
-          [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))
+          [:div {:class (str "file-upload nappi-toissijainen "
+                             (when grid? "nappi-grid ")
+                             (when disabled? "disabled "))
                  :on-click #(.stopPropagation %)}
            [ikonit/ikoni-ja-teksti
             (ikonit/livicon-upload)
@@ -210,7 +213,7 @@
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
   grid?                           Jos true, optimoidaan näytettäväksi gridissä"
-  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid?]}]
+  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -223,4 +226,5 @@
      (when uusi-liite-atom
        [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
                                :nappi-teksti uusi-liite-teksti
-                               :grid? grid?}]))])
+                               :grid? grid?
+                               :disabled? disabled?}]))])

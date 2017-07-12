@@ -163,7 +163,8 @@
                                         (assoc toimenpide ::to/liitteet (conj (::to/liitteet toimenpide)
                                                                               liite))
                                         toimenpide))
-                                    (:toimenpiteet app)))))
+                                    (:toimenpiteet app))
+                 :liitteen-lisays-kaynnissa? false)))
 
   LiiteEiLisatty
   (process-event [_ app]

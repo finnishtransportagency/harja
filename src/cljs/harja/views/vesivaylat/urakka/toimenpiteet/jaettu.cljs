@@ -164,6 +164,7 @@
                                                ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
                                                (e! (tiedot/->LisaaToimenpiteelleLiite {:liite uusi-arvo
                                                                                        ::to/id (::to/id rivi)}))))
+                    :disabled? (:liitteen-lisays-kaynnissa? app)
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
