@@ -51,6 +51,7 @@
          :hintaryhmien-poisto-kaynnissa? false
          :hintaryhmat nil
          :hintaryhmien-haku-kaynnissa? false
+         :liitteen-lisays-kaynnissa? false
          :toimenpiteet nil
          :hintaryhmien-liittaminen-kaynnissa? false
          :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false

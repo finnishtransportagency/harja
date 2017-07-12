@@ -164,8 +164,8 @@
                                                ;; TODO Nyt ei indikoida onko liite lisäys vai vanhan vaihto
                                                ;; Voisi assocata aina vanhan tilalle, mutta jos tehdäänkin
                                                ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
-                                               (e! (tiedot/->LisaaLiiteToimenpiteelle {:liite uusi-arvo
-                                                                                       :toimenpide-id (::to/id rivi)}))))
+                                               (e! (tiedot/->LisaaToimenpiteelleLiite {:liite uusi-arvo
+                                                                                       ::to/id (::to/id rivi)}))))
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita

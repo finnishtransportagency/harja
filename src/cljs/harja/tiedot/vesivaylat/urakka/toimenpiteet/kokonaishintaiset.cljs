@@ -37,6 +37,7 @@
          :infolaatikko-nakyvissa {} ; tunniste -> boolean
          :valittu-kiintio-id nil
          :kiintioon-liittaminen-kaynnissa? false
+         :liitteen-lisays-kaynnissa? false
          :toimenpiteet nil}))
 
 (def valinnat

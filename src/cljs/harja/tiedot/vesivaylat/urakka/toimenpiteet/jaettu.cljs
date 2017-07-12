@@ -79,7 +79,9 @@
 (defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
-(defrecord LisaaLiiteToimenpiteelle [tiedot])
+(defrecord LisaaToimenpiteelleLiite [tiedot])
+(defrecord LiiteLisatty [tiedot])
+(defrecord LiiteEiLisatty [])
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -138,16 +140,36 @@
     (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
     (assoc app :siirto-kaynnissa? false))
 
-  LisaaLiiteToimenpiteelle
+  LisaaToimenpiteelleLiite
   (process-event [{tiedot :tiedot} app]
+    ;; TODO TESTI!
+    (if (not (:liitteen-lisays-kaynnissa? app))
+      (do (tuck-tyokalut/palvelukutsu :lisaa-toimenpiteelle-liite
+                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::to/liite-id (get-in tiedot [:liite :id])
+                                       ::to/id (::to/id tiedot)}
+                                      {:onnistui ->LiiteLisatty
+                                       :epaonnistui ->LiiteEiLisatty})
+          (assoc app :liitteen-lisays-kaynnissa? true))
+      app))
+
+  LiiteLisatty
+  (process-event [{tiedot :tiedot} app]
+    (log "LIITE LISÄTTY: " (pr-sr tiedot))
     (let [liite (:liite tiedot)
-          toimenpide-id (:toimenpide-id tiedot)]
+          toimenpide-id (::to/id tiedot)]
       (assoc app :toimenpiteet (map (fn [toimenpide]
                                       (if (= (::to/id toimenpide) toimenpide-id)
                                         (assoc toimenpide ::to/liitteet (conj (::to/liitteet toimenpide)
                                                                               liite))
                                         toimenpide))
-                                    (:toimenpiteet app))))))
+                                    (:toimenpiteet app)))))
+
+  LiiteEiLisatty
+  (process-event [_ app]
+    ;; TODO TESTI!
+    (viesti/nayta! "Liitteen lisäys epäonnistui!" :danger)
+    (assoc app :liitteen-lisays-kaynnissa? false)))
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu

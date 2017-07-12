@@ -640,8 +640,8 @@
   (testing "Uuden liitteen lisääminen toimenpiteelle"
     (let [vanha-tila testitila
           toimenpide-id 2
-          uusi-tila (e! (jaetut-tiedot/->LisaaLiiteToimenpiteelle {:liite {:id 1}
-                                                                   :toimenpide-id toimenpide-id})
+          uusi-tila (e! (jaetut-tiedot/->LiiteLisatty {:liite {:id 1}
+                                                       ::to/id toimenpide-id})
                         vanha-tila)]
       (is (= (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet uusi-tila)))
              (-> (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet vanha-tila)))
