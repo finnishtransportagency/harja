@@ -419,3 +419,7 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
+
+(s/def ::lisaa-toimenpiteelle-liite-kysely
+  (s/keys :req [::id ::urakka-id]
+          :req-un [::liite-id]))

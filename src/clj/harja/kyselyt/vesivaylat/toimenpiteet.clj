@@ -4,7 +4,7 @@
             [clojure.set :as set]
             [clojure.future :refer :all]
             [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch update! upsert!]]
+            [specql.core :refer [fetch update! insert! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [taoensso.timbre :as log]
@@ -122,6 +122,11 @@
   (update! db ::vv-toimenpide/reimari-toimenpide
            {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
            {::vv-toimenpide/id (op/in toimenpide-idt)}))
+
+(defn lisaa-toimenpiteelle-liite [db toimenpide-id liite-id]
+  (insert! db ::vv-toimenpide/toimenpide<->liite
+           {::vv-toimenpide/id toimenpide-id
+            ::vv-toimenpide/liite-id liite-id}))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
   (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}

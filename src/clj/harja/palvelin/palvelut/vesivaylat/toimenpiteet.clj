@@ -49,6 +49,15 @@
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
     (::to/idt tiedot)))
 
+(defn lisaa-toimenpiteelle-liite [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::to/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-liitteet user urakka-id)
+      (jdbc/with-db-transaction [db db]
+        (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (:liite-id tiedot))))
+    {:ok? true}))
+
 (defrecord Toimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -79,6 +88,12 @@
       (fn [user tiedot]
         (siirra-toimenpiteet-yksikkohintaisiin db user tiedot))
       {:kysely-spec ::to/siirra-toimenpiteet-yksikkohintaisiin-kysely})
+    (julkaise-palvelu
+      http
+      :lisaa-toimenpiteelle-liite
+      (fn [user tiedot]
+        (lisaa-toimenpiteelle-liite db user tiedot))
+      {:kysely-spec ::to/lisaa-toimenpiteelle-liite-kysely})
     this)
 
   (stop [this]
