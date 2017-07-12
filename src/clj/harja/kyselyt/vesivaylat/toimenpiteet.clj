@@ -153,6 +153,9 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
+                               ;; FIXME Liitteiden fetchaus saa specql:n kaatumaan!?
+                               ;; TODO Ja sitten kun fetchaus toimii, välissä oleva linkkitaulu purkaa pois
+                               ;vv-toimenpide/liitteet
                                (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot)

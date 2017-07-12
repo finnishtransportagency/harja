@@ -12,6 +12,15 @@
    {"liite_oid" ::liite-oid
     "urakka" ::urakka-id}])
 
+(def perustiedot
+  #{::id
+    ::tyyppi
+    ::koko
+    ::kuvaus
+    ::nimi
+    ::lahde
+    ::urakka-id})
+
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 32000000
         mime-whitelist #{;; Kuvat

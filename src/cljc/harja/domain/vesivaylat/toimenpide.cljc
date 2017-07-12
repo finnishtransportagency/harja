@@ -250,6 +250,16 @@ reimari-tilat
 (define-tables
   ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
+  ["reimari_toimenpide_liite" ::toimenpide<->liite
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   {::toimenpiteet (specql.rel/has-one
+                     ::toimenpide-id
+                     :harja.domain.toimenpide/toimenpide
+                     :harja.domain.toimenpide/id)
+    ::liitteet (specql.rel/has-one
+                 ::liite-id
+                 :harja.domain.liite/liite
+                 :harja.domain.liite/id)}]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -268,17 +278,11 @@ reimari-tilat
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
-                           ::h/toimenpide-id)}]
-  ["reimari_toimenpide_liite" ::toimenpide<->liite
-   harja.domain.muokkaustiedot/poistettu?-sarake
-   {::toimenpiteet (specql.rel/has-one
-                     ::toimenpide-id
-                     :harja.domain.toimenpide/toimenpide
-                     :harja.domain.toimenpide/id)
-    ::liitteet (specql.rel/has-one
-                     ::liite-id
-                     :harja.domain.liite/liite
-                     :harja.domain.liite/id)}])
+                           ::h/toimenpide-id)
+    ::liite-linkit (specql.rel/has-many
+                          ::id
+                          ::toimenpide<->liite
+                          ::toimenpide-id)}])
 
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
@@ -342,6 +346,9 @@ reimari-tilat
                             m/muokkauskentat
                             h/toimenpiteen-hinnoittelut)]})
 
+(def liitteet
+  #{[::liite-linkit #{::toimenpide-id ::liite-id}]})
+
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
@@ -349,7 +356,6 @@ reimari-tilat
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
 (def kiintio #{[::kiintio kiintio/perustiedot]})
-
 
 (def viittaukset
   (clojure.set/union
