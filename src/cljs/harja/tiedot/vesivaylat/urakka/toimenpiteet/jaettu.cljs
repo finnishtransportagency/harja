@@ -80,7 +80,7 @@
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 (defrecord LisaaToimenpiteelleLiite [tiedot])
-(defrecord LiiteLisatty [tiedot])
+(defrecord LiiteLisatty [vastaus tiedot])
 (defrecord LiiteEiLisatty [])
 
 (extend-protocol tuck/Event
@@ -149,13 +149,13 @@
                                        ::to/liite-id (get-in tiedot [:liite :id])
                                        ::to/id (::to/id tiedot)}
                                       {:onnistui ->LiiteLisatty
+                                       :onnistui-parametrit [tiedot]
                                        :epaonnistui ->LiiteEiLisatty})
           (assoc app :liitteen-lisays-kaynnissa? true))
       app))
 
   LiiteLisatty
-  (process-event [{tiedot :tiedot} app]
-    (log "LIITE LISÄTTY: " (pr-str tiedot))
+  (process-event [{vastaus :vastaus tiedot :tiedot} app]
     (let [liite (:liite tiedot)
           toimenpide-id (::to/id tiedot)]
       (assoc app :toimenpiteet (map (fn [toimenpide]
