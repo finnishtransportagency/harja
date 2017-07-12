@@ -185,7 +185,7 @@
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?))
-        ;; Hae toimenpiteiden turvalaitteenn kaikki turvalaitekomponentit
+        ;; Hae toimenpiteiden turvalaitteen kaikki turvalaitekomponentit
         turvalaitekomponentit (fetch
                                 db
                                 ::tkomp/turvalaitekomponentti
