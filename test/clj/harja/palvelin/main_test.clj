@@ -44,7 +44,9 @@
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
-    :turvalaitteiden-geometriahaku :mobiili-laadunseuranta
+    :turvalaitteiden-geometriahaku
+    :vaylien-geometriahaku
+    :mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
     :urakan-tyotuntimuistutukset

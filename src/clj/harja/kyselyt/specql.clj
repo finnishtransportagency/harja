@@ -10,8 +10,10 @@
             [clojure.string :refer [trim]]
             [clojure.java.io :as io]))
 
-
 (s/def ::d/geometry any?)
 
 (define-tables
   ["tr_osoite" ::tr/osoite])
+
+(defmethod specql.impl.composite/parse-value :specql.data-types/int4 [_ string]
+  (Long/parseLong string))
