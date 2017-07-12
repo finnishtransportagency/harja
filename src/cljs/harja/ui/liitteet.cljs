@@ -10,7 +10,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.img-with-exif :refer [img-with-exif]]
             [harja.fmt :as fmt]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn lyhenna-pitkan-liitteen-nimi [nimi]
@@ -38,40 +39,65 @@
     (liitekuva-modalissa liite)))
 
 (defn liitetiedosto
-  "Näyttää liitteen pikkukuvan ja nimen."
-  [tiedosto]
-  (let [nimi (:nimi tiedosto)]
-    [:div.liite
-     (if (naytettava-liite? tiedosto)
-       [:span
-        [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                    :on-click #(nayta-liite-modalissa tiedosto)}]
-        [:span.liite-nimi nimi]]
-       [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi])]))
+  "Näyttää liitteen pikkukuvan ja nimen.
+
+  Optiot:
+  salli-poistaa-tallennettu-liite?   Piirtää roskakorin liitteen nimen viereen
+  poista-tallennettu-liite-fn        Funktio, jota kutsutaan roskakorista"
+  ([tiedosto] (liitetiedosto tiedosto {}))
+  ([tiedosto {:keys [salli-poistaa-tallennettu-liite?
+                     poista-tallennettu-liite-fn] :as optiot}]
+   (let [nimi (:nimi tiedosto)]
+     [:div.liite
+      (if (naytettava-liite? tiedosto)
+        [:span
+         [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                     :on-click #(nayta-liite-modalissa tiedosto)}]
+         [:span.liite-nimi nimi]]
+        [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi])])))
 
 (defn liitelinkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
    Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki.
 
    Optiot:
-   nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
+   nayta-tooltip?                     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)
+   rivita?                            Rivittää liitelinkit omille riveille
+   salli-poistaa-tallennettu-liite?   Piirtää roskakorin liitteen nimen viereen
+   poista-tallennettu-liite-fn        Funktio, jota kutsutaan roskakorista"
   ([liite teksti] (liitelinkki liite teksti {}))
-  ([liite teksti {:keys [nayta-tooltip? rivita?] :as optiot}]
-   (if (naytettava-liite? liite)
-     [:a.klikattava {:style (when rivita? {:display "block"})
-                     :title (let [tooltip (:nimi liite)]
-                              (if (nil? nayta-tooltip?)
-                                tooltip
-                                (when nayta-tooltip? tooltip)))
-                     :on-click #(do
-                                  (.stopPropagation %)
-                                  (nayta-liite-modalissa liite))}
-      teksti]
-     [:a.klikattava {:style (when rivita? {:display "block"})
-                     :title (:nimi liite)
-                     :href (k/liite-url (:id liite))
-                     :target "_blank"}
-      teksti])))
+  ([liite teksti {:keys [nayta-tooltip? rivita? salli-poistaa-tallennettu-liite?
+                         poista-tallennettu-liite-fn] :as optiot}]
+   (let [roskis (fn []
+                  (when salli-poistaa-tallennettu-liite?
+                    [:span
+                     {:on-click #(do
+                                   (.stopPropagation %)
+                                   (varmista-kayttajalta/varmista-kayttajalta
+                                     {:otsikko "Poista liitä?"
+                                      :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
+                                      :hyvaksy "Poista"
+                                      :toiminto-fn (fn []
+                                                     (poista-tallennettu-liite-fn (:id liite)))}))}
+                     (ikonit/livicon-trash)]))]
+     [:span {:style (when rivita? {:display "block"})}
+      (if (naytettava-liite? liite)
+        [:span
+         [:a.klikattava {:title (let [tooltip (:nimi liite)]
+                                  (if (nil? nayta-tooltip?)
+                                    tooltip
+                                    (when nayta-tooltip? tooltip)))
+                         :on-click #(do
+                                      (.stopPropagation %)
+                                      (nayta-liite-modalissa liite))}
+          teksti]
+         [roskis]]
+        [:span
+         [:a.klikattava {:title (:nimi liite)
+                         :href (k/liite-url (:id liite))
+                         :target "_blank"}
+          teksti]
+         [roskis]])])))
 
 (defn liitteet-numeroina
   "Listaa liitteet numeroina."
@@ -226,26 +252,33 @@
    Tekee myös oikeustarkistuksen.
 
   Optiot voi sisältää:
-  uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
-  uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
-  grid?                           Jos true, optimoidaan näytettäväksi gridissä
-  disabled?                       Disabloidaanko lisäysnappi, true tai false
-  lisaa-usea-liite?               Jos true, mahdollistaa usean liitteen lisäämisen.
-  nayta-lisatyt-liitteet?         Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
-                                  tallennuksen yhteydessä tehtävää linkitystä).
-                                  Oletus true. Voi olla false, mikäli liite-linkitykset tehdään
-                                  välittömästi sen jälkeen kun liite on ladattu palvelimelle."
+  uusi-liite-teksti                   Teksti uuden liitteen lisäämisen nappiin
+  uusi-liite-atom                     Atomi, johon uuden liitteen tiedot tallennetaan
+  grid?                               Jos true, optimoidaan näytettäväksi gridissä
+  disabled?                           Disabloidaanko lisäysnappi, true tai false
+  lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen.
+  nayta-lisatyt-liitteet?             Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
+                                      tallennuksen yhteydessä tehtävää linkitystä).
+                                      Oletus true. Voi olla false, mikäli liite-linkitykset tehdään
+                                      välittömästi sen jälkeen kun liite on ladattu palvelimelle.
+  salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
+  poista-tallennettu-liite-fn         Funktio, jota kutsutaan roskakorista."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
-                                          nayta-lisatyt-liitteet?]}]
+                                          nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
+                                          poista-tallennettu-liite-fn]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite tallennetut-liitteet]
        (if grid?
          ^{:key (:id liite)}
-         [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite)) {:rivita? true}]
+         [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))
+          {:rivita? true
+           :salli-poistaa-tallennettu-liite? salli-poistaa-tallennettu-liite?
+           :poista-tallennettu-liite-fn poista-tallennettu-liite-fn}]
          ^{:key (:id liite)}
-         [liitetiedosto liite])))
+         [liitetiedosto liite {:salli-poistaa-tallennettu-liite? salli-poistaa-tallennettu-liite?
+                               :poista-tallennettu-liite-fn poista-tallennettu-liite-fn}])))
 
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
