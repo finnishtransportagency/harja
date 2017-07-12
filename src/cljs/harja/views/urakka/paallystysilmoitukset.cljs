@@ -292,7 +292,7 @@
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
   (let [osan-pituus (atom {})]
-    (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
+    (go (reset! osan-pituus (<! (vkm/tieosien-ajoratojen-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])

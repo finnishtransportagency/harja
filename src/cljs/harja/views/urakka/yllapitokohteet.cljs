@@ -93,6 +93,7 @@
 
 (defn tierekisteriosoite-sarakkeet [perusleveys
                                     [nimi tunnus tie ajorata kaista aosa aet losa let pituus]]
+  (log "--->>>> pituus" pituus)
   (into []
         (remove
           nil?
@@ -248,28 +249,33 @@
 (defn- validoi-osan-maksimipituus [osan-pituus key pituus rivi]
   (when (integer? pituus)
     (let [osa (get rivi key)]
-      (when-let [pit (get osan-pituus osa)]
-        (when (> pituus pit)
-          (str "Osan " osa " maksimietäisyys on " pit))))))
+      (when (> pituus osan-pituus)
+        (str "Osan " osa " maksimietäisyys on " osan-pituus)))))
 
 (defn validoi-yllapitokohteen-osoite
   [osan-pituudet-teille kentta _ {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys] :as kohde}]
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata] :as kohde}]
   (when osan-pituudet-teille
-    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+    (let [osan-pituudet (osan-pituudet-teille tr-numero)
+          osan-ajoradan-pituus (fn [osa]
+                                 (:pituus (first (filter #(and (= osa (:osa %))
+                                                               (= tr-ajorata (:ajorata %)))
+                                                         osan-pituudet))))
+          sisaltaa-osan? (fn [osa]
+                           (some #(= osa (:osa %)) osan-pituudet))]
       (or
         (cond
-          (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+          (and (= kentta :tr-alkuosa) (not (sisaltaa-osan? tr-alkuosa)))
           (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
 
-          (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+          (and (= kentta :tr-loppuosa) (not (sisaltaa-osan? tr-loppuosa)))
           (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
 
         (when (= kentta :tr-alkuetaisyys)
-          (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+          (validoi-osan-maksimipituus (osan-ajoradan-pituus tr-alkuosa) :tr-alkuosa tr-alkuetaisyys kohde))
 
         (when (= kentta :tr-loppuetaisyys)
-          (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
+          (validoi-osan-maksimipituus (osan-ajoradan-pituus tr-loppuosa) :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 (defn yllapitokohdeosat
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
@@ -459,7 +465,7 @@
   (let [osan-pituus (atom {})
         tiedot (atom {:kohdeosat (:kohdeosat kohde)
                       :virheet {}})]
-    (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
+    (go (reset! osan-pituus (<! (vkm/tieosien-ajoratojen-pituudet tie aosa losa))))
     (fn [urakka kohteet-atom kohde {:keys [voi-muokata?] :as optiot}]
       [yllapitokohdeosat
        {:muokkaa! (fn [kohdeosat virheet]
@@ -566,7 +572,7 @@
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
     (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
       (go
-        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
+        (let [pituudet (<! (vkm/tieosien-ajoratojen-pituudet tie))]
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
@@ -681,7 +687,7 @@
                                                     "grid-solu-ennustettu")}
                                     (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
           (yllapitokohteet-domain/lihavoi-vasta-muokatut
-           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
+            (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
