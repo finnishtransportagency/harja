@@ -58,7 +58,7 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user urakka-id)
       (jdbc/with-db-transaction [db db]
-        (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (:liite-id tiedot))))
+        (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (::to/liite-id tiedot))))
     {:ok? true}))
 
 (defrecord Toimenpiteet []

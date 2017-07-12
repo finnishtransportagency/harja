@@ -125,7 +125,7 @@
 
 (defn lisaa-toimenpiteelle-liite [db toimenpide-id liite-id]
   (insert! db ::vv-toimenpide/toimenpide<->liite
-           {::vv-toimenpide/id toimenpide-id
+           {::vv-toimenpide/toimenpide-id toimenpide-id
             ::vv-toimenpide/liite-id liite-id}))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
