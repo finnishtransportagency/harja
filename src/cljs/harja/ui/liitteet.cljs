@@ -257,18 +257,22 @@
    jolla voi lisätä yhden uuden liitteen (optiolla useamman).
    Tekee myös oikeustarkistuksen.
 
-  Optiot voi sisältää:
-  uusi-liite-teksti                   Teksti uuden liitteen lisäämisen nappiin
-  uusi-liite-atom                     Atomi, johon uuden liitteen tiedot tallennetaan
-  grid?                               Jos true, optimoidaan näytettäväksi gridissä
-  disabled?                           Disabloidaanko lisäysnappi, true tai false
-  lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen.
-  nayta-lisatyt-liitteet?             Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
-                                      tallennuksen yhteydessä tehtävää linkitystä).
-                                      Oletus true. Tulisi olla false, mikäli liite-linkitykset tehdään
-                                      välittömästi sen jälkeen kun liite on ladattu palvelimelle.
-  salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
-  poista-tallennettu-liite-fn         Funktio, jota kutsutaan roskakorista."
+   urakka-id                          Urakan id, johon liite lisätään
+   tallennetut-liitteet               Kokoelma liitteitä, jotka on tallennettu kantaan ja jotka on linkitetty
+                                      johonkin domainiin liittyvään asiaan
+
+   Optiot voi sisältää:
+   uusi-liite-teksti                   Teksti uuden liitteen lisäämisen nappiin
+   uusi-liite-atom                     Atomi, johon uuden liitteen tiedot tallennetaan
+   grid?                               Jos true, optimoidaan näytettäväksi gridissä
+   disabled?                           Disabloidaanko lisäysnappi, true tai false
+   lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen.
+   nayta-lisatyt-liitteet?             Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
+                                       tallennuksen yhteydessä tehtävää linkitystä).
+                                       Oletus true. Tulisi olla false, mikäli liite-linkitykset tehdään
+                                       välittömästi sen jälkeen kun liite on ladattu palvelimelle.
+   salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
+   poista-tallennettu-liite-fn         Funktio, jota kutsutaan roskakorista."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn]}]
