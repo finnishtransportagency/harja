@@ -165,6 +165,9 @@
                                                (e! (tiedot/->LisaaToimenpiteelleLiite {:liite uusi-arvo
                                                                                        ::to/id (::to/id rivi)}))))
                     :disabled? (:liitteen-lisays-kaynnissa? app)
+                    :lisaa-usea-liite? true
+                    :nayta-lisatyt-liitteet? false ; Tässä näkymässä liitteet eivät odota erillistä linkitystä,
+                                                   ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita

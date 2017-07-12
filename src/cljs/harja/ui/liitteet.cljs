@@ -36,13 +36,13 @@
   "Näyttää liitteen pikkukuvan ja nimen."
   ([tiedosto] (liitetiedosto tiedosto {}))
   ([tiedosto {:keys [grid?] :as optiot}]
-  [:div.liite
-   (if (and (naytettava-liite? tiedosto) (not grid?))
-     [:span
-      [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                  :on-click #(nayta-liite-modalissa tiedosto)}]
-      [:span.liite-nimi (:nimi tiedosto)]]
-     [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
+   [:div.liite
+    (if (and (naytettava-liite? tiedosto) (not grid?))
+      [:span
+       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
+                                   :on-click #(nayta-liite-modalissa tiedosto)}]
+       [:span.liite-nimi (:nimi tiedosto)]]
+      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])]))
 
 (defn liite-linkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
@@ -136,89 +136,100 @@
   HUOM! Oikeustarkistuksen tekeminen on kutsujan vastuulla!
 
   Optiot voi sisältää:
-  grid?              Jos true, optimoidaan näytettäväksi gridissä
-  nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
-  liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
-                     Parametriksi annetaan mäppi, jossa liitteen tiedot:
+  grid?                     Jos true, optimoidaan näytettäväksi gridissä.
+  nappi-teksti              Teksti, joka napissa näytetään (vakiona 'Lisää liite')
+  liite-ladattu             Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
+                            Parametriksi annetaan mäppi, jossa liitteen tiedot:
 
-                     :kuvaus, :fileyard-hash, :urakka, :nimi,
-                     :id,:lahde,:tyyppi, :koko 65528
+                            :kuvaus, :fileyard-hash, :urakka, :nimi,
+                            :id,:lahde,:tyyppi, :koko 65528
 
-                     Metatietona annetaan tieto siitä, oliko kyseessä uuden liitteen
-                     lisäys vai vanhan vaihto:
-
-                     :lisays? true/false
-                     :vanha-liite { ... }
-  disabled?          Nappi disabloitu, true tai false"
+  disabled?                 Nappi disabloitu, true tai false.
+  lisaa-usea-liite?         Jos true, komponentilla voi lisätä useita liitteitä.
+  nayta-lisatyt-liitteet?   Näyttää juuri lisätyt liitteet, oletus true."
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
-        tiedosto (atom nil)
+        tiedosto (atom nil) ;; Jos komponentilla lisätään vain yksi liite
+        tiedostot (atom []) ;; Jos komponentilla lisätään useampi liite
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)
         virheviesti (atom nil)]
-    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled?] :as opts}]
-      [:span
-       ;; Tiedosto ladattu palvelimelle, näytetään se (paitsi gridissä)
-       (when (and @tiedosto (not grid?))
-         [liitetiedosto @tiedosto])
+    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled? lisaa-usea-liite?
+                           nayta-lisatyt-liitteet?] :as opts}]
+      (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)]
+        [:span
+         ;; Näytä vastikään ladatut tiedostot
+         ;; TODO Tässä voisi olla kätevää mahdollistaa myös lisätyn liitteen poisto ennen varsinaista tallennusta
+         (when (and nayta-lisatyt-liitteet? @tiedosto
+                    (not grid?)) ;; Gridissä ollessa lisätty tiedosto lukee napissa
+           [liitetiedosto @tiedosto])
+         (when (and nayta-lisatyt-liitteet? lisaa-usea-liite? (not (empty? @tiedostot)))
+           (for [liite @tiedostot]
+             ^{:key (:id liite)}
+             [liitetiedosto liite {:grid? grid?}]))
 
-       (if-let [edistyminen @edistyminen]
-         ;; Siirto menossa, näytetään progress
-         [:progress {:value edistyminen :max 100}]
-         ;; Näytetään liitteen lisäys
-         [:span.liitekomponentti
-          [:div {:class (str "file-upload nappi-toissijainen "
-                             (when grid? "nappi-grid ")
-                             (when disabled? "disabled "))
-                 :on-click #(.stopPropagation %)}
-           [ikonit/ikoni-ja-teksti
-            (ikonit/livicon-upload)
-            (if @tiedosto
-              (if grid?
-                (str "Vaihda " (fmt/leikkaa-merkkijono 25 {:pisteet? true} (:nimi @tiedosto)))
-                "Vaihda liite")
-              (or nappi-teksti "Lisää liite"))]
-           [:input.upload
-            {:type "file"
-             :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
-                           (go
-                             (loop [ed (<! ch)]
-                               (if (number? ed)
-                                 (do (reset! edistyminen ed)
-                                     (recur (<! ch)))
-                                 (if (and ed (not (k/virhe? ed)))
-                                   (do
-                                     (reset! edistyminen nil)
-                                     (reset! virheviesti nil)
-                                     (when liite-ladattu
-                                       (let [tiedosto-ennen-latausta @tiedosto
-                                             tiedosto-nyt (reset! tiedosto ed)]
-                                         (liite-ladattu (with-meta tiedosto-nyt
-                                                                   {:uusi-liite? (nil? tiedosto-ennen-latausta)
-                                                                    :vanha-liite tiedosto-ennen-latausta})))))
-                                   (do
-                                     (log "Virhe: " (pr-str ed))
-                                     (reset! edistyminen nil)
-                                     (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
-                                                              (if (:viesti ed)
-                                                                (str " (" (:viesti ed) ")"))))))))))}]]
-          [:div.liite-virheviesti @virheviesti]])])))
+         (if-let [edistyminen @edistyminen]
+           ;; Siirto menossa, näytetään progress
+           [:progress {:value edistyminen :max 100}]
+           ;; Näytetään uuden liitteen lisäyspainike
+           [:span.liitekomponentti
+            [:div {:class (str "file-upload nappi-toissijainen "
+                               (when grid? "nappi-grid ")
+                               (when disabled? "disabled "))
+                   :on-click #(.stopPropagation %)}
+             [ikonit/ikoni-ja-teksti
+              (ikonit/livicon-upload)
+              (if @tiedosto
+                (if grid?
+                  (str "Vaihda " (fmt/leikkaa-merkkijono 25 {:pisteet? true} (:nimi @tiedosto)))
+                  "Vaihda liite")
+                (or nappi-teksti "Lisää liite"))]
+             [:input.upload
+              {:type "file"
+               :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
+                             (go
+                               (loop [ed (<! ch)]
+                                 (if (number? ed)
+                                   (do (reset! edistyminen ed)
+                                       (recur (<! ch)))
+                                   (if (and ed (not (k/virhe? ed)))
+                                     (do
+                                       (reset! edistyminen nil)
+                                       (reset! virheviesti nil)
+                                       (when liite-ladattu
+                                         (if lisaa-usea-liite?
+                                           (swap! tiedostot conj ed)
+                                           (reset! tiedosto ed))
+
+                                         (liite-ladattu ed)))
+                                     (do
+                                       (log "Virhe: " (pr-str ed))
+                                       (reset! edistyminen nil)
+                                       (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
+                                                                (if (:viesti ed)
+                                                                  (str " (" (:viesti ed) ")"))))))))))}]]
+            [:div.liite-virheviesti @virheviesti]])]))))
 
 (defn liitteet-ja-lisays
   "Listaa nykyiset (kantaan tallennetut) liitteet ja näyttää Lisää liite -napin,
-   jolla voi lisätä yhden uuden liitteen. Mahdollistaa lisätyn liitteen vaihtamisen.
+   jolla voi lisätä yhden uuden liitteen (optiolla useamman).
    Tekee myös oikeustarkistuksen.
 
   Optiot voi sisältää:
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
   grid?                           Jos true, optimoidaan näytettäväksi gridissä
-  disabled?                       Disabloidaanko lisäysnappi, true tai false"
-  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled?]}]
+  disabled?                       Disabloidaanko lisäysnappi, true tai false
+  lisaa-usea-liite?               Jos true, mahdollistaa usean liitteen lisäämisen.
+  nayta-lisatyt-liitteet?         Listaa juuri lisätyt liitteet (jotka odottavat yhä linkitystä).
+                                  Oletus true. Voi olla false, mikäli liite-linkitykset tehdään
+                                  välittömästi sen jälkeen kun liite on ladattu palvelimelle."
+  [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
+                                          nayta-lisatyt-liitteet?]}]
   [:span
-   ;; Näytä olemassaolevat liitteet
+   ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
-     (for [liite liitteet]
+     (for [liite tallennetut-liitteet]
        ^{:key (:id liite)}
        [liitetiedosto liite {:grid? grid?}]))
 
@@ -228,4 +239,6 @@
        [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
                                :nappi-teksti uusi-liite-teksti
                                :grid? grid?
+                               :lisaa-usea-liite? lisaa-usea-liite?
+                               :nayta-lisatyt-liitteet? nayta-lisatyt-liitteet?
                                :disabled? disabled?}]))])
