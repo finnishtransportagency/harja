@@ -248,9 +248,10 @@
 
 (defn- validoi-osan-maksimipituus [osan-pituus key pituus rivi]
   (when (integer? pituus)
-    (let [osa (get rivi key)]
+    (let [osa (get rivi key)
+          ajorata (:tr-ajorata rivi)]
       (when (> pituus osan-pituus)
-        (str "Osan " osa " maksimietäisyys on " osan-pituus)))))
+        (str "Osan " osa " ajoradan " ajorata " maksimietäisyys on " osan-pituus)))))
 
 (defn validoi-yllapitokohteen-osoite
   [osan-pituudet-teille kentta _ {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
