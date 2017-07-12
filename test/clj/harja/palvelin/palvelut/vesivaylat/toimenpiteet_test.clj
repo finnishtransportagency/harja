@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet.toimenpiteet-test
+(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja
@@ -375,3 +375,19 @@
     (is (= vastaus kokonaishintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
+
+(deftest yksikkohintaisiin-siirto
+  (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
+        liitteet-ennen (ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite;"))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id 1
+                       ::toi/id (first kokonaishintaiset-toimenpide-idt)}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :lisaa-toimenpiteelle-liite +kayttaja-jvh+
+                                kysely-params)
+        liitteet-jalkeen (ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite;"))]
+    (is (s/valid? ::toi/lisaa-toimenpiteelle-liite-kysely kysely-params))
+
+    (is (true? (:ok? vastaus)))
+    (is (= (+ liitteet-ennen 1) liitteet-jalkeen))))

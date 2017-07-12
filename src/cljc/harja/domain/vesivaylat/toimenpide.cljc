@@ -432,5 +432,4 @@ reimari-tilat
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
 
 (s/def ::lisaa-toimenpiteelle-liite-kysely
-  (s/keys :req [::id ::urakka-id]
-          :req-un [::liite-id]))
+  (s/keys :req [::id ::urakka-id ::liite-id]))

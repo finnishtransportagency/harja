@@ -53,7 +53,10 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-liitteet user urakka-id)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                      user urakka-id)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                      user urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (:liite-id tiedot))))
     {:ok? true}))
