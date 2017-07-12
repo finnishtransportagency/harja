@@ -155,7 +155,7 @@
 
   LiiteLisatty
   (process-event [{tiedot :tiedot} app]
-    (log "LIITE LISÄTTY: " (pr-sr tiedot))
+    (log "LIITE LISÄTTY: " (pr-str tiedot))
     (let [liite (:liite tiedot)
           toimenpide-id (::to/id tiedot)]
       (assoc app :toimenpiteet (map (fn [toimenpide]
