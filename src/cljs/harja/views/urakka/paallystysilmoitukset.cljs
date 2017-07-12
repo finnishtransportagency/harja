@@ -388,7 +388,7 @@
                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
-                    :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
+                    :hae (partial tierekisteri-domain/laske-tieosan-ajoradan-pituus @osan-pituus)
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsittely\u00ADmenetelmä"
                     :nimi :kasittelymenetelma

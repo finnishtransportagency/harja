@@ -132,6 +132,32 @@
                  (recur (+ pituus osan-pituus)
                         (inc osa)))))))))))
 
+(defn laske-tieosan-ajoradan-pituus
+  ([tie] (laske-tien-pituus {} tie))
+  ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
+   (println "---->>>> laske-tieosan-ajoradan-pituus" osien-pituudet)
+   666
+   #_(when (and (on-alku-ja-loppu? tie)
+              (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
+                  (not (empty? osien-pituudet)))) ;; Tarvitaan osien pituudet laskuun
+     (let [{aosa :tr-alkuosa
+            alkuet :tr-alkuetaisyys
+            losa :tr-loppuosa
+            loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
+       (if (= aosa losa)
+         (Math/abs (- loppuet alkuet))
+         (let [max-osa (reduce max 0 (keys osien-pituudet))
+               losa (min losa max-osa)]
+           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+                  osa (inc aosa)]
+             (let [osan-pituus (get osien-pituudet osa 0)]
+               (if (>= osa losa)
+                 (+ pituus (min loppuet osan-pituus))
+
+                 (recur (+ pituus osan-pituus)
+                        (inc osa)))))))))
+   ))
+
 (defn validi-osoite? [osoite]
   (let [osoite (normalisoi osoite)]
     (and (some? (::tie osoite))

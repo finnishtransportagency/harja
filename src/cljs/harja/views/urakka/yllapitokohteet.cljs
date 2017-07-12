@@ -93,7 +93,6 @@
 
 (defn tierekisteriosoite-sarakkeet [perusleveys
                                     [nimi tunnus tie ajorata kaista aosa aet losa let pituus]]
-  (log "--->>>> pituus" pituus)
   (into []
         (remove
           nil?
@@ -316,7 +315,8 @@
               (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
 
         pituus (fn [osan-pituus tieosa]
-                 (tr/laske-tien-pituus osan-pituus tieosa))]
+                 (log "--->>>>> 1" (pr-str osan-pituus))
+                 (tr/laske-tieosan-ajoradan-pituus osan-pituus tieosa))]
 
     (fn [{:keys [kohdeosat-paivitetty-fn muokkaa!
                  rivinumerot? voi-muokata?] :as opts}
@@ -440,7 +440,7 @@
                              [:span#kohdeosien-pituus-yht
                               "Tierekisterikohteiden pituus yhteensä: "
                               (if (not (empty? osan-pituus))
-                                (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus) (vals @grid-data))))
+                                666 #_ (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus) (vals @grid-data))))
                                 "-")
                               (when (= kohdetyyppi :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
