@@ -56,9 +56,10 @@
    Optiot:
    nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
   ([liite teksti] (liitelinkki liite teksti {}))
-  ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
+  ([liite teksti {:keys [nayta-tooltip? rivita?] :as optiot}]
    (if (naytettava-liite? liite)
-     [:a.klikattava {:title (let [tooltip (:nimi liite)]
+     [:a.klikattava {:style (when rivita? {:display "block"})
+                     :title (let [tooltip (:nimi liite)]
                               (if (nil? nayta-tooltip?)
                                 tooltip
                                 (when nayta-tooltip? tooltip)))
@@ -66,7 +67,8 @@
                                   (.stopPropagation %)
                                   (nayta-liite-modalissa liite))}
       teksti]
-     [:a.klikattava {:title (:nimi liite)
+     [:a.klikattava {:style (when rivita? {:display "block"})
+                     :title (:nimi liite)
                      :href (k/liite-url (:id liite))
                      :target "_blank"}
       teksti])))
@@ -170,9 +172,10 @@
            [liitetiedosto @tiedosto])
          (when (and nayta-lisatyt-liitteet? lisaa-usea-liite? (not (empty? @tiedostot)))
            (for [liite @tiedostot]
-             ^{:key (:id liite)}
              (if grid?
-               [:div [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))]]
+               ^{:key (:id liite)}
+               [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite)) {:rivita? true}]
+               ^{:key (:id liite)}
                [liitetiedosto liite])))
 
          (if-let [edistyminen @edistyminen]
@@ -237,9 +240,10 @@
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite tallennetut-liitteet]
-       ^{:key (:id liite)}
        (if grid?
-         [:div [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))]]
+         ^{:key (:id liite)}
+         [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite)) {:rivita? true}]
+         ^{:key (:id liite)}
          [liitetiedosto liite])))
 
    ;; Uuden liitteen lähetys
