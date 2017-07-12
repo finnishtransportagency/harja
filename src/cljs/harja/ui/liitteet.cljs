@@ -198,7 +198,9 @@
       (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)]
         [:span
          ;; Näytä vastikään ladatut tiedostot
-         ;; TODO Tässä voisi olla kätevää mahdollistaa lisätyn liitteen poisto myös tässä ennen varsinaista tallennusta
+         ;; TODO Tässä voisi olla kätevää mahdollistaa lisätyn liitteen poisto myös tässä
+         ;; ennen varsinaista tallennusta. Vaatii oman option, jossa sallitaan poistaa vasta lisätty liite, jota
+         ;; ei kuitenkaan ole vielä linkitetty mihinkään domain-asiaan.
          (when (and nayta-lisatyt-liitteet? @tiedosto
                     (not grid?)) ;; Gridissä ollessa lisätty tiedosto lukee napissa
            [liitetiedosto @tiedosto])
