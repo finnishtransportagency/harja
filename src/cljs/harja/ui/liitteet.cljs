@@ -212,7 +212,8 @@
   Optiot voi sisältää:
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
-  grid?                           Jos true, optimoidaan näytettäväksi gridissä"
+  grid?                           Jos true, optimoidaan näytettäväksi gridissä
+  disabled?                       Disabloidaanko lisäysnappi, true tai false"
   [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
