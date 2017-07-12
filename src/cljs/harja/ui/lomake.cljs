@@ -8,7 +8,9 @@
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
             [harja.pvm :as pvm]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.leijuke :as leijuke]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord Ryhma [otsikko optiot skeemat])
@@ -163,20 +165,37 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                    (+ palstoja kentan-palstat)
                    skeemat)))))))
 
+(defn kentan-vihje-inline [vihje]
+  (let [vihjeet (if (vector? vihje) vihje [vihje])]
+    [:div {:class
+           (str "inline-block yleinen-pikkuvihje")}
+     [:div.vihjeen-sisalto
+      (harja.ui.ikonit/livicon-info-sign)
+      [:span (str " " (first vihjeet))]
+      (map-indexed
+        (fn [i vihje]
+          ^{:key i}
+          [:div.vihjeen-lisarivi (str "  " vihje)])
+        (rest vihjeet))]]))
 
-(defn kentan-vihje [{vihje :vihje}]
-  (when vihje
-    (let [vihjeet (if (vector? vihje) vihje [vihje])]
+(defn kentan-vihje-leijuke [leijuke-sisalto]
+  (let [nakyvissa? (atom false)]
+    (fn [leijuke-sisalto]
       [:div {:class
-             (str "inline-block yleinen-pikkuvihje")}
-       [:div.vihjeen-sisalto
-        (harja.ui.ikonit/livicon-info-sign)
-        [:span (str " " (first vihjeet))]
-        (map-indexed
-          (fn [i vihje]
-            ^{:key i}
-            [:div.vihjeen-lisarivi (str "  " vihje)])
-          (rest vihjeet))]])))
+             (str "inline-block yleinen-pikkuvihje klikattava")}
+       [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
+        (if @nakyvissa?
+          [leijuke/leijuke {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
+                            :sulje! #(reset! nakyvissa? false)}
+           [:div {:style {:min-width "300px"}}
+            leijuke-sisalto]]
+          (harja.ui.ikonit/livicon-info-sign))]])))
+
+(defn kentan-vihje [{:keys [vihje vihje-leijuke] :as skeema}]
+  (when vihje
+    [kentan-vihje-inline vihje])
+  (when vihje-leijuke
+    [kentan-vihje-leijuke vihje-leijuke]))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
@@ -198,13 +217,13 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (or
-                                   ;; salli skeeman ylikirjoittaa ns-avaimella
-                                   (::col-luokka s)
-                                   col-luokka
-                                   (case (or palstoja 1)
-                                     1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                     2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
-                                     3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
+                                    ;; salli skeeman ylikirjoittaa ns-avaimella
+                                    (::col-luokka s)
+                                    col-luokka
+                                    (case (or palstoja 1)
+                                      1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                      2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                      3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)
@@ -292,8 +311,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn- muokkausaika [{ensimmainen ::ensimmainen-muokkaus
                       viimeisin ::viimeisin-muokkaus :as tiedot}]
   (assoc tiedot
-         ::ensimmainen-muokkaus (or ensimmainen (pvm/nyt))
-         ::viimeisin-muokkaus (pvm/nyt)))
+    ::ensimmainen-muokkaus (or ensimmainen (pvm/nyt))
+    ::viimeisin-muokkaus (pvm/nyt)))
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
@@ -375,7 +394,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
              (when-let [footer (if footer-fn
                                  (footer-fn (assoc validoitu-data
-                                                   ::skeema skeema))
+                                              ::skeema skeema))
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))

@@ -11,8 +11,8 @@
     [cljs.core.async.macros :refer [go]]))
 
 (def karttataso-tr-alkuosoite (atom true))
-
 (def valittu-alkupiste (atom nil))
+
 (def tr-alkupiste-kartalla
   (reaction
    (when (and @karttataso-tr-alkuosoite @valittu-alkupiste)
