@@ -34,11 +34,17 @@
    {:harja.domain.vesivaylat.urakoitsija/id 2,
     :harja.domain.vesivaylat.urakoitsija/nimi "Merimiehet Oy"},
    ::toimenpide/reimari-sopimus
-   {:harja.domain.vesivaylat.sopimus/r-nro -5,
+   {:harja.domain.vesivaylat.sopimus/r-diaarinro "5/5"
+    :harja.domain.vesivaylat.sopimus/r-nro -5,
     :harja.domain.vesivaylat.sopimus/r-tyyppi "1022542301",
     :harja.domain.vesivaylat.sopimus/r-nimi "Hoitosopimus"},
    ::toimenpide/reimari-muokattu
    #inst "2017-04-24T13:30:00.123-00:00",
+   ::toimenpide/reimari-viat [{:harja.domain.vesivaylat.vika/id 42
+                       :harja.domain.vesivaylat.vika/tila "korjattu"}
+                      {:harja.domain.vesivaylat.vika/id 43
+                       :harja.domain.vesivaylat.vika/tila "aiheeton"}
+                      ]
    ::toimenpide/reimari-komponentit
    [{:harja.domain.vesivaylat.komponentti/tila "234",
      :harja.domain.vesivaylat.komponentti/nimi "Erikoispoiju",
@@ -53,7 +59,10 @@
    {:harja.domain.vesivaylat.turvalaite/r-nro "904",
      :harja.domain.vesivaylat.turvalaite/r-nimi
     "Glosholmsklacken pohjoinen",
-    :harja.domain.vesivaylat.turvalaite/r-ryhma 555}})
+    :harja.domain.vesivaylat.turvalaite/r-ryhma 555}
+   ::toimenpide/reimari-asiakas "Asko Asiakas"
+   ::toimenpide/reimari-vastuuhenkilo "Väiski Vastuullinen"
+   ::toimenpide/reimari-henkilo-lkm 2})
 
 (t/deftest kasittele-vastaus-kantatallennus
   (let [db (:db ht/jarjestelma)
