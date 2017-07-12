@@ -159,8 +159,6 @@
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
-                                               ;; TODO Toisin kuin yleensä, uusi liite-linkitys pitää tallentaa
-                                               ;; kantaan heti, koska näkymässä ei ole omaa "Tallenna" nappia.
                                                ;; TODO Nyt ei indikoida onko liite lisäys vai vanhan vaihto
                                                ;; Voisi assocata aina vanhan tilalle, mutta jos tehdäänkin
                                                ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
