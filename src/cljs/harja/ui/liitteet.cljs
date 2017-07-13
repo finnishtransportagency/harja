@@ -268,13 +268,13 @@
    uusi-liite-atom                     Atomi, johon uuden liitteen tiedot tallennetaan
    grid?                               Jos true, optimoidaan näytettäväksi gridissä
    disabled?                           Disabloidaanko lisäysnappi, true tai false
-   lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen.
+   lisaa-usea-liite?                   Jos true, mahdollistaa usean liitteen lisäämisen. Oletus false.
    nayta-lisatyt-liitteet?             Listaa juuri lisätyt liitteet (jotka odottavat esim. lomakkeen
                                        tallennuksen yhteydessä tehtävää linkitystä).
                                        Oletus true. Tulisi olla false, mikäli liite-linkitykset tehdään
                                        välittömästi sen jälkeen kun liite on ladattu palvelimelle.
    salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
-   poista-tallennettu-liite-fn         Funktio, jota kutsutaan roskakorista."
+   poista-tallennettu-liite-fn         Funktio, jota kutsutaan, kun tallennettu liite vahvistetaan poistettavaksi."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn]}]

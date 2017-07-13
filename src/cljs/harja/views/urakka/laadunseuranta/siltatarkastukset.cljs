@@ -432,10 +432,16 @@
                                    [liitteet/liitteet-ja-lisays
                                     (:id @nav/valittu-urakka)
                                     nil ;; Lisätyt liitteet näytetään eri sarakkeessa
-                                    {:uusi-liite-atom (r/wrap nil
-                                                              (fn [uusi-arvo]
-                                                                (reset! uudet-liitteet
-                                                                        (assoc @uudet-liitteet (:kohdenro rivi) uusi-arvo))))
+                                    {:uusi-liite-atom
+                                     (r/wrap nil
+                                             (fn [uusi-arvo]
+                                               (let [kohdenro (:kohdenro rivi)]
+                                                 (reset! uudet-liitteet
+                                                         (assoc @uudet-liitteet
+                                                           kohdenro
+                                                           (conj (get @uudet-liitteet kohdenro)
+                                                                 uusi-arvo))))))
+                                     :lisaa-usea-liite? true
                                      :grid? true}])}]
                   (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
