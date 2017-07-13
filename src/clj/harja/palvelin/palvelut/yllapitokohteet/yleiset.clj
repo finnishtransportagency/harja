@@ -99,9 +99,7 @@
                        osat)
             min-osa (reduce min 1 osat)
             max-osa (reduce max 1 osat)]
-        (into {}
-              (map (juxt :osa :pituus))
-              (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
+        (tieverkko/hae-ajoratojen-pituudet db tie min-osa max-osa)))
     (group-by :tr-numero yllapitokohteet)))
 
 (defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
@@ -189,12 +187,12 @@
 
 (def urakan-yllapitokohde-xf
   (comp
-   yllapitokohteet-domain/yllapitoluokka-xf
-   (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
-   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-   (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
+    yllapitokohteet-domain/yllapitoluokka-xf
+    (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+    (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+    (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+    (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+    (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
 
 (defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
   (let [yllapitokohteet (into []
@@ -209,8 +207,8 @@
                              (map :yllapitokohde)
                              (q/yllapitokohteet-joille-linkityksia db {:idt idt}))
         yllapitokohteet (->> yllapitokohteet
-                             (map #(assoc % :pituus
-                                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
+                             (map #(assoc % :pituus (tr/laske-tieosan-ajoradan-pituus 
+                                                      (osien-pituudet-tielle (:tr-numero %)) %)
                                             :yllapitokohteen-voi-poistaa?
                                             (not (ei-voi-poistaa (:id %))))))]
     (vec yllapitokohteet)))
@@ -224,10 +222,10 @@
     (vec yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
-  (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
-                                                       :aosa tr-alkuosa
-                                                       :losa tr-loppuosa})
-        pituus (tr/laske-tien-pituus osien-pituudet kohde)]
+  (let [osien-pituudet (tr-haku/hae-ajoratojen-pituudet db {:tie tr-numero
+                                                            :aosa tr-alkuosa
+                                                            :losa tr-loppuosa})
+        pituus (tr/laske-tieosan-ajoradan-pituus osien-pituudet kohde)]
     (assoc kohde :pituus pituus)))
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]

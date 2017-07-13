@@ -109,31 +109,8 @@
   (and (on-alku? tie)
        (on-loppu? tie)))
 
-(defn laske-tien-pituus
-  ([tie] (laske-tien-pituus {} tie))
-  ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
-   (when (and (on-alku-ja-loppu? tie)
-              (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
-                  (not (empty? osien-pituudet)))) ;; Tarvitaan osien pituudet laskuun
-     (let [{aosa :tr-alkuosa
-            alkuet :tr-alkuetaisyys
-            losa :tr-loppuosa
-            loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
-       (if (= aosa losa)
-         (Math/abs (- loppuet alkuet))
-         (let [max-osa (reduce max 0 (keys osien-pituudet))
-               losa (min losa max-osa)]
-           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                  osa (inc aosa)]
-             (let [osan-pituus (get osien-pituudet osa 0)]
-               (if (>= osa losa)
-                 (+ pituus (min loppuet osan-pituus))
-
-                 (recur (+ pituus osan-pituus)
-                        (inc osa)))))))))))
-
 (defn laske-tieosan-ajoradan-pituus
-  ([tie] (laske-tien-pituus {} tie))
+  ([tie] (laske-tieosan-ajoradan-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-loppuosa tr-ajorata] :as tie}]
    (when (and (on-alku-ja-loppu? tie)
               (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
@@ -154,7 +131,7 @@
          (Math/abs (- loppuet alkuet))
          (let [max-osa (reduce max 0 (map :osa osien-pituudet))
                losa (min losa max-osa)]
-           (loop [pituus (- (hae-osan-ajoradan-pituus aosa) alkuet)
+           (loop [pituus (max 0 (- (hae-osan-ajoradan-pituus aosa) alkuet))
                   osa (inc aosa)]
              (let [osan-pituus (hae-osan-ajoradan-pituus osa)]
                (if (>= osa losa)

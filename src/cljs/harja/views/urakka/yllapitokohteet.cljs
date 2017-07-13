@@ -315,7 +315,6 @@
               (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
 
         pituus (fn [osan-pituus tieosa]
-                 (log "--->>>>> 1" (pr-str osan-pituus))
                  (tr/laske-tieosan-ajoradan-pituus osan-pituus tieosa))]
 
     (fn [{:keys [kohdeosat-paivitetty-fn muokkaa!
@@ -354,7 +353,8 @@
                                                                         (< rivi (dec kohdeosia)))
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
-                                {:hae (partial tr/laske-tien-pituus osan-pituus)}])
+                                {:hae #(do
+                                         (tr/laske-tieosan-ajoradan-pituus osan-pituus %))}])
                              [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
                               (assoc paallystys-tiedot/raekoko-grid-skeema :leveys raekoko-leveys)
                               (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
