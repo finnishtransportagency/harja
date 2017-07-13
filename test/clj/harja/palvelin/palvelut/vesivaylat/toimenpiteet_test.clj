@@ -446,14 +446,14 @@
 (deftest lisaa-liite-toimenpiteelle-joka-ei-kuulu-urakkaan
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (muhoksen-paallystysurakan-id)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :lisaa-toimenpiteelle-liite +kayttaja-tero+
-                                           kysely-params)))))
+                                                   :lisaa-toimenpiteelle-liite +kayttaja-jvh+
+                                                   kysely-params)))))
 
 (deftest poista-liite-ilman-oikeutta
   (let [liite-id 1
@@ -470,11 +470,11 @@
 (deftest poista-liite-toimenpiteelta-joka-ei-kuulu-urakkaan
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (muhoksen-paallystysurakan-id)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :poista-toimenpiteen-liite +kayttaja-tero+
-                                           kysely-params)))))
+                                                   :poista-toimenpiteen-liite +kayttaja-jvh+
+                                                   kysely-params)))))

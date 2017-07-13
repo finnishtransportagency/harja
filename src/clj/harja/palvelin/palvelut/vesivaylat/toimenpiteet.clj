@@ -59,6 +59,7 @@
                                       user urakka-id)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user urakka-id)
+      (q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (::to/liite-id tiedot))))
     {:ok? true}))
@@ -71,6 +72,7 @@
                                       user urakka-id)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                       user urakka-id)
+      (q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/poista-toimenpiteen-liite db (::to/id tiedot) (::to/liite-id tiedot))))
     {:ok? true}))
