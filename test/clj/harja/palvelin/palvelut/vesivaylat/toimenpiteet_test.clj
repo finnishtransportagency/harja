@@ -409,7 +409,29 @@
       (is (true? (:ok? vastaus)))
       (is (= liitteet-ennen liitteet-poiston-jalkeen)))))
 
-;; TODO Testi: Lisää liite ilman oikeutta
+(deftest lisaa-liite-ilman-oikeutta
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :lisaa-toimenpiteelle-liite +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest poista-liite-ilman-oikeutta
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-toimenpiteen-liite +kayttaja-tero+
+                                           kysely-params)))))
+
 ;; TODO Testi: Lisää liite toimenpiteelle joka ei kuulu urakkaan
-;; TODO: Testi: Poista liite ilman oikeutta
 ;; TODO: Testi: Poista liite toimenpiteeltä joka ei kuulu urakkaan
