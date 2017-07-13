@@ -19,8 +19,7 @@
     "nimi" ::r-nimi
     "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ["vv_vayla" ::vayla
-   {::turvalaitteet (specql.rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)}])
+  ["vv_vayla" ::vayla])
 
 (def tyypit (s/describe ::tyyppi))
 

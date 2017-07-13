@@ -16,14 +16,19 @@
                             ::turvalaite/r-nimi "Glosholmsklacken pohjoinen"
                             ::turvalaite/r-ryhma 555}
    ::toimenpide/vayla {::vayla/r-nro "12345"
-                               ::vayla/r-nimi "Joku väylä"}
+                       ::vayla/r-nimi "Joku väylä"}
    ::toimenpide/suoritettu  #inst "2017-04-24T09:42:04.123-00:00"
    ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
-   ::toimenpide/reimari-sopimus {::sopimus/r-nro -5
+
+   ::toimenpide/reimari-sopimus {::sopimus/r-diaarinro "5/5"
+                                 ::sopimus/r-nro -5
                                  ::sopimus/r-tyyppi "1022542301"
                                  ::sopimus/r-nimi "Hoitosopimus"}
-
+   ::toimenpide/reimari-viat [{:harja.domain.vesivaylat.vika/id 42
+                               :harja.domain.vesivaylat.vika/tila "korjattu"}
+                              {:harja.domain.vesivaylat.vika/id 43
+                               :harja.domain.vesivaylat.vika/tila "aiheeton"}]
    ::toimenpide/reimari-toimenpidetyyppi "1022542001"
    ::toimenpide/lisatieto "vaihdettiin patterit lamppuun"
    ::toimenpide/reimari-tyoluokka "1022541905"
@@ -38,7 +43,10 @@
                               :harja.domain.vesivaylat.komponentti/id 123}
                              {:harja.domain.vesivaylat.komponentti/tila "345",
                               :harja.domain.vesivaylat.komponentti/nimi "Erikoismerkki",
-                              :harja.domain.vesivaylat.komponentti/id 124}]})
+                              :harja.domain.vesivaylat.komponentti/id 124}]
+   ::toimenpide/asiakas "Asko Asiakas"
+   ::toimenpide/vastuuhenkilo "Väiski Vastuullinen"
+   ::toimenpide/henkilo-lkm 2})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-toimenpide
@@ -46,7 +54,6 @@
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-
-    (println (s/explain-str ::toimenpide/reimari-toimenpide luettu-toimenpide))
+    (clojure.pprint/pprint luettu-toimenpide)
     (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))
