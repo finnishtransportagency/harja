@@ -183,7 +183,6 @@
 
   PoistaToimenpiteenLiite
   (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI!
     (if (not (:liitteen-poisto-kaynnissa? app))
       (do (tuck-tyokalut/palvelukutsu :poista-toimenpiteen-liite
                                       {::to/urakka-id (get-in app [:valinnat :urakka-id])
@@ -197,7 +196,6 @@
 
   LiitePoistettu
   (process-event [{vastaus :vastaus tiedot :tiedot} app]
-    ;; TODO TESTI!
     (let [liite-id (::to/liite-id tiedot)
           toimenpide-id (::to/id tiedot)]
       (assoc app :toimenpiteet (map (fn [toimenpide]
@@ -210,6 +208,5 @@
 
   LiiteEiPoistettu
   (process-event [_ app]
-    ;; TODO TESTI!
     (viesti/nayta! "Liitteen poistaminen epäonnistui!" :danger)
     (assoc app :liitteen-poisto-kaynnissa? false)))

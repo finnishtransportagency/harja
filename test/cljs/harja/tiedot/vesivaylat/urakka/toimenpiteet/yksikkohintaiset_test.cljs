@@ -110,6 +110,7 @@
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
+                                ::to/liitteet [{:id 666}]
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
 (deftest nakymaan-tuleminen
@@ -658,8 +659,8 @@
                         vanha-tila)]
       (is (false? (:liitteen-lisays-kaynnissa? uusi-tila)))
       ;; Liitteen tiedot lisättiin oikealle toimenpiteelle
-      (is (= (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet uusi-tila)))
-             (-> (first (filter #(= (::to/id %) toimenpide-id) (:toimenpiteet vanha-tila)))
+      (is (= (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
+             (-> (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
                  (assoc ::to/liitteet [{:id 1}])))))))
 
 (deftest liite-ei-lisatty
@@ -667,6 +668,37 @@
         uusi-tila (e! (jaetut-tiedot/->LiiteEiLisatty)
                       vanha-tila)]
     (is (false? (:liitteen-lisays-kaynnissa? uusi-tila)))))
+
+(deftest liitteen-poistaminen-toimenpiteelta
+  (vaadi-async-kutsut
+    #{jaetut-tiedot/->LiitePoistettu jaetut-tiedot/->LiiteEiPoistettu}
+    (let [vanha-tila testitila
+          uusi-tila (e! (jaetut-tiedot/->PoistaToimenpiteenLiite
+                          {::to/liite-id 666
+                           ::to/id 6})
+                        vanha-tila)]
+      (is (true? (:liitteen-poisto-kaynnissa? uusi-tila))))))
+
+(deftest liite-poistettu
+  (testing "Uusi liite lisätty toimenpiteelle"
+    (let [vanha-tila testitila
+          toimenpide-id 6
+          uusi-tila (e! (jaetut-tiedot/->LiitePoistettu
+                          nil
+                          {::to/liite-id 666
+                           ::to/id toimenpide-id})
+                        vanha-tila)]
+      (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))
+      ;; Liitteen tiedot poistetaan oikealta toimenpiteeltä
+      (is (= (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
+             (-> (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
+                 (assoc ::to/liitteet [])))))))
+
+(deftest liite-ei-poistettu
+  (let [vanha-tila testitila
+        uusi-tila (e! (jaetut-tiedot/->LiiteEiPoistettu)
+                      vanha-tila)]
+    (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))))
 
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
