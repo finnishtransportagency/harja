@@ -347,7 +347,7 @@ reimari-tilat
                             h/toimenpiteen-hinnoittelut)]})
 
 (def liitteet
-  #{[::liite-linkit #{::toimenpide-id ::liite-id}]})
+  #{[::liite-linkit #{::toimenpide-id ::liite-id ::poistettu?}]})
 
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})

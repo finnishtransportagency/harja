@@ -169,13 +169,14 @@
 
 (defn- lisaa-liitteet [toimenpiteet db]
   (let [liite-idt (mapcat (fn [toimenpide]
-                            (keep ::vv-toimenpide/liite-id (::vv-toimenpide/liite-linkit toimenpide)))
+                            (let [toimenpiteen-liite-linkit (filter (comp not ::m/poistettu?)
+                                                                    (::vv-toimenpide/liite-linkit toimenpide))]
+                              (keep ::vv-toimenpide/liite-id toimenpiteen-liite-linkit)))
                           toimenpiteet)
         liitteet (fetch
                    db ::liite/liite
                    liite/perustiedot
-                   {::liite/id (op/in liite-idt)
-                    ::liite/poistettu? false})
+                   {::liite/id (op/in liite-idt)})
         toimenpiteet-liitteilla
         (map (fn [toimenpide]
                (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
