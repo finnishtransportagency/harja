@@ -378,18 +378,38 @@
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
 
-(deftest liitteen-lisaaminen-toimenpiteelle
-  (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
-        liitteet-ennen (ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite;"))
+(deftest liitteen-lisaaminen-ja-poistaminen
+  (let [liite-id 1
+        laske-liitteet #(ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite WHERE poistettu = FALSE;"))
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        liitteet-ennen (laske-liitteet)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
-                       ::toi/liite-id 1
-                       ::toi/id (first kokonaishintaiset-toimenpide-idt)}
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :lisaa-toimenpiteelle-liite +kayttaja-jvh+
                                 kysely-params)
-        liitteet-jalkeen (ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite;"))]
+        liitteet-lisayksen-jalkeen (laske-liitteet)]
     (is (s/valid? ::toi/lisaa-toimenpiteelle-liite-kysely kysely-params))
 
     (is (true? (:ok? vastaus)))
-    (is (= (+ liitteet-ennen 1) liitteet-jalkeen))))
+    (is (= (+ liitteet-ennen 1) liitteet-lisayksen-jalkeen))
+
+    ;; Nyt poista liite
+    (let [kysely-params {::toi/urakka-id urakka-id
+                         ::toi/liite-id liite-id
+                         ::toi/id kokonaishintaiset-toimenpide-id}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :poista-toimenpiteen-liite +kayttaja-jvh+
+                                  kysely-params)
+          liitteet-poiston-jalkeen (laske-liitteet)]
+      (is (s/valid? ::toi/poista-toimenpiteen-liite-kysely kysely-params))
+
+      (is (true? (:ok? vastaus)))
+      (is (= liitteet-ennen liitteet-poiston-jalkeen)))))
+
+;; TODO Testi: Lisää liite ilman oikeutta
+;; TODO Testi: Lisää liite toimenpiteelle joka ei kuulu urakkaan
+;; TODO: Testi: Poista liite ilman oikeutta
+;; TODO: Testi: Poista liite toimenpiteeltä joka ei kuulu urakkaan

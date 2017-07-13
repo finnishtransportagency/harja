@@ -168,7 +168,8 @@
         liitteet (fetch
                    db ::liite/liite
                    liite/perustiedot
-                   {::liite/id (op/in liite-idt)})
+                   {::liite/id (op/in liite-idt)
+                    ::liite/poistettu? false})
         toimenpiteet-liitteilla
         (map (fn [toimenpide]
                (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
@@ -194,7 +195,7 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-                               vv-toimenpide/liitteet
+                               vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
                                vv-toimenpide/vikailmoitus
                                vv-toimenpide/urakoitsija
                                vv-toimenpide/sopimus

@@ -439,3 +439,6 @@ reimari-tilat
 
 (s/def ::lisaa-toimenpiteelle-liite-kysely
   (s/keys :req [::id ::urakka-id ::liite-id]))
+
+(s/def ::poista-toimenpiteen-liite-kysely
+  (s/keys :req [::id ::urakka-id ::liite-id]))
