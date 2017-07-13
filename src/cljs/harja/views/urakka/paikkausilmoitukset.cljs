@@ -263,18 +263,18 @@
                :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tasaa :oikea
                :tyyppi :positiivinen-numero :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                   (tierekisteri-domain/laske-tien-pituus rivi))}
+                                                                                   (tierekisteri-domain/laske-tieosan-ajoradan-pituus rivi))}
               {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen-leveys :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen-neliot :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                 (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen-leveys rivi)))}
+                                                                                                 (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tieosan-ajoradan-pituus rivi) (:paallysteen-leveys rivi)))}
               {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti
                :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                     (laske-paikkausprosentti (:paikkausneliot rivi)
-                                                                                                             (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen-leveys rivi))))}]
+                                                                                                             (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tieosan-ajoradan-pituus rivi) (:paallysteen-leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid

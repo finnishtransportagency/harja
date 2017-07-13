@@ -188,7 +188,7 @@
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
-                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
+                             (tr/laske-tieosan-ajoradan-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                           vastaus)]
         vastaus))))
 

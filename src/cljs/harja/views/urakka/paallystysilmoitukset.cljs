@@ -291,8 +291,8 @@
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
-  (let [osan-pituus (atom {})]
-    (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
+  (let [osan-ajoratojen-pituudet (atom {})]
+    (go (reset! osan-ajoratojen-pituudet (<! (vkm/tieosien-ajoratojen-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
@@ -313,7 +313,7 @@
           urakka tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-          @osan-pituus]
+          @osan-ajoratojen-pituudet]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
@@ -388,7 +388,7 @@
                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
-                    :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
+                    :hae (partial tierekisteri-domain/laske-tieosan-ajoradan-pituus @osan-ajoratojen-pituudet)
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsittely\u00ADmenetelmä"
                     :nimi :kasittelymenetelma
