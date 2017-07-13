@@ -197,7 +197,6 @@
                            poista-lisatty-liite-fn] :as opts}]
       (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)
             poista-liite (fn [liite-id]
-                           (log "POISTA: " (pr-str liite-id))
                            (reset! tiedostot (filter #(not= (:id %) liite-id) @tiedostot))
                            (reset! tiedosto nil)
                            (poista-lisatty-liite-fn liite-id))

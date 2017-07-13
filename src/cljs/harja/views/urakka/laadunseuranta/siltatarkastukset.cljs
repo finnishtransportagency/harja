@@ -450,8 +450,7 @@
                                                              (assoc @uudet-liitteet
                                                                kohdenro
                                                                (filter #(not= (:id %) liite-id)
-                                                                       (get @uudet-liitteet kohdenro))))
-                                                     (log "LIITTEET ON NY: " (pr-str @uudet-liitteet))))
+                                                                       (get @uudet-liitteet kohdenro))))))
                         :grid? true}])}]
                   (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
