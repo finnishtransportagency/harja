@@ -31,9 +31,17 @@
                       ::toimenpide/tila ::toimenpide/reimari-tila
                       ::toimenpide/asiakas ::toimenpide/reimari-asiakas
                       ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
+                      ::toimenpide/henkilo-lkm ::toimenpide/reimari-henkilo-lkm
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit
-                      ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?
-                      })
+                      ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?})
+
+(defn lisatyo->hintatyyppi [tiedot]
+  (-> tiedot
+      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
+                                        :yksikkohintainen
+                                        :kokonaishintainen))
+      (dissoc ::toimenpide/lisatyo?)))
+
 (defn kasittele-vastaus [db vastaus-xml]
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]

@@ -132,6 +132,10 @@
                                              :paivittainen-tarkistusaika [s/Num]
                                              :paivitysvali-paivissa s/Num}
 
+   (s/optional-key :vaylat)                 {:geometria-url       s/Str
+                                             :paivittainen-tarkistusaika [s/Num]
+                                             :paivitysvali-paivissa s/Num}
+
    (s/optional-key :tyotunti-muistutukset)   {:paivittainen-aika [s/Num]}
 
    (s/optional-key :vkm)   {:url s/Str}
