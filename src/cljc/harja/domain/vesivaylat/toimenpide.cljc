@@ -249,6 +249,7 @@ reimari-tilat
 (define-tables
   ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
+  ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -256,6 +257,7 @@ reimari-tilat
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
+    "reimari-lisatyo" ::reimari-lisatyo?
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
@@ -310,7 +312,9 @@ reimari-tilat
     ::reimari-urakoitsija
     ::reimari-sopimus
     ::reimari-turvalaite
-    ::reimari-vayla})
+    ::reimari-vayla
+    ::reimari-viat
+    ::reimari-henkilo-lkm})
 
 (def metatiedot m/muokkauskentat)
 

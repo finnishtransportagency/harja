@@ -317,7 +317,7 @@
 
   v/VirheTapahtui
   (process-event [{virhe :virhe} app]
-    (assoc app :virhe virhe :paikannus-kaynnissa? false))
+    (assoc app :virhe virhe))
 
   v/VirheKasitelty
   (process-event [_ app]
@@ -332,13 +332,6 @@
   v/LisaaLiitetiedosto
   (process-event [{liite :liite} app]
     (assoc-in app [:varustetoteuma :uusi-liite] liite))
-
-  v/AsetaKayttajanSijainti
-  (process-event [_ app]
-    (let [onnistunut! (t/send-async! v/->HaeSijainninOsoite)
-          virhe! (t/send-async! v/->VirheTapahtui)]
-      (geo/nykyinen-geolokaatio onnistunut! virhe!)
-      (assoc app :paikannus-kaynnissa? true)))
 
   v/HaeSijainninOsoite
   (process-event [{sijainti :sijainti} app]
@@ -360,8 +353,7 @@
                                         :alkuetaisyys (:aet osoite)
                                         :loppuosa (:losa osoite)
                                         :loppuetaisyys (:let osoite)})]
-      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))
-          (assoc :paikannus-kaynnissa? false)))))
+      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

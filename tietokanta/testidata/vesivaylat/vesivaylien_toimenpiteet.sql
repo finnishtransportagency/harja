@@ -81,7 +81,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -132,7 +132,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8882, Poiju 2, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -179,7 +179,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(12345, Poiju 3, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -226,7 +226,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8884, Poiju 4, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -277,7 +277,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(1234, Poiju 6, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
@@ -337,7 +337,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8890, Poiju 10, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -388,7 +388,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8891, Poiju 11, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren poiju'),
@@ -450,7 +450,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
@@ -473,7 +473,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
@@ -496,7 +496,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(666, Poiju 666, 555)',
     (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
