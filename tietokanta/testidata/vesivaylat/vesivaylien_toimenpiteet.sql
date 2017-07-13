@@ -111,7 +111,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus, NULL)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -172,7 +172,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -229,7 +229,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -286,7 +286,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -347,7 +347,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -444,7 +444,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -505,7 +505,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -576,7 +576,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -609,7 +609,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
@@ -642,7 +642,7 @@ VALUES
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Pohjanmeren venepojat'),
-    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus)',
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
