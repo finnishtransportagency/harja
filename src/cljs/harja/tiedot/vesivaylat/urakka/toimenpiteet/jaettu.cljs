@@ -153,7 +153,6 @@
 
   LisaaToimenpiteelleLiite
   (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI!
     (if (not (:liitteen-lisays-kaynnissa? app))
       (do (tuck-tyokalut/palvelukutsu :lisaa-toimenpiteelle-liite
                                       {::to/urakka-id (get-in app [:valinnat :urakka-id])
@@ -179,7 +178,6 @@
 
   LiiteEiLisatty
   (process-event [_ app]
-    ;; TODO TESTI!
     (viesti/nayta! "Liitteen lisäys epäonnistui!" :danger)
     (assoc app :liitteen-lisays-kaynnissa? false))
 
