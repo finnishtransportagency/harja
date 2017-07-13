@@ -1,5 +1,6 @@
 (ns harja.domain.liite
   (:require [clojure.spec.alpha :as s]
+            [harja.kyselyt.specql] ;; Jotta oid-tyyppi tulee määritellyksi
             [specql.rel :as rel]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
