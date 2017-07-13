@@ -395,7 +395,7 @@ INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id", poistettu) VA
                                                                                        FROM liite
                                                                                        WHERE nimi =
                                                                                              'POISTETTU LIITE EI SAA NÄKYÄ'),
-TRUE);
+                                                                                      TRUE);
 
 INSERT INTO vv_vikailmoitus
 ("reimari-id", kuvaus, pvm, "turvalaite-id", "toimenpide-id")
