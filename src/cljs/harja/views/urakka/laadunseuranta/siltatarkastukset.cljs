@@ -428,21 +428,31 @@
                   [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
                     :pituus-max 255}
                    {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
-                    :komponentti (fn [rivi]
-                                   [liitteet/liitteet-ja-lisays
-                                    (:id @nav/valittu-urakka)
-                                    nil ;; Lisätyt liitteet näytetään eri sarakkeessa
-                                    {:uusi-liite-atom
-                                     (r/wrap nil
-                                             (fn [uusi-arvo]
-                                               (let [kohdenro (:kohdenro rivi)]
-                                                 (reset! uudet-liitteet
-                                                         (assoc @uudet-liitteet
-                                                           kohdenro
-                                                           (conj (get @uudet-liitteet kohdenro)
-                                                                 uusi-arvo))))))
-                                     :lisaa-usea-liite? true
-                                     :grid? true}])}]
+                    :komponentti
+                    (fn [rivi]
+                      [liitteet/liitteet-ja-lisays
+                       (:id @nav/valittu-urakka)
+                       nil ;; Lisätyt liitteet näytetään eri sarakkeessa
+                       {:uusi-liite-atom
+                        (r/wrap nil
+                                (fn [uusi-arvo]
+                                  (let [kohdenro (:kohdenro rivi)]
+                                    (reset! uudet-liitteet
+                                            (assoc @uudet-liitteet
+                                              kohdenro
+                                              (conj (get @uudet-liitteet kohdenro)
+                                                    uusi-arvo))))))
+                        :lisaa-usea-liite? true
+                        :salli-poistaa-lisatty-liite? true
+                        :poista-lisatty-liite-fn (fn [liite-id]
+                                                   (let [kohdenro (:kohdenro rivi)]
+                                                     (reset! uudet-liitteet
+                                                             (assoc @uudet-liitteet
+                                                               kohdenro
+                                                               (filter #(not= (:id %) liite-id)
+                                                                       (get @uudet-liitteet kohdenro))))
+                                                     (log "LIITTEET ON NY: " (pr-str @uudet-liitteet))))
+                        :grid? true}])}]
                   (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
 

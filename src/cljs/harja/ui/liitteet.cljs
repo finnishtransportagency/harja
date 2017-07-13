@@ -188,29 +188,35 @@
   nayta-lisatyt-liitteet?   Näyttää juuri lisätyt liitteet, oletus true."
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
-        tiedosto (atom nil) ;; Jos komponentilla lisätään vain yksi liite
-        tiedostot (atom []) ;; Jos komponentilla lisätään useampi liite
-        ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
-        edistyminen (atom nil)
+        tiedosto (atom nil) ; Jos komponentilla lisätään vain yksi liite
+        tiedostot (atom []) ; Jos komponentilla lisätään useampi liite
+        edistyminen (atom nil) ; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled? lisaa-usea-liite?
-                           nayta-lisatyt-liitteet?] :as opts}]
-      (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)]
+                           nayta-lisatyt-liitteet? salli-poistaa-lisatty-liite?
+                           poista-lisatty-liite-fn] :as opts}]
+      (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)
+            poista-liite (fn [liite-id]
+                           (log "POISTA: " (pr-str liite-id))
+                           (reset! tiedostot (filter #(not= (:id %) liite-id) @tiedostot))
+                           (reset! tiedosto nil)
+                           (poista-lisatty-liite-fn liite-id))
+            nayta-liite (fn [liite]
+                          (if grid?
+                            [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))
+                             {:rivita? true
+                              :salli-poisto? salli-poistaa-lisatty-liite?
+                              :poista-liite-fn poista-liite}]
+                            [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
+                                                  :poista-liite-fn poista-liite}]))]
         [:span
-         ;; Näytä vastikään ladatut tiedostot
-         ;; TODO Tässä voisi olla kätevää mahdollistaa lisätyn liitteen poisto myös tässä
-         ;; ennen varsinaista tallennusta. Vaatii oman option, jossa sallitaan poistaa vasta lisätty liite, jota
-         ;; ei kuitenkaan ole vielä linkitetty mihinkään domain-asiaan.
-         (when (and nayta-lisatyt-liitteet? @tiedosto
-                    (not grid?)) ;; Gridissä ollessa lisätty tiedosto lukee napissa
-           [liitetiedosto @tiedosto])
+         ;; Näytä vastikään ladattu liite / liitteet
+         (when (and nayta-lisatyt-liitteet? @tiedosto)
+           [nayta-liite @tiedosto])
          (when (and nayta-lisatyt-liitteet? lisaa-usea-liite? (not (empty? @tiedostot)))
            (for [liite @tiedostot]
-             (if grid?
-               ^{:key (:id liite)}
-               [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite)) {:rivita? true}]
-               ^{:key (:id liite)}
-               [liitetiedosto liite])))
+             ^{:key (:id liite)}
+             [nayta-liite liite]))
 
          (if-let [edistyminen @edistyminen]
            ;; Siirto menossa, näytetään progress
@@ -224,9 +230,7 @@
              [ikonit/ikoni-ja-teksti
               (ikonit/livicon-upload)
               (if @tiedosto
-                (if grid?
-                  (str "Vaihda " (fmt/leikkaa-merkkijono 25 {:pisteet? true} (:nimi @tiedosto)))
-                  "Vaihda liite")
+                (str "Vaihda liite")
                 (or nappi-teksti "Lisää liite"))]
              [:input.upload
               {:type "file"
@@ -274,10 +278,15 @@
                                        Oletus true. Tulisi olla false, mikäli liite-linkitykset tehdään
                                        välittömästi sen jälkeen kun liite on ladattu palvelimelle.
    salli-poistaa-tallennettu-liite?    Jos true, sallii poistaa kantaan jo tallennetun liitteen linkityksen.
-   poista-tallennettu-liite-fn         Funktio, jota kutsutaan, kun tallennettu liite vahvistetaan poistettavaksi."
+   poista-tallennettu-liite-fn         Funktio, jota kutsutaan, kun tallennettu liite vahvistetaan poistettavaksi.
+   salli-poistaa-lisatty-liite?        Jos true, sallii poistaa juuri lisätyt liitteet
+                                       (jotka odottavat esim. lomakkeen tallennuksen yhteydessä tehtävää linkitystä).
+                                       Oletus false.
+   poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
-                                          poista-tallennettu-liite-fn]}]
+                                          poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
+                                          poista-lisatty-liite-fn]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -300,4 +309,6 @@
                                :grid? grid?
                                :lisaa-usea-liite? lisaa-usea-liite?
                                :nayta-lisatyt-liitteet? nayta-lisatyt-liitteet?
+                               :salli-poistaa-lisatty-liite? salli-poistaa-lisatty-liite?
+                               :poista-lisatty-liite-fn poista-lisatty-liite-fn
                                :disabled? disabled?}]))])
