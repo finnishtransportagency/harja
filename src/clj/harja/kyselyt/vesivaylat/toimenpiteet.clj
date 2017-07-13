@@ -10,6 +10,7 @@
             [taoensso.timbre :as log]
 
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
@@ -141,7 +142,6 @@
       toimenpiteet)))
 
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
-  ;; Hae toimenpiteiden turvalaitteen kaikki turvalaitekomponentit
   (let [turvalaitekomponentit (fetch
                                 db
                                 ::tkomp/turvalaitekomponentti
@@ -152,13 +152,32 @@
                                                #(get-in % [::vv-toimenpide/reimari-turvalaite
                                                            ::vv-turvalaite/r-nro])
                                                toimenpiteet)))})
-        ;; Liitä toimenpiteisiin tieto turvalaitteen komponenteista
-        toimenpiteet (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
-                                    (tkomp/turvalaitekomponentit-turvalaitenumerolla
-                                      turvalaitekomponentit
-                                      (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-                          toimenpiteet)]
-    toimenpiteet))
+        toimenpiteet-turvalaitekomponenteilla
+        (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
+                       (tkomp/turvalaitekomponentit-turvalaitenumerolla
+                         turvalaitekomponentit
+                         (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
+             toimenpiteet)]
+    toimenpiteet-turvalaitekomponenteilla))
+
+(defn- lisaa-liitteet [toimenpiteet db]
+  (let [liite-idt (mapcat (fn [toimenpide]
+                            (keep ::vv-toimenpide/liite-id (::vv-toimenpide/liite-linkit toimenpide)))
+                          toimenpiteet)
+        liitteet (fetch
+                   db ::liite/liite
+                   liite/perustiedot
+                   {::liite/id (op/in liite-idt)})
+        toimenpiteet-liitteilla
+        (map (fn [toimenpide]
+               (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
+                                                       (::vv-toimenpide/liite-linkit toimenpide)))
+                     toimenpiteen-liitteet (filter #(toimenpiteen-liite-idt (::liite/id %)) liitteet)]
+                 (-> toimenpide
+                     (assoc ::vv-toimenpide/liitteet toimenpiteen-liitteet)
+                     (dissoc ::vv-toimenpide/liite-linkit))))
+             toimenpiteet)]
+    toimenpiteet-liitteilla))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
@@ -172,44 +191,45 @@
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
-                                (clojure.set/union
-                                  vv-toimenpide/perustiedot
-                                  vv-toimenpide/liitteet
-                                  vv-toimenpide/vikailmoitus
-                                  vv-toimenpide/urakoitsija
-                                  vv-toimenpide/sopimus
-                                  vv-toimenpide/turvalaite
-                                  vv-toimenpide/vayla
-                                  vv-toimenpide/kiintio
-                                  vv-toimenpide/reimari-kentat
-                                  vv-toimenpide/metatiedot)
-                                (op/and
-                                  {::m/poistettu? false}
-                                  {::vv-toimenpide/urakka-id urakka-id}
-                                  (when (and luotu-alku luotu-loppu)
-                                    {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
-                                  (when urakoitsija-id
-                                    {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
-                                  (when kokonaishintaiset?
-                                    {::vv-toimenpide/hintatyyppi :kokonaishintainen})
-                                  (when yksikkohintaiset?
-                                    {::vv-toimenpide/hintatyyppi :yksikkohintainen})
-                                  (when sopimus-id
-                                    {::vv-toimenpide/sopimus-id sopimus-id})
-                                  (when (and alku loppu)
-                                    {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
-                                  (when vaylatyyppi
-                                    {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
-                                  (when vayla-id
-                                    {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
-                                  (when tyolaji
-                                    {::vv-toimenpide/reimari-tyolaji tyolaji})
-                                  (when tyoluokat
-                                    {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
-                                  (when toimenpiteet
-                                    {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
-                         (suodata-vikakorjaukset vikailmoitukset?)
-                         (lisaa-turvalaitekomponentit db))
-        (cond->> (into [] toimenpiteet-xf fetchattu)
-                 yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
-                 kokonaishintaiset? (identity))]))
+                             (clojure.set/union
+                               vv-toimenpide/perustiedot
+                               vv-toimenpide/liitteet
+                               vv-toimenpide/vikailmoitus
+                               vv-toimenpide/urakoitsija
+                               vv-toimenpide/sopimus
+                               vv-toimenpide/turvalaite
+                               vv-toimenpide/vayla
+                               vv-toimenpide/kiintio
+                               vv-toimenpide/reimari-kentat
+                               vv-toimenpide/metatiedot)
+                             (op/and
+                               {::m/poistettu? false}
+                               {::vv-toimenpide/urakka-id urakka-id}
+                               (when (and luotu-alku luotu-loppu)
+                                 {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
+                               (when urakoitsija-id
+                                 {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
+                               (when kokonaishintaiset?
+                                 {::vv-toimenpide/hintatyyppi :kokonaishintainen})
+                               (when yksikkohintaiset?
+                                 {::vv-toimenpide/hintatyyppi :yksikkohintainen})
+                               (when sopimus-id
+                                 {::vv-toimenpide/sopimus-id sopimus-id})
+                               (when (and alku loppu)
+                                 {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
+                               (when vaylatyyppi
+                                 {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
+                               (when vayla-id
+                                 {::vv-toimenpide/vayla {::vv-vayla/id vayla-id}})
+                               (when tyolaji
+                                 {::vv-toimenpide/reimari-tyolaji tyolaji})
+                               (when tyoluokat
+                                 {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
+                               (when toimenpiteet
+                                 {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+                      (suodata-vikakorjaukset vikailmoitukset?)
+                      (lisaa-turvalaitekomponentit db)
+                      (lisaa-liitteet db))]
+    (cond->> (into [] toimenpiteet-xf fetchattu)
+             yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
+             kokonaishintaiset? (identity))))
