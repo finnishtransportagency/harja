@@ -38,6 +38,7 @@
          :valittu-kiintio-id nil
          :kiintioon-liittaminen-kaynnissa? false
          :liitteen-lisays-kaynnissa? false
+         :liitteen-poisto-kaynnissa? false
          :toimenpiteet nil}))
 
 (def valinnat

@@ -165,7 +165,8 @@
                     :disabled? (:liitteen-lisays-kaynnissa? app)
                     :lisaa-usea-liite? true
                     :salli-poistaa-tallennettu-liite? true
-                    :poista-tallennettu-liite-fn #(log "TODO POISTA LIITE: " %)
+                    :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaToimenpiteenLiite {::to/liite-id %
+                                                                                         ::to/id (::to/id rivi)}))
                     :nayta-lisatyt-liitteet? false ; Tässä näkymässä liitteet eivät odota erillistä linkitystä,
                     ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
