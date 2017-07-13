@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.future :refer :all]
+            [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch update! insert! upsert!]]
             [specql.op :as op]
@@ -43,7 +44,7 @@
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/lisatieto
-                          ::vv-toimenpide/liiteet
+                          ::vv-toimenpide/liitteet
                           ::vv-toimenpide/turvalaitekomponentit]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
@@ -172,9 +173,9 @@
         (map (fn [toimenpide]
                (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
                                                        (::vv-toimenpide/liite-linkit toimenpide)))
-                     toimenpiteen-liitteet (filter #(toimenpiteen-liite-idt (::liite/id %)) liitteet)]
+                     toimenpiteen-liitteet (filterv #(toimenpiteen-liite-idt (::liite/id %)) liitteet)]
                  (-> toimenpide
-                     (assoc ::vv-toimenpide/liitteet toimenpiteen-liitteet)
+                     (assoc ::vv-toimenpide/liitteet (namespacefy/unnamespacefy toimenpiteen-liitteet))
                      (dissoc ::vv-toimenpide/liite-linkit))))
              toimenpiteet)]
     toimenpiteet-liitteilla))

@@ -63,6 +63,8 @@
     (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
     (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
     (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
+    (is (every? #(vector? (::toi/liitteet %)) vastaus))
+    (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
 
 

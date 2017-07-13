@@ -159,17 +159,15 @@
                    (::to/liitteet rivi)
                    {:uusi-liite-atom (r/wrap nil
                                              (fn [uusi-arvo]
-                                               ;; TODO Nyt ei indikoida onko liite lisäys vai vanhan vaihto
-                                               ;; Voisi assocata aina vanhan tilalle, mutta jos tehdäänkin
-                                               ;; liitekomponentille nyt lopultakin tuki lisätä usea liite kerralla?
-                                               (e! (tiedot/->LisaaToimenpiteelleLiite {:liite uusi-arvo
-                                                                                       ::to/id (::to/id rivi)}))))
+                                               (e! (tiedot/->LisaaToimenpiteelleLiite
+                                                     {:liite uusi-arvo
+                                                      ::to/id (::to/id rivi)}))))
                     :disabled? (:liitteen-lisays-kaynnissa? app)
                     :lisaa-usea-liite? true
                     :salli-poistaa-tallennettu-liite? true
                     :poista-tallennettu-liite-fn #(log "TODO POISTA LIITE: " %)
                     :nayta-lisatyt-liitteet? false ; Tässä näkymässä liitteet eivät odota erillistä linkitystä,
-                                                   ; vaan ne linkitetään toimenpiteeseen heti
+                    ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
