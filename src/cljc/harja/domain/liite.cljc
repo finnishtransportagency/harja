@@ -7,11 +7,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(define-tables
-  ["liite" ::liite
-   {"liite_oid" ::liite-oid
-    "urakka" ::urakka-id}])
-
 (def perustiedot
   #{::id
     ::tyyppi
@@ -62,3 +57,8 @@
           {:hyvaksytty false :viesti (str "Tiedostotyyppi (" (:tyyppi liite) ") ei ole sallittu.")}
           {:hyvaksytty true :viesti nil}))
       {:hyvaksytty false :viesti "Järjestelmä ei voi käsitellä tiedostoa."})))
+
+(define-tables
+  ["liite" ::liite
+   {"liite_oid" ::liite-oid
+    "urakka" ::urakka-id}])
