@@ -394,20 +394,60 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Hakee pisimmän mahdollisen pituuden tieosalle
+CREATE OR REPLACE FUNCTION hae_tieosan_pituus(tie_ INT, osa_ INT)
+  RETURNS INT AS $$
+DECLARE
+  ajr0_pituus INT;
+  ajr1_pituus INT;
+  ajr2_pituus INT;
+BEGIN
+  SELECT pituus
+  FROM tr_ajoratojen_pituudet tr
+  WHERE tr.tie = tie_ AND tr.osa = osa_ AND tr.ajorata = 0
+  INTO ajr0_pituus;
+
+  SELECT pituus
+  FROM tr_ajoratojen_pituudet tr
+  WHERE tr.tie = tie_ AND tr.osa = osa_ AND tr.ajorata = 1
+  INTO ajr1_pituus;
+
+  SELECT pituus
+  FROM tr_ajoratojen_pituudet tr
+  WHERE tr.tie = tie_ AND tr.osa = osa_ AND tr.ajorata = 2
+  INTO ajr2_pituus;
+
+  RETURN (
+    coalesce(ajr0_pituus, 0) +
+    GREATEST(coalesce(ajr1_pituus, 0),
+             coalesce(ajr2_pituus, 0)));
+END;
+$$ LANGUAGE plpgsql;
+
 -- paivittaa tr-rutiinien käyttämät taulut
-CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION paivita_tr_taulut()
+  RETURNS VOID AS $$
+
 DECLARE
 BEGIN
   -- Poista vanhat pituudet
   DELETE FROM tr_osien_pituudet;
   -- Laske uudet pituudet
   INSERT INTO tr_osien_pituudet
-    SELECT tie, osa, ST_Length(geom) AS pituus
-    FROM tr_osan_ajorata
-    WHERE ajorata=1 AND geom IS NOT NULL
-    ORDER BY tie,osa;
+    SELECT
+      tie,
+      osa,
+      hae_tieosan_pituus(tie, osa) AS pituus
+    FROM
+      (SELECT
+         tie,
+         osa
+       FROM tr_ajoratojen_pituudet
+       GROUP BY tie, osa
+       ORDER BY tie, osa) AS osat;
   -- Päivitä osien envelopet
-  UPDATE tr_osan_ajorata SET envelope = ST_Expand(ST_Envelope(geom), 250);
+  UPDATE tr_osan_ajorata
+  SET envelope = ST_Expand(ST_Envelope(geom), 250);
 END;
 $$ LANGUAGE plpgsql;
 
