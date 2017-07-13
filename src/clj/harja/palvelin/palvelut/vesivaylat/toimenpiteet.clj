@@ -61,6 +61,18 @@
         (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (::to/liite-id tiedot))))
     {:ok? true}))
 
+(defn poista-toimenpiteen-liite [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::to/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                      user urakka-id)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                      user urakka-id)
+      (jdbc/with-db-transaction [db db]
+        (q/poista-toimenpiteen-liite db (::to/id tiedot) (::to/liite-id tiedot))))
+    {:ok? true}))
+
 (defrecord Toimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -97,6 +109,12 @@
       (fn [user tiedot]
         (lisaa-toimenpiteelle-liite db user tiedot))
       {:kysely-spec ::to/lisaa-toimenpiteelle-liite-kysely})
+    (julkaise-palvelu
+      http
+      :poista-toimenpiteen-liite
+      (fn [user tiedot]
+        (poista-toimenpiteen-liite db user tiedot))
+      {:kysely-spec ::to/poista-toimenpiteen-liite-kysely})
     this)
 
   (stop [this]

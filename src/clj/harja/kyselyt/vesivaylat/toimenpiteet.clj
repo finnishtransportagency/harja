@@ -126,6 +126,12 @@
            {::vv-toimenpide/toimenpide-id toimenpide-id
             ::vv-toimenpide/liite-id liite-id}))
 
+(defn poista-toimenpiteen-liite [db toimenpide-id liite-id]
+  (update! db ::vv-toimenpide/toimenpide<->liite
+           {::m/poistettu? true}
+           {::vv-toimenpide/toimenpide-id toimenpide-id
+            ::vv-toimenpide/liite-id liite-id}))
+
 (defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
         (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
