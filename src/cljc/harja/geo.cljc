@@ -4,7 +4,9 @@
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
                            GeometryCollection Geometry MultiPoint)))
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            #?(:cljs
+               [ol.proj :as ol-proj])))
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
@@ -243,6 +245,14 @@
                                                       nil wgs84->euref-transform)]
        {:x (.y c) :y (.x c)})))
 
+(def +etrs-tm35fin+ "EPSG:3067")
+(def +wgs84+ "EPSG:4326")
+
+#?(:cljs
+   (defn wgs84->etrsfin
+     "Sijainti on [lon lat] vector."
+     [sijainti]
+     (ol-proj/transform (clj->js sijainti) +wgs84+ +etrs-tm35fin+)))
 
 #?(:cljs
    (defn geolocation-api []

@@ -21,7 +21,8 @@
    ::toimenpide/lisatyo? true
    ::toimenpide/id -123456
 
-   ::toimenpide/reimari-sopimus {::sopimus/r-nro -5
+   ::toimenpide/reimari-sopimus {::sopimus/r-diaarinro "5/5"
+                                 ::sopimus/r-nro -5
                                  ::sopimus/r-tyyppi "1022542301"
                                  ::sopimus/r-nimi "Hoitosopimus"}
    ::toimenpide/reimari-viat [{:harja.domain.vesivaylat.vika/id 42

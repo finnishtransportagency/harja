@@ -17,9 +17,7 @@
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-ryhma}]
-  ["vv_turvalaite" ::turvalaite
-   {"vayla" ::vayla-id
-    ::vayla (specql.rel/has-one ::vayla-id ::v/vayla ::v/id)}])
+  ["vv_turvalaite" ::turvalaite])
 
 (def tyypit (s/describe ::tyyppi))
 
@@ -27,4 +25,6 @@
   #{::id
     ::nimi
     ::tyyppi
-    [::vayla v/perustiedot]})
+    ::turvalaitenro
+    ::kiintea
+    ::vaylat})

@@ -52,13 +52,15 @@
                alus-avainmuunnos))
 
 (def sopimus-avainmuunnos
-  {:harja.domain.vesivaylat.sopimus/nro :harja.domain.vesivaylat.sopimus/r-nro
+  {:harja.domain.vesivaylat.sopimus/diaarinro :harja.domain.vesivaylat.sopimus/r-diaarinro
+   :harja.domain.vesivaylat.sopimus/nro :harja.domain.vesivaylat.sopimus/r-nro
    :harja.domain.vesivaylat.sopimus/tyyppi :harja.domain.vesivaylat.sopimus/r-tyyppi
    :harja.domain.vesivaylat.sopimus/nimi :harja.domain.vesivaylat.sopimus/r-nimi})
 
 (defn- lue-sopimus [s]
   (rename-keys (xml/lue-attribuutit s #(keyword "harja.domain.vesivaylat.sopimus" (name %))
-                                    {:nro #(Integer/parseInt %)
+                                    {:diaarinro identity
+                                     :nro #(Integer/parseInt %)
                                      :tyyppi identity
                                      :nimi identity})
                sopimus-avainmuunnos))
