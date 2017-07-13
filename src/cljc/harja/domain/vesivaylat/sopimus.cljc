@@ -15,4 +15,5 @@
   ["reimari_sopimus" ::reimari-sopimus
    {"nro" ::r-nro
     "nimi" ::r-nimi
-    "tyyppi" ::r-tyyppi}])
+    "tyyppi" ::r-tyyppi
+    "diaarinro" ::r-diaarinro}])

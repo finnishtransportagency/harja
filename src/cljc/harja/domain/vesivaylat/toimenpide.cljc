@@ -15,7 +15,6 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.sopimus :as sopimus]
-            [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
@@ -250,16 +249,7 @@ reimari-tilat
 (define-tables
   ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
-  ["reimari_toimenpide_liite" ::toimenpide<->liite
-   harja.domain.muokkaustiedot/poistettu?-sarake
-   {::toimenpiteet (specql.rel/has-one
-                     ::toimenpide-id
-                     :harja.domain.toimenpide/toimenpide
-                     :harja.domain.toimenpide/id)
-    ::liitteet (specql.rel/has-one
-                 ::liite-id
-                 :harja.domain.liite/liite
-                 :harja.domain.liite/id)}]
+  ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -278,11 +268,7 @@ reimari-tilat
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
                            ::h/hinnoittelu<->toimenpide
-                           ::h/toimenpide-id)
-    ::liite-linkit (specql.rel/has-many
-                          ::id
-                          ::toimenpide<->liite
-                          ::toimenpide-id)}])
+                           ::h/toimenpide-id)}])
 
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
@@ -326,7 +312,9 @@ reimari-tilat
     ::reimari-urakoitsija
     ::reimari-sopimus
     ::reimari-turvalaite
-    ::reimari-vayla})
+    ::reimari-vayla
+    ::reimari-viat
+    ::reimari-henkilo-lkm})
 
 (def metatiedot m/muokkauskentat)
 
@@ -346,9 +334,6 @@ reimari-tilat
                             m/muokkauskentat
                             h/toimenpiteen-hinnoittelut)]})
 
-(def liitteet
-  #{[::liite-linkit #{::toimenpide-id ::liite-id ::m/poistettu?}]})
-
 (def vikailmoitus #{[::vikailmoitukset vv-vikailmoitus/perustiedot]})
 (def urakoitsija #{[::urakoitsija o/urakoitsijan-perustiedot]})
 (def sopimus #{[::sopimus sopimus/perustiedot]})
@@ -356,6 +341,7 @@ reimari-tilat
 (def vayla #{[::vayla vv-vayla/perustiedot]})
 (def urakka #{[::urakka #{}]})
 (def kiintio #{[::kiintio kiintio/perustiedot]})
+
 
 (def viittaukset
   (clojure.set/union
@@ -436,9 +422,3 @@ reimari-tilat
 
 (s/def ::siirra-toimenpiteet-kokonaishintaisiin-vastaus
   ::idt) ; Päivitetyt toimenpide-idt (samat kuin lähetetyt)
-
-(s/def ::lisaa-toimenpiteelle-liite-kysely
-  (s/keys :req [::id ::urakka-id ::liite-id]))
-
-(s/def ::poista-toimenpiteen-liite-kysely
-  (s/keys :req [::id ::urakka-id ::liite-id]))
