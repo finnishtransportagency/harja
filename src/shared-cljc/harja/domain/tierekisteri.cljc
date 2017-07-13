@@ -109,26 +109,33 @@
   (and (on-alku? tie)
        (on-loppu? tie)))
 
-(defn laske-tien-pituus
-  ([tie] (laske-tien-pituus {} tie))
-  ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
+(defn laske-tieosan-ajoradan-pituus
+  ([tie] (laske-tieosan-ajoradan-pituus {} tie))
+  ([osien-pituudet {:keys [tr-alkuosa tr-loppuosa tr-ajorata] :as tie}]
    (when (and (on-alku-ja-loppu? tie)
               (or (= tr-alkuosa tr-loppuosa) ;; Pituus voidaan laskean suoraan
                   (not (empty? osien-pituudet)))) ;; Tarvitaan osien pituudet laskuun
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa
-            loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
+            loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)
+           hae-osan-ajoradan-pituus (fn [osa]
+                                      (let [suodatin #(and (= osa (:osa %))
+                                                           (or (not tr-ajorata)
+                                                               (= tr-ajorata (:ajorata %))))
+                                            pituus (apply max (concat [0] (map :pituus (filter suodatin osien-pituudet))))]
+                                        (if pituus
+                                          pituus
+                                          0)))]
        (if (= aosa losa)
          (Math/abs (- loppuet alkuet))
-         (let [max-osa (reduce max 0 (keys osien-pituudet))
+         (let [max-osa (reduce max 0 (map :osa osien-pituudet))
                losa (min losa max-osa)]
-           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+           (loop [pituus (max 0 (- (hae-osan-ajoradan-pituus aosa) alkuet))
                   osa (inc aosa)]
-             (let [osan-pituus (get osien-pituudet osa 0)]
+             (let [osan-pituus (hae-osan-ajoradan-pituus osa)]
                (if (>= osa losa)
                  (+ pituus (min loppuet osan-pituus))
-
                  (recur (+ pituus osan-pituus)
                         (inc osa)))))))))))
 
