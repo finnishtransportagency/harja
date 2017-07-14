@@ -41,6 +41,7 @@
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."
   [urakka-id tarkastus nakyma]
+  (log)
   (k/post! :tallenna-tarkastus {:urakka-id urakka-id
                                 :tarkastus (let
                                              [yllapitourakka? (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])]
@@ -52,7 +53,8 @@
                                                      ;; jos kyseessä on ylläpidon urakka, lisätään ylläpitokohde ja
                                                      ;; katselmuksille aina oikeus urakoitsijalle nähdä ne
                                                      yllapitourakka?
-                                                     (assoc :yllapitokohde (get-in tarkastus [:yllapitokohde :id])
+                                                     (assoc :yllapitokohde (or (:yllapitokohde tarkastus)
+                                                                               (get-in tarkastus [:yllapitokohde :id]))
                                                             :nayta-urakoitsijalle (or (= (:tyyppi tarkastus) :katselmus)
                                                                                       (:nayta-urakoitsijalle tarkastus)))))}))
 
