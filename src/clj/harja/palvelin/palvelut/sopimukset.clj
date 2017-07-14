@@ -31,15 +31,14 @@
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
         paasopimus-id (::sopimus/paasopimus-id sopimus)
-        _ (log/debug "Päivitetään sopimusta " nimi)
         harjassa-luotu-sopimus (q/paivita-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
                                                                        :id id
                                                                        :nimi nimi
                                                                        :alkupvm alkupvm
                                                                        :loppupvm loppupvm
                                                                        :paasopimus paasopimus-id})
-        harjassa-luotu-reimari-diaarinumero (q/paivita-harjassa-luotu-reimari-diaarinumero<! db {:harja-sopimus-id id
-                                                                                                 :reimari-diaarinro reimari-diaarinro})]
+        harjassa-luotu-reimari-diaarinumero (q/-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id
+                                                                                  :reimari-diaarinro reimari-diaarinro})]
       (assoc harjassa-luotu-sopimus :reimari-diaarinro (:reimari-diaarinro harjassa-luotu-reimari-diaarinumero))))
 
 (defn luo-uusi-sopimus! [db user sopimus]
@@ -48,14 +47,13 @@
         alkupvm (::sopimus/alkupvm sopimus)
         loppupvm (::sopimus/loppupvm sopimus)
         paasopimus-id (::sopimus/paasopimus-id sopimus)
-        _ (log/debug "Luodaan uusi sopimus nimellä " nimi)
         harjassa-luotu-sopimus (q/luo-harjassa-luotu-sopimus<! db {:kayttaja (:id user)
                                                                    :nimi nimi
                                                                    :alkupvm alkupvm
                                                                    :loppupvm loppupvm
                                                                    :paasopimus paasopimus-id})
-        harjassa-luotu-reimari-diaarinumero (q/luo-harjassa-luotu-reimari-diaarinumero<! db {:harja-sopimus-id (:id harjassa-luotu-sopimus)
-                                                                                             :reimari-diaarinro reimari-diaarinro})]
+        harjassa-luotu-reimari-diaarinumero (q/luo-reimari-diaarinumero-linkki<! db {:harja-sopimus-id (:id harjassa-luotu-sopimus)
+                                                                                     :reimari-diaarinro reimari-diaarinro})]
     (assoc harjassa-luotu-sopimus :reimari-diaarinro (:reimari-diaarinro harjassa-luotu-reimari-diaarinumero))))
 
 (defn tallenna-sopimus [db user sopimus]

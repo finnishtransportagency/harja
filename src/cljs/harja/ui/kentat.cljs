@@ -298,7 +298,6 @@
     (fn [{:keys [lomake?] :as kentta} data]
       (let [nykyinen-data @data
             nykyinen-teksti (or @teksti
-                                (str/replace (fmt nykyinen-data) #"€$" "")
                                 "")
             diaarinumero-re-pattern (re-pattern (str "((\\d\\/?)+\\s?)+"))]
         [:input {:class (when lomake? "form-control")
@@ -307,7 +306,7 @@
                  :on-focus (:on-focus kentta)
                  :on-blur #(reset! teksti nil)
                  :value nykyinen-teksti
-                 :on-change #(let [v (str/replace (-> % .-target .-value) #"€$" "")]
+                 :on-change #(let [v (-> % .-target .-value)]
                                (when (or (= v "")
                                          (re-matches diaarinumero-re-pattern v))
                                  (reset! teksti v)
