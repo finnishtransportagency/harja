@@ -93,3 +93,19 @@ SET nimi              = :nimi,
   muokattu = NOW()
 WHERE id = :id
 AND s.harjassa_luotu IS TRUE;
+
+-- name: hae-sopimusten-reimari-diaarinumerot
+-- Hakee diaarinumerot
+SELECT "harja-sopimus-id", "reimari-diaarinro"
+FROM reimari_sopimuslinkki;
+
+-- name: luo-harjassa-luotu-reimari-diaarinumero<!
+-- Luo uuden diaarinumeron sopimukselle
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-diaarinro")
+VALUES (:harja-sopimus-id, :reimari-diaarinro);
+
+-- name: paivita-harjassa-luotu-reimari-diaarinumero<!
+-- Paivittaa diaarinumeron sopimukselle
+UPDATE reimari_sopimuslinkki
+SET "reimari-diaarinro" = :reimari-diaarinro
+WHERE "harja-sopimus-id" = :harja-sopimus-id;
