@@ -15,7 +15,7 @@ BEGIN
   RAISE NOTICE 'reimari_toimenpide linkit trigger: sopimus-id arvoksi %', NEW."sopimus-id";
 
   id_temp := (SELECT id FROM vv_turvalaite
-               WHERE tunniste IS NOT NULL AND turvalaitenro = (NEW."reimari-turvalaite").nro LIMIT 1);
+               WHERE tunniste IS NOT NULL AND turvalaitenro::text = (NEW."reimari-turvalaite").nro LIMIT 1);
 
   NEW."turvalaite-id" = id_temp;
                 -- id:ksi tulee NULL jos ei löydy, joka on ok
