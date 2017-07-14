@@ -62,7 +62,7 @@
   {:uusi? true
    :aika (pvm/nyt)
    :tarkastaja @istunto/kayttajan-nimi
-   :nayta-urakoitsijalle (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+   :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
 
 (defn valitse-tarkastus [tarkastus-id]
@@ -419,8 +419,8 @@
           :fmt fmt/totuus}
 
          (when (and (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-                   (not (and (= (:arvo @nav/valittu-urakkatyyppi) :paallystys)
-                             (= (:tyyppi tarkastus) :katselmus))))
+                    (not (and (nav/yllapitourakka-valittu?)
+                              (= (:tyyppi tarkastus) :katselmus))))
            {:otsikko (when-not voi-muokata?
                        ;; Näytä otsikko näyttömuodossa
                        "Näytä urakoitsijalle")
