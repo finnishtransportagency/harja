@@ -455,27 +455,25 @@
                   (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
 
-         ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
-         [:button.nappi-ensisijainen
-          {:class (when @tallennus-kaynnissa "disabled")
-           :disabled (not voi-tallentaa?)
-           :on-click
-           #(do (.preventDefault %)
-                (reset! tallennus-kaynnissa true)
-                (go (let [tallennettava-tarkastus (-> tarkastus
-                                                      (assoc :uudet-liitteet @uudet-liitteet)
-                                                      (assoc :urakka-id (:id @nav/valittu-urakka)))
-                          res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
-                      (if (k/virhe? res)
-                        ;; Epäonnistui jostain syystä
-                        (do
-                          (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                          (reset! tallennus-kaynnissa false))
-                        ;; Tallennus ok
-                        (do (viesti/nayta! "Siltatarkastus tallennettu")
-                            (reset! tallennus-kaynnissa false)
-                            (reset! muokattava-tarkastus nil))))))}
-          (ikonit/tallenna) " Tallenna tarkastus"]
+         [napit/tallenna
+          "Tallenna tarkastus"
+          #(do (reset! tallennus-kaynnissa true)
+               (go (let [tallennettava-tarkastus (-> tarkastus
+                                                     (assoc :uudet-liitteet @uudet-liitteet)
+                                                     (assoc :urakka-id (:id @nav/valittu-urakka)))
+                         res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
+                     (if (k/virhe? res)
+                       ;; Epäonnistui jostain syystä
+                       (do
+                         (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                         (reset! tallennus-kaynnissa false))
+                       ;; Tallennus ok
+                       (do (viesti/nayta! "Siltatarkastus tallennettu")
+                           (reset! tallennus-kaynnissa false)
+                           (reset! muokattava-tarkastus nil))))))
+          {:disabled (not voi-tallentaa?)}]
+
+         ;; Tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
          (let [vinkki (if (= 24 riveja-taytetty)
                         (str "Kaikki " riveja-taytetty "/" riveja " kohdetta arvioitu.")
                         (if (and ainakin-yksi-tulos? (< riveja-taytetty 24))
