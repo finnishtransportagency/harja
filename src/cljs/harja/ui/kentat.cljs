@@ -298,6 +298,7 @@
     (fn [{:keys [lomake?] :as kentta} data]
       (let [nykyinen-data @data
             nykyinen-teksti (or @teksti
+                                (fmt nykyinen-data)
                                 "")
             diaarinumero-re-pattern (re-pattern (str "((\\d\\/?)+\\s?)+"))]
         [:input {:class (when lomake? "form-control")

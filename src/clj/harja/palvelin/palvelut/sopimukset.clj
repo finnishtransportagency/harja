@@ -19,10 +19,11 @@
                            (q/hae-harjassa-luodut-sopimukset db))
           diaarinumerot (q/hae-sopimusten-reimari-diaarinumerot db)
           sopimuksen-diaarinro (fn [id] (:reimari-diaarinro (first (filter #(= (:harja-sopimus-id %) id) diaarinumerot))))
-          sopimukset (mapv (fn [m] (assoc m :reimari-diaarinro (sopimuksen-diaarinro (:id m))))  sopimukset)]
+          sopimukset (mapv (fn [m] (assoc m :reimari-diaarinro (sopimuksen-diaarinro (:id m))))  sopimukset)
+          vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
+                                           :inner {:urakka {:ns :harja.domain.urakka}}})]
+        vastaus)))
 
-      (namespacefy sopimukset {:ns :harja.domain.sopimus
-                               :inner {:urakka {:ns :harja.domain.urakka}}}))))
 
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
@@ -37,8 +38,11 @@
                                                                        :alkupvm alkupvm
                                                                        :loppupvm loppupvm
                                                                        :paasopimus paasopimus-id})
-        harjassa-luotu-reimari-diaarinumero (q/paivita-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id}
-                                                                                  :reimari-diaarinro reimari-diaarinro)]
+        harjassa-luotu-reimari-diaarinumero (if (empty? (q/hae-sopimuksen-reimari-diaarinumero db id))
+                                              (q/luo-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id
+                                                                                       :reimari-diaarinro reimari-diaarinro})
+                                              (q/paivita-reimari-diaarinumero-linkki<! db {:harja-sopimus-id id
+                                                                                           :reimari-diaarinro reimari-diaarinro}))]
       (assoc harjassa-luotu-sopimus :reimari-diaarinro (:reimari-diaarinro harjassa-luotu-reimari-diaarinumero))))
 
 (defn luo-uusi-sopimus! [db user sopimus]

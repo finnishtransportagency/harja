@@ -99,6 +99,12 @@ AND s.harjassa_luotu IS TRUE;
 SELECT "harja-sopimus-id", "reimari-diaarinro"
 FROM reimari_sopimuslinkki;
 
+-- name: hae-sopimuksen-reimari-diaarinumero
+-- Hakee diaarinumeron
+SELECT "reimari-diaarinro"
+FROM reimari_sopimuslinkki
+WHERE "harja-sopimus-id" = :harja-sopimus-id
+
 -- name: luo-reimari-diaarinumero-linkki<!
 -- Luo uuden diaarinumeron sopimukselle
 INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-diaarinro")
