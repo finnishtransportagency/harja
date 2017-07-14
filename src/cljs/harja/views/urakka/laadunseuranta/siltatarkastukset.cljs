@@ -221,14 +221,21 @@
 
 (defn tallenna-siltatarkastus!
   "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
-  [tarkastus]
-  (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))
-            olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
-            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
-        (reset! muokattava-tarkastus nil)
-        (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
-        (reset! st/valittu-tarkastus res)
-        (paivita-valittu-silta))))
+  [tarkastus tallennus-kaynnissa-atom]
+  (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
+        (if (k/virhe? res)
+          (do
+            (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+            (reset! tallennus-kaynnissa-atom false))
+          (let [olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
+                kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
+            (reset! muokattava-tarkastus nil)
+            (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
+            (reset! st/valittu-tarkastus res)
+            (paivita-valittu-silta)
+            (reset! tallennus-kaynnissa-atom false)
+            (reset! muokattava-tarkastus nil)
+            (viesti/nayta! "Siltatarkastus tallennettu" :success))))))
 
 (defn siltatarkastusten-rivit
   [valittu-tarkastus muut-tarkastukset]
@@ -347,7 +354,7 @@
 (defn tarkastuksen-muokkauslomake
   "Lomake uuden tarkastuksen luomiseen ja vanhan muokkaamiseen"
   [muokattava-tarkastus]
-  (let [tallennus-kaynnissa (atom false)
+  (let [tallennus-kaynnissa? (atom false)
         muut-tarkastukset @st/valitun-sillan-tarkastukset
 
         olemassa-olevat-tarkastus-pvmt
@@ -457,20 +464,11 @@
 
          [napit/tallenna
           "Tallenna tarkastus"
-          #(do (reset! tallennus-kaynnissa true)
-               (go (let [tallennettava-tarkastus (-> tarkastus
-                                                     (assoc :uudet-liitteet @uudet-liitteet)
-                                                     (assoc :urakka-id (:id @nav/valittu-urakka)))
-                         res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
-                     (if (k/virhe? res)
-                       ;; Epäonnistui jostain syystä
-                       (do
-                         (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                         (reset! tallennus-kaynnissa false))
-                       ;; Tallennus ok
-                       (do (viesti/nayta! "Siltatarkastus tallennettu")
-                           (reset! tallennus-kaynnissa false)
-                           (reset! muokattava-tarkastus nil))))))
+          #(do (reset! tallennus-kaynnissa? true)
+               (let [tallennettava-tarkastus (-> tarkastus
+                                                 (assoc :uudet-liitteet @uudet-liitteet)
+                                                 (assoc :urakka-id (:id @nav/valittu-urakka)))]
+                 (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
           {:disabled (not voi-tallentaa?)}]
 
          ;; Tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
