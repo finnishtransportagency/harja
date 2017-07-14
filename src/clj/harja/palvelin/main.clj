@@ -77,6 +77,7 @@
     [harja.palvelin.palvelut.hankkeet :as hankkeet]
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
+    [harja.palvelin.palvelut.graylog :as graylog]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -481,6 +482,10 @@
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :graylog (component/using
+                  (graylog/->Graylog (:harja-datan-data asetukset))
+                  [:http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using
