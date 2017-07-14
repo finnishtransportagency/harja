@@ -275,10 +275,12 @@
       (is (true? (:kiintioon-liittaminen-kaynnissa? tulos))))))
 
 (deftest toimenpiteet-liitetty-kiintioon
-  (let [tulos (e! (tiedot/->ToimenpiteetLiitettyKiintioon {::to/idt #{1 2 3}})
-                  {:valittu-kiintio-id 123})]
-    (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))
-    (is (nil? (:valittu-kiintio-id tulos)))))
+  (vaadi-async-kutsut
+    #{tiedot/->HaeToimenpiteet}
+    (let [tulos (e! (tiedot/->ToimenpiteetLiitettyKiintioon {::to/idt #{1 2 3}})
+                    {:valittu-kiintio-id 123})]
+      (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))
+      (is (nil? (:valittu-kiintio-id tulos))))))
 
 (deftest toimenpiteet-ei-liitetty-kiintioon
   (let [tulos (e! (tiedot/->ToimenpiteetEiLiitettyKiintioon)

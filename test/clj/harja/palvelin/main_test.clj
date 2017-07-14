@@ -52,8 +52,7 @@
     :urakan-tyotuntimuistutukset
     :hankkeet
     :urakan-tyotunnit
-    :vv-yksikkohintaiset
-    :vv-kokonaishintaiset
+    :vv-toimenpiteet
     :vv-vaylat
     :vv-kiintiot
     :vv-hinnoittelut

@@ -24,7 +24,8 @@
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder voi-liittaa leveys-col liita-nappi-teksti]} kommentit]
+(defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder
+                         voi-liittaa leveys-col liita-nappi-teksti]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}

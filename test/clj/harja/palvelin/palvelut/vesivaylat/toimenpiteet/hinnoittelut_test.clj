@@ -16,7 +16,6 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [clojure.string :as str]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as yks]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]
             [clojure.spec.alpha :as s]))
 

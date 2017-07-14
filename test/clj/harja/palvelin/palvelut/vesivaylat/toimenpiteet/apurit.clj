@@ -8,8 +8,7 @@
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [clojure.string :as str]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as yks]))
+            [clojure.string :as str]))
 
 (defn hae-kokonaishintaiset-toimenpide-idt []
   (set (map :id

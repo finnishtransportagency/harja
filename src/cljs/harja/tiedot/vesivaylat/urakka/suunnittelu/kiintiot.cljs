@@ -147,7 +147,7 @@
       app))
 
   IrrotettuKiintiosta
-  (process-event [{vastaus :vastaus} app] harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu
+  (process-event [{vastaus :vastaus} app]
     (viesti/nayta! (to-jaettu/toimenpiteiden-toiminto-suoritettu (count (::to/idt vastaus))
                                                                  "irrotettu kiintiöstä")
                    :success)
