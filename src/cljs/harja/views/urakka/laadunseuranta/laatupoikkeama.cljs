@@ -401,13 +401,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 
 
-                {:otsikko     "Liitteet" :nimi :liitteet
-                 :palstoja    2
-                 :tyyppi      :komponentti
+                {:otsikko "Liitteet" :nimi :liitteet
+                 :palstoja 2
+                 :tyyppi :komponentti
                  :komponentti (fn [_]
-                                [liitteet/liitteet urakka-id (:liitteet @laatupoikkeama)
-                                 {:uusi-liite-atom   (r/wrap (:uusi-liite @laatupoikkeama)
-                                                             #(swap! laatupoikkeama assoc :uusi-liite %))
+                                [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
+                                 {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
+                                                           #(swap! laatupoikkeama assoc :uusi-liite %))
                                   :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}])}
 
                 (when-not uusi?

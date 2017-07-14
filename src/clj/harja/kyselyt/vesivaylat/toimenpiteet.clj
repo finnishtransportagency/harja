@@ -3,13 +3,15 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.future :refer :all]
+            [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
-            [specql.core :refer [fetch update! upsert!]]
+            [specql.core :refer [fetch update! insert! upsert!]]
             [specql.op :as op]
             [specql.rel :as rel]
             [taoensso.timbre :as log]
 
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
@@ -34,6 +36,7 @@
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
                           ::vv-toimenpide/tyoluokka
+                          ::vv-toimenpide/kiintio
                           ::vv-toimenpide/pvm
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
@@ -41,6 +44,7 @@
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/lisatieto
+                          ::vv-toimenpide/liitteet
                           ::vv-toimenpide/turvalaitekomponentit]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
@@ -112,15 +116,26 @@
                %))
        (map #(dissoc % ::vv-toimenpide/hintaryhma))))
 
-(defn suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
-  (cond (true? vikailmoitukset?)
-        (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
-        :default toimenpiteet))
-
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
   (update! db ::vv-toimenpide/reimari-toimenpide
            {::vv-toimenpide/hintatyyppi (name uusi-tyyppi)}
            {::vv-toimenpide/id (op/in toimenpide-idt)}))
+
+(defn lisaa-toimenpiteelle-liite [db toimenpide-id liite-id]
+  (insert! db ::vv-toimenpide/toimenpide<->liite
+           {::vv-toimenpide/toimenpide-id toimenpide-id
+            ::vv-toimenpide/liite-id liite-id}))
+
+(defn poista-toimenpiteen-liite [db toimenpide-id liite-id]
+  (update! db ::vv-toimenpide/toimenpide<->liite
+           {::m/poistettu? true}
+           {::vv-toimenpide/toimenpide-id toimenpide-id
+            ::vv-toimenpide/liite-id liite-id}))
+
+(defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
+  (cond (true? vikailmoitukset?)
+        (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
+        :default toimenpiteet))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
   (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
@@ -132,6 +147,46 @@
       (fn [toimenpide]
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
+
+(defn- lisaa-turvalaitekomponentit [toimenpiteet db]
+  (let [turvalaitekomponentit (fetch
+                                db
+                                ::tkomp/turvalaitekomponentti
+                                (set/union #{::tkomp/sarjanumero ::tkomp/turvalaitenro}
+                                           tkomp/komponenttityyppi)
+                                {::tkomp/turvalaitenro
+                                 (op/in (set (map
+                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
+                                                           ::vv-turvalaite/r-nro])
+                                               toimenpiteet)))})
+        toimenpiteet-turvalaitekomponenteilla
+        (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
+                       (tkomp/turvalaitekomponentit-turvalaitenumerolla
+                         turvalaitekomponentit
+                         (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
+             toimenpiteet)]
+    toimenpiteet-turvalaitekomponenteilla))
+
+(defn- lisaa-liitteet [toimenpiteet db]
+  (let [liite-idt (mapcat (fn [toimenpide]
+                            (let [toimenpiteen-liite-linkit (filter (comp not ::m/poistettu?)
+                                                                    (::vv-toimenpide/liite-linkit toimenpide))]
+                              (keep ::vv-toimenpide/liite-id toimenpiteen-liite-linkit)))
+                          toimenpiteet)
+        liitteet (fetch
+                   db ::liite/liite
+                   liite/perustiedot
+                   {::liite/id (op/in liite-idt)})
+        toimenpiteet-liitteilla
+        (map (fn [toimenpide]
+               (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
+                                                       (::vv-toimenpide/liite-linkit toimenpide)))
+                     toimenpiteen-liitteet (filterv #(toimenpiteen-liite-idt (::liite/id %)) liitteet)]
+                 (-> toimenpide
+                     (assoc ::vv-toimenpide/liitteet (namespacefy/unnamespacefy toimenpiteen-liitteet))
+                     (dissoc ::vv-toimenpide/liite-linkit))))
+             toimenpiteet)]
+    toimenpiteet-liitteilla))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
@@ -147,7 +202,13 @@
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-                               (disj vv-toimenpide/viittaukset vv-toimenpide/urakka)
+                               vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
+                               vv-toimenpide/vikailmoitus
+                               vv-toimenpide/urakoitsija
+                               vv-toimenpide/sopimus
+                               vv-toimenpide/turvalaite
+                               vv-toimenpide/vayla
+                               vv-toimenpide/kiintio
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot)
                              (op/and
@@ -175,24 +236,9 @@
                                  {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
-                      (suodata-vikakorjaukset vikailmoitukset?))
-        ;; Hae toimenpiteiden turvalaitteenn kaikki turvalaitekomponentit
-        turvalaitekomponentit (fetch
-                                db
-                                ::tkomp/turvalaitekomponentti
-                                (set/union #{::tkomp/sarjanumero ::tkomp/turvalaitenro}
-                                           tkomp/komponenttityyppi)
-                                {::tkomp/turvalaitenro
-                                 (op/in (set (map
-                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
-                                                           ::vv-turvalaite/r-nro])
-                                               fetchattu)))})
-        ;; Liitä toimenpiteisiin tieto turvalaitteen komponenteista
-        fetchattu (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
-                                 (tkomp/turvalaitekomponentit-turvalaitenumerolla
-                                   turvalaitekomponentit
-                                   (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-                       fetchattu)]
+                      (suodata-vikakorjaukset vikailmoitukset?)
+                      (lisaa-turvalaitekomponentit db)
+                      (lisaa-liitteet db))]
     (cond->> (into [] toimenpiteet-xf fetchattu)
              yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
              kokonaishintaiset? (identity))))

@@ -130,11 +130,12 @@
                          urakka-id
                          sillan-urakat)))))))
 
-(defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
-  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
-  (doseq [[kohdenumero uusi-liite] uudet-liitteet]
-    (log/debug "Tallenna liite: " (pr-str (:nimi uusi-liite)))
-    (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id uusi-liite)))
+(defn tallenna-siltatarkastuksen-liitteet [db tarkastus kohteiden-liitteet]
+  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str kohteiden-liitteet))
+  (doseq [[kohdenumero liitteet] kohteiden-liitteet]
+    (doseq [liite liitteet]
+      (log/debug "Tallenna liite: " (pr-str (:nimi liite)))
+      (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id liite))))
   (log/debug "Liitteet tallennettu!"))
 
 (defn tallenna-siltatarkastus!

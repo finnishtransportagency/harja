@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset-test
+(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja
@@ -15,7 +15,7 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.urakka :as u]
             [harja.domain.urakka :as u]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.kokonaishintaiset :as ko]
+            [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
             [clojure.spec.alpha :as s]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
@@ -28,9 +28,9 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
-                        :vv-kokonaishintaiset (component/using
-                                                (ko/->KokonaishintaisetToimenpiteet)
-                                                [:db :http-palvelin])))))
+                        :vv-toimenpiteet (component/using
+                                           (vv-toimenpiteet/->Toimenpiteet)
+                                           [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -40,7 +40,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest toimenpiteiden-haku
+(deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -63,7 +63,57 @@
     (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
     (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
     (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
+    (is (some #(not (empty? (::toi/liitteet %))) vastaus))
+    (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
+                  (mapcat ::toi/liitteet vastaus)))
+    (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
+
+
+(deftest kok-hint-toimenpiteiden-haku
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/sopimus-id sopimus-id
+                       :alku (c/to-date (t/date-time 2017 1 1))
+                       :loppu (c/to-date (t/date-time 2018 1 1))}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-yksikkohintaiset-toimenpiteet +kayttaja-jvh+
+                                kysely-params)]
+
+    (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+    (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
+    (is (>= (count vastaus) 2))
+    (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
+    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
+
+(deftest kokonaishintaisiin-siirto
+  (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/idt yksikkohintaiset-toimenpide-idt}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
+                                kysely-params)
+        nykyiset-kokonaishintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
+        siirrettyjen-uudet-tyypit (apurit/hae-toimenpiteiden-tyyppi yksikkohintaiset-toimenpide-idt)]
+    (is (s/valid? ::toi/siirra-toimenpiteet-kokonaishintaisiin-kysely kysely-params))
+    (is (s/valid? ::toi/siirra-toimenpiteet-kokonaishintaisiin-vastaus vastaus))
+
+    (is (= vastaus yksikkohintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
+    (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
+    (is (every? #(= % "kokonaishintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
+
+(deftest siirra-toimenpide-kokonaishintaisiin-kun-ei-kuulu-urakkaan
+  (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/idt yksikkohintaiset-toimenpide-idt}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
+                                                   kysely-params)))))
+
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -339,3 +389,92 @@
     (is (= vastaus kokonaishintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
+
+(deftest siirra-toimenpide-yksikkohintaisiin-kun-ei-kuulu-urakkaan
+  (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/idt yksikkohintaiset-toimenpide-idt}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest liitteen-lisaaminen-ja-poistaminen
+  (let [liite-id 1
+        laske-liitteet #(ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite WHERE poistettu = FALSE;"))
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        liitteet-ennen (laske-liitteet)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :lisaa-toimenpiteelle-liite +kayttaja-jvh+
+                                kysely-params)
+        liitteet-lisayksen-jalkeen (laske-liitteet)]
+    (is (s/valid? ::toi/lisaa-toimenpiteelle-liite-kysely kysely-params))
+
+    (is (true? (:ok? vastaus)))
+    (is (= (+ liitteet-ennen 1) liitteet-lisayksen-jalkeen))
+
+    ;; Nyt poista liite
+    (let [kysely-params {::toi/urakka-id urakka-id
+                         ::toi/liite-id liite-id
+                         ::toi/id kokonaishintaiset-toimenpide-id}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :poista-toimenpiteen-liite +kayttaja-jvh+
+                                  kysely-params)
+          liitteet-poiston-jalkeen (laske-liitteet)]
+      (is (s/valid? ::toi/poista-toimenpiteen-liite-kysely kysely-params))
+
+      (is (true? (:ok? vastaus)))
+      (is (= liitteet-ennen liitteet-poiston-jalkeen)))))
+
+(deftest lisaa-liite-ilman-oikeutta
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :lisaa-toimenpiteelle-liite +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest lisaa-liite-toimenpiteelle-joka-ei-kuulu-urakkaan
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :lisaa-toimenpiteelle-liite +kayttaja-jvh+
+                                                   kysely-params)))))
+
+(deftest poista-liite-ilman-oikeutta
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-toimenpiteen-liite +kayttaja-tero+
+                                           kysely-params)))))
+
+(deftest poista-liite-toimenpiteelta-joka-ei-kuulu-urakkaan
+  (let [liite-id 1
+        kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        kysely-params {::toi/urakka-id urakka-id
+                       ::toi/liite-id liite-id
+                       ::toi/id kokonaishintaiset-toimenpide-id}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :poista-toimenpiteen-liite +kayttaja-jvh+
+                                                   kysely-params)))))

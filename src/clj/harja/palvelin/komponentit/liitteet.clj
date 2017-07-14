@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [harja.domain.liitteet :as t-liitteet]
+            [harja.domain.liite :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [fileyard.client :as fileyard-client]
