@@ -52,6 +52,18 @@
         (q/liita-toimenpiteet-kiintioon db user tiedot))
       {::to/idt (::to/idt tiedot)})))
 
+(defn- irrota-toimenpiteet-kiintiosta [db user tiedot]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (let [urakka-id (::to/urakka-id tiedot)]
+      (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
+      (q-toimenpiteet/vaadi-toimenpiteet-kuuluvat-urakkaan db
+                                                           (::to/idt tiedot)
+                                                           urakka-id)
+      (jdbc/with-db-transaction [db db]
+        (q/irrota-toimenpiteet-kiintiosta db user tiedot))
+      {::to/idt (::to/idt tiedot)})))
+
 (defrecord Kiintiot []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -87,6 +99,14 @@
         (liita-toimenpiteet-kiintioon db user tiedot))
       {:kysely-spec ::kiintio/liita-toimenpiteet-kiintioon-kysely
        :vastaus-spec ::kiintio/liita-toimenpiteet-kiintioon-vastaus})
+
+    (julkaise-palvelu
+      http
+      :irrota-toimenpiteet-kiintiosta
+      (fn [user tiedot]
+        (irrota-toimenpiteet-kiintiosta db user tiedot))
+      {:kysely-spec ::kiintio/irrota-toimenpiteet-kiintiosta-kysely
+       :vastaus-spec ::kiintio/irrota-toimenpiteet-kiintiosta-vastaus})
 
     this)
 

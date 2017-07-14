@@ -6,7 +6,8 @@
             [harja.kyselyt.urakan-tyotunnit :as q]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.tyokalut.spec-apurit :as spec-apurit]))
 
 (defn hae-urakan-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
@@ -38,7 +39,7 @@
 (defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
   (let [tunnit (q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id)]
-    {::ut/urakan-tyotunnit tunnit}))
+    (spec-apurit/poista-nil-avaimet {::ut/urakan-tyotunnit tunnit} false)))
 
 (defrecord UrakanTyotunnit []
   component/Lifecycle

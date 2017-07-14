@@ -10,14 +10,17 @@
   (let [pko @pois-kytketyt-ominaisuudet]
     (if (nil? pko)
       (do
-        (log/error "ominaisuus-kaytossa? " k " kutsuttu ennen ko asetusten lukemista - kutusvasta komponentista puuttuu ominaisuuskomponetntin riippuvuus?")
+        (try
+          (throw (RuntimeException. (str "ominaisuus-kaytossa? " k " kutsuttu ennen ko asetusten lukemista - kutusvasta komponentista puuttuu ominaisuuskomponenttin riippuvuus?")))
+          (catch Exception e
+            (log/error e)))
         false) ;; ei alustetu vielä -> väitetään kaikkea pois kytketyksi
       (not (contains? pko k)))))
 
 (defrecord PoisKytketytOminaisuudet [pois-kytketyt-ominaisuudet-joukko]
   component/Lifecycle
   (start [this]
-    (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko)
+    (reset! pois-kytketyt-ominaisuudet (or pois-kytketyt-ominaisuudet-joukko #{}))
     (let [http (:http-palvelin this)]
       (julkaise-palvelu http :pois-kytketyt-ominaisuudet
                         (fn [user tiedot]

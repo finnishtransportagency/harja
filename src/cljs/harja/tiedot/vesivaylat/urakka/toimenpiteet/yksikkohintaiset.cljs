@@ -48,6 +48,7 @@
          :valittu-hintaryhma nil
          :uusi-hintaryhma ""
          :hintaryhman-tallennus-kaynnissa? false
+         :hintaryhmien-poisto-kaynnissa? false
          :hintaryhmat nil
          :hintaryhmien-haku-kaynnissa? false
          :toimenpiteet nil
@@ -87,8 +88,8 @@
 (defrecord HintaryhmatEiHaettu [virhe])
 (defrecord ValitseHintaryhma [hintaryhma])
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
-(defrecord ValitutLiitetty [vastaus])
-(defrecord ValitutEiLiitetty [virhe])
+(defrecord ValitutLiitettyHintaryhmaan [])
+(defrecord ValitutEiLiitettyHintaryhmaan [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
@@ -101,6 +102,9 @@
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
 (defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord PeruHintaryhmanHinnoittelu [])
+(defrecord PoistaHintaryhmat [hintaryhma-idt])
+(defrecord HintaryhmatPoistettu [vastaus])
+(defrecord HintaryhmatEiPoistettu [])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -158,7 +162,8 @@
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
-    (if-not (:toimenpiteiden-haku-kaynnissa? app)
+    (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
+             (some? (:urakka-id valinnat)))
       (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
                                       (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
                                       {:onnistui ->ToimenpiteetHaettu
@@ -241,19 +246,20 @@
                                       {::to/idt (map ::to/id valitut)
                                        ::h/id (::h/id hintaryhma)
                                        ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                      {:onnistui ->ValitutLiitetty
-                                       :epaonnistui ->ValitutEiLiitetty})
+                                      {:onnistui ->ValitutLiitettyHintaryhmaan
+                                       :epaonnistui ->ValitutEiLiitettyHintaryhmaan})
           (assoc app :hintaryhmien-liittaminen-kaynnissa? true))
       app))
 
-  ValitutLiitetty
-  (process-event [{vastaus :vastaus} app]
-    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku (:valinnat app)))
-
+  ValitutLiitettyHintaryhmaan
+  (process-event [_ app]
+    (let [toimenpidehaku (tuck/send-async! ->HaeToimenpiteet)
+          hintaryhmahaku (tuck/send-async! ->HaeHintaryhmat)]
+      (go (toimenpidehaku (:valinnat app)))
+      (go (hintaryhmahaku nil)) ;; Tarvitaan tieto siitä, miten tieto tyhjistä hintaryhmistä muuttuu
       (assoc app :hintaryhmien-liittaminen-kaynnissa? false)))
 
-  ValitutEiLiitetty
+  ValitutEiLiitettyHintaryhmaan
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden liittäminen tilaukseen epäonnistui!" :danger)
     (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
@@ -366,4 +372,26 @@
   PeruHintaryhmanHinnoittelu
   (process-event [_ app]
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
-               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu)))
+               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
+
+  PoistaHintaryhmat
+  (process-event [{hintaryhma-idt :hintaryhma-idt} app]
+    (if-not (:hintaryhmien-poisto-kaynnissa? app)
+      (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
+                                      {::h/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::h/idt hintaryhma-idt}
+                                      {:onnistui ->HintaryhmatPoistettu
+                                       :epaonnistui ->HintaryhmatEiPoistettu})
+          (assoc app :hintaryhmien-poisto-kaynnissa? true))
+      app))
+
+  HintaryhmatPoistettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :hintaryhmien-poisto-kaynnissa? false
+               :hintaryhmat (h/hinnoittelut-ilman (:hintaryhmat app)
+                                                  (::h/idt vastaus))))
+
+  HintaryhmatEiPoistettu
+  (process-event [_ app]
+    (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
+    (assoc app :hintaryhmien-poisto-kaynnissa? false)))

@@ -322,6 +322,18 @@
                   AND vv_hinta.\"hinnoittelu-id\" IS NULL
                   LIMIT 1"))))
 
+(defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
+  (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
+                        WHERE EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
+                                      WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
+
+(defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita []
+  (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
+                        WHERE NOT EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
+                                          WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
+
 (defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
   (ffirst (q (str "SELECT id FROM vv_hinnoittelu
                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
@@ -390,6 +402,12 @@
   (ffirst (q (str "SELECT id
                    FROM   reimari_toimenpide
                    WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
+
+(defn hae-kiintioon-kuuluva-reimari-toimenpide []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Kiintiöön kuuluva jutska'
+                          AND \"kiintio-id\" IS NOT NULL;"))))
 
 (defn hae-kiintio-siirtyneiden-poijujen-korjaus []
   (ffirst (q (str "SELECT id

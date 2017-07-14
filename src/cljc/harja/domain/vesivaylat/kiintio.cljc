@@ -29,11 +29,7 @@
                                                [:harja.domain.vesivaylat.toimenpide/turvalaite
                                                 #{:harja.domain.vesivaylat.turvalaite/id
                                                   :harja.domain.vesivaylat.turvalaite/nimi
-                                                  :harja.domain.vesivaylat.turvalaite/tyyppi
-                                                  [:harja.domain.vesivaylat.turvalaite/vayla
-                                                   #{:harja.domain.vesivaylat.vayla/id
-                                                     :harja.domain.vesivaylat.vayla/nimi
-                                                     :harja.domain.vesivaylat.vayla/tyyppi}]}]
+                                                  :harja.domain.vesivaylat.turvalaite/tyyppi}]
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyolaji
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyoluokka
                                                :harja.domain.vesivaylat.toimenpide/reimari-toimenpidetyyppi}]})
@@ -72,3 +68,10 @@
 
 ;; Palauttaa liitettyjen toimenpiteiden id:t (samat jotka annettiin)
 (s/def ::liita-toimenpiteet-kiintioon-vastaus (s/keys :req [:harja.domain.vesivaylat.toimenpide/idt]))
+
+(s/def ::irrota-toimenpiteet-kiintiosta-kysely (s/keys :req [:harja.domain.vesivaylat.toimenpide/urakka-id
+                                                            :harja.domain.vesivaylat.toimenpide/idt]))
+
+;; Palauttaa liitettyjen toimenpiteiden id:t (samat jotka annettiin)
+(s/def ::irrota-toimenpiteet-kiintiosta-vastaus (s/keys :req [:harja.domain.vesivaylat.toimenpide/idt]))
+

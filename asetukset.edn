@@ -141,6 +141,8 @@
  ;;                                                   tuotantoharjaan.
  ;; :tierekisterin-varusteet
  ;; :vesivayla
+ ;; :fileyard
+ ;; :varuste-api
  :pois-kytketyt-ominaisuudet #{:fileyard}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
@@ -154,12 +156,18 @@
            }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
-                 :paivittainen-tarkistusaika [11 00 00]
+                 :paivittainen-tarkistusaika [12 22 00]
                  :paivitysvali-paivissa 60}
+
+ :vaylat {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
+          :paivittainen-tarkistusaika [12 22 00]
+          :paivitysvali-paivissa 60}
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
 
  :vkm  {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos"}
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
+
+ :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
  }
