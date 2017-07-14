@@ -293,7 +293,22 @@
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
-(defn tallenna-urakka [db user urakka]
+(defn luo-vv-urakan-toimenpideinstanssit [db urakka]
+  (let [params {:urakka_id (::u/id urakka)
+                :alkupvm (::u/alkupvm urakka)
+                :loppupvm (::u/loppupvm urakka)}]
+    ;; TODO Tarttee luoda myös tieto väylätyypistä. Mikä on urakan yhteisten kustannusten väylätyyppi?
+    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
+                        :toimenpide_nimi "Kauppamerenkulun kustannukset"}))
+    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
+                        :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))
+    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      db (merge params {:nimi "Urakan yhteiset kustannukset TP"
+                        :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
+
+(defn tallenna-vesivaylaurakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
@@ -304,6 +319,7 @@
                           (luo-uusi-urakka! db user urakka))
             urakka (assoc urakka ::u/id (:id tallennettu))]
 
+        (luo-vv-urakan-toimenpideinstanssit db urakka)
         (paivita-urakan-sopimukset! db user urakka sopimukset)
         urakka))))
 
@@ -384,9 +400,9 @@
                         (poista-indeksi-kaytosta db user tiedot)))
 
     (julkaise-palvelu http
-                      :tallenna-urakka
+                      :tallenna-vesivaylaurakka
                       (fn [user tiedot]
-                        (tallenna-urakka db user tiedot))
+                        (tallenna-vesivaylaurakka db user tiedot))
                       {:kysely-spec ::u/tallenna-urakka-kysely
                        :vastaus-spec ::u/tallenna-urakka-vastaus})
     (julkaise-palvelu http
@@ -410,7 +426,7 @@
                      :tallenna-urakan-sopimustyyppi
                      :tallenna-urakan-tyyppi
                      :aseta-takuun-loppupvm
-                     :tallenna-urakka
+                     :tallenna-vesivaylaurakka
                      :hae-harjassa-luodut-urakat
                      :laheta-urakka-sahkeeseen)
 

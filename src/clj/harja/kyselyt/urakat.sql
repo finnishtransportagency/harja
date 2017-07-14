@@ -27,6 +27,10 @@ FROM urakka u
 WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
 
+-- name: luo-vesivaylaurakan-toimenpideinstanssi<!
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+    VALUES (:urakka_id, :nimi, (SELECT id FROM toimenpidekoodi WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
+
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT
   u.id,

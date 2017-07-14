@@ -70,10 +70,10 @@
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
         sopimuksen-materiaalit-hoitokausittain
         (reaction-writable
-         (let [[sopimus-id _] @u/valittu-sopimusnumero]
-           (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
+          (let [[sopimus-id _] @u/valittu-sopimusnumero]
+            (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
                                                  @urakan-materiaalit)
-                                         (u/hoitokaudet ur))))
+                                          (u/hoito-tai-sopimuskaudet ur))))
 
 
         ;; valitaan materiaaleista vain valitun hoitokauden
