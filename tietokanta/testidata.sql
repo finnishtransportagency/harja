@@ -145,3 +145,4 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Muunnetaan testidatan reittipisteet uuteen tallennusmuotoon
 SELECT siirra_kaikki_reittipisteet();
+
