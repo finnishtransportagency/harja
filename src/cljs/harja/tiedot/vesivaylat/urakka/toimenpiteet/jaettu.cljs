@@ -79,6 +79,20 @@
 (defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
+(defrecord LisaaToimenpiteelleLiite [tiedot])
+(defrecord LiiteLisatty [vastaus tiedot])
+(defrecord LiiteEiLisatty [])
+(defrecord PoistaToimenpiteenLiite [tiedot])
+(defrecord LiitePoistettu [vastaus tiedot])
+(defrecord LiiteEiPoistettu [])
+
+(defn siirra-valitut! [palvelu app]
+  (tuck-tyokalut/palvelukutsu palvelu
+                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                               ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
+                              {:onnistui ->ToimenpiteetSiirretty
+                               :epaonnistui ->ToimenpiteetEiSiirretty})
+  (assoc app :siirto-kaynnissa? true))
 
 (extend-protocol tuck/Event
   ValitseToimenpide
@@ -135,12 +149,64 @@
   ToimenpiteetEiSiirretty
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden siirto epäonnistui!" :danger)
-    (assoc app :siirto-kaynnissa? false)))
+    (assoc app :siirto-kaynnissa? false))
 
-(defn siirra-valitut! [palvelu app]
-  (tuck-tyokalut/palvelukutsu palvelu
-                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                               ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
-                              {:onnistui ->ToimenpiteetSiirretty
-                               :epaonnistui ->ToimenpiteetEiSiirretty})
-  (assoc app :siirto-kaynnissa? true))
+  LisaaToimenpiteelleLiite
+  (process-event [{tiedot :tiedot} app]
+    (if (not (:liitteen-lisays-kaynnissa? app))
+      (do (tuck-tyokalut/palvelukutsu :lisaa-toimenpiteelle-liite
+                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::to/liite-id (get-in tiedot [:liite :id])
+                                       ::to/id (::to/id tiedot)}
+                                      {:onnistui ->LiiteLisatty
+                                       :onnistui-parametrit [tiedot]
+                                       :epaonnistui ->LiiteEiLisatty})
+          (assoc app :liitteen-lisays-kaynnissa? true))
+      app))
+
+  LiiteLisatty
+  (process-event [{vastaus :vastaus tiedot :tiedot} app]
+    (let [liite (:liite tiedot)
+          toimenpide-id (::to/id tiedot)]
+      (assoc app :toimenpiteet (map (fn [toimenpide]
+                                      (if (= (::to/id toimenpide) toimenpide-id)
+                                        (assoc toimenpide ::to/liitteet (conj (::to/liitteet toimenpide)
+                                                                              liite))
+                                        toimenpide))
+                                    (:toimenpiteet app))
+                 :liitteen-lisays-kaynnissa? false)))
+
+  LiiteEiLisatty
+  (process-event [_ app]
+    (viesti/nayta! "Liitteen lisäys epäonnistui!" :danger)
+    (assoc app :liitteen-lisays-kaynnissa? false))
+
+  PoistaToimenpiteenLiite
+  (process-event [{tiedot :tiedot} app]
+    (if (not (:liitteen-poisto-kaynnissa? app))
+      (do (tuck-tyokalut/palvelukutsu :poista-toimenpiteen-liite
+                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::to/liite-id (::to/liite-id tiedot)
+                                       ::to/id (::to/id tiedot)}
+                                      {:onnistui ->LiitePoistettu
+                                       :onnistui-parametrit [tiedot]
+                                       :epaonnistui ->LiiteEiPoistettu})
+          (assoc app :liitteen-poisto-kaynnissa? true))
+      app))
+
+  LiitePoistettu
+  (process-event [{vastaus :vastaus tiedot :tiedot} app]
+    (let [liite-id (::to/liite-id tiedot)
+          toimenpide-id (::to/id tiedot)]
+      (assoc app :toimenpiteet (map (fn [toimenpide]
+                                      (if (= (::to/id toimenpide) toimenpide-id)
+                                        (assoc toimenpide ::to/liitteet (filter #(not= (:id %) liite-id)
+                                                                                (::to/liitteet toimenpide)))
+                                        toimenpide))
+                                    (:toimenpiteet app))
+                 :liitteen-poisto-kaynnissa? false)))
+
+  LiiteEiPoistettu
+  (process-event [_ app]
+    (viesti/nayta! "Liitteen poistaminen epäonnistui!" :danger)
+    (assoc app :liitteen-poisto-kaynnissa? false)))

@@ -1,4 +1,21 @@
-(ns harja.domain.liitteet)
+(ns harja.domain.liite
+  (:require [clojure.spec.alpha :as s]
+            [harja.kyselyt.specql] ;; Jotta oid-tyyppi tulee määritellyksi
+            [specql.rel :as rel]
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]]))
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+
+(def perustiedot
+  #{::id
+    ::tyyppi
+    ::koko
+    ::kuvaus
+    ::nimi
+    ::lahde
+    ::urakka-id})
 
 (defn tarkista-liite [liite]
   (let [max-koko-tavuina 32000000
@@ -41,3 +58,8 @@
           {:hyvaksytty false :viesti (str "Tiedostotyyppi (" (:tyyppi liite) ") ei ole sallittu.")}
           {:hyvaksytty true :viesti nil}))
       {:hyvaksytty false :viesti "Järjestelmä ei voi käsitellä tiedostoa."})))
+
+(define-tables
+  ["liite" ::liite
+   {"liite_oid" ::liite-oid
+    "urakka" ::urakka-id}])
