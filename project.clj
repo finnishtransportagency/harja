@@ -137,7 +137,10 @@
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
-                 [devcards "0.2.2" :exclusions [cljsjs/react]]]
+                 [devcards "0.2.2" :exclusions [cljsjs/react]]
+
+                 ;; Käytetään Graylog datan lukemiseen, kun ei voi käyttää API:a viel
+                 [org.clojure/data.csv "0.1.4"]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]

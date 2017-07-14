@@ -107,9 +107,9 @@
 
                                       :fill         (first colors)
                                       :stroke       "black"
-                                      :stroke-width (if (= hovered label) 3 1)
+                                      :stroke-width (if (= hovered label) 3 1)}])
 
-                                      }])
+
                             (cond
                               (= show-text :percent)
                               [:text {:x tx :y ty :text-anchor "middle"}
@@ -130,17 +130,18 @@
                      (rest colors)))))))))
 
 
-(defn bars [{:keys [width height label-fn value-fn key-fn color-fn color
-                    ticks format-amount hide-value? margin-x margin-y
+(defn bars [{:keys [width height label-fn value-fn key-fn color-fn color colors
+                    ticks format-amount hide-value? margin-x margin-y bar-padding
                     value-font-size tick-font-size font-size y-axis-font-size
-                    legend]} data]
+                    legend on-legend-click]} data]
   (let [label-fn (or label-fn first)
         value-fn (or value-fn second)
         key-fn (or key-fn hash)
         color-fn (or color-fn (constantly (or color "blue")))
-        colors ["#0066cc" "#A9D0F5" "#646464" "#afafaf" "#770000" "#ff9900"]
+        colors (or colors ["#0066cc" "#A9D0F5" "#646464" "#afafaf" "#770000" "#ff9900"])
         mx (or margin-x 40)                                 ;; margin-x
         my (or margin-y 40)                                 ;; margin-y
+        bar-padding (or bar-padding 0.9)
         value-font-size (or value-font-size "8pt")
         tick-font-size (or tick-font-size "7pt")
         y-axis-font-size (or y-axis-font-size "6pt")
@@ -148,7 +149,7 @@
         #?@(:cljs [bars-top-y 25
                    spacer-y 10
                    label-area-height 10
-                   legend-area-height 40
+                   legend-area-height (+ 40 (* 50 (quot (count (vec legend)) 4)))
                    legendbox-thickness 15
                    legend-label-x 20
                    legend-label-y-pos 11]
@@ -168,17 +169,29 @@
         legend-top-y (+ label-bottom-y spacer-y)
         my-half (/ my 2)
         bar-width (/ (- width mx) (count data))
-        multiple-series? (vector? (value-fn (first data)))
+        multiple-series? (or (vector? (value-fn (first data))) (= data []))
         _ (assert (or (and multiple-series? legend)
                       (and (not multiple-series?) (nil? legend)))
                   "Legend must be supplied iff data has multiple series")
-        max-value (reduce max (if multiple-series?
-                                (keep identity (mapcat value-fn data))
-                                (map value-fn data)))
-        min-value (reduce min (if multiple-series?
-                                (keep identity (mapcat value-fn data))
-                                (map value-fn data)))
+
+        is-legend-set? (set? legend)
+        value-seq (if multiple-series?
+                    (keep identity (mapcat value-fn data))
+                    (map value-fn data))
+        is-value-map? (map? (first value-seq))
+        ;_ (js/console.log (pr-str "ms" multiple-series? "ivm" is-value-map? "vs" value-seq "asd" (first data)))
+        max-value (if (empty? value-seq)
+                    1
+                    (reduce max (if is-value-map?
+                                  (map :value value-seq)
+                                  value-seq)))
+        min-value (if (empty? value-seq)
+                    0
+                    (reduce min (if is-value-map?
+                                  (map :value value-seq)
+                                  value-seq)))
         value-range (- max-value min-value)
+        ;leg-of-interest (atom nil)
         scale (if (= 0 max-value)
                 1
                 max-value)
@@ -200,22 +213,23 @@
                   :y      bars-top-y
                   :width  bar-width
                   :height bar-area-height
-                  :fill   "#F0F0F0" ;light gray
-                  }]))
-      (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value) 0])
-            :let [tick-y (- bars-bottom-y (value-height tick))]]
-        ^{:key tick}
-        [:g
-         [:text {:font-size y-axis-font-size :text-anchor "end"
-                 :x (- mx 3)
-                 :y tick-y}
-          (str tick)]
-         [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
-                 #?@(:cljs [:style {:stroke           "rgb(200,200,200)"
-                                    :stroke-width     0.5
-                                    :stroke-dasharray "5,1"}]
-                     :clj  [:style (str "stroke:rgb(200,200,200);stroke-width:0.5;")
-                            :stroke-dasharray "3,1"])}]])
+                  :fill   "#F0F0F0"}])) ;light gray
+
+      (map-indexed (fn [i item]
+                    (with-meta item {:key (str (gensym "tick") i)}))
+        (for [tick (or ticks [max-value (* 0.75 max-value) (* 0.50 max-value) (* 0.25 max-value) 0])
+               :let [tick-y (- bars-bottom-y (value-height tick))]]
+          [:g
+           [:text {:font-size y-axis-font-size :text-anchor "end"
+                   :x (- mx 3)
+                   :y tick-y}
+            (str tick)]
+           [:line {:x1 mx :y1 tick-y :x2 width :y2 tick-y
+                   #?@(:cljs [:style {:stroke           "rgb(200,200,200)"
+                                      :stroke-width     0.5
+                                      :stroke-dasharray "5,1"}]
+                       :clj  [:style (str "stroke:rgb(200,200,200);stroke-width:0.5;")
+                              :stroke-dasharray "3,1"])}]]))
       (map-indexed (fn [i d]
                      (let [label (label-fn d)
                            value (value-fn d)
@@ -226,7 +240,7 @@
                        ^{:key i}
                        [:g
                         (when (zero? (rem i show-every-nth-label))
-                             [:text {:x           (+ start-x (/ (* 0.9 bar-width) 2))
+                             [:text {:x           (+ start-x (/ (* bar-padding bar-width) 2))
                                      :y label-top-y
                                      :text-anchor "middle"
                                      :font-size   tick-font-size}
@@ -240,40 +254,53 @@
                           (when-not (empty? values)
                             (map-indexed
                               (fn [j value]
-                                (when value
-                                  (let [bar-height (value-height value)
-                                        x (+ bar-set-margin-x
-                                             (+ start-x (* bar-width j)))] ;; FIXME: scale min-max
-                                    ^{:key j}
-                                    [:g
-                                     [:rect {:x      x
-                                             :y      (- bars-bottom-y bar-height)
-                                             :width  (* 0.90 bar-width)
-                                             :height bar-height
-                                             :fill   (nth colors j) #_(color-fn d)}]
-                                     (when-not (hide-value? value)
-                                       [:text {:x           (+ x (/ (* 0.90 bar-width) 2))
-                                               :y (- bars-bottom-y bar-height 2)
-                                               :text-anchor "middle"
-                                               :font-size   value-font-size}
-                                        (format-amount value)])])))
+                                (let [value-num (if is-value-map?
+                                                  (:value value)
+                                                  value)
+                                      category (when is-value-map? (:category value))]
+                                  (when value
+                                    (let [bar-height (value-height value-num)
+                                          x (+ bar-set-margin-x
+                                               (+ start-x (* bar-width j)))] ;; FIXME: scale min-max
+                                      ^{:key j}
+                                      [:g
+                                       [:rect {:x      x
+                                               :y      (- bars-bottom-y bar-height)
+                                               :width  (* bar-padding bar-width)
+                                               :height bar-height
+                                               :fill   (if (map? colors)
+                                                          ((keyword category) colors)
+                                                          (nth colors j)) #_(color-fn d)
+                                               :on-mouse-over #(do (println (str category)))}]
+                                       (when-not (hide-value? value)
+                                         [:text {:x           (+ x (/ (* bar-padding bar-width) 2))
+                                                 :y (- bars-bottom-y bar-height 2)
+                                                 :text-anchor "middle"
+                                                 :font-size   value-font-size}
+                                          (format-amount value-num)])]))))
                               values)))]))
                    data)]
 
      ;; show legend if any
      (when multiple-series?
-       (map-indexed (fn [i leg]
-                      (let [rect-x-val (+ mx (* i (/ width (count legend))))]
-                        ^{:key i}
-                        [:g
-                         [:rect {:x      rect-x-val
-                                 :y      legend-top-y
-                                 :height legendbox-thickness
-                                 :width  legendbox-thickness
-                                 :fill   (nth colors i)}]
-                         [:text {:x         (+ legend-label-x rect-x-val)
-                                 :y         (+ legend-top-y legend-label-y-pos)
-                                 :font-size value-font-size
-                                 }
-                          leg]]))
-                    legend))]))
+       (map (fn [num]
+                (let [next-5 (take 4 (drop (* 4 num) (vec legend)))]
+                   (map-indexed (fn [i leg]
+                                  (let [rect-x-val (+ mx (* i (/ width (count next-5))))]
+                                    ^{:key i}
+                                    [:g
+                                     [:rect {:x      rect-x-val
+                                             :y      (+ legend-top-y (* num (+ legendbox-thickness spacer-y)))
+                                             :height legendbox-thickness
+                                             :width  legendbox-thickness
+                                             :fill   (if (map? colors)
+                                                        ((keyword leg) colors)
+                                                        (nth colors i))
+                                             :on-click #(on-legend-click (keyword leg))}]
+                                     [:text {:x         (+ legend-label-x rect-x-val)
+                                             :y         (+ legend-top-y legend-label-y-pos (* num (+ legendbox-thickness spacer-y)))
+                                             :font-size value-font-size}
+
+                                      leg]]))
+                                next-5)))
+            (range (inc (quot (count (vec legend)) 4)))))]))

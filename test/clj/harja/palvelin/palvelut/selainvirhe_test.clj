@@ -52,13 +52,15 @@
                                                    {:title "Käyttäjä" :value (str (:kayttajanimi kayttaja) " (" (:id kayttaja) ")")}]}))))
 (deftest raportoi-yhteyskatkos-testi
   (let [kayttaja +kayttaja-jvh+
+        user-agent "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E; Tablet PC 2.0; rv:11.0) like Gecko"
         ping-1 {:aika (pvm/luo-pvm 2000 1 1) :palvelu :ping}
         ping-2 {:aika (pvm/nyt) :palvelu :ping}
         hae-ilmoitukset {:aika (pvm/nyt) :palvelu :hae-ilmoitukset}
-        yhteyskatkos {:yhteyskatkokset [ping-1 hae-ilmoitukset ping-2]}
+        yhteyskatkos {:yhteyskatkokset [ping-1 hae-ilmoitukset ping-2]
+                      :user-agent user-agent}
         formatoitu-yhteyskatkos (formatoi-yhteyskatkos kayttaja yhteyskatkos)]
     (is (= formatoitu-yhteyskatkos {:text (str "Käyttäjä " (:kayttajanimi kayttaja) " (" (:id kayttaja) ")" " raportoi yhteyskatkoksista palveluissa:")
-                                    :fields [{:title ":ping" :value (str "Katkoksia 2 kpl(slack-n)ensimmäinen: " (c/from-date (:aika ping-1))
+                                    :fields [{:title ":ping" :value (str "Selain: " user-agent "(slack-n)Katkoksia 2 kpl(slack-n)ensimmäinen: " (c/from-date (:aika ping-1))
                                                                          "(slack-n)viimeinen: " (c/from-date (:aika ping-2)))}
-                                             {:title ":hae-ilmoitukset" :value (str "Katkoksia 1 kpl(slack-n)ensimmäinen: " (c/from-date (:aika hae-ilmoitukset))
+                                             {:title ":hae-ilmoitukset" :value (str "Selain: " user-agent "(slack-n)Katkoksia 1 kpl(slack-n)ensimmäinen: " (c/from-date (:aika hae-ilmoitukset))
                                                                                     "(slack-n)viimeinen: " (c/from-date (:aika hae-ilmoitukset)))}]}))))

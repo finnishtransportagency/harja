@@ -22,7 +22,12 @@
      :clj
            (:import (java.util Calendar Date)
                     (java.text SimpleDateFormat)
-                    (org.joda.time DateTimeZone))))
+                    (org.joda.time DateTimeZone)
+                    (org.joda.time.base BaseDateTime))))
+(defn DateTime?
+  [date]
+  #?(:cljs (instance? DateTime date)
+     :clj  (instance? BaseDateTime date)))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -462,7 +467,9 @@
      :clj  (if (instance? Date x)
              (suomen-aikavyohykkeeseen (tc/from-date x))
              x)))
-
+(defn paivia-kuukaudessa
+  [vuosi kuukausi]
+  (-> (luo-pvm vuosi kuukausi 1) d t/number-of-days-in-the-month))
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
   [pvm]
@@ -749,11 +756,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (t/in-days (t/interval eka toka))
     (t/in-days (t/interval toka eka))))
 
-#?(:clj
-   (defn iso-8601->pvm
-     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
-     [teksti]
-     (df/parse (df/formatter "yyyy-MM-dd") teksti)))
+ (defn iso-8601->pvm
+   "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+   [teksti]
+   (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
 #?(:clj
    (defn pvm->iso-8601
