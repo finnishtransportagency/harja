@@ -320,9 +320,9 @@
                          "Tallenna tarkastus"
                          (fn []
                            (tarkastukset/tallenna-tarkastus
-                            (:id @nav/valittu-urakka)
-                            (lomake/ilman-lomaketietoja tarkastus)
-                            (:nakyma optiot)))
+                             (:id @nav/valittu-urakka)
+                             (lomake/ilman-lomaketietoja tarkastus)
+                             (:nakyma optiot)))
                          {:disabled (not (lomake/voi-tallentaa? tarkastus))
                           :kun-onnistuu (fn [tarkastus]
                                           (reset! tarkastukset/valittu-tarkastus nil)
@@ -418,7 +418,9 @@
           :palstoja 2
           :fmt fmt/totuus}
 
-         (when (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+         (when (and (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+                   (not (and (= (:arvo @nav/valittu-urakkatyyppi) :paallystys)
+                             (= (:tyyppi tarkastus) :katselmus))))
            {:otsikko (when-not voi-muokata?
                        ;; Näytä otsikko näyttömuodossa
                        "Näytä urakoitsijalle")
