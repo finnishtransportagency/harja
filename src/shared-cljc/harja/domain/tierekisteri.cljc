@@ -1,4 +1,5 @@
 (ns harja.domain.tierekisteri
+  "Apufunktioita tierekisteriosoitteiden (TIE / AOSA / AET / LOSA LET) käsittelyyn."
   (:require [clojure.spec.alpha :as s]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
@@ -142,24 +143,21 @@
   [osa osien-pituudet]
   (number? (get osien-pituudet osa)))
 
-(defn osan-pituus-sopiva-verkolla? [osa etaisyys osien-pituudet]
+(defn osan-pituus-sopiva-verkolla? [osa etaisyys ajoratojen-pituudet]
   "Tarkistaa, onko annettu osa sekä sen alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (if-let [osan-pituus (get osien-pituudet osa)]
-    (and (<= etaisyys osan-pituus)
-         (>= etaisyys 0))
+  (if-let [hae (fn [ajorata] (:pituus
+                               (first (filter #(and (= osa (:osa %))
+                                                    (= ajorata (:ajorata %)))
+                                              ajoratojen-pituudet))))]
+    (let [nolla-ajoradan-pituus (hae 0)
+          ykkosajoradan-pituus (hae 1)
+          kakkosajoradan-pituus (hae 2)
+          ajoradan-pituus (+ (or nolla-ajoradan-pituus 0)
+                             (max (or ykkosajoradan-pituus 0)
+                                  (or kakkosajoradan-pituus 0)))]
+      (and (<= etaisyys ajoradan-pituus)
+           (>= etaisyys 0)))
     false))
-
-(defn ajoradan-pituus-sopiva-verkolla? [osa ajorata etaisyys ajoratojen-pituudet]
-  "Tarkistaa, onko annetun tieosan ajoradan alku-/loppuetäisyys sopiva Harjan tieverkolla (true / false)"
-  (let [asdf(if-let [ajoradan-pituus (:pituus
-                                   (first (filter #(and (= osa (:osa %))
-                                                        (= ajorata (:ajorata %)))
-                                                  ajoratojen-pituudet)))]
-
-          (and (<= etaisyys ajoradan-pituus)
-               (>= etaisyys 0))
-          false)]
-    asdf))
 
 (defn kohdeosa-kohteen-sisalla? [kohde kohdeosa]
   (and
@@ -232,3 +230,39 @@
     (boolean (and (> tie 20000)
                   (< tie 30000)))
     false))
+
+(defn tr-osoite-kasvusuuntaan [{alkuosa :tr-alkuosa
+                                alkuetaisyys :tr-alkuetaisyys
+                                loppuosa :tr-loppuosa
+                                loppuetaisyys :tr-loppuetaisyys}]
+  {:tr-alkuosa (if (> alkuosa loppuosa) loppuosa alkuosa)
+   :tr-alkuetaisyys (if (> alkuosa loppuosa) loppuetaisyys alkuetaisyys)
+   :tr-loppuosa (if (> alkuosa loppuosa) alkuosa loppuosa)
+   :tr-loppuetaisyys (if (> alkuosa loppuosa) alkuetaisyys loppuetaisyys)})
+
+(defn tr-vali-paakohteen-sisalla? [paakohde alikohde]
+  (let [{paa-alkuosa :tr-alkuosa
+         paa-alkuetaisyys :tr-alkuetaisyys
+         paa-loppuosa :tr-loppuosa
+         paa-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan paakohde)
+        {ali-alkuosa :tr-alkuosa
+         ali-alkuetaisyys :tr-alkuetaisyys
+         ali-loppuosa :tr-loppuosa
+         ali-loppuetaisyys :tr-loppuetaisyys} (tr-osoite-kasvusuuntaan alikohde)]
+
+    (boolean (and
+               ;; Alku- ja loppuosa sisällä
+               (>= ali-alkuosa paa-alkuosa)
+               (<= ali-loppuosa paa-loppuosa)
+
+               ;; Etäisyydet sisällä jos samalla osalla
+               (or
+                 (not= ali-alkuosa paa-alkuosa)
+                 (>= ali-alkuetaisyys paa-alkuetaisyys))
+               (or
+                 (not= ali-loppuosa paa-loppuosa)
+                 (<= ali-loppuetaisyys paa-loppuetaisyys))))))
+
+(defn tr-vali-paakohteen-sisalla-validaattori [paakohde _ alikohde]
+  (when-not (tr-vali-paakohteen-sisalla? paakohde alikohde)
+    "Ei pääkohteen sisällä"))

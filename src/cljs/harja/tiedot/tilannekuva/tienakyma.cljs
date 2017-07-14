@@ -158,9 +158,15 @@
            :muut-tulokset-kartalla nil))
 
   TarkasteleToteumaa
-  (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
+  (process-event [{{id :id :as toteuma} :toteuma}
                   {{:keys [alku loppu]} :valinnat :as app}]
-    (siirtymat/nayta-kokonaishintainen-toteuma! id)
+    (cond
+      (= (:tyyppi-kartalla toteuma) :varustetoteuma)
+      (siirtymat/nayta-varustetoteuma! id)
+
+      :default
+      (siirtymat/nayta-kokonaishintainen-toteuma! id))
+
     app)
 
   HaeToteumanReittipisteet

@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.reimari.apurit :refer [edellisen-integraatiotapahtuman-alkuaika
+                                                                formatoi-aika]]
             [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
@@ -11,13 +13,12 @@
             [harja.pvm :as pvm]
             [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
-            [clojure.string :as s]
             [harja.tyokalut.xml :as xml]
+            [clojure.string :as s]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
 
 (def avainmuunnokset {::toimenpide/id ::toimenpide/reimari-id
-
                       ::toimenpide/luotu ::toimenpide/reimari-luotu
                       ::toimenpide/muokattu ::toimenpide/reimari-muokattu
                       ::toimenpide/urakoitsija ::toimenpide/reimari-urakoitsija
@@ -30,30 +31,31 @@
                       ::toimenpide/tila ::toimenpide/reimari-tila
                       ::toimenpide/asiakas ::toimenpide/reimari-asiakas
                       ::toimenpide/vastuuhenkilo ::toimenpide/reimari-vastuuhenkilo
+                      ::toimenpide/henkilo-lkm ::toimenpide/reimari-henkilo-lkm
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit
-                      })
+                      ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?})
+
+(defn lisatyo->hintatyyppi [tiedot]
+  (-> tiedot
+      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
+                                        :yksikkohintainen
+                                        :kokonaishintainen))
+      (dissoc ::toimenpide/lisatyo?)))
 
 (defn kasittele-vastaus [db vastaus-xml]
-  (log/debug "kasittele-vastaus" vastaus-xml)
   (let [sanoman-tiedot (sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide
+                                       #{::toimenpide/reimari-id}
                                        (rename-keys toimenpide-tiedot avainmuunnokset)))]
     (vec kanta-tiedot)))
-
-(defn- formatoi-aika [muutosaika]
-  (let [aika-ilman-vyohyketta (xml/formatoi-xsd-datetime muutosaika)]
-    (if (s/ends-with? aika-ilman-vyohyketta "Z")
-      aika-ilman-vyohyketta
-      (str aika-ilman-vyohyketta "Z"))))
 
 (defn kysely-sanoma [muutosaika]
   (xml/tee-xml-sanoma
    [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
     [:soap:Body
      [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]
-     ]]))
+      [:HaeToimenpiteetRequest {:muutosaika (formatoi-aika muutosaika)}]]]]))
 
 (defn hae-toimenpiteet* [konteksti db pohja-url kayttajatunnus salasana muutosaika]
   (let [otsikot {"Content-Type" "text/xml"
@@ -68,17 +70,8 @@
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haetaan uudet toimenpiteet alkaen " muutosaika))
     (kasittele-vastaus db body)))
 
-(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (last (sort-by ::integraatiotapahtuma/alkanut
-                 (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                               #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                 [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                      :harja.palvelin.integraatiot/jarjestelma}] }
-                               {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                   :harja.palvelin.integraatiot/nimi nimi}}))))
-
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "hae-toimenpiteet" "reimari")]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" "hae-toimenpiteet")]
     (if-not muutosaika
       (log/info "Reimarin toimenpidehaku: ei löytynyt edellistä toimenpiteiden hakuaikaa, hakua ei tehdä")
       (lukko/yrita-ajaa-lukon-kanssa

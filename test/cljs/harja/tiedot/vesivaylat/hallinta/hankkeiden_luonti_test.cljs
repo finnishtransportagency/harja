@@ -1,7 +1,7 @@
 (ns harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
   (:require [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti :as h]
             [clojure.test :refer-macros [deftest is testing]]
-            [harja.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest hankkeen-valinta
   (let [hanke {:foobar 1}]

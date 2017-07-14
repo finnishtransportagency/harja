@@ -32,7 +32,7 @@
 
        (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)
-         [sanktiot/sanktiot {:nakyma tyyppi}])
+         [sanktiot/sanktiot])
 
        "Siltatarkastukset" :siltatarkastukset
        (when (and (= :hoito tyyppi)

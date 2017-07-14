@@ -83,7 +83,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pko]
-            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]))
+            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
+            [harja.palvelin.palvelut.toteumat :as toteumat]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -356,10 +357,20 @@
                                  (:xmin alue) (:ymin alue)
                                  (:xmax alue) (:ymax alue)))))
 
+(defn- hae-varustetoteumat
+  [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
+  (when (and (tk/valittu? varustetoteumat tk/varustetoteumat)
+         (not (empty? urakat)))
+    (into []
+          (toteumat/varustetoteuma-xf nil)
+          (q/hae-varustetoteumat db {:urakat urakat
+                                     :alku alku
+                                     :loppu loppu}))))
+
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat
     :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat
-    :tietyoilmoitukset})
+    :tietyoilmoitukset :varustetoteumat})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -401,6 +412,11 @@
       :tietyoilmoitukset)
     (tulosta-tulos! "tietyoilmoitusta"
                     (hae-tietyoilmoitukset db user tiedot urakat))))
+
+(defmethod hae-osio :varustetoteumat [db user tiedot urakat _]
+  (tulosta-tulos!
+   "varustetoteumaa"
+   (hae-varustetoteumat db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try

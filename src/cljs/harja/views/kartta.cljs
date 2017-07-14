@@ -275,7 +275,6 @@
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 
-
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))

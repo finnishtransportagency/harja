@@ -20,7 +20,9 @@
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn tieosoite
-  "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
+  "DEPRECATED Käytä harja.domain.tierekisteri/tierekisteriosoite-tekstina
+
+  Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
   Jos ei kaikkia kenttiä ole saatavilla, palauttaa 'ei saatavilla' -viestin"
   [numero aosa aet losa lopet]
   (let [laita (fn [arvo]
@@ -45,9 +47,9 @@
 
 (defn pisteelle-ei-loydy-tieta-ilmoitus! []
   (kartta/aseta-ohjelaatikon-sisalto! [:span
-                                      [:span.tr-valitsin-virhe vkm/pisteelle-ei-loydy-tieta]
+                                      [:span.karttavalitsin-virhe vkm/pisteelle-ei-loydy-tieta]
                                       " "
-                                      [:span.tr-valitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
+                                      [:span.karttavalitsin-ohje vkm/vihje-zoomaa-lahemmas]]))
 
 (defn konvertoi-tr-osoitteeksi [osoite]
   {:numero (:tie osoite)
@@ -64,40 +66,40 @@
    :geometria (:geometria osoite)})
 
 (defn nayta-alkupiste-ohjelaatikossa! [osoite]
-  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
                                       (str "Valittu alkupiste: "
                                            (:numero osoite) " / "
                                            (:alkuosa osoite) " / "
                                            (:alkuetaisyys osoite))]))
 
 (defn nayta-ohjeet-ohjelaatikossa! []
-  (kartta/aseta-ohjelaatikon-sisalto! [:span.tr-valitsin-ohje
+  (kartta/aseta-ohjelaatikon-sisalto! [:span.karttavalitsin-ohje
                                        "Valitse alkupiste kartalta."]))
 
 (defn tr-kontrollit [peruttu hyvaksytty tila]
-  [:span.tr-valitsin-ohje
+  [:span.karttavalitsin-ohje
    [napit/peruuta "Peruuta" peruttu]
    [napit/hyvaksy "OK" hyvaksytty {:disabled (= @tila :ei-valittu)}]])
 
 (defn karttavalitsin
   "Komponentti TR-osoitteen (pistemäisen tai välin) valitsemiseen kartalta.
-  Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
-  löytyneeseen pisteeseen.
+   Asettaa kartan näkyviin, jos se ei ole jo näkyvissä, ja keskittää sen
+   löytyneeseen pisteeseen.
 
-  Optiot on mäppi parametreja, jossa seuraavat avaimet:
+   Optiot on mäppi parametreja, jossa seuraavat avaimet:
 
-  :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
-               Parametrina valittu osoite mäppi, jossa avaimet:
-               :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys
-               Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
-               avaimia ei ole mäpissä.
+   :kun-valmis  Funktio, jota kutsutaan viimeisenä kun käyttäjän valinta on valmis.
+                Parametrina valittu osoite mäppi, jossa avaimet:
+                :numero, :alkuosa, :alkuetaisyys, :loppuosa, :loppuetaisyys
+                Jos käyttäjä valitsi pistemäisen osoitteen, loppuosa ja -etäisyys
+                avaimia ei ole mäpissä.
 
-  :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
-               ilman TR-osoitteen päivittämistä. Ei parametrejä.
+   :kun-peruttu Funktio, jota kutsutaan, jos käyttäjä haluaa perua karttavalinnan
+                ilman TR-osoitteen päivittämistä. Ei parametrejä.
 
-  :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
-               kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
-               osoitteella, jossa ei ole vielä loppupistettä."
+   :paivita     Funktio, jota kutsutaan kun valittu osoite muuttuu. Esim.
+                kun käyttäjä valitsee alkupisteen, kutsutaan tätä funktiota
+                osoitteella, jossa ei ole vielä loppupistettä."
   [optiot]
   (let [tapahtumat (chan)
         vkm-haku (chan)
@@ -164,7 +166,7 @@
        (komp/karttakontrollit
         :tr-karttavalitsin
         (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila]
-          {:class "kartan-tr-kontrollit"}))
+          {:class "kartan-sijaintivalintakontrollit"}))
 
        (komp/sisaan-ulos #(do
                             (log "TR karttavalitsin - sisään!")
@@ -186,8 +188,8 @@
                         :enter-painettu
                         valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-         [:div.tr-valitsin-teksti
-          [:div (ikonit/livicon-info-sign) (case @tila
-                                             :ei-valittu " Valitse alkupiste kartalta"
-                                             :alku-valittu " Valitse loppupiste kartalta"
-                                             "")]])))))
+         [:div.karttasijaintivalitsin-teksti
+          [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) (case @tila
+                                                               :ei-valittu " Valitse alkupiste kartalta"
+                                                               :alku-valittu " Valitse loppupiste kartalta"
+                                                               "")]])))))

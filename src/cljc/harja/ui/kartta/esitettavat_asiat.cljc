@@ -1,9 +1,7 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
             #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
-            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-               :clj
-               [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.tieliikenneilmoitukset :as ilmoitukset]
@@ -14,10 +12,6 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]))
 
-#?(:clj (defn log [& things]
-          (log/info things)))
-#?(:clj (defn warn [& things]
-          (log/warn things)))
 
 (defn- laske-skaala [valittu?]
   (if valittu? ulkoasu/+valitun-skaala+ ulkoasu/+normaali-skaala+))
@@ -132,7 +126,7 @@
   Esimerkkejä:
 
   (maarittele-feature juttu val? (pinni-ikoni 'vihrea'))
-    Juttu on todennäköisesti pistemäinen asia. Käytetään vihrää pinniä.
+    Juttu on todennäköisesti pistemäinen asia. Käytetään vihreää pinniä.
     Jos juttu onkin reitillinen, käytetään reitin piirtämiseen puhtaasti
     oletusasetuksia.
 
@@ -292,6 +286,16 @@
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
+(defmethod asia-kartalle :varuste [varuste valittu?]
+  (let [ikoni (ulkoasu/varusteen-ikoni)]
+    (assoc varuste
+      :type :varuste
+      :nimi (or (:tooltip varuste) "Varuste")
+      :selite {:teksti "Varuste"
+               :img    ikoni}
+      :alue (maarittele-feature varuste valittu?
+                                (ulkoasu/varusteen-ikoni)))))
+
 (defmethod asia-kartalle :tietyoilmoitus [tietyoilmoitus valittu?]
   (let [ikoni (ulkoasu/tietyoilmoituksen-ikoni)
         viiva (ulkoasu/tietyoilmoituksen-viiva)]
@@ -348,7 +352,7 @@
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
-    (log "WARN: " tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (log/warn tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
@@ -460,7 +464,7 @@
                          toimenpiteet
                          [(get-in toteuma [:tehtava :nimi])])
           _ (when (empty? toimenpiteet)
-              (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
+              (log/warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
                  ;; toteumalla on suoraan nimi
                  (:nimi toteuma)
@@ -486,7 +490,7 @@
         kulma)))
 
 (defmethod asia-kartalle :tietyomaa [aita valittu?]
-  (log "Asia kartalle: tietyömaa: " (pr-str aita))
+  (log/info "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
      :type :tietyomaa
@@ -562,8 +566,8 @@
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
-    (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
-    (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
+    (log/warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
+    (log/warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
           "sain: " (pr-str asia)))
   nil)
 

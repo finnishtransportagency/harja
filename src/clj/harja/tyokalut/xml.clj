@@ -160,6 +160,11 @@
       (.withOffsetParsed)
       (.parseDateTime teksti)))
 
+(defn parsi-xsd-datetime-ms-aikaleimalla [teksti]
+  (-> (org.joda.time.format.ISODateTimeFormat/dateTime)
+      (.withOffsetParsed)
+      (.parseDateTime teksti)))
+
 (defn json-date-time->joda-time
   "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
   org.joda.time.DateTime -muotoon."

@@ -71,12 +71,17 @@
       "minimum": 0
     },
     "alkupvm": {
-      "id": "urn:harja/sijainti/tie/puoli",
+      "id": "urn:harja/sijainti/tie/alkupvm",
       "type": "string",
       "format": "date-time"
     },
     "loppupvm": {
-      "id": "urn:harja/sijainti/tie/puoli",
+      "id": "urn:harja/sijainti/tie/loppupvm",
+      "type": "string",
+      "format": "date-time"
+    },
+    "karttapvm": {
+      "id": "urn:harja/sijainti/tie/karttapvm",
       "type": "string",
       "format": "date-time"
     }

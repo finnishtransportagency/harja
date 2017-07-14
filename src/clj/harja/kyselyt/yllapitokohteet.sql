@@ -176,6 +176,7 @@ WHERE id = :yllapitokohde_id;
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
   ypk.id,
+  ypk.muokattu,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
   pai.id                                AS "paikkausilmoitus-id",
@@ -486,6 +487,7 @@ WHERE yllapitokohde IN (SELECT id
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
+  ypk.muokattu,
   ypk.kohdenumero,
   ypk.nimi,
   ypk.urakka,
@@ -525,6 +527,7 @@ ORDER BY ypka.kohde_alku;
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
+  ypk.muokattu,
   ypk.kohdenumero,
   ypk.nimi,
   ypk.urakka,
@@ -672,6 +675,29 @@ FROM yllapitokohde ypk
   LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id IN (:idt);
+
+-- name: hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen
+SELECT
+  ypk.id                 AS id,
+  ypk.nimi               AS "kohde-nimi",
+  ypk.tr_numero          AS "tr-numero",
+  ypk.tr_alkuosa         AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa        AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
+  ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
+  pu.id                  AS "paallystysurakka-id",
+  pu.nimi                AS "paallystysurakka-nimi",
+  pu.sampoid             AS "paallystysurakka-sampo-id",
+  tu.id                  AS "tiemerkintaurakka-id",
+  tu.nimi                AS "tiemerkintaurakka-nimi",
+  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
+FROM yllapitokohde ypk
+  JOIN urakka pu ON ypk.urakka = pu.id
+  LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+WHERE
+  ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun

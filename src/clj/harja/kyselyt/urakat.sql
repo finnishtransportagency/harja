@@ -344,9 +344,9 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 -- name: luo-urakka<!
 -- Luo uuden urakan.
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko,
-                    sopimustyyppi, urakkanro)
+                    sopimustyyppi, urakkanro, urakoitsija)
 VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
-        :sopimustyyppi :: sopimustyyppi, :urakkanumero);
+        :sopimustyyppi :: sopimustyyppi, :urakkanumero, :urakoitsijaid );
 
 -- name: luo-harjassa-luotu-urakka<!
 INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
@@ -366,7 +366,9 @@ SET nimi          = :nimi,
   hallintayksikko = :hallintayksikko,
 
   sopimustyyppi   = :sopimustyyppi :: SOPIMUSTYYPPI,
-  urakkanro       = :urakkanro
+  urakkanro       = :urakkanro,
+  urakoitsija     = :urakoitsija
+
 WHERE id = :id;
 
 -- name: paivita-harjassa-luotu-urakka<!
@@ -813,3 +815,8 @@ WHERE
 -- name: urakan-paasopimus-id
 -- single?: true
 SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
+
+-- name: paivita-alue-urakalle!
+UPDATE urakka
+SET alue = ST_GeomFromText(:alue) :: GEOMETRY
+WHERE urakka.urakkanro = :urakkanro;

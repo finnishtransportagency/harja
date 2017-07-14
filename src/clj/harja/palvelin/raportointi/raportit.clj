@@ -5,35 +5,37 @@
   Jos lisäät uuden raportin, lisää sen nimiavaruuden require alle sekä
   raportin tiedot `raportit` vektoriin."
 
-  (:require
-   ;; vaaditaan built in raportit
-   [harja.palvelin.raportointi.raportit.erilliskustannukset]
-   [harja.palvelin.raportointi.raportit.ilmoitus]
-   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
-   [harja.palvelin.raportointi.raportit.materiaali]
-   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
-   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
-   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
-   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
-   [harja.palvelin.raportointi.raportit.suolasakko]
-   [harja.palvelin.raportointi.raportit.tiestotarkastus]
-   [harja.palvelin.raportointi.raportit.kelitarkastus]
-   [harja.palvelin.raportointi.raportit.laaduntarkastus]
-   [harja.palvelin.raportointi.raportit.laatupoikkeama]
-   [harja.palvelin.raportointi.raportit.siltatarkastus]
-   [harja.palvelin.raportointi.raportit.sanktio]
-   [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
-   [harja.palvelin.raportointi.raportit.soratietarkastus]
-   [harja.palvelin.raportointi.raportit.valitavoiteraportti]
-   [harja.palvelin.raportointi.raportit.ymparisto]
-   [harja.palvelin.raportointi.raportit.tyomaakokous]
-   [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-   [harja.palvelin.raportointi.raportit.toimenpideajat]
-   [harja.palvelin.raportointi.raportit.toimenpidepaivat]
-   [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-   [harja.palvelin.raportointi.raportit.indeksitarkistus]
-   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
-   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]))
+ (:require
+  ;; vaaditaan built in raportit
+  [harja.palvelin.raportointi.raportit.erilliskustannukset]
+  [harja.palvelin.raportointi.raportit.ilmoitus]
+  [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.materiaali]
+  [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
+  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
+  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
+  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
+  [harja.palvelin.raportointi.raportit.suolasakko]
+  [harja.palvelin.raportointi.raportit.tiestotarkastus]
+  [harja.palvelin.raportointi.raportit.kelitarkastus]
+  [harja.palvelin.raportointi.raportit.laaduntarkastus]
+  [harja.palvelin.raportointi.raportit.laatupoikkeama]
+  [harja.palvelin.raportointi.raportit.siltatarkastus]
+  [harja.palvelin.raportointi.raportit.sanktio]
+  [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
+  [harja.palvelin.raportointi.raportit.soratietarkastus]
+  [harja.palvelin.raportointi.raportit.valitavoiteraportti]
+  [harja.palvelin.raportointi.raportit.ymparisto]
+  [harja.palvelin.raportointi.raportit.tyomaakokous]
+  [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
+  [harja.palvelin.raportointi.raportit.toimenpideajat]
+  [harja.palvelin.raportointi.raportit.toimenpidepaivat]
+  [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
+  [harja.palvelin.raportointi.raportit.indeksitarkistus]
+  [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
+  [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+  [harja.domain.urakka :as urakka-domain]))
 
 (def raportit
   [{:nimi :sanktioraportti-yllapito
@@ -281,6 +283,13 @@
     :suorita #'harja.palvelin.raportointi.raportit.yllapidon-aikataulu/suorita
     :kuvaus "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
+
+   {:nimi :vesivaylien-laskutusyhteenveto
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"urakka"}
+    :kuvaus "Laskutusyhteenveto"
+    :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
+    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit}
    ])
 
 (def raportit-nimen-mukaan

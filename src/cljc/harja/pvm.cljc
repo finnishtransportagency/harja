@@ -6,7 +6,6 @@
     #?(:cljs [cljs-time.format :as df])
     #?(:cljs [cljs-time.core :as t])
     #?(:cljs [cljs-time.coerce :as tc])
-    #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.extend])
     #?(:clj [clj-time.format :as df])
     #?(:clj
@@ -15,9 +14,9 @@
             [clj-time.coerce :as tc])
     #?(:clj
             [clj-time.local :as l])
-    #?(:clj
-            [taoensso.timbre :as log])
-            [clojure.string :as str])
+
+    [taoensso.timbre :as log]
+    [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -28,6 +27,10 @@
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
                   "Syys" "Loka" "Marras" "Joulu"])
+
+(defn kk-fmt [kk]
+  (get +kuukaudet+ (dec kk)))
+
 #?(:cljs
    (do
      (defrecord Aika [tunnit minuutit sekunnit])
@@ -241,6 +244,11 @@
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
         (sama-tai-ennen? pvm loppupvm ilman-kellonaikaa?))))
 
+
+#?(:clj
+   (defn tanaan? [pvm]
+     (sama-pvm? (suomen-aikavyohykkeeseen (joda-timeksi pvm)) (nyt-suomessa))))
+
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
      :clj  (SimpleDateFormat. str)))
@@ -281,6 +289,10 @@
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
+
+(defn aika-iso8601-aikavyohykkeen-kanssa
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ssZ") pvm))
 
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
@@ -434,6 +446,16 @@
   "Palauttaa hoitokauden loppupvm:n 30.9.vuosi"
   [vuosi]
   (luo-pvm vuosi 8 30))
+
+(defn vesivaylien-hoitokauden-alkupvm
+  "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
+  [vuosi]
+  (luo-pvm vuosi 7 1))
+
+(defn vesivaylien-hoitokauden-loppupvm
+  "Vesiväylien hoitokauden loppupvm vuodelle: 31.7.vuosi"
+  [vuosi]
+  (luo-pvm vuosi 6 31))
 
 (defn- d [x]
   #?(:cljs x
@@ -607,32 +629,29 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     [alku loppu]))
 
 
-#?(:cljs
-   (defn hoitokauden-kuukausivalit
-     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun hoitokauden
-   jokaiselle kuukaudelle."
-     [[alkupvm loppupvm]]
-     (let [alku (t/first-day-of-the-month alkupvm)]
-       (loop [kkt [(kuukauden-aikavali alkupvm)]
-              kk (t/plus alku (t/months 1))]
-         (if (t/after? kk loppupvm)
-           kkt
-           (recur (conj kkt
-                        (kuukauden-aikavali kk))
-                  (t/plus kk (t/months 1))))))))
+(defn aikavalin-kuukausivalit
+  "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun aikavälin jokaiselle kuukaudelle."
+  [[alkupvm loppupvm]]
+  (let [alku (t/first-day-of-the-month alkupvm)]
+    (loop [kkt [(kuukauden-aikavali alkupvm)]
+           kk (t/plus alku (t/months 1))]
+      (if (t/after? kk loppupvm)
+        kkt
+        (recur (conj kkt
+                     (kuukauden-aikavali kk))
+               (t/plus kk (t/months 1)))))))
 
-#?(:cljs
-   (defn vuoden-kuukausivalit
-     "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
-     [alkuvuosi]
-     (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
-       (loop [kkt [(kuukauden-aikavali alku)]
-              kk (t/plus alku (t/months 1))]
-         (if (not= (vuosi kk) alkuvuosi)
-           kkt
-           (recur (conj kkt
-                        (kuukauden-aikavali kk))
-                  (t/plus kk (t/months 1))))))))
+(defn vuoden-kuukausivalit
+  "Palauttaa vektorin kuukauden aikavälejä (ks. kuukauden-aikavali funktio) annetun vuoden jokaiselle kuukaudelle."
+  [alkuvuosi]
+  (let [alku (t/first-day-of-the-month (luo-pvm alkuvuosi 0 1))]
+    (loop [kkt [(kuukauden-aikavali alku)]
+           kk (t/plus alku (t/months 1))]
+      (if (not= (vuosi kk) alkuvuosi)
+        kkt
+        (recur (conj kkt
+                     (kuukauden-aikavali kk))
+               (t/plus kk (t/months 1)))))))
 
 (defn ed-kk-aikavalina
   [p]
@@ -747,9 +766,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (mapv t/year pvmt)))
 
 
-#?(:cljs
-   (defn paivaa-sitten [paivaa]
-     (-> paivaa t/days t/ago)))
+(defn paivaa-sitten [paivaa]
+  (-> paivaa d t/days t/ago))
+
 
 #?(:cljs
    (defn tuntia-sitten [tuntia]

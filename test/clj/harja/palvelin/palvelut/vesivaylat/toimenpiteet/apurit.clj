@@ -14,16 +14,14 @@
 (defn hae-kokonaishintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE \"toteuma-id\" IN
-                    (SELECT id FROM toteuma WHERE tyyppi = 'vv-kokonaishintainen')"))))
+                    WHERE hintatyyppi = 'kokonaishintainen'"))))
 
 (defn hae-yksikkohintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE \"toteuma-id\" IN
-                    (SELECT id FROM toteuma WHERE tyyppi = 'vv-yksikkohintainen')"))))
+                    WHERE hintatyyppi = 'yksikkohintainen'"))))
 
 (defn hae-toimenpiteiden-tyyppi [idt]
-  (set (map :tyyppi
-            (q-map "SELECT tyyppi FROM toteuma
-                    WHERE id IN (SELECT \"toteuma-id\" FROM reimari_toimenpide WHERE id IN (" (str/join ", " idt) "));"))))
+  (set (map :hintatyyppi
+            (q-map "SELECT hintatyyppi FROM reimari_toimenpide
+                    WHERE id IN (" (str/join ", " idt) ");"))))

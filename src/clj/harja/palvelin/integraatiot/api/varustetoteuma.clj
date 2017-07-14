@@ -16,7 +16,8 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.domain.tierekisteri.tietolajit :as tietolajit])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgis GeometryCollection Geometry PGgeometry)))
 
@@ -159,7 +160,7 @@
           :toimenpide tehty-toimenpide
           :tietolaji tietolaji
           :arvot toimenpiteen-arvot-tekstina
-          :karttapvm (get-in toimenpiteen-tiedot [:varuste :tietue :karttapvm])
+          :karttapvm (some-> (get-in toimenpiteen-tiedot [:varuste :tietue :karttapvm]) (parametrit/pvm-aika))
           :alkupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
           :loppupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
           :piiri (get-in toimenpiteen-tiedot [:varuste :tietue :piiri])

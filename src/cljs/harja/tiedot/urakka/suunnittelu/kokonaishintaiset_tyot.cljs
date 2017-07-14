@@ -10,27 +10,28 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn aseta-hoitokausi [hoitokaudet rivi]
-  (let [p (pvm/luo-pvm (:vuosi rivi) (dec (:kuukausi rivi)) 1)]
-    (loop [[hk & hoitokaudet] hoitokaudet]
-      (if (nil? hk)
-        ;; Ei löytynyt hoitokautta, palautetaan rivi
-        (do (log "kokonaishintaiselle työlle ei löytynyt hoitokautta: " (pr-str rivi))
-            nil)
+  (if (= -1 (:kuukausi rivi))
+    (let [[alkupvm loppupvm] (first hoitokaudet)]
+      (assoc rivi
+             :alkupvm alkupvm
+             :loppupvm loppupvm))
+    (let [p (pvm/luo-pvm (:vuosi rivi) (dec (:kuukausi rivi)) 1)]
+      (loop [[hk & hoitokaudet] hoitokaudet]
+        (if (nil? hk)
+          ;; Ei löytynyt hoitokautta, palautetaan rivi
+          (do (log "kokonaishintaiselle työlle ei löytynyt hoitokautta: " (pr-str rivi))
+              nil)
 
-        (let [[alkupvm loppupvm] hk]
-          ;;(log "TESTAA ONKO " (pr-str p) " HOITOKAUDESSA " (pr-str hk) "? " (and (or (pvm/sama-pvm? alkupvm p)
-          ;;                                                                           (pvm/jalkeen? p alkupvm))
-          ;;                                                                       (or (pvm/sama-pvm? loppupvm p)
-          ;;                                                                           (pvm/ennen? p loppupvm))))
-          (if (and (or (pvm/sama-pvm? alkupvm p)
-                       (pvm/jalkeen? p alkupvm))
-                   (or (pvm/sama-pvm? loppupvm p)
-                       (pvm/ennen? p loppupvm)))
-            (assoc rivi
-              :alkupvm alkupvm
-              :loppupvm loppupvm)
+          (let [[alkupvm loppupvm] hk]
+            (if (and (or (pvm/sama-pvm? alkupvm p)
+                         (pvm/jalkeen? p alkupvm))
+                     (or (pvm/sama-pvm? loppupvm p)
+                         (pvm/ennen? p loppupvm)))
+              (assoc rivi
+                     :alkupvm alkupvm
+                     :loppupvm loppupvm)
 
-            (recur hoitokaudet)))))))
+              (recur hoitokaudet))))))))
 
 
 (defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]

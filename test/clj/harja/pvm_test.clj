@@ -134,3 +134,7 @@
       (is (= 0 (t/minute (first tulos))))
       (is (= 23 (t/hour (second tulos))))
       (is (= 59 (t/minute (second tulos)))))))
+
+(deftest vesivaylaurakan-hoitokausi
+  (is (= (pvm/->pvm "1.8.2017") (pvm/vesivaylien-hoitokauden-alkupvm 2017)))
+  (is (= (pvm/->pvm "31.7.2018") (pvm/vesivaylien-hoitokauden-loppupvm 2018))))

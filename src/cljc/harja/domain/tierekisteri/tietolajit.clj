@@ -44,16 +44,25 @@
   (when (and pakollinen (not arvo))
     (heita-validointipoikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
 
+(defn validoi-arvoalue [arvo tietolaji kenttatunniste tietotyyppi alaraja ylaraja]
+  (when (and arvo (not (str/blank? arvo)) (= :numeerinen tietotyyppi))
+    (let [arvo (BigDecimal. arvo)]
+      (when (and alaraja (< arvo alaraja))
+        (heita-validointipoikkeus tietolaji (format "Kentän arvon: %s pitää olla vähintään: %s" kenttatunniste alaraja)))
+      (when (and ylaraja (> arvo ylaraja))
+        (heita-validointipoikkeus tietolaji (format "Kentän arvon: %s pitää olla vähemmän kuin: %s" kenttatunniste ylaraja))))))
+
 (defn validoi-arvo
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset.
    Jos vaatimuksia ei täytetä, heittää poikkeuksen, muuten palauttaa nil."
-  [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto] :as kentan-kuvaus} tietolaji]
+  [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto alaraja ylaraja] :as kentan-kuvaus} tietolaji]
   (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (when arvo
     (validoi-pituus arvo tietolaji kenttatunniste pituus)
-    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
+    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)
+    (validoi-arvoalue arvo tietolaji kenttatunniste tietotyyppi alaraja ylaraja)))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
@@ -152,35 +161,35 @@
   [tierekisteri arvot tietolaji]
   (when tierekisteri
     (let [vastaus (tierekisteri/hae-tietolaji
-                   tierekisteri
-                   tietolaji
-                   nil)
-         tietolajin-kuvaus (:tietolaji vastaus)]
-     (try
-       (validoi-tietolajin-arvot
-         tietolaji
-         (clojure.walk/stringify-keys arvot)
-         tietolajin-kuvaus)
-       (catch Exception e
-         (throw+ {:type virheet/+viallinen-kutsu+
-                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-     (muunna-tietolajin-arvot-stringiksi
-       tietolajin-kuvaus
-       arvot))))
+                    tierekisteri
+                    tietolaji
+                    nil)
+          tietolajin-kuvaus (:tietolaji vastaus)]
+      (try
+        (validoi-tietolajin-arvot
+          tietolaji
+          (clojure.walk/stringify-keys arvot)
+          tietolajin-kuvaus)
+        (catch Exception e
+          (throw+ {:type virheet/+viallinen-kutsu+
+                   :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+      (muunna-tietolajin-arvot-stringiksi
+        tietolajin-kuvaus
+        arvot))))
 
 (defn validoi-ja-muunna-merkkijono-arvoiksi
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
   (when tierekisteri
     (let [vastaus (tierekisteri/hae-tietolaji tierekisteri tietolaji nil)
-         tietolajin-kuvaus (:tietolaji vastaus)
-         arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
-     (try
-       (validoi-tietolajin-arvot
-         tietolaji
-         (clojure.walk/stringify-keys arvot)
-         tietolajin-kuvaus)
-       (catch Exception e
-         (throw+ {:type virheet/+viallinen-kutsu+
-                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-     arvot)))
+          tietolajin-kuvaus (:tietolaji vastaus)
+          arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
+      (try
+        (validoi-tietolajin-arvot
+          tietolaji
+          (clojure.walk/stringify-keys arvot)
+          tietolajin-kuvaus)
+        (catch Exception e
+          (throw+ {:type virheet/+viallinen-kutsu+
+                   :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+      arvot)))

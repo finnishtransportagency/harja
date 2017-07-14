@@ -8,7 +8,8 @@
             [compojure.core :refer [GET]]
             [clojure.string :as str]))
 
-(def +wmts-url+ "https://karttakuva.maanmittauslaitos.fi")
+(def +wmts-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmts/")
+
 
 (def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
 

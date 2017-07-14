@@ -8,7 +8,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.urakka :as u-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -16,9 +17,11 @@
 (def nakymassa? (atom false))
 (defn uusi-sanktio [urakkatyyppi]
   {:suorasanktio true
-   :laji (if (= :hoito urakkatyyppi)
-           :A
-           :yllapidon_sakko)
+   :laji (cond
+           (= :hoito urakkatyyppi) :A
+           (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
+           ;; Luultavasti ylläpidon urakka
+           :default :yllapidon_sakko)
    :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                           (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi

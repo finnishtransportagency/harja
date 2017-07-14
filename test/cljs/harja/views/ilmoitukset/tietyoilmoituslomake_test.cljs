@@ -97,6 +97,8 @@
     :harja.domain.tierekisteri/tie 20,
     :harja.domain.tierekisteri/let 1,
     :harja.domain.tierekisteri/aet 1},
+   :harja.domain.tietyoilmoitukset/kohteen-aikataulu {:kohteen-alku (pvm/->pvm-aika  "01.01.2017 01:01")
+                                                      :paallystys-valmis (pvm/->pvm-aika  "07.01.2017 01:01")}
    :harja.domain.tietyoilmoitukset/urakan-nimi "Oulun alueurakka 2014-2019",
    :harja.domain.tietyoilmoitukset/ilmoittaja-id 6,
    :harja.domain.tietyoilmoitukset/ajoneuvorajoitukset
@@ -109,8 +111,7 @@
    [{:harja.domain.tietyoilmoitukset/materiaali "murske",
      :harja.domain.tietyoilmoitukset/matka 100}],
    :harja.domain.tietyoilmoitukset/pysaytysten-alku
-   (pvm/->pvm-aika  "01.01.2017 01:01")}
-  )
+   (pvm/->pvm-aika  "01.01.2017 01:01")})
 
 (defn lomake-mock-komponentti [e! app]
   (let [valittu-ilmoitus (:valittu-ilmoitus app)

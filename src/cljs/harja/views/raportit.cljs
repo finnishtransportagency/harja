@@ -135,7 +135,7 @@
                            [nil]
                            (cond
                              hk
-                             (pvm/hoitokauden-kuukausivalit hk)
+                             (pvm/aikavalin-kuukausivalit hk)
 
                              vuosi
                              (pvm/vuoden-kuukausivalit vuosi)
@@ -322,7 +322,7 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset (:id urakka))]
                                  (when (and urakka nakymassa? oikeus?)
                                   (k/post! :hae-urakan-sillat
                                            {:urakka-id (:id urakka)
@@ -341,8 +341,8 @@
                                                  :kaikki
                                                  (:id %))}))
       :format-fn #(case %
-                   :kaikki "Kaikki"
-                   (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
+                    :kaikki (if (empty? @urakan-sillat) "Ei siltoja" "Kaikki")
+                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
      (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
 

@@ -5,23 +5,24 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]])
+            [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
+            [taoensso.timbre :as log])
   (:import (java.util UUID)))
 
 (defn- lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "sonja" nimi))
 
-(defn- tee-vastaanottokuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono kuuntelijat]
-  (when (and (not (empty? sahkoposti-sisaan-jono)) (not (empty? sahkoposti-sisaan-kuittausjono)))
-    (jms/kuuntele-ja-kuittaa (lokittaja this "sahkoposti-vastaanotto") sonja
-                             sahkoposti-sisaan-jono sahkoposti-sisaan-kuittausjono
-                             sanomat/lue-sahkoposti sanomat/kirjoita-kuittaus
-                             #(try
-                               (doseq [kuuntelija @kuuntelijat]
-                                 (kuuntelija %))
-                               (sanomat/kuittaus % nil)
-                               (catch Exception e
-                                 (sanomat/kuittaus % [(.getMessage e)]))))))
+(defn- tee-vastaanottokuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono kuuntelijat]
+  (when (not (empty? sahkoposti-sisaan-jono))
+    (jms/kuuntele (lokittaja this "sahkoposti-vastaanotto")
+                  sonja
+                  sahkoposti-sisaan-jono
+                  sanomat/lue-sahkoposti
+                  #(try
+                     (doseq [kuuntelija @kuuntelijat]
+                       (kuuntelija %))
+                     (catch Exception e
+                       (log/error e "Sähköpostin vastaanotossa tapahtui poikkeus"))))))
 
 (defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
   (when (not (empty? sahkoposti-ulos-kuittausjono))
@@ -35,7 +36,7 @@
   component/Lifecycle
   (start [{sonja :sonja :as this}]
     (assoc this
-      :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) (:sahkoposti-sisaan-kuittausjono jonot) kuuntelijat)
+      :saapuva (tee-vastaanottokuuntelija this (:sahkoposti-sisaan-jono jonot) kuuntelijat)
       :lahteva (tee-lahetyksen-kuittauskuuntelija this (:sahkoposti-ulos-kuittausjono jonot))
       :jms-lahettaja (jms/jonolahettaja (lokittaja this "sahkoposti-lahetys")
                                         sonja

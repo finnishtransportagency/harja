@@ -4,11 +4,11 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [harja.domain.vesivaylat.vayla :as v]
+    [specql.rel :as rel]
 
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]
-    [specql.rel :as rel]]))
+    [clojure.future :refer :all]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -17,9 +17,7 @@
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-ryhma}]
-  ["vv_turvalaite" ::turvalaite
-   {"vayla" ::vayla-id
-    #?@(:clj [::vayla (rel/has-one ::vayla-id ::v/vayla ::v/id)])}])
+  ["vv_turvalaite" ::turvalaite])
 
 (def tyypit (s/describe ::tyyppi))
 
@@ -27,4 +25,6 @@
   #{::id
     ::nimi
     ::tyyppi
-    [::vayla v/perustiedot]})
+    ::turvalaitenro
+    ::kiintea
+    ::vaylat})

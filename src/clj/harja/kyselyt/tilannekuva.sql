@@ -580,3 +580,27 @@ FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
+
+-- name: hae-varustetoteumat
+SELECT t.id,
+       t.tyyppi as toteumatyyppi,
+       t.reitti as sijainti,
+       t.alkanut, t.paattynyt,
+       t.suorittajan_nimi AS suorittaja_nimi,
+       vt.tr_numero AS tierekisteriosoite_numero,
+       vt.tr_alkuosa AS tierekisteriosoite_alkuosa,
+       vt.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+       vt.tr_loppuosa AS tierekisteriosoite_loppuosa,
+       vt.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys,
+       vt.tunniste,
+       vt.kuntoluokka,
+       vt.tietolaji,
+       vt.alkupvm, vt.loppupvm, vt.toimenpide,
+       vt.arvot,
+       u.id AS "urakka-id"
+  FROM varustetoteuma vt
+       JOIN toteuma t ON vt.toteuma = t.id
+       JOIN urakka u ON t.urakka = u.id
+ WHERE t.urakka IN (:urakat)
+   AND ((t.alkanut BETWEEN :alku AND :loppu) OR
+        (t.paattynyt BETWEEN :alku AND :loppu))
