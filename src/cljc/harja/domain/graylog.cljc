@@ -1,12 +1,15 @@
 (ns harja.domain.graylog
-  (:require
-    [clojure.spec.alpha :as s]
-    [clojure.spec.gen.alpha :as gen]
-    #?(:clj [clj-time.coerce :as tc]
-       :cljs [cljs-time.coerce :as tc])
-    #?(:clj [clj-time.format :as tf]
-       :cljs [cljs-time.format :as tf])
-    [harja.pvm :as pvm]))
+  #?@(:clj [(:require [clj-time.coerce :as tc]
+                      [clj-time.format :as tf]
+                      [clojure.spec.alpha :as s]
+                      [clojure.spec.gen.alpha :as gen]
+                      [harja.pvm :as pvm])]
+      :cljs [(:require [cljs-time.coerce :as tc]
+                       [cljs-time.format :as tf]
+                       [cljs.spec.alpha :as s]
+                       [cljs.spec.gen.alpha :as gen]
+                       [harja.pvm :as pvm])]))
+
 
 (defn date-gen []
   (gen/fmap (fn [_]

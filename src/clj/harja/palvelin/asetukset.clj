@@ -150,7 +150,8 @@
                                              (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]}
 
    (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
-   })
+
+   (s/optional-key :harja-datan-data) {:polku s/Str}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"

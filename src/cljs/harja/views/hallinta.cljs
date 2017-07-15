@@ -14,6 +14,7 @@
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+            [harja.views.hallinta.harja-data :as harja-data]
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.ui.grid :as g]
             [harja.tiedot.istunto :as istunto]))
@@ -69,4 +70,10 @@
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
-     [vu/vesivayla-hallinta])])
+     [vu/vesivayla-hallinta])
+
+   "Data"
+   :harja-data
+   (when (oikeudet/hallinta-vesivaylat) ;;TODO
+     ^{:key "harja-data"}
+     [harja-data/harja-data])])

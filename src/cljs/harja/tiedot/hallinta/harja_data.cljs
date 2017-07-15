@@ -13,20 +13,12 @@
             [clojure.set :as set-math]
             [tuck.core :refer [Event process-event] :as tuck]
             [harja.domain.graylog :as dgl]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
-            [harja.tyokalut.spec :refer [defn+]])
+            [cljs.spec.alpha :as s]
+            [cljs.spec.gen.alpha :as gen])
 
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
-
-(s/def ::arvo-avain (s/coll-of (s/and integer? pos?)))
-(s/def ::ryhma-avain (s/coll-of string?))
-(s/def ::jarjestys-avain string?)
-(s/def ::jarjestetty-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::arvo-avain ::ryhma-avain ::jarjestys-avain])
-                                                    #(= (count (:arvo-avain %)) (count (:ryhma-avain %)))))
-(s/def ::jarjestetty-yhteyskatkos-data (s/coll-of ::jarjestetty-yhteyskatkos-data-itemi :kind seq?))
 
 (defonce app (atom {:analyysit ["yhteyskatkokset" "kaytto"]
                     :valittu-analyysi nil
@@ -52,10 +44,10 @@
                     :hakuasetukset {:min-katkokset 0
                                     :naytettavat-ryhmat #{:tallenna :hae :urakka :muut}}}))
 
-(defn+ jarjestele-yhteyskatkos-data
+(defn jarjestele-yhteyskatkos-data
   "Muodostaa serveriltä haetusta yhteyskatkosdatasta semmoisen, että
    avaimina on ryhma-avain ja arvona ryhman katkokset."
-  [jarjestys-avain keyword? ryhma-avain keyword? yhteyskatkos-data ::dgl/parsittu-yhteyskatkos-data] ::jarjestetty-yhteyskatkos-data
+  [jarjestys-avain ryhma-avain yhteyskatkos-data]
   (let [avainten-vaihto (map #(hash-map :jarjestys-avain (jarjestys-avain %) :ryhma-avain (ryhma-avain %) :arvo-avain (:katkokset %))
                              yhteyskatkos-data)
         ryhmasta-vektori (if (vector? (:ryhma-avain (first avainten-vaihto)))
@@ -136,3 +128,17 @@
                        :yhteyskatkosryhma-pvm-data (jarjestele-yhteyskatkos-data :pvm :palvelut ryhmakatkos-data)
                        :yhteyskatkosryhma-palvelut-data (jarjestele-yhteyskatkos-data :palvelut :pvm ryhmakatkos-data))]
       (assoc a :aloitus-valmis true))))
+
+
+(s/def ::arvo-avain (s/coll-of (s/and integer? pos?)))
+(s/def ::ryhma-avain (s/coll-of string?))
+(s/def ::jarjestys-avain string?)
+(s/def ::jarjestetty-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::arvo-avain ::ryhma-avain ::jarjestys-avain])
+                                                    #(= (count (:arvo-avain %)) (count (:ryhma-avain %)))))
+(s/def ::jarjestetty-yhteyskatkos-data (s/coll-of ::jarjestetty-yhteyskatkos-data-itemi :kind seq?))
+
+(s/fdef jarjestele-yhteyskatkos-data
+  :args (s/cat :jarjestys-avain keyword?
+               :ryhma-avain keyword?
+               :yhteyskatkos-data ::dgl/parsittu-yhteyskatkos-data)
+  :ret ::jarjestetty-yhteyskatkos-data)
