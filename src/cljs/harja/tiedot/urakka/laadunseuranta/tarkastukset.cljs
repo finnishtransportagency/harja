@@ -41,7 +41,6 @@
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."
   [urakka-id tarkastus nakyma]
-  (log)
   (k/post! :tallenna-tarkastus {:urakka-id urakka-id
                                 :tarkastus (let
                                              [yllapitourakka? (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])]
