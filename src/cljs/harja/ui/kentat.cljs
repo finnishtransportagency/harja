@@ -300,7 +300,7 @@
             nykyinen-teksti (or @teksti
                                 (fmt nykyinen-data)
                                 "")
-            diaarinumero-re-pattern (re-pattern (str "((\\d\\/?)+\\s?)+"))]
+            diaarinumero-re-pattern (re-pattern (str "(((^\\w)|(\\s\\w))?(\\d*\\/?)*\\s?)*"))]
         [:input {:class (when lomake? "form-control")
                  :type "text"
                  :placeholder (placeholder kentta data)
