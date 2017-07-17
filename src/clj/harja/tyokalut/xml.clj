@@ -15,7 +15,7 @@
            (org.w3c.dom.ls LSResourceResolver LSInput)
            (org.xml.sax SAXParseException ErrorHandler)
            (java.text SimpleDateFormat ParseException)
-           (java.util Date)
+           (java.util Date TimeZone)
            (hiccup.compiler HtmlRenderer)))
 
 (defn validoi-xml
@@ -213,3 +213,9 @@
                    (lue-fn (z/attr xml-zipper avain))))
           {}
           attr-map))
+
+(defn datetime->gmt-0 [date]
+  (when date
+    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
+      (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
+      (.format dateformat date))))

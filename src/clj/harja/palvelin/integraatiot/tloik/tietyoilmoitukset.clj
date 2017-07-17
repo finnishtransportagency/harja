@@ -35,6 +35,6 @@
        (let [idt (mapv :id (tietyoilmoitukset/hae-lahettamattomat-tietyoilmoitukset db))]
          (doseq [id idt]
            (try
-             (laheta-tietyoilmoitus jms-lahettaja db id)
+             (laheta-tietyoilmoitus tietyoilmoitus-jms-lahettaja db id)
              (catch Exception _))))
        (log/debug "Tietyöilmoitusten lähettäminen T-LOIK:n valmis."))))
