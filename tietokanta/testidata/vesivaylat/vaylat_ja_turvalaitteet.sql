@@ -28,37 +28,37 @@ VALUES
 -- ***********************************************
 
 INSERT INTO vv_turvalaite
-(nimi, tunniste, tyyppi, vaylat)
+(nimi, tunniste, tyyppi, vaylat, turvalaitenro)
 VALUES
-  ('Hietasaaren pienempi poiju', '1234', 'poiju', '{66662}');
+('Hietasaaren pienempi poiju', 'xx-1234', 'poiju', '{66662}', '1234');
 
 INSERT INTO vv_turvalaite
-(nimi, tunniste, tyyppi, vaylat)
+(nimi, tunniste, tyyppi, vaylat, turvalaitenro)
 VALUES
-  ('Hietasaaren poiju', '12345', 'poiju', '{66662}');
+('Hietasaaren poiju', 'xx-12345', 'poiju', '{66662}', '12345');
 
 INSERT INTO vv_turvalaite
-(nimi, tunniste, tyyppi, vaylat)
+(nimi, tunniste, tyyppi, vaylat, turvalaitenro)
 VALUES
-  ('Hietasaaren viitta', '12346', 'viitta', '{66662}');
+('Hietasaaren viitta', 'xx-12346', 'viitta', '{66662}', '12346');
 
 INSERT INTO vv_turvalaite
-(nimi, tunniste, tyyppi, vaylat, kiintea)
+(nimi, tunniste, tyyppi, vaylat, kiintea, turvalaitenro)
 VALUES
-  ('Hietasaaren kyltti', '12347', 'tuntematon', '{66662}', TRUE);
+('Hietasaaren kyltti', 'xx-12347', 'tuntematon', '{66662}', TRUE, '12347');
 
 INSERT INTO vv_turvalaite
-(nimi, tunniste, tyyppi, vaylat, kiintea)
+(nimi, tunniste, tyyppi, vaylat, kiintea, turvalaitenro)
 VALUES
-  ('Akonniemen kyltti', '123', 'tuntematon', '{66663}', TRUE);
+('Akonniemen kyltti', 'xx-123', 'tuntematon', '{66663}', TRUE, '123');
 
 -- testitoimenpiteissä käytetyt turvalaitenro-viittaukset
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (8881, 'poiju', 'poiju 1', '{66661}');
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (8882, 'poiju', 'poiju 2', '{66661}');
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (8884, 'poiju', 'poiju 4', '{66661}');
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (8890, 'poiju', 'poiju 10', '{66661}');
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (8891, 'poiju', 'poiju 11', '{66661}');
-INSERT INTO vv_turvalaite (tunniste, tyyppi, nimi, vaylat) VALUES (666, 'poiju', 'poiju 666', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro, tyyppi, nimi, vaylat) VALUES ('xx-8881',8881, 'poiju', 'poiju 1', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro,  tyyppi, nimi, vaylat) VALUES ('xx-8882',8882, 'poiju', 'poiju 2', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro, tyyppi, nimi, vaylat) VALUES ('xx-8884',8884, 'poiju', 'poiju 4', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro,  tyyppi, nimi, vaylat) VALUES ('xx-8890',8890, 'poiju', 'poiju 10', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro,  tyyppi, nimi, vaylat) VALUES ('xx-8891', 8891,'poiju', 'poiju 11', '{66661}');
+INSERT INTO vv_turvalaite (tunniste, turvalaitenro,  tyyppi, nimi, vaylat) VALUES ('xx-666', 666, 'poiju', 'poiju 666', '{66661}');
 
 -- ***********************************************
 -- TURVALAITEKOMPONENTTITYYPIT
