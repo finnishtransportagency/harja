@@ -50,3 +50,10 @@ WHERE lahetysid = :lahetysid;
 UPDATE tietyoilmoitus
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: hae-lahettamattomat-tietyoilmoitukset
+SELECT id
+FROM ilmoitustoimenpide
+WHERE
+  (tila IS NULL OR tila = 'virhe') AND
+  kuittaustyyppi != 'valitys';
