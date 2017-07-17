@@ -43,13 +43,15 @@
             <vastuuhenkilo>true</vastuuhenkilo>
         </tilaajan-yhteyshenkilo>
     </tilaajan-yhteyshenkilot>
-    <tyyppi>
-        <tyotyypit>
-            <tyotyyppi>Viimeistely</tyotyyppi>
-            <tyotyyppi>Viimeistely</tyotyyppi>
-        </tyotyypit>
-        <tyypinKuvaus>Viimeistellään töitä</tyypinKuvaus>
-    </tyyppi>
+    <tyotyypit>
+        <tyotyyppi>
+            <tyyppi>Viimeistely</tyyppi>
+            <kuvaus>Viimeistellään töitä</kuvaus>
+        </tyotyyppi>
+        <tyotyyppi>
+            <tyyppi>Kaapelityö</tyyppi>
+        </tyotyyppi>
+    </tyotyypit>
     <luvan-diaarinumero>09864321</luvan-diaarinumero>
     <sijainti>
         <tierekisteriosoitevali>

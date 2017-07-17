@@ -94,17 +94,10 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="tyyppi" minOccurs="1" maxOccurs="1">
+                <xs:element name="tyotyypit">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="tyotyypit">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="tyotyyppi" type="tietyoilmoitustyotyyppi" minOccurs="1" maxOccurs="unbounded"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                            <xs:element name="tyypinKuvaus" type="xs:string" minOccurs="1"/>
+                            <xs:element name="tyotyyppi" type="tietyoilmoitustyotyypinkuvaus" minOccurs="1" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -609,6 +602,12 @@
         <xs:sequence>
             <xs:element name="x" type="xs:decimal" minOccurs="1"/>
             <xs:element name="y" type="xs:decimal" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="tietyoilmoitustyotyypinkuvaus">
+        <xs:sequence>
+            <xs:element name="tyyppi" type="tietyoilmoitustyotyyppi" minOccurs="1"/>
+            <xs:element name="kuvaus" type="xs:string" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:simpleType name="tietyoilmoitustyotyyppi">
