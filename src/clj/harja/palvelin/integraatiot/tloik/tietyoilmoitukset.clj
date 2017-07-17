@@ -11,6 +11,6 @@
     (laheta jms-lahettaja db id)
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
-      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)
+      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db id)
       (throw e)))
   )

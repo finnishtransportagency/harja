@@ -35,3 +35,18 @@ FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
   JOIN organisaatio ely ON u.hallintayksikko = ely.id
 WHERE u.id = :urakkaid;
+
+-- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
+UPDATE tietyoilmoitus
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta'
+WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitus-lahetetyksi!
+UPDATE tietyoilmoitus
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE lahetysid = :lahetysid;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE id = :id;
