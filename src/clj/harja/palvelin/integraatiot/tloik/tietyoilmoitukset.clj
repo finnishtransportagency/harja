@@ -1,14 +1,14 @@
 (ns harja.palvelin.integraatiot.tloik.tietyoilmoitukset
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]
-            [harja.palvelin.tyokalut.lukot :as lukko])
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma])
   (:import (java.util UUID)))
 
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
         tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
-        ;; muodosta-xml #(toimenpide-sanoma/muodosta tietyoilmoitus viesti-id)
-        ]
+        muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
       (tietyoilmoitukset/merkitse-tietyoilmoitus-odottamaan-vastausta! db viesti-id id)
@@ -24,8 +24,7 @@
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
       (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db id)
-      (throw e)))
-  )
+      (throw e))))
 
 (defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja param2]
   (lukko/yrita-ajaa-lukon-kanssa
