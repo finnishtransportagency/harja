@@ -53,6 +53,7 @@
          :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
          :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
          :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+         :tietyoilmoituksen-lahetys "Harja.HarjaToT-LOIK-Tietyoilmoitukset.Msg"
          :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
          :uudelleenlahetysvali-minuuteissa 30}
 
@@ -143,7 +144,8 @@
  ;; :vesivayla
  ;; :fileyard
  ;; :varuste-api
- :pois-kytketyt-ominaisuudet #{:fileyard}
+ ;; :tietyoilmoitusten-lahetys
+ :pois-kytketyt-ominaisuudet #{:fileyard :tietyoilmoitusten-lahetys}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
