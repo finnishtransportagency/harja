@@ -20,12 +20,14 @@
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+             [tietyoilmoitukset :as tietyoilmoitukset]
              [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defprotocol Ilmoitustoimenpidelahetys
-  (laheta-ilmoitustoimenpide [this id]))
+  (laheta-ilmoitustoimenpide [this id])
+  (laheta-tietyilmoitus [this id]))
 
 (defn tee-lokittaja [this integraatio]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "tloik" integraatio))
@@ -118,7 +120,11 @@
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
         (poista-kuuntelija-fn))
       (apply dissoc this kuuntelijat)))
+
   Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]
     (let [jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
-      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id))))
+      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id)))
+  (laheta-tietyilmoitus [this id]
+    (let [jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
+      (tietyoilmoitukset/laheta-tietyoilmoitus jms-lahettaja (:db this) id))))
