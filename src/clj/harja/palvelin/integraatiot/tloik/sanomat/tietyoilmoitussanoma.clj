@@ -2,18 +2,15 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [hiccup.core :refer [html]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.tyokalut.merkkijono :as merkkijono])
-  (:use [slingshot.slingshot :only [throw+]])
-  (:import (java.text SimpleDateFormat)
-           (java.util TimeZone)))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn muodosta-viesti [data viesti-id]
   [:harja:tietyoilmoitus
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
-   [:viestiid viesti-id]
+   [:viestiId viesti-id]
    [:harja-tietyoilmoitus-id "234908234"]
    [:tloik-tietyoilmoitus-id "234908234"]
    [:toimenpide "uusi"]
@@ -53,7 +50,7 @@
     [:tyotyypit
      [:tyotyyppi "Viimeistely"]
      [:tyotyyppi "Viimeistely"]]
-    [:tyypinkuvaus "Viimeistellään töitä"]]
+    [:tyypinKuvaus "Viimeistellään töitä"]]
    [:luvan-diaarinumero "09864321"]
    [:sijainti
     [:tierekisteriosoitevali
@@ -70,10 +67,10 @@
      [:x "515497.44830392423"]
      [:y "6908053.366497267"]]
     [:pituus "1000.00"]
-    [:tiennimi "Tie"]
+    [:tienNimi "Tie"]
     [:kunnat "Pieksämäki"]
-    [:alkusijainninkuvaus "Kaakinmäessä"]
-    [:loppusijainninkuvaus "Rummukanmäessä"]]
+    [:alkusijainninKuvaus "Kaakinmäessä"]
+    [:loppusijainninKuvaus "Rummukanmäessä"]]
    [:ajankohta
     [:alku "2016-01-01T07:49:45+02:00"]
     [:loppu "2017-01-15T18:41:13+02:00"]]

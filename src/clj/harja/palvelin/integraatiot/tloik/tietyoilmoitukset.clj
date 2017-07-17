@@ -26,7 +26,7 @@
       (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db id)
       (throw e))))
 
-(defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja param2]
+(defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja db]
   (lukko/yrita-ajaa-lukon-kanssa
     db
     "tloik-tti-uudelleenlahetys"
