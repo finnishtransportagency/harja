@@ -34,14 +34,17 @@
 
 (defn urakoitsijan-yhteyshenkilot [data]
   [:urakoitsijan-yhteyshenkilot
-   ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
-   [:urakoitsijan-yhteyshenkilo
-    [:etunimi "Urho"]
-    [:sukunimi "Urakoitsija"]
-    [:matkapuhelin "+34592349342"]
-    [:tyopuhelin "+34592349342"]
-    [:sahkoposti "urho@example.com"]
-    [:vastuuhenkilo "true"]]])
+   (conj (henkilo :urakoitsijan-yhteyshenkilo (::tietyoilmoitus/urakoitsijayhteyshenkilo data))
+         [:vastuuhenkilo "true"])])
+
+(defn tilaaja [data]
+  [:tilaaja
+   [:nimi (::tietyoilmoitus/tilaajan-nimi data)]])
+
+(defn tilaajan-yhteyshenkilot [data]
+  [:tilaajan-yhteyshenkilot
+   (conj (henkilo :tilaajan-yhteyshenkilo (::tietyoilmoitus/tilaajayhteyshenkilo data))
+         [:vastuuhenkilo "true"])])
 
 (defn tyotyypit [data]
   (into [:tyotyypit]
@@ -49,21 +52,6 @@
                       [:tyyppi (::tietyoilmoitus/tyyppi %)]
                       [:kuvaus (::tietyoilmoitus/kuvaus %)])
              (::tietyoilmoitus/tyotyypit data))))
-
-(defn tilaaja [data]
-  [:tilaaja
-   [:nimi (::tietyoilmoitus/tilaajan-nimi data)]])
-
-(defn tilaajan-yhteyshenkilot [data]
-  ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
-  [:tilaajan-yhteyshenkilot
-   [:tilaajan-yhteyshenkilo
-    [:etunimi "Eija"]
-    [:sukunimi "Elyläinen"]
-    [:matkapuhelin "+34592349342"]
-    [:tyopuhelin "+34592349342"]
-    [:sahkoposti "eija@example.com"]
-    [:vastuuhenkilo "true"]]])
 
 (defn sijainti [data]
   (let [osoite (::tietyoilmoitus/osoite data)
