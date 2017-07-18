@@ -6,18 +6,113 @@
             [harja.domain.tietyoilmoitukset :as tietyoilmoitus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset])
+            [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.geo :as geo])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
 
 (def data (tietyoilmoitukset/hae-ilmoitus (:db harja.palvelin.main/harja-jarjestelma) 1))
 
-(defn muodosta-viesti [data viesti-id]
-  (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)
-        urakoitsijan-yhteyshenkilo (::tietyoilmoitus/urakoitsijan-yhteyshenkilo data)
-        osoite (:osoite data)]
+(defn henkilo [avain ilmoittaja]
+  [avain
+   [:etunimi (::tietyoilmoitus/etunimi ilmoittaja)]
+   [:sukunimi (::tietyoilmoitus/sukunimi ilmoittaja)]
+   [:matkapuhelin (::tietyoilmoitus/matkapuhelin ilmoittaja)]
+   [:sahkoposti (::tietyoilmoitus/sahkoposti ilmoittaja)]])
 
+(defn urakka [data]
+  [:urakka
+   [:id (::tietyoilmoitus/urakka-id data)]
+   [:nimi (::tietyoilmoitus/urakka-nimi data)]
+   [:tyyppi (::tietyoilmoitus/urakkatyyppi data)]])
+
+(defn urakoitsija [data]
+  [:urakoitsija
+   [:nimi (::tietyoilmoitus/urakoitsijan-nimi data)]
+   ;; todo: lisättävä frontille ja kantaan
+   [:ytunnus "2163026-3"]])
+
+(defn urakoitsijan-yhteyshenkilot [data]
+  [:urakoitsijan-yhteyshenkilot
+   ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
+   [:urakoitsijan-yhteyshenkilo
+    [:etunimi "Urho"]
+    [:sukunimi "Urakoitsija"]
+    [:matkapuhelin "+34592349342"]
+    [:tyopuhelin "+34592349342"]
+    [:sahkoposti "urho@example.com"]
+    [:vastuuhenkilo "true"]]])
+
+(defn tyotyypit [data]
+  (into [:tyotyypit]
+        (map #(vector :tyotyyppi
+                      [:tyyppi (::tietyoilmoitus/tyyppi %)]
+                      [:kuvaus (::tietyoilmoitus/kuvaus %)])
+             (::tietyoilmoitus/tyotyypit data))))
+
+(defn tilaaja [data]
+  [:tilaaja
+   [:nimi (::tietyoilmoitus/tilaajan-nimi data)]])
+
+(defn tilaajan-yhteyshenkilot [data]
+  ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
+  [:tilaajan-yhteyshenkilot
+   [:tilaajan-yhteyshenkilo
+    [:etunimi "Eija"]
+    [:sukunimi "Elyläinen"]
+    [:matkapuhelin "+34592349342"]
+    [:tyopuhelin "+34592349342"]
+    [:sahkoposti "eija@example.com"]
+    [:vastuuhenkilo "true"]]])
+
+(defn sijainti [data]
+  (let [osoite (::tietyoilmoitus/osoite data)
+        viivat (:lines (geo/pg->clj (::tierekisteri/geometria osoite)))
+        alkukoordinaatit (first (:points (first viivat)))
+        loppukoordinaatit (last (:points (last viivat)))]
+    [:sijainti
+     [:tierekisteriosoitevali
+      [:tienumero (::tierekisteri/tie osoite)]
+      [:alkuosa (::tierekisteri/alkuosa osoite)]
+      [:alkuetaisyys (::tierekisteri/alkuetaisyys osoite)]
+      [:loppuosa (::tierekisteri/loppuosa osoite)]
+      [:loppuetaisyys (::tierekisteri/loppuetaisyys osoite)]
+      ;; todo: hae erikseen kannasta
+      [:karttapvm "2016-01-01"]]
+     [:alkukoordinaatit
+      [:x (first alkukoordinaatit)]
+      [:y (second alkukoordinaatit)]]
+     [:loppukoordinaatit
+      [:x (first loppukoordinaatit)]
+      [:y (second loppukoordinaatit)]]
+     ;; todo: pitää laskea erikseen sijannista
+     [:pituus "1000.00"]
+     [:tienNimi (::tietyoilmoitus/tien-nimi data)]
+     [:kunnat (::tietyoilmoitus/kunnat data)]
+     [:alkusijainninKuvaus (::tietyoilmoitus/alkusijainnin-kuvaus data)]
+     [:loppusijainninKuvaus (::tietyoilmoitus/loppusijainnin-kuvaus data)]]))
+
+(defn ajankohta [data]
+  [:ajankohta
+   [:alku (xml/datetime->gmt-0 (::tietyoilmoitus/alku data))]
+   [:loppu (xml/datetime->gmt-0 (::tietyoilmoitus/loppu data))]])
+
+(defn tyoajat [data]
+  (let [tyoajat (::tietyoilmoitukset/tyoajat data)]
+    [:tyoajat
+     [:tyoaika
+      [:alku (xml/datetime->gmt-0 (::tietyoilmoitus/alkuaika tyoajat))]
+      [:loppu (xml/datetime->gmt-0 (::tietyoilmoitus/loppuaika tyoajat))]
+      [:paivat
+       [:paiva "maanantai"]
+       [:paiva "tiistai"]
+       [:paiva "keskiviikko"]
+       [:paiva "torstai"]
+       [:paiva "perjantai"]]]]))
+
+(defn muodosta-viesti [data viesti-id]
+  (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)]
     [:harja:tietyoilmoitus
      {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
      [:viestiId viesti-id]
@@ -27,79 +122,18 @@
      ;; todo: päättele
      [:toimenpide "uusi"]
      [:kirjattu (xml/datetime->gmt-0 (::muokkaustiedot/luotu data))]
-     [:ilmoittaja
-      [:etunimi (::tietyoilmoitus/etunimi ilmoittaja)]
-      [:sukunimi (::tietyoilmoitus/sukunimi ilmoittaja)]
-      [:matkapuhelin (::tietyoilmoitus/matkapuhelin ilmoittaja)]
-      [:sahkoposti (::tietyoilmoitus/sahkoposti ilmoittaja)]]
-     [:urakka
-      [:id (::tietyoilmoitus/urakka-id data)]
-      [:nimi (::tietyoilmoitus/urakka-nimi data)]
-      [:tyyppi (::tietyoilmoitus/urakkatyyppi data)]]
-     [:urakoitsija
-      [:nimi (::tietyoilmoitus/urakoitsijan-nimi data)]
-      ;; todo: lisättävä frontille ja kantaan
-      [:ytunnus "2163026-3"]]
-     [:urakoitsijan-yhteyshenkilot
-      ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
-      [:urakoitsijan-yhteyshenkilo
-       [:etunimi "Urho"]
-       [:sukunimi "Urakoitsija"]
-       [:matkapuhelin "+34592349342"]
-       [:tyopuhelin "+34592349342"]
-       [:sahkoposti "urho@example.com"]
-       [:vastuuhenkilo "true"]]]
-     [:tilaaja
-      [:nimi (::tietyoilmoitus/tilaajan-nimi data)]]
-     ;; todo: nämä pitäisi hakea FIM:stä, jos niitä ei ole suoraan kirjattu kantaan?
-     [:tilaajan-yhteyshenkilot
-      [:tilaajan-yhteyshenkilo
-       [:etunimi "Eija"]
-       [:sukunimi "Elyläinen"]
-       [:matkapuhelin "+34592349342"]
-       [:tyopuhelin "+34592349342"]
-       [:sahkoposti "eija@example.com"]
-       [:vastuuhenkilo "true"]]]
-     (into [:tyotyypit]
-           (map #(vector :tyotyyppi
-                         [:tyyppi (::tietyoilmoitus/tyyppi %)]
-                         [:kuvaus (::tietyoilmoitus/kuvaus %)])
-                (::tietyoilmoitus/tyotyypit data)))
+     (henkilo :ilmoittaja ilmoittaja)
+     (urakka data)
+     (urakoitsija data)
+     (urakoitsijan-yhteyshenkilot data)
+     (tilaaja data)
+     (tilaajan-yhteyshenkilot data)
+     (tyotyypit data)
      ;; todo: lisättävä kantaan
      [:luvan-diaarinumero "09864321"]
-     [:sijainti
-      [:tierekisteriosoitevali
-       [:tienumero (::tierekisteri/tie osoite)]
-       [:alkuosa (::tierekisteri/alkuosa osoite)]
-       [:alkuetaisyys (::tierekisteri/alkuetaisyys osoite)]
-       [:loppuosa (::tierekisteri/loppuosa osoite)]
-       [:loppuetaisyys (::tierekisteri/loppuetaisyys osoite)]
-       ;; todo: hae erikseen kannasta
-       [:karttapvm "2016-01-01"]]
-      [:alkukoordinaatit
-       [:x "512980.1296580813"]
-       [:y "6908379.5465487875"]]
-      [:loppukoordinaatit
-       [:x "515497.44830392423"]
-       [:y "6908053.366497267"]]
-      [:pituus "1000.00"]
-      [:tienNimi "Tie"]
-      [:kunnat "Pieksämäki"]
-      [:alkusijainninKuvaus "Kaakinmäessä"]
-      [:loppusijainninKuvaus "Rummukanmäessä"]]
-     [:ajankohta
-      [:alku "2016-01-01T07:49:45+02:00"]
-      [:loppu "2017-01-15T18:41:13+02:00"]]
-     [:tyoajat
-      [:tyoaika
-       [:alku "07:00:00+02:00"]
-       [:loppu "18:00:00+02:00"]
-       [:paivat
-        [:paiva "maanantai"]
-        [:paiva "tiistai"]
-        [:paiva "keskiviikko"]
-        [:paiva "torstai"]
-        [:paiva "perjantai"]]]]
+     (sijainti data)
+     (ajankohta data)
+     (tyoajat data)
      [:vaikutukset
       [:vaikutussuunta "molemmat"]
       [:kaistajarjestelyt "ajorataSuljettu"]
