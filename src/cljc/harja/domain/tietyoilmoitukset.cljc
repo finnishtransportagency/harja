@@ -143,5 +143,5 @@
 (s/def ::hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus
   (s/keys :req-un [::geometria ::urakka-id ::urakoitsijan-yhteyshenkilo ::kohteet ::tilaaja-nimi
                    ::tr-loppuosa ::tr-alkuosa ::tilaaja-id ::tr-loppuetaisyys ::yllapitokohde-id ::tr-alkuetaisyys
-                   ::tr-numero ::alku ::tilaajan-yhteyshenkilo ::urakoitsija-nimi ::loppu
+                   ::tr-numero ::alku ::tilaajan-yhteyshenkilo ::urakoitsija-nimi ::urakoitsija-ytunnus ::loppu
                    ::urakoitsija-id ::urakka-nimi ::urakka-sampo-id]))

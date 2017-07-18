@@ -79,6 +79,7 @@
     ::t/urakan-nimi
     ::t/urakkatyyppi
     ::t/urakoitsijan-nimi
+    ::t/urakoitsijan-ytunnus
     ::t/urakoitsijayhteyshenkilo-id
     ::t/urakoitsijayhteyshenkilo
     ::t/tilaaja-id

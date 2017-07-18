@@ -24,13 +24,14 @@ WHERE ypk.id = :kohdeid;
 
 -- name: hae-urakan-tiedot-tietyoilmoitukselle
 SELECT
-  u.id      AS "urakka-id",
-  u.nimi    AS "urakka-nimi",
-  u.sampoid AS "urakka-sampo-id",
-  urk.id    AS "urakoitsija-id",
-  urk.nimi  AS "urakoitsija-nimi",
-  ely.id    AS "tilaaja-id",
-  ely.nimi  AS "tilaaja-nimi"
+  u.id        AS "urakka-id",
+  u.nimi      AS "urakka-nimi",
+  u.sampoid   AS "urakka-sampo-id",
+  urk.id      AS "urakoitsija-id",
+  urk.nimi    AS "urakoitsija-nimi",
+  urk.ytunnus AS "urakoitsija-ytunnus",
+  ely.id      AS "tilaaja-id",
+  ely.nimi    AS "tilaaja-nimi"
 FROM urakka u
   JOIN organisaatio urk ON u.urakoitsija = urk.id
   JOIN organisaatio ely ON u.hallintayksikko = ely.id

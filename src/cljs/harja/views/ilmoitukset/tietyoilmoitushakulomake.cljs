@@ -158,6 +158,9 @@
      {:otsikko "Urakoitsija"
       :nimi ::t/urakoitsijan-nimi
       :muokattava? (constantly false)}
+     {:otsikko "Urakoitsijan y-tunnus"
+      :nimi ::t/urakoitsijan-ytunnus
+      :muokattava? (constantly false)}
      {:otsikko "Urakoitsijan yhteyshenkilo"
       :nimi :urakoitsijan_yhteyshenkilo
       :hae t/urakoitsijayhteyshenkilo->str

@@ -339,7 +339,12 @@
                       :otsikko "Nimi"
                       :muokattava? (constantly true)
                       :tyyppi :string
-                      :pituus-max 128})
+                      :pituus-max 128}
+                     {:nimi ::t/urakoitsijan-ytunnus
+                      :otsikko "Y-tunnus"
+                      :muokattava? (constantly true)
+                      :tyyppi :string
+                      :pituus-max 9})
 
       (yhteyshenkilo "Tilaaja" ::t/tilaajayhteyshenkilo false
                      {:nimi ::t/tilaajan-nimi

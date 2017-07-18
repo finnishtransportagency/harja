@@ -122,6 +122,7 @@
                                        urakka-id
                                        urakka-nimi
                                        urakoitsija-nimi
+                                       urakoitsija-ytunnus
                                        urakoitsijan-yhteyshenkilo
                                        tilaaja-nimi
                                        tilaajan-yhteyshenkilo
@@ -132,6 +133,7 @@
                         ::t/urakan-nimi urakka-nimi
 
                         ::t/urakoitsijan-nimi urakoitsija-nimi
+                        ::t/urakoitsijan-ytunnus urakoitsija-ytunnus
                         ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}

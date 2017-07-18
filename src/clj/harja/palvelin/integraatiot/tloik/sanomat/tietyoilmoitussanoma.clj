@@ -12,7 +12,7 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(def data (tietyoilmoitukset/hae-ilmoitus (:db harja.palvelin.main/harja-jarjestelma) 1))
+#_(def data (tietyoilmoitukset/hae-ilmoitus (:db harja.palvelin.main/harja-jarjestelma) 1))
 
 (defn henkilo [avain ilmoittaja]
   [avain
@@ -30,8 +30,7 @@
 (defn urakoitsija [data]
   [:urakoitsija
    [:nimi (::tietyoilmoitus/urakoitsijan-nimi data)]
-   ;; todo: lisättävä frontille ja kantaan
-   [:ytunnus "2163026-3"]])
+   [:ytunnus (::tietyoilmoitus/urakoitsijan-ytunnus data)]])
 
 (defn urakoitsijan-yhteyshenkilot [data]
   [:urakoitsijan-yhteyshenkilot
