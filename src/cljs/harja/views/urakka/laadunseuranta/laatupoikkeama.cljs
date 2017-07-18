@@ -88,6 +88,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
   (let [g (grid/grid-ohjaus)
         yllapito? @tiedot-urakka/yllapidon-urakka?
+        vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit
         mahdolliset-sanktiolajit (disj @tiedot-urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
@@ -125,29 +126,39 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 :muistutus "Muistutus"
                                 :yllapidon_muistutus "Muistutus"
                                 :yllapidon_sakko "Sakko"
+                                :vesivayla_sakko "Sakko"
                                 "- valitse laji -")
               :validoi [[:ei-tyhja "Valitse laji"]]}
 
-             (if yllapito?
-               {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
-                :tyyppi :valinta
-                :valinta-arvo first
-                :valinta-nayta second
-                :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}
-               ;; hoidossa sanktiotyyppi
-               {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
-                :tyyppi :valinta
-                :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                         ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                         (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                           (if (sanktio-domain/sakko? paivitetty)
-                             (assoc paivitetty :toimenpideinstanssi
-                                               (when tpk
-                                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                             (assoc paivitetty :toimenpideinstanssi nil))))
-                :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
-                :valinta-nayta :nimi
-                :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+             (cond yllapito?
+                   {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
+                    :tyyppi :valinta
+                    :valinta-arvo first
+                    :valinta-nayta second
+                    :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}
+
+                   vesivayla?
+                   {:otsikko "Sakko" :nimi :vakiofraasi :leveys 3
+                    :tyyppi :valinta
+                    :valinta-arvo :tyyppi
+                    :valinta-nayta #(if (:nimi %) (:nimi %) "- valitse -")
+                    :valinnat [{:nimi "Sakko" :tyyppi :vesivayla_sakko}]}
+
+                   :default
+                   ;; hoidossa sanktiotyyppi
+                   {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
+                    :tyyppi :valinta
+                    :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                             ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                             (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
+                               (if (sanktio-domain/sakko? paivitetty)
+                                 (assoc paivitetty :toimenpideinstanssi
+                                                   (when tpk
+                                                     (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                 (assoc paivitetty :toimenpideinstanssi nil))))
+                    :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
+                    :valinta-nayta :nimi
+                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
              {:otsikko "Toimenpide"
               :nimi :toimenpideinstanssi
@@ -237,7 +248,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn validoi-sanktiotiedot [laatupoikkeama]
   ;; Joko ei mitään sanktiotietoja, tai kaikki
-  (log "Validoi-sanktiotiedot: " (pr-str laatupoikkeama))
   (or (not (sanktiotietoja-annettu? laatupoikkeama))
       (kaikki-sanktiotiedot-annettu? laatupoikkeama)))
 
