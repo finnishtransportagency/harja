@@ -138,11 +138,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}
 
                    vesivayla?
-                   {:otsikko "Sakko" :nimi :vakiofraasi :leveys 3
-                    :tyyppi :valinta
-                    :valinta-arvo :tyyppi
-                    :valinta-nayta #(if (:nimi %) (:nimi %) "- valitse -")
-                    :valinnat [{:nimi "Sakko" :tyyppi :vesivayla_sakko}]}
+                   nil
 
                    :default
                    ;; hoidossa sanktiotyyppi
@@ -206,7 +202,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         pakolliset-yllapito-muistutus [[:perintapvm] [:laji]]
         pakolliset-hoito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
         pakolliset-hoito-muistutus [[:laji] [:tyyppi] [:perintapvm]]]
-    (if (or (:yllapito nakyma) (:vesivayla nakyma))
+    (if (or (= :yllapito nakyma) (= :vesivayla nakyma))
       (if sakko?
         pakolliset-yllapito-sakko
         pakolliset-yllapito-muistutus)
