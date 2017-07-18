@@ -124,41 +124,62 @@
                       [:matka (::tietyoilmoitus/matka %)])
              pinnat)))
 
-(defn vaikutukset [data]
+(defn nopeusrajoitukset [data]
+  (into [:nopeusrajoitukset]
+        (map #(vector :nopeusrajoitus
+                      [:rajoitus (::tietyoilmoitus/rajoitus %)]
+                      [:matka (::tietyoilmoitus/matka %)])
+             (::tietyoilmoitus/nopeusrajoitukset data))))
+
+(defn kiertotie [data]
+  [:kiertotie
+   [:mutkaisuus (::tietyoilmoitus/kiertotien-mutkaisuus data)]
+   (tienpinnat (::tietyoilmoitus/kiertotienpinnat data))])
+
+(defn liikenteenohjaus [data]
+  [:liikenteenohjaus
+   [:ohjaus (::tietyoilmoitus/liikenteenohjaus data)]
+   [:ohjaaja (::tietyoilmoitus/liikenteenohjaaja data)]])
+
+(defn viivastykset [data]
+  [:arvioitu-viivastys
+   [:normaali-liikenteessa (::tietyoilmoitus/viivastys-normaali-liikenteessa data)]
+   [:ruuhka-aikana (::tietyoilmoitus/viivastys-ruuhka-aikana data)]])
+
+(defn rajoitukset [data]
   (let [rajoitukset (::tietyoilmoitus/ajoneuvorajoitukset data)]
-    [:vaikutukset
-    [:vaikutussuunta (::tietyoilmoitus/vaikutussuunta data)]
-    [:kaistajarjestelyt (::tietyoilmoitus/jarjestely (::tietyoilmoitus/kaistajarjestelyt data))]
-    (into [:nopeusrajoitukset]
-          (map #(vector :nopeusrajoitus
-                        [:rajoitus (::tietyoilmoitus/rajoitus %)]
-                        [:matka (::tietyoilmoitus/matka %)])
-               (::tietyoilmoitus/nopeusrajoitukset data)))
-    (tienpinnat (::tietyoilmoitus/tienpinnat data))
-    [:kiertotie
-     [:mutkaisuus (::tietyoilmoitus/kiertotien-mutkaisuus data)]
-     (tienpinnat (::tietyoilmoitus/kiertotienpinnat data))]
-    [:liikenteenohjaus
-     [:ohjaus (::tietyoilmoitus/liikenteenohjaus data)]
-     [:ohjaaja (::tietyoilmoitus/liikenteenohjaaja data)]]
-    [:arvioitu-viivastys
-     [:normaali-liikenteessa (::tietyoilmoitus/viivastys-normaali-liikenteessa data)]
-     [:ruuhka-aikana (::tietyoilmoitus/viivastys-ruuhka-aikana data)]]
     [:ajoneuvorajoitukset
      [:max-korkeus (::tietyoilmoitus/max-korkeus rajoitukset)]
      [:max-leveys (::tietyoilmoitus/max-leveys rajoitukset)]
      [:max-pituus (::tietyoilmoitus/max-pituus rajoitukset)]
-     [:max-paino (::tietyoilmoitus/max-paino rajoitukset)]]
-     (into [:huomautukset]
-           (map
-             #(vector :huomautus %)
-             (::tietyoilmoitus/huomautukset data)))
-    [:pysaytykset
-     [:pysaytetaan-ajoittain (str (::tietyoilmoitus/ajoittaiset-pysaytykset data))]
-     [:tie-ajoittain-suljettu (str (::tietyoilmoitus/ajoittain-suljettu-tie data))]
-     [:aikataulu
-      [:alkaen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-alku data))]
-      [:paattyen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-loppu data))]]]]))
+     [:max-paino (::tietyoilmoitus/max-paino rajoitukset)]]))
+
+(defn huomautukset [data]
+  (into [:huomautukset]
+        (map
+          #(vector :huomautus %)
+          (::tietyoilmoitus/huomautukset data))))
+
+(defn pysaytykset [data]
+  [:pysaytykset
+   [:pysaytetaan-ajoittain (str (::tietyoilmoitus/ajoittaiset-pysaytykset data))]
+   [:tie-ajoittain-suljettu (str (::tietyoilmoitus/ajoittain-suljettu-tie data))]
+   [:aikataulu
+    [:alkaen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-alku data))]
+    [:paattyen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-loppu data))]]])
+
+(defn vaikutukset [data]
+  [:vaikutukset
+   [:vaikutussuunta (::tietyoilmoitus/vaikutussuunta data)]
+   [:kaistajarjestelyt (::tietyoilmoitus/jarjestely (::tietyoilmoitus/kaistajarjestelyt data))]
+   (nopeusrajoitukset data)
+   (tienpinnat (::tietyoilmoitus/tienpinnat data))
+   (kiertotie data)
+   (liikenteenohjaus data)
+   (viivastykset data)
+   (rajoitukset data)
+   (huomautukset data)
+   (pysaytykset data)])
 
 (defn muodosta-viesti [data viesti-id]
   (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)]
