@@ -5,8 +5,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.vesivaylat.urakka.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.views.vesivaylat.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.views.vesivaylat.urakka.laadunseuranta.viat :as viat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -17,20 +16,12 @@
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :laadunseuranta-vesivaylat)}
 
-       ;; TODO Enabloi sitten kun nämä on oikeasti valmiina
-       ;; Osa ainakin tehtäneen tiepuolen koodipohjalla, joten nämä
-       ;; nykyiset tuck-pohjat voi sitten poistaa
+       "Laatupoikkeamat" :vesivayla-laatupoikkeamat
+       (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ;; TODO OIKEUS!1
+         [laatupoikkeamat/laatupoikkeamat])
 
-       ;;"Tarkastukset" :vesivayla-tarkastukset
-       ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-       ;;          #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id)) ; TODO OIKEUS!
-       ;; [tarkastukset/tarkastukset])
-
-       ;;"Laatupoikkeamat" :vesivayla-laatupoikkeamat
-       ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-       ;;           #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
-       ;;  [laatupoikkeamat/laatupoikkeamat])
-
+       ;; TODO Enabloi kun oikeasti valmis
        ;;"Vikaseuranta" :vesivayla-viat
        ;;(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
        ;;           (oikeudet/urakat-vesivaylalaadunseuranta-viat id))
@@ -38,5 +29,5 @@
 
        "Sanktiot" :vesivayla-sanktiot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-                  (oikeudet/urakat-laadunseuranta-sanktiot id))
+                  (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
          [sanktiot/sanktiot])])))
