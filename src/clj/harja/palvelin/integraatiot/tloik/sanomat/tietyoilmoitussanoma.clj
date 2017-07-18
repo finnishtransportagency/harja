@@ -112,6 +112,11 @@
                     (into [:paivat] (map #(vector :paiva %) (::tietyoilmoitus/paivat tyoaika)))))
           (::tietyoilmoitus/tyoajat data))))
 
+(defn lista [lista-avain arvoavain arvo-fn data]
+  (into [lista-avain]
+        (map #(vector arvoavain (arvo-fn %))
+             data)))
+
 (defn vaikutukset [data]
   [:vaikutukset
    [:vaikutussuunta (::tietyoilmoitus/vaikutussuunta data)]
@@ -121,10 +126,11 @@
                        [:rajoitus (::tietyoilmoitus/rajoitus %)]
                        [:matka (::tietyoilmoitus/matka %)])
               (::tietyoilmoitus/nopeusrajoitukset data)))
-   [:tienpinnat
-    [:tienpinta
-     [:pintamateriaali "paallystetty"]
-     [:matka "100"]]]
+   (into [:tienpinnat]
+         (map #(vector :tienpinta
+                       [:pintamateriaali (::tietyoilmoitus/materiaali %)]
+                       [:matka (::tietyoilmoitus/matka %)])
+              (::tietyoilmoitus/tienpinnat data)))
    [:kiertotie
     [:mutkaisuus "loivatMutkat"]
     [:tienpinnat
