@@ -201,12 +201,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (empty? (sanktiotaulukon-rivit laatupoikkeama)))
 
 (defn- pakolliset-kentat
-  [yllapito? sakko?]
+  [nakyma sakko?]
   (let [pakolliset-yllapito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi]]
         pakolliset-yllapito-muistutus [[:perintapvm] [:laji]]
         pakolliset-hoito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
         pakolliset-hoito-muistutus [[:laji] [:tyyppi] [:perintapvm]]]
-    (if yllapito?
+    (if (or (:yllapito nakyma) (:vesivayla nakyma))
       (if sakko?
         pakolliset-yllapito-sakko
         pakolliset-yllapito-muistutus)
@@ -214,12 +214,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         pakolliset-hoito-sakko
         pakolliset-hoito-muistutus))))
 
-(defn- tarkasta-sanktiorivi [sanktiorivi yllapito?]
+(defn- tarkasta-sanktiorivi [sanktiorivi nakyma]
   (let [kentat (map #(get-in sanktiorivi %)
-                    (pakolliset-kentat yllapito? (sanktio-domain/sakko? sanktiorivi)))]
+                    (pakolliset-kentat nakyma (sanktio-domain/sakko? sanktiorivi)))]
     (every? some? kentat)))
 
-(defn- sanktiorivit-ok? [laatupoikkeama yllapito?]
+(defn- sanktiorivit-ok? [laatupoikkeama nakyma]
   (cond
     (and (not (sanktio-domain/paatos-on-sanktio? laatupoikkeama))
          (sanktiotaulukko-tyhja? laatupoikkeama))
@@ -232,7 +232,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     ;; muokkausgridiltä tulee [{id {rivi}} ..]
     ;; Tarkasta että jokaiselle riville muokkausgridissä on jokainen vaadittava arvo
     :default
-    (every? true? (map #(tarkasta-sanktiorivi % yllapito?) (sanktiotaulukon-rivit laatupoikkeama)))))
+    (every? true? (map #(tarkasta-sanktiorivi % nakyma) (sanktiotaulukon-rivit laatupoikkeama)))))
 
 (defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
   (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
@@ -306,8 +306,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)
                yllapito? @tiedot-urakka/yllapidon-urakka?
-               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
-               nakyma (:nakyma optiot)]
+               nakyma (:nakyma optiot)
+               vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
+               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
              [:div.laatupoikkeama
@@ -334,7 +335,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 {:ikoni (ikonit/tallenna)
                                  :disabled (or
                                              (not (validoi-sanktiotiedot sisalto))
-                                             (not (sanktiorivit-ok? sisalto yllapito?))
+                                             (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
+                                                                                  vesivayla? :vesivayla
+                                                                                  :default :hoito)))
                                              (not (lomake/voi-tallentaa? sisalto)))
                                  :virheviesti "Laatupoikkeaman tallennus epäonnistui"
                                  :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
@@ -387,7 +390,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :muokattava? (constantly muokattava?)
                  :validoi [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
 
-                (if (u-domain/vesivaylaurakkatyyppi? nakyma)
+                (if vesivayla?
                   {:nimi :sijainti
                    :otsikko "Sijainti"
                    :tyyppi :sijaintivalitsin
