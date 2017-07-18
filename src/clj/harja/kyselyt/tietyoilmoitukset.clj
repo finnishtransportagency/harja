@@ -247,3 +247,6 @@
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                 {::t/id tietyoilmoitus-id})))
+
+(defn lahetetty? [db id]
+  (:lahetetty? (first (lahetetty db id))))

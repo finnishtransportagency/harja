@@ -7,7 +7,8 @@
 
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
-        tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
+        uusi? (not (tietyoilmoitukset/lahetetty? db id))
+        tietyoilmoitus (assoc (tietyoilmoitukset/hae-ilmoitus db id) :uusi? uusi?)
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)

@@ -189,7 +189,7 @@
      ;; todo: lisätään möyhemmin
      ;; [:tloik-tietyoilmoitus-id "234908234"]
      ;; todo: päättele
-     [:toimenpide "uusi"]
+     [:toimenpide (if (:uusi? data) "uusi" "muokkaus")]
      [:kirjattu (xml/datetime->gmt-0-pvm (::muokkaustiedot/luotu data))]
      (henkilo :ilmoittaja ilmoittaja)
      (urakka data)
@@ -198,8 +198,8 @@
      (tilaaja data)
      (tilaajan-yhteyshenkilot data)
      (tyotyypit data)
-     ;; todo: lisättävä kantaan
-     [:luvan-diaarinumero "09864321"]
+     (when (::tietyoilmoitus/luvan-diaarinumero data)
+       [:luvan-diaarinumero (::tietyoilmoitus/luvan-diaarinumero data)])
      (sijainti data)
      (ajankohta data)
      (tyoajat data)

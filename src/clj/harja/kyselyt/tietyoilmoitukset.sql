@@ -58,3 +58,8 @@ FROM ilmoitustoimenpide
 WHERE
   (tila IS NULL OR tila = 'virhe') AND
   kuittaustyyppi != 'valitys';
+
+-- name: lahetetty
+SELECT tila = 'lahetetty' as "lahetetty?"
+FROM tietyoilmoitus
+WHERE id = :id;
