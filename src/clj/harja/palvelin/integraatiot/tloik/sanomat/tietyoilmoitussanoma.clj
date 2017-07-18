@@ -184,7 +184,7 @@
      (ajankohta data)
      (tyoajat data)
      (vaikutukset data)
-     [:lisatietoja "Lisätietoja"]]))
+     [:lisatietoja (::tietyoilmoitus/lisatietoja data)]]))
 
 (defn muodosta [data viesti-id]
   (let [sisalto (muodosta-viesti data viesti-id)
