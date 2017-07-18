@@ -2,13 +2,18 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma])
+            [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma]
+            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset])
   (:import (java.util UUID)))
 
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
         uusi? (not (tietyoilmoitukset/lahetetty? db id))
-        tietyoilmoitus (assoc (tietyoilmoitukset/hae-ilmoitus db id) :uusi? uusi?)
+        karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
+        tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
+        tietyoilmoitus (assoc tietyoilmoitus
+                         :uusi? uusi?
+                         :karttapvm karttapvm)
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)

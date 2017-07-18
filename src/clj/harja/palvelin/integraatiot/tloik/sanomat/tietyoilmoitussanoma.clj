@@ -68,8 +68,7 @@
       (when
         (::tierekisteri/let osoite)
         [:loppuetaisyys (::tierekisteri/let osoite)])
-      ;; todo: hae erikseen kannasta
-      [:karttapvm "2016-01-01"]]
+      [:karttapvm (xml/datetime->gmt-0-pvm (:karttapvm data))]]
      [:alkukoordinaatit
       [:x (first alkukoordinaatit)]
       [:y (second alkukoordinaatit)]]
