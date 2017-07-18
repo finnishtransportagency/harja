@@ -186,9 +186,8 @@
      {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
      [:viestiId viesti-id]
      [:harja-tietyoilmoitus-id (::tietyoilmoitus/id data)]
-     ;; todo: lisätään möyhemmin
-     ;; [:tloik-tietyoilmoitus-id "234908234"]
-     ;; todo: päättele
+     (when (::tietyoilmoitus/paatietyoilmoitus data)
+       [:harja-paatietyoilmoitus-id (::tietyoilmoitus/paatietyoilmoitus data)])
      [:toimenpide (if (:uusi? data) "uusi" "muokkaus")]
      [:kirjattu (xml/datetime->gmt-0-pvm (::muokkaustiedot/luotu data))]
      (henkilo :ilmoittaja ilmoittaja)
