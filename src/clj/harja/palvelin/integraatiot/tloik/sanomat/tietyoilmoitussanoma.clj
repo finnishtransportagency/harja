@@ -86,9 +86,10 @@
      [:alkukoordinaatit
       [:x (first alkukoordinaatit)]
       [:y (second alkukoordinaatit)]]
-     [:loppukoordinaatit
-      [:x (first loppukoordinaatit)]
-      [:y (second loppukoordinaatit)]]
+     (when loppukoordinaatit
+       [:loppukoordinaatit
+        [:x (first loppukoordinaatit)]
+        [:y (second loppukoordinaatit)]])
      ;; todo: pitää laskea erikseen sijannista
      [:pituus "1000.00"]
      [:tienNimi (::tietyoilmoitus/tien-nimi data)]
@@ -110,6 +111,45 @@
                     [:loppu (xml/datetime->gmt-0-aika (::tietyoilmoitus/loppuaika tyoaika))]
                     (into [:paivat] (map #(vector :paiva %) (::tietyoilmoitus/paivat tyoaika)))))
           (::tietyoilmoitus/tyoajat data))))
+
+(defn vaikutukset [data]
+  [:vaikutukset
+   [:vaikutussuunta (::tietyoilmoitus/vaikutussuunta data)]
+   [:kaistajarjestelyt (::tietyoilmoitus/jarjestely (::tietyoilmoitus/kaistajarjestelyt data))]
+   (into [:nopeusrajoitukset]
+         (map #(vector :nopeusrajoitus
+                       [:rajoitus (::tietyoilmoitus/rajoitus %)]
+                       [:matka (::tietyoilmoitus/matka %)])
+              (::tietyoilmoitus/nopeusrajoitukset data)))
+   [:tienpinnat
+    [:tienpinta
+     [:pintamateriaali "paallystetty"]
+     [:matka "100"]]]
+   [:kiertotie
+    [:mutkaisuus "loivatMutkat"]
+    [:tienpinnat
+     [:tienpinta
+      [:pintamateriaali "paallystetty"]
+      [:matka "100"]]]]
+   [:liikenteenohjaus
+    [:ohjaus "ohjataanVuorotellen"]
+    [:ohjaaja "liikenteenohjaaja"]]
+   [:arvioitu-viivastys
+    [:normaali-liikenteessa "100"]
+    [:ruuhka-aikana "100"]]
+   [:ajoneuvorajoitukset
+    [:max-korkeus "100"]
+    [:max-leveys "100"]
+    [:max-pituus "100"]
+    [:max-paino "100"]]
+   [:huomautukset
+    [:huomautus "avotuli"]]
+   [:pysaytykset
+    [:pysaytetaan-ajoittain "true"]
+    [:tie-ajoittain-suljettu "false"]
+    [:aikataulu
+     [:alkaen "2017-04-19T17:38:57+03:00"]
+     [:paattyen "2008-08-06T17:17:00+03:00"]]]])
 
 (defn muodosta-viesti [data viesti-id]
   (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)]
@@ -134,42 +174,7 @@
      (sijainti data)
      (ajankohta data)
      (tyoajat data)
-     [:vaikutukset
-      [:vaikutussuunta "molemmat"]
-      [:kaistajarjestelyt "ajorataSuljettu"]
-      [:nopeusrajoitukset
-       [:nopeusrajoitus
-        [:rajoitus "40"]
-        [:matka "100"]]]
-      [:tienpinnat
-       [:tienpinta
-        [:pintamateriaali "paallystetty"]
-        [:matka "100"]]]
-      [:kiertotie
-       [:mutkaisuus "loivatMutkat"]
-       [:tienpinnat
-        [:tienpinta
-         [:pintamateriaali "paallystetty"]
-         [:matka "100"]]]]
-      [:liikenteenohjaus
-       [:ohjaus "ohjataanVuorotellen"]
-       [:ohjaaja "liikenteenohjaaja"]]
-      [:arvioitu-viivastys
-       [:normaali-liikenteessa "100"]
-       [:ruuhka-aikana "100"]]
-      [:ajoneuvorajoitukset
-       [:max-korkeus "100"]
-       [:max-leveys "100"]
-       [:max-pituus "100"]
-       [:max-paino "100"]]
-      [:huomautukset
-       [:huomautus "avotuli"]]
-      [:pysaytykset
-       [:pysaytetaan-ajoittain "true"]
-       [:tie-ajoittain-suljettu "false"]
-       [:aikataulu
-        [:alkaen "2017-04-19T17:38:57+03:00"]
-        [:paattyen "2008-08-06T17:17:00+03:00"]]]]
+     (vaikutukset data)
      [:lisatietoja "Lisätietoja"]]))
 
 (defn muodosta [data viesti-id]
