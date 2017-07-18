@@ -52,7 +52,7 @@
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
-         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi}])
+         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi :urakka ur}])
 
        (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)

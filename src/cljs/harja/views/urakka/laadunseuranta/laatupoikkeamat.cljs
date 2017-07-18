@@ -21,7 +21,8 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.domain.urakka :as urakka])
+            [harja.domain.urakka :as urakka]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -33,30 +34,35 @@
                      (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat)))
         nakyma (:nakyma optiot)]
     [:div.laatupoikkeamat
-     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-     [yleiset/pudotusvalikko
-      "Näytä laatupoikkeamat"
-      {:valinta @laatupoikkeamat/listaus
-       :valitse-fn #(reset! laatupoikkeamat/listaus %)
-       :format-fn #(case %
-                     :kaikki "Kaikki"
-                     :kasitellyt "Käsitellyt (päätös tehty)"
-                     :selvitys "Odottaa urakoitsijan selvitystä"
-                     :omat "Minun kirjaamat / kommentoimat"
-                     :poikkeamaraportilliset "Poikkeamaraportilliset")}
-      [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
+     [valinnat/urakkavalinnat {:urakka (:urakka optiot)}
+      ^{:key "urakkavalinnat"}
+      [:div
+       [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
+       [yleiset/pudotusvalikko
+        "Näytä laatupoikkeamat"
+        {:valinta @laatupoikkeamat/listaus
+         :valitse-fn #(reset! laatupoikkeamat/listaus %)
+         :format-fn #(case %
+                       :kaikki "Kaikki"
+                       :kasitellyt "Käsitellyt (päätös tehty)"
+                       :selvitys "Odottaa urakoitsijan selvitystä"
+                       :omat "Minun kirjaamat / kommentoimat"
+                       :poikkeamaraportilliset "Poikkeamaraportilliset")}
+        [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
+       [urakka-valinnat/aikavali]]
 
-     [urakka-valinnat/aikavali]
-
-     (let [oikeus? @laatupoikkeamat/voi-kirjata?]
-       (yleiset/wrap-if
-         (not oikeus?)
-         [yleiset/tooltip {} :%
-          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                          oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
-         [napit/uusi "Uusi laatupoikkeama"
-          #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-          {:disabled (not oikeus?)}]))
+      ^{:key "urakkatoiminnot"}
+      [valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
+       (let [oikeus? @laatupoikkeamat/voi-kirjata?]
+         (yleiset/wrap-if
+           (not oikeus?)
+           [yleiset/tooltip {} :%
+            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                            oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+           ^{:key "uusi-laatupoikkeama"}
+           [napit/uusi "Uusi laatupoikkeama"
+            #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+            {:disabled (not oikeus?)}]))]]
 
      [grid/grid
       {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
