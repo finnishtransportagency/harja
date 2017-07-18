@@ -20,7 +20,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.fmt :as fmt]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain])
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.domain.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -29,7 +30,8 @@
   "Listaa urakan laatupoikkeamat"
   [optiot]
   (let [poikkeamat (when @laatupoikkeamat/urakan-laatupoikkeamat
-                     (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat)))]
+                     (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat)))
+        nakyma (:nakyma optiot)]
     [:div.laatupoikkeamat
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
      [yleiset/pudotusvalikko
@@ -62,18 +64,19 @@
                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
                 "Ei laatupoikkeamia")}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-       (if (or (= :paallystys (:nakyma optiot))
-               (= :paikkaus (:nakyma optiot))
-               (= :tiemerkinta (:nakyma optiot)))
+       (if (or (= :paallystys nakyma)
+               (= :paikkaus nakyma)
+               (= :tiemerkinta nakyma))
          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                :nimi (get-in rivi [:yllapitokohde :nimi])}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
-       {:otsikko "TR-osoite"
-        :nimi :tr
-        :leveys 2
-        :fmt tierekisteri/tierekisteriosoite-tekstina}
+       (when-not (urakka/vesivaylaurakkatyyppi? nakyma)
+         {:otsikko "TR-osoite"
+          :nimi :tr
+          :leveys 2
+          :fmt tierekisteri/tierekisteriosoite-tekstina})
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
        {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
