@@ -74,10 +74,13 @@
     [:sijainti
      [:tierekisteriosoitevali
       [:tienumero (::tierekisteri/tie osoite)]
-      [:alkuosa (::tierekisteri/alkuosa osoite)]
-      [:alkuetaisyys (::tierekisteri/alkuetaisyys osoite)]
-      [:loppuosa (::tierekisteri/loppuosa osoite)]
-      [:loppuetaisyys (::tierekisteri/loppuetaisyys osoite)]
+      [:alkuosa (::tierekisteri/aosa osoite)]
+      [:alkuetaisyys (::tierekisteri/aet osoite)]
+      (when (::tierekisteri/losa osoite)
+        [:loppuosa (::tierekisteri/losa osoite)])
+      (when
+        (::tierekisteri/let osoite)
+        [:loppuetaisyys (::tierekisteri/let osoite)])
       ;; todo: hae erikseen kannasta
       [:karttapvm "2016-01-01"]]
      [:alkukoordinaatit
@@ -95,21 +98,18 @@
 
 (defn ajankohta [data]
   [:ajankohta
-   [:alku (xml/datetime->gmt-0 (::tietyoilmoitus/alku data))]
-   [:loppu (xml/datetime->gmt-0 (::tietyoilmoitus/loppu data))]])
+   [:alku (xml/datetime->gmt-0-pvm (::tietyoilmoitus/alku data))]
+   [:loppu (xml/datetime->gmt-0-pvm (::tietyoilmoitus/loppu data))]])
 
 (defn tyoajat [data]
-  (let [tyoajat (::tietyoilmoitukset/tyoajat data)]
-    [:tyoajat
-     [:tyoaika
-      [:alku (xml/datetime->gmt-0 (::tietyoilmoitus/alkuaika tyoajat))]
-      [:loppu (xml/datetime->gmt-0 (::tietyoilmoitus/loppuaika tyoajat))]
-      [:paivat
-       [:paiva "maanantai"]
-       [:paiva "tiistai"]
-       [:paiva "keskiviikko"]
-       [:paiva "torstai"]
-       [:paiva "perjantai"]]]]))
+  (into [:tyoajat]
+        (map
+          (fn [tyoaika]
+            (vector :tyoaika
+                    [:alku (xml/datetime->gmt-0-aika (::tietyoilmoitus/alkuaika tyoaika))]
+                    [:loppu (xml/datetime->gmt-0-aika (::tietyoilmoitus/loppuaika tyoaika))]
+                    (into [:paivat] (map #(vector :paiva %) (::tietyoilmoitus/paivat tyoaika)))))
+          (::tietyoilmoitus/tyoajat data))))
 
 (defn muodosta-viesti [data viesti-id]
   (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)]
@@ -121,7 +121,7 @@
      ;; [:tloik-tietyoilmoitus-id "234908234"]
      ;; todo: päättele
      [:toimenpide "uusi"]
-     [:kirjattu (xml/datetime->gmt-0 (::muokkaustiedot/luotu data))]
+     [:kirjattu (xml/datetime->gmt-0-pvm (::muokkaustiedot/luotu data))]
      (henkilo :ilmoittaja ilmoittaja)
      (urakka data)
      (urakoitsija data)

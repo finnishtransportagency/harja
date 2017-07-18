@@ -16,7 +16,8 @@
            (org.xml.sax SAXParseException ErrorHandler)
            (java.text SimpleDateFormat ParseException)
            (java.util Date TimeZone)
-           (hiccup.compiler HtmlRenderer)))
+           (hiccup.compiler HtmlRenderer)
+           (java.time.format DateTimeFormatter)))
 
 (defn validoi-xml
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
@@ -214,8 +215,13 @@
           {}
           attr-map))
 
-(defn datetime->gmt-0 [date]
+(defn datetime->gmt-0-pvm [date]
   (when date
     (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
       (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
+      (.format dateformat date))))
+
+(defn datetime->gmt-0-aika [date]
+  (when date
+    (let [dateformat (DateTimeFormatter/ofPattern "HH:mm:ss'Z'")]
       (.format dateformat date))))

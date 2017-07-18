@@ -83,7 +83,7 @@
     <tyoajat>
         <tyoaika>
             <alku>07:00:00+02:00</alku>
-            <loppu>18:00:00+02:00</loppu>
+            <loppu>23:01:01Z</loppu>
             <paivat>
                 <paiva>maanantai</paiva>
                 <paiva>tiistai</paiva>

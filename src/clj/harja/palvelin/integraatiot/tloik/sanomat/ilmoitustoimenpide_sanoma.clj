@@ -33,7 +33,7 @@
    [:viestiId viesti-id]
    [:ilmoitusId ilmoitusid]
    [:tyyppi kuittaustyyppi]
-   [:aika (xml/datetime->gmt-0 kuitattu)]
+   [:aika (xml/datetime->gmt-0-pvm kuitattu)]
    [:vapaateksti (muodosta-vapaateksti vakiofraasi vapaateksti)]
    [:kasittelija
     (muodosta-henkilo kasittelija)
