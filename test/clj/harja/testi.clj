@@ -310,17 +310,45 @@
                    \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    AND id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
 
+(defn hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla [& options]
+  (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                   WHERE
+                   \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
+                   (when (not (empty? options))
+                      (when-let [maara (:limit (first options))]
+                        "LIMIT " maara ";"))))))
+
+(defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla [& options]
+  (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                   WHERE
+                   \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   AND id IN (SELECT \"toimenpide-id\"
+                              FROM vv_hinnoittelu_toimenpide AS ht
+                              INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
+                              WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
+                              AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
+                              (when (not (empty? options))
+                                (if (:hintaryhma (first options))
+                                  " AND hintaryhma = TRUE"
+                                  " AND hintaryhma = FALSE"))
+                              ") LIMIT 1;"))))
+
 (defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
                    FROM   vv_kiintio
                    WHERE  nimi = '" nimi "'"))))
 
-(defn hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja []
+(defn hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja [& options]
   (ffirst (q (str "SELECT vv_hinnoittelu.id FROM vv_hinnoittelu
                   LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
                   WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
-                  AND vv_hinta.\"hinnoittelu-id\" IS NULL
-                  LIMIT 1"))))
+                  AND vv_hinta.\"hinnoittelu-id\" IS NULL"
+                  (when (not (empty? options))
+                    (if (:hintaryhma (first options))
+                      " AND hintaryhma = TRUE"
+                      " AND hintaryhma = FALSE"))
+                  " LIMIT 1"))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
