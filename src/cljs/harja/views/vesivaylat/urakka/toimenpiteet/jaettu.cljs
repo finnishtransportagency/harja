@@ -268,8 +268,7 @@
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti]}]
-  [:div
-   (when otsikko [hintaryhman-otsikko otsikko])
+  [:div.vv-toimenpideryhma-sisalto
    (into [otsikkopaneeli
           {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
            :paneelikomponentit

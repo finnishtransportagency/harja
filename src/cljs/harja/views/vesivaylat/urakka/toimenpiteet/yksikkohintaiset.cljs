@@ -186,50 +186,51 @@
         hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
         hinnat (::h/hinnat hintaryhma)
         hintaryhman-kokonaishinta (hinta/kokonaishinta-yleiskustannuslisineen hinnat)]
-    [:div.pull-right
-     (if hinnoitellaan?
-       [:div
-        [:div.inline-block {:style {:margin-right "10px"}}
-         [tee-kentta {:tyyppi :numero
-                      :placeholder "Syötä hinta"
-                      :kokonaisosan-maara 7}
-          (r/wrap (hinta/hinnan-maara
-                    (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
-                    tiedot/hintaryhman-hintakentta-otsikko)
-                  #(e! (tiedot/->HinnoitteleHintaryhmaKentta
-                         {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                          ::hinta/maara %})))]
-         [:span " "]
-         [:span "€"]]
-        [napit/tallenna
-         "Valmis"
-         #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
-         {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-        [napit/peruuta
-         "Peruuta"
-         #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
-       (if (empty? hinnat)
-         [napit/yleinen-ensisijainen
-          "Määrittele yksi hinta koko tilaukselle"
-          #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+    [:div.vv-hintaryhman-hinnoittelu-wrapper
+     [:div.vv-hintaryhman-hinnoittelu
+      (if hinnoitellaan?
+        [:div
+         [:div.inline-block {:style {:margin-right "10px"}}
+          [tee-kentta {:tyyppi :numero
+                       :placeholder "Syötä hinta"
+                       :kokonaisosan-maara 7}
+           (r/wrap (hinta/hinnan-maara
+                     (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
+                     tiedot/hintaryhman-hintakentta-otsikko)
+                   #(e! (tiedot/->HinnoitteleHintaryhmaKentta
+                          {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                           ::hinta/maara %})))]
+          [:span " "]
+          [:span "€"]]
+         [napit/tallenna
+          "Valmis"
+          #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-         [:div
-          [:div.inline-block {:style {:margin-right "10px"}}
-           (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
-             [:span
-              [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-             ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
-             ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
-             ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
-             [yleiset/tietoja {:tietokentan-leveys "180px"}
-              "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-              "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
-              "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
-          [:div.inline-block {:style {:vertical-align :top}}
-           [napit/yleinen-toissijainen
-            (ikonit/muokkaa)
-            #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-            {:ikoninappi? true}]]]))]))
+         [napit/peruuta
+          "Peruuta"
+          #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
+        (if (empty? hinnat)
+          [napit/yleinen-ensisijainen
+           "Määrittele yksi hinta koko tilaukselle"
+           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+          [:div
+           [:div.inline-block {:style {:margin-right "10px"}}
+            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+              [:span
+               [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+              [yleiset/tietoja {:tietokentan-leveys "180px"}
+               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+               "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+           [:div.inline-block {:style {:vertical-align :top}}
+            [napit/yleinen-toissijainen
+             (ikonit/muokkaa)
+             #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+             {:ikoninappi? true}]]]))]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
@@ -268,34 +269,36 @@
                                                                    (not (empty? hintaryhman-toimenpiteet))))]]
 
              (when nayta-hintaryhma?
-               (if hintaryhma-tyhja?
-                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
-                 [:div
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
-                  [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
-                  [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
-                   {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
-                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-                 [jaettu/listaus e! app*
-                  {:sarakkeet [jaettu/sarake-tyoluokka
-                               jaettu/sarake-toimenpide
-                               jaettu/sarake-pvm
-                               jaettu/sarake-turvalaite
-                               jaettu/sarake-vikakorjaus
-                               (jaettu/sarake-liitteet e! app)
-                               {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                :komponentti (fn [rivi]
-                                               [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
-                               (jaettu/sarake-checkbox e! app)]
-                   :listaus-tunniste listaus-tunniste
-                   :footer (when nayta-hintaryhman-yhteenveto?
-                             [hintaryhman-hinnoittelu e! app* hintaryhma])
-                   :otsikko (h/hintaryhman-nimi hintaryhma)
-                   :paneelin-checkbox-sijainti "95.5%"
-                   :vaylan-checkbox-sijainti "95.5%"}])))]]]))))
+               [:div.vv-toimenpideryhma
+                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
+                [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+
+                (if hintaryhma-tyhja?
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
+                  [:div
+                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
+                   [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
+                   [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
+                    {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
+                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                  [jaettu/listaus e! app*
+                   {:sarakkeet [jaettu/sarake-tyoluokka
+                                jaettu/sarake-toimenpide
+                                jaettu/sarake-pvm
+                                jaettu/sarake-turvalaite
+                                jaettu/sarake-vikakorjaus
+                                (jaettu/sarake-liitteet e! app)
+                                {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                 :komponentti (fn [rivi]
+                                                [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                                (jaettu/sarake-checkbox e! app)]
+                    :listaus-tunniste listaus-tunniste
+                    :footer (when nayta-hintaryhman-yhteenveto?
+                              [hintaryhman-hinnoittelu e! app* hintaryhma])
+                    :otsikko (h/hintaryhman-nimi hintaryhma)
+                    :paneelin-checkbox-sijainti "95.5%"
+                    :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
