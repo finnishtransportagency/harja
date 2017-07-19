@@ -44,8 +44,7 @@
     (laheta jms-lahettaja db id)
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
-      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db {:id id})
-      (throw e))))
+      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db {:id id}))))
 
 (defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja db]
   (lukko/yrita-ajaa-lukon-kanssa
