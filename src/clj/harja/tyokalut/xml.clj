@@ -225,3 +225,8 @@
   (when date
     (let [dateformat (DateTimeFormatter/ofPattern "HH:mm:ss'Z'")]
       (.format dateformat date))))
+
+(defn timestamp->xml-xs-date [timestamp]
+  (when timestamp
+    (let [format (SimpleDateFormat. "yyyy-MM-dd") ]
+      (.format format timestamp))))

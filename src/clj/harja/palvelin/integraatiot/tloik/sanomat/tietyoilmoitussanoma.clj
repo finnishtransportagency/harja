@@ -68,7 +68,7 @@
       (when
         (::tierekisteri/let osoite)
         [:loppuetaisyys (::tierekisteri/let osoite)])
-      [:karttapvm (xml/datetime->gmt-0-pvm (:karttapvm data))]]
+      [:karttapvm (xml/timestamp->xml-xs-date (:karttapvm data))]]
      [:alkukoordinaatit
       [:x (first alkukoordinaatit)]
       [:y (second alkukoordinaatit)]]
@@ -76,7 +76,8 @@
        [:loppukoordinaatit
         [:x (first loppukoordinaatit)]
         [:y (second loppukoordinaatit)]])
-     [:pituus (:pituus data)]
+     (when (:pituus data)
+       [:pituus (:pituus data)])
      [:tienNimi (::tietyoilmoitus/tien-nimi data)]
      [:kunnat (::tietyoilmoitus/kunnat data)]
      [:alkusijainninKuvaus (::tietyoilmoitus/alkusijainnin-kuvaus data)]
