@@ -96,15 +96,17 @@
                        (update-in [::t/osoite ::tr/geometria]
                                   #(when % (geo/geometry (geo/clj->pg %)))))
 
-          id (::t/id (upsert! db ::t/ilmoitus
-                              ilmoitus
-                              (op/or
-                                {::m/luoja-id (:id user)}
-                                {::t/urakoitsija-id org}
-                                {::t/tilaaja-id org}
-                                {::t/urakka-id (op/in kayttajan-urakat)})))]
+          tallennettu (upsert! db ::t/ilmoitus
+                               ilmoitus
+                               (op/or
+                                 {::m/luoja-id (:id user)}
+                                 {::t/urakoitsija-id org}
+                                 {::t/tilaaja-id org}
+                                 {::t/urakka-id (op/in kayttajan-urakat)}))]
       (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-        (async/thread (tloik/laheta-tietyilmoitus tloik id))))))
+        (async/thread
+          (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
+      tallennettu)))
 
 (defn tietyoilmoitus-pdf [db user params]
   (pdf/tietyoilmoitus-pdf
