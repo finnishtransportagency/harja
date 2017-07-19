@@ -61,8 +61,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                     :aloituskuittauksen-ajankohta :kaikki
                     :ilmoittaja-nimi ""
                     :ilmoittaja-puhelin ""
-                    :vakioaikavali (first aikavalit)
-                    :alkuaika (pvm/tuntia-sitten 1)
+                    :vakioaikavali (second aikavalit)
+                    :alkuaika (pvm/tuntia-sitten 12)
                     :loppuaika (pvm/nyt)}
          :kuittaa-monta nil}))
 

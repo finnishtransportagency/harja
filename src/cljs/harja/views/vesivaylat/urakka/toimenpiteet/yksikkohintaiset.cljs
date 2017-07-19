@@ -280,15 +280,22 @@
                    {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                  [jaettu/listaus e! app*
-                  {:lisa-sarakkeet [{:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                                     :komponentti (fn [rivi]
-                                                    [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}]
+                  {:sarakkeet [jaettu/sarake-tyoluokka
+                               jaettu/sarake-toimenpide
+                               jaettu/sarake-pvm
+                               jaettu/sarake-turvalaite
+                               jaettu/sarake-vikakorjaus
+                               (jaettu/sarake-liitteet e! app)
+                               {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                                :komponentti (fn [rivi]
+                                               [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                               (jaettu/sarake-checkbox e! app)]
                    :listaus-tunniste listaus-tunniste
                    :footer (when nayta-hintaryhman-yhteenveto?
                              [hintaryhman-hinnoittelu e! app* hintaryhma])
                    :otsikko (h/hintaryhman-nimi hintaryhma)
-                   :paneelin-checkbox-sijainti "95.2%"
-                   :vaylan-checkbox-sijainti "95.2%"}])))]]]))))
+                   :paneelin-checkbox-sijainti "95.5%"
+                   :vaylan-checkbox-sijainti "95.5%"}])))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
