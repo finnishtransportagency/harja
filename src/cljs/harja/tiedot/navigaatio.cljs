@@ -418,3 +418,10 @@
 ;; HAR-5517 takia. Tilannekuvassa halutaan näyttää selite urakkarajoille, jos alueita on valittu. Syklisen riippuvuuden takia
 ;; piti laittaa tänne.
 (def tilannekuvassa-alueita-valittu? (atom false))
+
+
+(defn yllapitourakka-valittu? []
+  (let [urakkatyyppi (:arvo @urakkatyyppi)]
+    (or (= urakkatyyppi :paallystys)
+        (= urakkatyyppi :paikkaus)
+        (= urakkatyyppi :tiemerkinta))))
