@@ -1,19 +1,35 @@
 (ns harja.palvelin.integraatiot.tloik.tietyoilmoitukset
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.domain.tietyoilmoitukset :as tietyoilmoitus-d]
+            [harja.domain.tierekisteri :as tierekisteri-d]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma]
-            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset])
+            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri])
   (:import (java.util UUID)))
+
+(defn pituus [db tietyoilmoitus]
+  (let [osoite (::tietyoilmoitus-d/osoite tietyoilmoitus)
+        osien-pituudet (tierekisteri/hae-osien-pituudet db {:tie (::tierekisteri-d/tie osoite)
+                                                            :aosa (::tierekisteri/aosa osoite)
+                                                            :losa (::tierekisteri/losa osoite)})
+        _ (println "--->>>>" osien-pituudet)]
+    (tierekisteri-d/laske-tien-pituus osien-pituudet {:tr-alkuosa (::tierekisteri/aosa osoite)
+                                                      :tr-alkuetaisyys (::tierekisteri-d/aet osoite)
+                                                      :tr-loppuosa (::tierekisteri-d/losa osoite)
+                                                      :tr-loppuetaisyys (::tierekisteri-d/let osoite)})))
 
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
         uusi? (not (tietyoilmoitukset/lahetetty? db id))
         karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
         tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
+        pituus (pituus db tietyoilmoitus)
         tietyoilmoitus (assoc tietyoilmoitus
                          :uusi? uusi?
-                         :karttapvm karttapvm)
+                         :karttapvm karttapvm
+                         :pituus pituus)
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
