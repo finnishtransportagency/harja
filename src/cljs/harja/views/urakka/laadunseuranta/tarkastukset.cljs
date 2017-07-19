@@ -10,6 +10,7 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.urakka :as u-domain]
 
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
@@ -58,9 +59,10 @@
     +tarkastustyyppi-yllapidolle+
     +tarkastustyyppi-hoidolle+))
 
-(defn uusi-tarkastus []
+(defn uusi-tarkastus [urakkatyyppi]
   {:uusi? true
    :aika (pvm/nyt)
+   :tyyppi (if (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :katselmus nil)
    :tarkastaja @istunto/kayttajan-nimi
    :nayta-urakoitsijalle (or (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija) (nav/yllapitourakka-valittu?))
    :laadunalitus false})
@@ -152,7 +154,7 @@
              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                              oikeudet/urakat-laadunseuranta-tarkastukset)]
             [napit/uusi "Uusi tarkastus"
-             #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
+             #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
              {:disabled (not oikeus?)
               :luokka "alle-marginia"}]))
 
@@ -300,7 +302,8 @@
                           (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
         yllapitokohteet (:yllapitokohteet optiot)
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+        vesivaylaurakka? (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)]
     (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
@@ -337,7 +340,6 @@
             :vihje "Tietojärjestelmästä tulleen tiedon muokkaus ei ole sallittu."})
 
 
-
          {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
           :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
@@ -361,12 +363,15 @@
                                  "")))
             :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
 
-         {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
-          :pakollinen? true
-          :tyyppi :valinta
-          :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
-          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "- valitse -")
-          :palstoja 1}
+         (if vesivaylaurakka?
+           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
+            :hae (constantly "Katselmus") :muokattava? (constantly false)}
+           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
+            :pakollinen? true
+            :tyyppi :valinta
+            :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
+            :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "- valitse -")
+            :palstoja 1})
 
          {:tyyppi :tierekisteriosoite
           :nimi :tr
