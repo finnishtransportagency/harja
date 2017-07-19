@@ -297,6 +297,21 @@
                     :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
                     :luokka "ryhma-reuna"}
      [(lomake/ryhma
+        "Lähetys Tieliikennekeskukseen"
+        {:nimi ::t/tila
+         :otsikko "Tila"
+         :muokattava? (constantly false)
+         :tyyppi :komponentti
+         :komponentti #(case (get-in % [:data ::t/tila])
+                         "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                         "lahetetty" [:span.tila-lahetetty "Lähetetty"]
+                         "virhe" [:span.tila-virhe "Epäonnistunut"]
+                         [:span "Ei lähetetty"])}
+        {:nimi ::t/lahetetty
+         :otsikko "Aika"
+         :tyyppi :pvm-aika
+         :muokattava? (constantly false)})
+      (lomake/ryhma
         "Urakka"
         {:nimi ::t/urakka-id
          :otsikko "Liittyy urakkaan"
