@@ -58,3 +58,13 @@
              (laheta-tietyoilmoitus tietyoilmoitus-jms-lahettaja db id)
              (catch Exception _))))
        (log/debug "Tietyöilmoitusten lähettäminen T-LOIK:n valmis."))))
+
+(defn vastaanota-kuittaus [db viesti-id onnistunut]
+  (if onnistunut
+    (do
+      (log/debug (format "Tietyöilmoitus kuitattiin T-LOIK:sta onnistuneeksi viesti-id:llä: %s" viesti-id))
+      (tietyoilmoitukset/merkitse-tietyoilmoitus-lahetetyksi! db viesti-id))
+
+    (do
+      (log/error (format "Tietyöilmoitus kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
+      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla! db viesti-id))))

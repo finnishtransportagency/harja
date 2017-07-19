@@ -96,8 +96,14 @@
     (constantly nil)))
 
 (defn tee-tietyoilmoituskuittauskuuntelija [this tietyoilmoituskuittausjono]
-
-  )
+  (when (and tietyoilmoituskuittausjono (not (empty? tietyoilmoituskuittausjono)))
+    (jms/kuittausjonokuuntelija
+      (tee-lokittaja this "tietyoilmoituksen-lahetys") (:sonja this) tietyoilmoituskuittausjono
+      (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
+      :viesti-id
+      #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
+      (fn [_ viesti-id onnistunut]
+        (tietyoilmoitukset/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
 (defrecord Tloik [asetukset]
   component/Lifecycle
@@ -147,4 +153,4 @@
     (when (and (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
                (:tietyoilmoitusviestijono asetukset))
       (let [jms-lahettaja (tee-tietyoilmoitus-jms-lahettaja this asetukset)]
-       (tietyoilmoitukset/laheta-tietyoilmoitus jms-lahettaja (:db this) id)))))
+        (tietyoilmoitukset/laheta-tietyoilmoitus jms-lahettaja (:db this) id)))))

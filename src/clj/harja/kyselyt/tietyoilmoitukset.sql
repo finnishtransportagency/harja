@@ -56,7 +56,7 @@ WHERE id = :id;
 
 -- name: hae-lahettamattomat-tietyoilmoitukset
 SELECT id
-FROM ilmoitustoimenpide
+FROM tietyoilmoitus
 WHERE
   (tila IS NULL OR tila = 'virhe') AND
   kuittaustyyppi != 'valitys';
@@ -65,3 +65,8 @@ WHERE
 SELECT tila = 'lahetetty' as "lahetetty?"
 FROM tietyoilmoitus
 WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE lahetysid = :lahetysid;
