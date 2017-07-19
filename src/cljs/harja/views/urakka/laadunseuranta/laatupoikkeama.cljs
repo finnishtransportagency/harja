@@ -114,7 +114,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
 
              (if vesivayla?
-               {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae #(-> "Sakko")
+               {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae (constantly "Sakko")
                 :muokattava? (constantly false)}
                {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
                :nimi :laji
