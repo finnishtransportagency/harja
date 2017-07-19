@@ -115,7 +115,7 @@
           [:span (kuittaustyypin-lyhenne kuittaustyyppi)]]
          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi)) kuittaustyyppi kuitattu? oikeus?]])]]))
 
-(defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
+(defn ilmoitusten-hakuehdot [e! valinnat-nyt]
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
