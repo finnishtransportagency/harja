@@ -125,18 +125,20 @@
   ([optiot]
    (fn [optiot]
      (let [urakka @nav/valittu-urakka
+           vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
            tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
         [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
          [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
-         [tee-otsikollinen-kentta
-          {:otsikko "Tyyppi"
-           :kentta-params {:tyyppi :valinta
-                           :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-                           :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-           :arvo-atom tarkastukset/tarkastustyyppi}]
+         (when-not vesivaylaurakka?
+           [tee-otsikollinen-kentta
+            {:otsikko "Tyyppi"
+             :kentta-params {:tyyppi :valinta
+                             :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                             :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+             :arvo-atom tarkastukset/tarkastustyyppi}])
 
          [tee-otsikollinen-kentta
           {:otsikko "Näytä"
@@ -145,7 +147,8 @@
                            :valinta-nayta second}
            :arvo-atom tarkastukset/naytettavat-tarkastukset}]
 
-         [valinnat/tienumero tarkastukset/tienumero]
+         (when-not vesivaylaurakka?
+           [valinnat/tienumero tarkastukset/tienumero])
 
          [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
           (let [oikeus? (oikeudet/voi-kirjoittaa?
