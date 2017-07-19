@@ -98,8 +98,10 @@
              {:otsikko "Urakka-aluenumero" :nimi ::u/urakkanro :tyyppi :string :pakollinen? true}
              {:otsikko "Sampo-ID" :nimi ::u/sampoid :tyyppi :string :pakollinen? false :muokattava? (constantly false)})
            (lomake/rivi
-             {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true}
+             {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true
+              :muokattava? (constantly (nil? (::u/alkupvm valittu-urakka)))}
              {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
+              :muokattava? (constantly (nil? (::u/loppupvm valittu-urakka)))
               :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
            (lomake/rivi
              (if haetut-hallintayksikot
