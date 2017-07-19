@@ -102,9 +102,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              :voi-muokata? paatosoikeus?
              :uusi-rivi (fn [rivi]
                           (assoc rivi :laji (cond
-                                              (= :hoito nakyma) :A
                                               yllapito? :yllapidon_sakko
-                                              (= :vesivayla nakyma) :vesivayla_sakko)
+                                              vesivayla? :vesivayla_sakko
+                                              ;; Oletettavasti hoito
+                                              :default :A)
                                       :toimenpideinstanssi (when (= 1 (count urakan-tpit))
                                                              (:tpi_id (first urakan-tpit)))))}
 
@@ -112,24 +113,26 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
                         [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
 
-             {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
-              :nimi :laji
-              :aseta (fn [rivi arvo]
-                       (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                         (if-not (sanktio-domain/sakko? paivitetty)
-                           (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                           paivitetty)))
-              :valinnat mahdolliset-sanktiolajit
-              :valinta-nayta #(case %
-                                :A "Ryhmä A"
-                                :B "Ryhmä B"
-                                :C "Ryhmä C"
-                                :muistutus "Muistutus"
-                                :yllapidon_muistutus "Muistutus"
-                                :yllapidon_sakko "Sakko"
-                                :vesivayla_sakko "Sakko"
-                                "- valitse laji -")
-              :validoi [[:ei-tyhja "Valitse laji"]]}
+             (if vesivayla?
+               {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae #(-> "Sakko")
+                :muokattava? (constantly false)}
+               {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
+               :nimi :laji
+               :aseta (fn [rivi arvo]
+                        (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                          (if-not (sanktio-domain/sakko? paivitetty)
+                            (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                            paivitetty)))
+               :valinnat mahdolliset-sanktiolajit
+               :valinta-nayta #(case %
+                                 :A "Ryhmä A"
+                                 :B "Ryhmä B"
+                                 :C "Ryhmä C"
+                                 :muistutus "Muistutus"
+                                 :yllapidon_muistutus "Muistutus"
+                                 :yllapidon_sakko "Sakko"
+                                 "- valitse laji -")
+               :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
                    {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
