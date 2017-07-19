@@ -183,10 +183,11 @@
              :hae (fn [rivi]
                     (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                   :nimi (get-in rivi [:yllapitokohde :nimi])}))})
-          {:otsikko "TR-osoite"
-           :nimi :tr
-           :leveys 2
-           :fmt tierekisteri/tierekisteriosoite-tekstina}
+          (when-not (u-domain/vesivaylaurakka? urakka)
+            {:otsikko "TR-osoite"
+             :nimi :tr
+             :leveys 2
+             :fmt tierekisteri/tierekisteriosoite-tekstina})
           {:otsikko "Havainnot"
            :nimi :havainnot
            :leveys 4
