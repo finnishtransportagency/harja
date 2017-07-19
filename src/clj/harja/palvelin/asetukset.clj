@@ -54,7 +54,8 @@
                                            :ilmoituskuittausjono   s/Str
                                            :toimenpideviestijono   s/Str
                                            :toimenpidekuittausjono s/Str
-                                           :tietyoilmoituksen-lahetys s/Str
+                                           (s/optional-key :tietyoilmoitusviestijono) s/Str
+                                           (s/optional-key :tietyoilmoituskuittausjono) s/Str
                                            :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
    (s/optional-key :turi)                 {:turvallisuuspoikkeamat-url s/Str

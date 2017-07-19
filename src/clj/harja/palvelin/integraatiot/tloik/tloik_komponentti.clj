@@ -81,7 +81,7 @@
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
 
 (defn tee-tietyoilmoitus-jms-lahettaja [this asetukset]
-  (jms/jonolahettaja (tee-lokittaja this "tietyoilmoituksen-lahetys") (:sonja this) (:tietyoilmoituksen-lahetys asetukset)))
+  (jms/jonolahettaja (tee-lokittaja this "tietyoilmoituksen-lahetys") (:sonja this) (:tietyoilmoitusviestijono asetukset)))
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this toimenpide-jms-lahettaja tietyoilmoitus-jms-lahettaja aikavali]
   (if aikavali
@@ -95,12 +95,17 @@
             (tietyoilmoitukset/laheta-lahettamattomat-tietyoilmoitukset tietyoilmoitus-jms-lahettaja (:db this))))))
     (constantly nil)))
 
+(defn tee-tietyoilmoituskuittauskuuntelija [this tietyoilmoituskuittausjono]
+
+  )
+
 (defrecord Tloik [asetukset]
   component/Lifecycle
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
     (rekisteroi-kuittauskuuntelijat this asetukset)
-    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono uudelleenlahetysvali-minuuteissa]} asetukset
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
+                  tietyoilmoituskuittausjono uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                                    {:sms labyrintti
                                     :email sonja-sahkoposti})
@@ -116,6 +121,9 @@
         :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
                                               this
                                               toimenpidekuittausjono)
+        :sonja-tietyoilmoituskuittauskuuntelija (tee-tietyoilmoituskuittauskuuntelija
+                                                  this
+                                                  tietyoilmoituskuittausjono)
         :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         toimenpide-jms-lahettaja
@@ -124,6 +132,7 @@
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
                        :sonja-toimenpidekuittauskuuntelija
+                       :sonja-tietyoilmoituskuittauskuuntelija
                        :paivittainen-lahetys-tehtava]]
       (doseq [kuuntelija kuuntelijat
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
@@ -136,6 +145,6 @@
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id)))
   (laheta-tietyilmoitus [this id]
     (when (and (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
-               (:tietyoilmoituksen-lahetys asetukset))
+               (:tietyoilmoitusviestijono asetukset))
       (let [jms-lahettaja (tee-tietyoilmoitus-jms-lahettaja this asetukset)]
        (tietyoilmoitukset/laheta-tietyoilmoitus jms-lahettaja (:db this) id)))))
