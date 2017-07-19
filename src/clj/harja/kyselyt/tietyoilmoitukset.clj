@@ -113,7 +113,9 @@
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
-    ::t/lisatietoja})
+    ::t/lisatietoja
+    ::t/lahetetty
+    ::t/tila})
 
 ;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
