@@ -115,8 +115,8 @@
      :tyyppi :positiivinen-numero}]
    (r/wrap {0 (::t/ajoneuvorajoitukset ilmoitus)}
            #(e!
-             (tiedot/->IlmoitustaMuokattu
-              (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+              (tiedot/->IlmoitustaMuokattu
+                (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
 
 (defn- grid-virheita?
   "Palauttaa true/false onko annetussa muokkaus-grid datassa virheitä"
@@ -136,16 +136,16 @@
      :tyyppi :pvm-aika}
     {:otsikko "Pysäytykset päättyvät" :nimi ::t/pysaytysten-loppu
      :tyyppi :pvm-aika
-     :validoi [[:pvm-kentan-jalkeen ::t/pysaytysten-alku "Lopun on oltava alun jälkeen" ]]}]
+     :validoi [[:pvm-kentan-jalkeen ::t/pysaytysten-alku "Lopun on oltava alun jälkeen"]]}]
    (r/wrap {0 (select-keys ilmoitus [::t/pysaytysten-alku ::t/pysaytysten-loppu])}
            #(do
               (e!
-               (tiedot/->IlmoitustaMuokattu
-                (-> ilmoitus
-                    (merge (select-keys (get % 0)
-                                        [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
-                    (assoc-in [:komponentissa-virheita? :pysaytysajat]
-                              (grid-virheita? %)))))))])
+                (tiedot/->IlmoitustaMuokattu
+                  (-> ilmoitus
+                      (merge (select-keys (get % 0)
+                                          [::t/pysaytysten-alku ::t/pysaytysten-loppu]))
+                      (assoc-in [:komponentissa-virheita? :pysaytysajat]
+                                (grid-virheita? %)))))))])
 
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 (def viikonpaivat ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"])
@@ -217,16 +217,16 @@
                 :valittu-fn valittu-tyon-tyyppi?
                 :valitse-fn valitse-tyon-tyyppi})]
     (lomake/ryhma
-     "Työn tyyppi"
-     (osio :tyotyypit-a "Tienrakennustyöt" t/tyotyyppi-vaihtoehdot-tienrakennus)
-     (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" t/tyotyyppi-vaihtoehdot-huolto)
-     (osio :tyotyypit-c "Asennustyöt" t/tyotyyppi-vaihtoehdot-asennus)
-     (merge (osio :tyotyypit-d "Muut"  t/tyotyyppi-vaihtoehdot-muut)
-            {:muu-vaihtoehto "Muu, mikä?"
-             :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
-                          :hae #(tyotyypin-kuvaus % "Muu, mikä?")
-                          :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
-                          :placeholder "(Muu tyyppi?)"}}))))
+      "Työn tyyppi"
+      (osio :tyotyypit-a "Tienrakennustyöt" t/tyotyyppi-vaihtoehdot-tienrakennus)
+      (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" t/tyotyyppi-vaihtoehdot-huolto)
+      (osio :tyotyypit-c "Asennustyöt" t/tyotyyppi-vaihtoehdot-asennus)
+      (merge (osio :tyotyypit-d "Muut" t/tyotyyppi-vaihtoehdot-muut)
+             {:muu-vaihtoehto "Muu, mikä?"
+              :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
+                           :hae #(tyotyypin-kuvaus % "Muu, mikä?")
+                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
+                           :placeholder "(Muu tyyppi?)"}}))))
 
 (defn yhteyshenkilo [otsikko avain pakollinen? & kentat-ennen]
   (apply
@@ -286,7 +286,7 @@
        [:td {:colSpan 2}
         [lomake/nayta-puuttuvat-pakolliset-kentat ilmoitus]]]
 
-       ]]))
+      ]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -296,21 +296,22 @@
                     :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
                     :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
                     :luokka "ryhma-reuna"}
-     [(lomake/ryhma
-        "Lähetys Tieliikennekeskukseen"
-        {:nimi ::t/tila
-         :otsikko "Tila"
-         :muokattava? (constantly false)
-         :tyyppi :komponentti
-         :komponentti #(case (get-in % [:data ::t/tila])
-                         "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                         "lahetetty" [:span.tila-lahetetty "Lähetetty"]
-                         "virhe" [:span.tila-virhe "Epäonnistunut"]
-                         [:span "Ei lähetetty"])}
-        {:nimi ::t/lahetetty
-         :otsikko "Aika"
-         :tyyppi :pvm-aika
-         :muokattava? (constantly false)})
+     [(when (::t/id ilmoitus)
+        (lomake/ryhma
+          "Lähetys Tieliikennekeskukseen"
+          {:nimi ::t/tila
+           :otsikko "Tila"
+           :muokattava? (constantly false)
+           :tyyppi :komponentti
+           :komponentti #(case (get-in % [:data ::t/tila])
+                           "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                           "lahetetty" [:span.tila-lahetetty "Lähetetty"]
+                           "virhe" [:span.tila-virhe "Epäonnistunut"]
+                           [:span "Ei lähetetty"])}
+          {:nimi ::t/lahetetty
+           :otsikko "Aika"
+           :tyyppi :pvm-aika
+           :muokattava? (constantly false)}))
       (lomake/ryhma
         "Urakka"
         {:nimi ::t/urakka-id
@@ -369,37 +370,37 @@
                       :pituus-max 128})
 
       (lomake/ryhma
-       "Tiedot kohteesta"
-       {:otsikko "Osoite"
-        :nimi ::t/osoite
-        :pakollinen? true
-        :tyyppi :tierekisteriosoite
-        :avaimet kentat/tr-osoite-domain-avaimet
-        :ala-nayta-virhetta-komponentissa? true
-        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
-        :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
-                          #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
-       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
-        :tyyppi :string :uusi-rivi? true :pakollinen? true
-        :pituus-max 256}
-       {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
-        :tyyppi :string}
-       {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
-        :tyyppi :string}
-       {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
-        :tyyppi :string}
-       {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true
-        :varoita [[:pvm-sama (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))
-                   (when (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))
-                     (str "Kohteen aloitus merkitty aikatauluun "
-                          (pvm/pvm (:kohteen-alku (::t/kohteen-aikataulu ilmoitus)))))]]}
-       {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true
-        :varoita [[:pvm-sama (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))
-                   (when (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))
-                     (str "Kohteen päällystyksen valmistuminen merkitty aikatauluun "
-                         (pvm/pvm (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus)))))]]
-        :validoi [[:pvm-toisen-pvmn-jalkeen (::t/alku ilmoitus)
-                   "Lopetuksen pitää olla alun jälkeen"]]})
+        "Tiedot kohteesta"
+        {:otsikko "Osoite"
+         :nimi ::t/osoite
+         :pakollinen? true
+         :tyyppi :tierekisteriosoite
+         :avaimet kentat/tr-osoite-domain-avaimet
+         :ala-nayta-virhetta-komponentissa? true
+         :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite ::tr/geometria]]]
+         :sijainti (r/wrap (::tr/geometria (::t/osoite ilmoitus))
+                           #(e! (tiedot/->PaivitaIlmoituksenSijainti %)))}
+        {:otsikko "Tien nimi" :nimi ::t/tien-nimi
+         :tyyppi :string :uusi-rivi? true :pakollinen? true
+         :pituus-max 256}
+        {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
+         :tyyppi :string}
+        {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
+         :tyyppi :string}
+        {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
+         :tyyppi :string}
+        {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm :pakollinen? true
+         :varoita [[:pvm-sama (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))
+                    (when (:kohteen-alku (::t/kohteen-aikataulu ilmoitus))
+                      (str "Kohteen aloitus merkitty aikatauluun "
+                           (pvm/pvm (:kohteen-alku (::t/kohteen-aikataulu ilmoitus)))))]]}
+        {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm :pakollinen? true
+         :varoita [[:pvm-sama (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))
+                    (when (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus))
+                      (str "Kohteen päällystyksen valmistuminen merkitty aikatauluun "
+                           (pvm/pvm (:paallystys-valmis (::t/kohteen-aikataulu ilmoitus)))))]]
+         :validoi [[:pvm-toisen-pvmn-jalkeen (::t/alku ilmoitus)
+                    "Lopetuksen pitää olla alun jälkeen"]]})
       (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
@@ -494,9 +495,9 @@
                                    (assoc %1 ::t/ajoittaiset-pysaytykset %2)
                                    ;; else
                                    (assoc %1
-                                          ::t/ajoittaiset-pysaytykset %2
-                                          ::t/pysaytysten-alku nil
-                                          ::t/pysaytysten-loppu nil)))
+                                     ::t/ajoittaiset-pysaytykset %2
+                                     ::t/pysaytysten-alku nil
+                                     ::t/pysaytysten-loppu nil)))
                      :teksti "Pysäytyksiä ajoittain (aikataulu, jos kesto yli 5 min)"}
                     (if (-> ilmoitus ::t/ajoittaiset-pysaytykset)
                       {:otsikko ""
