@@ -123,103 +123,108 @@
   "Tarkastuksien listauskomponentti"
   ([] (tarkastuslistaus {}))
   ([optiot]
-   (fn [optiot]
-     (let [urakka @nav/valittu-urakka
-           vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
-           tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
-       [:div.tarkastukset
+   (komp/luo
+     (komp/sisaan #(when (u-domain/vesivaylaurakka? @nav/valittu-urakka)
+                     ;; VV-urakassa nämä filtterit eivät saa vaikuttaa.
+                     (reset! tarkastukset/tienumero nil)
+                     (reset! tarkastukset/tarkastustyyppi nil)))
+     (fn [optiot]
+       (let [urakka @nav/valittu-urakka
+             vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
+             tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
+         [:div.tarkastukset
 
-        [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
-         [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
+          [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
+           [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
-         (when-not vesivaylaurakka?
+           (when-not vesivaylaurakka?
+             [tee-otsikollinen-kentta
+              {:otsikko "Tyyppi"
+               :kentta-params {:tyyppi :valinta
+                               :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                               :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+               :arvo-atom tarkastukset/tarkastustyyppi}])
+
            [tee-otsikollinen-kentta
-            {:otsikko "Tyyppi"
+            {:otsikko "Näytä"
              :kentta-params {:tyyppi :valinta
-                             :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-                             :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-             :arvo-atom tarkastukset/tarkastustyyppi}])
+                             :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+                             :valinta-nayta second}
+             :arvo-atom tarkastukset/naytettavat-tarkastukset}]
 
-         [tee-otsikollinen-kentta
-          {:otsikko "Näytä"
-           :kentta-params {:tyyppi :valinta
-                           :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
-                           :valinta-nayta second}
-           :arvo-atom tarkastukset/naytettavat-tarkastukset}]
+           (when-not vesivaylaurakka?
+             [valinnat/tienumero tarkastukset/tienumero])
 
-         (when-not vesivaylaurakka?
-           [valinnat/tienumero tarkastukset/tienumero])
+           [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
+            (let [oikeus? (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-laadunseuranta-tarkastukset
+                            (:id @nav/valittu-urakka))]
+              (yleiset/wrap-if
+                (not oikeus?)
+                [yleiset/tooltip {} :%
+                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                                 oikeudet/urakat-laadunseuranta-tarkastukset)]
+                [napit/uusi "Uusi tarkastus"
+                 #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
+                 {:disabled (not oikeus?)
+                  :luokka "alle-marginia"}]))]]
 
-         [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
-          (let [oikeus? (oikeudet/voi-kirjoittaa?
-                          oikeudet/urakat-laadunseuranta-tarkastukset
-                          (:id @nav/valittu-urakka))]
-            (yleiset/wrap-if
-              (not oikeus?)
-              [yleiset/tooltip {} :%
-               (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                               oikeudet/urakat-laadunseuranta-tarkastukset)]
-              [napit/uusi "Uusi tarkastus"
-               #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
-               {:disabled (not oikeus?)
-                :luokka "alle-marginia"}]))]]
+          [grid/grid
+           {:otsikko "Tarkastukset"
+            :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
+                     [yleiset/ajax-loader "Tarkastuksia ladataan"]
+                     "Ei tarkastuksia")
+            :rivi-klikattu #(valitse-tarkastus (:id %))
+            :jarjesta :aika
+            :max-rivimaara 500
+            :max-rivimaaran-ylitys-viesti
+            "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
 
-        [grid/grid
-         {:otsikko "Tarkastukset"
-          :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
-                   [yleiset/ajax-loader "Tarkastuksia ladataan"]
-                   "Ei tarkastuksia")
-          :rivi-klikattu #(valitse-tarkastus (:id %))
-          :jarjesta :aika
-          :max-rivimaara 500
-          :max-rivimaaran-ylitys-viesti
-          "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
+           [{:otsikko "Pvm ja aika"
+             :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
+             :nimi :aika}
 
-         [{:otsikko "Pvm ja aika"
-           :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
-           :nimi :aika}
+            {:otsikko "Tyyppi"
+             :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
 
-          {:otsikko "Tyyppi"
-           :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
-
-          (when (or (= :paallystys (:nakyma optiot))
-                    (= :paikkaus (:nakyma optiot))
-                    (= :tiemerkinta (:nakyma optiot)))
-            {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
-             :hae (fn [rivi]
-                    (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                                  :nimi (get-in rivi [:yllapitokohde :nimi])}))})
-          (when-not (u-domain/vesivaylaurakka? urakka)
-            {:otsikko "TR-osoite"
-             :nimi :tr
-             :leveys 2
-             :fmt tierekisteri/tierekisteriosoite-tekstina})
-          {:otsikko "Havainnot"
-           :nimi :havainnot
-           :leveys 4
-           :tyyppi :komponentti
-           :komponentti (fn [rivi]
-                          (let [havainnot (:havainnot rivi)
-                                havainnot-max-pituus 50
-                                havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
-                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
-                                                    havainnot)
-                                vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
-                                talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
-                                soratiemittaukset (formatoi-soratiemittaukset (:soratiemittaus rivi))]
-                            [:ul.tarkastuksen-havaintolista
-                             (when-not (str/blank? vakiohavainnot)
-                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
-                             (when-not (str/blank? talvihoitomittaukset)
-                               [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
-                             (when-not (str/blank? soratiemittaukset)
-                               [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
-                             (when-not (str/blank? havainnot-rajattu)
-                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
-          {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
-           :komponentti (fn [rivi]
-                          (liitteet/liitteet-numeroina (:liitteet rivi)))}]
-         tarkastukset]]))))
+            (when (or (= :paallystys (:nakyma optiot))
+                      (= :paikkaus (:nakyma optiot))
+                      (= :tiemerkinta (:nakyma optiot)))
+              {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+               :hae (fn [rivi]
+                      (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                                    :nimi (get-in rivi [:yllapitokohde :nimi])}))})
+            (when-not (u-domain/vesivaylaurakka? urakka)
+              {:otsikko "TR-osoite"
+               :nimi :tr
+               :leveys 2
+               :fmt tierekisteri/tierekisteriosoite-tekstina})
+            {:otsikko "Havainnot"
+             :nimi :havainnot
+             :leveys 4
+             :tyyppi :komponentti
+             :komponentti (fn [rivi]
+                            (let [havainnot (:havainnot rivi)
+                                  havainnot-max-pituus 50
+                                  havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
+                                                      (str (.substring havainnot 0 havainnot-max-pituus) "...")
+                                                      havainnot)
+                                  vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
+                                  talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
+                                  soratiemittaukset (formatoi-soratiemittaukset (:soratiemittaus rivi))]
+                              [:ul.tarkastuksen-havaintolista
+                               (when-not (str/blank? vakiohavainnot)
+                                 [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
+                               (when-not (str/blank? talvihoitomittaukset)
+                                 [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
+                               (when-not (str/blank? soratiemittaukset)
+                                 [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
+                               (when-not (str/blank? havainnot-rajattu)
+                                 [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
+            {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
+             :komponentti (fn [rivi]
+                            (liitteet/liitteet-numeroina (:liitteet rivi)))}]
+           tarkastukset]])))))
 
 
 (defn talvihoitomittaus []
