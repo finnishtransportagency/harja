@@ -9,13 +9,12 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri])
   (:import (java.util UUID)))
 
-(defn pituus [db tietyoilmoitus]
+(defn laske-pituus [db tietyoilmoitus]
   (let [osoite (::tietyoilmoitus-d/osoite tietyoilmoitus)
         osien-pituudet (tierekisteri/hae-osien-pituudet db {:tie (::tierekisteri-d/tie osoite)
-                                                            :aosa (::tierekisteri/aosa osoite)
-                                                            :losa (::tierekisteri/losa osoite)})
-        _ (println "--->>>>" osien-pituudet)]
-    (tierekisteri-d/laske-tien-pituus osien-pituudet {:tr-alkuosa (::tierekisteri/aosa osoite)
+                                                            :aosa (::tierekisteri-d/aosa osoite)
+                                                            :losa (::tierekisteri-d/losa osoite)})]
+    (tierekisteri-d/laske-tien-pituus osien-pituudet {:tr-alkuosa (::tierekisteri-d/aosa osoite)
                                                       :tr-alkuetaisyys (::tierekisteri-d/aet osoite)
                                                       :tr-loppuosa (::tierekisteri-d/losa osoite)
                                                       :tr-loppuetaisyys (::tierekisteri-d/let osoite)})))
@@ -25,7 +24,7 @@
         uusi? (not (tietyoilmoitukset/lahetetty? db id))
         karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
         tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
-        pituus (pituus db tietyoilmoitus)
+        pituus (laske-pituus db tietyoilmoitus)
         tietyoilmoitus (assoc tietyoilmoitus
                          :uusi? uusi?
                          :karttapvm karttapvm

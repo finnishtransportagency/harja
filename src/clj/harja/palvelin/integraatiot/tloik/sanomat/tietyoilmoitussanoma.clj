@@ -76,8 +76,7 @@
        [:loppukoordinaatit
         [:x (first loppukoordinaatit)]
         [:y (second loppukoordinaatit)]])
-     ;; todo: pitää laskea erikseen sijannista
-     [:pituus "1000.00"]
+     [:pituus (:pituus data)]
      [:tienNimi (::tietyoilmoitus/tien-nimi data)]
      [:kunnat (::tietyoilmoitus/kunnat data)]
      [:alkusijainninKuvaus (::tietyoilmoitus/alkusijainnin-kuvaus data)]
