@@ -26,6 +26,7 @@ WHERE ypk.id = :kohdeid;
 SELECT
   u.id        AS "urakka-id",
   u.nimi      AS "urakka-nimi",
+  u.tyyppi    AS "urakkatyyppi",
   u.sampoid   AS "urakka-sampo-id",
   urk.id      AS "urakoitsija-id",
   urk.nimi    AS "urakoitsija-nimi",

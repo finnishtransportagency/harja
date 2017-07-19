@@ -24,7 +24,7 @@
 (defn urakka [data]
   [:urakka
    [:id (::tietyoilmoitus/urakka-id data)]
-   [:nimi (::tietyoilmoitus/urakka-nimi data)]
+   [:nimi (::tietyoilmoitus/urakkan-nimi data)]
    [:tyyppi (::tietyoilmoitus/urakkatyyppi data)]])
 
 (defn urakoitsija [data]
@@ -151,8 +151,10 @@
    [:pysaytetaan-ajoittain (str (::tietyoilmoitus/ajoittaiset-pysaytykset data))]
    [:tie-ajoittain-suljettu (str (::tietyoilmoitus/ajoittain-suljettu-tie data))]
    [:aikataulu
-    [:alkaen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-alku data))]
-    [:paattyen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-loppu data))]]])
+    (when (::tietyoilmoitus/pysaytysten-alku data)
+      [:alkaen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-alku data))])
+    (when (::tietyoilmoitus/pysaytysten-loppu data)
+      [:paattyen (xml/datetime->gmt-0-pvm (::tietyoilmoitus/pysaytysten-loppu data))])]])
 
 (defn vaikutukset [data]
   [:vaikutukset
