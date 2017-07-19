@@ -3,7 +3,7 @@
 (defn sakko? [sanktio]
   (and (not= :muistutus (:laji sanktio))
        (not= :yllapidon_muistutus (:laji sanktio))
-       (not= :vesivayla_muistutus(:laji sanktio))))
+       (not= :vesivayla_muistutus (:laji sanktio))))
 
 (defn sakkoryhmasta-sakko? [sanktio]
   (and (not= :muistutus (:sakkoryhma sanktio))
