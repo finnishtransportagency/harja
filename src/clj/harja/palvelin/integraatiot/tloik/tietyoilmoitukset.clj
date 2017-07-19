@@ -32,11 +32,11 @@
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
-      (tietyoilmoitukset/merkitse-tietyoilmoitus-odottamaan-vastausta! db viesti-id id)
+      (tietyoilmoitukset/merkitse-tietyoilmoitus-odottamaan-vastausta! db {:id id :lahetysid viesti-id})
       (log/debug (format "Tietyöilmoituksen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
         (log/error e (format "Tietyöilmoituksen (id: %s) lähetys T-LOIK:n epäonnistui." id))
-        (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db id)))))
+        (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db {:id id})))))
 
 (defn laheta-tietyoilmoitus [jms-lahettaja db id]
   (log/debug (format "Lähetetään tietyöilmoitus (id: %s) T-LOIK:n." id))
@@ -44,7 +44,7 @@
     (laheta jms-lahettaja db id)
     (catch Exception e
       (log/error e (format "Tietyöilmoituksen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
-      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db id)
+      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe! db {:id id})
       (throw e))))
 
 (defn laheta-lahettamattomat-tietyoilmoitukset [tietyoilmoitus-jms-lahettaja db]

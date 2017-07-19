@@ -81,7 +81,7 @@
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
 
 (defn tee-tietyoilmoitus-jms-lahettaja [this asetukset]
-  (jms/jonolahettaja (tee-lokittaja this "tietyoilmoituksen-lahetys") (:sonja this) (:tietyoilmoitusviestijono asetukset)))
+  (jms/jonolahettaja (tee-lokittaja this "tietyoilmoituksen-lahetys") (:sonja this) (:tietyoilmoituksen-lahetys asetukset)))
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this toimenpide-jms-lahettaja tietyoilmoitus-jms-lahettaja aikavali]
   (if aikavali

@@ -249,4 +249,4 @@
                 {::t/id tietyoilmoitus-id})))
 
 (defn lahetetty? [db id]
-  (:lahetetty? (first (lahetetty db id))))
+  (:lahetetty? (first (lahetetty db {:id id}))))
