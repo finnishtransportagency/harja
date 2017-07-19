@@ -79,7 +79,7 @@
                 <xs:element name="ilmoittaja" type="henkilo" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakka" type="urakka" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakoitsija" type="organisaatio" minOccurs="0"/>
-                <xs:element name="urakoitsijan-yhteyshenkilot">
+                <xs:element name="urakoitsijan-yhteyshenkilot" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="urakoitsijan-yhteyshenkilo" type="vastuuhenkilo" minOccurs="1" maxOccurs="unbounded" />
@@ -87,14 +87,14 @@
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
-                <xs:element name="tilaajan-yhteyshenkilot">
+                <xs:element name="tilaajan-yhteyshenkilot" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="tilaajan-yhteyshenkilo" type="vastuuhenkilo" minOccurs="1" maxOccurs="unbounded" />
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="tyotyypit">
+                <xs:element name="tyotyypit" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="tyotyyppi" type="tietyoilmoitustyotyypinkuvaus" minOccurs="1" maxOccurs="unbounded"/>
@@ -199,7 +199,7 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="arvioitu-viivastys">
+                            <xs:element name="arvioitu-viivastys" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element type="xs:integer" name="normaali-liikenteessa"/>
@@ -207,7 +207,7 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="ajoneuvorajoitukset">
+                            <xs:element name="ajoneuvorajoitukset" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element type="xs:decimal" name="max-korkeus" minOccurs="0" nillable="true"/>
@@ -231,16 +231,16 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="pysaytykset">
+                            <xs:element name="pysaytykset" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element type="xs:boolean" name="pysaytetaan-ajoittain"/>
-                                        <xs:element type="xs:boolean" name="tie-ajoittain-suljettu"/>
-                                        <xs:element name="aikataulu">
+                                        <xs:element type="xs:boolean" name="pysaytetaan-ajoittain" minOccurs="0"/>
+                                        <xs:element type="xs:boolean" name="tie-ajoittain-suljettu" minOccurs="0"/>
+                                        <xs:element name="aikataulu" minOccurs="0">
                                             <xs:complexType>
                                                 <xs:sequence>
-                                                    <xs:element type="xs:dateTime" name="alkaen"/>
-                                                    <xs:element type="xs:dateTime" name="paattyen"/>
+                                                    <xs:element type="xs:dateTime" name="alkaen" minOccurs="0"/>
+                                                    <xs:element type="xs:dateTime" name="paattyen" minOccurs="0"/>
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
