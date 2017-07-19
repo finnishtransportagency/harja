@@ -53,7 +53,8 @@
 
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
-         [tarkastukset/tarkastukset {:nakyma tyyppi}])
+         [tarkastukset/tarkastukset {:nakyma tyyppi
+                                     :urakka ur}])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)

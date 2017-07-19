@@ -20,6 +20,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.valinnat :as ui-valinnat]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -127,36 +128,38 @@
            tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
        [:div.tarkastukset
 
-        [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
+        [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
+         [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
-        [tee-otsikollinen-kentta
-         {:otsikko "Tyyppi"
-          :kentta-params {:tyyppi :valinta
-                          :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-                          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-          :arvo-atom tarkastukset/tarkastustyyppi}]
+         [tee-otsikollinen-kentta
+          {:otsikko "Tyyppi"
+           :kentta-params {:tyyppi :valinta
+                           :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                           :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+           :arvo-atom tarkastukset/tarkastustyyppi}]
 
-        [tee-otsikollinen-kentta
-         {:otsikko "Näytä"
-          :kentta-params {:tyyppi :valinta
-                          :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
-                          :valinta-nayta second}
-          :arvo-atom tarkastukset/naytettavat-tarkastukset}]
+         [tee-otsikollinen-kentta
+          {:otsikko "Näytä"
+           :kentta-params {:tyyppi :valinta
+                           :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+                           :valinta-nayta second}
+           :arvo-atom tarkastukset/naytettavat-tarkastukset}]
 
-        [valinnat/tienumero tarkastukset/tienumero]
+         [valinnat/tienumero tarkastukset/tienumero]
 
-        (let [oikeus? (oikeudet/voi-kirjoittaa?
-                        oikeudet/urakat-laadunseuranta-tarkastukset
-                        (:id @nav/valittu-urakka))]
-          (yleiset/wrap-if
-            (not oikeus?)
-            [yleiset/tooltip {} :%
-             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                             oikeudet/urakat-laadunseuranta-tarkastukset)]
-            [napit/uusi "Uusi tarkastus"
-             #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
-             {:disabled (not oikeus?)
-              :luokka "alle-marginia"}]))
+         [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
+          (let [oikeus? (oikeudet/voi-kirjoittaa?
+                          oikeudet/urakat-laadunseuranta-tarkastukset
+                          (:id @nav/valittu-urakka))]
+            (yleiset/wrap-if
+              (not oikeus?)
+              [yleiset/tooltip {} :%
+               (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                               oikeudet/urakat-laadunseuranta-tarkastukset)]
+              [napit/uusi "Uusi tarkastus"
+               #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
+               {:disabled (not oikeus?)
+                :luokka "alle-marginia"}]))]]
 
         [grid/grid
          {:otsikko "Tarkastukset"
@@ -383,12 +386,12 @@
             ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
             :karttavalinta-tehty-fn #(swap! tarkastus-atom assoc :sijainti %)}
            {:tyyppi :tierekisteriosoite
-           :nimi :tr
-           :pakollinen? true
-           :ala-nayta-virhetta-komponentissa? true
-           :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-           :sijainti (r/wrap (:sijainti tarkastus)
-                             #(swap! tarkastus-atom assoc :sijainti %))})
+            :nimi :tr
+            :pakollinen? true
+            :ala-nayta-virhetta-komponentissa? true
+            :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+            :sijainti (r/wrap (:sijainti tarkastus)
+                              #(swap! tarkastus-atom assoc :sijainti %))})
 
          {:otsikko "Tar\u00ADkastaja"
           :nimi :tarkastaja
