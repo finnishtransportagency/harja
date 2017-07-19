@@ -269,6 +269,7 @@
                                                                    (not (empty? hintaryhman-toimenpiteet))))]]
 
              (when nayta-hintaryhma?
+               ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
                [:div.vv-toimenpideryhma
                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
                 [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
