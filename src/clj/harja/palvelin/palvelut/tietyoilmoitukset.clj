@@ -165,7 +165,6 @@
       yllapitokohde)))
 
 (defn hae-urakan-tiedot-tietyoilmoitukselle [db fim user urakka-id]
-  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
   (oikeudet/ei-oikeustarkistusta!)
   (let [{:keys [urakka-sampo-id] :as urakka}
         (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})
