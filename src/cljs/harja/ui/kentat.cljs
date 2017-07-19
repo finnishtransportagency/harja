@@ -1127,7 +1127,8 @@
             [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
                                                 :kun-valmis #(do
                                                                (lopeta-karttavalinta)
-                                                               (karttavalinta-tehty-fn %))}]))]))))
+                                                               (karttavalinta-tehty-fn
+                                                                 {:type :point :coordinates %}))}]))]))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
