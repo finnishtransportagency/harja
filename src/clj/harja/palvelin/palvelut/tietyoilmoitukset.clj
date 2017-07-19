@@ -23,7 +23,10 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.domain.roolit :as roolit]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [clojure.core.async :as async]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -77,7 +80,7 @@
   (oikeudet/ei-oikeustarkistusta!)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
-(defn tallenna-tietyoilmoitus [db user ilmoitus]
+(defn tallenna-tietyoilmoitus [tloik db user ilmoitus]
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
     (if (::t/urakka-id ilmoitus)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
@@ -91,16 +94,17 @@
           ilmoitus (-> ilmoitus
                        (m/lisaa-muokkaustiedot ::t/id user)
                        (update-in [::t/osoite ::tr/geometria]
-                                  #(when % (geo/geometry (geo/clj->pg %)))))]
+                                  #(when % (geo/geometry (geo/clj->pg %)))))
 
-      (upsert! db ::t/ilmoitus
-               ilmoitus
-               (op/or
-                 {::m/luoja-id (:id user)}
-                 {::t/urakoitsija-id org}
-                 {::t/tilaaja-id org}
-                 {::t/urakka-id (op/in kayttajan-urakat)})))))
-
+          id (::t/id (upsert! db ::t/ilmoitus
+                              ilmoitus
+                              (op/or
+                                {::m/luoja-id (:id user)}
+                                {::t/urakoitsija-id org}
+                                {::t/tilaaja-id org}
+                                {::t/urakka-id (op/in kayttajan-urakat)})))]
+      (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+        (async/thread (tloik/laheta-tietyilmoitus tloik id))))))
 
 (defn tietyoilmoitus-pdf [db user params]
   (pdf/tietyoilmoitus-pdf
@@ -180,7 +184,8 @@
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
-  (start [{db :db
+  (start [{tloik :tloik
+           db :db
            http :http-palvelin
            pdf :pdf-vienti
            fim :fim
@@ -195,7 +200,7 @@
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user ilmoitus]
-                        (tallenna-tietyoilmoitus db user ilmoitus))
+                        (tallenna-tietyoilmoitus tloik db user ilmoitus))
                       {:kysely-spec ::t/ilmoitus
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
