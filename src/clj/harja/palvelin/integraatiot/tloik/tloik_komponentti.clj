@@ -135,6 +135,7 @@
     (let [jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja (:db this) id)))
   (laheta-tietyilmoitus [this id]
-    (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+    (when (and (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+               (:tietyoilmoituksen-lahetys asetukset))
       (let [jms-lahettaja (tee-tietyoilmoitus-jms-lahettaja this asetukset)]
        (tietyoilmoitukset/laheta-tietyoilmoitus jms-lahettaja (:db this) id)))))
