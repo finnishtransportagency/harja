@@ -374,13 +374,21 @@
             :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "- valitse -")
             :palstoja 1})
 
-         {:tyyppi :tierekisteriosoite
-          :nimi :tr
-          :pakollinen? true
-          :ala-nayta-virhetta-komponentissa? true
-          :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-          :sijainti (r/wrap (:sijainti tarkastus)
-                            #(swap! tarkastus-atom assoc :sijainti %))}
+         (if vesivaylaurakka?
+           {:nimi :sijainti
+            :otsikko "Sijainti"
+            :tyyppi :sijaintivalitsin
+            :paikannus? false
+            :pakollinen? true
+            ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
+            :karttavalinta-tehty-fn #(swap! tarkastus-atom assoc :sijainti %)}
+           {:tyyppi :tierekisteriosoite
+           :nimi :tr
+           :pakollinen? true
+           :ala-nayta-virhetta-komponentissa? true
+           :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+           :sijainti (r/wrap (:sijainti tarkastus)
+                             #(swap! tarkastus-atom assoc :sijainti %))})
 
          {:otsikko "Tar\u00ADkastaja"
           :nimi :tarkastaja
