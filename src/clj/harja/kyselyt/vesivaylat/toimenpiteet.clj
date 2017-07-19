@@ -45,7 +45,8 @@
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/lisatieto
                           ::vv-toimenpide/liitteet
-                          ::vv-toimenpide/turvalaitekomponentit]))))
+                          ::vv-toimenpide/turvalaitekomponentit
+                          ::vv-toimenpide/reimari-henkilo-lkm]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
