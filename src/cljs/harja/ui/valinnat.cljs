@@ -18,15 +18,19 @@
             [harja.domain.urakka :as u-domain]))
 
 (defn urakan-sopimus
-  [ur valittu-sopimusnumero-atom valitse-fn]
-  [:div.label-ja-alasveto.sopimusnumero
+  ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
+  ([ur valittu-sopimusnumero-atom valitse-fn {:keys [kaikki-valinta?] :as optiot}]
+   (log "SOPPARIT: " (pr-str (:sopimukset ur)))
+   [:div.label-ja-alasveto.sopimusnumero
    [:span.alasvedon-otsikko "Sopimusnumero"]
    [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
                          :format-fn second
                          :valitse-fn valitse-fn
                          :li-luokka-fn #(when (= (first %) (:paasopimus ur))
                                           "bold")}
-    (:sopimukset ur)]])
+    (if kaikki-valinta?
+      (concat [nil] (:sopimukset ur))
+      (:sopimukset ur))]]))
 
 (defn urakkatyyppi
   [valittu-urakkatyyppi-atom urakkatyypit valitse-fn]
@@ -163,8 +167,8 @@
 
 (defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
   [:span
-   (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn]} sopimus]
-     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn])
+   (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
+     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn sopimus-optiot])
    (when-let [{:keys [hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]} hoitokausi]
      [urakan-hoitokausi urakka hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])
    (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
