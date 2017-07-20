@@ -4,7 +4,6 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.debug :as ui-debug]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]

@@ -161,84 +161,18 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-(defn urakan-suodattimet [{:keys [urakan-sopimus urakan-hoitokausi] :as optiot}]
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
   [:span
-   (let [{:keys [urakka valittu-sopimusnumero-atom valitse-sopimus-fn]} urakan-sopimus]
-    (when urakan-sopimus
-      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn]))
-  (let [{:keys [urakka valittu-sopimusnumero-atom valitse-sopimus-fn]} urakan-hoitokausi]
-    (when urakan-hoitokausi
-      [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])]))
-
-;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
-(defn urakan-sopimus-ja-hoitokausi
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn] ;; urakan-hoitokausi
-
-  [:span
-   [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
-   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]])
-
-(defn urakan-hoitokausi-ja-kuukausi
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
-   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
-  [:span
-   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
-
-(defn urakan-sopimus-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-   [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-
-
-(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-   [urakan-sopimus-ja-hoitokausi
-    ur
-    valittu-sopimusnumero-atom valitse-sopimus-fn
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-(defn urakan-hoitokausi-ja-toimenpide
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide]
-  [:span
-   [urakan-hoitokausi
-    ur
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [urakan-toimenpide
-    urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-
-(defn urakan-hoitokausi-ja-aikavali
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   valittu-aikavali-atom ;; hoitokauden-aikavali
-   ]
-
-  [:span
-
-   [urakan-hoitokausi
-    ur
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [aikavali valittu-aikavali-atom]])
+   (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn]} sopimus]
+     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn])
+   (when-let [{:keys [hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]} hoitokausi]
+     [urakan-hoitokausi urakka hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])
+   (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
+     [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn])
+   (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
+     [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
+   (when-let [{:keys [valittu-aikavali-atom]} aikavali]
+     [aikavali valittu-aikavali-atom])])
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
   [ur
@@ -248,10 +182,11 @@
    urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
 
   [:span
-   [urakan-sopimus-ja-hoitokausi
-    ur
-    valittu-sopimusnumero-atom valitse-sopimus-fn
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom valittu-sopimusnumero-atom
+                                     :valitse-sopimus-fn valitse-sopimus-fn}
+                           :hoitokausi {:hoitokaudet hoitokaudet
+                                        :valittu-hoitokausi-atom valittu-hoitokausi-atom
+                                        :valitse-hoitokausi-fn valitse-hoitokausi-fn}}]
    [aikavali valittu-aikavali-atom]
    [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
 
@@ -262,10 +197,11 @@
    valittu-aikavali-atom] ;; hoitokauden-aikavali
 
   [:span
-   [urakan-sopimus-ja-hoitokausi
-    ur
-    valittu-sopimusnumero-atom valitse-sopimus-fn
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom valittu-sopimusnumero-atom
+                                     :valitse-sopimus-fn valitse-sopimus-fn}
+                           :hoitokausi {:hoitokaudet hoitokaudet
+                                        :valittu-hoitokausi-atom valittu-hoitokausi-atom
+                                        :valitse-hoitokausi-fn valitse-hoitokausi-fn}}]
    [aikavali valittu-aikavali-atom]])
 
 (defn vuosi

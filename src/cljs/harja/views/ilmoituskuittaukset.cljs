@@ -9,7 +9,6 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
             [harja.ui.bootstrap :as bs]
             [harja.pvm :as pvm]
