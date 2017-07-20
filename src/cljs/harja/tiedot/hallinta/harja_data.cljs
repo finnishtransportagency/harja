@@ -55,15 +55,16 @@
                                            (fn [ryhma-arvo]
                                               (vec (repeat (count (:arvo-avain %)) ryhma-arvo))))
                                 avainten-vaihto)) ; ({:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []} {:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []})
-        jarjestyksesta-arvo  (if (-> (first ryhmasta-vektori) (:jarjestys-avain) (vector?))
+        jarjestyksesta-arvo  (if (empty? (filter #(vector? (:jarjestys-avain %)) ryhmasta-vektori))
+                              ryhmasta-vektori
                               (mapcat #(map-indexed (fn [index vektori-elementti]
                                                        (let [arvo-paivitetty {:arvo-avain [(get (:arvo-avain %) index)]
                                                                               :ryhma-avain [(get (:ryhma-avain %) index)]
                                                                               :jarjestys-avain vektori-elementti}]
                                                         arvo-paivitetty))
                                                     (:jarjestys-avain %))
-                                      ryhmasta-vektori) ; ({:jarjestys-avain ["ping" "raportoi-yhteyskatkos"], :ryhma-avain ["2017-05-30" "2017-05-30"], :arvo-avain [7 2]}) -> ({:jarjestys-avain "ping" :ryhma-avain ["2017-05-30"] :arvo-avain [7]} {:jarjestys-avain "raportoi-yhteyskatkos" :ryhma-avain ["2017-05-30"] :arvo-avain [2]})
-                              ryhmasta-vektori)
+                                      ryhmasta-vektori)) ; ({:jarjestys-avain ["ping" "raportoi-yhteyskatkos"], :ryhma-avain ["2017-05-30" "2017-05-30"], :arvo-avain [7 2]}) -> ({:jarjestys-avain "ping" :ryhma-avain ["2017-05-30"] :arvo-avain [7]} {:jarjestys-avain "raportoi-yhteyskatkos" :ryhma-avain ["2017-05-30"] :arvo-avain [2]})
+
         poista-nillit-ryhmista (map (fn [mappi]
                                       (let [arvo-avaimet (vec (map-indexed #(if (nil? (get (:ryhma-avain mappi) %1))
                                                                                 nil %2)

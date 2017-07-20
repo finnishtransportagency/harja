@@ -4,6 +4,7 @@
             [harja.domain.graylog :as dgl]
             [cljs.spec.alpha :as s]
             [cljs.spec.gen.alpha :as gen]
+            [clojure.test.check.generators]
             [clojure.set :as set-math]))
 (defn satunnainen-set-elementti
   [setti]
@@ -18,11 +19,16 @@
       (doseq [parsittu-data graylogista-parsittu-data-sample]
         (let [jarjestys-avain (satunnainen-set-elementti mahdollisesti-parsittavat-arvot)
               ryhma-avain (satunnainen-set-elementti mahdollisesti-parsittavat-vektori-arvot)
-              _ (println (pr-str jarjestys-avain " " ryhma-avain))
+              jarjestetty-data (tiedot/jarjestele-yhteyskatkos-data jarjestys-avain ryhma-avain parsittu-data)]
+          (is (s/valid? ::tiedot/jarjestetty-yhteyskatkos-data jarjestetty-data)
+              (s/explain ::tiedot/jarjestetty-yhteyskatkos-data jarjestetty-data)))))
+    (testing "yhteyskatkosdatan järjestely ryhmäavaimena joku muu kuin vektori"
+      (doseq [parsittu-data graylogista-parsittu-data-sample]
+        (let [jarjestys-avain (satunnainen-set-elementti mahdollisesti-parsittavat-arvot)
+              ryhma-avain (satunnainen-set-elementti mahdollisesti-parsittavat-ei-vektori-arvot)
               jarjestetty-data (tiedot/jarjestele-yhteyskatkos-data jarjestys-avain ryhma-avain parsittu-data)]
           (is (s/valid? ::tiedot/jarjestetty-yhteyskatkos-data jarjestetty-data)
               (s/explain ::tiedot/jarjestetty-yhteyskatkos-data jarjestetty-data)))))))
-    ; (testing "yhteyskatkosdatan järjestely ryhmäavaimena joku muu kuin vektori")
     ; (testing "yhteyskatkosdatan järjestely järjestysavaimena vektroi")
     ; (testing "yhteyskatkosdatan järjestely järjestysavaimena joku muu kuin vektori")))
-    ;avs
+    ;avss
