@@ -46,6 +46,7 @@
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test]
             [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test]
             [harja.views.vesivaylat.urakka.materiaalit-test]
+            [harja.tiedot.hallinta.harja-data-test]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -94,5 +95,6 @@
            'harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test
            'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
            'harja.views.vesivaylat.urakka.materiaalit-test
+           'harja.tiedot.hallinta.harja-data-test
            ;; uusi testi tähän
            )

@@ -10,7 +10,6 @@
             [cljs-time.core :as t]
             [harja.pvm :as pvm]
             [clojure.string :as st]
-            [clojure.set :as set-math]
             [tuck.core :refer [Event process-event] :as tuck]
             [harja.domain.graylog :as dgl]
             [cljs.spec.alpha :as s]

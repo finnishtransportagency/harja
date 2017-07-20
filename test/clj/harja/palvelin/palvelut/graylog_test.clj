@@ -23,8 +23,7 @@
 (deftest parsi-yhteyskatkos-data
   (let [generoitu-graylogista-luettu-data (gen/sample (s/gen ::graylog/csvsta-luettu-data))
         asetukset {:pvm? true :kello? true :kayttaja? true :palvelut? true
-                   :katkokset? true :ensimmaiset-katkokset? true
-                   :viimeiset-katkokset? true}]
+                   :ensimmaiset-katkokset? true :viimeiset-katkokset? true}]
     (testing "Ilman optioita"
       (doseq [data generoitu-graylogista-luettu-data]
         (let [parsittu-data (graylog/parsi-yhteyskatkos-data data asetukset)]

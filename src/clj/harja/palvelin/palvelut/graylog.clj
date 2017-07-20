@@ -44,13 +44,13 @@
                                          :taulukko string?))
 (s/def ::csvsta-luettu-data (s/coll-of ::graylogista-luettu-itemi))
 
-(defn read-csv
+(defn lue-csv
   [csv-file]
   (with-open [reader (io/reader csv-file)]
     (doall
       (csv/read-csv reader))))
 
-(defn+ korjaa-teksti
+(defn+ ilman-skandeja
   "Korjaa ääkköset"
   [teksti string?] string?
   (st/replace teksti #"�_" "ä"))
@@ -66,7 +66,7 @@
    ([teksti string? alku-teksti string? loppu-teksti string] string?
     (etsi-arvot-valilta teksti alku-teksti loppu-teksti false))
    ([teksti string? alku-teksti string? loppu-teksti string? kaikki? ::boolean] string?
-    (loop [kasiteltava-teksti (korjaa-teksti teksti)
+    (loop [kasiteltava-teksti (ilman-skandeja teksti)
            tekstin-alku (if-let [alku-tekstin-alku (st/index-of kasiteltava-teksti alku-teksti)]
                           (+ alku-tekstin-alku (count alku-teksti)) nil)
            tekstin-loppu (if tekstin-alku (st/index-of kasiteltava-teksti loppu-teksti tekstin-alku) nil)
@@ -93,7 +93,7 @@
   "Lukee csv tiedoston poistaen header-rivin.
    Käyttää pilkkua sarakkeiden erottelemisessa"
   [data-csvna]
-  (rest (read-csv data-csvna)))
+  (rest (lue-csv data-csvna)))
 
 (defn+ tekstin-hyvaksymis-fn
   [optio? ::boolean re s/regex?] ::nilable-fn
@@ -106,13 +106,12 @@
    Mikäli optioita ei ole annettu, lukee kaiken mahdolliset arvot datasta
    ja sijoittaa ne mappiin. Optiota ovat :pvm :kello :kayttaja :palvelut
    :katkokset :ensimmaiset-katkokset ja :viimeiset-katkokset"
-  [data {:keys [pvm? kello? kayttaja? palvelut? katkokset? ensimmaiset-katkokset?
+  [data {:keys [pvm? kello? kayttaja? palvelut? ensimmaiset-katkokset?
                 viimeiset-katkokset? naytettavat-ryhmat min-katkokset]}]
   (let [pvm? (or pvm? true)
         kello? (or kello? true)
         kayttaja? (or kayttaja? true)
         palvelut? (or palvelut? true)
-        katkokset? (or katkokset? true)
         ensimmaiset-katkokset? (or ensimmaiset-katkokset? true)
         viimeiset-katkokset? (or viimeiset-katkokset? true)
         hae? (if (nil? naytettavat-ryhmat) true (if (:hae naytettavat-ryhmat) true false))
@@ -133,14 +132,14 @@
                           kello? (assoc :kello (etsi-arvot-valilta  (get aika %1) "T" "."))
                           kayttaja? (assoc :kayttaja (etsi-arvot-valilta %2 "[:div Käyttäjä  " " "))
                           palvelut? (assoc :palvelut (mapv (fn [x] (palvelujen-poisto-fn x)) (etsi-arvot-valilta %2 "[:tr [:td {:valign top} [:b :" "]]" true)))
-                          katkokset? (assoc :katkokset (mapv (fn [x] (katkoksien-poisto-fn (Integer/parseInt x))) (etsi-arvot-valilta %2 "[:pre Katkoksia " " " true)))
+                          true (assoc :katkokset (mapv (fn [x] (katkoksien-poisto-fn (Integer/parseInt x))) (etsi-arvot-valilta %2 "[:pre Katkoksia " " " true)))
                           ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (etsi-arvot-valilta %2 "ensimmäinen: " "viimeinen" true))
                           viimeiset-katkokset? (assoc :viimeiset-katkokset (etsi-arvot-valilta %2 "viimeinen: " "]]]" true)))
                  taulukko)))
 (s/fdef parsi-yhteyskatkos-data
   :args (s/coll-of (s/cat :data ::csvsta-luettu-data :pvm? (s/nilable ::boolean) :kello? (s/nilable ::boolean)
                           :kayttaja? (s/nilable ::boolean) :palvelut? (s/nilable ::boolean)
-                          :katkokset? (s/nilable ::boolean) :ensimmaiset-katkokset? (s/nilable ::boolean)
+                          :ensimmaiset-katkokset? (s/nilable ::boolean)
                           :viimeiset-katkokset? (s/nilable ::boolean) :naytettavat-ryhmat (s/nilable set?)
                           :min-katkokset (s/nilable (s/and pos? integer?))))
   :ret ::dgl/parsittu-yhteyskatkos-data)

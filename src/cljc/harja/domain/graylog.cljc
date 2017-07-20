@@ -47,9 +47,9 @@
 (s/def ::kello (s/with-gen (s/and string?
                                   #(pvm/pvm? (tc/from-date (pvm/parsi pvm/fi-aika-sek %))))
                            #(gen/fmap (fn [_]
-                                        (let [tunnit (inc (rand-int 24))
-                                              minuutit (inc (rand-int 60))
-                                              sekunnit (inc (rand-int 60))]
+                                        (let [tunnit (rand-int 24)
+                                              minuutit (rand-int 60)
+                                              sekunnit (rand-int 60)]
                                           (str tunnit ":" minuutit ":" sekunnit)))
                                       (gen/int))))
 (s/def ::kayttaja string?)
@@ -64,8 +64,9 @@
                                                            #(pvm/pvm? (tf/parse %)))
                                                     :kind vector?)
                                          #(gen/vector (iso8601-pvm-gen))))
-(s/def ::parsittu-yhteyskatkos-data-itemi (s/and (s/keys :opt-un [::pvm ::kello ::kayttaja ::palvelut
-                                                                  ::katkokset ::ensimmaiset-katkokset ::viimeiset-katkokset])
+(s/def ::parsittu-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::katkokset]
+                                                         :opt-un [::pvm ::kello ::kayttaja ::palvelut
+                                                                  ::ensimmaiset-katkokset ::viimeiset-katkokset])
                                                  #(apply = (keep (fn [x]
                                                                   (when (not (nil? x))
                                                                     (count x)))
