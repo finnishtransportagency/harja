@@ -3,13 +3,11 @@
             [hiccup.core :refer [html]]
             [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
-
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma]
             [harja.palvelin.integraatiot.tloik.tietyoilmoitukset :as tietyoilmoitukset])
-  (:import (java.io ByteArrayInputStream)
-           (java.text SimpleDateFormat)
+  (:import (java.text SimpleDateFormat)
            (java.util UUID)))
 
 (def +xsd-polku+ "xsd/tloik/")
