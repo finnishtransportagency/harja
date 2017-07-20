@@ -103,7 +103,7 @@
                                  {::t/urakoitsija-id org}
                                  {::t/tilaaja-id org}
                                  {::t/urakka-id (op/in kayttajan-urakat)}))]
-      (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+      (when (and tloik (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (async/thread
           (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
       tallennettu)))
