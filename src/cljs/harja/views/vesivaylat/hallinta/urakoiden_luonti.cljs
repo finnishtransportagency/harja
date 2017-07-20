@@ -99,9 +99,9 @@
              {:otsikko "Sampo-ID" :nimi ::u/sampoid :tyyppi :string :pakollinen? false :muokattava? (constantly false)})
            (lomake/rivi
              {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true
-              :muokattava? (constantly (nil? (::u/alkupvm valittu-urakka)))}
+              :muokattava? (constantly (nil? (::u/id valittu-urakka)))}
              {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
-              :muokattava? (constantly (nil? (::u/loppupvm valittu-urakka)))
+              :muokattava? (constantly (nil? (::u/id valittu-urakka)))
               :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
            (lomake/rivi
              (if haetut-hallintayksikot
