@@ -55,6 +55,7 @@
                      [:ytunnus]]}
           {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
           {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
+          {:otsikko "Postitoimipaikka" :nimi ::o/postitoimipaikka :tyyppi :string :pituus-max 64}
           (when (some not-empty (vals urakat))
             (lomake/ryhma
               {:otsikko "Urakat"}
@@ -100,6 +101,7 @@
          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pituus-max 9}
          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
          {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
+         {:otsikko "Postitoimipaikka" :nimi ::o/postitoimipaikka :pituus-max 5 :tyyppi :string}
          {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}
          {:otsikko "Luotu Harjassa?" :nimi ::o/harjassa-luotu? :fmt fmt/totuus}]
