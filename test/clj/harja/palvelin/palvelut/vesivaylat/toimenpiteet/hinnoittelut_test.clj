@@ -146,15 +146,15 @@
     (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
 
 (deftest tallenna-toimenpiteelle-toinen-ryhmahinnoittelu
-  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma true})
-        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma true})
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma? true})
+        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma? true})
         hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
     (is (= 1 hinnoittelujen-maara))
     (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
 
 (deftest tallenna-toimenpiteelle-toinen-oma-hinnoittelu
-  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma false})
-        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma false})
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma? false})
+        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma? false})
         hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
     (is (= 1 hinnoittelujen-maara))
     (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
