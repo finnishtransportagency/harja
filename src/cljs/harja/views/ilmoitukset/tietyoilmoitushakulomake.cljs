@@ -24,7 +24,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -51,7 +52,7 @@
         {:valokioaikavali :luotu-vakioaikavali
          :alkuaika :luotu-alkuaika
          :loppuaika :luotu-loppuaika}
-         true)
+        true)
       (valinnat/aikavalivalitsin
         "Käynnissä välillä"
         tiedot/kaynnissa-aikavalit
@@ -59,7 +60,7 @@
         {:valokioaikavali :kaynnissa-vakioaikavali
          :alkuaika :kaynnissa-alkuaika
          :loppuaika :kaynnissa-loppuaika}
-         true)
+        true)
       {:nimi :urakka-id
        :otsikko "Urakka"
        :tyyppi :valinta
@@ -231,7 +232,16 @@
           [{:otsikko "Vaiheita"
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
-            :leveys 1}])
+            :leveys 1}
+           {:otsikko "Lähetys Tieliikennekeskukseen"
+            :nimi :lahetys
+            :tyyppi :komponentti
+            :komponentti #(case (::t/tila %)
+                            "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                            "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
+                            "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
+                            [:span "Ei lähetetty"])
+            :leveys 3}])
     haetut-ilmoitukset]])
 
 (defn hakulomake

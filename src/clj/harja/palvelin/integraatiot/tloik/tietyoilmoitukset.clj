@@ -63,8 +63,8 @@
   (if onnistunut
     (do
       (log/debug (format "Tietyöilmoitus kuitattiin T-LOIK:sta onnistuneeksi viesti-id:llä: %s" viesti-id))
-      (tietyoilmoitukset/merkitse-tietyoilmoitus-lahetetyksi! db viesti-id))
+      (tietyoilmoitukset/merkitse-tietyoilmoitus-lahetetyksi! db {:lahetysid viesti-id}))
 
     (do
       (log/error (format "Tietyöilmoitus kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
-      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla! db viesti-id))))
+      (tietyoilmoitukset/merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla! db {:lahetysid viesti-id}))))

@@ -266,27 +266,17 @@
 
 (defn- lomaketoiminnot [e! kayttajan-urakat tallennus-kaynnissa? ilmoitus]
   (r/with-let [avaa-pdf? (r/atom false)]
-    [:table
-     [:tbody
-      [:tr
-       [:td
-        [napit/tallenna
-         "Tallenna ilmoitus"
-         #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
-         {:disabled (or tallennus-kaynnissa?
-                        (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
-                        (not (lomake/voi-tallentaa? ilmoitus)))
-          :tallennus-kaynnissa? tallennus-kaynnissa?
-          :ikoni (ikonit/tallenna)}]]
-
-       [:td
-        [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]]]
-
-      [:tr
-       [:td {:colSpan 2}
-        [lomake/nayta-puuttuvat-pakolliset-kentat ilmoitus]]]
-
-      ]]))
+    [:div
+     [lomake/nayta-puuttuvat-pakolliset-kentat ilmoitus]
+     [tee-kentta {:tyyppi :checkbox :teksti "Lataa PDF"} avaa-pdf?]
+     [napit/tallenna
+      "Tallenna ilmoitus"
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus) true @avaa-pdf?))
+      {:disabled (or tallennus-kaynnissa?
+                     (not (t/voi-tallentaa? ilmoitus (into #{} (map :id) kayttajan-urakat)))
+                     (not (lomake/voi-tallentaa? ilmoitus)))
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :ikoni (ikonit/tallenna)}]]))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -296,23 +286,7 @@
                     :muokkaa! #(e! (tiedot/->IlmoitustaMuokattu %))
                     :footer-fn (partial lomaketoiminnot e! kayttajan-urakat tallennus-kaynnissa?)
                     :luokka "ryhma-reuna"}
-     [(when (::t/id ilmoitus)
-        (lomake/ryhma
-          "Lähetys Tieliikennekeskukseen"
-          {:nimi ::t/tila
-           :otsikko "Tila"
-           :muokattava? (constantly false)
-           :tyyppi :komponentti
-           :komponentti #(case (get-in % [:data ::t/tila])
-                           "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
-                           "lahetetty" [:span.tila-lahetetty "Lähetetty"]
-                           "virhe" [:span.tila-virhe "Epäonnistunut"]
-                           [:span "Ei lähetetty"])}
-          {:nimi ::t/lahetetty
-           :otsikko "Aika"
-           :tyyppi :pvm-aika
-           :muokattava? (constantly false)}))
-      (lomake/ryhma
+     [(lomake/ryhma
         "Urakka"
         {:nimi ::t/urakka-id
          :otsikko "Liittyy urakkaan"
@@ -524,5 +498,21 @@
                      :nimi ::t/luvan-diaarinumero
                      :tyyppi :string
                      :pituus-max 32})
-      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)]
+      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja true)
+      (when (::t/id ilmoitus)
+        (lomake/ryhma
+          "Lähetys Tieliikennekeskukseen"
+          {:nimi ::t/tila
+           :otsikko "Tila"
+           :muokattava? (constantly false)
+           :tyyppi :komponentti
+           :komponentti #(case (get-in % [:data ::t/tila])
+                           "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                           "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
+                           "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
+                           [:span "Ei lähetetty"])}
+          {:nimi ::t/lahetetty
+           :otsikko "Aika"
+           :tyyppi :pvm-aika
+           :muokattava? (constantly false)}))]
      ilmoitus]]])
