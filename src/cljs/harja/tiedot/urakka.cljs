@@ -21,18 +21,28 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn urakan-oletussopimus [urakka]
+  (let [{:keys [sopimukset paasopimus]} urakka]
+    (if paasopimus
+      [paasopimus (get sopimukset paasopimus)]
+      (first sopimukset))))
+
 (defonce valittu-sopimusnumero
   (reaction-writable
-    (let [{:keys [sopimukset paasopimus]} @nav/valittu-urakka]
-      (if paasopimus
-        [paasopimus (get sopimukset paasopimus)]
-        (first sopimukset)))))
+    (urakan-oletussopimus @nav/valittu-urakka)))
 
 (defonce urakan-yks-hint-tyot (atom nil))
 (defonce urakan-kok-hint-tyot (atom nil))
 
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
+
+(defn valitse-oletussopimus-jos-valittuna-kaikki! []
+  (when (nil? (first @valittu-sopimusnumero))
+    (reset! valittu-sopimusnumero (urakan-oletussopimus @nav/valittu-urakka))))
+
+(defn valitse-sopimusnumero-kaikki! []
+  (reset! valittu-sopimusnumero [nil "Kaikki"]))
 
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)]

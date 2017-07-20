@@ -236,12 +236,15 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
-                                                          :sopimus-id (first (:sopimus valinnat))
-                                                          :aikavali (:aikavali valinnat)}))
-                           (e! (tiedot/->HaeHintaryhmat)))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/sisaan-ulos #(do
+                         (e! (tiedot/->Nakymassa? true))
+                         (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
+                                                        :sopimus-id (first (:sopimus valinnat))
+                                                        :aikavali (:aikavali valinnat)}))
+                         (e! (tiedot/->HaeHintaryhmat)))
+                      #(do
+                         (u/valitse-oletussopimus-jos-valittuna-kaikki!)
+                         (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa? hintaryhmat] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
