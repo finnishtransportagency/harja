@@ -41,7 +41,7 @@ WHERE u.id = :urakkaid;
 
 -- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
 UPDATE tietyoilmoitus
-SET lahetysid = :lahetysid, tila = 'lahetetty', lahetetty = current_timestamp
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', lahetetty = current_timestamp
 WHERE id = :id;
 
 -- name: merkitse-tietyoilmoitus-lahetetyksi!
