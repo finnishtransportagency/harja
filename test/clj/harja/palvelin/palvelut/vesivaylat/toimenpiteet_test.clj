@@ -64,6 +64,7 @@
     (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
     (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
     (is (some #(not (empty? (::toi/liitteet %))) vastaus))
+    (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
