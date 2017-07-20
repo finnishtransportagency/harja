@@ -12,8 +12,6 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-#_(def data (tietyoilmoitukset/hae-ilmoitus (:db harja.palvelin.main/harja-jarjestelma) 1))
-
 (defn henkilo [avain ilmoittaja]
   [avain
    [:etunimi (::tietyoilmoitus/etunimi ilmoittaja)]
@@ -130,7 +128,7 @@
      (tienpinnat (::tietyoilmoitus/kiertotienpinnat data))]))
 
 (defn liikenteenohjaus [data]
-  (let [ohjaus (::tietyoilmoitus/tienpinnat data)
+  (let [ohjaus (::tietyoilmoitus/liikenteenohjaus data)
         ohjaaja (::tietyoilmoitus/liikenteenohjaaja data)]
     (when (or ohjaus ohjaaja)
       [:liikenteenohjaus

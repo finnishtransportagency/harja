@@ -19,16 +19,20 @@
                                                       :tr-loppuosa (::tierekisteri-d/losa osoite)
                                                       :tr-loppuetaisyys (::tierekisteri-d/let osoite)})))
 
-(defn laheta [jms-lahettaja db id]
-  (let [viesti-id (str (UUID/randomUUID))
-        uusi? (not (tietyoilmoitukset/lahetetty? db id))
+(defn hae [db id]
+  (let [uusi? (not (tietyoilmoitukset/lahetetty? db id))
         karttapvm (geometriapaivitykset/harjan-verkon-pvm db)
         tietyoilmoitus (tietyoilmoitukset/hae-ilmoitus db id)
         pituus (laske-pituus db tietyoilmoitus)
         tietyoilmoitus (assoc tietyoilmoitus
                          :uusi? uusi?
                          :karttapvm karttapvm
-                         :pituus pituus)
+                         :pituus pituus)]
+    tietyoilmoitus))
+
+(defn laheta [jms-lahettaja db id]
+  (let [viesti-id (str (UUID/randomUUID))
+        tietyoilmoitus (hae db id)
         muodosta-xml #(tietyoilmoitussanoma/muodosta tietyoilmoitus viesti-id)]
     (try
       (jms-lahettaja muodosta-xml viesti-id)
