@@ -72,7 +72,9 @@
   (let [testiurakoitsijat (map-indexed (fn [index urakoitsija]
                                          (-> urakoitsija
                                              (dissoc ::o/id)
-                                             (assoc ::o/ytunnus (str "FirmaOY" index) ::o/postinumero "86300")))
+                                             (assoc ::o/ytunnus (str "FirmaOY" index)
+                                                    ::o/postinumero "86300"
+                                                    ::o/postitoimipaikka "Oulainen")))
                                        (gen/sample (s/gen ::o/tallenna-urakoitsija-kysely)))]
 
     (doseq [urakoitsija testiurakoitsijat]
