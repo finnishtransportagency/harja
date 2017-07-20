@@ -115,7 +115,7 @@
           fail! (tuck/send-async! ->UrakoitsijatEiHaettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/post! :vesivayla-urakoitsijat {}))]
+          (let [vastaus (async/<! (k/post! :vesivaylaurakoitsijat {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -140,7 +140,7 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [urakoitsijat (async/<! (k/post! :hae-kaikki-urakoitsijat {}))
+          (let [urakoitsijat (async/<! (k/post! :hae-urakoitsijat-urakkatietoineen {}))
                 ytunnukset (into {} (map (juxt ::o/ytunnus ::o/nimi) urakoitsijat))
                 vastaus {:ytunnukset ytunnukset}]
             (if (some k/virhe? (vals vastaus))

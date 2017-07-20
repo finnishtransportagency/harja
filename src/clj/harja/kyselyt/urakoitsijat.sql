@@ -6,13 +6,14 @@ SELECT y.id, y.ytunnus, y.nimi,
        LEFT JOIN organisaatio y ON u.urakoitsija = y.id
  WHERE y.tyyppi = 'urakoitsija'::organisaatiotyyppi;
 
--- name: hae-kaikki-urakoitsijat
+-- name: hae-urakoitsijat-urakkatietoineen
 SELECT
   urk.id,
   urk.nimi,
   urk.ytunnus,
   urk.katuosoite,
   urk.postinumero,
+  urk.postitoimipaikka,
   u.nimi AS urakka_nimi,
   u.id AS urakka_id,
   u.alkupvm AS urakka_alkupvm,
@@ -35,13 +36,14 @@ SELECT y.id
   		LEFT JOIN organisaatio y ON u.urakoitsija = y.id
  WHERE u.tyyppi IN ('paallystys', 'paikkaus', 'valaistus', 'tiemerkinta', 'siltakorjaus', 'tekniset-laitteet');
 
--- name: hae-vesivayla-urakoitsijat
+-- name: hae-vesivaylaurakoitsijat
 SELECT
   urk.id,
   urk.nimi,
   urk.ytunnus,
   urk.katuosoite,
   urk.postinumero,
+  urk.postitoimipaikka,
   urk.harjassa_luotu AS "harjassa-luotu?",
   u.nimi AS urakka_nimi,
   u.id AS urakka_id,
@@ -56,8 +58,8 @@ WHERE urk.tyyppi = 'urakoitsija'
 ORDER BY urk.nimi;
 
 -- name: luo-urakoitsija<!
-INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, tyyppi, luoja, luotu, harjassa_luotu)
-    VALUES (:nimi, :ytunnus, :katuosoite, :postinumero,
+INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, postitoimipaikka, tyyppi, luoja, luotu, harjassa_luotu)
+    VALUES (:nimi, :ytunnus, :katuosoite, :postinumero, :postitoimipaikka,
             'urakoitsija', :kayttaja, NOW(), TRUE);
 
 -- name: paivita-urakoitsija<!
@@ -66,6 +68,7 @@ UPDATE organisaatio SET
   ytunnus = :ytunnus,
   katuosoite = :katuosoite,
   postinumero = :postinumero,
+  postitoimipaikka = :postitoimipaikka,
   muokkaaja = :kayttaja,
   muokattu = NOW()
 WHERE id = :id;
