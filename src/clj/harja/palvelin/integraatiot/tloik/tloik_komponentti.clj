@@ -142,7 +142,8 @@
                        :paivittainen-lahetys-tehtava]]
       (doseq [kuuntelija kuuntelijat
               :let [poista-kuuntelija-fn (get this kuuntelija)]]
-        (poista-kuuntelija-fn))
+        (when poista-kuuntelija-fn
+          (poista-kuuntelija-fn)))
       (apply dissoc this kuuntelijat)))
 
   Ilmoitustoimenpidelahetys
