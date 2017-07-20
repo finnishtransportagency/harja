@@ -223,17 +223,25 @@
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (fn [ur]
-    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
+    (valinnat/urakan-valinnat
       ur
-      u/valittu-sopimusnumero u/valitse-sopimusnumero!
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      u/valittu-aikavali
-      u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+      {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                 :valitse-sopimus-fn u/valitse-sopimusnumero!}
+       :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :aikavali {:valittu-aikavali-atom u/valittu-aikavali}
+       :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                    :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                    :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali [ur]
   (fn [ur]
-    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+    (valinnat/urakan-valinnat
       ur
-      u/valittu-sopimusnumero u/valitse-sopimusnumero!
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      u/valittu-aikavali)))
+      {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                 :valitse-sopimus-fn u/valitse-sopimusnumero!}
+       :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :aikavali {:valittu-aikavali-atom u/valittu-aikavali}})))

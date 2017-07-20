@@ -174,36 +174,6 @@
    (when-let [{:keys [valittu-aikavali-atom]} aikavali]
      [aikavali valittu-aikavali-atom])])
 
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   valittu-aikavali-atom ;; hoitokauden-aikavali
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-   [urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom valittu-sopimusnumero-atom
-                                     :valitse-sopimus-fn valitse-sopimus-fn}
-                           :hoitokausi {:hoitokaudet hoitokaudet
-                                        :valittu-hoitokausi-atom valittu-hoitokausi-atom
-                                        :valitse-hoitokausi-fn valitse-hoitokausi-fn}}]
-   [aikavali valittu-aikavali-atom]
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   valittu-aikavali-atom] ;; hoitokauden-aikavali
-
-  [:span
-   [urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom valittu-sopimusnumero-atom
-                                     :valitse-sopimus-fn valitse-sopimus-fn}
-                           :hoitokausi {:hoitokaudet hoitokaudet
-                                        :valittu-hoitokausi-atom valittu-hoitokausi-atom
-                                        :valitse-hoitokausi-fn valitse-hoitokausi-fn}}]
-   [aikavali valittu-aikavali-atom]])
-
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
    (vuosi {}
