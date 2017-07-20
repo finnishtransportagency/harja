@@ -10,12 +10,13 @@ BEGIN
 
   IF (SELECT EXISTS(
       SELECT *
-      FROM (SELECT * FROM vv_hinnoittelu_toimenpide WHERE poistettu=FALSE) ht
+      FROM vv_hinnoittelu_toimenpide ht
         JOIN
-        (SELECT * FROM vv_hinnoittelu WHERE poistettu=FALSE) h ON ht."hinnoittelu-id" = h.id
+        vv_hinnoittelu h ON ht."hinnoittelu-id" = h.id
       WHERE
         ht."toimenpide-id" = new."toimenpide-id" AND
-        h.hintaryhma = uusi_hintaryhma))
+        h.hintaryhma = uusi_hintaryhma AND
+        ht.poistettu IS NOT TRUE))
   THEN
     RAISE EXCEPTION 'Toimenpiteelle % on jo olemassa hinnoittelu', new."toimenpide-id";
   END IF;

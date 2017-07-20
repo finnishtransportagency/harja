@@ -1,23 +1,23 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-   [clojure.test :refer :all]
-   [taoensso.timbre :as log]
-   [harja.kyselyt.urakat :as urk-q]
-   [harja.palvelin.komponentit.todennus :as todennus]
-   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-   [harja.palvelin.komponentit.http-palvelin :as http]
-   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-   [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
-   [harja.palvelin.komponentit.tietokanta :as tietokanta]
-   [harja.palvelin.komponentit.liitteet :as liitteet]
-   [com.stuartsierra.component :as component]
-   [clj-time.core :as t]
-   [clj-time.coerce :as tc]
-   [clojure.core.async :as async]
-   [clojure.spec.alpha :as s]
-   [clojure.string :as str]
-   [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]
+    [clojure.core.async :as async]
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -37,18 +37,18 @@
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
 (log/merge-config!
- {:appenders
-  {:println
-   {:min-level
-    (cond
-      (or (ollaanko-jenkinsissa?)
-          (travis?)
-          (circleci?)
-          (= "true" (System/getenv "NOLOG")))
-      :fatal
+  {:appenders
+   {:println
+    {:min-level
+     (cond
+       (or (ollaanko-jenkinsissa?)
+           (travis?)
+           (circleci?)
+           (= "true" (System/getenv "NOLOG")))
+       :fatal
 
-      :default
-      :debug)}}})
+       :default
+       :debug)}}})
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
@@ -315,9 +315,9 @@
                    WHERE
                    \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-                   (when (not (empty? options))
-                      (when-let [maara (:limit (first options))]
-                        "LIMIT " maara ";"))))))
+                  (when (not (empty? options))
+                    (when-let [maara (:limit (first options))]
+                      "LIMIT " maara ";"))))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla [& options]
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
@@ -328,11 +328,11 @@
                               INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                               WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
                               AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
-                              (when (not (empty? options))
-                                (if (:hintaryhma (first options))
-                                  " AND hintaryhma = TRUE"
-                                  " AND hintaryhma = FALSE"))
-                              ") LIMIT 1;"))))
+                  (when (not (empty? options))
+                    (if (:hintaryhma (first options))
+                      " AND hintaryhma = TRUE"
+                      " AND hintaryhma = FALSE"))
+                  ") LIMIT 1;"))))
 
 (defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
@@ -793,7 +793,7 @@
 (def portti nil)
 (def urakka nil)
 
-(def testi-pois-kytketyt-ominaisuudet  (component/using
+(def testi-pois-kytketyt-ominaisuudet (component/using
                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
                                         [:http-palvelin]))
 
@@ -828,8 +828,8 @@
                                                   (liitteet/->Liitteet nil)
                                                   [:db])
                            :pois-kytketyt-ominaisuudet (component/using
-                                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                                        [:http-palvelin])
+                                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                                         [:http-palvelin])
 
                            ~@omat))))
 
