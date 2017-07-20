@@ -275,6 +275,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
+ "reimari-henkilo-lkm",
  "vayla-id")
 VALUES
   ('kokonaishintainen',
@@ -307,6 +308,7 @@ VALUES
     '1022541803',
     '1022541903',
     '(123, Akonniemen väylät, 55)',
+    30,
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Akonniemen väylät'));
