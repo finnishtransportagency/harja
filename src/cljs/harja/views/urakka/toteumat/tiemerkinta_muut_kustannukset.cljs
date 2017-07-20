@@ -55,10 +55,10 @@
   (let [muokkausoikeus? (voi-kirjoittaa? (:id valittu-urakka))]
     [:span
      [valinnat/urakan-valinnat valittu-urakka {:sopimus {:valittu-sopimusnumero-atom valittu-sopimusnumero
-                                                            :valitse-sopimus-fn valitse-sopimusnumero}
-                                                  :hoitokausi {:hoitokaudet valitun-urakan-hoitokaudet
-                                                               :valittu-hoitokausi-atom valittu-hoitokausi
-                                                               :valitse-hoitokausi-fn valitse-hoitokausi}}]
+                                                         :valitse-sopimus-fn valitse-sopimusnumero}
+                                               :hoitokausi {:hoitokaudet valitun-urakan-hoitokaudet
+                                                            :valittu-hoitokausi-atom valittu-hoitokausi
+                                                            :valitse-hoitokausi-fn valitse-hoitokausi}}]
      [valinta-muun-kustannuksen-tyyppi kustannustyypit valittu-kustannustyyppi valitse-kustannustyyppi]
      [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiToteuma))
       {:disabled (not muokkausoikeus?)}]]))
