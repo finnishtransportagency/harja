@@ -20,17 +20,16 @@
 (defn urakan-sopimus
   ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
   ([ur valittu-sopimusnumero-atom valitse-fn {:keys [kaikki-valinta?] :as optiot}]
-   (log "SOPPARIT: " (pr-str (:sopimukset ur)))
    [:div.label-ja-alasveto.sopimusnumero
-   [:span.alasvedon-otsikko "Sopimusnumero"]
-   [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
-                         :format-fn second
-                         :valitse-fn valitse-fn
-                         :li-luokka-fn #(when (= (first %) (:paasopimus ur))
-                                          "bold")}
-    (if kaikki-valinta?
-      (concat [nil] (:sopimukset ur))
-      (:sopimukset ur))]]))
+    [:span.alasvedon-otsikko "Sopimusnumero"]
+    [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
+                          :format-fn second
+                          :valitse-fn valitse-fn
+                          :li-luokka-fn #(when (= (first %) (:paasopimus ur))
+                                           "bold")}
+     (if kaikki-valinta?
+       (merge (:sopimukset ur) {nil "Kaikki"})
+       (:sopimukset ur))]]))
 
 (defn urakkatyyppi
   [valittu-urakkatyyppi-atom urakkatyypit valitse-fn]
