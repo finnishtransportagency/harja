@@ -236,7 +236,7 @@
                     :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali
-  ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali {}))
+  ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))
   ([ur optiot]
    (fn [ur]
      (valinnat/urakan-valinnat

@@ -167,7 +167,7 @@
 (defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
-     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn sopimus-optiot])
+     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])
    (when-let [{:keys [hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]} hoitokausi]
      [urakan-hoitokausi urakka hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])
    (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
