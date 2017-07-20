@@ -124,4 +124,5 @@
          ::o/nimi (:nimi tallennettu-urakoitsija)
          ::o/postinumero (:postinumero tallennettu-urakoitsija)
          ::o/katuosoite (:katuosoite tallennettu-urakoitsija)
+         ::o/postitoimipaikka (:postitoimipaikka tallennettu-urakoitsija)
          ::o/ytunnus (:ytunnus tallennettu-urakoitsija)}))))
