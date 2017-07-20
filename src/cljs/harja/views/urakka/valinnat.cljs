@@ -241,7 +241,7 @@
    (fn [ur]
      (valinnat/urakan-valinnat
        ur
-       (merge
+       (merge-with merge
          {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
                     :valitse-sopimus-fn u/valitse-sopimusnumero!}
           :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
