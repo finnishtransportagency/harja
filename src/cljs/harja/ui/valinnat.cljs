@@ -86,14 +86,6 @@
                          :valitse-fn valitse-fn}
     hoitokauden-kuukaudet]])
 
-(defn urakan-hoitokausi-ja-kuukausi
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
-   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
-  [:span
-   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
-
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
   ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
@@ -169,6 +161,15 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
+(defn urakan-suodattimet [{:keys [urakan-sopimus urakan-hoitokausi] :as optiot}]
+  [:span
+   (let [{:keys [urakka valittu-sopimusnumero-atom valitse-sopimus-fn]} urakan-sopimus]
+    (when urakan-sopimus
+      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn]))
+  (let [{:keys [urakka valittu-sopimusnumero-atom valitse-sopimus-fn]} urakan-hoitokausi]
+    (when urakan-hoitokausi
+      [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])]))
+
 ;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
 (defn urakan-sopimus-ja-hoitokausi
   [ur
@@ -178,6 +179,14 @@
   [:span
    [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
    [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]])
+
+(defn urakan-hoitokausi-ja-kuukausi
+  [ur
+   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
+   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
+  [:span
+   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
+   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
 
 (defn urakan-sopimus-ja-toimenpide
   [ur
