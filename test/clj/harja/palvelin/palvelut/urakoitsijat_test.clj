@@ -64,15 +64,17 @@
 
 (deftest vesivaylaurakoitsijoiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :vesivayla-urakoitsijat +kayttaja-jvh+ {})]
+                                :vesivaylaurakoitsijat +kayttaja-jvh+ {})]
     (is (>= (count vastaus) 2))
-    (is (s/valid? ::o/vesivayla-urakoitsijat-vastaus vastaus))))
+    (is (s/valid? ::o/vesivaylaurakoitsijat-vastaus vastaus))))
 
 (deftest vesivaylaurakoitsijan-tallennus-ja-paivitys-toimii
   (let [testiurakoitsijat (map-indexed (fn [index urakoitsija]
                                          (-> urakoitsija
                                              (dissoc ::o/id)
-                                             (assoc ::o/ytunnus (str "FirmaOY" index) ::o/postinumero "86300")))
+                                             (assoc ::o/ytunnus (str "FirmaOY" index)
+                                                    ::o/postinumero "86300"
+                                                    ::o/postitoimipaikka "Oulainen")))
                                        (gen/sample (s/gen ::o/tallenna-urakoitsija-kysely)))]
 
     (doseq [urakoitsija testiurakoitsijat]
