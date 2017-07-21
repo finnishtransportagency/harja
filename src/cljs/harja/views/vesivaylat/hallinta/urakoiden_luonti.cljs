@@ -37,7 +37,7 @@
        :nimi ::s/sopimus
        :leveys 3
        :tyyppi :valinta
-       :valinnat (tiedot/vapaat-sopimukset haetut-sopimukset urakan-sopimukset)
+       :valinnat (tiedot/vapaat-sopimukset urakka haetut-sopimukset urakan-sopimukset)
        :virheet-dataan? true
        :valinta-nayta #(or (::s/nimi %) "- Valitse sopimus -")
        :hae identity
@@ -49,7 +49,7 @@
        :nimi ::s/paasopimus-id
        :leveys 1
        :tyyppi :string
-       :fmt #(if (s/paasopimus? urakan-sopimukset %)
+       :fmt #(if (s/paasopimus-jokaiselle? urakan-sopimukset %)
                (ikonit/check)
                (ikonit/unchecked))
        :muokattava? (constantly false)
@@ -146,9 +146,6 @@
                                 (> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
                                 "Määrittele pääsopimus"
 
-                                (= (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
-                                "Urakalla vain yksi sopimus"
-
                                 :else "Valitse urakalle sopimus"))
             :jos-tyhja "Urakalla ei sopimuksia"
             :muokattava? #(> (count (filter (comp id-olemassa? ::s/id) urakan-sopimukset)) 1)
@@ -158,7 +155,7 @@
                                                   (::u/sopimukset rivi)
                                                   arvo)))
             :hae (fn [rivi]
-                   (s/paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
+                   (s/ainoa-paasopimus (ilman-poistettuja (::u/sopimukset rivi))))}]
           valittu-urakka])])))
 
 (defn- muokkaus-otsikko [asia muokattu luotu]

@@ -43,9 +43,13 @@
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
-(defn vapaat-sopimukset [sopimukset urakan-sopimukset]
+(defn sopiva-sopimus-urakalle? [u s]
+  (or (vapaa-sopimus? s)
+      (= (::u/id u) (get-in s [::s/urakka ::u/id]))))
+
+(defn vapaat-sopimukset [urakka sopimukset urakan-sopimukset]
   (->> sopimukset
-       (filter vapaa-sopimus?)
+       (filter (partial sopiva-sopimus-urakalle? urakka))
        (remove (comp (into #{} (keep ::s/id urakan-sopimukset)) ::s/id))))
 
 (defn uusin-tieto [hanke sopimukset urakoitsija urakka]
@@ -194,7 +198,7 @@
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
     (->> sopimukset
          ;; Asetetaan sopimukset viittaamaan pääsopimukseen
-         (map #(assoc % ::s/paasopimus-id (::s/id (s/paasopimus (::u/sopimukset urakka)))))
+         (map #(assoc % ::s/paasopimus-id (::s/id (s/ainoa-paasopimus (::u/sopimukset urakka)))))
          ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
          (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
          (assoc-in app [:valittu-urakka ::u/sopimukset])))
