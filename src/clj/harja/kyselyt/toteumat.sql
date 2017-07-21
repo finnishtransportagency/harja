@@ -284,7 +284,7 @@ FROM toteuma_tehtava tt
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
--- name: paivita-toteuma!
+-- name: paivita-toteuma<!
 UPDATE toteuma
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
