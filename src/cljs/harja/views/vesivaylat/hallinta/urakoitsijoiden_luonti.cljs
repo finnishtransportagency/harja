@@ -10,6 +10,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]))
 
@@ -48,8 +49,9 @@
                          :tallennus-kaynnissa? tallennus-kaynnissa?}])}
          [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
           {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9
-           :validoi [(fn [tunnus] (when-let [urakoitsija (haetut-ytunnukset tunnus)]
-                                    (str "Tunnus " tunnus " on käytössa urakoitsijalla " urakoitsija)))
+           :validoi [(fn [tunnus]
+                       (when-let [nimi (tiedot/urakoitsijan-nimi-ytunnuksella tunnus valittu-urakoitsija haetut-ytunnukset)]
+                         (str "Tunnus " tunnus " on käytössa urakoitsijalla " nimi)))
                      [:ytunnus]]}
           {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
           {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
@@ -111,9 +113,11 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {valittu-urakoitsija :valittu-urakoitsija :as app}]
-      (if valittu-urakoitsija
-        [luontilomake e! app]
-        [urakoitsijagrid e! app]))))
+      [:div
+       [debug/debug app]
+       (if valittu-urakoitsija
+         [luontilomake e! app]
+         [urakoitsijagrid e! app])])))
 
 (defn vesivaylaurakoitsijoiden-luonti []
   [tuck tiedot/tila vesivaylaurakoitsijoiden-luonti*])
