@@ -14,12 +14,9 @@
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
-            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.ui.napit :as napit])
+            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake])
   (:require-macros
    [cljs.core.async.macros :refer [go]]))
-
-
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
