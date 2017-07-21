@@ -18,8 +18,13 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
-    :tarkastukset (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
-                       (not (urakka/vesivaylaurakka? urakka)))
+    :tarkastukset (or (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
+                        (not (urakka/vesivaylaurakka? urakka)))
+                      (and
+                        (istunto/ominaisuus-kaytossa? :vesivayla)
+                        (urakka/vesivaylaurakka? urakka)
+                        ;; TODO Tartteeko todella olla vv-urakoille oma erilinen vesivaylalaadunseuranta oikeus?
+                        #_(oikeudet/urakat-vesivaylalaadunseuranta-tarkastukset id))) ; TODO OIKEUS
     :laatupoikkeamat (or (and
                            (istunto/ominaisuus-kaytossa? :vesivayla)
                            (urakka/vesivaylaurakka? urakka)
@@ -48,7 +53,8 @@
 
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
-         [tarkastukset/tarkastukset {:nakyma tyyppi}])
+         [tarkastukset/tarkastukset {:nakyma tyyppi
+                                     :urakka ur}])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
