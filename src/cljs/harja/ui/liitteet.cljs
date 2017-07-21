@@ -262,9 +262,9 @@
    jolla voi lisätä yhden uuden liitteen (optiolla useamman).
    Tekee myös oikeustarkistuksen.
 
-   urakka-id                          Urakan id, johon liite lisätään
-   tallennetut-liitteet               Kokoelma liitteitä, jotka on tallennettu kantaan ja jotka on linkitetty
-                                      johonkin domainiin liittyvään asiaan
+   urakka-id                           Urakan id, johon liite lisätään
+   tallennetut-liitteet                Kokoelma liitteitä, jotka on tallennettu kantaan ja jotka on linkitetty
+                                       johonkin domainiin liittyvään asiaan
 
    Optiot voi sisältää:
    uusi-liite-teksti                   Teksti uuden liitteen lisäämisen nappiin
