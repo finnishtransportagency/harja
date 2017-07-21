@@ -201,7 +201,7 @@ FROM toteuma_tehtava tt
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
-  tt.id, -- Jotta "sarakkeet vektoriin" palauttaa oikein
+  tt.id, -- Jotta "sarakkeet vektoriin" toimii oikein
   tt.id              AS tehtava_id,
   tt.toteuma         AS toteuma_id,
   tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
