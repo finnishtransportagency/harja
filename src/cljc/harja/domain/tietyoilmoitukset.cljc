@@ -144,4 +144,5 @@
   (s/keys :req-un [::geometria ::urakka-id ::urakoitsijan-yhteyshenkilo ::kohteet ::tilaaja-nimi
                    ::tr-loppuosa ::tr-alkuosa ::tilaaja-id ::tr-loppuetaisyys ::yllapitokohde-id ::tr-alkuetaisyys
                    ::tr-numero ::alku ::tilaajan-yhteyshenkilo ::urakoitsija-nimi ::loppu
-                   ::urakoitsija-id ::urakka-nimi ::urakka-sampo-id]))
+                   ::urakoitsija-id ::urakka-nimi ::urakka-sampo-id]
+          :opt-un [::urakoitsija-ytunnus]))

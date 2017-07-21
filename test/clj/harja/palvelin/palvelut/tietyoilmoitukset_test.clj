@@ -167,7 +167,6 @@
                                   :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                                   +kayttaja-jvh+
                                   yllapitokohde-id)]
-
       (is (s/valid? ::t/hae-yllapitokohteen-tiedot-tietyoilmoitukselle-vastaus vastaus)))))
 
 (deftest hae-tietyoilmoitus

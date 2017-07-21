@@ -4,18 +4,9 @@
             [hiccup.core :refer [html]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.tyokalut.merkkijono :as merkkijono])
-  (:use [slingshot.slingshot :only [throw+]])
-  (:import (java.text SimpleDateFormat)
-           (java.util TimeZone)))
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
-
-(defn formatoi-paivamaara [date]
-  (when date
-    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
-      ;; T-LOIK:n lähetetään ajat GMT+0 aikavyöhykkeellä
-      (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
-      (.format dateformat date))))
 
 (defn muodosta-henkilo [data]
   (when data
@@ -42,7 +33,7 @@
    [:viestiId viesti-id]
    [:ilmoitusId ilmoitusid]
    [:tyyppi kuittaustyyppi]
-   [:aika (formatoi-paivamaara kuitattu)]
+   [:aika (xml/datetime->gmt-0-pvm kuitattu)]
    [:vapaateksti (muodosta-vapaateksti vakiofraasi vapaateksti)]
    [:kasittelija
     (muodosta-henkilo kasittelija)
