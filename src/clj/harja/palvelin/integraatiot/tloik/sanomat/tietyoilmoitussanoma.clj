@@ -12,41 +12,41 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(defn henkilo [avain ilmoittaja]
+(defn- henkilo [avain ilmoittaja]
   [avain
    [:etunimi (::tietyoilmoitus/etunimi ilmoittaja)]
    [:sukunimi (::tietyoilmoitus/sukunimi ilmoittaja)]
    [:matkapuhelin (::tietyoilmoitus/matkapuhelin ilmoittaja)]
    [:sahkoposti (::tietyoilmoitus/sahkoposti ilmoittaja)]])
 
-(defn urakka [data]
+(defn- urakka [data]
   [:urakka
    [:id (::tietyoilmoitus/urakka-id data)]
    [:nimi (::tietyoilmoitus/urakkan-nimi data)]
    [:tyyppi (::tietyoilmoitus/urakkatyyppi data)]])
 
-(defn urakoitsija [data]
+(defn- urakoitsija [data]
   [:urakoitsija
    [:nimi (::tietyoilmoitus/urakoitsijan-nimi data)]
    [:ytunnus (::tietyoilmoitus/urakoitsijan-ytunnus data)]])
 
-(defn urakoitsijan-yhteyshenkilot [data]
+(defn- urakoitsijan-yhteyshenkilot [data]
   (when (::tietyoilmoitus/urakoitsijayhteyshenkilo data)
     [:urakoitsijan-yhteyshenkilot
      (conj (henkilo :urakoitsijan-yhteyshenkilo (::tietyoilmoitus/urakoitsijayhteyshenkilo data))
            [:vastuuhenkilo "true"])]))
 
-(defn tilaaja [data]
+(defn- tilaaja [data]
   [:tilaaja
    [:nimi (::tietyoilmoitus/tilaajan-nimi data)]])
 
-(defn tilaajan-yhteyshenkilot [data]
+(defn- tilaajan-yhteyshenkilot [data]
   (when (::tietyoilmoitus/tilaajayhteyshenkilo data)
     [:tilaajan-yhteyshenkilot
      (conj (henkilo :tilaajan-yhteyshenkilo (::tietyoilmoitus/tilaajayhteyshenkilo data))
            [:vastuuhenkilo "true"])]))
 
-(defn tyotyypit [data]
+(defn- tyotyypit [data]
   (when (::tietyoilmoitus/tyotyypit data)
     (into [:tyotyypit]
           (map #(vector :tyotyyppi
@@ -54,7 +54,7 @@
                         [:kuvaus (::tietyoilmoitus/kuvaus %)])
                (::tietyoilmoitus/tyotyypit data)))))
 
-(defn sijainti [data]
+(defn- sijainti [data]
   (let [osoite (::tietyoilmoitus/osoite data)
         viivat (:lines (geo/pg->clj (::tierekisteri/geometria osoite)))
         alkukoordinaatit (first (:points (first viivat)))
@@ -84,12 +84,12 @@
      [:alkusijainninKuvaus (::tietyoilmoitus/alkusijainnin-kuvaus data)]
      [:loppusijainninKuvaus (::tietyoilmoitus/loppusijainnin-kuvaus data)]]))
 
-(defn ajankohta [data]
+(defn- ajankohta [data]
   [:ajankohta
    [:alku (xml/datetime->gmt-0-pvm (::tietyoilmoitus/alku data))]
    [:loppu (xml/datetime->gmt-0-pvm (::tietyoilmoitus/loppu data))]])
 
-(defn tyoajat [data]
+(defn- tyoajat [data]
   (when (::tietyoilmoitus/tyoajat data)
     (into [:tyoajat]
           (map
@@ -100,12 +100,12 @@
                       (into [:paivat] (map #(vector :paiva %) (::tietyoilmoitus/paivat tyoaika)))))
             (::tietyoilmoitus/tyoajat data)))))
 
-(defn lista [lista-avain arvoavain arvo-fn data]
+(defn- lista [lista-avain arvoavain arvo-fn data]
   (into [lista-avain]
         (map #(vector arvoavain (arvo-fn %))
              data)))
 
-(defn tienpinnat [pinnat]
+(defn- tienpinnat [pinnat]
   (when pinnat
     (into [:tienpinnat]
           (map #(vector :tienpinta
@@ -113,7 +113,7 @@
                         [:matka (::tietyoilmoitus/matka %)])
                pinnat))))
 
-(defn nopeusrajoitukset [data]
+(defn- nopeusrajoitukset [data]
   (when (::tietyoilmoitus/nopeusrajoitukset data)
     (into [:nopeusrajoitukset]
           (map #(vector :nopeusrajoitus
@@ -121,13 +121,13 @@
                         [:matka (::tietyoilmoitus/matka %)])
                (::tietyoilmoitus/nopeusrajoitukset data)))))
 
-(defn kiertotie [data]
+(defn- kiertotie [data]
   (when (::tietyoilmoitus/kiertotien-mutkaisuus data)
     [:kiertotie
      [:mutkaisuus (::tietyoilmoitus/kiertotien-mutkaisuus data)]
      (tienpinnat (::tietyoilmoitus/kiertotienpinnat data))]))
 
-(defn liikenteenohjaus [data]
+(defn- liikenteenohjaus [data]
   (let [ohjaus (::tietyoilmoitus/liikenteenohjaus data)
         ohjaaja (::tietyoilmoitus/liikenteenohjaaja data)]
     (when (or ohjaus ohjaaja)
@@ -137,7 +137,7 @@
        (when ohjaaja
          [:ohjaaja ohjaaja])])))
 
-(defn viivastykset [data]
+(defn- viivastykset [data]
   (let [normaali-liikenteessa (::tietyoilmoitus/viivastys-normaali-liikenteessa data)
         ruuhka-aikana (::tietyoilmoitus/viivastys-ruuhka-aikana data)]
     (when (or normaali-liikenteessa ruuhka-aikana)
@@ -147,7 +147,7 @@
        (when ruuhka-aikana
          [:ruuhka-aikana ruuhka-aikana])])))
 
-(defn rajoitukset [data]
+(defn- rajoitukset [data]
   (let [rajoitukset (::tietyoilmoitus/ajoneuvorajoitukset data)
         korkeus (::tietyoilmoitus/max-korkeus rajoitukset)
         leveys (::tietyoilmoitus/max-leveys rajoitukset)
@@ -164,14 +164,14 @@
        (when paino
          [:max-paino (::tietyoilmoitus/max-paino rajoitukset)])])))
 
-(defn huomautukset [data]
+(defn- huomautukset [data]
   (when (::tietyoilmoitus/huomautukset data)
     (into [:huomautukset]
           (map
             #(vector :huomautus %)
             (::tietyoilmoitus/huomautukset data)))))
 
-(defn pysaytykset [data]
+(defn- pysaytykset [data]
   (let [ajoittaiset-pysaytykset (::tietyoilmoitus/ajoittaiset-pysaytykset data)
         ajoittain-suljettu-tie (::tietyoilmoitus/ajoittain-suljettu-tie data)
         alku (::tietyoilmoitus/pysaytysten-alku data)
@@ -188,7 +188,7 @@
         (when loppu
           [:paattyen (xml/datetime->gmt-0-pvm loppu)])]])))
 
-(defn vaikutukset [data]
+(defn- vaikutukset [data]
   [:vaikutukset
    [:vaikutussuunta (::tietyoilmoitus/vaikutussuunta data)]
    (when
@@ -203,7 +203,7 @@
    (huomautukset data)
    (pysaytykset data)])
 
-(defn muodosta-viesti [data viesti-id]
+(defn- muodosta-viesti [data viesti-id]
   (let [ilmoittaja (::tietyoilmoitus/ilmoittaja data)]
     [:harja:tietyoilmoitus
      {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
