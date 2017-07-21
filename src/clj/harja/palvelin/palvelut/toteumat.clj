@@ -398,15 +398,12 @@
   (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)
 
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
-  (let [vastaus (-> (into []
-                          muut-tyot-xf
-                          (toteumat-q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
-                    (konv/sarakkeet-vektoriin
-                      {:liite :liitteet}
-                      #(get % [:tehtava :id])))]
-
-    (log/debug "VAST: " vastaus)
-    vastaus))
+  (-> (into []
+            muut-tyot-xf
+            (toteumat-q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+      (konv/sarakkeet-vektoriin
+        {:liite :liitteet}
+        #(get % [:tehtava :id]))))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
