@@ -263,7 +263,7 @@
 
     (let [urakan-sopimus-idt (map ::s/id (remove :poistettu sopimukset))
           poistettavat-sopimus-idt (map ::s/id (filter :poistettu sopimukset))
-          urakan-paasopimus (s/paasopimus sopimukset)
+          urakan-paasopimus (s/ainoa-paasopimus sopimukset)
           urakan-sivusopimukset (filter #(not= % urakan-paasopimus) sopimukset)]
 
       (assert urakan-paasopimus "Urakalla oltava yksi pääsopimus!")
