@@ -378,7 +378,7 @@
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim])
+                           [:tloik :http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

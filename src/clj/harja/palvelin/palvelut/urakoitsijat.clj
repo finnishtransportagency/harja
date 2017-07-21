@@ -13,29 +13,31 @@
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.konversio :as konv]))
 
-(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivayla-urakoitsijat
-         tallenna-urakoitsija! hae-kaikki-urakoitsijat)
+(declare hae-urakoitsijat urakkatyypin-urakoitsijat yllapidon-urakoitsijat vesivaylaurakoitsijat
+         tallenna-urakoitsija! hae-urakoitsijat-urakkatietoineen)
 
 
 (defrecord Urakoitsijat []
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-urakoitsijat (fn [user _]
-                                          (hae-urakoitsijat (:db this) user)))
-    (julkaise-palvelu (:http-palvelin this) :hae-kaikki-urakoitsijat
+                      :hae-urakoitsijat
                       (fn [user _]
-                        (hae-kaikki-urakoitsijat (:db this) user)))
+                        (hae-urakoitsijat (:db this) user)))
+    (julkaise-palvelu (:http-palvelin this)
+                      :hae-urakoitsijat-urakkatietoineen
+                      (fn [user _]
+                        (hae-urakoitsijat-urakkatietoineen (:db this) user)))
     (julkaise-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat
                       (fn [user urakkatyyppi]
                         (urakkatyypin-urakoitsijat (:db this) user urakkatyyppi)))
     (julkaise-palvelu (:http-palvelin this) :yllapidon-urakoitsijat
                       (fn [user]
                         (yllapidon-urakoitsijat (:db this) user)))
-    (julkaise-palvelu (:http-palvelin this) :vesivayla-urakoitsijat
+    (julkaise-palvelu (:http-palvelin this) :vesivaylaurakoitsijat
                       (fn [user _]
-                        (vesivayla-urakoitsijat (:db this) user))
-                      {:vastaus-spec ::o/vesivayla-urakoitsijat-vastaus})
+                        (vesivaylaurakoitsijat (:db this) user))
+                      {:vastaus-spec ::o/vesivaylaurakoitsijat-vastaus})
     (julkaise-palvelu (:http-palvelin this) :tallenna-urakoitsija
                       (fn [user tiedot]
                         (tallenna-urakoitsija! (:db this) user tiedot))
@@ -45,27 +47,25 @@
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hae-urakoitsijat)
-    (poista-palvelu (:http-palvelin this) :hae-kaikki-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :hae-urakoitsijat-urakkatietoineen)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-urakoitsijat)
-    (poista-palvelu (:http-palvelin this) :vesivayla-urakoitsijat)
+    (poista-palvelu (:http-palvelin this) :vesivaylaurakoitsijat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakoitsija)
     this))
 
 
 (defn hae-urakoitsijat
-  "Palvelu, joka palauttaa kaikki urakoitsijat urakkatyypistä riippumatta."
   [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (vec (q/listaa-urakoitsijat db)))
 
-(defn hae-kaikki-urakoitsijat [db user]
+(defn hae-urakoitsijat-urakkatietoineen [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (let [urakoitsijat (konv/sarakkeet-vektoriin
                        (into []
                              (map #(konv/alaviiva->rakenne %))
-                             (q/hae-kaikki-urakoitsijat db))
+                             (q/hae-urakoitsijat-urakkatietoineen db))
                        {:urakka :urakat})]
-    (log/debug (pr-str urakoitsijat))
     (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
                                :inner {:urakat {:ns :harja.domain.urakka}}})))
 
@@ -84,13 +84,13 @@
        (map :id)
        (into #{})))
 
-(defn vesivayla-urakoitsijat [db user]
+(defn vesivaylaurakoitsijat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [urakoitsijat (konv/sarakkeet-vektoriin
                          (into []
                                (map #(konv/alaviiva->rakenne %))
-                               (q/hae-vesivayla-urakoitsijat db))
+                               (q/hae-vesivaylaurakoitsijat db))
                          {:urakka :urakat})]
       (namespacefy urakoitsijat {:ns :harja.domain.organisaatio
                                  :inner {:urakat {:ns :harja.domain.urakka}}}))))
@@ -101,6 +101,7 @@
     (let [id (::o/id urakoitsija)
           nimi (::o/nimi urakoitsija)
           postinumero (::o/postinumero urakoitsija)
+          postitoimipaikka (::o/postitoimipaikka urakoitsija)
           katuosoite (::o/katuosoite urakoitsija)
           ytunnus (::o/ytunnus urakoitsija)]
       (let [tallennettu-urakoitsija (if (id-olemassa? id)
@@ -110,15 +111,18 @@
                                                                 :ytunnus ytunnus
                                                                 :katuosoite katuosoite
                                                                 :postinumero postinumero
+                                                                :postitoimipaikka postitoimipaikka
                                                                 :kayttaja (:id user)})
                                       (q/luo-urakoitsija<! db
                                                            {:nimi nimi
                                                             :ytunnus ytunnus
                                                             :katuosoite katuosoite
                                                             :postinumero postinumero
+                                                            :postitoimipaikka postitoimipaikka
                                                             :kayttaja (:id user)}))]
         {::o/id (:id tallennettu-urakoitsija)
          ::o/nimi (:nimi tallennettu-urakoitsija)
          ::o/postinumero (:postinumero tallennettu-urakoitsija)
          ::o/katuosoite (:katuosoite tallennettu-urakoitsija)
+         ::o/postitoimipaikka (:postitoimipaikka tallennettu-urakoitsija)
          ::o/ytunnus (:ytunnus tallennettu-urakoitsija)}))))
