@@ -44,6 +44,19 @@
        (map pvm/pvm)
        (str/join " - ")))
 
+(defn- ytunnus-kaytossa? [tunnus valittu-urakoitsija tunnukset]
+  (boolean
+    (when-let [urakoitsija (tunnukset tunnus)]
+     (not (= (::o/id urakoitsija) (::o/id valittu-urakoitsija))))))
+
+(defn urakoitsijan-nimi-ytunnuksella [tunnus valittu-urakoitsija tunnukset]
+  (when
+    (ytunnus-kaytossa? tunnus valittu-urakoitsija tunnukset)
+    (::o/nimi (tunnukset tunnus))))
+
+(defn urakoitsijat-ytunnuksittain [urakoitsijat]
+  (into {} (map (juxt ::o/ytunnus identity) urakoitsijat)))
+
 (defrecord ValitseUrakoitsija [urakoitsija])
 (defrecord Nakymassa? [nakymassa?])
 (defrecord UusiUrakoitsija [])
@@ -115,7 +128,7 @@
           fail! (tuck/send-async! ->UrakoitsijatEiHaettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/post! :vesivayla-urakoitsijat {}))]
+          (let [vastaus (async/<! (k/post! :vesivaylaurakoitsijat {}))]
             (if (k/virhe? vastaus)
               (fail! vastaus)
               (tulos! vastaus)))
@@ -140,8 +153,8 @@
           fail! (tuck/send-async! ->LomakevaihtoehdotEiHaettu)]
       (go
         (try
-          (let [urakoitsijat (async/<! (k/post! :hae-kaikki-urakoitsijat {}))
-                ytunnukset (into {} (map (juxt ::o/ytunnus ::o/nimi) urakoitsijat))
+          (let [urakoitsijat (async/<! (k/post! :hae-urakoitsijat-urakkatietoineen {}))
+                ytunnukset (urakoitsijat-ytunnuksittain urakoitsijat)
                 vastaus {:ytunnukset ytunnukset}]
             (if (some k/virhe? (vals vastaus))
               (fail! vastaus)

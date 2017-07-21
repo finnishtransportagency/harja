@@ -1,13 +1,14 @@
 (ns harja.domain.organisaatio
   "Määrittelee organisaation nimiavaruuden specit"
-  #?@(:clj [(:require [clojure.spec.alpha :as s]
-                      [harja.kyselyt.specql-db :refer [define-tables]]
-                      [clojure.future :refer :all])]
+  #?@(:clj  [
+             (:require [clojure.spec.alpha :as s]
+                       [harja.kyselyt.specql-db :refer [define-tables]]
+                       [clojure.future :refer :all])]
       :cljs [(:require [clojure.spec.alpha :as s]
-                       [specql.impl.registry]
-                       [specql.data-types])
+               [specql.impl.registry]
+               [specql.data-types])
              (:require-macros
-              [harja.kyselyt.specql-db :refer [define-tables]])]))
+               [harja.kyselyt.specql-db :refer [define-tables]])]))
 
 (define-tables
   ["organisaatio" ::organisaatio
@@ -22,12 +23,16 @@
 
 ;; Haut
 
-(s/def ::vesivayla-urakoitsijat-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::ytunnus ::katuosoite ::postinumero])))
+(s/def ::vesivaylaurakoitsijat-vastaus
+  (s/coll-of (s/keys :req [::id ::nimi ::ytunnus ::katuosoite ::postinumero ::postitoimipaikka])))
 
 ;; Tallennus
 
-(s/def ::tallenna-urakoitsija-kysely (s/keys :req [::nimi ::ytunnus]
-                                             :opt [::id ::katuosoite ::postinumero]))
+(s/def ::tallenna-urakoitsija-kysely
+  (s/keys :req [::nimi ::ytunnus]
+          :opt [::id ::katuosoite
+                ::postinumero ::postitoimipaikka]))
 
-(s/def ::tallenna-urakoitsija-vastaus (s/keys :req [::id ::nimi ::ytunnus ::katuosoite ::postinumero]))
+(s/def ::tallenna-urakoitsija-vastaus
+  (s/keys :req [::id ::nimi ::ytunnus
+                ::katuosoite ::postinumero ::postitoimipaikka]))
