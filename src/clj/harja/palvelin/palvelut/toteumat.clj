@@ -398,9 +398,12 @@
   (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)
 
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
-  (into []
-        muut-tyot-xf
-        (toteumat-q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
+  (-> (into []
+            muut-tyot-xf
+            (toteumat-q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+      (konv/sarakkeet-vektoriin
+        {:liite :liitteet}
+        #(get % [:tehtava :id]))))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
@@ -866,7 +869,7 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
-      :urakan-muut-tyot
+      :urakan-toteutuneet-muut-tyot
       (fn [user tiedot]
         (hae-urakan-muut-tyot db user tiedot))
       :tallenna-muiden-toiden-toteuma
@@ -912,7 +915,7 @@
       :paivita-yk-hint-toteumien-tehtavat
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
-      :urakan-muut-tyot
+      :urakan-toteutuneet-muut-tyot
       :tallenna-muiden-toiden-toteuma
       :tallenna-toteuma-ja-toteumamateriaalit
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat

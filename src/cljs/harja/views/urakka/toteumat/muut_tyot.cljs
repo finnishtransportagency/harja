@@ -67,11 +67,11 @@
                       (if (= :paivanhinta (:hinnoittelu muokattu))
                         (get-in muokattu [:tehtava :paivanhinta])
                         nil))
-            vanhat-idt (into #{} (map #(get-in % [:toteuma :id]) @u/muut-tyot-hoitokaudella))
+            vanhat-idt (into #{} (map #(get-in % [:toteuma :id]) @u/toteutuneet-muut-tyot-hoitokaudella))
             res (<! (muut-tyot/tallenna-muiden-toiden-toteuma toteuma))
             uuden-id (get-in (first (filter #(not (vanhat-idt (get-in % [:toteuma :id])))
                                             res)) [:toteuma :id])]
-        (reset! u/muut-tyot-hoitokaudella res)
+        (reset! u/toteutuneet-muut-tyot-hoitokaudella res)
         (paivita! u/muutoshintaiset-tyot)
         (or uuden-id true))))
 
@@ -401,19 +401,20 @@
 (defn muut-tyot-toteumalistaus
   "Muiden töiden toteumat"
   [urakka]
-  (let [valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
-                                          muut-tyot-hoitokaudella @u/muut-tyot-hoitokaudella]
-                                      (when muut-tyot-hoitokaudella
-                                        (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
-                                                                               (:id toimenpideinstanssi))
-                                                                           muut-tyot-hoitokaudella))))))
+  (let [toteutuneet-muut-tyot (reaction
+                                (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                                      toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella]
+                                  (when toteutuneet-muut-tyot-hoitokaudella
+                                    (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
+                                                                           (:id toimenpideinstanssi))
+                                                                       toteutuneet-muut-tyot-hoitokaudella))))))
         oikeus (if (= (:tyyppi urakka) :tiemerkinta)
                  oikeudet/urakat-toteutus-muutkustannukset
                  oikeudet/urakat-toteumat-muutos-ja-lisatyot)
         tyorivit
         (reaction
           (let [muutoshintaiset-tyot @u/muutoshintaiset-tyot
-                valitut-muut-tyot @valitut-muut-tyot]
+                toteutuneet-muut-tyot @toteutuneet-muut-tyot]
             (map (fn [muu-tyo]
                    (let [muutoshintainen-tyo
                          (first (filter (fn [muutoshinta]
@@ -425,7 +426,7 @@
                        :yksikko (:yksikko muutoshintainen-tyo)
                        :yksikkohinta yksikkohinta
                        :yksikkohinta-suunniteltu? yksikkohinta)))
-                 valitut-muut-tyot)))]
+                 toteutuneet-muut-tyot)))]
 
     (komp/luo
       (fn []
@@ -445,7 +446,7 @@
 
            [grid/grid
             {:otsikko (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt sekä vahinkojen korjaukset")
-             :tyhja (if (nil? @valitut-muut-tyot)
+             :tyhja (if (nil? @toteutuneet-muut-tyot)
                       [ajax-loader "Toteumia haetaan..."]
                       "Ei toteumia saatavilla.")
              :rivi-klikattu #(reset! muut-tyot/valittu-toteuma %)

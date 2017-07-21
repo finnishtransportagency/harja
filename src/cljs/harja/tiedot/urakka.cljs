@@ -380,14 +380,14 @@
                               (= :muut-tyot toteuman-sivu)))
                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
-(defonce muut-tyot-hoitokaudella
+(defonce toteutuneet-muut-tyot-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                sopimus-id (first @valittu-sopimusnumero)
                aikavali @valittu-hoitokausi
                sivu (nav/valittu-valilehti :toteumat)]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+      (toteumat/hae-urakan-toteutuneet-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
