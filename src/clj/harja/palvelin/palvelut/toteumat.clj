@@ -403,7 +403,7 @@
             (toteumat-q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
       (konv/sarakkeet-vektoriin
         {:liite :liitteet}
-        #(get % [:tehtava :id]))))
+        :id)))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
