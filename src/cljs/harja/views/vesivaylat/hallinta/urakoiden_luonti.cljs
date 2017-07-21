@@ -6,7 +6,6 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [namespacefy.core :refer [get-un]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.domain.urakka :as u]
             [harja.domain.organisaatio :as o]
             [harja.domain.hanke :as h]

@@ -10,7 +10,6 @@
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid] :as grid]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
