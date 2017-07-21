@@ -990,7 +990,7 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE
-        OR u.urakoitsija = :urakoitsija-id)
+        OR u.urakoitsija = :urakoitsija-id);
 
 -- name: tallenna-liite-toteumalle<!
 INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
@@ -1005,4 +1005,4 @@ SELECT
 FROM liite l
   JOIN toteuma_liite tl ON l.id = tl.liite
 WHERE tl.toteuma = :toteumaid
-ORDER BY l.luotu ASC
+ORDER BY l.luotu ASC;
