@@ -27,7 +27,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -56,11 +57,14 @@
                                                           :toimenpideinstanssi tpi-id
                                                           :tyyppi tyyppi
                                                           :rahasumma rahasumma
-                                                          :indeksin_nimi indeksi)))
-            uuden-id (:id (first (filter #(not (vanhat-idt (:id %)))
-                                         res)))]
-        (reset! u/erilliskustannukset-hoitokaudella res)
-        (or uuden-id true))))
+                                                          :indeksin_nimi indeksi)))]
+
+        (if (k/virhe? res)
+          (viesti/nayta! "Tallennus epäonnistui!" :danger)
+          (let [uuden-id (:id (first (filter #(not (vanhat-idt (:id %)))
+                                             res)))]
+            (reset! u/erilliskustannukset-hoitokaudella res)
+            (or uuden-id true))))))
 
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
@@ -261,8 +265,7 @@
             :palstoja 1
             }
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
-            :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}
-           ]
+            :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}]
 
           @muokattu]]))))
 
