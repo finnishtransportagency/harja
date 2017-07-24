@@ -36,20 +36,22 @@
     (nil? (::paasopimus-id sopimus))))
 
 (defn paasopimus-jollekin? [sopimukset sopimus]
-  (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
-                                sopimukset)]
-    (and
-      (voi-olla-paasopimus?* sopimus)
-      (some #(= (::paasopimus-id %) (::id sopimus))
-              muut-sopimukset))))
+  (boolean
+    (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
+                                 sopimukset)]
+     (and
+       (voi-olla-paasopimus?* sopimus)
+       (some #(= (::paasopimus-id %) (::id sopimus))
+             muut-sopimukset)))))
 
 (defn paasopimus-jokaiselle? [sopimukset sopimus]
-  (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
-                                sopimukset)]
-    (and
-      (voi-olla-paasopimus?* sopimus)
-      (every? #(= (::paasopimus-id %) (::id sopimus))
-              muut-sopimukset))))
+  (boolean
+    (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
+                                 sopimukset)]
+     (and
+       (voi-olla-paasopimus?* sopimus)
+       (every? #(= (::paasopimus-id %) (::id sopimus))
+               muut-sopimukset)))))
 
 (defn ainoa-paasopimus [sopimukset]
   (first (filter #(paasopimus-jokaiselle? sopimukset %) sopimukset)))
