@@ -16,9 +16,9 @@ INSERT INTO toimenpidekoodi (taso, emo, nimi) VALUES (3, (SELECT id
 CREATE OR REPLACE FUNCTION lisaa_vv_urakoille_toimenpiteet()
   RETURNS VOID AS $$
 DECLARE
-  rivi RECORD;
+  urakka_rivi RECORD;
 BEGIN
-  FOR rivi IN SELECT
+  FOR urakka_rivi IN SELECT
                 id,
                 alkupvm,
                 loppupvm
@@ -27,35 +27,40 @@ BEGIN
   LOOP
 
     INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
-    VALUES (rivi.id,
+    VALUES (urakka_rivi.id,
             'Kauppamerenkulun kustannukset TP',
             (SELECT id
              FROM toimenpidekoodi
              WHERE nimi = 'Kauppamerenkulun kustannukset'),
-            rivi.alkupvm,
-            rivi.loppupvm);
+            urakka_rivi.alkupvm,
+            urakka_rivi.loppupvm);
 
-    -- TODO MITEN LISÄTÄÄN TIETO VÄYLÄTYYPISTÄ!?
+    INSERT INTO toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id", vaylatyyppi)
+    VALUES ((SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_rivi.id
+            AND nimi = 'Kauppamerenkulun kustannukset TP'), 'kauppamerenkulku');
 
     INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
-    VALUES (rivi.id,
+    VALUES (urakka_rivi.id,
             'Muun vesiliikenteen kustannukset TP',
             (SELECT id
              FROM toimenpidekoodi
              WHERE nimi = 'Muun vesiliikenteen kustannukset'),
-            rivi.alkupvm,
-            rivi.loppupvm);
+            urakka_rivi.alkupvm,
+            urakka_rivi.loppupvm);
 
-    -- TODO MITEN LISÄTÄÄN TIETO VÄYLÄTYYPISTÄ!?
+    INSERT INTO toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id", vaylatyyppi)
+    VALUES ((SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_rivi.id
+                                                      AND nimi = 'Muun vesiliikenteen kustannukset TP'),
+    'muu');
 
     INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
-    VALUES (rivi.id,
+    VALUES (urakka_rivi.id,
             'Urakan yhteiset kustannukset TP',
             (SELECT id
              FROM toimenpidekoodi
              WHERE nimi = 'Urakan yhteiset kustannukset'),
-            rivi.alkupvm,
-            rivi.loppupvm);
+            urakka_rivi.alkupvm,
+            urakka_rivi.loppupvm);
 
   END LOOP;
   RETURN;
