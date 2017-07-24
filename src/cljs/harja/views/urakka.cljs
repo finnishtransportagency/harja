@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.bootstrap :as bs]
             [harja.asiakas.tapahtumat :as t]
-
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
@@ -33,8 +32,6 @@
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
