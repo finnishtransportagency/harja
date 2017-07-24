@@ -236,6 +236,28 @@
        :urakoitsija (::o/id urakoitsija)
        :kayttaja (:id user)})))
 
+(defn luo-vv-urakan-toimenpideinstanssit [db urakka]
+  (let [params {:urakka_id (::u/id urakka)
+                :alkupvm (::u/alkupvm urakka)
+                :loppupvm (::u/loppupvm urakka)}]
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
+                                  :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "kauppamerenkulku"}))
+
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
+                                  :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "muu"}))
+
+    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      db (merge params {:nimi "Urakan yhteiset kustannukset TP"
+                        :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
+
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
   (log/debug "Luodaan uusi urakka " (::u/nimi urakka))
   (let [hanke (hankkeet-palvelu/tallenna-hanke db user {::h/nimi (str (::u/nimi urakka) " H")
@@ -294,28 +316,6 @@
                                                            :sopimukset urakan-sopimus-idt})
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
-
-(defn luo-vv-urakan-toimenpideinstanssit [db urakka]
-  (let [params {:urakka_id (::u/id urakka)
-                :alkupvm (::u/alkupvm urakka)
-                :loppupvm (::u/loppupvm urakka)}]
-    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-                db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
-                                  :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
-        db {:toimenpideinstanssi_id (:id tpi)
-            :vaylatyyppi "kauppamerenkulku"}))
-
-    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-                db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
-                                  :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
-        db {:toimenpideinstanssi_id (:id tpi)
-            :vaylatyyppi "muu"}))
-
-    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Urakan yhteiset kustannukset TP"
-                        :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
 
 (defn tallenna-vesivaylaurakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
