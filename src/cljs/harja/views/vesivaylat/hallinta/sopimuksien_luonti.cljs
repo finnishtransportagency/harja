@@ -10,6 +10,7 @@
             [harja.domain.urakka :as urakka]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn luontilomake [e! {:keys [valittu-sopimus tallennus-kaynnissa? haetut-sopimukset] :as app}]
@@ -45,11 +46,9 @@
         :nimi ::sopimus/paasopimus-id
         :tyyppi :string
         :hae (fn [s]
-               (let [paasopimus (first (filter #(= (::sopimus/paasopimus-id s) (::sopimus/id %))
-                                               haetut-sopimukset))]
-                 (if (::sopimus/paasopimus-id s)
-                   (::sopimus/nimi paasopimus)
-                   "Sopimus on pääsopimus")))}
+               (if (sopimus/paasopimus-jollekin? haetut-sopimukset s)
+                 "Sopimus on pääsopimus"
+                 (::sopimus/nimi (sopimus/sopimuksen-paasopimus haetut-sopimukset s))))}
        (if (:id valittu-sopimus)
          {:otsikko "Urakka"
           :muokattava? (constantly false)
@@ -79,9 +78,9 @@
         [{:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string}
          {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-         {:otsikko "Pääsopimus" :nimi ::sopimus/paasopimus
-          :hae (fn [s] (::sopimus/nimi (first (filter #(= (::sopimus/paasopimus s) (::sopimus/id %))
-                                                      haetut-sopimukset))))}
+         {:otsikko "Pääsopimus" :nimi ::sopimus/paasopimus-id
+          :hae (fn [s]
+                 (::sopimus/nimi (sopimus/sopimuksen-paasopimus haetut-sopimukset s)))}
          {:otsikko "Urakka" :nimi :urakan-nimi :hae #(get-in % [::sopimus/urakka ::urakka/nimi])}]
         haetut-sopimukset]])))
 
@@ -91,9 +90,11 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {valittu-sopimus :valittu-sopimus :as app}]
-      (if valittu-sopimus
-        [luontilomake e! app]
-        [sopimusgrid e! app]))))
+      [:div
+       [debug/debug app]
+       (if valittu-sopimus
+         [luontilomake e! app]
+         [sopimusgrid e! app])])))
 
 (defn vesivaylasopimuksien-luonti []
   [tuck tiedot/tila vesivaylasopimuksien-luonti*])
