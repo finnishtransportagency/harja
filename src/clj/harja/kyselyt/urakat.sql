@@ -33,7 +33,7 @@ INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
 INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES (:toimenpideinstanssi_id, :vaylatyyppi);
+VALUES (:toimenpideinstanssi_id, :vaylatyyppi::vv_vaylatyyppi);
 
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT
