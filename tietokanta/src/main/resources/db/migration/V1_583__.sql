@@ -35,6 +35,8 @@ BEGIN
             rivi.alkupvm,
             rivi.loppupvm);
 
+    -- TODO MITEN LISÄTÄÄN TIETO VÄYLÄTYYPISTÄ!?
+
     INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
     VALUES (rivi.id,
             'Muun vesiliikenteen kustannukset TP',
@@ -43,6 +45,8 @@ BEGIN
              WHERE nimi = 'Muun vesiliikenteen kustannukset'),
             rivi.alkupvm,
             rivi.loppupvm);
+
+    -- TODO MITEN LISÄTÄÄN TIETO VÄYLÄTYYPISTÄ!?
 
     INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
     VALUES (rivi.id,
