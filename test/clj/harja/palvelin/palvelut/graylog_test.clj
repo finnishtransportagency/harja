@@ -29,5 +29,8 @@
         (let [parsittu-data (graylog/parsi-yhteyskatkos-data data asetukset)]
           (is (s/valid? ::dgl/parsittu-yhteyskatkos-data parsittu-data)
               (s/explain ::dgl/parsittu-yhteyskatkos-data parsittu-data)))))
-    (testing "check-homma"
-      (stest/check `graylog/parsi-yhteyskatkos-data))))
+    (testing "Optioiden kanssa"
+      (doseq [data generoitu-graylogista-luettu-data]
+        (let [parsittu-data (graylog/parsi-yhteyskatkos-data data (assoc asetukset :naytettavat-ryhmat (random-sample 0.5 #{"hae-" "tallenna-" "urakan-"}) :min-katkokset (rand-int 40)))]
+          (is (s/valid? ::dgl/parsittu-yhteyskatkos-data parsittu-data)
+              (s/explain ::dgl/parsittu-yhteyskatkos-data parsittu-data)))))))

@@ -10,7 +10,6 @@
                        [cljs.spec.gen.alpha :as gen]
                        [harja.pvm :as pvm])]))
 
-
 (defn date-gen []
   (gen/fmap (fn [_]
               (let [pv (inc (rand-int 31))
@@ -19,7 +18,7 @@
                     max-paiva (pvm/paivia-kuukaudessa vuosi kk)
                     pv (if (> pv max-paiva) max-paiva pv)]
                 (pvm/luo-pvm vuosi kk pv)))
-            (gen/int)))
+            (s/gen integer?)))
 
 (defn iso8601-pvm-gen []
   (gen/fmap (fn [date]
@@ -51,24 +50,45 @@
                                               minuutit (rand-int 60)
                                               sekunnit (rand-int 60)]
                                           (str tunnit ":" minuutit ":" sekunnit)))
-                                      (gen/int))))
+                                      (s/gen integer?))))
 (s/def ::kayttaja string?)
-(s/def ::palvelut (s/with-gen (s/coll-of string? :kind vector?)
-                              #(gen/vector (palvelu-gen))))
-(s/def ::katkokset (s/coll-of (s/and integer? pos?) :kind vector?))
-(s/def ::ensimmaiset-katkokset (s/with-gen (s/coll-of (s/and string?
-                                                             #(pvm/pvm? (tf/parse %)))
-                                                      :kind vector?)
-                                           #(gen/vector (iso8601-pvm-gen))))
-(s/def ::viimeiset-katkokset (s/with-gen (s/coll-of (s/and string?
-                                                           #(pvm/pvm? (tf/parse %)))
-                                                    :kind vector?)
-                                         #(gen/vector (iso8601-pvm-gen))))
-(s/def ::parsittu-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::katkokset]
-                                                         :opt-un [::pvm ::kello ::kayttaja ::palvelut
-                                                                  ::ensimmaiset-katkokset ::viimeiset-katkokset])
+(s/def ::palvelut-havainto (s/with-gen (s/nilable string?)
+                                       #(palvelu-gen)))
+(s/def ::palvelut (s/coll-of ::palvelut-havainto :kind vector?))
+(s/def ::katkokset-havainto (s/nilable (s/and integer? pos?)))
+(s/def ::katkokset (s/coll-of ::katkokset-havainto :kind vector?))
+(s/def ::ensimmaiset-katkokset-havainto (s/with-gen (s/nilable (s/and string?
+                                                                      #(pvm/pvm? (tf/parse %))))
+                                                    #(iso8601-pvm-gen)))
+(s/def ::ensimmaiset-katkokset (s/coll-of ::ensimmaiset-katkokset-havainto :kind vector?))
+(s/def ::viimeiset-katkokset-havainto (s/with-gen (s/nilable (s/and string?
+                                                                    #(pvm/pvm? (tf/parse %))))
+                                                  #(iso8601-pvm-gen)))
+(s/def ::viimeiset-katkokset (s/coll-of ::viimeiset-katkokset-havainto :kind vector?))
+(s/def ::yhteyskatkokset (s/coll-of (s/keys :req-un [::katkokset-havainto]
+                                            :opt-un [::palvelut-havainto ::ensimmaiset-katkokset-havainto ::viimeiset-katkokset-havainto])
+                                    :kind vector?))
+(s/def ::parsittu-yhteyskatkos-data-itemi (s/and (s/with-gen (s/keys :req-un [::yhteyskatkokset]
+                                                                     :opt-un [::pvm ::kello ::kayttaja])
+                                                             #(let [opt-avaimet #{:pvm :kello :kayttaja :palvelut :ensimmaiset-katkokset :viimeiset-katkokset}
+                                                                    vec-arvot #{:palvelut :ensimmaiset-katkokset :viimeiset-katkokset}
+                                                                    ensimmainen-opt-avain (rand-nth (into '() opt-avaimet))
+                                                                    toinen-opt-avain (rand-nth (into '() (disj opt-avaimet ensimmainen-opt-avain)))
+                                                                    rand-numero (rand-int 10)
+                                                                    apu-fn (fn [avain]
+                                                                            (if (vec-arvot avain)
+                                                                              (s/coll-of (keyword "harja.domain.graylog" (str (name avain) "-havainto"))
+                                                                                         :kind vector? :count rand-numero)
+                                                                              (keyword "harja.domain.graylog" (name avain))))]
+                                                                  (apply gen/hash-map :katkokset (s/gen (s/coll-of ::katkokset-havainto :kind vector? :count rand-numero))
+                                                                                      ensimmainen-opt-avain (s/gen (apu-fn ensimmainen-opt-avain))
+                                                                                      toinen-opt-avain (s/gen (apu-fn toinen-opt-avain))
+                                                                                      (mapcat (fn [x] [x (s/gen (apu-fn x))])
+                                                                                              (random-sample 0.5 (disj opt-avaimet ensimmainen-opt-avain toinen-opt-avain))))))
                                                  #(apply = (keep (fn [x]
                                                                   (when (not (nil? x))
                                                                     (count x)))
-                                                                 [(:palvelut %) (:katkokset %) (:ensimmaiset-katkokset %) (:viimeiset-katkokset %)]))))
-(s/def ::parsittu-yhteyskatkos-data (s/coll-of ::parsittu-yhteyskatkos-data-itemi :kind seq?))
+                                                                 [(:palvelut %) (:katkokset %) (:ensimmaiset-katkokset %) (:viimeiset-katkokset %)]))
+                                                 #(-> % count (>= 3))))
+(s/def ::parsittu-yhteyskatkos-data (s/and (s/coll-of ::parsittu-yhteyskatkos-data-itemi :kind seq?)
+                                           #(apply = (map keys %))))

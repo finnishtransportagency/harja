@@ -13,7 +13,8 @@
             [tuck.core :refer [Event process-event] :as tuck]
             [harja.domain.graylog :as dgl]
             [cljs.spec.alpha :as s]
-            [cljs.spec.gen.alpha :as gen])
+            [cljs.spec.gen.alpha :as gen]
+            [clojure.set :as set-math])
 
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
@@ -49,12 +50,12 @@
   [jarjestys-avain ryhma-avain yhteyskatkos-data]
   (let [avainten-vaihto (map #(hash-map :jarjestys-avain (jarjestys-avain %) :ryhma-avain (ryhma-avain %) :arvo-avain (:katkokset %))
                              yhteyskatkos-data)
-        ryhmasta-vektori (if (vector? (:ryhma-avain (first avainten-vaihto)))
-                           avainten-vaihto
+        ryhmasta-vektori (if (empty? (filter #(vector? (:ryhma-avain %)) avainten-vaihto))
                            (map #(update % :ryhma-avain
                                            (fn [ryhma-arvo]
                                               (vec (repeat (count (:arvo-avain %)) ryhma-arvo))))
-                                avainten-vaihto)) ; ({:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []} {:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []})
+                                avainten-vaihto) ; ({:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []} {:jarjestys-avain []/"" :ryhma-avain [] :arvo-avain []})
+                           avainten-vaihto)
         jarjestyksesta-arvo  (if (empty? (filter #(vector? (:jarjestys-avain %)) ryhmasta-vektori))
                               ryhmasta-vektori
                               (mapcat #(map-indexed (fn [index vektori-elementti]
@@ -64,7 +65,7 @@
                                                         arvo-paivitetty))
                                                     (:jarjestys-avain %))
                                       ryhmasta-vektori)) ; ({:jarjestys-avain ["ping" "raportoi-yhteyskatkos"], :ryhma-avain ["2017-05-30" "2017-05-30"], :arvo-avain [7 2]}) -> ({:jarjestys-avain "ping" :ryhma-avain ["2017-05-30"] :arvo-avain [7]} {:jarjestys-avain "raportoi-yhteyskatkos" :ryhma-avain ["2017-05-30"] :arvo-avain [2]})
-
+        ;_ (println "jarjestyksesta-arvo: " (pr-str jarjestyksesta-arvo))
         poista-nillit-ryhmista (map (fn [mappi]
                                       (let [arvo-avaimet (vec (map-indexed #(if (nil? (get (:ryhma-avain mappi) %1))
                                                                                 nil %2)
@@ -77,6 +78,7 @@
         ota-tyhjat-ryhmat-pois (keep #(if (empty? (:ryhma-avain %))
                                         nil %)
                                       ota-nil-jarjestykset-pois)
+        _ (println "ota-tyhjat-ryhmat-pois: " (pr-str ota-tyhjat-ryhmat-pois))
         ota-tyhjat-arvot-pois (keep #(if (empty? (:arvo-avain %))
                                         nil %)
                                     ota-tyhjat-ryhmat-pois)]
@@ -129,16 +131,40 @@
                        :yhteyskatkosryhma-palvelut-data (jarjestele-yhteyskatkos-data :palvelut :pvm ryhmakatkos-data))]
       (assoc a :aloitus-valmis true))))
 
+(s/def ::data-kentat (s/with-gen (s/or :pvm ::dgl/pvm
+                                       :kello ::dgl/kello
+                                       :kayttaja ::dgl/kayttaja
+                                       :palvelut (s/and ::dgl/palvelut-havainto
+                                                        #(not (nil? %)))
+                                       :ensimmaiset-katkokset (s/and ::dgl/ensimmaiset-katkokset-havainto
+                                                                     #(not (nil? %)))
+                                       :viimeiset-katkokset (s/and ::dgl/viimeiset-katkokset-havainto
+                                                                   #(not (nil? %))))
+                               #(gen/such-that (fn [x]
+                                                 (not (nil? x)))
+                                               (let [satunnainen-numero (rand-int 6)
+                                                     data-kentat [:pvm :kello :kayttaja :palvelut-havainto :ensimmaiset-katkokset-havainto :viimeiset-katkokset-havainto]]
+                                                 (s/gen (keyword "harja.domain.graylog" (name (get data-kentat satunnainen-numero))))))))
 
 (s/def ::arvo-avain (s/coll-of (s/and integer? pos?)))
-(s/def ::ryhma-avain (s/coll-of string?))
-(s/def ::jarjestys-avain string?)
+(s/def ::ryhma-avain (s/coll-of ::data-kentat))
+(s/def ::jarjestys-avain ::data-kentat)
 (s/def ::jarjestetty-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::arvo-avain ::ryhma-avain ::jarjestys-avain])
                                                     #(= (count (:arvo-avain %)) (count (:ryhma-avain %)))))
 (s/def ::jarjestetty-yhteyskatkos-data (s/coll-of ::jarjestetty-yhteyskatkos-data-itemi :kind seq?))
 
 (s/fdef jarjestele-yhteyskatkos-data
-  :args (s/cat :jarjestys-avain keyword?
-               :ryhma-avain keyword?
-               :yhteyskatkos-data ::dgl/parsittu-yhteyskatkos-data)
-  :ret ::jarjestetty-yhteyskatkos-data)
+  :args (s/and (s/cat :jarjestys-avain ::data-kentat
+                      :ryhma-avain ::data-kentat
+                      :yhteyskatkos-data ::dgl/parsittu-yhteyskatkos-data)
+               (s/coll-of any? :distinct true))
+  :ret ::jarjestetty-yhteyskatkos-data
+  :fn (fn [{:keys [ret args]}]
+        (let [ryhma-avain (:ryhma-avain args)
+              parsitun-datan-ryhma-avain-arvo-vektori? (-> (:yhteyskatkos-data args) first ryhma-avain vector?)
+              parsitun-datan-ryhma-avain-arvot (let [arvot-sequssa (map #(ryhma-avain %) (:yhteyskatkos-data args))]
+                                                 (if parsitun-datan-ryhma-avain-arvo-vektori?
+                                                   (apply set-math/union (map #(apply hash-set %) arvot-sequssa))
+                                                   (apply hash-set arvot-sequssa)))
+              jarjestetyn-datan-ryhma-avain-arvot (apply set-math/union (map #(apply hash-set (:ryhma-avain %)) ret))]
+          (= (count parsitun-datan-ryhma-avain-arvot) (count jarjestetyn-datan-ryhma-avain-arvot)))))
