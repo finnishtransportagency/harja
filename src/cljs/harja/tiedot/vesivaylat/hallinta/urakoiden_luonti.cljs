@@ -196,12 +196,22 @@
 
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
-    (->> sopimukset
-         ;; Asetetaan sopimukset viittaamaan pääsopimukseen
-         (map #(assoc % ::s/paasopimus-id (::s/id (s/ainoa-paasopimus (::u/sopimukset urakka)))))
-         ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
-         (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
-         (assoc-in app [:valittu-urakka ::u/sopimukset])))
+    (let [urakan-sopimukset-ilman-poistettuja (remove
+                                                (comp
+                                                  (into #{} (map ::s/id (filter :poistettu sopimukset)))
+                                                  ::s/id)
+                                                (::u/sopimukset urakka))
+          paasopimus (s/ainoa-paasopimus urakan-sopimukset-ilman-poistettuja)
+          ;; Jos pääsopimukseksi merkitty pääsopimus ei enää ole gridissä,
+          ;; poista pääsopimusmerkintä - yhtäkään sopimusta ei merkitä pääsopimukseksi.
+          paasopimus-id (when ((into #{} (map ::s/id sopimukset)) (::s/id paasopimus))
+                          (::s/id paasopimus))]
+      (->> sopimukset
+           ;; Asetetaan sopimukset viittaamaan pääsopimukseen
+           (map #(assoc % ::s/paasopimus-id paasopimus-id))
+           ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
+           (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
+           (assoc-in app [:valittu-urakka ::u/sopimukset]))))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]

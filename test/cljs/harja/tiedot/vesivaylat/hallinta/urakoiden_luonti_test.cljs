@@ -67,46 +67,67 @@
   (let [testaa (fn [tila annettu haluttu]
                  (let [uusi-tila (-> (e! (luonti/->PaivitaSopimuksetGrid annettu) {:valittu-urakka {::u/sopimukset tila}})
                                      (get-in [:valittu-urakka ::u/sopimukset]))]
-                   (= uusi-tila haluttu)))]
+                   (is (= uusi-tila haluttu))))]
     (testing "Rivin lisääminen tyhjään gridiin"
-      (is (testaa []
-                  [{::s/id -1 ::s/paasopimus-id nil}]
-                  [{::s/id -1 ::s/paasopimus-id nil}])))
+      (testaa []
+              [{::s/id -1 ::s/paasopimus-id nil}]
+              [{::s/id -1 ::s/paasopimus-id nil}]))
 
     (testing "Rivin lisääminen valmiiseen gridiin"
       ;; Gridissä on yksi pääsopimus, lisätään uusi rivi, uusi sopimus
       ;; viittaa nyt pääsopimukseen
-      (is (testaa [{::s/id 1 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id 1}])))
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id 1}]))
 
     (testing "Rivin asettaminen sopimukseksi gridiin"
-      (is (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}])))
+      (testaa [{::s/id 1 ::s/paasopimus-id nil} {::s/id -2 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id nil}]))
 
     ;; Pääsopimus asetetaan muualla
 
     (testing "Sopimuksen lisääminen gridiin, kun pääsopimus on jo asetettu"
-      (is (testaa [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1}]
-                  [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1}
-                   {::s/id -3 ::s/paasopimus-id nil}]
-                  [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1}
-                   {::s/id -3 ::s/paasopimus-id 1}])))
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}
+               {::s/id -3 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}
+               {::s/id -3 ::s/paasopimus-id 1}]))
+
+    (testing "Ainoan sopimuksen nimen vaihtaminen"
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}]
+              [{::s/id 2 ::s/paasopimus-id nil}]
+              [{::s/id 2 ::s/paasopimus-id nil}]))
+
+    (testing "Pääsopimuksen vaihtaminen kun sopimuksia on kaksi"
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}]
+              [{::s/id 3 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}]
+              [{::s/id 3 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id nil}]))
+
+    (testing "Sivusopimuksen vaihtaminen kun sopimuksia on kaksi"
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 3 ::s/paasopimus-id nil}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 3 ::s/paasopimus-id 1}]))
 
     (testing "Rivin poistaminen gridistä"
-      (is (testaa [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1}
-                   {::s/id -3 ::s/paasopimus-id 1}]
-                  [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
-                   {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
-                  [{::s/id 1 ::s/paasopimus-id nil}
-                   {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
-                   {::s/id -3 ::s/paasopimus-id 1 :poistettu true}])))))
+      (testaa [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1}
+               {::s/id -3 ::s/paasopimus-id 1}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
+               {::s/id -3 ::s/paasopimus-id nil :poistettu true}]
+              [{::s/id 1 ::s/paasopimus-id nil}
+               {::s/id 2 ::s/paasopimus-id 1 :poistettu true}
+               {::s/id -3 ::s/paasopimus-id 1 :poistettu true}]))))
 
 
 (deftest lomakevaihtoehtojen-hakemisen-aloitus
