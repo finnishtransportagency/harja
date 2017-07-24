@@ -121,7 +121,9 @@
 (defn esitayta-tietyoilmoitus [{:keys [yllapitokohde-id
                                        urakka-id
                                        urakka-nimi
+                                       urakkatyyppi
                                        urakoitsija-nimi
+                                       urakoitsija-ytunnus
                                        urakoitsijan-yhteyshenkilo
                                        tilaaja-nimi
                                        tilaajan-yhteyshenkilo
@@ -130,8 +132,9 @@
   (let [kayttaja @istunto/kayttaja
         tietyoilmoitus {::t/urakka-id urakka-id
                         ::t/urakan-nimi urakka-nimi
-
+                        ::t/urakkatyyppi urakkatyyppi
                         ::t/urakoitsijan-nimi urakoitsija-nimi
+                        ::t/urakoitsijan-ytunnus urakoitsija-ytunnus
                         ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}

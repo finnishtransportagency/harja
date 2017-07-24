@@ -24,7 +24,6 @@
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.vesivaylat.urakka.laadunseuranta :as laadunseuranta-vesivaylat]
             [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.tiedot.navigaatio :as nav]
@@ -51,8 +50,8 @@
                        (u-domain/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
     :vv-materiaalit (and
-                     (oikeudet/urakat-vesivayla-materiaalit id)
-                     (u-domain/vesivaylaurakkatyyppi? tyyppi))
+                      (oikeudet/urakat-vesivayla-materiaalit id)
+                      (u-domain/vesivaylaurakkatyyppi? tyyppi))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
@@ -67,11 +66,11 @@
     :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
                                      (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
                                  (= tyyppi :paikkaus))
-    :laadunseuranta (and (oikeudet/urakat-laadunseuranta id)
-                         (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
-    :laadunseuranta-vesivaylat (and (oikeudet/urakat-vesivaylalaadunseuranta id)
-                                    (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                                    (istunto/ominaisuus-kaytossa? :vesivayla))
+    :laadunseuranta (or (and (oikeudet/urakat-vesivaylalaadunseuranta id)
+                             (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                             (istunto/ominaisuus-kaytossa? :vesivayla))
+                        (and (oikeudet/urakat-laadunseuranta id)
+                             (not (u-domain/vesivaylaurakkatyyppi? tyyppi))))
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
@@ -137,11 +136,12 @@
          ^{:key "vv-materiaalit"}
          [vv-materiaalit/materiaalit ur])
 
-       "Turvalaitteet"
-       :turvalaitteet
-       (when (valilehti-mahdollinen? :turvalaitteet ur)
-         ^{:key "turvalaitteet"}
-         [turvalaitteet/turvalaitteet ur])
+       ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
+       ;;"Turvalaitteet"
+       ;;:turvalaitteet
+       ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
+       ;;  ^{:key "turvalaitteet"}
+       ;;  [turvalaitteet/turvalaitteet ur])
 
        "Toteutus"
        :toteutus
@@ -172,12 +172,6 @@
        (when (valilehti-mahdollinen? :laadunseuranta ur)
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
-
-       "Laadunseuranta"
-       :laadunseuranta-vesivaylat
-       (when (valilehti-mahdollinen? :laadunseuranta-vesivaylat ur)
-         ^{:key "laadunseuranta-vesivaylat"}
-         [laadunseuranta-vesivaylat/laadunseuranta ur])
 
        "Välitavoitteet"
        :valitavoitteet

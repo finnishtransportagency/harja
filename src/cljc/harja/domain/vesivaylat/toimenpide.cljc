@@ -375,7 +375,8 @@ reimari-tilat
   #{::id
     ::lisatieto
     ::suoritettu
-    ::hintatyyppi})
+    ::hintatyyppi
+    ::reimari-henkilo-lkm})
 
 (defn toimenpide-idlla [toimenpiteet id]
   (first (filter #(= (::id %) id) toimenpiteet)))

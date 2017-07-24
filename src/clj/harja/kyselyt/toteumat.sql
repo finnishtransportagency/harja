@@ -201,6 +201,7 @@ FROM toteuma_tehtava tt
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
+  tt.id, -- Jotta "sarakkeet vektoriin" toimii oikein
   tt.id              AS tehtava_id,
   tt.toteuma         AS toteuma_id,
   tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
@@ -219,8 +220,11 @@ SELECT
   tr_loppuetaisyys,
   tr_loppuosa,
   reitti,
-
-
+  l.id   as liite_id,
+  l.nimi as liite_nimi,
+  l.tyyppi as liite_tyyppi,
+  l.koko as liite_koko,
+  l.liite_oid as liite_oid,
   tpk.emo            AS tehtava_emo,
   tpk.nimi           AS tehtava_nimi,
   o.nimi             AS organisaatio,
@@ -240,6 +244,8 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN toteuma_liite tl ON tl.toteuma = t.id
+  LEFT JOIN liite l ON l.id = tl.liite
   LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
@@ -279,7 +285,7 @@ FROM toteuma_tehtava tt
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
--- name: paivita-toteuma!
+-- name: paivita-toteuma<!
 UPDATE toteuma
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
@@ -990,7 +996,7 @@ SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE
-        OR u.urakoitsija = :urakoitsija-id)
+        OR u.urakoitsija = :urakoitsija-id);
 
 -- name: tallenna-liite-toteumalle<!
 INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
@@ -1005,4 +1011,4 @@ SELECT
 FROM liite l
   JOIN toteuma_liite tl ON l.id = tl.liite
 WHERE tl.toteuma = :toteumaid
-ORDER BY l.luotu ASC
+ORDER BY l.luotu ASC;

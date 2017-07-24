@@ -278,8 +278,7 @@
               ;;                                {:type :point :coordinates [(aget latlon 1)
               ;;                                                            (aget latlon 0)]}))
               ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
-              :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti
-                                              {:type :point :coordinates %})}
+              :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
              {:otsikko "Tierekisteriosoite"
               :nimi :tr
               :pakollinen? true

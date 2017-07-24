@@ -2,8 +2,8 @@
 INSERT INTO organisaatio (nimi, ytunnus, tyyppi, harjassa_luotu, luotu)
 VALUES ('Saimaan huolto', '1729662-9', 'urakoitsija', true, NOW());
 
-INSERT INTO organisaatio (nimi, ytunnus, tyyppi, harjassa_luotu, luotu)
-VALUES ('Pohjanmeren venepojat', '0472549-4', 'urakoitsija', true, NOW());
+INSERT INTO organisaatio (nimi, ytunnus, katuosoite, postinumero, postitoimipaikka, tyyppi, harjassa_luotu, luotu)
+VALUES ('Pohjanmeren venepojat', '0472549-4', 'Oulaistenkatu 28', 8600, 'Oulainen', 'urakoitsija', true, NOW());
 
 -- HANKE
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)

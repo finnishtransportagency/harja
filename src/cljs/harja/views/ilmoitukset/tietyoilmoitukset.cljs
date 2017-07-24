@@ -4,7 +4,6 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.debug :as ui-debug]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
@@ -15,12 +14,9 @@
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
-            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.ui.napit :as napit])
+            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake])
   (:require-macros
    [cljs.core.async.macros :refer [go]]))
-
-
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
