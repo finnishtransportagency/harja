@@ -151,13 +151,14 @@
            {:otsikko "Silta\u00ADtunnus" :nimi :siltatunnus :leveys 13}
            {:otsikko "Edellinen tarkastus" :nimi :tarkastusaika :tyyppi :pvm :fmt #(if % (pvm/pvm %)) :leveys 20}
            {:otsikko "Tarkastaja" :nimi :tarkastaja :leveys 30}
-           (when-let [listaus (some #{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
-                                    [@sillat/listaus])]
+           (when-let [listaus (#{:urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava}
+                                @sillat/listaus)]
              {:otsikko (case listaus
                          :urakan-korjattavat "Korjattavat"
                          :urakassa-korjatut "Korjatut"
                          :korjaus-ohjelmoitava "Ohjelmoitavat")
-              :nimi :kohteet :leveys 30
+              :nimi :kohteet
+              :leveys 30
               :fmt (fn [kohteet]
                      (case listaus
                        :urakassa-korjatut [kohdesarake kohteet true]
