@@ -59,7 +59,7 @@
 
 (defn voi-tallentaa? [urakka]
   (> (count (filter (comp id-olemassa? ::s/id)
-                    (::u/sopimukset urakka)))
+                    (remove :poistettu (::u/sopimukset urakka))))
      0))
 
 (defn luontilomake [e! app]
