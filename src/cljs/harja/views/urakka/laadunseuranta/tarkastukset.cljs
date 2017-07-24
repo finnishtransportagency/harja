@@ -135,9 +135,11 @@
          [:div.tarkastukset
 
           [ui-valinnat/urakkavalinnat {:urakka (:urakka optiot)}
+           ^{:key "aikavali"}
            [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
            (when-not vesivaylaurakka?
+             ^{:key "tyyppi"}
              [tee-otsikollinen-kentta
               {:otsikko "Tyyppi"
                :kentta-params {:tyyppi :valinta
@@ -145,6 +147,7 @@
                                :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
                :arvo-atom tarkastukset/tarkastustyyppi}])
 
+           ^{:key "tarkastusvalinnat"}
            [tee-otsikollinen-kentta
             {:otsikko "Näytä"
              :kentta-params {:tyyppi :valinta
@@ -153,8 +156,10 @@
              :arvo-atom tarkastukset/naytettavat-tarkastukset}]
 
            (when-not vesivaylaurakka?
+             ^{:key "tienumero"}
              [valinnat/tienumero tarkastukset/tienumero])
 
+           ^{:key "urakkatoiminnot"}
            [ui-valinnat/urakkatoiminnot {:urakka (:urakka optiot)}
             (let [oikeus? (oikeudet/voi-kirjoittaa?
                             oikeudet/urakat-laadunseuranta-tarkastukset
@@ -164,6 +169,7 @@
                 [yleiset/tooltip {} :%
                  (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                                  oikeudet/urakat-laadunseuranta-tarkastukset)]
+                ^{:key "uusi-tarkastus"}
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus (:tyyppi urakka)))
                  {:disabled (not oikeus?)
