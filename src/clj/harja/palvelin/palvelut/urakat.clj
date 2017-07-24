@@ -392,7 +392,7 @@
                       :hae-harjassa-luodut-urakat
                       (fn [user _]
                         (hae-harjassa-luodut-urakat db user))
-                      {:kysely-spec ::u/hae-harjassa-luodut-urakat-vastaus})
+                      {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
     (julkaise-palvelu http
                       :laheta-urakka-sahkeeseen
