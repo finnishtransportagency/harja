@@ -79,8 +79,6 @@
              true)
           (case urakkatyyppi
             :hoito [:asiakastyytyvaisyysbonus :muu]
-
-            :default
             [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
