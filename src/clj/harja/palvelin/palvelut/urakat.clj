@@ -300,14 +300,14 @@
     (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
                 db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
                                   :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
         db {:toimenpideinstanssi_id (:id tpi)
             :vaylatyyppi "kauppamerenkulku"}))
 
     (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
                 db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
                                   :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
-      (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
         db {:toimenpideinstanssi_id (:id tpi)
             :vaylatyyppi "muu"}))
 
