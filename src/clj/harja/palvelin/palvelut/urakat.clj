@@ -297,13 +297,20 @@
   (let [params {:urakka_id (::u/id urakka)
                 :alkupvm (::u/alkupvm urakka)
                 :loppupvm (::u/loppupvm urakka)}]
-    ;; TODO Tarttee luoda myös tieto väylätyypistä. Mikä on urakan yhteisten kustannusten väylätyyppi?
-    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
-                        :toimenpide_nimi "Kauppamerenkulun kustannukset"}))
-    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
-      db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
-                        :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
+                                  :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "kauppamerenkulku"}))
+
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
+                                  :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "muu"}))
+
     (q/luo-vesivaylaurakan-toimenpideinstanssi<!
       db (merge params {:nimi "Urakan yhteiset kustannukset TP"
                         :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
