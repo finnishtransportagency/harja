@@ -6,7 +6,6 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [namespacefy.core :refer [get-un]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.domain.urakka :as u]
             [harja.domain.organisaatio :as o]
             [harja.domain.hanke :as h]
@@ -98,8 +97,10 @@
              {:otsikko "Urakka-aluenumero" :nimi ::u/urakkanro :tyyppi :string :pakollinen? true}
              {:otsikko "Sampo-ID" :nimi ::u/sampoid :tyyppi :string :pakollinen? false :muokattava? (constantly false)})
            (lomake/rivi
-             {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true}
+             {:otsikko "Alkupäivämäärä" :nimi ::u/alkupvm :tyyppi :pvm :pakollinen? true
+              :muokattava? (constantly (nil? (::u/id valittu-urakka)))}
              {:otsikko "Loppupäivämäärä" :nimi ::u/loppupvm :tyyppi :pvm :pakollinen? true
+              :muokattava? (constantly (nil? (::u/id valittu-urakka)))
               :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
            (lomake/rivi
              (if haetut-hallintayksikot

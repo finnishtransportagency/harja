@@ -44,7 +44,7 @@
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-   [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]
+  [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]
    ^{:key "kiintio"}
    [liita-kiintioon e! app]])
 
@@ -52,12 +52,15 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
-                                                          :sopimus-id (first (:sopimus valinnat))
-                                                          :aikavali (:aikavali valinnat)}))
-                           (e! (tiedot/->HaeKiintiot)))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/sisaan-ulos #(do
+                         (e! (tiedot/->Nakymassa? true))
+                         (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
+                                                        :sopimus-id (first (:sopimus valinnat))
+                                                        :aikavali (:aikavali valinnat)}))
+                         (e! (tiedot/->HaeKiintiot)))
+                      #(do
+                         (u/valitse-oletussopimus-jos-valittuna-kaikki!)
+                         (e! (tiedot/->Nakymassa? false))))
     (fn [e! app]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
@@ -70,19 +73,19 @@
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/tulokset e! app
         [jaettu/listaus e! app
-        {:otsikko "Kokonaishintaiset toimenpiteet"
-         :sarakkeet [jaettu/sarake-tyoluokka
-                     jaettu/sarake-toimenpide
-                     {:otsikko "Kiintiö" :tyyppi :string :leveys 10
-                      :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
-                     jaettu/sarake-pvm
-                     jaettu/sarake-turvalaite
-                     jaettu/sarake-vikakorjaus
-                     (jaettu/sarake-liitteet e! app)
-                     (jaettu/sarake-checkbox e! app)]
-         :listaus-tunniste :kokonaishintaiset-toimenpiteet
-         :paneelin-checkbox-sijainti "95.5%"
-         :vaylan-checkbox-sijainti "95.5%"}]]])))
+         {:otsikko "Kokonaishintaiset toimenpiteet"
+          :sarakkeet [jaettu/sarake-tyoluokka
+                      jaettu/sarake-toimenpide
+                      {:otsikko "Kiintiö" :tyyppi :string :leveys 10
+                       :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
+                      jaettu/sarake-pvm
+                      jaettu/sarake-turvalaite
+                      jaettu/sarake-vikakorjaus
+                      (jaettu/sarake-liitteet e! app)
+                      (jaettu/sarake-checkbox e! app)]
+          :listaus-tunniste :kokonaishintaiset-toimenpiteet
+          :paneelin-checkbox-sijainti "95.5%"
+          :vaylan-checkbox-sijainti "95.5%"}]]])))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

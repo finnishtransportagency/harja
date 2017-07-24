@@ -6,6 +6,63 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
 
+(deftest ytunnus-kaytossa
+  (testing
+    "Olemassa olevan urakoitsijan vanha tunnus"
+    (is (false? (tiedot/ytunnus-kaytossa? 100 {::o/id 1} {100 {::o/id 1}}))))
+
+  (testing
+    "Olemassa olevan urakoitsijan uusi tunnus"
+    (is (false? (tiedot/ytunnus-kaytossa? 200 {::o/id 1} {100 {::o/id 1}}))))
+
+  (testing
+    "Olemassa olevalle urakoitsijalle toisen urakoitsijan tunnus"
+    (is (true? (tiedot/ytunnus-kaytossa? 200 {::o/id 1} {100 {::o/id 1}
+                                                        200 {::o/id 2}}))))
+
+  (testing
+    "Uudelle urakoitsijalle uusi tunnus"
+    (is (false? (tiedot/ytunnus-kaytossa? 200 {} {100 {::o/id 1}}))))
+
+  (testing
+    "Uudelle urakoitsijalle toisen urakoitsijan tunnus"
+    (is (true? (tiedot/ytunnus-kaytossa? 100 {} {100 {::o/id 1}})))))
+
+(deftest nimi-tunnuksella
+  (testing
+    "Olemassa olevan urakoitsijan vanha tunnus"
+    (is (nil? (tiedot/urakoitsijan-nimi-ytunnuksella 100 {::o/id 1} {100 {::o/id 1}}))))
+
+  (testing
+    "Olemassa olevan urakoitsijan uusi tunnus"
+    (is (nil? (tiedot/urakoitsijan-nimi-ytunnuksella 200 {::o/id 1} {100 {::o/id 1}}))))
+
+  (testing
+    "Olemassa olevalle urakoitsijalle toisen urakoitsijan tunnus"
+    (is (= "Foobar" (tiedot/urakoitsijan-nimi-ytunnuksella 200 {::o/id 1}
+                                                           {100 {::o/id 1}
+                                                            200 {::o/id 2 ::o/nimi "Foobar"}}))))
+
+  (testing
+    "Uudelle urakoitsijalle uusi tunnus"
+    (is (nil? (tiedot/urakoitsijan-nimi-ytunnuksella 200 {} {100 {::o/id 1}}))))
+
+  (testing
+    "Uudelle urakoitsijalle toisen urakoitsijan tunnus"
+    (is (= "Foobar" (tiedot/urakoitsijan-nimi-ytunnuksella 100 {} {100 {::o/id 1
+                                                                        ::o/nimi "Foobar"}})))))
+
+(deftest ytunnuksella-ryhmittely
+  (is (= {1 {::o/id 1
+             ::o/ytunnus 1}
+          2 {::o/id 2
+             ::o/ytunnus 2}}
+         (tiedot/urakoitsijat-ytunnuksittain
+           [{::o/id 1
+             ::o/ytunnus 1}
+            {::o/id 2
+             ::o/ytunnus 2}]))))
+
 (deftest urakoitsijan-valinta
   (let [urakoitsija {:foobar 1}]
     (is (= urakoitsija (:valittu-urakoitsija (e! (tiedot/->ValitseUrakoitsija urakoitsija)))))))
@@ -121,3 +178,16 @@
             alkava-urakka {::u/id 1 ::u/alkupvm (pvm/->pvm tam-2017) ::u/loppupvm (pvm/->pvm tam-2018)}]
         (is (= (str tam-2017 " - " tam-2018) (tiedot/urakan-aikavali-str alkava-urakka)))))))
 
+(deftest lomakevaihtoehtojen-haku
+  (vaadi-async-kutsut
+    #{tiedot/->LomakevaihtoehdotEiHaettu tiedot/->LomakevaihtoehdotHaettu}
+    (is (= {:foo :bar} (e! (tiedot/->HaeLomakevaihtoehdot) {:foo :bar})))))
+
+(deftest lomakevaihtoehdot-haettu
+  (is (= {:haetut-ytunnukset {1 {::o/ytunnus 1}}
+          :foo :bar}
+         (e! (tiedot/->LomakevaihtoehdotHaettu {:ytunnukset {1 {::o/ytunnus 1}}})
+             {:foo :bar}))))
+
+(deftest lomakevaihtoehdot-ei-haettu
+  (is (= {:foo :bar} (e! (tiedot/->LomakevaihtoehdotEiHaettu {:msg :error}) {:foo :bar}))))

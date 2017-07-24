@@ -19,7 +19,6 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]

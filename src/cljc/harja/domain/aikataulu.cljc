@@ -16,8 +16,8 @@
      {:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
              aikataulu-paallystys-alku aikataulu-paallystys-loppu
              aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
-             nimi id] :as rivi}]
-   {::aikajana/otsikko nimi
+             nimi id kohdenumero] :as rivi}]
+   {::aikajana/otsikko (str kohdenumero " - " nimi)
     ::aikajana/ajat
     (into []
           (remove nil?)
