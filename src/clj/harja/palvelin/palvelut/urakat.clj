@@ -264,20 +264,22 @@
                                                         ::h/alkupvm (::u/alkupvm urakka)
                                                         ::h/loppupvm (::u/loppupvm urakka)})
         hallintayksikko (::u/hallintayksikko urakka)
-        urakoitsija (::u/urakoitsija urakka)]
-    (q/luo-harjassa-luotu-urakka<!
-      db
-      {:nimi (::u/nimi urakka)
-       :urakkanro (::u/urakkanro urakka)
-       :alkupvm (::u/alkupvm urakka)
-       :loppupvm (::u/loppupvm urakka)
-       :alue (::u/alue urakka)
-       :hallintayksikko (::o/id hallintayksikko)
-       :urakoitsija (::o/id urakoitsija)
-       :hanke (::h/id hanke)
-       :kayttaja (:id user)})
+        urakoitsija (::u/urakoitsija urakka)
+        urakka (q/luo-harjassa-luotu-urakka<!
+                 db
+                 {:nimi (::u/nimi urakka)
+                  :urakkanro (::u/urakkanro urakka)
+                  :alkupvm (::u/alkupvm urakka)
+                  :loppupvm (::u/loppupvm urakka)
+                  :alue (::u/alue urakka)
+                  :hallintayksikko (::o/id hallintayksikko)
+                  :urakoitsija (::o/id urakoitsija)
+                  :hanke (::h/id hanke)
+                  :kayttaja (:id user)})]
 
-    (luo-vv-urakan-toimenpideinstanssit db urakka)))
+    (luo-vv-urakan-toimenpideinstanssit db urakka)
+
+    urakka))
 
 (defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
   (when (ominaisuus-kaytossa? :vesivayla)
