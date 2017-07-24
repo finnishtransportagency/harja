@@ -82,7 +82,7 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn- validoi-vastaus [spec data]
+(defn- validoi-vastaus! [spec data]
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
@@ -123,11 +123,11 @@
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                       (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
+                       (validoi-vastaus! (:vastaus-spec optiot) (:vastaus vastaus))
                        (http/send! channel vastaus)
                        (http/close channel))))
                  (do
-                   (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
+                   (validoi-vastaus! (:vastaus-spec optiot) palvelu-vastaus)
                    (transit-vastaus palvelu-vastaus))))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
@@ -156,6 +156,7 @@
                    (not (.after last-modified if-modified-since)))
             {:status 304}
             (let [vastaus (palvelu-fn (:kayttaja req))]
+              (validoi-vastaus! (:vastaus-spec optiot) vastaus)
               {:status  200
                :headers (merge {"Content-Type" "application/transit+json"}
                                (if last-modified
