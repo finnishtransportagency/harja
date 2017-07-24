@@ -239,7 +239,7 @@
               (poista-toteuma-materiaali! db user toteuma))
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
-              (toteumat-q/paivita-toteuma! db
+              (toteumat-q/paivita-toteuma<! db
                                            {:alkanut (:alkanut toteuma)
                                             :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
                                             :tyyppi "kokonaishintainen"

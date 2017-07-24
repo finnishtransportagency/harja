@@ -79,6 +79,7 @@
     ::t/urakan-nimi
     ::t/urakkatyyppi
     ::t/urakoitsijan-nimi
+    ::t/urakoitsijan-ytunnus
     ::t/urakoitsijayhteyshenkilo-id
     ::t/urakoitsijayhteyshenkilo
     ::t/tilaaja-id
@@ -112,7 +113,9 @@
     ::t/ajoittain-suljettu-tie
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
-    ::t/lisatietoja})
+    ::t/lisatietoja
+    ::t/lahetetty
+    ::t/tila})
 
 ;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
@@ -246,3 +249,6 @@
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                 {::t/id tietyoilmoitus-id})))
+
+(defn lahetetty? [db id]
+  (:lahetetty? (first (lahetetty db {:id id}))))

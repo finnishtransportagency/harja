@@ -69,7 +69,8 @@
   [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
    [valinnat/valintaryhmat-3
-    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]
+    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+     urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
 
     [:div
      [valinnat/vaylatyyppi
