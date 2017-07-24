@@ -253,7 +253,9 @@
        :hallintayksikko (::o/id hallintayksikko)
        :urakoitsija (::o/id urakoitsija)
        :hanke (::h/id hanke)
-       :kayttaja (:id user)})))
+       :kayttaja (:id user)})
+
+    (luo-vv-urakan-toimenpideinstanssit db urakka)))
 
 (defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -325,8 +327,6 @@
                           (paivita-urakkaa! db user urakka)
                           (luo-uusi-urakka! db user urakka))
             urakka (assoc urakka ::u/id (:id tallennettu))]
-
-        (luo-vv-urakan-toimenpideinstanssit db urakka)
         (paivita-urakan-sopimukset! db user urakka sopimukset)
         urakka))))
 
