@@ -260,6 +260,9 @@
                     :valmis (:kt-valmis ikonien-varit))
                   (:turvallisuuspoikkeama ikonien-varit)))
 
+(defn turvalaitteen-ikoni []
+  (sijainti-ikoni "sininen"))
+
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
 
