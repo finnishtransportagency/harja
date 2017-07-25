@@ -125,7 +125,7 @@
 ;; Atomi, joka sisältää valitun hallintayksikön
 (defonce valittu-hallintayksikko
   (reaction (let [id @valittu-hallintayksikko-id
-                  yksikot @hy/hallintayksikot]
+                  yksikot (apply concat (vals @hy/haetut-hallintayksikot))]
               (when (and id yksikot)
                 (some #(and (= id (:id %)) %) yksikot)))))
 
@@ -353,7 +353,7 @@
 
 
 (def render-lupa-hy? (reaction
-                       (some? @hy/hallintayksikot)))
+                       (some? @hy/vaylamuodon-hallintayksikot)))
 
 (def render-lupa-u? (reaction
                       (or (nil? @valittu-urakka-id) ;; urakkaa ei annettu urlissa, ei estetä latausta

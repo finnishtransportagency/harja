@@ -15,7 +15,7 @@
 
 (def
   ^{:doc "Sisältää yhden väylämuodon hallintayksiköt"}
-  hallintayksikot (atom nil))
+  vaylamuodon-hallintayksikot (atom nil))
 
 (def
   ^{:private true
@@ -40,7 +40,7 @@
   sen hallintayksikot-atomin sisällöksi."
   [vaylamuoto]
   (go
-    (reset! hallintayksikot ((or @haetut-hallintayksikot (<! (hae-hallintayksikot!))) vaylamuoto))))
+    (reset! vaylamuodon-hallintayksikot ((or @haetut-hallintayksikot (<! (hae-hallintayksikot!))) vaylamuoto))))
 
 (defn- hallintayksikon-vaylamuoto* [haetut-hallintayksikot id]
   (go
