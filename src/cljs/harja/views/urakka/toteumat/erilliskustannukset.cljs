@@ -275,10 +275,11 @@
         valitut-kustannukset
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
                         toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
-                    (reverse (sort-by :pvm (filter #(and
-                                                      (= sopimus-id (:sopimus %))
-                                                      (= (:toimenpideinstanssi %) toimenpideinstanssi))
-                                                   @u/erilliskustannukset-hoitokaudella)))))]
+                    (when @u/erilliskustannukset-hoitokaudella
+                      (reverse (sort-by :pvm (filter #(and
+                                                        (= sopimus-id (:sopimus %))
+                                                        (= (:toimenpideinstanssi %) toimenpideinstanssi))
+                                                     @u/erilliskustannukset-hoitokaudella))))))]
 
     (komp/luo
       (komp/lippu toteumat/erilliskustannukset-nakymassa?)
