@@ -295,7 +295,8 @@
                                :on-mouse-out hide-tooltip!}]
                        ;; TODO Piirrä tämä jos on vain alku (tai loppu)
                        [:image {:xlinkHref "images/pinni.svg"
-                                :x x :y y
+                                :x (- x 10) ;; Noin puolet ikonin leveydestä
+                                :y y
                                 :height (+ korkeus 10)}]
                        ;; kahvat draggaamiseen
                        (when voi-raahata?
