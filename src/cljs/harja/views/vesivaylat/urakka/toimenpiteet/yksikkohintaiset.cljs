@@ -22,7 +22,8 @@
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -252,6 +253,7 @@
                           [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."}]
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
+         [kartta/kartan-paikka]
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 

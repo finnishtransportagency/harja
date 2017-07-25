@@ -17,7 +17,8 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.tyokalut.tuck :as tuck-tyokalut])
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -39,7 +40,12 @@
          :kiintioon-liittaminen-kaynnissa? false
          :liitteen-lisays-kaynnissa? false
          :liitteen-poisto-kaynnissa? false
-         :toimenpiteet nil}))
+         :toimenpiteet nil
+         :turvalaitteet-kartalla nil
+         :karttataso-nakyvissa? false}))
+
+(defonce karttataso-kokonaishintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
+(defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
 
 (def valinnat
   (reaction
@@ -73,7 +79,8 @@
 
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
+    (assoc app :nakymassa? nakymassa?
+               :karttataso-nakyvissa? nakymassa?))
 
   PaivitaValinnat
   ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
@@ -103,8 +110,10 @@
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
-               :toimenpiteiden-haku-kaynnissa? false))
+    (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
+      (go (turvalaitteet-kartalle toimenpiteet))
+      (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+                 :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
