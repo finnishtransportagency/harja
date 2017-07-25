@@ -10,7 +10,9 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tyokalut.tuck :as tuck-tyokalut])
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [harja.ui.kartta.esitettavat-asiat :as kartta]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -85,6 +87,9 @@
 (defrecord PoistaToimenpiteenLiite [tiedot])
 (defrecord LiitePoistettu [vastaus tiedot])
 (defrecord LiiteEiPoistettu [])
+(defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
+(defrecord TurvalaitteetKartalleHaettu [tulos haetut])
+(defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
@@ -209,4 +214,37 @@
   LiiteEiPoistettu
   (process-event [_ app]
     (viesti/nayta! "Liitteen poistaminen epäonnistui!" :danger)
-    (assoc app :liitteen-poisto-kaynnissa? false)))
+    (assoc app :liitteen-poisto-kaynnissa? false))
+
+  HaeToimenpiteidenTurvalaitteetKartalle
+  (process-event [{to :toimenpiteet} app]
+    (let [haettavat (into #{} (map (comp ::tu/turvalaitenro ::to/turvalaite) to))]
+      (tuck-tyokalut/palvelukutsu :hae-turvalaitteet-kartalle
+                                 {:turvalaitenumerot haettavat}
+                                  {:onnistui ->TurvalaitteetKartalleHaettu
+                                   :onnistui-parametrit [haettavat]
+                                   :epaonnistui ->TurvalaitteetKartalleEiHaettu
+                                   :epaonnistui-parametrit [haettavat]})
+      (assoc app :kartalle-haettavat-toimenpiteet haettavat)))
+
+  TurvalaitteetKartalleHaettu
+  (process-event [{haetut :haetut tulos :tulos} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
+    ;; Jos valmistunut haku ei ole uusin aloitettu, ei tehdä mitään.
+    (if (= haetut kartalle-haettavat-toimenpiteet)
+      (assoc app :kartalle-haettavat-toimenpiteet nil
+                 :turvalaitteet-kartalla (kartta/kartalla-esitettavaan-muotoon
+                                           tulos
+                                           (constantly false)
+                                           (comp
+                                             (map #(assoc % :tyyppi-kartalla :turvalaite))
+                                             (map #(set/rename-keys % {::tu/sijainti :sijainti})))))
+
+      app))
+
+  TurvalaitteetKartalleEiHaettu
+  (process-event [{haetut :haetut} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
+    (if (= haetut kartalle-haettavat-toimenpiteet)
+      (do (viesti/nayta! "Toimenpiteiden haku kartalle epäonnistui!" :danger)
+          (assoc app :kartalle-haettavat-toimenpiteet nil))
+
+      app)))
