@@ -262,10 +262,9 @@
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat-fn #(maksajavalinnat @muokattu)
             :fmt #(maksajavalinnan-teksti %)
-            :palstoja 1
-            }
+            :palstoja 1}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :text :pituus-max 1024
-            :placeholder "Kirjoita tähän lisätietoa" :koko [80 :auto]}]
+            :placeholder "Kirjoita tähän lisätietoa" :koko [80 8]}]
 
           @muokattu]]))))
 
