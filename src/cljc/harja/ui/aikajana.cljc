@@ -324,8 +324,8 @@
                         tooltip)])]))))
 
 (defn aikajana
-  "Aikajanakomponentti, joka näyttää gantt kaavion tyylisen aikajanan.
-  Komponentti sovittaa alku/loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
+  "Aikajanakomponentti, joka näyttää gantt-kaavion tyylisen aikajanan.
+  Komponentti sovittaa alku-/loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
   alkuun ja loppuun 14 päivää. Komponentti mukautuu selaimen leveyteen ja sen korkeus määräytyy
   rivimäärän perusteella."
   ([rivit] (aikajana {} rivit))
