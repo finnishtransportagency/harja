@@ -314,7 +314,7 @@
                          ;; Vain alku tai loppu, piirrä marker
                          [:image {:xlinkHref "images/pinni.svg"
                                   :x (- x 10) ;; Noin puolet ikonin leveydestä
-                                  :y y
+                                  :y (- y 10) ;; Noin puolet ikonin korkeudesta
                                   :height (+ korkeus 10)}])]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
