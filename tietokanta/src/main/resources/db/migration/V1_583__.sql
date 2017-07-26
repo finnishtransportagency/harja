@@ -10,6 +10,8 @@ INSERT INTO toimenpidekoodi (koodi, taso, emo, nimi) VALUES ('VV113', 3, (SELECT
 
 UPDATE toimenpidekoodi SET nimi = 'Urakan yhteiset kustannukset' WHERE koodi='VV111';
 
+ALTER TABLE toimenpideinstanssi ALTER COLUMN urakka SET NOT NULL;
+
 -- Lisää olemassa oleville VV-urakoille toimenpideinstanssit
 
 CREATE OR REPLACE FUNCTION lisaa_vv_urakoille_toimenpiteet()
