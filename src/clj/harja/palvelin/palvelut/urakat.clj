@@ -220,21 +220,22 @@
                                                                               {:urakka urakka-id})
     :ok))
 
-(defn- paivita-urakkaa! [db user urakka]
+(defn- paivita-urakka! [db user urakka]
   (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
-    (q/paivita-harjassa-luotu-urakka<!
-      db
-      {:id (::u/id urakka)
-       :nimi (::u/nimi urakka)
-       :urakkanro (::u/urakkanro urakka)
-       :alkupvm (::u/alkupvm urakka)
-       :loppupvm (::u/loppupvm urakka)
-       :alue (::u/alue urakka)
-       :hallintayksikko (::o/id hallintayksikko)
-       :urakoitsija (::o/id urakoitsija)
-       :kayttaja (:id user)})))
+    (let [paivitetty (q/paivita-harjassa-luotu-urakka<!
+                       db
+                       {:id (::u/id urakka)
+                        :nimi (::u/nimi urakka)
+                        :urakkanro (::u/urakkanro urakka)
+                        :alkupvm (::u/alkupvm urakka)
+                        :loppupvm (::u/loppupvm urakka)
+                        :alue (::u/alue urakka)
+                        :hallintayksikko (::o/id hallintayksikko)
+                        :urakoitsija (::o/id urakoitsija)
+                        :kayttaja (:id user)})]
+      (assoc urakka ::u/id (:id paivitetty)))))
 
 (defn luo-vv-urakan-toimenpideinstanssit [db urakka]
   (let [params {:urakka_id (::u/id urakka)
@@ -265,20 +266,19 @@
                                                         ::h/loppupvm (::u/loppupvm urakka)})
         hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)
-        urakka (q/luo-harjassa-luotu-urakka<!
-                 db
-                 {:nimi (::u/nimi urakka)
-                  :urakkanro (::u/urakkanro urakka)
-                  :alkupvm (::u/alkupvm urakka)
-                  :loppupvm (::u/loppupvm urakka)
-                  :alue (::u/alue urakka)
-                  :hallintayksikko (::o/id hallintayksikko)
-                  :urakoitsija (::o/id urakoitsija)
-                  :hanke (::h/id hanke)
-                  :kayttaja (:id user)})]
-
+        tallennettu (q/luo-harjassa-luotu-urakka<!
+                      db
+                      {:nimi (::u/nimi urakka)
+                       :urakkanro (::u/urakkanro urakka)
+                       :alkupvm (::u/alkupvm urakka)
+                       :loppupvm (::u/loppupvm urakka)
+                       :alue (::u/alue urakka)
+                       :hallintayksikko (::o/id hallintayksikko)
+                       :urakoitsija (::o/id urakoitsija)
+                       :hanke (::h/id hanke)
+                       :kayttaja (:id user)})
+        urakka (assoc urakka ::u/id (:id tallennettu))]
     (luo-vv-urakan-toimenpideinstanssit db urakka)
-
     urakka))
 
 (defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
@@ -324,10 +324,9 @@
 
     (jdbc/with-db-transaction [db db]
       (let [sopimukset (::u/sopimukset urakka)
-            tallennettu (if (id-olemassa? (::u/id urakka))
-                          (paivita-urakkaa! db user urakka)
-                          (luo-uusi-urakka! db user urakka))
-            urakka (assoc urakka ::u/id (:id tallennettu))]
+            urakka (if (id-olemassa? (::u/id urakka))
+                     (paivita-urakka! db user urakka)
+                     (luo-uusi-urakka! db user urakka))]
         (paivita-urakan-sopimukset! db user urakka sopimukset)
         urakka))))
 
