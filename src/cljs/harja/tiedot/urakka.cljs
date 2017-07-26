@@ -80,7 +80,7 @@
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
            (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
-        (range ensimmainen-vuosi (inc viimeinen-vuosi))))
+        (range ensimmainen-vuosi viimeinen-vuosi)))
 
 (defn hoito-tai-sopimuskaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
