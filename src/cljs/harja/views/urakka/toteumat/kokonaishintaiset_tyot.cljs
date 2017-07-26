@@ -55,7 +55,7 @@
                       [:div
                        [:button.nappi-toissijainen.nappi-grid
                         {:on-click #(tiedot/valitse-paivan-toteuma-id! avain (:id rivi))}
-                        (ikonit/eye-open) " Toteuma"]])}]
+                        (ikonit/ikoni-ja-teksti (ikonit/eye-open) "Toteuma")]])}]
      tiedot]))
 
 (defn taulukko []
@@ -157,7 +157,9 @@
                              :ikoni        (ikonit/tallenna)
                              :kun-onnistuu #(do
                                              (tiedot/toteuman-tallennus-onnistui %)
-                                             (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                                             (tiedot/poista-toteuman-valinta!)
+                                             ;; Päiväkohtaiset tiedot vanhentui -> tyhjennä
+                                             (reset! tiedot/toteumien-paivakohtaiset-tiedot {}))
                              :disabled     (or (not (lomake/voi-tallentaa? tiedot))
                                                jarjestelman-lisaama-toteuma?
                                                (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}

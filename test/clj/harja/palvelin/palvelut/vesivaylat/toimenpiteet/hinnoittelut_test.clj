@@ -17,7 +17,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -35,7 +36,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -136,6 +137,27 @@
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                                    kysely-params)))))
+
+(deftest tallenna-toimenpiteelle-ylimaarainen-hinnoittelu
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {:limit 1})
+        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
+        hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
+    (is (= 2 hinnoittelujen-maara))
+    (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
+
+(deftest tallenna-toimenpiteelle-toinen-ryhmahinnoittelu
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma? true})
+        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma? true})
+        hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
+    (is (= 1 hinnoittelujen-maara))
+    (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
+
+(deftest tallenna-toimenpiteelle-toinen-oma-hinnoittelu
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {:hintaryhma? false})
+        hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {:hintaryhma? false})
+        hinnoittelujen-maara (:maara (first (q-map (str "SELECT COUNT(*) AS maara FROM vv_hinnoittelu_toimenpide WHERE \"toimenpide-id\"=" toimenpide-id ";"))))]
+    (is (= 1 hinnoittelujen-maara))
+    (is (thrown? PSQLException (q-map (str "INSERT INTO vv_hinnoittelu_toimenpide (\"toimenpide-id\", \"hinnoittelu-id\", luoja) VALUES (" toimenpide-id ", " hinnoittelu-id ", 1);"))))))
 
 (deftest tallenna-ryhmalle-hinta
   (testing "Hintojen lisääminen hintaryhmälle"
