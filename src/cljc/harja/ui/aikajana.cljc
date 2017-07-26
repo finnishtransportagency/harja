@@ -196,6 +196,16 @@
                           (update ::alku pvm/joda-timeksi)
                           (update ::loppu pvm/joda-timeksi)) ajat)))))
 
+(defn- marker [{:keys [x hover-y teksti korkeus width y show-tooltip! hide-tooltip! tyyppi]}]
+  [:image {:xlinkHref "images/pinni.svg"
+           :x (- x 10) ;; Noin puolet ikonin leveydestä
+           :y (- y 10) ;; Noin puolet ikonin korkeudesta
+           :height (+ korkeus 10)
+           :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                           :y (hover-y y)
+                                           :text teksti})
+           :on-mouse-out hide-tooltip!}])
+
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
                                        leveys]}]
@@ -286,40 +296,36 @@
                       ^{:key j}
                       [:g
                        (if alku-ja-loppu?
-                         ;; Piirä yksittäinen aikajana
-                         [:g [:rect {:x x :y y
-                                     :width width
-                                     :height korkeus
-                                     :fill (or vari "white")
-                                     ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                     ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                     :fill-opacity (if vari 1.0 0.0)
-                                     :stroke reuna
-                                     :rx 3 :ry 3
-                                     :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                                                     :y (hover-y y)
-                                                                     :text teksti})
-                                     :on-mouse-out hide-tooltip!}]
-                          ;; kahvat draggaamiseen
-                          (when voi-raahata?
-                            [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::alku)}])
-                          (when voi-raahata?
-                            [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::loppu)}])]
-                         ;; Vain alku tai loppu, piirrä marker
-                         [:image {:xlinkHref "images/pinni.svg"
-                                  :x (- x 10) ;; Noin puolet ikonin leveydestä
-                                  :y (- y 10) ;; Noin puolet ikonin korkeudesta
-                                  :height (+ korkeus 10)
-                                  :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                                                  :y (hover-y y)
-                                                                  :text teksti})
-                                  :on-mouse-out hide-tooltip!}])]))
+                             ;; Piirä yksittäinen aikajana
+                             [:g [:rect {:x x :y y
+                                         :width width
+                                         :height korkeus
+                                         :fill (or vari "white")
+                                         ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                         ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                         :fill-opacity (if vari 1.0 0.0)
+                                         :stroke reuna
+                                         :rx 3 :ry 3
+                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                                                         :y (hover-y y)
+                                                                         :text teksti})
+                                         :on-mouse-out hide-tooltip!}]
+                              ;; kahvat draggaamiseen
+                              (when voi-raahata?
+                                [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                        :style {:fill "white" :opacity 0.0
+                                                :cursor "ew-resize"}
+                                        :on-mouse-down #(drag-start! % jana ::alku)}])
+                              (when voi-raahata?
+                                [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
+                                        :style {:fill "white" :opacity 0.0
+                                                :cursor "ew-resize"}
+                                        :on-mouse-down #(drag-start! % jana ::loppu)}])]
+                             ;; Vain alku tai loppu, piirrä marker
+                             #?(:cljs
+                                [marker TODO PARAMS]
+                                :clj
+                                (marker TODO PARAMS)))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
