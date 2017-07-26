@@ -196,15 +196,17 @@
                           (update ::alku pvm/joda-timeksi)
                           (update ::loppu pvm/joda-timeksi)) ajat)))))
 
-(defn- marker [{:keys [x hover-y teksti korkeus width y show-tooltip! hide-tooltip! tyyppi]}]
-  [:image {:xlinkHref "images/pinni.svg"
-           :x (- x 10) ;; Noin puolet ikonin leveydestä
-           :y (- y 10) ;; Noin puolet ikonin korkeudesta
-           :height (+ korkeus 10)
-           :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
-                                           :y (hover-y y)
-                                           :text teksti})
-           :on-mouse-out hide-tooltip!}])
+(defn- marker [{:keys [x y leveys korkeus hover-y teksti paivan-leveys show-tooltip! hide-tooltip! tyyppi]}]
+  [:path {:d (str "M " x " " y
+                  " L " (+ x paivan-leveys) " " y
+                  " L " (+ x paivan-leveys (/ paivan-leveys 2)) " " (+ y (/ korkeus 2))
+                  " L " (+ x paivan-leveys) " " (+ y korkeus)
+                  " L " x " " (+ y korkeus))
+          :fill "black"
+          :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
+                                          :y (hover-y y)
+                                          :text teksti})
+          :on-mouse-out hide-tooltip!}])
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
@@ -250,9 +252,9 @@
                               (t/days (/ % paivan-leveys)))
             kuukaudet (kuukaudet paivat)
 
-            rajaa-nakyvaan-alueeseen (fn [x width]
+            rajaa-nakyvaan-alueeseen (fn [x leveys]
                                        (let [x1 (max alku-x x)
-                                             x2 (+ x width)]
+                                             x2 (+ x leveys)]
                                          [x1 (min (- x2 x1) (- leveys alku-x))]))]
         [:svg#aikajana
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
@@ -287,8 +289,8 @@
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
                           x (inc (paiva-x alku))
-                          width (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
-                          [x width] (rajaa-nakyvaan-alueeseen x width)
+                          leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
+                          [x leveys] (rajaa-nakyvaan-alueeseen x leveys)
                           ;; Vähennä väritetyn korkeutta 2px
                           y (if vari (inc y) y)
                           korkeus (if vari (- jana-korkeus 2) jana-korkeus)
@@ -298,7 +300,7 @@
                        (if alku-ja-loppu?
                              ;; Piirä yksittäinen aikajana
                              [:g [:rect {:x x :y y
-                                         :width width
+                                         :width leveys
                                          :height korkeus
                                          :fill (or vari "white")
                                          ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
@@ -306,7 +308,7 @@
                                          :fill-opacity (if vari 1.0 0.0)
                                          :stroke reuna
                                          :rx 3 :ry 3
-                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
                                                                          :y (hover-y y)
                                                                          :text teksti})
                                          :on-mouse-out hide-tooltip!}]
@@ -317,15 +319,25 @@
                                                 :cursor "ew-resize"}
                                         :on-mouse-down #(drag-start! % jana ::alku)}])
                               (when voi-raahata?
-                                [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
+                                [:rect {:x (+ x leveys -3) :y y :width 7 :height korkeus
                                         :style {:fill "white" :opacity 0.0
                                                 :cursor "ew-resize"}
                                         :on-mouse-down #(drag-start! % jana ::loppu)}])]
                              ;; Vain alku tai loppu, piirrä marker
                              #?(:cljs
-                                [marker TODO PARAMS]
+                                [marker {:x x :hover-y hover-y :teksti teksti
+                                         :leveys leveys :korkeus korkeus
+                                         :paivan-leveys paivan-leveys
+                                         :y y :show-tooltip! show-tooltip!
+                                         :hide-tooltip! hide-tooltip!
+                                         :tyyppi (if alku :alku :loppu)}]
                                 :clj
-                                (marker TODO PARAMS)))]))
+                                [marker {:x x :hover-y hover-y :teksti teksti
+                                         :leveys leveys :korkeus korkeus
+                                         :y y :show-tooltip! show-tooltip!
+                                         :paivan-leveys paivan-leveys
+                                         :hide-tooltip! hide-tooltip!
+                                         :tyyppi (if alku :alku :loppu)}]))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
