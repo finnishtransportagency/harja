@@ -176,7 +176,7 @@
                 :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
-                           :parallel-build true
+                           ;:parallel-build false Failaa randomisti
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"
                            :output-dir "dev-resources/js/out"
@@ -192,7 +192,7 @@
                            :optimizations :none
                            :pretty-print true
                            :source-map true
-                           :parallel-build true
+                           ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
@@ -211,7 +211,7 @@
                            :source-map "resources/public/js/harja.js.map"
                            :output-dir "resources/public/js/"
 
-                           :parallel-build true
+                           ;:parallel-build false Failaa randomisti
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"}}
 
@@ -261,7 +261,7 @@
                            :language-in :ecmascript5
                            :language-out :ecmascript5
                            :externs ["laadunseuranta/externs.js"]
-                           :parallel-build true
+                           ;:parallel-build false Failaa randomisti
                            :pretty-print false}}]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
