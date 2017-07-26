@@ -288,19 +288,18 @@
     (log/debug "Päivitetään urakan " (::u/nimi urakka) " " (count sopimukset) " sopimusta.")
 
     (let [urakan-sopimus-idt (map ::s/id (remove :poistettu sopimukset))
-          poistettavat-sopimus-idt (map ::s/id (filter :poistettu sopimukset))
-          urakan-paasopimus (s/paasopimus sopimukset)
+          urakan-paasopimus (s/ainoa-paasopimus (remove :poistettu sopimukset))
           urakan-sivusopimukset (filter #(not= % urakan-paasopimus) sopimukset)]
 
       (assert urakan-paasopimus "Urakalla oltava yksi pääsopimus!")
 
-      ;; Irrota poistetut sopimukset urakasta
-      (when-not (empty? poistettavat-sopimus-idt)
-        (log/debug "Poistetaan urakasta " (::u/id urakka) (count poistettavat-sopimus-idt) " sopimusta.")
-        (as-> (sopimukset-q/poista-sopimukset-urakasta! db {:urakka (::u/id urakka)
-                                                            :sopimukset poistettavat-sopimus-idt})
-              lkm
-              (log/debug lkm " sopimusta poistettu onnistuneesti.")))
+      ;; Irrota sopimukset urakasta
+      ;; Palvelimelle lähetetään tietyissä tilanteissa vain "uusi totuus", ei
+      ;; tietoa siitä, mikä on muuttunut. Vanha tilanne täytyy siis pyyhkiä pois,
+      ;; ja päivittää uuteen uusien tietojen pohjalta.
+      (log/debug "Puretaan tilapäisesti kaikki urakan sopimukset.")
+      (as-> (sopimukset-q/poista-kaikki-sopimukset-urakasta! db {:urakka (::u/id urakka)}) lkm
+            (log/debug lkm " sopimusta purettu."))
 
       ;; Aseta pääsopimus ja aseta muut sopimukset viittaamaan siihen
       ;; Tärkeää tehdä tässä järjestyksessä, koska urakalla saa olla vain yksi pääsopimus
@@ -418,7 +417,7 @@
                       :hae-harjassa-luodut-urakat
                       (fn [user _]
                         (hae-harjassa-luodut-urakat db user))
-                      {:kysely-spec ::u/hae-harjassa-luodut-urakat-vastaus})
+                      {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
     (julkaise-palvelu http
                       :laheta-urakka-sahkeeseen

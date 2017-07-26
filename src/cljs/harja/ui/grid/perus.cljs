@@ -340,27 +340,26 @@
    (when nayta-otsikko? [:h6.panel-title otsikko])])
 
 (defn- otsikkorivi [{:keys [opts skeema nayta-toimintosarake? piilota-toiminnot? tallenna]}]
-  (fn []
-    [:thead
-     (when-let [rivi-ennen (:rivi-ennen opts)]
-       [:tr
-        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-          ^{:key teksti}
-          [:th {:colSpan (or sarakkeita 1)
-                :class (y/tasaus-luokka tasaa)}
-           teksti])])
+  [:thead
+   (when-let [rivi-ennen (:rivi-ennen opts)]
      [:tr
-      (map-indexed
-        (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]}]
-          ^{:key (str i nimi)}
-          [:th {:class (y/luokat otsikkorivi-luokka
-                                 (y/tasaus-luokka tasaa))
-                :width (or leveys "5%")}
-           otsikko]) skeema)
-      (when (or nayta-toimintosarake?
-                (and (not piilota-toiminnot?)
-                     tallenna))
-        [:th.toiminnot {:width "40px"} " "])]]))
+      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        ^{:key teksti}
+        [:th {:colSpan (or sarakkeita 1)
+              :class (y/tasaus-luokka tasaa)}
+         teksti])])
+   [:tr
+    (map-indexed
+      (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]}]
+        ^{:key (str i nimi)}
+        [:th {:class (y/luokat otsikkorivi-luokka
+                               (y/tasaus-luokka tasaa))
+              :width (or leveys "5%")}
+         otsikko]) skeema)
+    (when (or nayta-toimintosarake?
+              (and (not piilota-toiminnot?)
+                   tallenna))
+      [:th.toiminnot {:width "40px"} " "])]])
 
 (defn- toggle-valiotsikko [valiotsikko-id piilotetut-valiotsikot]
   (if (@piilotetut-valiotsikot valiotsikko-id)

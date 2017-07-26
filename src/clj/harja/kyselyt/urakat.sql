@@ -13,6 +13,7 @@ SELECT
   urk.ytunnus              AS urakoitsija_ytunnus,
   s.nimi                   AS sopimus_nimi,
   s.id                     AS sopimus_id,
+  s.paasopimus             AS "sopimus_paasopimus-id",
   h.nimi                   AS hanke_nimi,
   h.id                     AS hanke_id,
   sl.lahetetty AS sahkelahetys_lahetetty,

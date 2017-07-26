@@ -61,10 +61,9 @@ UPDATE sopimus s SET urakka=:urakka
 WHERE id IN (:sopimukset)
 AND s.harjassa_luotu IS TRUE;
 
--- name: poista-sopimukset-urakasta!
+-- name: poista-kaikki-sopimukset-urakasta!
 UPDATE sopimus s SET urakka=NULL, paasopimus=NULL
-WHERE id IN (:sopimukset)
-AND urakka=:urakka
+WHERE urakka=:urakka
 AND s.harjassa_luotu IS TRUE;
 
 -- name: aseta-sopimus-paasopimukseksi!
