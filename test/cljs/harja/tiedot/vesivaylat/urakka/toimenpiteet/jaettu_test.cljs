@@ -122,7 +122,7 @@
   (testing "Asetetaan infolaatikko näkyviin"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true) vanha-tila)]
-      (is (false? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
+      (is (nil? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
       (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila)))))))
 
 (deftest vaylan-rivien-valinta
@@ -181,9 +181,9 @@
       (is (false? (tiedot/kaikki-valittu? mitaan-ei-valittu))))
 
     (testing "Mitään-ei-valittu?"
-      (is (false? (tiedot/kaikki-valittu? kaikki-valittu)))
-      (is (false? (tiedot/kaikki-valittu? osa-valittu)))
-      (is (true? (tiedot/kaikki-valittu? mitaan-ei-valittu))))
+      (is (false? (tiedot/mitaan-ei-valittu? kaikki-valittu)))
+      (is (false? (tiedot/mitaan-ei-valittu? osa-valittu)))
+      (is (true? (tiedot/mitaan-ei-valittu? mitaan-ei-valittu))))
 
     (testing "Checkboxin tila"
       (is (true? (tiedot/valinnan-tila kaikki-valittu)))
@@ -193,7 +193,7 @@
 (deftest toimenpiteet-siirretty
   (is (= {:toimenpiteet [{::to/id 2}]
           :siirto-kaynnissa? false}
-         (e! (tiedot/->ToimenpiteetSiirretty [{::to/id 1}]) [{::to/id 1} {::to/id 2}]))))
+         (e! (tiedot/->ToimenpiteetSiirretty #{1}) {:toimenpiteet [{::to/id 1} {::to/id 2}]}))))
 
 (deftest toimenpiteet-ei-siirretty
   (is (= {:siirto-kaynnissa? false}
@@ -204,6 +204,37 @@
     #{tiedot/->ToimenpiteetSiirretty tiedot/->ToimenpiteetEiSiirretty}
     (is (= {:siirto-kaynnissa? true}
            (tiedot/siirra-valitut! :foo {})))))
+
+(deftest turvalaitteet-kartalle
+  (testing "Turvalaitteiden hakemisen aloitus"
+    (vaadi-async-kutsut
+     #{tiedot/->TurvalaitteetKartalleHaettu tiedot/->TurvalaitteetKartalleEiHaettu}
+
+     (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
+            (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle [{::to/turvalaite {::tu/turvalaitenro 1}}
+                                                                  {::to/turvalaite {::tu/turvalaitenro 1}}
+                                                                  {::to/turvalaite {::tu/turvalaitenro 2}}]))))))
+
+  (testing "Haun valmistuminen"
+    (let [tulos (e! (tiedot/->TurvalaitteetKartalleHaettu [{::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}] #{1 2})
+                    {:kartalle-haettavat-toimenpiteet #{1 2}})]
+      (is (nil? (:kartalle-haettavat-toimenpiteet tulos)))
+      (is (not-empty (:turvalaitteet-kartalla tulos)))))
+
+  (testing "Vanhentuneen haun valmistuminen"
+    (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
+          (e! (tiedot/->TurvalaitteetKartalleHaettu {} #{3 2})
+              {:kartalle-haettavat-toimenpiteet #{1 2}}))))
+
+  (testing "Haun epäonnistuminen"
+    (is (= {:kartalle-haettavat-toimenpiteet nil}
+           (e! (tiedot/->TurvalaitteetKartalleEiHaettu nil #{1 2})
+               {:kartalle-haettavat-toimenpiteet #{1 2}}))))
+
+  (testing "Vanhentuneen haun epäonnistuminen"
+    (is (= {:kartalle-haettavat-toimenpiteet #{1 2}}
+          (e! (tiedot/->TurvalaitteetKartalleEiHaettu nil #{3 2})
+              {:kartalle-haettavat-toimenpiteet #{1 2}})))))
 
 (deftest tilan-yhdistaminen
 
@@ -216,9 +247,12 @@
   (testing "Tilan yhdistäminen yhdistää :valinnat mäpin"
     (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
           b (atom {:id 2 :baz {:urakka 2 :organisaatio 2}})]
-      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
+      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin"))
+
+    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
+          b (atom {:id 2 :valinnat {:urakka 2 :organisaatio 2}})]
       (is (= {:id 1 :valinnat {:sopimus 1 :urakka 2 :organisaatio 2}}
-             @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
+            @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
 
 
 
