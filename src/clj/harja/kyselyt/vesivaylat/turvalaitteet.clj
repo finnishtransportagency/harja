@@ -59,6 +59,7 @@
                     ::tu/kiintea
                     ::tu/vaylat}
                  (op/and
+                   {::m/poistettu? false}
                    (when (not-empty turvalaitenumerot)
                      {::tu/turvalaitenro (op/in turvalaitenumerot)})
                    (when (not-empty vaylanumerot)
