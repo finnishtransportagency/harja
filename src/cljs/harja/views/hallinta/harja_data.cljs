@@ -19,44 +19,13 @@
                               (apply str "#" (repeatedly 6 #(rand-int 10)))))))
 
 (defn yhteyskatkokset-bars
-  [e! yhteyskatkos-jarjestys-data yhteyskatkos-data-avain]
+  [e! yhteyskatkokset-jarjestys-data yhteyskatkokset-data-avain]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
         str-pred (fn [txt] (fn [arvo] (= txt arvo)))
-        lisaa-yhteyskatkoksiin (fn [olemassa-olevat ryhma-vec arvo-vec]
-                                (let [ryhma-arvo-pari (mapv #(hash-map :category %1 :value %2) ryhma-vec arvo-vec)
-                                      lisays-olemassa-oleviin (vec (for [oo olemassa-olevat
-                                                                         rap ryhma-arvo-pari
-                                                                         :when (= (:category oo) (:category rap))]
-                                                                      {:category (:category oo) :value (+ (:value oo) (:value rap))}))
-                                      lisays-olemassa-oleviin (mapv #(if-let [paivitetty (some (fn [paivitetty-mappi]
-                                                                                                  (if (= (:category paivitetty-mappi) (:category %))
-                                                                                                    paivitetty-mappi false))
-                                                                                               lisays-olemassa-oleviin)]
-                                                                        paivitetty %)
-                                                                    olemassa-olevat)
-                                      lisattavat (keep #(if (some (fn [{:keys [category value]}]
-                                                                    (= (:category %) category))
-                                                                  lisays-olemassa-oleviin)
-                                                          nil %)
-                                                        ryhma-arvo-pari)]
-                                    (vec (concat lisays-olemassa-oleviin lisattavat))))
-
-        data (reduce (fn [jarjestetty {:keys [jarjestys-avain ryhma-avain arvo-avain]}]
-                       (let [mapin-arvo (if-let [loytynyt-mappi (some #(if (= jarjestys-avain (:jarjestys-avain %)) % false) jarjestetty)]
-                                          {:jarjestys-avain jarjestys-avain
-                                           :yhteyskatkokset (lisaa-yhteyskatkoksiin (:yhteyskatkokset loytynyt-mappi) ryhma-avain arvo-avain)}
-                                          {:jarjestys-avain jarjestys-avain
-                                           :yhteyskatkokset (mapv #(hash-map :category %1 :value %2) ryhma-avain arvo-avain)})
-                              loytyy-jarjestyksesta? (some #(= (:jarjestys-avain %) (:jarjestys-avain mapin-arvo)) jarjestetty)]
-                          (if loytyy-jarjestyksesta?
-                            (mapv #(if (= (:jarjestys-avain %) (:jarjestys-avain mapin-arvo))
-                                      mapin-arvo %)
-                                  jarjestetty)
-                            (conj jarjestetty mapin-arvo))))
-
-                    [] yhteyskatkos-jarjestys-data)
-        yhteyskatkosten-lkm-max (apply max (map #(apply max (map :value (:yhteyskatkokset %))) data))
+        yhteyskatkosten-lkm-max (apply max (map #(apply max (map :value
+                                                                 (:yhteyskatkokset %)))
+                                                yhteyskatkokset-jarjestys-data))
         tikit (if yhteyskatkosten-lkm-max
                 [0
                  (js/Math.round (* .25 yhteyskatkosten-lkm-max))
@@ -64,7 +33,9 @@
                  (js/Math.round (* .75 yhteyskatkosten-lkm-max))
                  yhteyskatkosten-lkm-max]
                 nil)
-        legend (apply hash-set (mapcat #(map (fn [x] (:category x)) (:yhteyskatkokset %)) data))
+        legend (apply hash-set (mapcat #(map (fn [x] (:category x))
+                                             (:yhteyskatkokset %))
+                                       yhteyskatkokset-jarjestys-data))
         colors (zipmap (mapv keyword legend) (take (count legend) colors))]
     [vis/bars {:width w
                :height (max 1000 h)
@@ -76,9 +47,14 @@
                :ticks tikit
                :legend legend}
               ;  :on-legend-click (fn [nakyma]
-              ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkos-jarjestys-data nakyma) yhteyskatkos-data-avain)))}
-              data]))
-
+              ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkokset-jarjestys-data nakyma) yhteyskatkokset-data-avain)))}
+              yhteyskatkokset-jarjestys-data]))
+(defn hae-kaikki-yhteyskatkosdatat
+  [e!]
+  (e! (tiedot/->HaeYhteyskatkosData :pvm :palvelut))
+  (e! (tiedot/->HaeYhteyskatkosData :palvelut :pvm))
+  (e! (tiedot/->HaeYhteyskatkosryhmaData :pvm :palvelut))
+  (e! (tiedot/->HaeYhteyskatkosryhmaData :palvelut :pvm)))
 (defn hakuasetukset-leijuke
   [e! hakuasetukset]
   (let [setti-ryhmia (atom #{:tallenna :hae :muut})]
@@ -88,7 +64,7 @@
          :sulje! #(e! (tiedot/->PaivitaArvoFunktio not :hakuasetukset-nakyvilla?))}
         [lomake/lomake
           {:muokkaa! #(e! (tiedot/->PaivitaArvo % :hakuasetukset))
-           :footer [napit/yleinen-ensisijainen "Päivitä" #(e! (tiedot/->KaytaAsetuksia))]}
+           :footer [napit/yleinen-ensisijainen "Päivitä" #(hae-kaikki-yhteyskatkosdatat e!)]}
           [{:otsikko "Min katkokset"
             :nimi :min-katkokset
             :tyyppi :positiivinen-numero
@@ -102,12 +78,11 @@
           hakuasetukset]])))
 
 (defn harja-datan-paanakyma [e! app]
-  (e! (tiedot/->HaeArvotEnsin))
-  (fn [e! {:keys [analyysit valittu-analyysi yhteyskatkos-pvm-data yhteyskatkos-palvelut-data
-                  valittu-yhteyskatkos-jarjestys yhteyskatkos-jarjestykset aloitus-valmis valittu-yhteyskatkos-arvo
-                  yhteyskatkos-arvot yhteyskatkosryhma-pvm-data yhteyskatkosryhma-palvelut-data
+  (fn [e! {:keys [analyysit valittu-analyysi yhteyskatkokset-pvm-data yhteyskatkokset-palvelut-data
+                  valittu-yhteyskatkokset-jarjestys yhteyskatkokset-jarjestykset haku-kaynnissa valittu-yhteyskatkokset-arvo
+                  yhteyskatkokset-arvot yhteyskatkosryhma-pvm-data yhteyskatkosryhma-palvelut-data
                   hakuasetukset-nakyvilla? hakuasetukset]}]
-    (if aloitus-valmis
+    (if (empty? haku-kaynnissa)
       [:span
        [:div.container
         [:div.label-ja-alasveto
@@ -121,17 +96,17 @@
             ^{:key "jarjestys"}
             [:div.label-ja-alasveto
               [:span.alasvedon-otsikko "Jäjestys"]
-              [y/livi-pudotusvalikko {:valinta valittu-yhteyskatkos-jarjestys
+              [y/livi-pudotusvalikko {:valinta valittu-yhteyskatkokset-jarjestys
                                       :format-fn #(if % % "Kaikki järjestykset")
-                                      :valitse-fn #(e! (tiedot/->PaivitaArvo % :valittu-yhteyskatkos-jarjestys))}
-                                    (cons nil yhteyskatkos-jarjestykset)]]
+                                      :valitse-fn #(e! (tiedot/->PaivitaArvo % :valittu-yhteyskatkokset-jarjestys))}
+                                    (cons nil yhteyskatkokset-jarjestykset)]]
             ^{:key "arvo"}
             [:div.label-ja-alasveto
               [:span.alasvedon-otsikko "Arvo"]
-              [y/livi-pudotusvalikko {:valinta valittu-yhteyskatkos-arvo
+              [y/livi-pudotusvalikko {:valinta valittu-yhteyskatkokset-arvo
                                       :format-fn #(identity %)
-                                      :valitse-fn #(e! (tiedot/->PaivitaArvo % :valittu-yhteyskatkos-arvo))}
-                                    yhteyskatkos-arvot]]
+                                      :valitse-fn #(e! (tiedot/->PaivitaArvo % :valittu-yhteyskatkokset-arvo))}
+                                    yhteyskatkokset-arvot]]
             ^{:key "hakuasetukset"}
             [:div.inline-block
               [:button.nappi-ensisijainen {:on-click #(e! (tiedot/->PaivitaArvoFunktio not :hakuasetukset-nakyvilla?))} "Hakuasetukset"]
@@ -140,20 +115,21 @@
 
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
-            (when (or (nil? valittu-yhteyskatkos-jarjestys) (= valittu-yhteyskatkos-jarjestys "pvm"))
-              (case valittu-yhteyskatkos-arvo
-                "katkokset" ^{:key "yhteyskatkos-pvm"}[yhteyskatkokset-bars e! yhteyskatkos-pvm-data :yhteyskatkos-pvm-data]
+            (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "pvm"))
+              (case valittu-yhteyskatkokset-arvo
+                "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-bars e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
                 "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-bars e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data]))
-            (when (or (nil? valittu-yhteyskatkos-jarjestys) (= valittu-yhteyskatkos-jarjestys "palvelut"))
-              (case valittu-yhteyskatkos-arvo
-                "katkokset" ^{:key "yhteyskatkos-palvelut"}[yhteyskatkokset-bars e! yhteyskatkos-palvelut-data :yhteyskatkos-palvelut-data]
+            (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "palvelut"))
+              (case valittu-yhteyskatkokset-arvo
+                "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-bars e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
                 "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data]))))]]
 
       [y/ajax-loader])))
 
 (defn harja-data* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (hae-kaikki-yhteyskatkosdatat e!))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! app]
       [:div
