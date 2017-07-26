@@ -319,7 +319,7 @@ WHERE siltatarkastus = :siltatarkastus;
 
 -- name: luo-silta!
 INSERT INTO silta (tyyppi, siltanro, siltanimi, alue, tr_numero, tr_alkuosa, tr_alkuetaisyys, siltatunnus, siltaid)
-VALUES (:nimi, :siltanro, :siltanimi, ST_GeomFromText(:geometria) :: GEOMETRY, :numero, :aosa, :aet, :tunnus, :siltaid);
+VALUES (:tyyppi, :siltanro, :nimi, ST_GeomFromText(:geometria) :: GEOMETRY, :numero, :aosa, :aet, :tunnus, :siltaid);
 
 -- name: paivita-silta-idlla!
 UPDATE silta

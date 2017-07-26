@@ -97,7 +97,7 @@
                         :soratien-hoitoluokkien-alk-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
 
                         :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-alk-osoite "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
+                        :siltojen-alk-osoite "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=TL151&OUTPUTFORMAT=SHAPE-ZIP"
                         :siltojen-alk-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"

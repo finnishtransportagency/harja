@@ -1,22 +1,40 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.siltatarkastukset :as s]
+            [harja.kyselyt.siltatarkastukset :as q]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn luo-tai-paivita-silta [db silta]
-  (let [tyyppi (:siltatyy silta)
-        numero (int (:nro silta))
-        nimi (:nimi silta)
-        geometria (.toString (:the_geom silta))
-        tie (:tie silta)
-        alkuosa (:aosa silta)
-        alkuetaisyys (:aet silta)
-        tunnus (:tunnus silta)
-        id (int (:silta_id silta))]
-    (if (first (s/hae-silta-idlla db id))
-      (s/paivita-silta-idlla! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id)
-      (s/luo-silta! db tyyppi numero nimi geometria tie alkuosa alkuetaisyys tunnus id))))
+
+(defn luo-tai-paivita-silta [db {:keys [siltaty siltanimi siltanro silta_id the_geom
+                                        tie aosa aet
+                                        akspaino telipaino ajonpaino
+                                        ]}]
+  (let [id (int silta_id)
+        nro (int siltanro)
+        params {;; Sillan osoite
+                :numero tie :aosa aosa :aet aet
+
+                ;; Sillan tunnisteet ja nimi
+                :siltaid id
+                :siltanro nro
+                :nimi siltanimi
+
+                ;; Tyyppi. HUOM: Ennen tekstimuotoinen, mutta tyypit tierekisterissä ei samat
+                :tyyppi (str (int siltaty))
+
+                :geometria (str the_geom)
+
+                ;; Painorajoitukset
+                :akselipaino akspaino
+                :telipaino telipaino
+                :ajoneuvopaino ajonpaino
+
+                ;; Tunnusta ei tierekisterissä ole
+                :tunnus nil}]
+
+    (if (first (q/hae-silta-idlla db id))
+      (q/paivita-silta-idlla! db params)
+      (q/luo-silta! db params))))
 
 (defn vie-silta-entry [db silta]
   (if (:the_geom silta)
