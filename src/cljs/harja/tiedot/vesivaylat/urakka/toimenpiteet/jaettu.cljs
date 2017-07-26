@@ -88,6 +88,9 @@
       (map #(assoc % :tyyppi-kartalla :turvalaite))
       (map #(set/rename-keys % {::tu/sijainti :sijainti})))))
 
+(defn paivita-kartta [app]
+  (update app :turvalaitteet-kartalla #(turvalaitteet-kartalle % app)))
+
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
@@ -104,6 +107,7 @@
 (defrecord TurvalaitteetKartalleHaettu [tulos haetut])
 (defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
 (defrecord KorostaToimenpideKartalla [toimenpide])
+(defrecord PoistaKorostuksetKartalta [])
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
@@ -154,8 +158,11 @@
   (process-event [{tunniste :tunniste
                    uusi-tila :uusi-tila} app]
     (if tunniste
-      (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
-                                                {tunniste uusi-tila}))
+      (cond-> (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
+                                                 {tunniste uusi-tila}))
+              (false? uusi-tila)
+              (-> (assoc :korostetut-turvalaitteet nil)
+                  (paivita-kartta)))
       app))
 
   ToimenpiteetSiirretty
@@ -262,4 +269,8 @@
   (process-event [{toimenpide :toimenpide} app]
     (-> (assoc app :korostetut-turvalaitteet #{(get-in toimenpide [::to/turvalaite ::tu/turvalaitenro])})
         ;; Päivitetään :turvalaitteet-kartalla mäppiin korostustieto
-        (update :turvalaitteet-kartalla #(turvalaitteet-kartalle % app)))))
+        (paivita-kartta)))
+
+  PoistaKorostuksetKartalta
+  (process-event [_ app]
+    (assoc app :korostetut-turvalaitteet nil)))
