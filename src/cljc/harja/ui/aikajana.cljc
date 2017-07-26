@@ -315,7 +315,11 @@
                          [:image {:xlinkHref "images/pinni.svg"
                                   :x (- x 10) ;; Noin puolet ikonin leveydestä
                                   :y (- y 10) ;; Noin puolet ikonin korkeudesta
-                                  :height (+ korkeus 10)}])]))
+                                  :height (+ korkeus 10)
+                                  :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
+                                                                  :y (hover-y y)
+                                                                  :text teksti})
+                                  :on-mouse-out hide-tooltip!}])]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
