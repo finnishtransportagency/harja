@@ -306,9 +306,9 @@ reimari-tilat
                              ::vv-vayla/id
                              ::vv-vayla/nimi]))
 (s/def ::pvm inst?)
-(s/def ::turvalaite (s/keys :opt [::vv-turvalaite/nimi
-                                  ::vv-turvalaite/nro
-                                  ::vv-turvalaite/ryhma]))
+(s/def ::turvalaite (s/nilable (s/keys :opt [::vv-turvalaite/nimi
+                                             ::vv-turvalaite/nro
+                                             ::vv-turvalaite/ryhma])))
 (s/def ::oma-hinnoittelu ::h/hinnoittelu)
 (s/def ::hintaryhma-id ::h/id)
 (s/def ::vikakorjauksia? boolean?)
