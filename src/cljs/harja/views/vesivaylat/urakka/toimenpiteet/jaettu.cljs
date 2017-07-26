@@ -235,6 +235,7 @@
                           [toimenpide-infolaatikossa rivi])
     :salli-valiotsikoiden-piilotus? true
     :ei-footer-muokkauspaneelia? true
+    :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi)))
     :valiotsikoiden-alkutila :kaikki-kiinni}
    sarakkeet
    toimenpiteet])

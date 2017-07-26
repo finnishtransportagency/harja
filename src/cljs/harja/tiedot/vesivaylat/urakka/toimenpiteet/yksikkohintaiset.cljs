@@ -61,7 +61,8 @@
          :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu
          :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu
          :turvalaitteet-kartalla nil
-         :karttataso-nakyvissa? true}))
+         :karttataso-nakyvissa? true
+         :korostetut-turvalaitteet nil}))
 
 (defonce karttataso-yksikkohintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))

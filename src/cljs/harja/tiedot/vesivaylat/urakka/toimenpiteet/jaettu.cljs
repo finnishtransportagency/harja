@@ -75,6 +75,19 @@
 (defn toimenpiteet-aikajarjestyksessa [toimenpiteet]
   (sort-by ::to/pvm toimenpiteet))
 
+(defn korosta-turvalaite-kartalla? [app]
+  (fn [turvalaite]
+    (when-let [setti (:korostetut-turvalaitteet app)]
+      (boolean (setti (::tu/turvalaitenro turvalaite))))))
+
+(defn turvalaitteet-kartalle [turvalaitteet app]
+  (kartta/kartalla-esitettavaan-muotoon
+    turvalaitteet
+    (korosta-turvalaite-kartalla? app)
+    (comp
+      (map #(assoc % :tyyppi-kartalla :turvalaite))
+      (map #(set/rename-keys % {::tu/sijainti :sijainti})))))
+
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
@@ -90,6 +103,7 @@
 (defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
 (defrecord TurvalaitteetKartalleHaettu [tulos haetut])
 (defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
+(defrecord KorostaToimenpideKartalla [toimenpide])
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
@@ -232,12 +246,7 @@
     ;; Jos valmistunut haku ei ole uusin aloitettu, ei tehdä mitään.
     (if (= haetut kartalle-haettavat-toimenpiteet)
       (assoc app :kartalle-haettavat-toimenpiteet nil
-                 :turvalaitteet-kartalla (kartta/kartalla-esitettavaan-muotoon
-                                           tulos
-                                           (constantly false)
-                                           (comp
-                                             (map #(assoc % :tyyppi-kartalla :turvalaite))
-                                             (map #(set/rename-keys % {::tu/sijainti :sijainti})))))
+                 :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app))
 
       app))
 
@@ -247,4 +256,10 @@
       (do (viesti/nayta! "Toimenpiteiden haku kartalle epäonnistui!" :danger)
           (assoc app :kartalle-haettavat-toimenpiteet nil))
 
-      app)))
+      app))
+
+  KorostaToimenpideKartalla
+  (process-event [{toimenpide :toimenpide} app]
+    (-> (assoc app :korostetut-turvalaitteet #{(get-in toimenpide [::to/turvalaite ::tu/turvalaitenro])})
+        ;; Päivitetään :turvalaitteet-kartalla mäppiin korostustieto
+        (update :turvalaitteet-kartalla #(turvalaitteet-kartalle % app)))))

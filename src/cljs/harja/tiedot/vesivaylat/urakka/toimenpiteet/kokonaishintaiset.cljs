@@ -42,7 +42,8 @@
          :liitteen-poisto-kaynnissa? false
          :toimenpiteet nil
          :turvalaitteet-kartalla nil
-         :karttataso-nakyvissa? false}))
+         :karttataso-nakyvissa? false
+         :korostetut-turvalaitteet nil}))
 
 (defonce karttataso-kokonaishintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
