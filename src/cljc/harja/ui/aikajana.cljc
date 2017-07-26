@@ -212,6 +212,7 @@
                     " L " (+ x (/ paivan-leveys 2)) " " (+ y korkeus)
                     " L " (+ x paivan-leveys (/ paivan-leveys 2)) " " (+ y korkeus)))
           :fill vari
+          :fill-opacity (if vari 1.0 0.0)
           :store reuna
           :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
                                           :y (hover-y y)
