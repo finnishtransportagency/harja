@@ -541,6 +541,63 @@ VALUES
 -- TODO: REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU TYÖ
 -- ***********************************************
 
+INSERT INTO reimari_toimenpide
+(hintatyyppi,
+ "urakka-id",
+ "reimari-id",
+ "reimari-urakoitsija",
+ "urakoitsija-id",
+ "reimari-sopimus",
+ "sopimus-id",
+ "reimari-turvalaite",
+ "turvalaite-id",
+ lisatieto,
+ suoritettu,
+ luotu,
+ luoja,
+ "reimari-luotu",
+ "reimari-alus",
+ "reimari-tila",
+ "reimari-toimenpidetyyppi",
+ "reimari-tyolaji",
+ "reimari-tyoluokka",
+ "reimari-vayla",
+ "vayla-id")
+VALUES
+  ('yksikkohintainen',
+    (SELECT id
+     FROM urakka
+     WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+    82,
+    '(23, Pohjanmeren venepojat)',
+    (SELECT id
+     FROM organisaatio
+     WHERE nimi = 'Pohjanmeren venepojat'),
+    '(-5, 1022542301, Helsingin väyläyksikön pääsopimus,)',
+    (SELECT id
+     FROM sopimus
+     WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+    '(8881, Poiju 1, 555)',
+    (SELECT id
+     FROM vv_turvalaite
+     WHERE nimi = 'Hietasaaren pienempi poiju'),
+    'Poijujen korjausta kuten on sovittu otos 2',
+    '2017-05-08T23:23Z',
+    '2017-05-08',
+    (SELECT id
+     FROM kayttaja
+     WHERE kayttajanimi = 'tero'),
+    '2017-05-08',
+    '(MBKE24524, MS Piggy)',
+    '1022541202',
+    '1022542001',
+    '1022541802',
+    '1022541905',
+    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    (SELECT id
+     FROM vv_vayla
+     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+
 -- ***********************************************
 -- REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU, KÖNTTÄSUMMALLA
 -- SEKÄ TARKENNETULLA HINNALLA HINNOITELTU TOIMENPIDE
@@ -787,6 +844,17 @@ VALUES
     FROM urakka
     WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id")
+VALUES
+  ('Hietasaaren poijujen korjasusta otos 2', FALSE,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM urakka
+    WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -840,6 +908,16 @@ VALUES
               FROM kayttaja
               WHERE kayttajanimi = 'tero'));
 
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Hietasaaren poijujen korjasusta otos 2'),
+   'Työ', 70, (SELECT id
+               FROM kayttaja
+               WHERE kayttajanimi = 'tero'));
+
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
 VALUES
@@ -862,6 +940,19 @@ VALUES
    (SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'POISTETTU HINNOITTELU EI SAISI NÄKYÄ MISSÄÄN'),
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id", luoja)
+VALUES
+  ((SELECT id
+    FROM reimari_toimenpide
+    WHERE lisatieto = 'Poijujen korjausta kuten on sovittu otos 2'),
+   (SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Hietasaaren poijujen korjasusta otos 2'),
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));

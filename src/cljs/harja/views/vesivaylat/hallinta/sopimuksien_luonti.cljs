@@ -36,7 +36,7 @@
                       :tallennus-kaynnissa? tallennus-kaynnissa?}])}
       [(lomake/rivi
          {:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string :pakollinen? true}
-         {:otsikko "Diaarinumero" :nimi ::sopimus/reimari-diaarinro :tyyppi :diaarinumero :pakollinen? false})
+         {:otsikko "Diaarinumero" :nimi ::sopimus/reimari-diaarinro :tyyppi :string :pakollinen? false})
        (lomake/rivi
          {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :pakollinen? true}
          {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :pakollinen? true
