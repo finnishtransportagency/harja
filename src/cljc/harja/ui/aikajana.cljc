@@ -196,7 +196,7 @@
                           (update ::alku pvm/joda-timeksi)
                           (update ::loppu pvm/joda-timeksi)) ajat)))))
 
-(defn- marker [{:keys [x y leveys reuna korkeus hover-y teksti
+(defn- marker [{:keys [x y reuna korkeus hover-y teksti
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
   ;; Varmistetaan, ettei stringeihin mene murtolukuja.
   (let [x (float x)
@@ -350,14 +350,14 @@
                          ;; Vain alku tai loppu, piirrä marker
                          #?(:cljs
                             [marker {:x x :hover-y hover-y :teksti teksti
-                                     :leveys jana-leveys :korkeus korkeus
+                                     :korkeus korkeus
                                      :paivan-leveys paivan-leveys
                                      :y y :show-tooltip! show-tooltip!
                                      :hide-tooltip! hide-tooltip! :reuna reuna
                                      :vari vari :suunta (if alku :oikea :vasen)}]
                             :clj
                             (marker {:x x :hover-y hover-y :teksti teksti
-                                     :leveys jana-leveys :korkeus korkeus
+                                     :korkeus korkeus
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
