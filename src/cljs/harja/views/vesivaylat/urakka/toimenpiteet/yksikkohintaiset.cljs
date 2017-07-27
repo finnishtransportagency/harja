@@ -73,7 +73,10 @@
 
     [napit/yleinen-ensisijainen
      "Luo uusi tilaus"
-     #(e! (tiedot/->UudenHintaryhmanLisays? true))]))
+     #(e! (tiedot/->UudenHintaryhmanLisays? true))
+     {:disabled (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
+                                              oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                              (:id @nav/valittu-urakka)))}]))
 
 (defn- hinnoittelu [e! app]
   [:span
@@ -289,7 +292,10 @@
                    [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
                    ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
                    [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
-                    {:disabled (:hintaryhmien-poisto-kaynnissa? app)}]]
+                    {:disabled (or (:hintaryhmien-poisto-kaynnissa? app)
+                                   (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
+                                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                 (:id @nav/valittu-urakka))))}]]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                   [jaettu/listaus e! app*
                    {:sarakkeet
