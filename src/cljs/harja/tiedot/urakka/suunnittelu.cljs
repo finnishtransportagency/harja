@@ -114,7 +114,7 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
                                                                 (filter (fn [t]
                                                                           (= (:sopimus t) (first @u/valittu-sopimusnumero))))
                                                                 @u/urakan-yks-hint-tyot)
-                                                          (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
+                                                          (u/hoito-tai-sopimuskaudet urakka)) @u/valittu-hoitokausi))))
 
 (def valitun-hoitokauden-kok-hint-kustannukset
     (reaction (toiden-kustannusten-summa
