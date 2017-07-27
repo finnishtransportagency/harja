@@ -331,14 +331,14 @@
         :alue (maarittele-feature tp valittu? ikoni)))))
 
 (defmethod asia-kartalle :turvalaite [turvalaite valittu?]
-  (let [ikoni (ulkoasu/turvalaitteen-ikoni)
+  (let [[ikoni selite] (ulkoasu/turvalaitteen-ikoni-ja-selite turvalaite)
         alue (maarittele-feature turvalaite valittu? ikoni)]
     (assoc turvalaite
-     :type :turvalaite
-     :nimi (or (::tu/nimi turvalaite) "Turvalaite")
-     :selite {:teksti "Turvalaite"
-              :img ikoni}
-     :alue alue)))
+      :type :turvalaite
+      :nimi (or (::tu/nimi turvalaite) "Turvalaite")
+      :selite {:teksti selite
+               :img ikoni}
+      :alue alue)))
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
