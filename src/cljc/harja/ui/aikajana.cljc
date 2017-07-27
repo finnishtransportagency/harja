@@ -196,11 +196,11 @@
         paivan-leveys (float paivan-leveys)
         puolikas-paiva (float (/ paivan-leveys 2))
         puolikas-korkeus (float (/ korkeus 2))]
-    [:g {:transform (str "translate( " (case suunta
-                                         :vasen (- x paivan-leveys puolikas-paiva)
-                                         :oikea x)
-                         ", " y ")")}
-     (when (>= x alku-x)
+    (when (>= x alku-x)
+      [:g {:transform (str "translate( " (case suunta
+                                           :vasen (- x paivan-leveys puolikas-paiva)
+                                           :oikea x)
+                           ", " y ")")}
        [:path {:d (case suunta
                     :oikea
                     (str "M " 0 " " 0
@@ -222,7 +222,7 @@
                :on-mouse-over #(show-tooltip! {:x x
                                                :y (hover-y y)
                                                :text teksti})
-               :on-mouse-out hide-tooltip!}])]))
+               :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
