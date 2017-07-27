@@ -273,7 +273,7 @@
            tyolajit))))
 
 (defn hintaryhman-otsikko [otsikko]
-  [:h1 otsikko])
+  [:h1.vv-hintaryhman-otsikko otsikko])
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer

@@ -284,9 +284,11 @@
 
                            (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
                         {:ikoninappi? true
-                         :luokka (if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                                   "nappi-ensisijainen"
-                                   "nappi-toissijainen")}]
+                         :disabled hintaryhma-tyhja?
+                         :luokka (str "vv-hintaryhma-korostus-nappi "
+                                      (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                        "nappi-ensisijainen"
+                                        "nappi-toissijainen"))}]
                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
 
                 (if hintaryhma-tyhja?
