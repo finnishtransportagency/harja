@@ -19,24 +19,24 @@ VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-   '2013-08-01', '2016-07-30',
-   (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
-   (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
-   (SELECT id FROM hanke WHERE nimi = 'Saimaan kartoitus'),
-   'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-   444);
+    '2013-08-01', '2016-07-30',
+    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
+    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
+    (SELECT id FROM hanke WHERE nimi = 'Saimaan kartoitus'),
+    'vesivayla-hoito',
+    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+    444);
 
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-   '2016-08-01', '2019-07-30',
-   (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
-   (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
-   (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
-   'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-   '555');
+    '2016-08-01', '2019-07-30',
+    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
+    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
+    (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
+    'vesivayla-hoito',
+    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+    '555');
 
 INSERT INTO urakka (nimi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
@@ -70,11 +70,16 @@ VALUES ('Helsingin väyläyksikön pääsopimus',
         NULL,
         '2016-08-01', '2018-07-30', true, NOW());
 
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Turun väyläyksikön pääsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Turun väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+        NULL,
+        '2019-08-01', '2024-07-30', true, NOW());
 
 INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Helsingin väyläyksikön sivusopimus',
-       (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
-       (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
+        (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+        (SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
         '2016-08-01', '2018-07-30', true, NOW());
 
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
