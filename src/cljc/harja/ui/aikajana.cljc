@@ -198,6 +198,7 @@
 
 (defn- marker [{:keys [x y leveys reuna korkeus hover-y teksti
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
+  ;; Varmistetaan, ettei stringeihin mene murtolukuja.
   (let [x (float x)
         y (float y)
         korkeus (float korkeus)
