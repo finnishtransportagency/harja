@@ -41,23 +41,13 @@
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
-                       (loop [min nil
-                              max nil
-                              [{alku ::alku loppu ::loppu} & ajat] ajat]
-                         (if-not alku
-                           [(and min (t/minus min (t/days pad)))
-                            (and max (t/plus max (t/days pad)))]
-                           (recur (cond
-                                    (nil? min) alku
-                                    (pvm/ennen? alku min) alku
-                                    (pvm/ennen? loppu min) loppu
-                                    :default min)
-                                  (cond
-                                    (nil? max) loppu
-                                    (pvm/jalkeen? loppu max) loppu
-                                    (pvm/jalkeen? alku max) alku
-                                    :else max)
-                                  ajat))))
+                       (let [ajat (concat (keep ::alku ajat)
+                                          (keep :loppu ajat))
+                             ajat-jarjestyksessa (sort pvm/ennen? ajat)
+                             aikaisin (first ajat-jarjestyksessa)
+                             myohaisin (last ajat-jarjestyksessa)]
+                         [(t/minus aikaisin (t/days pad))
+                          (t/plus myohaisin (t/days pad))]))
 
 (defn+ kuukaudet
   "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
@@ -209,6 +199,7 @@
                                          :vasen (- x paivan-leveys puolikas-paiva)
                                          :oikea x)
                          ", " y ")")}
+     ;; TODO Älä piirrä jos x pienempi kuin alku-x
      [:path {:d (case suunta
                   :oikea
                   (str "M " 0 " " 0
@@ -254,6 +245,10 @@
         bar-y-offset 3
         taustapalkin-korkeus (- rivin-korkeus 6)
         jana-korkeus 10]
+
+    (println "MIN AIKA: " min-aika)
+    (println "MAX AIKA: " max-aika)
+
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
@@ -293,7 +288,6 @@
             :clj
             (paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat))
 
-         ;; Renderöidään itse aikajanarivit
          (map-indexed
            (fn [i {ajat ::ajat :as rivi}]
              (let [y (rivin-y i)]
@@ -386,5 +380,6 @@
   rivimäärän perusteella."
   ([rivit] (aikajana {} rivit))
   ([{:keys [muuta!] :as optiot} rivit]
+   (println "AIKAJANA RIVEILLÄ: " (pr-str rivit))
     #?(:cljs [aikajana-ui-tila rivit optiot aikajana*]
        :clj  (aikajana* rivit optiot {:leveys (or (:leveys optiot) 750)}))))
