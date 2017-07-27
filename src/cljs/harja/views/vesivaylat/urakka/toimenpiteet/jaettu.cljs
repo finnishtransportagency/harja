@@ -22,7 +22,9 @@
             [harja.domain.vesivaylat.komponenttityyppi :as ktyyppi]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [harja.fmt :as fmt]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -132,7 +134,7 @@
     (or lisasuodattimet [])
     (or urakkatoiminnot [])]])
 
-(defn siirtonappi [e! {:keys [siirto-kaynnissa? toimenpiteet]} otsikko toiminto]
+(defn siirtonappi [e! {:keys [siirto-kaynnissa? toimenpiteet]} otsikko toiminto oikeus-fn]
   [:div.inline-block {:style {:margin-right "10px"}}
    [napit/yleinen-ensisijainen (if siirto-kaynnissa?
                                  [ajax-loader-pieni "Siirretään.."]
@@ -141,7 +143,8 @@
                                         (str " (" (count (tiedot/valitut-toimenpiteet toimenpiteet)) ")"))))
     toiminto
     {:disabled (or (not (tiedot/joku-valittu? toimenpiteet))
-                   siirto-kaynnissa?)}]])
+                   siirto-kaynnissa?
+                   (not (oikeus-fn)))}]])
 
 
 ;;;;;;;;;;;;;;;;;

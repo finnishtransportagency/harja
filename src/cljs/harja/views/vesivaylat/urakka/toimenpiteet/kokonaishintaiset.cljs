@@ -13,7 +13,8 @@
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.ui.debug :as debug]
             [harja.ui.napit :as napit]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
@@ -44,7 +45,13 @@
 
 (defn urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [jaettu/siirtonappi e! app "Siirrä yksikköhintaisiin" #(e! (tiedot/->SiirraValitutYksikkohintaisiin))]
+  [jaettu/siirtonappi e!
+   app
+   "Siirrä yksikköhintaisiin"
+   #(e! (tiedot/->SiirraValitutYksikkohintaisiin))
+   #(oikeudet/on-muu-oikeus? "siirra-yksikkohintaisiin"
+                             oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                             (:id @nav/valittu-urakka))]
    ^{:key "kiintio"}
    [liita-kiintioon e! app]])
 

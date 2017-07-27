@@ -84,7 +84,12 @@
 
 (defn- urakkatoiminnot [e! app]
   [^{:key "siirto"}
-  [jaettu/siirtonappi e! app "Siirrä kokonaishintaisiin" #(e! (tiedot/->SiirraValitutKokonaishintaisiin))]
+  [jaettu/siirtonappi e! app
+   "Siirrä kokonaishintaisiin"
+   #(e! (tiedot/->SiirraValitutKokonaishintaisiin))
+   #(oikeudet/on-muu-oikeus? "siirra-kokonaishintaisiin"
+                             oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                             (:id @nav/valittu-urakka))]
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
