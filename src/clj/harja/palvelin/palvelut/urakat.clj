@@ -220,21 +220,44 @@
                                                                               {:urakka urakka-id})
     :ok))
 
-(defn- paivita-urakkaa! [db user urakka]
+(defn- paivita-urakka! [db user urakka]
   (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
   (let [hallintayksikko (::u/hallintayksikko urakka)
         urakoitsija (::u/urakoitsija urakka)]
-    (q/paivita-harjassa-luotu-urakka<!
-      db
-      {:id (::u/id urakka)
-       :nimi (::u/nimi urakka)
-       :urakkanro (::u/urakkanro urakka)
-       :alkupvm (::u/alkupvm urakka)
-       :loppupvm (::u/loppupvm urakka)
-       :alue (::u/alue urakka)
-       :hallintayksikko (::o/id hallintayksikko)
-       :urakoitsija (::o/id urakoitsija)
-       :kayttaja (:id user)})))
+    (let [paivitetty (q/paivita-harjassa-luotu-urakka<!
+                       db
+                       {:id (::u/id urakka)
+                        :nimi (::u/nimi urakka)
+                        :urakkanro (::u/urakkanro urakka)
+                        :alkupvm (::u/alkupvm urakka)
+                        :loppupvm (::u/loppupvm urakka)
+                        :alue (::u/alue urakka)
+                        :hallintayksikko (::o/id hallintayksikko)
+                        :urakoitsija (::o/id urakoitsija)
+                        :kayttaja (:id user)})]
+      (assoc urakka ::u/id (:id paivitetty)))))
+
+(defn luo-vv-urakan-toimenpideinstanssit [db urakka]
+  (let [params {:urakka_id (::u/id urakka)
+                :alkupvm (::u/alkupvm urakka)
+                :loppupvm (::u/loppupvm urakka)}]
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Kauppamerenkulun kustannukset TP"
+                                  :toimenpide_nimi "Kauppamerenkulun kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "kauppamerenkulku"}))
+
+    (let [tpi (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+                db (merge params {:nimi "Muun vesiliikenteen kustannukset TP"
+                                  :toimenpide_nimi "Muun vesiliikenteen kustannukset"}))]
+      (q/luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+        db {:toimenpideinstanssi_id (:id tpi)
+            :vaylatyyppi "muu"}))
+
+    (q/luo-vesivaylaurakan-toimenpideinstanssi<!
+      db (merge params {:nimi "Urakan yhteiset kustannukset TP"
+                        :toimenpide_nimi "Urakan yhteiset kustannukset"}))))
 
 (defn- luo-uusi-urakka! [db user {:keys [hanke hallintayksikko urakoitsija] :as urakka}]
   (log/debug "Luodaan uusi urakka " (::u/nimi urakka))
@@ -242,18 +265,21 @@
                                                         ::h/alkupvm (::u/alkupvm urakka)
                                                         ::h/loppupvm (::u/loppupvm urakka)})
         hallintayksikko (::u/hallintayksikko urakka)
-        urakoitsija (::u/urakoitsija urakka)]
-    (q/luo-harjassa-luotu-urakka<!
-      db
-      {:nimi (::u/nimi urakka)
-       :urakkanro (::u/urakkanro urakka)
-       :alkupvm (::u/alkupvm urakka)
-       :loppupvm (::u/loppupvm urakka)
-       :alue (::u/alue urakka)
-       :hallintayksikko (::o/id hallintayksikko)
-       :urakoitsija (::o/id urakoitsija)
-       :hanke (::h/id hanke)
-       :kayttaja (:id user)})))
+        urakoitsija (::u/urakoitsija urakka)
+        tallennettu (q/luo-harjassa-luotu-urakka<!
+                      db
+                      {:nimi (::u/nimi urakka)
+                       :urakkanro (::u/urakkanro urakka)
+                       :alkupvm (::u/alkupvm urakka)
+                       :loppupvm (::u/loppupvm urakka)
+                       :alue (::u/alue urakka)
+                       :hallintayksikko (::o/id hallintayksikko)
+                       :urakoitsija (::o/id urakoitsija)
+                       :hanke (::h/id hanke)
+                       :kayttaja (:id user)})
+        urakka (assoc urakka ::u/id (:id tallennettu))]
+    (luo-vv-urakan-toimenpideinstanssit db urakka)
+    urakka))
 
 (defn- paivita-urakan-sopimukset! [db user urakka sopimukset]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -292,17 +318,15 @@
               lkm
               (log/debug lkm " sopimusta liitetty onnistuneesti."))))))
 
-(defn tallenna-urakka [db user urakka]
+(defn tallenna-vesivaylaurakka [db user urakka]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
       (let [sopimukset (::u/sopimukset urakka)
-            tallennettu (if (id-olemassa? (::u/id urakka))
-                          (paivita-urakkaa! db user urakka)
-                          (luo-uusi-urakka! db user urakka))
-            urakka (assoc urakka ::u/id (:id tallennettu))]
-
+            urakka (if (id-olemassa? (::u/id urakka))
+                     (paivita-urakka! db user urakka)
+                     (luo-uusi-urakka! db user urakka))]
         (paivita-urakan-sopimukset! db user urakka sopimukset)
         urakka))))
 
@@ -383,9 +407,9 @@
                         (poista-indeksi-kaytosta db user tiedot)))
 
     (julkaise-palvelu http
-                      :tallenna-urakka
+                      :tallenna-vesivaylaurakka
                       (fn [user tiedot]
-                        (tallenna-urakka db user tiedot))
+                        (tallenna-vesivaylaurakka db user tiedot))
                       {:kysely-spec ::u/tallenna-urakka-kysely
                        :vastaus-spec ::u/tallenna-urakka-vastaus})
     (julkaise-palvelu http
@@ -409,7 +433,7 @@
                      :tallenna-urakan-sopimustyyppi
                      :tallenna-urakan-tyyppi
                      :aseta-takuun-loppupvm
-                     :tallenna-urakka
+                     :tallenna-vesivaylaurakka
                      :hae-harjassa-luodut-urakat
                      :laheta-urakka-sahkeeseen)
 

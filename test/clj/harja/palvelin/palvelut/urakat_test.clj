@@ -93,7 +93,7 @@
 
     ;; Luo uusi urakka
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :tallenna-urakka +kayttaja-jvh+
+                                          :tallenna-vesivaylaurakka +kayttaja-jvh+
                                           urakka)
           urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
           eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
@@ -130,7 +130,7 @@
                                                  ::sop/paasopimus-id toka-sopimus-id
                                                  :poistettu true}])
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                       :tallenna-urakka +kayttaja-jvh+
+                                                       :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                        paivitetty-urakka)
             paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
             paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
@@ -167,7 +167,7 @@
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :tallenna-urakka +kayttaja-jvh+
+                                                :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                 urakka))
         "Ei voi tallentaa urakalle kahta pääsopimusta")))
 

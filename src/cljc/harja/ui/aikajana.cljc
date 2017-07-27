@@ -292,8 +292,7 @@
                                :on-mouse-over #(show-tooltip! {:x (+ x (/ width 2))
                                                                :y (hover-y y)
                                                                :text teksti})
-                               :on-mouse-out hide-tooltip!
-                               }]
+                               :on-mouse-out hide-tooltip!}]
                        ;; kahvat draggaamiseen
                        (when voi-raahata?
                          [:rect {:x (- x 3) :y y :width 7 :height korkeus
@@ -304,8 +303,7 @@
                          [:rect {:x (+ x width -3) :y y :width 7 :height korkeus
                                  :style {:fill "white" :opacity 0.0
                                          :cursor "ew-resize"}
-                                 :on-mouse-down #(drag-start! % jana ::loppu)}])
-                       ])))
+                                 :on-mouse-down #(drag-start! % jana ::loppu)}])])))
                 ajat)
                [:text {:x 0 :y (+ text-y-offset y)
                        :font-size 10}
