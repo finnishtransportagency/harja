@@ -81,7 +81,7 @@
       (boolean (setti (::tu/turvalaitenro turvalaite))))))
 
 (defn turvalaitteen-toimenpiteet [turvalaite app]
-  (filter #(= (::tu/turvalaitenro turvalaite)
+  (filterv #(= (::tu/turvalaitenro turvalaite)
               (get-in % [::to/turvalaite ::tu/turvalaitenro]))
           (:toimenpiteet app)))
 
