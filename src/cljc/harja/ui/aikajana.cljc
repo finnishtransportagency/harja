@@ -198,30 +198,31 @@
 
 (defn- marker [{:keys [x y leveys reuna korkeus hover-y teksti
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
-  [:g {:transform (str "translate( " (case suunta
-                                       :vasen (- x paivan-leveys (/ paivan-leveys 2))
-                                       :oikea x)
-                       ", " y ")")}
-   [:path {:d (case suunta
-                :oikea
-                (str "M " 0 " " 0
-                     " L " (+ 0 paivan-leveys) " " 0
-                     " L " (+ 0 paivan-leveys (/ paivan-leveys 2)) " " (+ 0 (/ korkeus 2))
-                     " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
-                     " L " 0 " " (+ 0 korkeus))
-                :vasen
-                (str "M " (+ 0 paivan-leveys (/ paivan-leveys 2)) " " 0
-                     " L " (+ 0 (/ paivan-leveys 2)) " " 0
-                     " L " 0 " " (+ 0 (/ korkeus 2))
-                     " L " (+ 0 (/ paivan-leveys 2)) " " (+ 0 korkeus)
-                     " L " (+ 0 paivan-leveys (/ paivan-leveys 2)) " " (+ 0 korkeus)))
-           :fill vari
-           :fill-opacity (if vari 1.0 0.0)
-           :stroke reuna
-           :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
-                                           :y (hover-y y)
-                                           :text teksti})
-           :on-mouse-out hide-tooltip!}]])
+  (let [puolikas-paiva (/ paivan-leveys 2)]
+    [:g {:transform (str "translate( " (case suunta
+                                         :vasen (- x paivan-leveys puolikas-paiva)
+                                         :oikea x)
+                         ", " y ")")}
+     [:path {:d (case suunta
+                  :oikea
+                  (str "M " 0 " " 0
+                       " L " (+ 0 paivan-leveys) " " 0
+                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 (/ korkeus 2))
+                       " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
+                       " L " 0 " " (+ 0 korkeus))
+                  :vasen
+                  (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
+                       " L " (+ 0 puolikas-paiva) " " 0
+                       " L " 0 " " (+ 0 (/ korkeus 2))
+                       " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
+                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)))
+             :fill vari
+             :fill-opacity (if vari 1.0 0.0)
+             :stroke reuna
+             :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
+                                             :y (hover-y y)
+                                             :text teksti})
+             :on-mouse-out hide-tooltip!}]]))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
@@ -241,10 +242,6 @@
         [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
         min-aika (or (::alku optiot) min-aika)
         max-aika (or (::loppu optiot) max-aika)
-
-        _ (println "MIN AIKA: " (pr-str min-aika))
-        _ (println "MAX AIKA: " (pr-str max-aika))
-
         text-y-offset 8
         bar-y-offset 3
         taustapalkin-korkeus (- rivin-korkeus 6)
