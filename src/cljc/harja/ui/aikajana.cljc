@@ -303,7 +303,7 @@
                                                         (::drag jana)))
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
-                          x (inc (paiva-x alku))
+                          x (inc (paiva-x (or alku loppu)))
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
                           [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
                           ;; Vähennä väritetyn korkeutta 2px
