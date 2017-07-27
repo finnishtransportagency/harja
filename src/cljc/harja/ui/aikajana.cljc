@@ -42,12 +42,13 @@
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
                        (let [ajat (concat (keep ::alku ajat)
-                                          (keep :loppu ajat))
+                                          (keep ::loppu ajat))
                              ajat-jarjestyksessa (sort pvm/ennen? ajat)
                              aikaisin (first ajat-jarjestyksessa)
                              myohaisin (last ajat-jarjestyksessa)]
-                         [(t/minus aikaisin (t/days pad))
-                          (t/plus myohaisin (t/days pad))]))
+                         (when (and aikaisin myohaisin)
+                           [(t/minus aikaisin (t/days pad))
+                            (t/plus myohaisin (t/days pad))])))
 
 (defn+ kuukaudet
   "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
