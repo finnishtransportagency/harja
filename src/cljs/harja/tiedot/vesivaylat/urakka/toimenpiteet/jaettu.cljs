@@ -98,7 +98,7 @@
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
-(defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
+(defrecord AsetaInfolaatikonTila [tunniste uusi-tila lisa-funktiot])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 (defrecord LisaaToimenpiteelleLiite [tiedot])
@@ -110,7 +110,7 @@
 (defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
 (defrecord TurvalaitteetKartalleHaettu [tulos haetut])
 (defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
-(defrecord KorostaToimenpideKartalla [toimenpide])
+(defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
@@ -159,13 +159,16 @@
 
   AsetaInfolaatikonTila
   (process-event [{tunniste :tunniste
-                   uusi-tila :uusi-tila} app]
-    (if tunniste
-      (cond->> (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
-                                                 {tunniste uusi-tila}))
-              (false? uusi-tila)
-              (korosta-kartalla nil))
-      app))
+                   uusi-tila :uusi-tila
+                   fn :lisa-funktiot} app]
+    (let [fn (or fn [])]
+      ((apply comp fn)
+        (if tunniste
+          (cond->> (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
+                                                             {tunniste uusi-tila}))
+                   (false? uusi-tila)
+                   (korosta-kartalla nil))
+          app))))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
@@ -268,5 +271,7 @@
       app))
 
   KorostaToimenpideKartalla
-  (process-event [{toimenpide :toimenpide} app]
-    (korosta-kartalla #{(get-in toimenpide [::to/turvalaite ::tu/turvalaitenro])} app)))
+  (process-event [{toimenpide :toimenpide fn :lisa-funktiot} app]
+    (let [fn (or fn [])]
+      ((apply comp fn)
+        (korosta-kartalla #{(get-in toimenpide [::to/turvalaite ::tu/turvalaitenro])} app)))))

@@ -225,24 +225,29 @@
         (tiedot/toimenpiteet-tyolajilla $ tyolaji)
         (ryhmittele-toimenpiteet-vaylalla e! $ vaylan-checkbox-sijainti)))
 
-(defn- paneelin-sisalto [e! app listaus-tunniste toimenpiteet sarakkeet]
+(defn- paneelin-sisalto [e! app listaus-tunniste toimenpiteet sarakkeet
+                         {:keys [infolaatikon-tila-muuttui
+                                 rivi-klikattu]}]
   [grid/grid
    {:tunniste ::to/id
     :infolaatikon-tila-muuttui (fn [nakyvissa?]
-                                 (e! (tiedot/->AsetaInfolaatikonTila listaus-tunniste nakyvissa?)))
+                                 (e! (tiedot/->AsetaInfolaatikonTila
+                                       listaus-tunniste
+                                       nakyvissa?
+                                       infolaatikon-tila-muuttui)))
     :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
     :rivin-infolaatikko (fn [rivi data]
                           [toimenpide-infolaatikossa rivi])
     :salli-valiotsikoiden-piilotus? true
     :ei-footer-muokkauspaneelia? true
-    :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi)))
+    :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
     :valiotsikoiden-alkutila :kaikki-kiinni}
    sarakkeet
    toimenpiteet])
 
 (defn- luo-otsikkorivit
   [{:keys [e! app listaus-tunniste toimenpiteet toimenpiteiden-haku-kaynnissa?
-           gridin-sarakkeet vaylan-checkbox-sijainti]}]
+           gridin-sarakkeet vaylan-checkbox-sijainti infolaatikon-tila-muuttui rivi-klikattu]}]
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
     (vec (mapcat
            (fn [tyolaji]
@@ -262,7 +267,9 @@
                  toimenpiteet
                  tyolaji
                  vaylan-checkbox-sijainti)
-               gridin-sarakkeet]])
+               gridin-sarakkeet
+               {:infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                :rivi-klikattu rivi-klikattu}]])
            tyolajit))))
 
 (defn hintaryhman-otsikko [otsikko]
@@ -270,7 +277,8 @@
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
-                                                      listaus-tunniste vaylan-checkbox-sijainti]}]
+                                                      listaus-tunniste vaylan-checkbox-sijainti
+                                                      rivi-klikattu infolaatikon-tila-muuttui]}]
   [:div.vv-toimenpideryhma-sisalto
    (into [otsikkopaneeli
           {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
@@ -293,7 +301,9 @@
             :toimenpiteet toimenpiteet
             :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
             :gridin-sarakkeet gridin-sarakkeet
-            :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}))
+            :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
+            :rivi-klikattu rivi-klikattu
+            :infolaatikon-tila-muuttui infolaatikon-tila-muuttui}))
    (when footer
      [:div.toimenpiteet-listaus-footer footer])])
 
@@ -305,7 +315,7 @@
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   footer listaus-tunniste sarakkeet]}]
+                   footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     sarakkeet
@@ -313,4 +323,6 @@
      :footer footer
      :listaus-tunniste listaus-tunniste
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
-     :vaylan-checkbox-sijainti vaylan-checkbox-sijainti}]))
+     :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
+     :rivi-klikattu rivi-klikattu
+     :infolaatikon-tila-muuttui infolaatikon-tila-muuttui}]))
