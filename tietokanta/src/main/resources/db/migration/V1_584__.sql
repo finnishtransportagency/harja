@@ -1,4 +1,4 @@
--- Luo näkymä, jossa reimarin väylän nimi
+-- Aseta vayla-id reimarin väylänimen perusteella
 
 -- Koska Reimarin antama väyläid on tällä hetkellä ERI kuin inspire
 -- palvelusta tuoduille väylille, joudutaan match tekemään nimellä.
