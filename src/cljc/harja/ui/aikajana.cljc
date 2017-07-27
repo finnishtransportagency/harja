@@ -306,8 +306,8 @@
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
                           x (inc (paiva-x alku))
-                          leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
-                          [x leveys] (rajaa-nakyvaan-alueeseen x leveys)
+                          jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
+                          [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
                           ;; Vähennä väritetyn korkeutta 2px
                           y (if vari (inc y) y)
                           korkeus (if vari (- jana-korkeus 2) jana-korkeus)
@@ -317,7 +317,7 @@
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
                          [:g [:rect {:x x :y y
-                                     :width leveys
+                                     :width jana-leveys
                                      :height korkeus
                                      :fill (or vari "white")
                                      ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
@@ -325,7 +325,7 @@
                                      :fill-opacity (if vari 1.0 0.0)
                                      :stroke reuna
                                      :rx 3 :ry 3
-                                     :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
+                                     :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
                                                                      :y (hover-y y)
                                                                      :text teksti})
                                      :on-mouse-out hide-tooltip!}]
@@ -336,21 +336,21 @@
                                             :cursor "ew-resize"}
                                     :on-mouse-down #(drag-start! % jana ::alku)}])
                           (when voi-raahata?
-                            [:rect {:x (+ x leveys -3) :y y :width 7 :height korkeus
+                            [:rect {:x (+ x jana-leveys -3) :y y :width 7 :height korkeus
                                     :style {:fill "white" :opacity 0.0
                                             :cursor "ew-resize"}
                                     :on-mouse-down #(drag-start! % jana ::loppu)}])]
                          ;; Vain alku tai loppu, piirrä marker
                          #?(:cljs
                             [marker {:x x :hover-y hover-y :teksti teksti
-                                     :leveys leveys :korkeus korkeus
+                                     :leveys jana-leveys :korkeus korkeus
                                      :paivan-leveys paivan-leveys
                                      :y y :show-tooltip! show-tooltip!
                                      :hide-tooltip! hide-tooltip! :reuna reuna
                                      :vari vari :suunta (if alku :oikea :vasen)}]
                             :clj
                             [marker {:x x :hover-y hover-y :teksti teksti
-                                     :leveys leveys :korkeus korkeus
+                                     :leveys jana-leveys :korkeus korkeus
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
