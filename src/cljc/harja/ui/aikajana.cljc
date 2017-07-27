@@ -219,7 +219,7 @@
              :fill vari
              :fill-opacity (if vari 1.0 0.0)
              :stroke reuna
-             :on-mouse-over #(show-tooltip! {:x (+ x (/ leveys 2))
+             :on-mouse-over #(show-tooltip! {:x x
                                              :y (hover-y y)
                                              :text teksti})
              :on-mouse-out hide-tooltip!}]]))
