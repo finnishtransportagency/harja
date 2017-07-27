@@ -247,9 +247,6 @@
         taustapalkin-korkeus (- rivin-korkeus 6)
         jana-korkeus 10]
 
-    (println "MIN AIKA: " min-aika)
-    (println "MAX AIKA: " max-aika)
-
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
