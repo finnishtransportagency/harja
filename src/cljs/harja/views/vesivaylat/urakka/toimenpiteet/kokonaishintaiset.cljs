@@ -91,7 +91,10 @@
                       jaettu/sarake-pvm
                       jaettu/sarake-turvalaite
                       jaettu/sarake-vikakorjaus
-                      (jaettu/sarake-liitteet e! app)
+                      (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
+                                                        "lisää-liite"
+                                                        oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                                        (:id @nav/valittu-urakka)))
                       (jaettu/sarake-checkbox e! app)]
           :listaus-tunniste :kokonaishintaiset-toimenpiteet
           :paneelin-checkbox-sijainti "95.5%"

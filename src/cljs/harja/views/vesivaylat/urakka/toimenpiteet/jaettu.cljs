@@ -156,7 +156,7 @@
 (def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
 (def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
-(defn sarake-liitteet [e! app]
+(defn sarake-liitteet [e! app oikeus-fn]
   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
    :komponentti (fn [rivi]
                   [liitteet/liitteet-ja-lisays
@@ -167,7 +167,8 @@
                                                (e! (tiedot/->LisaaToimenpiteelleLiite
                                                      {:liite uusi-arvo
                                                       ::to/id (::to/id rivi)}))))
-                    :disabled? (:liitteen-lisays-kaynnissa? app)
+                    :disabled? (or (:liitteen-lisays-kaynnissa? app)
+                                   (not (oikeus-fn)))
                     :lisaa-usea-liite? true
                     :salli-poistaa-tallennettu-liite? true
                     :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaToimenpiteenLiite {::to/liite-id %
