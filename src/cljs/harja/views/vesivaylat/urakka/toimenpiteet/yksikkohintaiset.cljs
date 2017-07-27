@@ -171,7 +171,10 @@
            [napit/tallenna
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
-            {:disabled (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)}]]]]]
+            {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                           (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                         (:id @nav/valittu-urakka))))}]]]]]
 
        (grid/arvo-ja-nappi
          {:voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
@@ -180,7 +183,10 @@
           :nappi-teksti "Hinnoittele"
           :uusi-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
           :muokkaa-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :nappi-optiot {:disabled (listaus-tunniste (:infolaatikko-nakyvissa app*))}
+          :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
+                                       (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                     (:id @nav/valittu-urakka))))}
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                 (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))
           :ikoninappi? true}))]))
@@ -216,7 +222,10 @@
          [napit/tallenna
           "Valmis"
           #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
-          {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+          {:disabled (or (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)
+                         (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                       (:id @nav/valittu-urakka))))}]
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
@@ -241,7 +250,10 @@
             [napit/yleinen-toissijainen
              (ikonit/muokkaa)
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-             {:ikoninappi? true}]]]))]]))
+             {:ikoninappi? true
+              :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                      (:id @nav/valittu-urakka)))}]]]))]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
