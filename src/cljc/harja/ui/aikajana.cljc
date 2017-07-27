@@ -198,7 +198,12 @@
 
 (defn- marker [{:keys [x y leveys reuna korkeus hover-y teksti
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
-  (let [puolikas-paiva (/ paivan-leveys 2)]
+  (let [x (float x)
+        y (float y)
+        korkeus (float korkeus)
+        paivan-leveys (float paivan-leveys)
+        puolikas-paiva (float (/ paivan-leveys 2))
+        puolikas-korkeus (float (/ korkeus 2))]
     [:g {:transform (str "translate( " (case suunta
                                          :vasen (- x paivan-leveys puolikas-paiva)
                                          :oikea x)
@@ -207,14 +212,14 @@
                   :oikea
                   (str "M " 0 " " 0
                        " L " (+ 0 paivan-leveys) " " 0
-                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 (/ korkeus 2))
+                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 puolikas-korkeus)
                        " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
                        " L " 0 " " (+ 0 korkeus)
                        " L 0 0")
                   :vasen
                   (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
                        " L " (+ 0 puolikas-paiva) " " 0
-                       " L " 0 " " (+ 0 (/ korkeus 2))
+                       " L " 0 " " (+ 0 puolikas-korkeus)
                        " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
                        " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
                        " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
