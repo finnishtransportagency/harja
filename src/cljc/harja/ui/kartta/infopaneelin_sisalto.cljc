@@ -39,6 +39,8 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]
+            [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri.varusteet :as varusteet]))
 
@@ -521,6 +523,13 @@
                                         #(clojure.string/join ", " (map str (:ajoradat %))))}
             {:otsikko "Nopeusrajoitus" :nimi :nopeusrajoitus}]
    :data tietyomaa})
+
+(defmethod infopaneeli-skeema :turvalaite [turvalaite]
+  {:tyyppi :turvalaite
+   :jarjesta-fn (constantly false)
+   :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
+   :tiedot [{:otsikko "Nimi" :nimi ::tu/nimi}]
+   :data turvalaite})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
