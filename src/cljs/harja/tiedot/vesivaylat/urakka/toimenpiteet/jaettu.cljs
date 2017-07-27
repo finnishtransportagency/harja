@@ -80,13 +80,19 @@
     (when-let [setti (:korostetut-turvalaitteet app)]
       (boolean (setti (::tu/turvalaitenro turvalaite))))))
 
+(defn turvalaitteen-toimenpiteet [turvalaite app]
+  (filter #(= (::tu/turvalaitenro turvalaite)
+              (get-in % [::to/turvalaite ::tu/turvalaitenro]))
+          (:toimenpiteet app)))
+
 (defn turvalaitteet-kartalle [turvalaitteet app]
   (kartta/kartalla-esitettavaan-muotoon
     turvalaitteet
     (korosta-turvalaite-kartalla? app)
     (comp
       (map #(assoc % :tyyppi-kartalla :turvalaite))
-      (map #(set/rename-keys % {::tu/sijainti :sijainti})))))
+      (map #(set/rename-keys % {::tu/sijainti :sijainti}))
+      (map #(assoc % :toimenpiteet (turvalaitteen-toimenpiteet % app))))))
 
 (defn paivita-kartta [app]
   (update app :turvalaitteet-kartalla #(turvalaitteet-kartalle % app)))
