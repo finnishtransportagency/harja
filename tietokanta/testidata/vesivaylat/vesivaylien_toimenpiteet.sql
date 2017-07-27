@@ -131,7 +131,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
    (SELECT id
     FROM vv_vayla
     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -192,7 +192,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -249,7 +249,7 @@ VALUES
     '1022542049',
     '1022541802',
     '1022541903',
-    '(123, Akonniemen väylät, 55)',
+    '(123,Akonniemen väylät,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Akonniemen väylät'));
@@ -307,7 +307,7 @@ VALUES
     '1022542049',
     '1022541803',
     '1022541903',
-    '(123, Akonniemen väylät, 55)',
+    '(123,Akonniemen väylät,55)',
     30,
     (SELECT id
      FROM vv_vayla
@@ -369,7 +369,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -466,7 +466,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -527,7 +527,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -593,7 +593,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
@@ -655,7 +655,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
@@ -688,7 +688,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
@@ -721,7 +721,7 @@ VALUES
     '1022542001',
     '1022541802',
     '1022541905',
-    '(123, Hietasaaren läntinen rinnakkaisväylä, 55)',
+    '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     (SELECT id
      FROM vv_vayla
      WHERE nimi = 'Oulaisten meriväylä'));
