@@ -41,14 +41,14 @@
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
-  (let [ajat (concat (keep ::alku ajat)
-                     (keep ::loppu ajat))
-        ajat-jarjestyksessa (sort pvm/ennen? ajat)
-        aikaisin (first ajat-jarjestyksessa)
-        myohaisin (last ajat-jarjestyksessa)]
-    (when (and aikaisin myohaisin)
-      [(t/minus aikaisin (t/days pad))
-       (t/plus myohaisin (t/days pad))])))
+                       (let [ajat (concat (keep ::alku ajat)
+                                          (keep ::loppu ajat))
+                             ajat-jarjestyksessa (sort pvm/ennen? ajat)
+                             aikaisin (first ajat-jarjestyksessa)
+                             myohaisin (last ajat-jarjestyksessa)]
+                         (when (and aikaisin myohaisin)
+                           [(t/minus aikaisin (t/days pad))
+                            (t/plus myohaisin (t/days pad))])))
 
 (defn+ kuukaudet
   "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
@@ -187,7 +187,7 @@
                           (update ::alku pvm/joda-timeksi)
                           (update ::loppu pvm/joda-timeksi)) ajat)))))
 
-(defn- marker [{:keys [x y reuna korkeus hover-y teksti
+(defn- marker [{:keys [x y reuna korkeus hover-y teksti alku-x
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
   ;; Varmistetaan, ettei stringeihin mene murtolukuja.
   (let [x (float x)
@@ -200,29 +200,29 @@
                                          :vasen (- x paivan-leveys puolikas-paiva)
                                          :oikea x)
                          ", " y ")")}
-     ;; TODO Älä piirrä jos x pienempi kuin alku-x
-     [:path {:d (case suunta
-                  :oikea
-                  (str "M " 0 " " 0
-                       " L " (+ 0 paivan-leveys) " " 0
-                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 puolikas-korkeus)
-                       " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
-                       " L " 0 " " (+ 0 korkeus)
-                       " L 0 0")
-                  :vasen
-                  (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
-                       " L " (+ 0 puolikas-paiva) " " 0
-                       " L " 0 " " (+ 0 puolikas-korkeus)
-                       " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
-                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
-                       " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
-             :fill vari
-             :fill-opacity (if vari 1.0 0.0)
-             :stroke reuna
-             :on-mouse-over #(show-tooltip! {:x x
-                                             :y (hover-y y)
-                                             :text teksti})
-             :on-mouse-out hide-tooltip!}]]))
+     (when (>= x alku-x)
+       [:path {:d (case suunta
+                    :oikea
+                    (str "M " 0 " " 0
+                         " L " (+ 0 paivan-leveys) " " 0
+                         " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 puolikas-korkeus)
+                         " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
+                         " L " 0 " " (+ 0 korkeus)
+                         " L 0 0")
+                    :vasen
+                    (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
+                         " L " (+ 0 puolikas-paiva) " " 0
+                         " L " 0 " " (+ 0 puolikas-korkeus)
+                         " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
+                         " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
+                         " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
+               :fill vari
+               :fill-opacity (if vari 1.0 0.0)
+               :stroke reuna
+               :on-mouse-over #(show-tooltip! {:x x
+                                               :y (hover-y y)
+                                               :text teksti})
+               :on-mouse-out hide-tooltip!}])]))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
                                        drag drag-start! drag-move! drag-stop!
@@ -343,14 +343,14 @@
                          ;; Vain alku tai loppu, piirrä marker
                          #?(:cljs
                             [marker {:x x :hover-y hover-y :teksti teksti
-                                     :korkeus korkeus
+                                     :korkeus korkeus :alku-x alku-x
                                      :paivan-leveys paivan-leveys
                                      :y y :show-tooltip! show-tooltip!
                                      :hide-tooltip! hide-tooltip! :reuna reuna
                                      :vari vari :suunta (if alku :oikea :vasen)}]
                             :clj
                             (marker {:x x :hover-y hover-y :teksti teksti
-                                     :korkeus korkeus
+                                     :korkeus korkeus :alku-x alku-x
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
