@@ -12,7 +12,7 @@ DECLARE
   id_ INTEGER;
 BEGIN
   v := NEW."reimari-vayla";
-  SELECT INTO id_ id FROM vv_vayla WHERE nimi = v.nimi;
+  SELECT INTO id_ id FROM vv_vayla WHERE nimi = v.nimi LIMIT 1;
   NEW."vayla-id" := id_;
   RETURN NEW;
 END;
