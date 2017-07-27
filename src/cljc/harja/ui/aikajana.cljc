@@ -303,6 +303,7 @@
                                                         (::drag jana)))
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
+                          ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
                           x (inc (paiva-x (or alku loppu)))
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
                           [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
