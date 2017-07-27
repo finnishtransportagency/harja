@@ -3,12 +3,12 @@
     "date": "2017-07-27",
     "title": "HARJA:n käyttökatko maanantaina 31.7.2017 kello 19.00-19.15",
     "body": "Liikenneviraston pääsynhallinnassa tehdään huoltotöitä maanantaina 31.7.2017 kello 19.00-19.15. Tällä aikavälillä useimpiin pääsynhallintaan liitettyihin selainsovelluksiin pääsy katkeaa, eikä uudelleen kirjautuminen onnistu. Katkon jälkeen uudelleenkirjautuminen saattaa edellyttää kaikkien selainikkunoiden sulkemista."
-  }
+  },
   {
     "date": "2017-07-10",
     "title": "Osoitemuunnoksille tuki Harja API:n varusteidenhallintaan",
     "body": "Jatkossa Harjaan voi tehdä varustekirjaukset vanhan päivän verkolla ilmoittamalla karttapäivämäärän varusteen tierekisteriosoitteen mukana, jolloin Harja muuntaa osoitteen uusimman päivän verkolle."
-  }
+  },
   {
     "date": "2017-06-08",
     "title": "Aikajana lisätty Päivystystiedot –taulukkoon",
