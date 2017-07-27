@@ -85,17 +85,23 @@
               (get-in % [::to/turvalaite ::tu/turvalaitenro]))
           (:toimenpiteet app)))
 
+(defn kartalla-naytettavat-turvalaitteet [turvalaitteet app]
+  (if (empty? (:korostetut-turvalaitteet app))
+    turvalaitteet
+
+    (filter (korosta-turvalaite-kartalla? app) turvalaitteet)))
+
 (defn turvalaitteet-kartalle [turvalaitteet app]
   (kartta/kartalla-esitettavaan-muotoon
-    turvalaitteet
-    (korosta-turvalaite-kartalla? app)
+    (kartalla-naytettavat-turvalaitteet turvalaitteet app)
+    (constantly false)
     (comp
       (map #(assoc % :tyyppi-kartalla :turvalaite))
       (map #(set/rename-keys % {::tu/sijainti :sijainti}))
       (map #(assoc % :toimenpiteet (turvalaitteen-toimenpiteet % app))))))
 
 (defn paivita-kartta [app]
-  (update app :turvalaitteet-kartalla #(turvalaitteet-kartalle % app)))
+  (assoc app :turvalaitteet-kartalla (turvalaitteet-kartalle (:turvalaitteet app) app)))
 
 (defn korosta-kartalla [turvalaitenumero-set app]
   (-> (assoc app :korostetut-turvalaitteet turvalaitenumero-set)
@@ -264,7 +270,8 @@
     ;; Jos valmistunut haku ei ole uusin aloitettu, ei tehdä mitään.
     (if (= haetut kartalle-haettavat-toimenpiteet)
       (assoc app :kartalle-haettavat-toimenpiteet nil
-                 :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app))
+                 :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app)
+                 :turvalaitteet tulos)
 
       app))
 
