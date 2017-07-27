@@ -235,7 +235,7 @@
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
-           (u/hoitokaudet ur)
+           (u/hoito-tai-sopimuskaudet ur)
            (u/edelliset-hoitokaudet 5 true))
          valittu-hoitokausi
          #(do
