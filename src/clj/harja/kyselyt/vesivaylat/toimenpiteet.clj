@@ -18,7 +18,8 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.urakka :as ur]
+            [harja.tyokalut.functor :refer [fmap]]))
 
 (def toimenpiteet-xf
   (comp
@@ -168,26 +169,39 @@
              toimenpiteet)]
     toimenpiteet-turvalaitekomponenteilla))
 
+(defn- toimenpiteiden-liite-idt
+  "Hakee annetuille toimenpiteille liitteet, jotka eivät ole poistettuja.
+  Palauttaa mäpin toimenpide id:stä listaan liite id:tä."
+  [db toimenpiteet]
+  (fmap #(map ::vv-toimenpide/liite-id %)
+        (group-by ::vv-toimenpide/toimenpide-id
+                  (fetch db ::vv-toimenpide/toimenpide<->liite
+
+                         #{::vv-toimenpide/liite-id ::vv-toimenpide/toimenpide-id}
+
+                         ;; Haetaan liitelinkit kaikille toimenpiteille
+                         {::vv-toimenpide/toimenpide-id
+                          (op/in (map ::vv-toimenpide/id toimenpiteet))
+                          ::m/poistettu? false}))))
+
 (defn- lisaa-liitteet [toimenpiteet db]
-  (let [liite-idt (mapcat (fn [toimenpide]
-                            (let [toimenpiteen-liite-linkit (filter (comp not ::m/poistettu?)
-                                                                    (::vv-toimenpide/liite-linkit toimenpide))]
-                              (keep ::vv-toimenpide/liite-id toimenpiteen-liite-linkit)))
-                          toimenpiteet)
-        liitteet (fetch
-                   db ::liite/liite
-                   liite/perustiedot
-                   {::liite/id (op/in liite-idt)})
-        toimenpiteet-liitteilla
-        (map (fn [toimenpide]
-               (let [toimenpiteen-liite-idt (set (keep ::vv-toimenpide/liite-id
-                                                       (::vv-toimenpide/liite-linkit toimenpide)))
-                     toimenpiteen-liitteet (filterv #(toimenpiteen-liite-idt (::liite/id %)) liitteet)]
-                 (-> toimenpide
-                     (assoc ::vv-toimenpide/liitteet (namespacefy/unnamespacefy toimenpiteen-liitteet))
-                     (dissoc ::vv-toimenpide/liite-linkit))))
-             toimenpiteet)]
-    toimenpiteet-liitteilla))
+  (let [;; Hae kaikki liite id:t reimari toimenpiteille
+        liite-idt-toimenpiteelle (toimenpiteiden-liite-idt db toimenpiteet)
+
+        ;; Listataan IN listaa varten kaikki liitteet
+        liite-idt (mapcat val liite-idt-toimenpiteelle)
+
+        ;; Haetaan liitteet {liiteid liitteen-tiedot} mäppiin
+        liitteet (into {}
+                       (map (juxt ::liite/id identity))
+                       (fetch db ::liite/liite
+                              liite/perustiedot
+                              {::liite/id (op/in liite-idt)}))]
+    (for [{id ::vv-toimenpide/id :as toimenpide} toimenpiteet
+          :let [toimenpiteen-liitteet (liite-idt-toimenpiteelle id)]]
+      (assoc toimenpide
+             ::vv-toimenpide/liitteet
+             (map (comp namespacefy/unnamespacefy liitteet) toimenpiteen-liitteet)))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
@@ -202,8 +216,12 @@
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
-                               vv-toimenpide/perustiedot
-                               vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
+                              vv-toimenpide/perustiedot
+
+                              ;; Haetaan liitteet erikseen,
+                              ;; specql 0.6 versio ei osaa hakea 2 has-many
+                              ;; joukkoa samalla tasolla
+                              ;;vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
                                vv-toimenpide/vikailmoitus
                                vv-toimenpide/urakoitsija
                                vv-toimenpide/sopimus
