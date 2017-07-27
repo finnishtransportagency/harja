@@ -77,7 +77,7 @@
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta)
                    (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
-    :laskutus-vesivaylat (and #_(oikeudet/urakat-vesivaylalaskutus id) ; TODO OIKEUS
+    :laskutus-vesivaylat (and (oikeudet/urakat-vesivaylalaskutus id)
                            (u-domain/vesivaylaurakkatyyppi? tyyppi)
                            (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
