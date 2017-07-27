@@ -250,7 +250,7 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."}]
+                          (tiedot/kokonaishintaisista-siirretyt-hintaryhma)
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
@@ -267,7 +267,7 @@
                        hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
                        nayta-hintaryhma?
                        (boolean
-                         (or (not hintaryhma-id) ;; Kok. hint. siirretyt -ryhmä
+                         (or (tiedot/kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
                              hintaryhma-tyhja?
                              (not (empty? hintaryhman-toimenpiteet)))) ;; Toimenpiteitä käytetyillä suodattimilla
                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
@@ -277,7 +277,17 @@
                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
                [:div.vv-toimenpideryhma
                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                [:span [napit/nappi
+                        (ikonit/map-marker)
+                        #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                           (e! (tiedot/->PoistaHintaryhmanKorostus))
+
+                           (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
+                        {:ikoninappi? true
+                         :luokka (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                   "nappi-ensisijainen"
+                                   "nappi-toissijainen")}]
+                 [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
 
                 (if hintaryhma-tyhja?
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
