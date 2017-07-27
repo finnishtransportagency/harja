@@ -316,30 +316,31 @@
                       [:g
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
-                         [:g [:rect {:x x :y y
-                                     :width jana-leveys
-                                     :height korkeus
-                                     :fill (or vari "white")
-                                     ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                     ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                     :fill-opacity (if vari 1.0 0.0)
-                                     :stroke reuna
-                                     :rx 3 :ry 3
-                                     :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
-                                                                     :y (hover-y y)
-                                                                     :text teksti})
-                                     :on-mouse-out hide-tooltip!}]
-                          ;; kahvat draggaamiseen
-                          (when voi-raahata?
-                            [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::alku)}])
-                          (when voi-raahata?
-                            [:rect {:x (+ x jana-leveys -3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::loppu)}])]
+                         (when (pos? jana-leveys)
+                           [:g [:rect {:x x :y y
+                                       :width jana-leveys
+                                       :height korkeus
+                                       :fill (or vari "white")
+                                       ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                       ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                       :fill-opacity (if vari 1.0 0.0)
+                                       :stroke reuna
+                                       :rx 3 :ry 3
+                                       :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
+                                                                       :y (hover-y y)
+                                                                       :text teksti})
+                                       :on-mouse-out hide-tooltip!}]
+                            ;; kahvat draggaamiseen
+                            (when voi-raahata?
+                              [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                      :style {:fill "white" :opacity 0.0
+                                              :cursor "ew-resize"}
+                                      :on-mouse-down #(drag-start! % jana ::alku)}])
+                            (when voi-raahata?
+                              [:rect {:x (+ x jana-leveys -3) :y y :width 7 :height korkeus
+                                      :style {:fill "white" :opacity 0.0
+                                              :cursor "ew-resize"}
+                                      :on-mouse-down #(drag-start! % jana ::loppu)}])])
                          ;; Vain alku tai loppu, piirrä marker
                          #?(:cljs
                             [marker {:x x :hover-y hover-y :teksti teksti
@@ -349,12 +350,12 @@
                                      :hide-tooltip! hide-tooltip! :reuna reuna
                                      :vari vari :suunta (if alku :oikea :vasen)}]
                             :clj
-                            [marker {:x x :hover-y hover-y :teksti teksti
+                            (marker {:x x :hover-y hover-y :teksti teksti
                                      :leveys jana-leveys :korkeus korkeus
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
-                                     :vari vari :suunta (if alku :oikea :vasen)}]))]))
+                                     :vari vari :suunta (if alku :oikea :vasen)})))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
