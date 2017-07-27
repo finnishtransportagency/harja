@@ -269,9 +269,9 @@
                               (t/days (/ % paivan-leveys)))
             kuukaudet (kuukaudet paivat)
 
-            rajaa-nakyvaan-alueeseen (fn [x leveys]
+            rajaa-nakyvaan-alueeseen (fn [x jana-leveys]
                                        (let [x1 (max alku-x x)
-                                             x2 (+ x leveys)]
+                                             x2 (+ x jana-leveys)]
                                          [x1 (min (- x2 x1) (- leveys alku-x))]))]
         [:svg#aikajana
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
