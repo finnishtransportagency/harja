@@ -49,7 +49,10 @@
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   (not valittu-hintaryhma)
-                  hintaryhmien-liittaminen-kaynnissa?)}])
+                  hintaryhmien-liittaminen-kaynnissa?
+                  (not (oikeudet/on-muu-oikeus? "siirrä-tilaukseen"
+                                                oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                (:id @nav/valittu-urakka))))}])
 
 (defn- hintaryhman-luonti [e! {:keys [hintaryhmat uuden-hintaryhman-lisays? uusi-hintaryhma
                                       hintaryhman-tallennus-kaynnissa?] :as app}]
