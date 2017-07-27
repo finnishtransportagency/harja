@@ -35,7 +35,10 @@
    #(e! (tiedot/->LiitaToimenpiteetKiintioon))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   (not valittu-kiintio-id)
-                  kiintioon-liittaminen-kaynnissa?)}])
+                  kiintioon-liittaminen-kaynnissa?
+                  (not (oikeudet/on-muu-oikeus? "liitä-kiintioon"
+                                                oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                                (:id @nav/valittu-urakka))))}])
 
 (defn- liita-kiintioon [e! app]
   [:span
