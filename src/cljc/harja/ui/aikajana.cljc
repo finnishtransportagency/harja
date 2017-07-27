@@ -209,13 +209,15 @@
                        " L " (+ 0 paivan-leveys) " " 0
                        " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 (/ korkeus 2))
                        " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
-                       " L " 0 " " (+ 0 korkeus))
+                       " L " 0 " " (+ 0 korkeus)
+                       " L 0 0")
                   :vasen
                   (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
                        " L " (+ 0 puolikas-paiva) " " 0
                        " L " 0 " " (+ 0 (/ korkeus 2))
                        " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
-                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)))
+                       " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
+                       " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
              :fill vari
              :fill-opacity (if vari 1.0 0.0)
              :stroke reuna
