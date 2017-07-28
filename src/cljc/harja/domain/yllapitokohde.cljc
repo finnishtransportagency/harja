@@ -333,11 +333,8 @@ yllapitoluokkanimi->numero
 
 (defn lihavoi-vasta-muokatut [rivit]
   (let [viikko-sitten (pvm/paivaa-sitten 7)]
-    (map #(assoc % :lihavoi (->> %
-                                 (some (fn [[avain arvo]]
-                                         (case avain
-                                            :muokattu arvo
-                                            :aikataulu-muokattu arvo
-                                            nil)))
-                                  (pvm/ennen? viikko-sitten)))
+    (map (fn [{:keys [muokattu aikataulu-muokattu] :as rivi}]
+           (assoc rivi :lihavoi
+                  (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
+                      (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
          rivit)))
