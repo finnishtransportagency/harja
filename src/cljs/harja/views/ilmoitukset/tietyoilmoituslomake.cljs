@@ -160,7 +160,6 @@
     :leveys 1}
    {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00"
     :nimi ::t/loppuaika
-    :validoi [[:aika-jalkeen ::t/alkuaika "Loppuajan tulee olla alkuajan jälkeen"]]
     :leveys 1}])
 
 (def aikataulu-grid-optiot {:otsikko ""
