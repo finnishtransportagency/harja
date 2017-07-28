@@ -6,7 +6,8 @@
             [harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn toimenpiteet []
@@ -22,4 +23,8 @@
        "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset id))
-         [yks-hint/yksikkohintaiset-toimenpiteet])])))
+         [yks-hint/yksikkohintaiset-toimenpiteet])
+
+       "Erilliskustannukset" :erilliskustannukset
+       (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+         [erilliskustannukset/erilliskustannusten-toteumat ur])])))
