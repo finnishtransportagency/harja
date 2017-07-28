@@ -16,6 +16,9 @@
 
 (defn hae-turvalaitteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
+    ;; Turvalaitteita haetaan väylän tai turvalaitenumeroiden perusteella,
+    ;; eli oikeustarkastusta ei tarvita. Jos lisätään esim urakan perusteella
+    ;; haku, täytyy oikeustarkastusta harkita uudelleen.
     (oikeudet/ei-oikeustarkistusta!)
     (tu-q/hae-turvalaitteet-kartalle db tiedot)))
 
