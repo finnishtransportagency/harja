@@ -244,7 +244,7 @@
                             "Ylihärmä, Hakola"
                             "11.05.2017"
                             "2686,0 m"
-                            "Työaika tiistai, maanantai, perjantai, keskiviikko, torstai: 06:00 – 22:00"]]
+                            "Työaika maanantai, tiistai, keskiviikko, torstai, perjantai: 06:00 – 22:00"]]
               (is (str/includes? text teksti)))))))))
 
 ;; TODO Lisää testit:

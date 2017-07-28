@@ -15,8 +15,8 @@
     #?(:clj
             [clj-time.local :as l])
 
-    [taoensso.timbre :as log]
-    [clojure.string :as str])
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -748,6 +748,14 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (if (t/before? eka toka)
     (t/in-days (t/interval eka toka))
     (t/in-days (t/interval toka eka))))
+
+(defn paivia-valissa-opt
+  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on.
+   Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksessä.
+   Jos toinen tai molemmat puuttuu, palauttaa nil."
+  [eka toka]
+  (when (and eka toka)
+    (paivia-valissa eka toka)))
 
 #?(:clj
    (defn iso-8601->pvm
