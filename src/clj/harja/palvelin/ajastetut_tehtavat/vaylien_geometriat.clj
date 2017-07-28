@@ -14,8 +14,8 @@
 (def geometriapaivitystunnus "vaylat")
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
-                             (:viimeisin_paivitys
-                               (first (q-geometriapaivitykset/hae-paivitys db geometriapaivitystunnus))))]
+                            (:viimeisin_paivitys
+                             (first (q-geometriapaivitykset/hae-paivitys db geometriapaivitystunnus))))]
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
