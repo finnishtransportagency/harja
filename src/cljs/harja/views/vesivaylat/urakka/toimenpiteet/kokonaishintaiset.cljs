@@ -36,7 +36,7 @@
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   (not valittu-kiintio-id)
                   kiintioon-liittaminen-kaynnissa?
-                  (not (oikeudet/on-muu-oikeus? "liitä-kiintioon"
+                  (not (oikeudet/on-muu-oikeus? "liitä-kiintiöön"
                                                 oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                 (:id @nav/valittu-urakka))))}])
 
@@ -52,7 +52,7 @@
    app
    "Siirrä yksikköhintaisiin"
    #(e! (tiedot/->SiirraValitutYksikkohintaisiin))
-   #(oikeudet/on-muu-oikeus? "siirra-yksikkohintaisiin"
+   #(oikeudet/on-muu-oikeus? "siirrä-yksikköhintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                              (:id @nav/valittu-urakka))]
    ^{:key "kiintio"}

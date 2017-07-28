@@ -93,7 +93,7 @@
   [jaettu/siirtonappi e! app
    "Siirrä kokonaishintaisiin"
    #(e! (tiedot/->SiirraValitutKokonaishintaisiin))
-   #(oikeudet/on-muu-oikeus? "siirra-kokonaishintaisiin"
+   #(oikeudet/on-muu-oikeus? "siirrä-kokonaishintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                              (:id @nav/valittu-urakka))]
    ^{:key "hinnoittelu"}

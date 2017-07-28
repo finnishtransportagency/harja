@@ -26,7 +26,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-oikeus "siirra-kokonaishintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen)))
@@ -43,7 +43,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-oikeus "siirra-yksikkohintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-yksikköhintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
