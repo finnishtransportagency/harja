@@ -280,61 +280,60 @@
                                                         (= sopimus-id (:sopimus %))
                                                         (= (:toimenpideinstanssi %) toimenpideinstanssi))
                                                      @u/erilliskustannukset-hoitokaudella))))))]
+    (fn []
+      (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
+            oikeus? (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-toteumat-erilliskustannukset
+                      (:id @nav/valittu-urakka))]
+        [:div.erilliskustannusten-toteumat
+         [ui-valinnat/urakkavalinnat {:urakka urakka}
+          ^{:key "valinnat"}
+          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+          (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-toteumat-erilliskustannukset)]
+            ^{:key "toiminnot"}
+            [ui-valinnat/urakkatoiminnot {:urakka urakka}
+             ^{:key "lisaa-kustannus"}
+             [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
+              {:disabled (not oikeus?)}]])]
 
-    (komp/luo
-      (komp/lippu toteumat/erilliskustannukset-nakymassa?)
-      (fn []
-        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
-              oikeus? (oikeudet/voi-kirjoittaa?
-                        oikeudet/urakat-toteumat-erilliskustannukset
-                        (:id @nav/valittu-urakka))]
-          [:div.erilliskustannusten-toteumat
-           [ui-valinnat/urakkavalinnat {:urakka urakka}
-            ^{:key "valinnat"}
-            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-            (yleiset/wrap-if
-              (not oikeus?)
-              [yleiset/tooltip {} :%
-               (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                               oikeudet/urakat-toteumat-erilliskustannukset)]
-              ^{:key "toiminnot"}
-              [ui-valinnat/urakkatoiminnot {:urakka urakka}
-               ^{:key "lisaa-kustannus"}
-               [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-                {:disabled (not oikeus?)}]])]
-
-           [grid/grid
-            {:otsikko (str "Erilliskustannukset ")
-             :tyhja (if (nil? @valitut-kustannukset)
-                      [ajax-loader "Erilliskustannuksia haetaan..."]
-                      "Ei erilliskustannuksia saatavilla.")
-             :rivi-klikattu #(reset! valittu-kustannus %)
-             :rivin-luokka #(aseta-rivin-luokka %)}
-            [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
-             {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
-             {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :tasaa :oikea
-              :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
-             {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna :tasaa :oikea
-              :hae #(if (nil? (:indeksin_nimi %))
-                      "Ei sidottu indeksiin"
-                      (if (and
-                            (not (nil? (:indeksin_nimi %)))
-                            (nil? (:indeksikorjattuna %)))
-                        nil
-                        (fmt/euro-opt (Math/abs (:indeksikorjattuna %)))))
-              :fmt #(if (nil? %)
-                      [:span.ei-arvoa "Ei indeksiarvoa"]
-                      (str %))
-              :leveys "13%"}
-             {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
-             {:otsikko "Mak\u00ADsaja" :tyyppi :string :nimi :maksaja
-              :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-             {:otsikko "Lisä\u00ADtieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
-            @valitut-kustannukset]])))))
+         [grid/grid
+          {:otsikko (str "Erilliskustannukset ")
+           :tyhja (if (nil? @valitut-kustannukset)
+                    [ajax-loader "Erilliskustannuksia haetaan..."]
+                    "Ei erilliskustannuksia saatavilla.")
+           :rivi-klikattu #(reset! valittu-kustannus %)
+           :rivin-luokka #(aseta-rivin-luokka %)}
+          [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
+           {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
+           {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :tasaa :oikea
+            :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
+           {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna :tasaa :oikea
+            :hae #(if (nil? (:indeksin_nimi %))
+                    "Ei sidottu indeksiin"
+                    (if (and
+                          (not (nil? (:indeksin_nimi %)))
+                          (nil? (:indeksikorjattuna %)))
+                      nil
+                      (fmt/euro-opt (Math/abs (:indeksikorjattuna %)))))
+            :fmt #(if (nil? %)
+                    [:span.ei-arvoa "Ei indeksiarvoa"]
+                    (str %))
+            :leveys "13%"}
+           {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
+           {:otsikko "Mak\u00ADsaja" :tyyppi :string :nimi :maksaja
+            :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
+           {:otsikko "Lisä\u00ADtieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
+          @valitut-kustannukset]]))))
 
 (defn erilliskustannusten-toteumat [urakka]
-  (fn [urakka]
-    [:span
-     (if @valittu-kustannus
-       [erilliskustannusten-toteuman-muokkaus]
-       [erilliskustannusten-toteumalistaus urakka])]))
+  (komp/luo
+    (komp/lippu toteumat/erilliskustannukset-nakymassa?)
+    (fn [urakka]
+      [:span
+       (if @valittu-kustannus
+         [erilliskustannusten-toteuman-muokkaus]
+         [erilliskustannusten-toteumalistaus urakka])])))
