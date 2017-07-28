@@ -173,10 +173,14 @@
       (tieto "Työvaiheen pituus"
              (pituus ilm))])))
 
+(def viikonpaivan-jarjestys
+  {"maanantai" 1 "tiistai" 2 "keskiviikko" 3 "torstai" 4 "perjantai" 5
+   "lauantai" 6 "sunnuntai" 7})
+
 (defn- tyoaika [{tyoajat ::t/tyoajat}]
   [:fo:block
    (for [ta tyoajat]
-     [:fo:block (str/join ", " (::t/paivat ta)) ": "
+     [:fo:block (str/join ", " (sort-by viikonpaivan-jarjestys (::t/paivat ta))) ": "
       (str (::t/alkuaika ta)) " \u2013 " (str (::t/loppuaika ta))])])
 
 
