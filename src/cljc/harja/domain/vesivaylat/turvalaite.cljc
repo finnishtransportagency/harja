@@ -35,4 +35,4 @@
   (s/keys :req []))
 
 (s/def ::hae-turvalaitteet-vastaus
-  (s/coll-of ::turvalaite))
+  (s/nilable (s/coll-of ::turvalaite)))

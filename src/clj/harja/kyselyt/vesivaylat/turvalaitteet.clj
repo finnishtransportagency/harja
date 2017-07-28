@@ -43,25 +43,24 @@
   (->&&op values))
 
 (defn hae-turvalaitteet-kartalle [db {:keys [turvalaitenumerot vaylanumerot]}]
-  (assert (or (not-empty turvalaitenumerot)
-              (not-empty vaylanumerot))
-          "Turvalaitteet on haettava joko turvalaitenumeroilla tai väylänumeroilla.")
-  (into []
-    (comp
-      (geo/muunna-pg-tulokset ::tu/sijainti))
-    (specql/fetch db
-                  ::tu/turvalaite
-                  #{::tu/id
-                    ::tu/nimi
-                    ::tu/sijainti
-                    ::tu/turvalaitenro
-                    ::tu/tyyppi
-                    ::tu/kiintea
-                    ::tu/vaylat}
-                 (op/and
-                   {::m/poistettu? false}
-                   (when (not-empty turvalaitenumerot)
-                     {::tu/turvalaitenro (op/in turvalaitenumerot)})
-                   (when (not-empty vaylanumerot)
-                     {::tu/vaylat (&& (vec vaylanumerot))})))))
+  (when (or (not-empty turvalaitenumerot)
+            (not-empty vaylanumerot))
+    (into []
+          (comp
+            (geo/muunna-pg-tulokset ::tu/sijainti))
+          (specql/fetch db
+                        ::tu/turvalaite
+                        #{::tu/id
+                          ::tu/nimi
+                          ::tu/sijainti
+                          ::tu/turvalaitenro
+                          ::tu/tyyppi
+                          ::tu/kiintea
+                          ::tu/vaylat}
+                        (op/and
+                          {::m/poistettu? false}
+                          (when (not-empty turvalaitenumerot)
+                            {::tu/turvalaitenro (op/in turvalaitenumerot)})
+                          (when (not-empty vaylanumerot)
+                            {::tu/vaylat (&& (vec vaylanumerot))}))))))
 
