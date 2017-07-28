@@ -260,14 +260,20 @@
 
   HaeToimenpiteidenTurvalaitteetKartalle
   (process-event [{to :toimenpiteet} app]
-    (let [haettavat (into #{} (map (comp ::tu/turvalaitenro ::to/turvalaite) to))]
-      (tuck-tyokalut/palvelukutsu :hae-turvalaitteet-kartalle
-                                 {:turvalaitenumerot haettavat}
-                                  {:onnistui ->TurvalaitteetKartalleHaettu
-                                   :onnistui-parametrit [haettavat]
-                                   :epaonnistui ->TurvalaitteetKartalleEiHaettu
-                                   :epaonnistui-parametrit [haettavat]})
-      (assoc app :kartalle-haettavat-toimenpiteet haettavat)))
+    (if (not-empty to)
+      (let [haettavat (into #{} (map (comp ::tu/turvalaitenro ::to/turvalaite) to))]
+       (tuck-tyokalut/palvelukutsu :hae-turvalaitteet-kartalle
+                                   {:turvalaitenumerot haettavat}
+                                   {:onnistui ->TurvalaitteetKartalleHaettu
+                                    :onnistui-parametrit [haettavat]
+                                    :epaonnistui ->TurvalaitteetKartalleEiHaettu
+                                    :epaonnistui-parametrit [haettavat]})
+       (assoc app :kartalle-haettavat-toimenpiteet haettavat))
+
+      (assoc app :kartalle-haettavat-toimenpiteet nil
+                 :turvalaitteet-kartalla nil
+                 :turvalaitteet nil
+                 :korostetut-turvalaitteet nil)))
 
   TurvalaitteetKartalleHaettu
   (process-event [{haetut :haetut tulos :tulos} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
@@ -284,7 +290,10 @@
   (process-event [{haetut :haetut} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
     (if (= haetut kartalle-haettavat-toimenpiteet)
       (do (viesti/nayta! "Toimenpiteiden haku kartalle epäonnistui!" :danger)
-          (assoc app :kartalle-haettavat-toimenpiteet nil))
+          (assoc app :kartalle-haettavat-toimenpiteet nil
+                     :turvalaitteet-kartalla nil
+                     :turvalaitteet nil
+                     :korostetut-turvalaitteet nil))
 
       app))
 

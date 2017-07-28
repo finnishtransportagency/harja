@@ -374,6 +374,19 @@
                                                                   {::to/turvalaite {::tu/turvalaitenro 1}}
                                                                   {::to/turvalaite {::tu/turvalaitenro 2}}]))))))
 
+  (testing "Kartan tyhjennys kun toimenpidelista on tyhjä"
+    (is (= {:kartalle-haettavat-toimenpiteet nil
+            :turvalaitteet-kartalla nil
+            :turvalaitteet nil
+            :korostetut-turvalaitteet nil}
+           (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle []))))
+
+    (is (= {:kartalle-haettavat-toimenpiteet nil
+            :turvalaitteet-kartalla nil
+            :turvalaitteet nil
+            :korostetut-turvalaitteet nil}
+           (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle nil)))))
+
   (testing "Haun valmistuminen"
     (let [payload [{::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
           tulos (e! (tiedot/->TurvalaitteetKartalleHaettu payload #{1 2})
