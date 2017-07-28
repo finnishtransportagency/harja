@@ -159,7 +159,9 @@
   (reaction<! [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
 
                ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
-               urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))
+               urakan-urakkatyyppi (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? @valittu-urakka)
+                                                            :vesivayla
+                                                            (:tyyppi @valittu-urakka)))
                ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
@@ -375,8 +377,8 @@
   (reset! urlia-kasitellaan? true)
   (go
     (let [uri (Uri/parse url)
-         polku (.getPath uri)
-         parametrit (.getQueryData uri)]
+          polku (.getPath uri)
+          parametrit (.getQueryData uri)]
      (log "POLKU: " polku)
      (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
      (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
