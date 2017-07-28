@@ -66,7 +66,7 @@
                                    :vikailmoitukset? vain-vikailmoitukset?}))
 
 (defn joku-valittu? [toimenpiteet]
-  (some :valittu? toimenpiteet))
+  (boolean (some :valittu? toimenpiteet)))
 
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
@@ -76,9 +76,13 @@
   (sort-by ::to/pvm toimenpiteet))
 
 (defn korosta-turvalaite-kartalla? [app]
+  ;; Tämä funktio oli alunperin kartalla-esitettavaan-muotoon funktion
+  ;; haluama valittu?-fn, siksi palautetaan funktio. Pidetään nykyinen
+  ;; malli, niin kartan toiminnallisuutta on helpompi muuttaa jälkikäteen.
   (fn [turvalaite]
-    (when-let [setti (:korostetut-turvalaitteet app)]
-      (boolean (setti (::tu/turvalaitenro turvalaite))))))
+    (boolean
+      (when-let [setti (:korostetut-turvalaitteet app)]
+       (setti (::tu/turvalaitenro turvalaite))))))
 
 (defn turvalaitteen-toimenpiteet [turvalaite app]
   (filterv #(= (::tu/turvalaitenro turvalaite)
@@ -271,7 +275,8 @@
     (if (= haetut kartalle-haettavat-toimenpiteet)
       (assoc app :kartalle-haettavat-toimenpiteet nil
                  :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app)
-                 :turvalaitteet tulos)
+                 :turvalaitteet tulos
+                 :korostetut-turvalaitteet nil)
 
       app))
 
