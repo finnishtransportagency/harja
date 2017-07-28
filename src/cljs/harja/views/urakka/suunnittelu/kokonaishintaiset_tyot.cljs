@@ -389,7 +389,7 @@
              ;; sarakkeet
              [(when @prosenttijako?
                 {:otsikko "%" :nimi :prosentti
-                 :tyyppi :positiivinen-numero
+                 :tyyppi :positiivinen-numero :kokonaisluku? true
                  :leveys 10})
 
               {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
