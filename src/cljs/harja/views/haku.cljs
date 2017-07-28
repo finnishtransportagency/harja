@@ -120,8 +120,6 @@
                 ;; urakkalista on päivittynyt. Muuten voi tulla ajoitusongelma toisinaan HAR-2044
                 hallintayksikon-urakkalista (<! (urakat/hae-hallintayksikon-urakat
                                                   {:id (get-in haettu-urakka [:hallintayksikko :id])}))]
-            (log "[DEBUG] haettu-urakka: " (pr-str haettu-urakka))
-            (log "[DEBUG] hallintayksikon-urakkalista: " (pr-str hallintayksikon-urakkalista))
             (reset! nav/hallintayksikon-urakkalista hallintayksikon-urakkalista)
             (nav/aseta-hallintayksikko-ja-urakka
               (get-in haettu-urakka [:hallintayksikko :id])
