@@ -3,6 +3,7 @@
 -- pituuden tierekisteriosoitteen perusteella
 DROP VIEW IF EXISTS tietyoilmoitus_pituus;
 
+
 CREATE VIEW tietyoilmoitus_pituus AS
   SELECT tti.*, CASE
                   WHEN (tti.osoite).losa IS NOT NULL THEN
@@ -14,3 +15,5 @@ CREATE VIEW tietyoilmoitus_pituus AS
                      0
                   END
                 AS pituus FROM tietyoilmoitus tti;
+
+-- 27.7.2017 muutettu, jotta tti view päivittyy
