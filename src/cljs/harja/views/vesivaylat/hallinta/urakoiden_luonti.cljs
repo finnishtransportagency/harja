@@ -90,8 +90,7 @@
                                         (not (oikeudet/hallinta-vesivaylat))
                                         (not (voi-tallentaa? urakka))
                                         (not (lomake/voi-tallentaa? urakka)))
-                          :tallennus-kaynnissa? tallennus-kaynnissa?
-                          }])}
+                          :tallennus-kaynnissa? tallennus-kaynnissa?}])}
           [(lomake/rivi
              {:otsikko "Nimi" :nimi ::u/nimi :tyyppi :string :pakollinen? true}
              {:otsikko "Urakka-aluenumero" :nimi ::u/urakkanro :tyyppi :string :pakollinen? true}
