@@ -531,7 +531,8 @@
    :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
    :tiedot (vec
              (concat
-               [{:otsikko "Kiinteä?" :nimi ::tu/kiintea :tyyppi :string :fmt fmt/totuus}
+               [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
+                {:otsikko "Kiinteä?" :nimi ::tu/kiintea :tyyppi :string :fmt fmt/totuus}
                 {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
                 {:otsikko "Väylä" :tyyppi :string :hae
                  (hakufunktio
