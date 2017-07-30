@@ -265,9 +265,10 @@
                        hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
                        nayta-hintaryhma?
                        (boolean
-                         (or (not hintaryhma-id) ;; Kok. hint. siirretyt -ryhmä
-                             hintaryhma-tyhja?
-                             (not (empty? hintaryhman-toimenpiteet)))) ;; Toimenpiteitä käytetyillä suodattimilla
+                         (or (and (not hintaryhma-id)  ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
+                                  (not (empty? hintaryhman-toimenpiteet)))
+                             hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
+                             (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
                                                                    (not (empty? hintaryhman-toimenpiteet))))]]
 
