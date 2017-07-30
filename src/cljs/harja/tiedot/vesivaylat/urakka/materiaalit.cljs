@@ -112,6 +112,6 @@
 
   Virhe
   (process-event [virhe app]
-    (log "Virhe: " virhe)
+    (log "Virhe: " (pr-str virhe))
     (viesti/nayta! "Virhe palvelinkutsussa" :warning)
     (assoc app :tallennus-kaynnissa? false)))
