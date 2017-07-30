@@ -419,8 +419,8 @@
                      false
                      @data)]
           [:div.boolean
-           (let [checkbox [:div.checkbox {:on-click #(.stopPropagation %)}
-                           [:label
+           (let [checkbox [:div.checkbox
+                           [:label {:on-click #(.stopPropagation %)}
                             [:input {:id input-id
                                      :type "checkbox"
                                      :checked arvo

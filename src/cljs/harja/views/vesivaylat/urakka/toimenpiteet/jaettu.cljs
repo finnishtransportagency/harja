@@ -174,12 +174,11 @@
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+   :solu-klikattu (fn [rivi]
+                    (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                     :valinta (not (:valittu? rivi))}
+                                                    toimenpiteet)))
    :komponentti (fn [rivi]
-                  ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta
-                  ;; Siltatarkastuksissa käytetty radio-elementti expandoi labelin
-                  ;; koko soluun. Voisi ehkä käyttää myös checkbox-elementille
-                  ;; Täytyy kuitenkin varmistaa, ettei mikään mene rikki.
-                  ;; Ja entäs otsikkorivit?
                   [kentat/tee-kentta
                    {:tyyppi :checkbox}
                    (r/wrap (:valittu? rivi)
