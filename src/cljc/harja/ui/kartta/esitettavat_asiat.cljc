@@ -250,11 +250,13 @@
       :alue (maarittele-feature laatupoikkeama valittu?
                                 ikoni viiva))))
 
+(def tarkastus-selitteet-tie
+  #{{:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Lumista" nil))}})
+
 (def tarkastus-selitteet
   #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil nil))}
     {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil :urakoitsija))}
     {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Vesakko raivaamatta" nil))}
-    {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Lumista" nil))}
     {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil nil))}
     {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil :urakoitsija))}})
 

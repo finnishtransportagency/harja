@@ -8,25 +8,30 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.domain.urakka :as u-domain]
+            [clojure.set :as set])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce karttataso-tarkastukset (atom false))
 
-(defn- luo-tarkastusreitit-kuvataso [taso-paalla? parametrit]
+(defn- luo-tarkastusreitit-kuvataso [taso-paalla? urakkatyyppi parametrit]
   (when taso-paalla?
     (openlayers/luo-kuvataso
-     :tarkastusreitit esitettavat-asiat/tarkastus-selitteet
+     :tarkastusreitit (if (not (u-domain/vesivaylaurakkatyyppi? urakkatyyppi))
+                        (set/union esitettavat-asiat/tarkastus-selitteet esitettavat-asiat/tarkastus-selitteet-tie)
+                        esitettavat-asiat/tarkastus-selitteet)
      "tr" (k/url-parametri (assoc parametrit
                              :valittu {:id (:id @tarkastukset/valittu-tarkastus)})))))
 
 (def tarkastusreitit-kartalla
   (reaction
     @tarkastukset/urakan-tarkastukset
-    (luo-tarkastusreitit-kuvataso
+    (luo-tarkastusreitit-kuvatasoN
       @karttataso-tarkastukset
+      (:tyyppi @nav/valittu-urakka)
       (tarkastukset/kasaa-haun-parametrit
         @tiedot-urakka/valittu-urakka-kaynnissa?
         @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi
