@@ -25,7 +25,9 @@
 
 (defprotocol PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [this nimi kasittely-fn]
-    "Julkaisee PDF käsittelijäfunktion annetulla keyword nimellä. Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa PDF:n tiedot hiccup muotoisena FOPina.")
+    "Julkaisee PDF käsittelijäfunktion annetulla keyword nimellä.
+     Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit
+     mäppeinä ja palauttaa PDF:n tiedot hiccup muotoisena FOPina.")
   (poista-pdf-kasittelija! [this nimi]))
 
 (declare muodosta-pdf)

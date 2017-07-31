@@ -61,7 +61,7 @@
 
       "Erilliskustannukset" :erilliskustannukset
       (when (oikeudet/urakat-toteumat-erilliskustannukset id)
-        [erilliskustannukset/erilliskustannusten-toteumat])
+        [erilliskustannukset/erilliskustannusten-toteumat ur])
 
       "Varusteet" :varusteet
       (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
