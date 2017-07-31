@@ -29,7 +29,7 @@
 (def tarkastusreitit-kartalla
   (reaction
     @tarkastukset/urakan-tarkastukset
-    (luo-tarkastusreitit-kuvatasoN
+    (luo-tarkastusreitit-kuvataso
       @karttataso-tarkastukset
       (:tyyppi @nav/valittu-urakka)
       (tarkastukset/kasaa-haun-parametrit
