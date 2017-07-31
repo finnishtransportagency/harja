@@ -402,7 +402,10 @@
               {:kartalle-haettavat-toimenpiteet #{1 2}}))))
 
   (testing "Haun epäonnistuminen"
-    (is (= {:kartalle-haettavat-toimenpiteet nil}
+    (is (= {:kartalle-haettavat-toimenpiteet nil
+            :turvalaitteet-kartalla nil
+            :turvalaitteet nil
+            :korostetut-turvalaitteet nil}
            (e! (tiedot/->TurvalaitteetKartalleEiHaettu nil #{1 2})
                {:kartalle-haettavat-toimenpiteet #{1 2}}))))
 
