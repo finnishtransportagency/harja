@@ -16,9 +16,9 @@
 (def listaus
   [{::m/nimi "Poiju" ::m/alkuperainen-maara 20  ::m/maara-nyt 18 ::m/lisatieto "annettu 20 poijua"
     ::m/muutokset
-    [{::m/pvm (pvm/->pvm "1.5.2017") ::m/maara -3 ::m/lisatieto "käytettiin 3kpl"}
+    [{::m/pvm (pvm/->pvm "3.5.2017") ::m/maara -3 ::m/lisatieto "käytettiin 3kpl"}
      {::m/pvm (pvm/->pvm "2.5.2017") ::m/maara -1 ::m/lisatieto "yksi upposi mereen"}
-     {::m/pvm (pvm/->pvm "10.5.2017") ::m/maara 2 ::m/lisatieto "saatiin pajalta 2 lisää"}]}])
+     {::m/pvm (pvm/->pvm "1.5.2017") ::m/maara 2 ::m/lisatieto "saatiin pajalta 2"}]}])
 
 (def alkutila
   {:urakka-id 1
@@ -56,7 +56,7 @@
      "Katsotaan, että vetolaatikon muutoslokissa on oikeat rivit"
      (is (u/sel1 :.vetolaatikko-auki))
      (is (= 3 (count (u/sel ".vv-materiaaliloki tr"))))
-     (is (= "saatiin pajalta 2 lisää" (u/text (u/sel1 ".vv-materiaaliloki tr:nth-child(3) td:nth-child(3)"))))
+     (is (= "saatiin pajalta 2" (u/text (u/sel1 ".vv-materiaaliloki tr:nth-child(3) td:nth-child(3)"))))
      --
      "Kirjataan uusi poijun käyttö"
      (u/click ".vv-materiaalin-kirjaus button.materiaalin-kaytto")
@@ -74,5 +74,5 @@
      "Tarkistetaan tallennuksen jälkeen uusi tila"
      (is (= '("Poiju" "20" "8") (ensimmainen-rivi)))
      (is (= 4 (count (u/sel ".vv-materiaaliloki tr"))))
-     (is (= "hukattiin 10kpl" (u/text (u/sel1 ".vv-materiaaliloki tr:nth-child(4) td:nth-child(3)"))))
+     (is (= "saatiin pajalta 2" (u/text (u/sel1 ".vv-materiaaliloki tr:nth-child(4) td:nth-child(3)"))))
      (is (nil? (u/sel1 ".vv-materiaalin-kirjaus .lomake"))))))
