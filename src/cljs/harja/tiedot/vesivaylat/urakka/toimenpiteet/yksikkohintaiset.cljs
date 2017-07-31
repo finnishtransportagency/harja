@@ -19,7 +19,8 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.domain.urakka :as urakka])
+            [harja.domain.urakka :as urakka]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -58,7 +59,16 @@
          :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
          :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
          :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu
-         :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu}))
+         :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu
+         :turvalaitteet-kartalla nil
+         :karttataso-nakyvissa? true
+         :korostetut-turvalaitteet nil
+         ;; korostettu-hintaryhma on false, kun hintaryhmää ei ole korostettu,
+         ;; koska "kokonaishintaisista siirrettyjen" hintaryhmän id:n täytyy olla nil
+         :korostettu-hintaryhma false}))
+
+(defonce karttataso-yksikkohintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
+(defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
 
 (def valinnat
   (reaction
@@ -73,6 +83,21 @@
       (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
+
+(defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
+  (boolean
+    (when-not (false? korostettu-hintaryhma)
+      (= (::h/id hintaryhma) korostettu-hintaryhma))))
+
+(defn kokonaishintaisista-siirretyt-hintaryhma []
+  [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."
+    ::h/id nil}])
+
+(defn kokonaishintaisista-siirretyt-hintaryhma? [hintaryhma]
+  (= (::h/id hintaryhma) (::h/id (kokonaishintaisista-siirretyt-hintaryhma))))
+
+(defn poista-hintaryhmien-korostus [app]
+  (assoc app :korostettu-hintaryhma false))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
@@ -107,6 +132,8 @@
 (defrecord PoistaHintaryhmat [hintaryhma-idt])
 (defrecord HintaryhmatPoistettu [vastaus])
 (defrecord HintaryhmatEiPoistettu [])
+(defrecord KorostaHintaryhmaKartalla [hintaryhma])
+(defrecord PoistaHintaryhmanKorostus [])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -146,7 +173,8 @@
 
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
+    (assoc app :nakymassa? nakymassa?
+               :karttataso-nakyvissa? nakymassa?))
 
   PaivitaValinnat
   ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
@@ -175,8 +203,10 @@
 
   ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
-               :toimenpiteiden-haku-kaynnissa? false))
+    (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
+      (go (turvalaitteet-kartalle toimenpiteet))
+      (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+                 :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
   (process-event [_ app]
@@ -396,4 +426,20 @@
   HintaryhmatEiPoistettu
   (process-event [_ app]
     (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
-    (assoc app :hintaryhmien-poisto-kaynnissa? false)))
+    (assoc app :hintaryhmien-poisto-kaynnissa? false))
+
+  KorostaHintaryhmaKartalla
+  (process-event [{hintaryhma :hintaryhma} {:keys [toimenpiteet] :as app}]
+    (let [korostettavat-turvalaitteet (->>
+                                        toimenpiteet
+                                        (filter #(= (::to/hintaryhma-id %) (::h/id hintaryhma)))
+                                        (map (comp ::tu/turvalaitenro ::to/turvalaite))
+                                        (into #{}))]
+      (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
+          (assoc :korostettu-hintaryhma (::h/id hintaryhma)))))
+
+  PoistaHintaryhmanKorostus
+  (process-event [_ app]
+    (->> app
+         (poista-hintaryhmien-korostus)
+         (jaettu/korosta-kartalla nil))))

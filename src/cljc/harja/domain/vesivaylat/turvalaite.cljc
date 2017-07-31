@@ -3,9 +3,9 @@
   (:require
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
-    [harja.domain.vesivaylat.vayla :as v]
     [specql.rel :as rel]
 
+    [harja.domain.vesivaylat.vayla :as v]
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]))
@@ -17,7 +17,9 @@
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-ryhma}]
-  ["vv_turvalaite" ::turvalaite])
+  ["vv_turvalaite" ::turvalaite
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistettu?-sarake])
 
 (def tyypit (s/describe ::tyyppi))
 
@@ -28,3 +30,9 @@
     ::turvalaitenro
     ::kiintea
     ::vaylat})
+
+(s/def ::hae-turvalaitteet-kysely
+  (s/keys :req []))
+
+(s/def ::hae-turvalaitteet-vastaus
+  (s/nilable (s/coll-of ::turvalaite)))
