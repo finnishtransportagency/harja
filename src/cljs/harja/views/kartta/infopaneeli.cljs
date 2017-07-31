@@ -20,8 +20,9 @@
     [:span.ip-haitari-otsikko.klikattava otsikko]]])
 
 (defn- kentan-arvo [skeema data]
-  (let [arvo-fn (or (:hae skeema) (:nimi skeema))
-        arvo (when arvo-fn (arvo-fn data))]
+  (let [fmt (or (:fmt skeema) identity)
+        arvo-fn (or (:hae skeema) (:nimi skeema))
+        arvo (fmt (when arvo-fn (arvo-fn data)))]
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
     (when arvo
       (r/wrap arvo

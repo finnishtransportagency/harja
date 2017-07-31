@@ -14,6 +14,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
+            [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -75,6 +76,8 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       [:div
+       [kartta/kartan-paikka]
+       [debug/debug app]
        [jaettu/suodattimet e!
         tiedot/->PaivitaValinnat
         app (:urakka valinnat)

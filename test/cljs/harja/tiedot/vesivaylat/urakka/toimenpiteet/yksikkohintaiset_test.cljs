@@ -114,8 +114,12 @@
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
-  (is (false? (:nakymassa? (e! (tiedot/->Nakymassa? false))))))
+  (is (= {:nakymassa? true
+          :karttataso-nakyvissa? true}
+         (e! (tiedot/->Nakymassa? true))))
+  (is (= {:nakymassa? false
+          :karttataso-nakyvissa? false}
+         (e! (tiedot/->Nakymassa? false)))))
 
 (deftest valintojen-paivittaminen
   (testing "Asetetaan uudet valinnat"
@@ -181,9 +185,12 @@
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest toimenpiteiden-hakemisen-valmistuminen
-  (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-    (is (= [{:id 1}] (:toimenpiteet tulos)))))
+  (vaadi-async-kutsut
+    #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
+
+    (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
+     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
+     (is (= [{:id 1}] (:toimenpiteet tulos))))))
 
 (deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
@@ -637,68 +644,23 @@
                       vanha-tila)]
     (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hintaelementit])))))
 
+(deftest hintaryhman-korostaminen
+  (testing "Hintaryhmän korostus"
+    (let [tulos (e! (tiedot/->KorostaHintaryhmaKartalla {::h/id 1})
+              {:turvalaitteet [{::tu/turvalaitenro 1
+                                ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+               :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
+                              {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
+                              {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]
+      (is (= 1 (:korostettu-hintaryhma tulos)))
+      (is (= #{1 2} (:korostetut-turvalaitteet tulos)))
+      (is (not-empty (:turvalaitteet-kartalla tulos)))))
 
-(deftest liitteen-lisaaminen-toimenpiteelle
-  (vaadi-async-kutsut
-    #{jaetut-tiedot/->LiiteLisatty jaetut-tiedot/->LiiteEiLisatty}
-    (let [vanha-tila testitila
-          uusi-tila (e! (jaetut-tiedot/->LisaaToimenpiteelleLiite
-                          {:liite {:id 1}
-                           ::to/id 1})
-                        vanha-tila)]
-      (is (true? (:liitteen-lisays-kaynnissa? uusi-tila))))))
-
-(deftest liite-lisatty
-  (testing "Uusi liite lisätty toimenpiteelle"
-    (let [vanha-tila testitila
-          toimenpide-id 2
-          uusi-tila (e! (jaetut-tiedot/->LiiteLisatty
-                          nil
-                          {:liite {:id 1}
-                           ::to/id toimenpide-id})
-                        vanha-tila)]
-      (is (false? (:liitteen-lisays-kaynnissa? uusi-tila)))
-      ;; Liitteen tiedot lisättiin oikealle toimenpiteelle
-      (is (= (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
-             (-> (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
-                 (assoc ::to/liitteet [{:id 1}])))))))
-
-(deftest liite-ei-lisatty
-  (let [vanha-tila testitila
-        uusi-tila (e! (jaetut-tiedot/->LiiteEiLisatty)
-                      vanha-tila)]
-    (is (false? (:liitteen-lisays-kaynnissa? uusi-tila)))))
-
-(deftest liitteen-poistaminen-toimenpiteelta
-  (vaadi-async-kutsut
-    #{jaetut-tiedot/->LiitePoistettu jaetut-tiedot/->LiiteEiPoistettu}
-    (let [vanha-tila testitila
-          uusi-tila (e! (jaetut-tiedot/->PoistaToimenpiteenLiite
-                          {::to/liite-id 666
-                           ::to/id 6})
-                        vanha-tila)]
-      (is (true? (:liitteen-poisto-kaynnissa? uusi-tila))))))
-
-(deftest liite-poistettu
-  (testing "Uusi liite lisätty toimenpiteelle"
-    (let [vanha-tila testitila
-          toimenpide-id 6
-          uusi-tila (e! (jaetut-tiedot/->LiitePoistettu
-                          nil
-                          {::to/liite-id 666
-                           ::to/id toimenpide-id})
-                        vanha-tila)]
-      (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))
-      ;; Liitteen tiedot poistetaan oikealta toimenpiteeltä
-      (is (= (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
-             (-> (to/toimenpide-idlla (:toimenpiteet uusi-tila) toimenpide-id)
-                 (assoc ::to/liitteet [])))))))
-
-(deftest liite-ei-poistettu
-  (let [vanha-tila testitila
-        uusi-tila (e! (jaetut-tiedot/->LiiteEiPoistettu)
-                      vanha-tila)]
-    (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))))
+  (testing "Hintaryhmän korostamisen poistaminen"
+    (let [tulos (e! (tiedot/->PoistaHintaryhmanKorostus))]
+      ;; false, koska näkymässä on hintaryhmä jonka id on nil
+      (is (= false (:korostettu-hintaryhma tulos)))
+      (is (nil? (:korostetut-turvalaitteet tulos))))))
 
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
@@ -707,3 +669,20 @@
              ::va/id 1}
             {::va/nimi "Varkaus, Kuopion väylä"
              ::va/id 2}]))))
+
+(deftest hintaryhma-korostettu?
+  (is (true? (tiedot/hintaryhma-korostettu? {::h/id 1} {:korostettu-hintaryhma 1})))
+  (is (true? (tiedot/hintaryhma-korostettu? {::h/id nil} {:korostettu-hintaryhma nil})))
+  (is (false? (tiedot/hintaryhma-korostettu? {::h/id 2} {:korostettu-hintaryhma 1})))
+  (is (false? (tiedot/hintaryhma-korostettu? {::h/id 1} {:korostettu-hintaryhma 2})))
+  (is (false? (tiedot/hintaryhma-korostettu? {::h/id 1} {:korostettu-hintaryhma false})))
+  (is (false? (tiedot/hintaryhma-korostettu? {::h/id false} {:korostettu-hintaryhma false}))))
+
+(deftest tunnista-kok-hint-siirretty-ryhma
+  (is (true? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id nil})))
+  (is (false? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id 1}))))
+
+(deftest poista-ryhman-korostus
+  (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {})))
+  (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma false})))
+  (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma true}))))

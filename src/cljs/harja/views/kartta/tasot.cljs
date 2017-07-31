@@ -29,7 +29,9 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -57,7 +59,9 @@
     :tilannekuva
     :tilannekuva-organisaatiot
     :tienakyma-valitut
-    :tienakyma-muut})
+    :tienakyma-muut
+    :kokonaishintaisten-turvalaitteet
+    :yksikkohintaisten-turvalaitteet})
 
 (def
   ^{:doc
@@ -218,7 +222,9 @@
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
    :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
-   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla})
+   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
+   :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
+   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -276,6 +282,8 @@
        :sijaintivalitsin (taso :sijaintivalitsin (inc oletus-zindex))
        :tienakyma-valitut (taso :tienakyma-valitut)
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
+       :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
+       :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -310,6 +318,8 @@
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
    :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
+   :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
+   :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 
