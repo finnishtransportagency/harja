@@ -74,7 +74,10 @@
                                           (when-not (empty? (:valitut-toimenpide-idt app))
                                             (str " (" (count (:valitut-toimenpide-idt app)) ")")))
           #(e! (tiedot/->IrrotaKiintiosta (:valitut-toimenpide-idt app)))
-          {:disabled (empty? (:valitut-toimenpide-idt app))}]]]
+          {:disabled (or (empty? (:valitut-toimenpide-idt app))
+                         (not (oikeudet/on-muu-oikeus? "irrota"
+                                                       oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                                       (:id @nav/valittu-urakka))))}]]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
                           kiintioiden-tallennus-kaynnissa?)
