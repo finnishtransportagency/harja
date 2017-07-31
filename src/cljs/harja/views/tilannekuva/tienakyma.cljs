@@ -66,12 +66,10 @@
 
 (defn tienakyman-infopaneelin-linkit [e!]
   {:toteuma
-   [{:teksti "Toteumanäkymään"
-     :tooltip "Siirry urakan toteumanäkymään"
+   [{:teksti "Siirry toteumanäkymään"
      :ikoni [ikonit/livicon-eye]
      :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
-    {:teksti "Reittipisteet"
-     :tooltip "Hae toteuman kaikki reittipisteet kartalle"
+    {:teksti "Näytä reittipisteet kartalla"
      :ikoni [ikonit/livicon-info-circle]
      :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]
 
