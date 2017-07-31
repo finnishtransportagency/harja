@@ -91,7 +91,6 @@
 
     (fn [e! {valittu-sopimus :valittu-sopimus :as app}]
       [:div
-       [debug/debug app]
        (if valittu-sopimus
          [luontilomake e! app]
          [sopimusgrid e! app])])))
