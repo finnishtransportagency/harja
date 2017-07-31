@@ -22,7 +22,8 @@
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.kartta :as kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -272,9 +273,10 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."}]
+                          (tiedot/kokonaishintaisista-siirretyt-hintaryhma)
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
+         [kartta/kartan-paikka]
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
@@ -288,10 +290,12 @@
                        hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
                        nayta-hintaryhma?
                        (boolean
-                         (or (and (not hintaryhma-id)  ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
-                                  (not (empty? hintaryhman-toimenpiteet)))
-                             hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
-                             (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
+                         (or
+                           ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
+                           (and (tiedot/kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
+                                (not (empty? hintaryhman-toimenpiteet)))
+                           hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
+                           (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
                                                                    (not (empty? hintaryhman-toimenpiteet))))]]
 
@@ -299,7 +303,19 @@
                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
                [:div.vv-toimenpideryhma
                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                [:span [napit/nappi
+                        (ikonit/map-marker)
+                        #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                           (e! (tiedot/->PoistaHintaryhmanKorostus))
+
+                           (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
+                        {:ikoninappi? true
+                         :disabled hintaryhma-tyhja?
+                         :luokka (str "vv-hintaryhma-korostus-nappi "
+                                      (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                        "nappi-ensisijainen"
+                                        "nappi-toissijainen"))}]
+                 [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
 
                 (if hintaryhma-tyhja?
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
@@ -329,6 +345,8 @@
                                      [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
                      (jaettu/sarake-checkbox e! app)]
                     :listaus-tunniste listaus-tunniste
+                    :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
+                    :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
                     :footer (when nayta-hintaryhman-yhteenveto?
                               [hintaryhman-hinnoittelu e! app* hintaryhma])
                     :otsikko (h/hintaryhman-nimi hintaryhma)

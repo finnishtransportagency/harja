@@ -10,7 +10,9 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tyokalut.tuck :as tuck-tyokalut])
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [harja.ui.kartta.esitettavat-asiat :as kartta]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -64,7 +66,7 @@
                                    :vikailmoitukset? vain-vikailmoitukset?}))
 
 (defn joku-valittu? [toimenpiteet]
-  (some :valittu? toimenpiteet))
+  (boolean (some :valittu? toimenpiteet)))
 
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
@@ -73,10 +75,46 @@
 (defn toimenpiteet-aikajarjestyksessa [toimenpiteet]
   (sort-by ::to/pvm toimenpiteet))
 
+(defn korosta-turvalaite-kartalla? [app]
+  ;; Tämä funktio oli alunperin kartalla-esitettavaan-muotoon funktion
+  ;; haluama valittu?-fn, siksi palautetaan funktio. Pidetään nykyinen
+  ;; malli, niin kartan toiminnallisuutta on helpompi muuttaa jälkikäteen.
+  (fn [turvalaite]
+    (boolean
+      (when-let [setti (:korostetut-turvalaitteet app)]
+       (setti (::tu/turvalaitenro turvalaite))))))
+
+(defn turvalaitteen-toimenpiteet [turvalaite app]
+  (filterv #(= (::tu/turvalaitenro turvalaite)
+              (get-in % [::to/turvalaite ::tu/turvalaitenro]))
+          (:toimenpiteet app)))
+
+(defn kartalla-naytettavat-turvalaitteet [turvalaitteet app]
+  (if (empty? (:korostetut-turvalaitteet app))
+    turvalaitteet
+
+    (filter (korosta-turvalaite-kartalla? app) turvalaitteet)))
+
+(defn turvalaitteet-kartalle [turvalaitteet app]
+  (kartta/kartalla-esitettavaan-muotoon
+    (kartalla-naytettavat-turvalaitteet turvalaitteet app)
+    (constantly false)
+    (comp
+      (map #(assoc % :tyyppi-kartalla :turvalaite))
+      (map #(set/rename-keys % {::tu/sijainti :sijainti}))
+      (map #(assoc % :toimenpiteet (turvalaitteen-toimenpiteet % app))))))
+
+(defn paivita-kartta [app]
+  (assoc app :turvalaitteet-kartalla (turvalaitteet-kartalle (:turvalaitteet app) app)))
+
+(defn korosta-kartalla [turvalaitenumero-set app]
+  (-> (assoc app :korostetut-turvalaitteet turvalaitenumero-set)
+      (paivita-kartta)))
+
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
-(defrecord AsetaInfolaatikonTila [tunniste uusi-tila])
+(defrecord AsetaInfolaatikonTila [tunniste uusi-tila lisa-funktiot])
 (defrecord ToimenpiteetSiirretty [toimenpiteet])
 (defrecord ToimenpiteetEiSiirretty [])
 (defrecord LisaaToimenpiteelleLiite [tiedot])
@@ -85,6 +123,10 @@
 (defrecord PoistaToimenpiteenLiite [tiedot])
 (defrecord LiitePoistettu [vastaus tiedot])
 (defrecord LiiteEiPoistettu [])
+(defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
+(defrecord TurvalaitteetKartalleHaettu [tulos haetut])
+(defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
+(defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
@@ -133,11 +175,16 @@
 
   AsetaInfolaatikonTila
   (process-event [{tunniste :tunniste
-                   uusi-tila :uusi-tila} app]
-    (if tunniste
-      (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
-                                                {tunniste uusi-tila}))
-      app))
+                   uusi-tila :uusi-tila
+                   fn :lisa-funktiot} app]
+    (let [fn (or fn [])]
+      ((apply comp fn)
+        (if tunniste
+          (cond->> (assoc app :infolaatikko-nakyvissa (merge (:infolaatikko-nakyvissa app)
+                                                             {tunniste uusi-tila}))
+                   (false? uusi-tila)
+                   (korosta-kartalla nil))
+          app))))
 
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
@@ -209,4 +256,49 @@
   LiiteEiPoistettu
   (process-event [_ app]
     (viesti/nayta! "Liitteen poistaminen epäonnistui!" :danger)
-    (assoc app :liitteen-poisto-kaynnissa? false)))
+    (assoc app :liitteen-poisto-kaynnissa? false))
+
+  HaeToimenpiteidenTurvalaitteetKartalle
+  (process-event [{to :toimenpiteet} app]
+    (if (not-empty to)
+      (let [haettavat (into #{} (map (comp ::tu/turvalaitenro ::to/turvalaite) to))]
+       (tuck-tyokalut/palvelukutsu :hae-turvalaitteet-kartalle
+                                   {:turvalaitenumerot haettavat}
+                                   {:onnistui ->TurvalaitteetKartalleHaettu
+                                    :onnistui-parametrit [haettavat]
+                                    :epaonnistui ->TurvalaitteetKartalleEiHaettu
+                                    :epaonnistui-parametrit [haettavat]})
+       (assoc app :kartalle-haettavat-toimenpiteet haettavat))
+
+      (assoc app :kartalle-haettavat-toimenpiteet nil
+                 :turvalaitteet-kartalla nil
+                 :turvalaitteet nil
+                 :korostetut-turvalaitteet nil)))
+
+  TurvalaitteetKartalleHaettu
+  (process-event [{haetut :haetut tulos :tulos} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
+    ;; Jos valmistunut haku ei ole uusin aloitettu, ei tehdä mitään.
+    (if (= haetut kartalle-haettavat-toimenpiteet)
+      (assoc app :kartalle-haettavat-toimenpiteet nil
+                 :turvalaitteet-kartalla (turvalaitteet-kartalle tulos app)
+                 :turvalaitteet tulos
+                 :korostetut-turvalaitteet nil)
+
+      app))
+
+  TurvalaitteetKartalleEiHaettu
+  (process-event [{haetut :haetut} {:keys [kartalle-haettavat-toimenpiteet] :as app}]
+    (if (= haetut kartalle-haettavat-toimenpiteet)
+      (do (viesti/nayta! "Toimenpiteiden haku kartalle epäonnistui!" :danger)
+          (assoc app :kartalle-haettavat-toimenpiteet nil
+                     :turvalaitteet-kartalla nil
+                     :turvalaitteet nil
+                     :korostetut-turvalaitteet nil))
+
+      app))
+
+  KorostaToimenpideKartalla
+  (process-event [{toimenpide :toimenpide fn :lisa-funktiot} app]
+    (let [fn (or fn [])]
+      ((apply comp fn)
+        (korosta-kartalla #{(get-in toimenpide [::to/turvalaite ::tu/turvalaitenro])} app)))))
