@@ -208,11 +208,17 @@
         ei-voi-poistaa (into #{}
                              (map :yllapitokohde)
                              (q/yllapitokohteet-joille-linkityksia db {:idt idt}))
+        yllapitokohteiden-aikataulu-muokattu (q/hae-yllapitokohteiden-aikataulun-muokkaus-aika db {:idt idt})
+        etsi-yllapitokohde (fn [id]
+                            (some #(when (= id (:yllapitokohde %)) %)
+                                  yllapitokohteiden-aikataulu-muokattu))
         yllapitokohteet (->> yllapitokohteet
                              (map #(assoc % :pituus
                                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
                                             :yllapitokohteen-voi-poistaa?
-                                            (not (ei-voi-poistaa (:id %))))))]
+                                            (not (ei-voi-poistaa (:id %)))
+                                            :aikataulu-muokattu
+                                            (:muokattu (etsi-yllapitokohde (:id %))))))]
     (vec yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi]}]

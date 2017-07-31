@@ -23,8 +23,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "tilausten-muokkaus" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/luo-hinnoittelu! db user tiedot)))))
 
@@ -33,8 +32,7 @@
     (let [urakka-id (::h/urakka-id tiedot)
           hinnoittelu-idt (::h/idt tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "tilausten-muokkaus" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db hinnoittelu-idt urakka-id)
       (doseq [hinnoittelu-id hinnoittelu-idt]
         (q/vaadi-hinnoitteluun-ei-kuulu-toimenpiteita db hinnoittelu-id))
@@ -49,8 +47,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-tilaukseen" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
       (q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))
@@ -61,6 +58,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::ur/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
+      (oikeudet/vaadi-oikeus "hinnoittele-tilaus" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
@@ -76,8 +74,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
       (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]

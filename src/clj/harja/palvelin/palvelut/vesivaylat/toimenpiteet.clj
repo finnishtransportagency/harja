@@ -26,8 +26,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen)))
@@ -44,8 +43,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-yksikköhintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
@@ -55,10 +53,8 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "lisää-liite" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
+      (oikeudet/vaadi-oikeus "lisää-liite" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/lisaa-toimenpiteelle-liite db (::to/id tiedot) (::to/liite-id tiedot))))
@@ -68,10 +64,8 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                      user urakka-id)
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
-                                      user urakka-id)
+      (oikeudet/vaadi-oikeus "lisää-liite" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
+      (oikeudet/vaadi-oikeus "lisää-liite" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/poista-toimenpiteen-liite db (::to/id tiedot) (::to/liite-id tiedot))))
