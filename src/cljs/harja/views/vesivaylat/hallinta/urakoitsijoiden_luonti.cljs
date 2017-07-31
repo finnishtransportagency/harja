@@ -114,7 +114,6 @@
 
     (fn [e! {valittu-urakoitsija :valittu-urakoitsija :as app}]
       [:div
-       [debug/debug app]
        (if valittu-urakoitsija
          [luontilomake e! app]
          [urakoitsijagrid e! app])])))
