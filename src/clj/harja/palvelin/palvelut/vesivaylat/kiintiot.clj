@@ -41,7 +41,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::kiintio/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
+      (oikeudet/vaadi-oikeus "liitä-kiintiöön" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-kiintiot-kuuluvat-urakkaan! db
                                            #{(::kiintio/id tiedot)}
                                            urakka-id)
@@ -56,7 +56,7 @@
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
+      (oikeudet/vaadi-oikeus "irrota" oikeudet/urakat-vesivaylasuunnittelu-kiintiot user urakka-id)
       (q-toimenpiteet/vaadi-toimenpiteet-kuuluvat-urakkaan db
                                                            (::to/idt tiedot)
                                                            urakka-id)
