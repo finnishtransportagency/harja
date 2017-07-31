@@ -220,6 +220,7 @@
                         :class (y/luokat
                                  (y/tasaus-luokka tasaa)
                                  (when pakota-rivitys? "grid-pakota-rivitys")
+                                 (when solu-klikattu "klikattava")
                                  (case reunus
                                    :ei "grid-reunus-ei"
                                    :vasen "grid-reunus-vasen"

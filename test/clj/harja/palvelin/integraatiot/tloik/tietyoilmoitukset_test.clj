@@ -56,8 +56,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-;; FIXME Timeout
-#_(deftest tarkista-lahetys-ja-kuittaus
+(deftest tarkista-lahetys-ja-kuittaus
   (let [tietyoilmoitus-id 1
         viestit (atom [])
         sonja (:sonja jarjestelma)]
