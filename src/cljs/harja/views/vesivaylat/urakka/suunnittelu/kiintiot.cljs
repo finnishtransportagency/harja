@@ -32,14 +32,18 @@
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+     :solu-klikattu (fn [rivi]
+                      (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
+                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                         :valittu? (not valittu?)}))))
      :komponentti (fn [rivi]
-                    ;; TODO Olisi kiva jos otettaisiin click koko solun alueelta (sama juttu toimenpidenäkymässä)
-                    [kentat/tee-kentta
-                     {:tyyppi :checkbox}
-                     (r/wrap (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))
-                             (fn [uusi]
-                               (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                                :valittu? uusi}))))])
+                    (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
+                      [kentat/tee-kentta
+                       {:tyyppi :checkbox}
+                       (r/wrap valittu?
+                               (fn [uusi]
+                                 (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                                  :valittu? uusi}))))]))
      :leveys 5}]
    (::kiintio/toimenpiteet kiintio)])
 
