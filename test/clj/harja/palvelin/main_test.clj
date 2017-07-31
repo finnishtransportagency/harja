@@ -58,7 +58,8 @@
     :vv-hinnoittelut
     :vv-materiaalit
     :reimari
-    :vkm})
+    :vkm
+    :vv-turvalaitteet})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

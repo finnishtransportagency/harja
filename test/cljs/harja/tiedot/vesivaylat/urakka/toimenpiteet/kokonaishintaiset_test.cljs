@@ -84,8 +84,12 @@
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
 (deftest nakymaan-tuleminen
-  (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
-  (is (false? (:nakymassa? (e! (tiedot/->Nakymassa? false))))))
+  (is (= {:nakymassa? true
+          :karttataso-nakyvissa? true}
+         (e! (tiedot/->Nakymassa? true))))
+  (is (= {:nakymassa? false
+          :karttataso-nakyvissa? false}
+         (e! (tiedot/->Nakymassa? false)))))
 
 (deftest valintojen-paivittaminen
   (testing "Asetetaan uudet valinnat"
@@ -230,9 +234,12 @@
         (is (= tila (e! (tiedot/->HaeToimenpiteet {}) tila)))))))
 
 (deftest toimenpiteiden-hakemisen-valmistuminen
-  (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-    (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-    (is (= [{:id 1}] (:toimenpiteet tulos)))))
+  (vaadi-async-kutsut
+    #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
+
+    (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
+     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
+     (is (= [{:id 1}] (:toimenpiteet tulos))))))
 
 (deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
