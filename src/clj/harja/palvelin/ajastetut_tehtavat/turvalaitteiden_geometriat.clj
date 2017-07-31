@@ -1,18 +1,18 @@
-(ns harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat
-  (:require [taoensso.timbre :as log]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
-            [harja.pvm :as pvm]
-            [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [cheshire.core :as cheshire]
-            [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
-            [harja.geo :as geo]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str])
-  (:import (org.postgis Point)))
+(def i) (ns harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat
+     (:require [taoensso.timbre :as log]
+               [com.stuartsierra.component :as component]
+               [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+               [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
+               [harja.pvm :as pvm]
+               [clj-time.coerce :as c]
+               [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+               [cheshire.core :as cheshire]
+               [clojure.java.jdbc :as jdbc]
+               [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
+               [harja.geo :as geo]
+               [harja.kyselyt.konversio :as konv]
+               [clojure.string :as str])
+     (:import (org.postgis Point)))
 
 (def geometriapaivitystunnus "turvalaitteet")
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
@@ -50,7 +50,6 @@
         kiintea? (= "KIINTE" (:SUBTYPE properties))
         nimi (:NIMIS properties)
         sql-parametrit {:sijainti geometria
-                        :tunniste id
                         :tyyppi tyyppi
                         :turvalaitenro turvalaitenro
                         :kiintea kiintea?
