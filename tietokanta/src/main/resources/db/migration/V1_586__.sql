@@ -6,3 +6,5 @@ WHERE id IN (SELECT id
               WHERE t.rnum > 1);
 
 CREATE UNIQUE INDEX vv_turvalaite_turvalaitenro ON vv_turvalaite (turvalaitenro);
+
+ALTER TABLE vv_turvalaite DROP COLUMN tunniste;
