@@ -10,10 +10,7 @@
 
 (define-tables
   ["vv_materiaali" ::materiaali
-   {"muokattu" ::m/muokattu
-    "muokkaaja" ::m/muokkaaja-id
-    "luotu" ::m/luotu
-    "luoja" ::m/luoja-id}]
+   harja.domain.muokkaustiedot/muokkaustiedot]
   ["vv_materiaali_muutos" ::muutos]
   ["vv_materiaalilistaus" ::materiaalilistaus])
 
