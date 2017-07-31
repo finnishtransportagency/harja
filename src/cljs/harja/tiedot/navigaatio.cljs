@@ -45,10 +45,6 @@
                                              (not= @valittu-sivu :about)
                                              (not= @valittu-sivu :hallinta))))
 
-
-
-
-
 (defonce kartan-extent (atom nil))
 
 (defonce kartalla-nakyva-alue
@@ -115,17 +111,21 @@
            (filter #(= tyyppi (:arvo %))
                    +urakkatyypit+))))
 
+(defn urakkatyyppi-urakalle [ur]
+  (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? ur)
+                           :vesivayla
+                           (:tyyppi ur))))
+
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden
                          urakoitsijakohtaiseen suodatukseen" (atom nil)) ;;(= nil kaikki)
 
 ;; Hallintayksikön valinta id:llä (URL parametrista)
 (defonce valittu-hallintayksikko-id (atom nil))
-
 ;; Atomi, joka sisältää valitun hallintayksikön
 (defonce valittu-hallintayksikko
   (reaction (let [id @valittu-hallintayksikko-id
-                  yksikot (apply concat (vals @hy/haetut-hallintayksikot))]
+                  yksikot @hy/vaylamuodon-hallintayksikot]
               (when (and id yksikot)
                 (some #(and (= id (:id %)) %) yksikot)))))
 
@@ -159,9 +159,7 @@
   (reaction<! [kayttajan-oletus-tyyppi (:urakkatyyppi @istunto/kayttaja)
 
                ;; Jos urakka on valittuna, asetetaan tyypiksi sen tyyppi
-               urakan-urakkatyyppi (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? @valittu-urakka)
-                                                            :vesivayla
-                                                            (:tyyppi @valittu-urakka)))
+               urakan-urakkatyyppi (urakkatyyppi-urakalle @valittu-urakka)
                ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
@@ -257,7 +255,12 @@
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id ur]
   (reset! valittu-hallintayksikko-id hy-id)
-  (valitse-urakka! ur))
+  ;; go block sen takia, että vaihda-urakkatyyppi! kerkeää suorittaa
+  ;; hy/aseta-hallintayksikot-vaylamuodolle! funktion ennen, kuin valitse-urakka!
+  ;; funktiota kutsutaan, sillä valitse-urakka! triggeröi kasittele-url! funktion
+  ;; joka resetoisi valittu-hallintayksikko-id:n nilliksi.
+  (go (<! (vaihda-urakkatyyppi! (urakkatyyppi-urakalle ur)))
+      (valitse-urakka! ur)))
 
 (defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
   (reset! valittu-hallintayksikko-id hy-id)
