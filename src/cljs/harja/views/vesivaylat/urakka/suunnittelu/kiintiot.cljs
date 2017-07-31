@@ -70,7 +70,10 @@
                                           (when-not (empty? (:valitut-toimenpide-idt app))
                                             (str " (" (count (:valitut-toimenpide-idt app)) ")")))
           #(e! (tiedot/->IrrotaKiintiosta (:valitut-toimenpide-idt app)))
-          {:disabled (empty? (:valitut-toimenpide-idt app))}]]]
+          {:disabled (or (empty? (:valitut-toimenpide-idt app))
+                         (not (oikeudet/on-muu-oikeus? "irrota"
+                                                       oikeudet/urakat-vesivaylasuunnittelu-kiintiot
+                                                       (:id @nav/valittu-urakka))))}]]]
        [grid/grid
         {:otsikko (if (or (and (some? kiintiot) kiintioiden-haku-kaynnissa?)
                           kiintioiden-tallennus-kaynnissa?)
@@ -87,9 +90,9 @@
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
                      (fn [sisalto]
-                      (let [ch (chan)]
-                        (e! (tiedot/->TallennaKiintiot sisalto ch))
-                        (go (<! ch)))))
+                       (let [ch (chan)]
+                         (e! (tiedot/->TallennaKiintiot sisalto ch))
+                         (go (<! ch)))))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
@@ -97,29 +100,29 @@
          :vetolaatikot (into {}
                              (map (juxt ::kiintio/id (fn [rivi] [kiintion-toimenpiteet e! app rivi])))
                              kiintiot)}
-          [{:tyyppi :vetolaatikon-tila :leveys 1}
-           {:otsikko "Nimi"
-            :nimi ::kiintio/nimi
-            :tyyppi :string
-            :leveys 6
-            :validoi [[:ei-tyhja "Anna nimi"]]}
-           {:otsikko "Kuvaus"
-            :nimi ::kiintio/kuvaus
-            :tyyppi :text
-            :leveys 12}
-           {:otsikko "Toteutunut"
-            :nimi :toteutunut
-            :hae (comp count ::kiintio/toimenpiteet)
-            :tyyppi :positiivinen-numero
-            :muokattava? (constantly false)
-            :leveys 3}
-           {:otsikko "Koko"
-            :nimi ::kiintio/koko
-            :tyyppi :positiivinen-numero
-            :kokonaisosan-maara 7
-            :leveys 3
-            :validoi [[:ei-tyhja "Anna koko"]]}]
-          kiintiot]])))
+        [{:tyyppi :vetolaatikon-tila :leveys 1}
+         {:otsikko "Nimi"
+          :nimi ::kiintio/nimi
+          :tyyppi :string
+          :leveys 6
+          :validoi [[:ei-tyhja "Anna nimi"]]}
+         {:otsikko "Kuvaus"
+          :nimi ::kiintio/kuvaus
+          :tyyppi :text
+          :leveys 12}
+         {:otsikko "Toteutunut"
+          :nimi :toteutunut
+          :hae (comp count ::kiintio/toimenpiteet)
+          :tyyppi :positiivinen-numero
+          :muokattava? (constantly false)
+          :leveys 3}
+         {:otsikko "Koko"
+          :nimi ::kiintio/koko
+          :tyyppi :positiivinen-numero
+          :kokonaisosan-maara 7
+          :leveys 3
+          :validoi [[:ei-tyhja "Anna koko"]]}]
+        kiintiot]])))
 
 (defn kiintiot []
   [tuck/tuck tiedot/tila kiintiot*])

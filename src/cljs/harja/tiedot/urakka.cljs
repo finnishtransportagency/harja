@@ -392,10 +392,9 @@
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                aikavali @valittu-hoitokausi
-               sivu (nav/valittu-valilehti :toteumat)
-               _ @toteumat/erilliskustannukset-nakymassa?]
+               nakymassa? @toteumat/erilliskustannukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and ur aikavali (= :erilliskustannukset sivu))
+              (when (and ur aikavali nakymassa?)
                 (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
 (defn vaihda-urakkatyyppi
