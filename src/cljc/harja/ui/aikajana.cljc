@@ -379,6 +379,5 @@
   rivimäärän perusteella."
   ([rivit] (aikajana {} rivit))
   ([{:keys [muuta!] :as optiot} rivit]
-   (println "AIKAJANA RIVEILLÄ: " (pr-str rivit))
     #?(:cljs [aikajana-ui-tila rivit optiot aikajana*]
        :clj  (aikajana* rivit optiot {:leveys (or (:leveys optiot) 750)}))))
