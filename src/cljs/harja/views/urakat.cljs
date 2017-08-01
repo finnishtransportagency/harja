@@ -22,7 +22,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
-  (let [hallintayksikot @hal/hallintayksikot]
+  (let [hallintayksikot @hal/vaylamuodon-hallintayksikot]
     [:div.row
      [:div.col-md-4
       (if (nil? hallintayksikot)
