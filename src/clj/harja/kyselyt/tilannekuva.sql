@@ -264,7 +264,11 @@ SELECT
   ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  (SELECT array_agg(ST_Simplify(ypko.sijainti,:toleranssi)) FROM yllapitokohdeosa ypko
+    WHERE ypko.yllapitokohde=ypk.id
+      AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+      AND ypko.poistettu IS NOT TRUE) AS "osien-geometriat"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -314,7 +318,11 @@ SELECT
   ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  (SELECT array_agg(ST_Simplify(ypko.sijainti,:toleranssi)) FROM yllapitokohdeosa ypko
+    WHERE ypko.yllapitokohde=ypk.id
+      AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+      AND ypko.poistettu IS NOT TRUE) AS "osien-geometriat"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -364,7 +372,11 @@ SELECT
   ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  (SELECT array_agg(ST_Simplify(ypko.sijainti,:toleranssi)) FROM yllapitokohdeosa ypko
+    WHERE ypko.yllapitokohde=ypk.id
+      AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+      AND ypko.poistettu IS NOT TRUE) AS "osien-geometriat"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -414,7 +426,11 @@ SELECT
   ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypka.kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  (SELECT array_agg(ST_Simplify(ypko.sijainti,:toleranssi)) FROM yllapitokohdeosa ypko
+    WHERE ypko.yllapitokohde=ypk.id
+      AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+      AND ypko.poistettu IS NOT TRUE) AS "osien-geometriat"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE

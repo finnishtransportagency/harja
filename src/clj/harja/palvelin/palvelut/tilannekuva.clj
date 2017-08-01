@@ -150,6 +150,20 @@
       (tietyoilmoitukset-q/hae-ilmoitukset-tilannekuvaan db (assoc tiedot :urakat urakat
                                                                           :tilaaja? (roolit/tilaajan-kayttaja? user))))))
 
+(def
+  ^{:doc "Laajentaa :osien-geometriat avaimella arrayna tulevat ylläpitokohteen kohdeosien sijainnit
+  :kohdeosat vektoriksi. Muita kohdeosan tietoja ei tarvita tilannekuvassa. Poistaa lopuksi kohteet,
+  joissa ei ole osia"}
+  laajenna-kohdeosien-sijainnit
+  (comp (map #(konv/array->vec % :osien-geometriat))
+        (map #(-> %
+                  (assoc :kohdeosat
+                         (mapv (fn [g]
+                                 {:sijainti (geo/pg->clj g)})
+                               (:osien-geometriat %)))
+                  (dissoc :osien-geometriat)))
+        (remove #(empty? (:kohdeosat %)))))
+
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
@@ -165,29 +179,30 @@
     (when (tk/valittu? yllapito (case tyyppi
                                   "paallystys" tk/paallystys
                                   "paikkaus" tk/paikkaus))
-      (let [vastaus (into []
+      (let [params (merge alue
+                          {:toleranssi toleranssi})
+            vastaus (into []
                           (comp
                             (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
+                            laajenna-kohdeosien-sijainnit)
                           (if nykytilanne?
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
-                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
+                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db params)
+                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db params))
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               (konv/sql-date loppu)
-                                                                               (konv/sql-date alku))
+                                                                               (assoc params
+                                                                                      :loppu (konv/sql-date loppu)
+                                                                                      :alku (konv/sql-date alku)))
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                           (konv/sql-date loppu)
-                                                                           (konv/sql-date alku)))))
-            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
-                                                                  {:alue alue
-                                                                   :toleranssi toleranssi})
-            vastaus (remove #(empty? (:kohdeosat %)) vastaus)
+                                                                           (assoc params
+                                                                                  :loppu (konv/sql-date loppu)
+                                                                                  :alku (konv/sql-date alku))))))
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
