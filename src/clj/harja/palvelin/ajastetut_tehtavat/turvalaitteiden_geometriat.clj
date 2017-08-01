@@ -50,7 +50,6 @@
         kiintea? (= "KIINTE" (:SUBTYPE properties))
         nimi (:NIMIS properties)
         sql-parametrit {:sijainti geometria
-                        :tunniste id
                         :tyyppi tyyppi
                         :turvalaitenro turvalaitenro
                         :kiintea kiintea?
