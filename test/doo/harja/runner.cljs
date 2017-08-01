@@ -1,6 +1,5 @@
 (ns harja.runner
   (:require [doo.runner :refer-macros [doo-tests]]
-            [harja.tiedot.hallinta.harja-data-test]
             [harja.pvm-test]
             [harja.ui.dom-test]
             [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test]
@@ -97,6 +96,5 @@
            'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
            'harja.views.vesivaylat.urakka.materiaalit-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test
-           'harja.tiedot.hallinta.harja-data-test
            ;; uusi testi tähän
            )
