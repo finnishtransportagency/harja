@@ -86,124 +86,122 @@
 (defn urakka
   "Urakkanäkymä"
   []
-  (if @nav/valittu-urakka
-    (let [ur @nav/valittu-urakka
-          _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
-              (nav/aseta-valittu-valilehti! :urakat :yleiset))
-          hae-urakan-tyot (fn [ur]
-                            (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
-                              (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
-                            (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
-                              (go (reset! u/urakan-yks-hint-tyot
-                                          (s/prosessoi-tyorivit ur
-                                                                (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
+  (let [ur @nav/valittu-urakka
+        _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
+            (nav/aseta-valittu-valilehti! :urakat :yleiset))
+        hae-urakan-tyot (fn [ur]
+                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
+                          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                            (go (reset! u/urakan-yks-hint-tyot
+                                        (s/prosessoi-tyorivit ur
+                                                              (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
 
-      ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
-      @u/valittu-toimenpideinstanssi
+    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
+    @u/valittu-toimenpideinstanssi
 
-      (hae-urakan-tyot ur)
-      (if @u/urakan-tiedot-ladattu?
-        [bs/tabs {:style :tabs :classes "tabs-taso1"
-                  :active (nav/valittu-valilehti-atom :urakat)}
-         "Yleiset"
-         :yleiset
-         (when (oikeudet/urakat-yleiset (:id ur))
-           ^{:key "yleiset"}
-           [urakka-yleiset/yleiset ur])
+    (hae-urakan-tyot ur)
+    (if @u/urakan-tiedot-ladattu?
+      [bs/tabs {:style :tabs :classes "tabs-taso1"
+                :active (nav/valittu-valilehti-atom :urakat)}
+       "Yleiset"
+       :yleiset
+       (when (oikeudet/urakat-yleiset (:id ur))
+         ^{:key "yleiset"}
+         [urakka-yleiset/yleiset ur])
 
-         "Suunnittelu"
-         :suunnittelu
-         (when (valilehti-mahdollinen? :suunnittelu ur)
-           ^{:key "suunnittelu"}
-           [suunnittelu/suunnittelu ur])
+       "Suunnittelu"
+       :suunnittelu
+       (when (valilehti-mahdollinen? :suunnittelu ur)
+         ^{:key "suunnittelu"}
+         [suunnittelu/suunnittelu ur])
 
-         "Toteumat"
-         :toteumat
-         (when (valilehti-mahdollinen? :toteumat ur)
-           ^{:key "toteumat"}
-           [toteumat/toteumat ur])
+       "Toteumat"
+       :toteumat
+       (when (valilehti-mahdollinen? :toteumat ur)
+         ^{:key "toteumat"}
+         [toteumat/toteumat ur])
 
-         "Toimenpiteet"
-         :toimenpiteet
-         (when (valilehti-mahdollinen? :toimenpiteet ur)
-           ^{:key "toimenpiteet"}
-           [toimenpiteet/toimenpiteet ur])
+       "Toimenpiteet"
+       :toimenpiteet
+       (when (valilehti-mahdollinen? :toimenpiteet ur)
+         ^{:key "toimenpiteet"}
+         [toimenpiteet/toimenpiteet ur])
 
-         "Materiaalit"
-         :vv-materiaalit
-         (when (valilehti-mahdollinen? :vv-materiaalit ur)
-           ^{:key "vv-materiaalit"}
-           [vv-materiaalit/materiaalit ur])
+       "Materiaalit"
+       :vv-materiaalit
+       (when (valilehti-mahdollinen? :vv-materiaalit ur)
+         ^{:key "vv-materiaalit"}
+         [vv-materiaalit/materiaalit ur])
 
-         ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
-         ;;"Turvalaitteet"
-         ;;:turvalaitteet
-         ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
-         ;;  ^{:key "turvalaitteet"}
-         ;;  [turvalaitteet/turvalaitteet ur])
+       ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
+       ;;"Turvalaitteet"
+       ;;:turvalaitteet
+       ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
+       ;;  ^{:key "turvalaitteet"}
+       ;;  [turvalaitteet/turvalaitteet ur])
 
-         "Toteutus"
-         :toteutus
-         (when (valilehti-mahdollinen? :toteutus ur)
-           ^{:key "toteutus"}
-           [toteutus/toteutus ur])
+       "Toteutus"
+       :toteutus
+       (when (valilehti-mahdollinen? :toteutus ur)
+         ^{:key "toteutus"}
+         [toteutus/toteutus ur])
 
-         "Aikataulu"
-         :aikataulu
-         (when (valilehti-mahdollinen? :aikataulu ur)
-           ^{:key "aikataulu"}
-           [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
+       "Aikataulu"
+       :aikataulu
+       (when (valilehti-mahdollinen? :aikataulu ur)
+         ^{:key "aikataulu"}
+         [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
 
-         "Kohdeluettelo"
-         :kohdeluettelo-paallystys
-         (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
-           ^{:key "kohdeluettelo"}
-           [paallystyksen-kohdeluettelo/kohdeluettelo ur])
+       "Kohdeluettelo"
+       :kohdeluettelo-paallystys
+       (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
+         ^{:key "kohdeluettelo"}
+         [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-         "Kohdeluettelo"
-         :kohdeluettelo-paikkaus
-         (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
-           ^{:key "kohdeluettelo"}
-           [paikkauksen-kohdeluettelo/kohdeluettelo ur])
+       "Kohdeluettelo"
+       :kohdeluettelo-paikkaus
+       (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
+         ^{:key "kohdeluettelo"}
+         [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
-         "Laadunseuranta"
-         :laadunseuranta
-         (when (valilehti-mahdollinen? :laadunseuranta ur)
-           ^{:key "laadunseuranta"}
-           [laadunseuranta/laadunseuranta ur])
+       "Laadunseuranta"
+       :laadunseuranta
+       (when (valilehti-mahdollinen? :laadunseuranta ur)
+         ^{:key "laadunseuranta"}
+         [laadunseuranta/laadunseuranta ur])
 
-         "Välitavoitteet"
-         :valitavoitteet
-         (when (valilehti-mahdollinen? :valitavoitteet ur)
-           ^{:key "valitavoitteet"}
-           [valitavoitteet/valitavoitteet ur])
+       "Välitavoitteet"
+       :valitavoitteet
+       (when (valilehti-mahdollinen? :valitavoitteet ur)
+         ^{:key "valitavoitteet"}
+         [valitavoitteet/valitavoitteet ur])
 
-         "Turvallisuus"
-         :turvallisuuspoikkeamat
-         (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
-           ^{:key "turvallisuuspoikkeamat"}
-           [turvallisuuspoikkeamat/turvallisuuspoikkeamat ur])
+       "Turvallisuus"
+       :turvallisuuspoikkeamat
+       (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
+         ^{:key "turvallisuuspoikkeamat"}
+         [turvallisuuspoikkeamat/turvallisuuspoikkeamat ur])
 
-         "Laskutus"
-         :laskutus
-         (when (valilehti-mahdollinen? :laskutus ur)
-           ^{:key "laskutus"}
-           [laskutus/laskutus])
+       "Laskutus"
+       :laskutus
+       (when (valilehti-mahdollinen? :laskutus ur)
+         ^{:key "laskutus"}
+         [laskutus/laskutus])
 
-         "Laskutus"
-         :laskutus-vesivaylat
-         (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
-           ^{:key "laskutus"}
-           [laskutus-vesivaylat/laskutus])
+       "Laskutus"
+       :laskutus-vesivaylat
+       (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
+         ^{:key "laskutus"}
+         [laskutus-vesivaylat/laskutus])
 
-         "Kustannukset"
-         :tiemerkinnan-kustannukset
-         (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
-           ^{:key "tiemerkinnan-kustannukset"}
-           [tiemerkinnan-kustannukset/kustannukset
-            ur
-            tiemerkinnan-kustannukset-tiedot/raportin-parametrit
-            tiemerkinnan-kustannukset-tiedot/raportin-tiedot])]
+       "Kustannukset"
+       :tiemerkinnan-kustannukset
+       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+         ^{:key "tiemerkinnan-kustannukset"}
+         [tiemerkinnan-kustannukset/kustannukset
+          ur
+          tiemerkinnan-kustannukset-tiedot/raportin-parametrit
+          tiemerkinnan-kustannukset-tiedot/raportin-tiedot])]
 
-        [ajax-loader "Ladataan urakan tietoja..."]))
-    [ajax-loader "Ladataan urakkaa..."]))
+      [ajax-loader "Ladataan urakan tietoja..."])))
