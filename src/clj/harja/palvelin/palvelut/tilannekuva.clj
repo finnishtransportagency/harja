@@ -154,7 +154,7 @@
   ^{:doc "Laajentaa :osien-geometriat avaimella arrayna tulevat ylläpitokohteen kohdeosien sijainnit
   :kohdeosat vektoriksi. Muita kohdeosan tietoja ei tarvita tilannekuvassa. Poistaa lopuksi kohteet,
   joissa ei ole osia"}
-  laajenna-kohdeosien-sijainnit
+  kohdeosien-sijainnit-xf
   (comp (map #(konv/array->vec % :osien-geometriat))
         (map #(-> %
                   (assoc :kohdeosat
@@ -189,7 +189,7 @@
                             (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                            laajenna-kohdeosien-sijainnit)
+                            kohdeosien-sijainnit-xf)
                           (if nykytilanne?
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-nykytilanteeseen db params)
