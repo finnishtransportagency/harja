@@ -49,7 +49,7 @@
              [oikeudet :as oikeudet]
              [roolit :as roolit]
              [tilannekuva :as tk]]
-            [harja.domain.laadunseuranta.tarkastukset :as laadunseuranta]
+            [harja.domain.laadunseuranta.tarkastus :as laadunseuranta]
             [harja.kyselyt
              [hallintayksikot :as hal-q]
              [konversio :as konv]
