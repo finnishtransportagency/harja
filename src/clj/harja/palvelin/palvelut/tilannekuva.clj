@@ -174,8 +174,7 @@
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                            kohdeosien-sijainnit-xf)
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                           (if nykytilanne?
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-nykytilanteeseen db params)
