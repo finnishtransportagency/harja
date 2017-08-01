@@ -197,15 +197,6 @@ SELECT
   stm.kiinteys             AS soratiemittaus_kiinteys,
   stm.polyavyys            AS soratiemittaus_polyavyys,
   stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
-  t.tr_numero AS tierekisteriosoite_numero,
-  t.tr_alkuosa AS tierekisteriosoite_alkuosa,
-  t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
-  t.tr_loppuosa AS tierekisteriosoite_loppuosa,
-  t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-    THEN 'urakoitsija' :: osapuoli
-  ELSE 'tilaaja' :: osapuoli
-  END AS tekija,
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
 FROM tarkastus t
