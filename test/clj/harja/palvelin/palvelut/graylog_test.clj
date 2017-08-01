@@ -20,34 +20,22 @@
 
 (t/use-fixtures :each jarjestelma-fixture)
 
+(defn generoidun-spekin-tarkistus
+  [otos spekki funktio]
+  (doseq [havainto otos]
+    (is (s/valid? spekki (funktio havainto))
+        (s/explain spekki (funktio havainto)))))
+(defn rand-avaimet
+  []
+  (let [yhteyskatkos-kentat #{:pvm :kello :kayttaja :palvelut :ensimmaiset-katkokset :viimeiset-katkokset}
+        ryhma-avain (rand-nth (into '() yhteyskatkos-kentat))
+        jarjestys-avain (rand-nth (into '() (disj yhteyskatkos-kentat ryhma-avain)))]
+    #{ryhma-avain jarjestys-avain}))
+
 (deftest parsi-yhteyskatkos-data
-  (let [generoitu-graylogista-luettu-data (gen/sample (s/gen ::graylog/csvsta-luettu-data) 1)
-        data-kentat #{:pvm :kello :kayttaja :palvelut :viimeiset-katkokset}
-        asetukset {:naytettavat-ryhmat (into #{} (random-sample 0.5 #{:hae :tallenna :urakka :muut}))
-                   :min-katkokset (rand-int 5)}]
-    ; (testing "Ilman optioita"
-    ;   (doseq [data generoitu-graylogista-luettu-data]
-    ;     (let [ryhma-avain (rand-nth (into '() data-kentat))
-    ;           jarjestys-avain (rand-nth (into '() (disj data-kentat ryhma-avain)))
-    ;           parsittu-data (graylog/parsi-yhteyskatkos-data data {:ryhma-avain ryhma-avain
-    ;                                                                :jarjestys-avain jarjestys-avain})]
-    ;       (is (s/valid? ::dgl/parsittu-yhteyskatkos-data parsittu-data)
-    ;           (s/explain ::dgl/parsittu-yhteyskatkos-data parsittu-data)))))
-    (testing "Ryhma-asetuksen kanssa"
-      (doseq [data generoitu-graylogista-luettu-data]
-        (let [ryhma-avain (rand-nth (into '() data-kentat))
-              jarjestys-avain (rand-nth (into '() (disj data-kentat ryhma-avain)))
-              parsittu-data (graylog/parsi-yhteyskatkos-data data (merge (dissoc asetukset :min-katkokset)
-                                                                         {:ryhma-avain ryhma-avain
-                                                                          :jarjestys-avain jarjestys-avain}))]
-          (is (s/valid? ::dgl/parsittu-yhteyskatkos-data parsittu-data)
-              (s/explain ::dgl/parsittu-yhteyskatkos-data parsittu-data)))))))
-    ; (testing "min-katkokset-asetuksen kanssa"
-    ;   (doseq [data generoitu-graylogista-luettu-data]
-    ;     (let [ryhma-avain (rand-nth (into '() data-kentat))
-    ;           jarjestys-avain (rand-nth (into '() (disj data-kentat ryhma-avain)))
-    ;           parsittu-data (graylog/parsi-yhteyskatkos-data data (merge (dissoc asetukset :naytettavat-ryhmat)
-    ;                                                                      {:ryhma-avain ryhma-avain
-    ;                                                                       :jarjestys-avain jarjestys-avain}))]
-    ;       (is (s/valid? ::dgl/parsittu-yhteyskatkos-data parsittu-data)
-    ;           (s/explain ::dgl/parsittu-yhteyskatkos-data parsittu-data)))))))
+  (testing "yhteyskatkokset-lokitus-string->yhteyskatkokset-map funktion testaus"
+    (generoidun-spekin-tarkistus (gen/sample (s/gen ::graylog/graylogista-luettu-itemi) 20)
+                                 ::dgl/yhteyskatkokset-lokitus-mappina
+                                 (fn [havainto]
+                                    (graylog/yhteyskatkokset-lokitus-string->yhteyskatkokset-map havainto
+                                                                                                 (rand-avaimet))))))

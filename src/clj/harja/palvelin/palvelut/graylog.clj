@@ -38,10 +38,6 @@
                                                                      (gen/vector (s-pos-int) eri-palveluiden-maara)
                                                                      (gen/vector (dgl/date-gen) eri-palveluiden-maara)
                                                                      (gen/vector (dgl/date-gen) eri-palveluiden-maara))))))
-(s/def ::csvsta-luettu-rivi-dataa (s/cat :aika (s/and string?
-                                                      #(pvm/pvm? (tf/parse %)))
-                                         :vali (s/* string?)
-                                         :taulukko string?))
 (s/def ::csvsta-luettu-data (s/coll-of ::graylogista-luettu-itemi))
 
 (defn lue-csv
@@ -101,110 +97,107 @@
    (fn [teksti]
       (if (and (string? teksti) (re-find re teksti)) nil teksti))))
 
-(defn parsi-string-data
-  [parsittava-data aika & avaimet]
+(defn html-yhteyskatkos-lokituksen-tiedot
+  [loki-teksti aika & avaimet]
   (let [pvm? (some #(= :pvm %) avaimet)
         kello? (some #(= :kello %) avaimet)
         kayttaja? (some #(= :kayttaja %) avaimet)]
-    (map-indexed #(cond-> {}
-                          pvm? (assoc :pvm (etsi-arvot-valilta (get aika %1) "" "T"))
-                          kello? (assoc :kello (etsi-arvot-valilta  (get aika %1) "T" "."))
-                          kayttaja? (assoc :kayttaja (etsi-arvot-valilta %2 "[:div Käyttäjä  " " ")))
-                 parsittava-data)))
-(defn parsi-vektori-data
-  [parsittava-data & avaimet]
+    (cond-> {}
+            pvm? (assoc :pvm (etsi-arvot-valilta aika "" "T"))
+            kello? (assoc :kello (etsi-arvot-valilta  aika "T" "."))
+            kayttaja? (assoc :kayttaja (etsi-arvot-valilta loki-teksti "[:div Käyttäjä  " " ")))))
+
+(defn html-yhteyskatkos-lokituksen-yhteyskatkokset
+  [loki-teksti & avaimet]
   (let [palvelut? (some #(= :palvelut %) avaimet)
         ensimmaiset-katkokset? (some #(= :ensimmaiset-katkokset %) avaimet)
-        viimeiset-katkokset? (some #(= :viimeiset-katkokset %) avaimet)]
-    (map #(let [data [(when palvelut?
-                        (etsi-arvot-valilta % "[:tr [:td {:valign top} [:b :" "]]" true))
-                      (mapv (fn [x] (Integer. x)) (etsi-arvot-valilta % "[:pre Katkoksia " " " true))
-                      (when ensimmaiset-katkokset?
-                        (etsi-arvot-valilta % "ensimmäinen: " "viimeinen" true))
-                      (when viimeiset-katkokset?
-                        (etsi-arvot-valilta % "viimeinen: " "]]]" true))]
-                map-vec->vec-map (fn [mappi-vektoreita]
-                                   (apply mapv (fn [& arvot]
-                                                 (zipmap (keys mappi-vektoreita) arvot))
-                                               (vals mappi-vektoreita)))]
-              (map-vec->vec-map
-                (cond-> {}
-                        palvelut? (assoc :palvelut (first data))
-                        true (assoc :katkokset (second data))
-                        ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (get data 2))
-                        viimeiset-katkokset? (assoc :viimeiset-katkokset (last data)))))
-         parsittava-data)))
+        viimeiset-katkokset? (some #(= :viimeiset-katkokset %) avaimet)
+        yhteyskatkos-tiedot [(when palvelut?
+                               (etsi-arvot-valilta loki-teksti "[:tr [:td {:valign top} [:b :" "]]" true))
+                             (mapv (fn [x]
+                                    (Integer. x))
+                                   (etsi-arvot-valilta loki-teksti "[:pre Katkoksia " " " true))
+                             (when ensimmaiset-katkokset?
+                               (etsi-arvot-valilta loki-teksti "ensimmäinen: " "viimeinen" true))
+                             (when viimeiset-katkokset?
+                               (etsi-arvot-valilta loki-teksti "viimeinen: " "]]]" true))]
+        map-vec->vec-map (fn [mappi-vektoreita]
+                           (apply mapv (fn [& arvot]
+                                         (zipmap (keys mappi-vektoreita) arvot))
+                                       (vals mappi-vektoreita)))]
+    (map-vec->vec-map
+      (cond-> {}
+              palvelut? (assoc :palvelut (first yhteyskatkos-tiedot))
+              true (assoc :katkokset (second yhteyskatkos-tiedot))
+              ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (get yhteyskatkos-tiedot 2))
+              viimeiset-katkokset? (assoc :viimeiset-katkokset (last yhteyskatkos-tiedot))))))
 
-(defn parsi-yhteyskatkos-data
-  "Ottaa csv:stä luetun datan ja käyttäjän antamat optiot.
-   Mikäli optioita ei ole annettu, lukee kaiken mahdolliset arvot datasta
-   ja sijoittaa ne mappiin. Optiota ovat :pvm :kello :kayttaja :palvelut
-   :katkokset :ensimmaiset-katkokset ja :viimeiset-katkokset"
-  [data {:keys [ryhma-avain jarjestys-avain naytettavat-ryhmat min-katkokset]}]
-  (let [aika (mapv first data)
-        taulukko (mapv last data)
-        parsittu-string-data (parsi-string-data taulukko aika ryhma-avain jarjestys-avain)
-        parsittu-vektori-data (parsi-vektori-data taulukko ryhma-avain jarjestys-avain)
-        parsittu-data (map #(merge %1 {:yhteyskatkokset %2}) parsittu-string-data parsittu-vektori-data)]
-    parsittu-data))
+(defn yhteyskatkokset-lokitus-string->yhteyskatkokset-map
+  "Ottaa graylogista luetut yhteyskatkokslokituksen ja palauttaa kutsujan määrittämät
+   tiedot mapissa. Katkoksien lukumäärä palautetaan aina.
 
+   Kutsuja määrittää haluamansa tiedot setissä keywordeina. Keywordit voivat olla
+   :pvm
+   :kello
+   :kayttaja
+   :palvelut
+   :ensimmaiset-katkokset
+   :viimeiset-katkokset
+   , joista :pvm, :kello ja :kayttaja palauttavat yksittäisiä arvoja yhdestä
+   lokituksesta, kun taas loput palauttavat vektoriarvoja."
+  [lokitus {:keys [pvm kello kayttaja palvelut ensimmaiset-katkokset viimeiset-katkokset]}]
+  (let [aika (first lokitus)
+        loki-teksti (last lokitus)
+        html-yhteyskatkos-tiedot (html-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
+        html-yhteyskatkos-yhteyskatkokset (html-yhteyskatkos-lokituksen-yhteyskatkokset loki-teksti palvelut ensimmaiset-katkokset viimeiset-katkokset)
+        html-yhtyeksatkokset (merge html-yhteyskatkos-tiedot {:yhteyskatkokset html-yhteyskatkos-yhteyskatkokset})]
+    html-yhtyeksatkokset))
 
-(s/fdef parsi-yhteyskatkos-data
-  :args (s/cat :data ::csvsta-luettu-data
-               :ryhma-avain (s/nilable keyword?)
-               :jarjestys-avain (s/nilable keyword?)
-               :naytettavat-ryhmat (s/nilable set?)
-               :min-katkokset (s/nilable (s/and integer? pos?)))
-  :ret ::dgl/parsittu-yhteyskatkos-data)
-
-(defn jarjestele-yhteyskatkos-data
+(defn jarjestele-yhteyskatkos-data-visualisointia-varten
   [yhteyskatkos-data ryhma-avain jarjestys-avain]
-  (let [ryhmien-avaaminen (mapcat #(map (fn [yhteyskatkokset-map]
-                                          {:jarjestys-avain (if (jarjestys-avain %)
-                                                              (jarjestys-avain %)
-                                                              (jarjestys-avain yhteyskatkokset-map))
-                                           :ryhma-avain (if (ryhma-avain %)
-                                                          (ryhma-avain %)
-                                                          (ryhma-avain yhteyskatkokset-map))
-                                           :arvo-avain (:katkokset yhteyskatkokset-map)})
-                                        (:yhteyskatkokset %))
-                                  yhteyskatkos-data)]
-      (reduce (fn [jarjestelty-data uusi-map]
-                (let [loytynyt-jarjestys (some #(when (= (:jarjestys-avain %) (:jarjestys-avain uusi-map))
-                                                  %)
-                                               jarjestelty-data)
-                      loytynyt-ryhma (when loytynyt-jarjestys
-                                        (first (filter #(= (:category %) (:ryhma-avain uusi-map))
-                                                       (:yhteyskatkokset loytynyt-jarjestys))))]
-                  (if loytynyt-jarjestys
-                    (if loytynyt-ryhma
-                      (mapv #(if (= loytynyt-jarjestys %)
-                               (assoc %
-                                      :yhteyskatkokset
-                                      (mapv (fn [ryhma]
-                                              (if (= loytynyt-ryhma ryhma)
-                                                (update ryhma :value (fn [arvo]
-                                                                       (+ arvo (:arvo-avain uusi-map))))
-                                                ryhma))
-                                            (:yhteyskatkokset %)))
-                               %)
-                            jarjestelty-data)
-                      (mapv #(if (= loytynyt-jarjestys %)
-                               (update %
-                                       :yhteyskatkokset
-                                       (fn [ryhmat]
-                                         (conj ryhmat {:category (:ryhma-avain uusi-map)
-                                                       :value (:arvo-avain uusi-map)})))
-                               %)
-                            jarjestelty-data))
-                    (conj jarjestelty-data
-                          {:jarjestys-avain (:jarjestys-avain uusi-map)
-                           :yhteyskatkokset [{:category (:ryhma-avain uusi-map)
-                                              :value (:arvo-avain uusi-map)}]}))))
-              [] ryhmien-avaaminen)))
+  (let [ryhmat-avattuna (mapcat #(map (fn [yhteyskatkokset-map]
+                                        {:jarjestys-avain (if (jarjestys-avain %)
+                                                            (jarjestys-avain %)
+                                                            (jarjestys-avain yhteyskatkokset-map))
+                                         :ryhma-avain (if (ryhma-avain %)
+                                                        (ryhma-avain %)
+                                                        (ryhma-avain yhteyskatkokset-map))
+                                         :arvo-avain (:katkokset yhteyskatkokset-map)})
+                                      (:yhteyskatkokset %))
+                                yhteyskatkos-data)
+        data-visualisointia-varten (reduce (fn [jarjestelty-data uusi-map]
+                                             (let [loytynyt-jarjestys (some #(when (= (:jarjestys-avain %) (:jarjestys-avain uusi-map))
+                                                                               %)
+                                                                            jarjestelty-data)
+                                                   loytynyt-ryhma (when loytynyt-jarjestys
+                                                                     (first (filter #(= (:category %) (:ryhma-avain uusi-map))
+                                                                                    (:yhteyskatkokset loytynyt-jarjestys))))
+                                                   paivita-ryhma #(update %
+                                                                          :yhteyskatkokset
+                                                                          (fn [ryhmat]
+                                                                           (if loytynyt-ryhma
+                                                                             (mapv (fn [ryhma]
+                                                                                     (if (= loytynyt-ryhma ryhma)
+                                                                                       (update ryhma :value (fn [arvo]
+                                                                                                              (+ arvo (:arvo-avain uusi-map))))
+                                                                                       ryhma))
+                                                                                   ryhmat)
+                                                                             (conj ryhmat {:category (:ryhma-avain uusi-map)
+                                                                                           :value (:arvo-avain uusi-map)}))))]
+                                               (if loytynyt-jarjestys
+                                                 (mapv #(if (= loytynyt-jarjestys %)
+                                                          (paivita-ryhma %)
+                                                          %)
+                                                       jarjestelty-data)
+                                                 (conj jarjestelty-data
+                                                       {:jarjestys-avain (:jarjestys-avain uusi-map)
+                                                        :yhteyskatkokset [{:category (:ryhma-avain uusi-map)
+                                                                           :value (:arvo-avain uusi-map)}]}))))
+                                           [] ryhmat-avattuna)]
+    (sort-by :jarjestys-avain data-visualisointia-varten)))
 
 (defn asetukset-kayttoon
-  [data {:keys [ryhma-avain jarjestys-avain naytettavat-ryhmat min-katkokset]}]
+  [data {:keys [jarjestys-avain naytettavat-ryhmat min-katkokset]}]
   (let [ryhma-annettu? #(if (nil? naytettavat-ryhmat)
                           true
                           (contains? naytettavat-ryhmat %))
@@ -262,18 +255,19 @@
     katkos-asetukset-kayttoon))
 
 (defn hae-yhteyskatkosten-data [{ryhma-avain :ryhma-avain jarjestys-avain :jarjestys-avain :as hakuasetukset} data-csvna ryhmana?]
-    (println "RYHMANA?: " ryhmana?)
-    (let [data (hae-yhteyskatkos-data data-csvna)
-          parsittu-data (parsi-yhteyskatkos-data data hakuasetukset)
-          parsittu-data (if ryhmana?
-                          (map #(map (fn [mappi]
-                                       (assoc mappi :katkokset 1))
-                                     (:yhteyskatkokset %))
-                               parsittu-data)
-                          parsittu-data)
-          jarjestelty-data (jarjestele-yhteyskatkos-data parsittu-data ryhma-avain jarjestys-avain)
-          asetuksien-mukainen-data (asetukset-kayttoon jarjestelty-data hakuasetukset)]
-      asetuksien-mukainen-data))
+  (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
+        haettavat-tiedot-lokituksista #{ryhma-avain jarjestys-avain}
+        yhteyskatkokset-mappina (map #(yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista) graylogista-haetut-lokitukset)
+        yhteyskatkokset-mappina (if ryhmana?
+                                  (map #(assoc % :yhteyskatkokset
+                                                 (mapv (fn [mappi]
+                                                         (assoc mappi :katkokset 1))
+                                                       (:yhteyskatkokset %)))
+                                       yhteyskatkokset-mappina)
+                                  yhteyskatkokset-mappina)
+        jarjestelty-data (jarjestele-yhteyskatkos-data-visualisointia-varten yhteyskatkokset-mappina ryhma-avain jarjestys-avain)
+        asetuksien-mukainen-data (asetukset-kayttoon jarjestelty-data hakuasetukset)]
+    asetuksien-mukainen-data))
 
 (defrecord Graylog [data-csvna]
   component/Lifecycle

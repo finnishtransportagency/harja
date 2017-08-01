@@ -64,7 +64,9 @@
 (s/def ::yhteyskatkokset (s/coll-of (s/keys :req-un [::katkokset]
                                             :opt-un [::palvelu ::ensimmainen-katkos ::viimeinen-katkos])
                                     :kind vector?))
-(s/def ::parsittu-yhteyskatkos-data-itemi (s/and (s/keys :req-un [::yhteyskatkokset]
-                                                         :opt-un [::pvm ::kello ::kayttaja])
-                                                 #(-> (merge (first (:yhteyskatkokset %)) (dissoc % :yhteyskatkokset)) count (>= 3))))
-(s/def ::parsittu-yhteyskatkos-data (s/coll-of ::parsittu-yhteyskatkos-data-itemi :kind seq?))
+(s/def ::yhteyskatkokset-lokitus-mappina (s/and (s/keys :req-un [::yhteyskatkokset]
+                                                        :opt-un [::pvm ::kello ::kayttaja])
+                                                #(-> (merge (first (:yhteyskatkokset %))
+                                                            (dissoc % :yhteyskatkokset))
+                                                     count
+                                                     (>= 3))))

@@ -32,10 +32,8 @@
 (defn graylog-palvelukutsu
   "Hakee serveriltä yhteyskatkosdatan."
   [palvelu callback hakuasetukset]
-  (go (try (let [data (<! (k/post! palvelu hakuasetukset))]
-              (callback data))
-           (catch :default e
-              (log (pr-str e))))))
+  (go (let [lokitukset-visualisointia-varten (<! (k/post! palvelu hakuasetukset))]
+        (callback lokitukset-visualisointia-varten))))
 (defn graylog-haku
   [haku {ryhma-avain :ryhma-avain jarjestys-avain :jarjestys-avain} app]
   (let [hakukoodi (gensym (name haku))

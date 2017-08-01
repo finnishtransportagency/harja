@@ -145,14 +145,17 @@
         value-font-size (or value-font-size "8pt")
         tick-font-size (or tick-font-size "7pt")
         y-axis-font-size (or y-axis-font-size "6pt")
+        n-of-items-in-legend-row 4
+        n-of-legend-rows #?(:clj (-> legend count (/ n-of-items-in-legend-row) Math/ceil)
+                            :cljs (-> legend count (/ n-of-items-in-legend-row) js/Math.ceil))
         ;; we need env specific parameters for each rendering target
         #?@(:cljs [bars-top-y 25
                    spacer-y 10
                    label-area-height 10
-                   legend-area-height (+ 40 (* 50 (quot (count (vec legend)) 4)))
                    legendbox-thickness 15
                    legend-label-x 20
-                   legend-label-y-pos 11]
+                   legend-label-y-pos 11
+                   legend-area-height (* (+ spacer-y legendbox-thickness) n-of-legend-rows)]
 
             :clj  [bars-top-y 5
                    spacer-y 4
@@ -162,14 +165,14 @@
                    legend-label-x 5
                    legend-label-y-pos 3.5])
 
-        bar-area-height (- height bars-top-y label-area-height legend-area-height)
+        bar-area-height (- height bars-top-y label-area-height legend-area-height (* spacer-y 2))
         bars-bottom-y (+ bars-top-y bar-area-height)
         label-top-y (+ bars-bottom-y spacer-y)
         label-bottom-y (+ label-top-y label-area-height)
         legend-top-y (+ label-bottom-y spacer-y)
         my-half (/ my 2)
         bar-width (/ (- width mx) (count data))
-        multiple-series? (or (vector? (value-fn (first data))) (= data []))
+        multiple-series? (-> data first value-fn vector?)
         _ (assert (or (and multiple-series? legend)
                       (and (not multiple-series?) (nil? legend)))
                   "Legend must be supplied iff data has multiple series")
@@ -179,17 +182,12 @@
                     (keep identity (mapcat value-fn data))
                     (map value-fn data))
         is-value-map? (map? (first value-seq))
-        ;_ (js/console.log (pr-str "ms" multiple-series? "ivm" is-value-map? "vs" value-seq "asd" (first data)))
-        max-value (if (empty? value-seq)
-                    1
-                    (reduce max (if is-value-map?
-                                  (map :value value-seq)
-                                  value-seq)))
-        min-value (if (empty? value-seq)
-                    0
-                    (reduce min (if is-value-map?
-                                  (map :value value-seq)
-                                  value-seq)))
+        max-value (reduce max (if is-value-map?
+                                (map :value value-seq)
+                                value-seq))
+        min-value (reduce min (if is-value-map?
+                                (map :value value-seq)
+                                value-seq))
         value-range (- max-value min-value)
         ;leg-of-interest (atom nil)
         scale (if (= 0 max-value)
@@ -283,24 +281,26 @@
 
      ;; show legend if any
      (when multiple-series?
-       (map (fn [num]
-                (let [next-5 (take 4 (drop (* 4 num) (vec legend)))]
-                   (map-indexed (fn [i leg]
-                                  (let [rect-x-val (+ mx (* i (/ width (count next-5))))]
-                                    ^{:key i}
-                                    [:g
-                                     [:rect {:x      rect-x-val
-                                             :y      (+ legend-top-y (* num (+ legendbox-thickness spacer-y)))
-                                             :height legendbox-thickness
-                                             :width  legendbox-thickness
-                                             :fill   (if (map? colors)
-                                                        ((keyword leg) colors)
-                                                        (nth colors i))
-                                             :on-click #(on-legend-click (keyword leg))}]
-                                     [:text {:x         (+ legend-label-x rect-x-val)
-                                             :y         (+ legend-top-y legend-label-y-pos (* num (+ legendbox-thickness spacer-y)))
-                                             :font-size value-font-size}
+       (let [legend-rows (partition-all n-of-items-in-legend-row legend)]
+         (map (fn [num]
+                  (let [legend-row (nth legend-rows num)]
+                     (map-indexed (fn [i leg]
+                                    (let [rect-x-val (+ mx (* i (/ width (count legend-row))))
+                                          rect-y-val (* num (+ legendbox-thickness spacer-y))]
+                                      ^{:key i}
+                                      [:g
+                                       [:rect {:x      rect-x-val
+                                               :y      (+ legend-top-y rect-y-val)
+                                               :height legendbox-thickness
+                                               :width  legendbox-thickness
+                                               :fill   (if (map? colors)
+                                                          ((keyword leg) colors)
+                                                          (nth colors i))
+                                               :on-click #(on-legend-click (keyword leg))}]
+                                       [:text {:x         (+ legend-label-x rect-x-val)
+                                               :y         (+ legend-top-y legend-label-y-pos rect-y-val)
+                                               :font-size value-font-size}
 
-                                      leg]]))
-                                next-5)))
-            (range (inc (quot (count (vec legend)) 4)))))]))
+                                        leg]]))
+                                  legend-row)))
+              (range n-of-legend-rows))))]))

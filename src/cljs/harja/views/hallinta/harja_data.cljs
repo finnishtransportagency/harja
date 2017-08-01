@@ -37,18 +37,21 @@
                                              (:yhteyskatkokset %))
                                        yhteyskatkokset-jarjestys-data))
         colors (zipmap (mapv keyword legend) (take (count legend) colors))]
-    [vis/bars {:width w
-               :height (max 1000 h)
-               :value-fn :yhteyskatkokset
-               :label-fn :jarjestys-avain
-               :colors colors
-               :bar-padding 1
-               :format-amount str
-               :ticks tikit
-               :legend legend}
-              ;  :on-legend-click (fn [nakyma]
-              ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkokset-jarjestys-data nakyma) yhteyskatkokset-data-avain)))}
-              yhteyskatkokset-jarjestys-data]))
+    (if (empty? yhteyskatkokset-jarjestys-data)
+      [:p "Annetuilla hakuasetuksilla ei löytynyt yhteyskatkoksia."]
+      [vis/bars {:width w
+                 :height (max 1000 h)
+                 :value-fn :yhteyskatkokset
+                 :label-fn :jarjestys-avain
+                 :colors colors
+                 :bar-padding 1
+                 :format-amount str
+                 :ticks tikit
+                 :legend legend}
+                ; TODO on-legend-click ei tällä hetkellä toimi.
+                ;  :on-legend-click (fn [nakyma]
+                ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkokset-jarjestys-data nakyma) yhteyskatkokset-data-avain)))}
+                yhteyskatkokset-jarjestys-data])))
 (defn hae-kaikki-yhteyskatkosdatat
   [e!]
   (e! (tiedot/->HaeYhteyskatkosData :pvm :palvelut))
@@ -116,13 +119,19 @@
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "pvm"))
-              (case valittu-yhteyskatkokset-arvo
-                "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-bars e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
-                "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-bars e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data]))
+              ^{:key "jarjestys-pvm-mukaan"}
+              [:div
+                [:h3 "Järjestys päivämäärän mukaan"]
+                (case valittu-yhteyskatkokset-arvo
+                  "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-bars e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-bars e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data])])
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "palvelut"))
-              (case valittu-yhteyskatkokset-arvo
-                "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-bars e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
-                "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data]))))]]
+              ^{:key "jarjestys-palvelukutsujen-mukaan"}
+              [:div
+                [:h3 "Järjestys palvelukutsujen mukaan"]
+                (case valittu-yhteyskatkokset-arvo
+                  "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-bars e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])))]]
 
       [y/ajax-loader])))
 
