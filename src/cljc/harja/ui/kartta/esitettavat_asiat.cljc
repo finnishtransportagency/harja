@@ -253,7 +253,7 @@
 
 (def tarkastus-selitteet-tie
   #{{:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true
-                                                                                                                 :havainnot "Vesakko raivaamatta"}))}})
+                                                                                                                 :havainnot "Lumista"}))}})
 
 (def tarkastus-selitteet
   #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true}))}

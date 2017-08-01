@@ -13,7 +13,8 @@
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [clojure.set :as set])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -85,7 +86,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
   (muodosta-kuva-karttataso
-   :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet
+   :tilannekuva-tarkastukset (set/union esitettavat-asiat/tarkastus-selitteet
+                                        esitettavat-asiat/tarkastus-selitteet-tie)
    @url-hakuparametrit))
 
 (defmethod muodosta-karttataso :tyokoneet [taso {:keys [tehtavat viimeisin]}]
