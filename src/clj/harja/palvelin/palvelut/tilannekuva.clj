@@ -150,20 +150,6 @@
       (tietyoilmoitukset-q/hae-ilmoitukset-tilannekuvaan db (assoc tiedot :urakat urakat
                                                                           :tilaaja? (roolit/tilaajan-kayttaja? user))))))
 
-(def
-  ^{:doc "Laajentaa :osien-geometriat avaimella arrayna tulevat ylläpitokohteen kohdeosien sijainnit
-  :kohdeosat vektoriksi. Muita kohdeosan tietoja ei tarvita tilannekuvassa. Poistaa lopuksi kohteet,
-  joissa ei ole osia"}
-  kohdeosien-sijainnit-xf
-  (comp (map #(konv/array->vec % :osien-geometriat))
-        (map #(-> %
-                  (assoc :kohdeosat
-                         (mapv (fn [g]
-                                 {:sijainti (geo/pg->clj g)})
-                               (:osien-geometriat %)))
-                  (dissoc :osien-geometriat)))
-        (remove #(empty? (:kohdeosat %)))))
-
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
@@ -203,6 +189,11 @@
                                                                            (assoc params
                                                                                   :loppu (konv/sql-date loppu)
                                                                                   :alku (konv/sql-date alku))))))
+            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
+                                                                  {:alue alue
+                                                                   :toleranssi toleranssi})
+            vastaus (remove #(empty? (:kohdeosat %)) vastaus)
+
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
