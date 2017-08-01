@@ -189,7 +189,7 @@ minimi-etaisyys 40)
   [g extent]
   (let [[x1 y1 x2 y2] extent]
     (piirra-viiva g {:points [[x1 y1] [x2 y1] [x2 y2] [x1 y2] [x1 y1]]}
-                  {:color java.awt.Color/WHITE
+                  {:color java.awt.Color/BLACK
                    :width 5})))
 
 (defn piirra-karttakuvaan [extent koko px-scale g asiat]
