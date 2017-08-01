@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.turvalaitteet :as q-turvalaitteet]
+            [harja.kyselyt.vesivaylat.turvalaitteet :as q-turvalaitteet]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str])
@@ -50,7 +50,6 @@
         kiintea? (= "KIINTE" (:SUBTYPE properties))
         nimi (:NIMIS properties)
         sql-parametrit {:sijainti geometria
-                        :tunniste id
                         :tyyppi tyyppi
                         :turvalaitenro turvalaitenro
                         :kiintea kiintea?

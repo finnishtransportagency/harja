@@ -21,18 +21,28 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn urakan-oletussopimus [urakka]
+  (let [{:keys [sopimukset paasopimus]} urakka]
+    (if paasopimus
+      [paasopimus (get sopimukset paasopimus)]
+      (first sopimukset))))
+
 (defonce valittu-sopimusnumero
   (reaction-writable
-    (let [{:keys [sopimukset paasopimus]} @nav/valittu-urakka]
-      (if paasopimus
-        [paasopimus (get sopimukset paasopimus)]
-        (first sopimukset)))))
+    (urakan-oletussopimus @nav/valittu-urakka)))
 
 (defonce urakan-yks-hint-tyot (atom nil))
 (defonce urakan-kok-hint-tyot (atom nil))
 
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
+
+(defn valitse-oletussopimus-jos-valittuna-kaikki! []
+  (when (nil? (first @valittu-sopimusnumero))
+    (reset! valittu-sopimusnumero (urakan-oletussopimus @nav/valittu-urakka))))
+
+(defn valitse-sopimusnumero-kaikki! []
+  (reset! valittu-sopimusnumero [nil "Kaikki"]))
 
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)]
@@ -66,14 +76,13 @@
     (reset! valittu-toimenpideinstanssi tpi)
     (valitse-toimenpideinstanssi-koodilla! koodi)))
 
-
-(defn- vesivaylien-hoitokaudet [ensimmainen-vuosi viimeinen-vuosi]
+(defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
            (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
         (range ensimmainen-vuosi viimeinen-vuosi)))
 
-(defn hoitokaudet
+(defn hoito-tai-sopimuskaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
   urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
   ja viimeinen voivat olla vajaat)."
@@ -89,7 +98,7 @@
             (range ensimmainen-vuosi viimeinen-vuosi))
 
       (= :vesivayla-hoito tyyppi)
-      (vesivaylien-hoitokaudet ensimmainen-vuosi viimeinen-vuosi)
+      (vesivaylien-sopimuskaudet ensimmainen-vuosi viimeinen-vuosi)
 
       :default
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
@@ -109,14 +118,15 @@
 
 (defonce valitun-urakan-hoitokaudet
   (reaction (when-let [ur @nav/valittu-urakka]
-              (hoitokaudet ur))))
+              (log "MUODOSTA VALITUN URAKAN SOPPARIKAUDET " (pr-str ur))
+              (hoito-tai-sopimuskaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]
   (pvm/valissa? (pvm/nyt) alku loppu))
 
 (defn urakka-kaynnissa? [urakka]
   (->> urakka
-       hoitokaudet
+       hoito-tai-sopimuskaudet
        (some hoitokausi-kaynnissa?)))
 
 (defonce valittu-urakka-kaynnissa?
@@ -233,7 +243,7 @@
 
 (defn tulevat-hoitokaudet [ur hoitokausi]
   (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
-              (hoitokaudet ur)))
+              (hoito-tai-sopimuskaudet ur)))
 
 (defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
   (into []
@@ -370,22 +380,21 @@
                               (= :muut-tyot toteuman-sivu)))
                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
-(defonce muut-tyot-hoitokaudella
+(defonce toteutuneet-muut-tyot-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                sopimus-id (first @valittu-sopimusnumero)
                aikavali @valittu-hoitokausi
                sivu (nav/valittu-valilehti :toteumat)]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+      (toteumat/hae-urakan-toteutuneet-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                aikavali @valittu-hoitokausi
-               sivu (nav/valittu-valilehti :toteumat)
-               _ @toteumat/erilliskustannukset-nakymassa?]
+               nakymassa? @toteumat/erilliskustannukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and ur aikavali (= :erilliskustannukset sivu))
+              (when (and ur aikavali nakymassa?)
                 (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
 (defn vaihda-urakkatyyppi
@@ -454,4 +463,4 @@
 (def paallystysurakan-indeksitiedot (atom nil))
 
 (defn ensimmainen-hoitokausi? [urakka hoitokausi]
-  (= hoitokausi (first (hoitokaudet urakka))))
+  (= hoitokausi (first (hoito-tai-sopimuskaudet urakka))))

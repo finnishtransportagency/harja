@@ -43,9 +43,13 @@
 
 (defn vapaa-sopimus? [s] (nil? (get-in s [::s/urakka ::u/id])))
 
-(defn vapaat-sopimukset [sopimukset urakan-sopimukset]
+(defn sopiva-sopimus-urakalle? [u s]
+  (or (vapaa-sopimus? s)
+      (= (::u/id u) (get-in s [::s/urakka ::u/id]))))
+
+(defn vapaat-sopimukset [urakka sopimukset urakan-sopimukset]
   (->> sopimukset
-       (filter vapaa-sopimus?)
+       (filter (partial sopiva-sopimus-urakalle? urakka))
        (remove (comp (into #{} (keep ::s/id urakan-sopimukset)) ::s/id))))
 
 (defn uusin-tieto [hanke sopimukset urakoitsija urakka]
@@ -124,7 +128,7 @@
           fail! (tuck/send-async! ->UrakkaEiTallennettu)]
       (go
         (try
-          (let [vastaus (async/<! (k/post! :tallenna-urakka
+          (let [vastaus (async/<! (k/post! :tallenna-vesivaylaurakka
                                            (update urakka
                                                    ::u/sopimukset
                                                    #(->> %
@@ -192,12 +196,22 @@
 
   PaivitaSopimuksetGrid
   (process-event [{sopimukset :sopimukset} {urakka :valittu-urakka :as app}]
-    (->> sopimukset
-         ;; Asetetaan sopimukset viittaamaan pääsopimukseen
-         (map #(assoc % ::s/paasopimus-id (::s/id (s/paasopimus (::u/sopimukset urakka)))))
-         ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
-         (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
-         (assoc-in app [:valittu-urakka ::u/sopimukset])))
+    (let [urakan-sopimukset-ilman-poistettuja (remove
+                                                (comp
+                                                  (into #{} (map ::s/id (filter :poistettu sopimukset)))
+                                                  ::s/id)
+                                                (::u/sopimukset urakka))
+          paasopimus (s/ainoa-paasopimus urakan-sopimukset-ilman-poistettuja)
+          ;; Jos pääsopimukseksi merkitty pääsopimus ei enää ole gridissä,
+          ;; poista pääsopimusmerkintä - yhtäkään sopimusta ei merkitä pääsopimukseksi.
+          paasopimus-id (when ((into #{} (map ::s/id sopimukset)) (::s/id paasopimus))
+                          (::s/id paasopimus))]
+      (->> sopimukset
+           ;; Asetetaan sopimukset viittaamaan pääsopimukseen
+           (map #(assoc % ::s/paasopimus-id paasopimus-id))
+           ;; Jos sopimus on pääsopimus, :paasopimus-id asetetaan nilliksi
+           (map #(update % ::s/paasopimus-id (fn [ps] (when-not (= ps (::s/id %)) ps))))
+           (assoc-in app [:valittu-urakka ::u/sopimukset]))))
 
   HaeLomakevaihtoehdot
   (process-event [_ app]

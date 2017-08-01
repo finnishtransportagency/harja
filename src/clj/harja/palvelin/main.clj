@@ -134,7 +134,8 @@
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
     [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
-    [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit])
+    [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
+    [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet])
 
   (:gen-class))
 
@@ -313,6 +314,9 @@
       :vv-materiaalit (component/using
                         (vv-materiaalit/->Materiaalit)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :vv-turvalaitteet (component/using
+                          (vv-turvalaitteet/->Turvalaitteet)
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -379,7 +383,7 @@
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim])
+                           [:tloik :http-palvelin :db :pois-kytketyt-ominaisuudet :pdf-vienti :fim])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

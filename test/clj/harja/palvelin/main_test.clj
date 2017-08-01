@@ -59,7 +59,8 @@
     :vv-materiaalit
     :reimari
     :vkm
-    :graylog})
+    :graylog
+    :vv-turvalaitteet})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

@@ -579,6 +579,14 @@ FROM yllapitokohde ypk
 WHERE ypk.id = :id
       AND poistettu IS NOT TRUE;
 
+-- name: hae-yllapitokohteiden-aikataulun-muokkaus-aika
+-- Hakee yllapitokohteiden aikataulutiedot
+SELECT
+  muokattu,
+  yllapitokohde
+FROM yllapitokohteen_aikataulu
+WHERE yllapitokohde IN (:idt);
+
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
 FROM urakka

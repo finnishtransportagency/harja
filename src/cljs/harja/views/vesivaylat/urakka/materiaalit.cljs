@@ -23,27 +23,27 @@
    [:table
     [:tbody
      (for*
-      [{::m/keys [pvm maara lisatieto]} rivit]
-      [:tr
-       [:td {:width "15%"} (pvm/pvm pvm)]
-       [:td {:width "15%" :class (if (neg? maara)
-                                   "materiaali-miinus"
-                                   "materiaali-plus")}
-        maara " kpl"]
-       [:td {:width "70%"} lisatieto]])]]])
+       [{::m/keys [pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
+       [:tr
+        [:td {:width "15%"} (pvm/pvm pvm)]
+        [:td {:width "15%" :class (if (neg? maara)
+                                    "materiaali-miinus"
+                                    "materiaali-plus")}
+         maara " kpl"]
+        [:td {:width "70%"} lisatieto]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
-  (let [ikoni  (if tallennus-kaynnissa?
-                 [yleiset/ajax-loader-pieni]
-                 [ikonit/tallenna])]
+  (let [ikoni (if tallennus-kaynnissa?
+                [yleiset/ajax-loader-pieni]
+                [ikonit/tallenna])]
     [lomake/lomake {:muokkaa! muokkaa!
                     :footer-fn (fn [data]
                                  [napit/tallenna "Lisää materiaali"
                                   #(tallenna! data)
                                   {:disabled (or
-                                              tallennus-kaynnissa?
-                                              (not (lomake/voi-tallentaa-ja-muokattu? data)))
+                                               tallennus-kaynnissa?
+                                               (not (lomake/voi-tallentaa-ja-muokattu? data)))
                                    :ikoni ikoni}])}
      [{:otsikko "Nimi" :nimi ::m/nimi :tyyppi :string :palstoja 3
        :pakollinen? true
@@ -87,8 +87,8 @@
                                        #(e! (tiedot/->KirjaaMateriaali))
                                        {:disabled
                                         (or
-                                         tallennus-kaynnissa?
-                                         (not (lomake/voi-tallentaa-ja-muokattu? tiedot)))
+                                          tallennus-kaynnissa?
+                                          (not (lomake/voi-tallentaa-ja-muokattu? tiedot)))
                                         :ikoni (if tallennus-kaynnissa?
                                                  [yleiset/ajax-loader-pieni]
                                                  [ikonit/tallenna])}])}
@@ -107,58 +107,58 @@
                kaytettava-maara (::m/maara kirjaa-materiaali)]
            [yleiset/tietoja {}
             "Määrä nyt: " maara-nyt
-            "Muutos: "  (case tyyppi
-                          :- (if kaytettava-maara (- kaytettava-maara) "")
-                          :+ (or kaytettava-maara ""))
+            "Muutos: " (case tyyppi
+                         :- (if kaytettava-maara (- kaytettava-maara) "")
+                         :+ (or kaytettava-maara ""))
             "Määrä jälkeen:" ((case tyyppi
                                 :- -
                                 :+ +)
-                              maara-nyt
-                              (or kaytettava-maara 0))])]]))])
+                               maara-nyt
+                               (or kaytettava-maara 0))])]]))])
 
 (defn materiaalit* [e! app]
   (komp/luo
-   (komp/sisaan #(e! (tiedot/->PaivitaUrakka @nav/valittu-urakka)))
-   (komp/watcher nav/valittu-urakka (fn [_ _ ur]
-                                      (e! (tiedot/->PaivitaUrakka ur))))
-   (fn [e! {:keys [materiaalilistaus materiaalin-kaytto lisaa-materiaali tallennus-kaynnissa?]
-            :as app}]
-     (let [voi-kirjata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivayla-materiaalit
-                                                  (:urakka-id app))]
-       [:div.vv-materiaalit
-        (when voi-kirjata?
-          [valinnat/urakkatoiminnot {}
-           ^{:key "lisaa-materiaali"}
-           [:div.inline-block
-            [napit/uusi "Lisää materiaali" #(e! (tiedot/->AloitaMateriaalinLisays))
-             {:disabled lisaa-materiaali}]
-            (when lisaa-materiaali
-              [:div.vv-lisaa-materiaali-leijuke
-               [leijuke/leijuke {:otsikko "Lisää materiaali"
-                                 :sulje! #(e! (tiedot/->PeruMateriaalinLisays))
-                                 :ankkuri "lisaa-nappi" :suunta :oikea}
-                [materiaali-lomake {:muokkaa! #(e! (tiedot/->PaivitaLisattavaMateriaali %))
-                                    :tallenna! #(e! (tiedot/->LisaaMateriaali))
-                                    :maara-placeholder "Syötä alkutilanne"}
-                 lisaa-materiaali materiaalilistaus tallennus-kaynnissa?]]])]])
+    (komp/sisaan #(e! (tiedot/->PaivitaUrakka @nav/valittu-urakka)))
+    (komp/watcher nav/valittu-urakka (fn [_ _ ur]
+                                       (e! (tiedot/->PaivitaUrakka ur))))
+    (fn [e! {:keys [materiaalilistaus materiaalin-kaytto lisaa-materiaali tallennus-kaynnissa?]
+             :as app}]
+      (let [voi-kirjata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivayla-materiaalit
+                                                   (:urakka-id app))]
+        [:div.vv-materiaalit
+         (when voi-kirjata?
+           [valinnat/urakkatoiminnot {}
+            ^{:key "lisaa-materiaali"}
+            [:div.inline-block
+             [napit/uusi "Lisää materiaali" #(e! (tiedot/->AloitaMateriaalinLisays))
+              {:disabled lisaa-materiaali}]
+             (when lisaa-materiaali
+               [:div.vv-lisaa-materiaali-leijuke
+                [leijuke/leijuke {:otsikko "Lisää materiaali"
+                                  :sulje! #(e! (tiedot/->PeruMateriaalinLisays))
+                                  :ankkuri "lisaa-nappi" :suunta :oikea}
+                 [materiaali-lomake {:muokkaa! #(e! (tiedot/->PaivitaLisattavaMateriaali %))
+                                     :tallenna! #(e! (tiedot/->LisaaMateriaali))
+                                     :maara-placeholder "Syötä alkutilanne"}
+                  lisaa-materiaali materiaalilistaus tallennus-kaynnissa?]]])]])
 
-        [grid/grid {:id "vv-materiaalilistaus"
-                    :tunniste ::m/nimi
-                    :tyhja "Ei materiaaleja"
-                    :vetolaatikot (into {}
-                                        (map (juxt ::m/nimi
-                                                   (fn [{muutokset ::m/muutokset}]
-                                                     [materiaaliloki e! muutokset])))
-                                        materiaalilistaus)}
-         [{:tyyppi :vetolaatikon-tila :leveys 1}
-          {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
-          {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
-          {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
-          (when voi-kirjata?
-            {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
-             :komponentti (fn [{nimi ::m/nimi}]
-                            [materiaalin-kirjaus e! app nimi])})]
-         materiaalilistaus]]))))
+         [grid/grid {:id "vv-materiaalilistaus"
+                     :tunniste ::m/nimi
+                     :tyhja "Ei materiaaleja"
+                     :vetolaatikot (into {}
+                                         (map (juxt ::m/nimi
+                                                    (fn [{muutokset ::m/muutokset}]
+                                                      [materiaaliloki e! muutokset])))
+                                         materiaalilistaus)}
+          [{:tyyppi :vetolaatikon-tila :leveys 1}
+           {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
+           {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
+           {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
+           (when voi-kirjata?
+             {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
+              :komponentti (fn [{nimi ::m/nimi}]
+                             [materiaalin-kirjaus e! app nimi])})]
+          materiaalilistaus]]))))
 
 (defn materiaalit [ur]
   [tuck/tuck tiedot/app materiaalit*])

@@ -13,6 +13,7 @@ SELECT
   urk.ytunnus              AS urakoitsija_ytunnus,
   s.nimi                   AS sopimus_nimi,
   s.id                     AS sopimus_id,
+  s.paasopimus             AS "sopimus_paasopimus-id",
   h.nimi                   AS hanke_nimi,
   h.id                     AS hanke_id,
   sl.lahetetty AS sahkelahetys_lahetetty,
@@ -26,6 +27,14 @@ FROM urakka u
   LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
 WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
+
+-- name: luo-vesivaylaurakan-toimenpideinstanssi<!
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+    VALUES (:urakka_id, :nimi, (SELECT id FROM toimenpidekoodi WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
+
+-- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+VALUES (:toimenpideinstanssi_id, :vaylatyyppi::vv_vaylatyyppi);
 
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT

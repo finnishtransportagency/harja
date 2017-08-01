@@ -36,7 +36,7 @@
 
 (defn hae-urakan-kokonaishintaiset-tyot [{:keys [tyyppi id] :as ur}]
   (go (let [res (<! (k/post! :kokonaishintaiset-tyot id))
-            hoitokaudet (u/hoitokaudet ur)]
+            hoitokaudet (u/hoito-tai-sopimuskaudet ur)]
         (keep #(aseta-hoitokausi hoitokaudet %) res))))
 
 

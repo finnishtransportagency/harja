@@ -14,7 +14,7 @@
   (comp
     (map konv/alaviiva->rakenne)
     (map #(assoc %
-           :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))))
+            :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))))
 
 
 (defn hae-urakan-muutoshintaiset-tyot
@@ -22,8 +22,8 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
   (into []
-    muutoshintaiset-xf
-    (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
+        muutoshintaiset-xf
+        (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
 
 (defn tallenna-muutoshintaiset-tyot
   "Palvelu joka tallentaa muutoshintaiset tyot."
@@ -57,11 +57,13 @@
   (start [this]
     (doto (:http-palvelin this)
       (julkaise-palvelu
-        :muutoshintaiset-tyot (fn [user urakka-id]
-                                 (hae-urakan-muutoshintaiset-tyot (:db this) user urakka-id)))
+        :muutoshintaiset-tyot
+        (fn [user urakka-id]
+          (hae-urakan-muutoshintaiset-tyot (:db this) user urakka-id)))
       (julkaise-palvelu
-        :tallenna-muutoshintaiset-tyot (fn [user tiedot]
-                                                 (tallenna-muutoshintaiset-tyot (:db this) user tiedot))))
+        :tallenna-muutoshintaiset-tyot
+        (fn [user tiedot]
+          (tallenna-muutoshintaiset-tyot (:db this) user tiedot))))
     this)
 
   (stop [this]

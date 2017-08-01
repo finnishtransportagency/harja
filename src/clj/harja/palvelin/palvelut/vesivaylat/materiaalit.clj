@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [com.stuartsierra.component :as component]
             [harja.domain.vesivaylat.materiaali :as m]
+            [harja.domain.muokkaustiedot :as muok]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn- hae-materiaalilistaus [db user params]
@@ -13,7 +14,8 @@
 (defn- kirjaa-materiaali [db user materiaali]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaali))
-  (specql/insert! db ::m/materiaali materiaali)
+  (specql/insert! db ::m/materiaali
+                  (muok/lisaa-muokkaustiedot materiaali ::m/id user))
   (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
 
 (defrecord Materiaalit []

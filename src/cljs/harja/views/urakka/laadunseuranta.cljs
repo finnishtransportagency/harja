@@ -18,22 +18,25 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
-    :tarkastukset (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
-                       (not (urakka/vesivaylaurakka? urakka)))
-    :laatupoikkeamat (or (and
+    :tarkastukset (or (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
+                           (not (urakka/vesivaylaurakka? urakka)))
+                      (and
+                        (istunto/ominaisuus-kaytossa? :vesivayla)
+                        (urakka/vesivaylaurakka? urakka)
+                        (oikeudet/urakat-laadunseuranta-tarkastukset id)))
+    :laatupoikkeamat (or (and (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
+                              (not (urakka/vesivaylaurakka? urakka)))
+                         (and
                            (istunto/ominaisuus-kaytossa? :vesivayla)
                            (urakka/vesivaylaurakka? urakka)
-                           #_(oikeudet/urakat-vesivaylalaadunseuranta-laatupoikkeamat id)) ; TODO OIKEUS
-                         (and (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
-                              (not (urakka/vesivaylaurakka? urakka))))
+                           (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)))
     :sanktiot (or (and
-                    (istunto/ominaisuus-kaytossa? :vesivayla)
-                    (urakka/vesivaylaurakka? urakka)
-                    (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id))
+                    (not (urakka/vesivaylaurakka? urakka))
+                    (oikeudet/urakat-laadunseuranta-sanktiot id))
                   (and
                     (istunto/ominaisuus-kaytossa? :vesivayla)
-                    (oikeudet/urakat-vesivaylalaadunseuranta-sanktiot id)
-                    (not (urakka/vesivaylaurakka? urakka))))
+                    (urakka/vesivaylaurakka? urakka)
+                    (oikeudet/urakat-laadunseuranta-sanktiot id)))
     :siltatarkastukset (and (= :hoito tyyppi)
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))))
@@ -48,7 +51,8 @@
 
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
-         [tarkastukset/tarkastukset {:nakyma tyyppi}])
+         [tarkastukset/tarkastukset {:nakyma tyyppi
+                                     :urakka ur}])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)

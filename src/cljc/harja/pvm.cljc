@@ -15,8 +15,8 @@
     #?(:clj
             [clj-time.local :as l])
 
-    [taoensso.timbre :as log]
-    [clojure.string :as str])
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -24,10 +24,6 @@
                     (java.text SimpleDateFormat)
                     (org.joda.time DateTimeZone)
                     (org.joda.time.base BaseDateTime))))
-(defn DateTime?
-  [date]
-  #?(:cljs (instance? DateTime date)
-     :clj  (instance? BaseDateTime date)))
 
 (def +kuukaudet+ ["Tammi" "Helmi" "Maalis" "Huhti"
                   "Touko" "Kesä" "Heinä" "Elo"
@@ -756,10 +752,19 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     (t/in-days (t/interval eka toka))
     (t/in-days (t/interval toka eka))))
 
- (defn iso-8601->pvm
-   "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
-   [teksti]
-   (df/parse (df/formatter "yyyy-MM-dd") teksti))
+(defn paivia-valissa-opt
+  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on.
+   Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksessä.
+   Jos toinen tai molemmat puuttuu, palauttaa nil."
+  [eka toka]
+  (when (and eka toka)
+    (paivia-valissa eka toka)))
+
+#?(:clj
+   (defn iso-8601->pvm
+     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+     [teksti]
+     (df/parse (df/formatter "yyyy-MM-dd") teksti)))
 
 #?(:clj
    (defn pvm->iso-8601

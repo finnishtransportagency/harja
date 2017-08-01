@@ -54,6 +54,8 @@
                                            :ilmoituskuittausjono   s/Str
                                            :toimenpideviestijono   s/Str
                                            :toimenpidekuittausjono s/Str
+                                           (s/optional-key :tietyoilmoitusviestijono) s/Str
+                                           (s/optional-key :tietyoilmoituskuittausjono) s/Str
                                            :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
    (s/optional-key :turi)                 {:turvallisuuspoikkeamat-url s/Str
@@ -99,8 +101,7 @@
                                            (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-alk-osoite)             s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str
-                                           }
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str}
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str

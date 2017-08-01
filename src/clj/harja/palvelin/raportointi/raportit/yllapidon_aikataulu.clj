@@ -20,8 +20,8 @@
                         [::urakka/sopimukset #{::sopimus/id ::sopimus/paasopimus-id}]}
                       {::urakka/id urakka-id}))]
     (assoc parametrit
-           :tyyppi (keyword tyyppi)
-           :sopimus-id (::sopimus/id (sopimus/paasopimus sopimukset)))))
+      :tyyppi (keyword tyyppi)
+      :sopimus-id (::sopimus/id (sopimus/ainoa-paasopimus sopimukset)))))
 
 (defn kohdeluettelo-sarakkeet [urakkatyyppi]
   [{:otsikko "Koh\u00ADde" :leveys 4 :nimi :kohdenumero :tyyppi :string}

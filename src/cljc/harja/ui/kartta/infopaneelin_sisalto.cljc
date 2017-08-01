@@ -39,6 +39,9 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]
+            [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri.varusteet :as varusteet]))
 
@@ -521,6 +524,29 @@
                                         #(clojure.string/join ", " (map str (:ajoradat %))))}
             {:otsikko "Nopeusrajoitus" :nimi :nopeusrajoitus}]
    :data tietyomaa})
+
+(defmethod infopaneeli-skeema :turvalaite [turvalaite]
+  {:tyyppi :turvalaite
+   :jarjesta-fn (constantly false)
+   :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
+   :tiedot (vec
+             (concat
+               [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
+                {:otsikko "Kiinteä?" :nimi ::tu/kiintea :tyyppi :string :fmt fmt/totuus}
+                {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
+                {:otsikko "Väylä" :tyyppi :string :hae
+                 (hakufunktio
+                   #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
+                   #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}]
+               (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (:toimenpiteet turvalaite))]
+                 ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                 {:otsikko (if-let [s (or (::to/pvm toimenpide)
+                                          (::to/suoritettu toimenpide))]
+                             (pvm/pvm s)
+                             "-")
+                  :tyyppi :string
+                  :hae (hakufunktio (constantly true) (constantly (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))))})))
+   :data turvalaite})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))

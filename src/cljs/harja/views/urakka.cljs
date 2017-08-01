@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.bootstrap :as bs]
             [harja.asiakas.tapahtumat :as t]
-
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
@@ -33,8 +32,6 @@
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
-
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
@@ -66,20 +63,21 @@
     :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
                                      (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
                                  (= tyyppi :paikkaus))
-    :laadunseuranta (or (and (oikeudet/urakat-vesivaylalaadunseuranta id)
-                             (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                             (istunto/ominaisuus-kaytossa? :vesivayla))
-                        (and (oikeudet/urakat-laadunseuranta id)
-                             (not (u-domain/vesivaylaurakkatyyppi? tyyppi))))
+    :laadunseuranta (or
+                      (and (oikeudet/urakat-laadunseuranta id)
+                           (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
+                      (and (oikeudet/urakat-laadunseuranta id)
+                           (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                           (istunto/ominaisuus-kaytossa? :vesivayla)))
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta)
                    (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
-    :laskutus-vesivaylat (and #_(oikeudet/urakat-vesivaylalaskutus id) ; TODO OIKEUS
-                           (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                           (istunto/ominaisuus-kaytossa? :vesivayla))
+    :laskutus-vesivaylat (and (oikeudet/urakat-laskutus-vesivaylalaskutusyhteenveto id)
+                              (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                              (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
@@ -136,11 +134,12 @@
          ^{:key "vv-materiaalit"}
          [vv-materiaalit/materiaalit ur])
 
-       "Turvalaitteet"
-       :turvalaitteet
-       (when (valilehti-mahdollinen? :turvalaitteet ur)
-         ^{:key "turvalaitteet"}
-         [turvalaitteet/turvalaitteet ur])
+       ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
+       ;;"Turvalaitteet"
+       ;;:turvalaitteet
+       ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
+       ;;  ^{:key "turvalaitteet"}
+       ;;  [turvalaitteet/turvalaitteet ur])
 
        "Toteutus"
        :toteutus
