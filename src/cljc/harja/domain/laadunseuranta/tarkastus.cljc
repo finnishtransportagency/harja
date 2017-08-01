@@ -1,4 +1,6 @@
-(ns harja.domain.laadunseuranta.tarkastus)
+(ns harja.domain.laadunseuranta.tarkastus
+  (:require [clojure.string :as str]
+            [harja.domain.hoitoluokat :as hoitoluokat]))
 
 (def +tarkastustyyppi->nimi+
   {:tiesto "Tiestötarkastus"
