@@ -5,7 +5,6 @@ SET poistettu = TRUE;
 -- name: luo-turvalaite<!
 INSERT INTO vv_turvalaite
 (sijainti,
- tunniste,
  turvalaitenro,
  tyyppi,
  kiintea,
@@ -14,7 +13,6 @@ INSERT INTO vv_turvalaite
  arvot,
  poistettu)
 VALUES (:sijainti :: GEOMETRY,
-        :tunniste,
         :turvalaitenro,
         :tyyppi :: VV_TURVALAITETYYPPI,
         :kiintea,
@@ -22,11 +20,10 @@ VALUES (:sijainti :: GEOMETRY,
         :vaylat :: INTEGER [],
         :arvot :: JSONB,
         FALSE)
-ON CONFLICT (tunniste)
+ON CONFLICT (turvalaitenro)
   DO UPDATE
     SET
       sijainti      = :sijainti :: GEOMETRY,
-      tunniste      = :tunniste,
       turvalaitenro = :turvalaitenro,
       tyyppi        = :tyyppi :: VV_TURVALAITETYYPPI,
       kiintea       = :kiintea,
@@ -34,4 +31,3 @@ ON CONFLICT (tunniste)
       vaylat        = :vaylat :: INTEGER [],
       arvot         = :arvot :: JSONB,
       poistettu     = FALSE;
-

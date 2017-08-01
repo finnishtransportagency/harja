@@ -61,9 +61,8 @@
         viestit (atom [])
         sonja (:sonja jarjestelma)]
 
-    (tloik/laheta-tietyilmoitus (:tloik jarjestelma) tietyoilmoitus-id)
-
     (sonja/kuuntele sonja +tloik-tietyoilmoitusviestijono+ #(swap! viestit conj (.getText %)))
+    (tloik/laheta-tietyilmoitus (:tloik jarjestelma) tietyoilmoitus-id)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Tietyöilmoitussanoma on vastaanotettu." 10000)
 
