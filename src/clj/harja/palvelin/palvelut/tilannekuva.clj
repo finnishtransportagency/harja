@@ -165,9 +165,7 @@
     (when (tk/valittu? yllapito (case tyyppi
                                   "paallystys" tk/paallystys
                                   "paikkaus" tk/paikkaus))
-      (let [params (merge alue
-                          {:toleranssi toleranssi})
-            vastaus (into []
+      (let [vastaus (into []
                           (comp
                             (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
@@ -177,17 +175,15 @@
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                           (if nykytilanne?
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db params)
-                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db params))
+                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
+                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               (assoc params
-                                                                                      :loppu (konv/sql-date loppu)
-                                                                                      :alku (konv/sql-date alku)))
+                                                                               {:loppu (konv/sql-date loppu)
+                                                                                :alku (konv/sql-date alku)})
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                           (assoc params
-                                                                                  :loppu (konv/sql-date loppu)
-                                                                                  :alku (konv/sql-date alku))))))
+                                                                           {:loppu (konv/sql-date loppu)
+                                                                            :alku (konv/sql-date alku)}))))
             vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
                                                                   {:alue alue
                                                                    :toleranssi toleranssi})
