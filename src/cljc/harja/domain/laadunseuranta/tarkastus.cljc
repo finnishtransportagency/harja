@@ -64,12 +64,21 @@
 (defn tarkastuksen-havainto-ok? [data]
   (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
+(defn- tyhja-mittaus?* [mittaus]
+  (every? #(if (map? %) (tyhja-mittaus?* %) (empty? %)) (vals mittaus)))
+
+(defn tyhja-soratiemittaus? [data]
+  (tyhja-mittaus?* (:soratiemittaus data)))
+
+(defn tyhja-talvihoitomittaus? [data]
+  (tyhja-mittaus?* (:talvihoitomittaus data)))
+
 (defn tarkastus-sisaltaa-havaintoja? [data]
   (boolean
     (or (not-empty (:vakiohavainnot data))
         (and (not-empty (:havainnot data)) (not (tarkastuksen-havainto-ok? data)))
-        (not-empty (:talvihoitomittaus data))
-        (not-empty (:soratiemittaus data)))))
+        (not (tyhja-talvihoitomittaus? data))
+        (not (tyhja-soratiemittaus? data)))))
 
 (defn liukas-vakiohavainto? [data]
   (boolean
