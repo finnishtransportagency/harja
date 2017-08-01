@@ -12,8 +12,11 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.codec :as codec]
             [taoensso.timbre :as log]
+            [harja.tyokalut.html :refer [sanitoi]]
             [ring.util.io :refer [piped-input-stream]]
-            [harja.palvelin.komponentit.vienti :as vienti])
+            [harja.palvelin.komponentit.vienti :as vienti]
+            [clojure.walk :as walk]
+            [clojure.string :as str])
   (:import javax.xml.transform.sax.SAXResult
            javax.xml.transform.stream.StreamSource
            javax.xml.transform.TransformerFactory
@@ -22,7 +25,9 @@
 
 (defprotocol PdfKasittelijat
   (rekisteroi-pdf-kasittelija! [this nimi kasittely-fn]
-    "Julkaisee PDF käsittelijäfunktion annetulla keyword nimellä. Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa PDF:n tiedot hiccup muotoisena FOPina.")
+    "Julkaisee PDF käsittelijäfunktion annetulla keyword nimellä.
+     Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit
+     mäppeinä ja palauttaa PDF:n tiedot hiccup muotoisena FOPina.")
   (poista-pdf-kasittelija! [this nimi]))
 
 (declare muodosta-pdf)
@@ -63,10 +68,16 @@
 (defn luo-pdf-vienti []
   (->PdfVienti (atom {}) (luo-fop-factory)))
 
+(defn- escape [hiccup]
+  (walk/postwalk #(if (and (string? %)
+                           (not (str/starts-with? % "<![CDATA[")))
+                    (sanitoi %)
+                    %) hiccup))
+
 (defn- hiccup->pdf [fop-factory hiccup out]
   (let [fop (.newFop fop-factory MimeConstants/MIME_PDF out)
         xform (.newTransformer (TransformerFactory/newInstance))
-        src (StreamSource. (java.io.StringReader. (html hiccup)))
+        src (StreamSource. (java.io.StringReader. (html (escape hiccup))))
         res (SAXResult. (.getDefaultHandler fop))]
     (.transform xform src res)))
 
@@ -85,13 +96,16 @@
       (try
         (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        (let [pdf (kasittelija kayttaja params)]
+        (let [pdf (kasittelija kayttaja params)
+              tiedostonimi (-> pdf meta :tiedostonimi)]
           (if (map? pdf)
             ;; Käsittelijä palautti ring vastauksen, annetaan se läpi as is
             pdf
             ;; Käsittelijä palautti hiccupia, generoidaan siitä PDF
             {:status  200
-             :headers {"Content-Type" "application/pdf"} ;; content-disposition!
+             :headers (merge {"Content-Type" "application/pdf"}
+                             (when tiedostonimi
+                               {"Content-Disposition" (str "attachment; filename=\"" tiedostonimi "\"")}))
              :body    (piped-input-stream
                        (fn [out]
                          (try

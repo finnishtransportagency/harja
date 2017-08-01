@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
             [clojure.string :as str]
-            [clojure.core.async :as async])
+            [clojure.core.async :as async]
+            [harja.domain.reittipiste :as rp])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgresql.util PSQLException)
            (org.postgis Point)))
@@ -114,45 +115,29 @@ maksimi-linnuntien-etaisyys 200)
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))
 
-(defn luo-reitin-tehtavat [db reittipiste reittipiste-id]
-  (log/debug "Luodaan reitin tehtävät")
-  (doseq [tehtava (get-in reittipiste [:reittipiste :tehtavat])]
-    (toteumat/luo-reitti_tehtava<!
-      db
-      reittipiste-id
-      (get-in tehtava [:tehtava :id])
-      (get-in tehtava [:tehtava :maara :maara]))))
-
-(defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
-  (log/debug "Luodaan reitin materiaalit")
-  (doseq [materiaali (get-in reittipiste [:reittipiste :materiaalit])]
-    (let [materiaali-nimi (:materiaali materiaali)
-          materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
-      (if (nil? materiaalikoodi-id)
-        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
-                 :virheet [{:koodi virheet/+tuntematon-materiaali+
-                            :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
-      (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
-
 (defn luo-reitti [db reitti toteuma-id]
   (log/debug "Luodaan uusi reittipiste")
-  (doseq [reittipiste reitti]
-    (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
-                                db
-                                toteuma-id
-                                (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
-                                (get-in reittipiste [:reittipiste :koordinaatit :x])
-                                (get-in reittipiste [:reittipiste :koordinaatit :y])))]
-      (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
-      (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
-      (luo-reitin-tehtavat db reittipiste reittipiste-id)
-      (log/debug "Aloitetaan reittipisteen materiaalien tallennus.")
-      (luo-reitin-materiaalit db reittipiste reittipiste-id))))
+  (toteumat/tallenna-toteuman-reittipisteet!
+   db
+   {::rp/toteuma-id toteuma-id
+    ::rp/reittipisteet
+    (for [{:keys [aika koordinaatit tehtavat materiaalit]} (map :reittipiste reitti)]
+      (rp/reittipiste
+       (aika-string->java-sql-date aika)
+       koordinaatit
+       (toteumat/pisteen-hoitoluokat db koordinaatit)
+       (for [t tehtavat]
+         {::rp/toimenpidekoodi (get-in t [:tehtava :id])
+          ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
+       (for [m materiaalit]
+         {::rp/materiaalikoodi (->> m :materiaali
+                                    (materiaalit/hae-materiaalikoodin-id-nimella db)
+                                    first :id)
+          ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
 
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
-  ;; Poistetaan reittipisteet (reittipisteiden tehtävät ja materiaalit cascade)
-  ;; PENDING: Tämä on hidas operaatio isoille toteumille.
+  ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
 (defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja reittitoteuma]
@@ -240,8 +225,11 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/reittitoteuman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
-                           (#'kirjaa-toteuma db db-replica
-                                             parametit data kayttaja)))))
+                           (try
+                             (#'kirjaa-toteuma db db-replica
+                                               parametit data kayttaja)
+                             (catch Exception e
+                               (.printStackTrace e)))))))
 
     (julkaise-reitti
      http :lisaa-reittitoteuma

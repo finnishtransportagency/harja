@@ -3,10 +3,7 @@
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
-            [clojure.string :as str]
-    #?(:cljs [harja.loki :refer [log]]
-       :clj
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
             [clojure.string :as str]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
@@ -96,5 +93,15 @@
 
 (defn validi-laatupoikkeama? [data]
   (let [virheet (validoi-laatupoikkeama data)]
-    #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
+    (log/debug "laatupoikkeama virheet: " (pr-str virheet))
     (nil? virheet)))
+
+(def talvihoitomittauksen-lomakekentat
+  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
+
+(def talvihoitomittauksen-kentat
+  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
+   [:lampotila :tie] [:lampotila :ilma]])
+
+(def soratiemittauksen-kentat
+  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])

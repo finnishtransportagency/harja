@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat
-  (:require [harja.geo :as geo]))
+  (:require [harja.geo :as geo]
+            [harja.tyokalut.spec-apurit :as apurit]))
 
 (defn rakenna-tierekisteriosoite [ilmoitus tierekisteriosoite]
   (if (and (:numero tierekisteriosoite)

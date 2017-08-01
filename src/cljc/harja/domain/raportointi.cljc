@@ -75,10 +75,8 @@
   toinen arvo on mäppi, johon formatointifunktion voi liittää."
   [solu fmt]
   (if (raporttielementti? solu)
-    (do
-      #?(:cljs (harja.loki/log "Sain solun " (pr-str solu)))
-      (when (and fmt (map? (second solu)))
-        (assoc-in solu [1 :fmt] fmt)))
+    (when (and fmt (map? (second solu)))
+      (assoc-in solu [1 :fmt] fmt))
 
     ;; Jos annettu solu ei ole raporttielementti, voidaan sen arvo formatoida suoraan.
     (when fmt (fmt solu))))

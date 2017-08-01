@@ -214,7 +214,7 @@ SELECT
   u.loppupvm                            AS "urakka-loppupvm",
   u.nimi                                AS "urakka-nimi",
   h.nimi                                AS "hanke-nimi",
-
+  h.sampoid                             AS "hanke-sampoid",
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,

@@ -1,8 +1,10 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [harja.domain.laadunseuranta.tarkastukset :as domain-tarkastukset]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+
+            [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
+            [harja.domain.vesivaylat.turvalaite :as tu]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -81,22 +83,22 @@
 ;;;;;;;;;;
 
 ;; Merkkijono, koska tämä on osa tiedoston nimeä
-(def ikonien-varit
+(def tiepuolen-ikonien-varit
   {;; Tilallisten sijainti-ikonien ulompi väri
-   :tiedoitus                  "oranssi"
-   :kysely                     "syaani"
-   :toimenpidepyynto           "punainen"
-   :turvallisuuspoikkeama      "magenta"
+   :tiedoitus "oranssi"
+   :kysely "syaani"
+   :toimenpidepyynto "punainen"
+   :turvallisuuspoikkeama "magenta"
 
    ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
-   :ilmoitus-auki              "punainen"
-   :ilmoitus-kaynnissa         "sininen"
-   :ilmoitus-lopetettu         "vihrea"
+   :ilmoitus-auki "punainen"
+   :ilmoitus-kaynnissa "sininen"
+   :ilmoitus-lopetettu "vihrea"
 
    ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan (sisempi väri)
-   :kt-tyhja                   "oranssi"
-   :kt-avoimia                 "punainen"
-   :kt-valmis                  "vihrea"
+   :kt-tyhja "oranssi"
+   :kt-avoimia "punainen"
+   :kt-valmis "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
    :laatupoikkeama "violetti"
@@ -113,9 +115,32 @@
    :ei-ok-tarkastus-urakoitsija "oranssi"
    :tarkastus-vakiohavainnolla "keltainen"
    :varustetoteuma "tummansininen"
-   :yllapito "pinkki"})
+   :varuste "oranssi"
+   :yllapito "pinkki"
 
-(def viivojen-varit
+   :tietyoilmoitus "oranssi"})
+
+(def vesivaylien-ikonien-varit
+  {"merimajakka" "magenta"
+   "muu-merkki" "oranssi"
+   "poiju" "keltainen"
+   "reunamerkki" "lime"
+   "sektoriloisto" "vihrea"
+   "suuntaloisto" "vaaleanharmaa"
+   "tunnusmajakka" "punainen"
+   "tutkamerkki" "violetti"
+   "viitta" {true "tummansininen"
+             false "sininen"}
+   "apuloisto" "pinkki"
+   "kummeli" "syaani"
+   "linjamerkki" "turkoosi"})
+
+(defn turvalaitteiden-varit [tyyppi kiintea?]
+  (or (let [vari (get vesivaylien-ikonien-varit tyyppi)]
+        (if (map? vari) (get vari kiintea?) vari))
+      "musta"))
+
+(def tiepuolen-viivojen-varit
   {:yllapito-aloitettu puhtaat/keltainen
    :yllapito-valmis puhtaat/lime
    :yllapito-muu puhtaat/tummansininen
@@ -159,56 +184,56 @@
   {;; yhdistelmätoimenpiteet
    #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "PISTEHIEKOITUS"} auraus-tasaus-ja-kolmas
    #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "LINJAHIEKOITUS"} auraus-tasaus-ja-kolmas
-   #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "SUOLAUS"}        auraus-tasaus-ja-kolmas
+   #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "SUOLAUS"} auraus-tasaus-ja-kolmas
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "LIUOSSUOLAUS"}   auraus-tasaus-ja-kolmas
-   #{"AURAUS JA SOHJONPOISTO" "PISTEHIEKOITUS"}                 auraus-ja-hiekoitus
-   #{"AURAUS JA SOHJONPOISTO" "LINJAHIEKOITUS"}                 auraus-ja-hiekoitus
-   #{"AURAUS JA SOHJONPOISTO" "SUOLAUS"}                        auraus-ja-suolaus
+   #{"AURAUS JA SOHJONPOISTO" "PISTEHIEKOITUS"} auraus-ja-hiekoitus
+   #{"AURAUS JA SOHJONPOISTO" "LINJAHIEKOITUS"} auraus-ja-hiekoitus
+   #{"AURAUS JA SOHJONPOISTO" "SUOLAUS"} auraus-ja-suolaus
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"AURAUS JA SOHJONPOISTO" "LIUOSSUOLAUS"}                   auraus-ja-suolaus
    ;; tilannekuva/talvihoito
-   #{"AURAUS JA SOHJONPOISTO"}                                  [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
-   #{"SUOLAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"AURAUS JA SOHJONPOISTO"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   #{"SUOLAUS"} [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"LIUOSSUOLAUS"}                                            [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
-   #{"PISTEHIEKOITUS"}                                          [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
-   #{"LINJAHIEKOITUS"}                                          [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
-   #{"PINNAN TASAUS"}                                           [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
-   #{"LUMIVALLIEN MADALTAMINEN"}                                [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"SULAMISVEDEN HAITTOJEN TORJUNTA"}                         [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"AURAUSVIITOITUS JA KINOSTIMET"}                           [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
-   #{"LUMENSIIRTO"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"LUMEN SIIRTO"}                                            [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"PAANNEJAAN POISTO"}                                       [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"MUU"}                                                     [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"PISTEHIEKOITUS"} [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
+   #{"LINJAHIEKOITUS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
+   #{"PINNAN TASAUS"} [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
+   #{"LUMIVALLIEN MADALTAMINEN"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SULAMISVEDEN HAITTOJEN TORJUNTA"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"AURAUSVIITOITUS JA KINOSTIMET"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"LUMENSIIRTO"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"LUMEN SIIRTO"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"PAANNEJAAN POISTO"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
+   #{"MUU"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/kesähoito
-   #{"SORATEIDEN PÖLYNSIDONTA"}                                 [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
-   #{"SORASTUS"}                                                [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
-   #{"SORASTUS KM"}                                             [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
-   #{"SORATEIDEN TASAUS"}                                       [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
-   #{"SORATEIDEN MUOKKAUSHÖYLÄYS"}                              [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
-   #{"PÄÄLLYSTEIDEN PAIKKAUS"}                                  [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
-   #{"PÄÄLLYSTEIDEN JUOTOSTYÖT"}                                [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
-   #{"KONEELLINEN NIITTO"}                                      [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"KONEELLINEN VESAKONRAIVAUS"}                              [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"HARJAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
-   #{"LIIKENNEMERKKIEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"L- JA P-ALUEIDEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"SORATEIDEN PÖLYNSIDONTA"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   #{"SORASTUS"} [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"SORASTUS KM"} [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"SORATEIDEN TASAUS"} [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
+   #{"SORATEIDEN MUOKKAUSHÖYLÄYS"} [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
+   #{"PÄÄLLYSTEIDEN PAIKKAUS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
+   #{"PÄÄLLYSTEIDEN JUOTOSTYÖT"} [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
+   #{"KONEELLINEN NIITTO"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"KONEELLINEN VESAKONRAIVAUS"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"HARJAUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"LIIKENNEMERKKIEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"L- JA P-ALUEIDEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
+   #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/yllapito
-   #{"ASFALTOINTI"}                                             [(viiva-mustalla-rajalla puhtaat/musta) "musta"]
-   #{"TIEMERKINTÄ"}                                             [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"KUUMENNUS"}                                               [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"SEKOITUS TAI STABILOINTI"}                                [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
-   #{"TURVALAITE"}                                              [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
-   #{"JYRAYS"}                                                  [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]})
+   #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/musta) "musta"]
+   #{"TIEMERKINTÄ"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"KUUMENNUS"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SEKOITUS TAI STABILOINTI"} [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   #{"TURVALAITE"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   #{"JYRAYS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
@@ -233,131 +258,152 @@
 (defn yllapidon-ikoni []
   {:paikka [:loppu]
    :tyyppi :merkki
-   :img    (:yllapito ikonien-varit)})
+   :img (:yllapito tiepuolen-ikonien-varit)})
 
-(defn yllapidon-viiva [valittu? avoin? tila tyyppi]
+(defn yllapidon-viiva [valittu? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
         leveydet (range (cond
-                          (and valittu? avoin?) (+ 2 +valitun-leveys+)
-                          avoin? (+ 2 +normaali-leveys+)
                           valittu? +valitun-leveys+
-                          :else +normaali-leveys+) 0 -2)
-        tila (if (keyword? tila)
-               tila
-               (keyword (str/lower-case (or tila "muu"))))]
-    [{:color (:yllapito-pohja viivojen-varit)
+                          :else +normaali-leveys+) 0 -2)]
+    [{:color (:yllapito-pohja tiepuolen-viivojen-varit)
       :width (nth leveydet 0)}
      {:color (case tila
-               :aloitettu (:yllapito-aloitettu viivojen-varit)
-               :valmis (:yllapito-valmis viivojen-varit)
-               (:yllapito-muu viivojen-varit))
+               :kesken (:yllapito-aloitettu tiepuolen-viivojen-varit)
+               :valmis (:yllapito-valmis tiepuolen-viivojen-varit)
+               (:yllapito-muu tiepuolen-viivojen-varit))
       :width (nth leveydet 1)}
-     {:color (:yllapito-katkoviiva viivojen-varit)
-      :dash  (if (= tyyppi :paikkaus) [3 9] [10 5])
+     {:color (:yllapito-katkoviiva tiepuolen-viivojen-varit)
+      :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
   (sijainti-ikoni (case kt-tila
-                    :tyhja (:kt-tyhja ikonien-varit)
-                    :avoimia (:kt-avoimia ikonien-varit)
-                    :valmis (:kt-valmis ikonien-varit))
-                  (:turvallisuuspoikkeama ikonien-varit)))
+                    :tyhja (:kt-tyhja tiepuolen-ikonien-varit)
+                    :avoimia (:kt-avoimia tiepuolen-ikonien-varit)
+                    :valmis (:kt-valmis tiepuolen-ikonien-varit))
+                  (:turvallisuuspoikkeama tiepuolen-ikonien-varit)))
+
+(defn turvalaitteen-ikoni-ja-selite [turvalaite]
+  [(pinni-ikoni (turvalaitteiden-varit (::tu/tyyppi turvalaite)
+                                       (::tu/kiintea turvalaite)))
+   (str/capitalize
+     (str (when (and (= (::tu/tyyppi turvalaite) "viitta")
+                    (::tu/kiintea turvalaite))
+           "Kiinteä ")
+         (::tu/tyyppi turvalaite)))])
 
 (defn varustetoteuman-ikoni []
-  (pinni-ikoni (:varustetoteuma ikonien-varit)))
+  (pinni-ikoni (:varustetoteuma tiepuolen-ikonien-varit)))
+
+(defn varusteen-ikoni []
+  (pinni-ikoni (:varuste tiepuolen-ikonien-varit)))
+
+(defn tietyoilmoituksen-ikoni []
+  (pinni-ikoni (:tietyoilmoitus tiepuolen-ikonien-varit)))
+
+(defn tietyoilmoituksen-viiva []
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/oranssi
+    :width 6}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 4}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 3}])
 
 (defn tarkastuksen-ikoni [valittu? ok? havainnot vakiohavainnot talvihoitomittaus soratiemittaus reitti? tekija]
   (cond
     reitti? nil
     (not ok?)
     (pinni-ikoni (case tekija
-                   :tilaaja (:ei-ok-tarkastus-tilaaja ikonien-varit)
-                   :konsultti (:ei-ok-tarkastus-konsultti ikonien-varit)
-                   :urakoitsija (:ei-ok-tarkastus-urakoitsija ikonien-varit)
-                   (:ei-ok-tarkastus ikonien-varit)))
+                   :tilaaja (:ei-ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+                   :konsultti (:ei-ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+                   :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+                   (:ei-ok-tarkastus tiepuolen-viivojen-varit)))
 
     (or (not-empty vakiohavainnot)
         (not-empty havainnot)
         (not-empty talvihoitomittaus)
         (not-empty soratiemittaus))
-    (pinni-ikoni (:tarkastus-vakiohavainnolla ikonien-varit))
+    (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-viivojen-varit))
 
     (and valittu? ok?)
     (pinni-ikoni (case tekija
-                   :tilaaja (:ok-tarkastus-tilaaja ikonien-varit)
-                   :konsultti (:ok-tarkastus-konsultti ikonien-varit)
-                   :urakoitsija (:ok-tarkastus-urakoitsija ikonien-varit)
-                   (:ok-tarkastus ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+                   :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+                   :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+                   :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+                   (:ok-tarkastus tiepuolen-viivojen-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
 
-(defn tarkastuksen-reitti
-  [{:keys [ok? tekija] :as tarkastus}]
+(defn tarkastuksen-reitti [{:keys [ok? tekija] :as tarkastus}]
   (if-not ok? ;;laadunalitus
     {:color (case tekija
-              :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
-              :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
-              :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
-              (:ei-ok-tarkastus viivojen-varit))}
+              :tilaaja (:ei-ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+              :konsultti (:ei-ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+              :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+              (:ei-ok-tarkastus tiepuolen-viivojen-varit))}
     (if (domain-tarkastukset/tarkastus-sisaltaa-havaintoja? tarkastus)
       ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
       (if (domain-tarkastukset/luminen-tai-liukas-vakiohavainto? tarkastus)
         (tarkastus-vakiohavainnolla-luminen-tai-liukas (case tekija
-                                                         :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                                         :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                                         :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                                         (:ok-tarkastus viivojen-varit)))
+                                                         :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+                                                         :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+                                                         :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+                                                         (:ok-tarkastus tiepuolen-viivojen-varit)))
         (tarkastus-vakiohavainnolla (case tekija
-                                      :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                      :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                      :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                      (:ok-tarkastus viivojen-varit))))
+                                      :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+                                      :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+                                      :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+                                      (:ok-tarkastus tiepuolen-viivojen-varit))))
       ;; kaikki OK
       {:color (case tekija
-                :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                (:ok-tarkastus viivojen-varit))})))
+                :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
+                :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
+                :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
+                (:ok-tarkastus tiepuolen-viivojen-varit))})))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija
-                 :tilaaja (:laatupoikkeama-tilaaja ikonien-varit)
-                 :konsultti (:laatupoikkeama-konsultti ikonien-varit)
-                 :urakoitsija (:laatupoikkeama-urakoitsija ikonien-varit)
-                 (:laatupoikkeama ikonien-varit))))
+                 :tilaaja (:laatupoikkeama-tilaaja tiepuolen-ikonien-varit)
+                 :konsultti (:laatupoikkeama-konsultti tiepuolen-ikonien-varit)
+                 :urakoitsija (:laatupoikkeama-urakoitsija tiepuolen-ikonien-varit)
+                 (:laatupoikkeama tiepuolen-ikonien-varit))))
 
 (defn laatupoikkeaman-reitti [tekija]
   {:color (case tekija
-            :tilaaja (:laatupoikkeama-tilaaja viivojen-varit)
-            :konsultti (:laatupoikkeama-konsultti viivojen-varit)
-            :urakoitsija (:laatupoikkeama-urakoitsija viivojen-varit)
-            (:laatupoikkeama viivojen-varit))})
+            :tilaaja (:laatupoikkeama-tilaaja tiepuolen-viivojen-varit)
+            :konsultti (:laatupoikkeama-konsultti tiepuolen-viivojen-varit)
+            :urakoitsija (:laatupoikkeama-urakoitsija tiepuolen-viivojen-varit)
+            (:laatupoikkeama tiepuolen-viivojen-varit))})
 
 (defn kyselyn-ikoni [tila]
   (sijainti-ikoni
     (case tila
-     :kuittaamaton (:ilmoitus-kaynnissa ikonien-varit)
-     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
-    (:kysely ikonien-varit)))
+      :kuittaamaton (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :lopetettu (:ilmoitus-lopetettu tiepuolen-ikonien-varit))
+    (:kysely tiepuolen-ikonien-varit)))
 
 (defn toimenpidepyynnon-ikoni [tila]
   (sijainti-ikoni
     (case tila
-     :kuittaamaton (:ilmoitus-auki ikonien-varit)
-     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
-    (:toimenpidepyynto ikonien-varit)))
+      :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
+      :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :lopetettu (:ilmoitus-lopetettu tiepuolen-ikonien-varit))
+    (:toimenpidepyynto tiepuolen-ikonien-varit)))
 
 
 (defn tiedotuksen-ikoni [tila]
   (sijainti-ikoni
     (case tila
-     :kuittaamaton (:ilmoitus-auki ikonien-varit)
-     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
-    (:tiedoitus ikonien-varit)))
+      :kuittaamaton (:ilmoitus-auki tiepuolen-ikonien-varit)
+      :vastaanotettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :aloitettu (:ilmoitus-kaynnissa tiepuolen-ikonien-varit)
+      :lopetettu (:ilmoitus-lopetettu tiepuolen-ikonien-varit))
+    (:tiedoitus tiepuolen-ikonien-varit)))
 
 (defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
   (case ilmoitustyyppi
@@ -366,12 +412,12 @@
     :tiedoitus (tiedotuksen-ikoni tila)))
 
 (def ^{:doc "TR-valinnan viivatyyli"}
-tr-viiva {:color  puhtaat/tummanharmaa
-          :dash   [15 15]
+tr-viiva {:color puhtaat/tummanharmaa
+          :dash [15 15]
           :zindex 20})
 
 (def ^{:doc "TR-valinnan ikoni"}
-tr-ikoni {:img    (pinni-ikoni "musta")
+tr-ikoni {:img (pinni-ikoni "musta")
           :zindex 21})
 
 (def tietyomaa

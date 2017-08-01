@@ -35,8 +35,8 @@
    :toteumat
    [{:suorite                         +paikkaustyo+
      (s/optional-key :yksikko)        s/Str
-     (s/optional-key :maara)          s/Num
-     (s/optional-key :yks-hint-alv-0) s/Num
+     (s/optional-key :maara)          (s/maybe s/Num)
+     (s/optional-key :yks-hint-alv-0) (s/maybe s/Num)
      (s/optional-key :takuupvm)       (s/maybe s/Inst)
      (s/optional-key :poistettu)      s/Bool}]})
 
@@ -44,5 +44,8 @@
 (defn laske-kokonaishinta [tyot]
   (reduce +
           (map
-            (fn [tyo] (* (:yks-hint-alv-0 tyo) (:maara tyo)))
+            (fn [tyo]
+              (if (and (:yks-hint-alv-0 tyo) (:maara tyo))
+                (* (:yks-hint-alv-0 tyo) (:maara tyo))
+                0))
             tyot)))

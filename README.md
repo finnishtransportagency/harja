@@ -105,6 +105,8 @@ logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 * Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
 * ActiveMQ: docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
 
+Kantaimagen päivitys: docker pull solita/harjadb
+
 ## Dokumentaatio
 
 ### Tietokanta
@@ -277,6 +279,8 @@ jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja
 ## Labyrintin SMS-gateway
 
 Harja käyttää Labyrintin SMS-gatewaytä SMS-viestien lähettämiseen. Labyrintin komponentista on olemassa kaksi eri versiota: Labyrintti ja FeikkiLabyrintti. FeikkiLabyrintti on käytössä vain lokaalissa kehitysympäristössä ja se ainoastaan logittaa viestit REPLiin.
+
+Jos haluat kehityskäytössä testata SMS-gatewayta, vaihda main.clj tiedostosta oikea Labyrinttikomponentti käyttöön feikin sijasta.
 
 Oikeiden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
 harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan

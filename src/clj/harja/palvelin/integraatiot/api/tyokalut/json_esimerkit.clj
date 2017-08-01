@@ -71,3 +71,5 @@
 (def +urakan-tiemerkintatoteuman-kirjaus-request+ "api/examples/urakan-tiemerkintatoteuman-kirjaus-request.json")
 
 (def +urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+ "api/examples/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
+
+(def +urakan-tyotuntien-kirjaus-request+ "api/examples/urakan-tyotuntien-kirjaus-request.json")

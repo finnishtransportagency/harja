@@ -45,7 +45,7 @@
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen"]))
           (is (= (count toteuma-tehtava-idt) 1)))
 
-        (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+        (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
 

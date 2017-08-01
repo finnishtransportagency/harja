@@ -25,16 +25,18 @@
         loppu-vuosi (t/year (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm)))
         alkukuukauden-eka-paiva (t/day (t/first-day-of-the-month alku-vuosi alku-kuukausi))
         loppukuukauden-vika-paiva (t/day (t/last-day-of-the-month loppu-vuosi loppu-kuukausi))
-        kk-vali? (and (= alku-paiva alkukuukauden-eka-paiva)
+        kokonaisia-kuukausia-aikavalina? (and (= alku-paiva alkukuukauden-eka-paiva)
                       (= loppu-paiva loppukuukauden-vika-paiva))
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat yksikkohintaiset-suunnitellut-tyot
-                muut-tyot sakot bonukset]}
+                muut-tyot arvonmuutokset indeksit sakot bonukset]}
         (first (hae-tiemerkinnan-kustannusyhteenveto db {:urakkaid urakka-id
                                                          :alkupvm alkupvm
                                                          :loppupvm loppupvm}))
-        toteumat-yhteensa (+ (if kk-vali? kokonaishintaiset-tyot 0)
+        toteumat-yhteensa (+ (if kokonaisia-kuukausia-aikavalina? kokonaishintaiset-tyot 0)
                              yksikkohintaiset-toteumat
                              muut-tyot
+                             arvonmuutokset
+                             indeksit
                              sakot
                              bonukset)]
 
@@ -42,25 +44,30 @@
      :yksikkohintaiset-toteumat yksikkohintaiset-toteumat
      :yksikkohintaiset-suunnitellut-tyot yksikkohintaiset-suunnitellut-tyot
      :muut-tyot muut-tyot
+     :arvonmuutokset arvonmuutokset
+     :indeksit indeksit
      :sakot sakot
      :bonukset bonukset
      :toteumat-yhteensa toteumat-yhteensa
-     :kk-vali? kk-vali?}))
+     :kokonaisia-kuukausia-aikavalina? kokonaisia-kuukausia-aikavalina?}))
 
 (defn- muodosta-raportin-rivit [raportin-tiedot]
   (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]} raportin-tiedot
+                muut-tyot arvonmuutokset indeksit sakot bonukset
+                toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]} raportin-tiedot
         ei-kk-vali-viesti "Kokonaishintainen osa voidaan näyttää vain kokonaisille kuukausille"]
 
     [["Kokonaishintaiset työt"
-      (if kk-vali?
+      (if kokonaisia-kuukausia-aikavalina?
         kokonaishintaiset-tyot
         [:varillinen-teksti {:arvo ei-kk-vali-viesti :tyyli :virhe}])
-      (if kk-vali?
+      (if kokonaisia-kuukausia-aikavalina?
         kokonaishintaiset-tyot
         [:varillinen-teksti {:arvo "-" :tyyli :virhe}])]
      ["Yksikköhintaiset työt" yksikkohintaiset-toteumat yksikkohintaiset-toteumat]
      ["Muut työt" muut-tyot muut-tyot]
+     ["Arvonmuutokset" arvonmuutokset arvonmuutokset]
+     ["Indeksitarkistukset" indeksit indeksit]
      ["Sakot" sakot sakot]
      ["Bonukset" bonukset bonukset]
      ["Yhteensä" toteumat-yhteensa toteumat-yhteensa]]))
@@ -80,7 +87,7 @@
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  "toteutuneet kustannukset" alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
@@ -92,7 +99,7 @@
      (let [yksikkohintaiset-suunnitellut-tyot (:yksikkohintaiset-suunnitellut-tyot raportin-tiedot)
            toteumat-yhteensa (:toteumat-yhteensa raportin-tiedot)]
        [:yhteenveto
-        [["Suunnitellut yksikköhintaiset työt yhteensä:" (fmt/euro-opt yksikkohintaiset-suunnitellut-tyot)]
-         ["Toteumat yhteensä:" (fmt/euro-opt toteumat-yhteensa)]
-         ["Kaikki yhteensä:" (fmt/euro-opt (+ toteumat-yhteensa
+        [["Suunnitellut yksikköhintaiset työt aikavälillä:" (fmt/euro-opt yksikkohintaiset-suunnitellut-tyot)]
+         ["Toteumat aikavälillä:" (fmt/euro-opt toteumat-yhteensa)]
+         ["Kaikki aikavälillä:" (fmt/euro-opt (+ toteumat-yhteensa
                                               yksikkohintaiset-suunnitellut-tyot))]]])]))

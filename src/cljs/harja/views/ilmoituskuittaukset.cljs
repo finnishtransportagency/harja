@@ -4,23 +4,24 @@
             [reagent.core :refer [atom]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoituskuittaukset :as tiedot]
-            [harja.domain.ilmoitukset :as apurit]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
             [harja.ui.bootstrap :as bs]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.protokollat :as protokollat])
+            [harja.ui.protokollat :as protokollat]
+            [reagent.core :as r]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -154,6 +155,13 @@
          "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
          "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]]))
 
+(def vakiofraasi-kentta
+  {:otsikko "Vakiofraasi"
+   :tyyppi :haku
+   :hae-kun-yli-n-merkkia 0
+   :lahde fraasihaku
+   :nimi :vakiofraasi})
+
 (defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
                                 :as data}]
   (let [valittuna (count ilmoitukset)]
@@ -172,11 +180,7 @@
           :nimi :tyyppi
           :vihje (when (= :vaara-urakka (:tyyppi data))
                    "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
-         {:otsikko "Vakiofraasi"
-          :tyyppi :haku
-          :hae-kun-yli-n-merkkia 0
-          :lahde fraasihaku
-          :nimi :vakiofraasi}
+         vakiofraasi-kentta
 
          {:otsikko "Vapaateksti"
           :tyyppi :text
@@ -199,3 +203,28 @@
                      (zero? valittuna))}]
      [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
+
+(defn- pikakuittauslomake [e! pikakuittaus]
+  (komp/luo
+   (komp/fokusoi "input.form-control")
+   (fn [e! {:keys [tyyppi tallennus-kaynnissa?] :as pikakuittaus}]
+     [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
+                     :otsikko (apurit/kuittaustyypin-selite tyyppi)
+                     :footer-fn (fn [data]
+                                  [napit/tallenna "Kuittaa"
+                                   #(e! (v/->TallennaPikakuittaus))
+                                   {:disabled tallennus-kaynnissa?}])}
+      [{:tyyppi :string
+        :nimi :vapaateksti
+        :otsikko "Vapaateksti" :palstoja 2
+        ::lomake/col-luokka ""}
+       (merge vakiofraasi-kentta
+              {:palstoja 2
+               ::lomake/col-luokka ""})]
+      pikakuittaus])))
+
+(defn pikakuittaus [e! pikakuittaus]
+  [leijuke/leijuke
+   {:otsikko "Kuittaa"
+    :sulje! #(e! (v/->PeruutaPikakuittaus))}
+   [pikakuittauslomake e! pikakuittaus]])

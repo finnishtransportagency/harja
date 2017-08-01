@@ -170,15 +170,30 @@
                             <xs:element name="urakkatyyppi" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Urakan tyyppi: hoito/ylläpito/investoinnit/muut.
+                                        Urakan tyyppi.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
+                                        <!-- Tieurakat -->
                                         <xs:enumeration value="hoito" />
-                                        <xs:enumeration value="ylläpito" />
-                                        <xs:enumeration value="investoinnit" />
-                                        <xs:enumeration value="muut" />
+                                        <xs:enumeration value="paallystys" />
+                                        <xs:enumeration value="paikkaus" />
+                                        <xs:enumeration value="tiemerkinta" />
+                                        <xs:enumeration value="valaistus" />
+                                        <xs:enumeration value="siltakorjaus" />
+                                        <xs:enumeration value="tekniset-laitteet" />
+                                        <!-- Vesiurakat -->
+                                        <xs:enumeration value="vesivayla-hoito" />
+                                        <xs:enumeration value="vesivayla-ruoppaus" />
+                                        <xs:enumeration value="vesivayla-turvalaitteiden-korjaus" />
+                                        <xs:enumeration value="vesivayla-kanavien-hoito" />
+                                        <xs:enumeration value="vesivayla-kanavien-korjaus" />
+                                        <!-- Rataurakat -->
+                                        <xs:enumeration value="kunnossapito-paallysrakenne" />
+                                        <xs:enumeration value="kunnossapito-sahkorata" />
+                                        <xs:enumeration value="kunnossapito-turvalaite" />
+                                        <xs:enumeration value="yllapito" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -919,7 +934,6 @@
                             </xs:element>
 
 
-
                             <xs:element name="vastuuhenkilokayttajatunnus" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -968,7 +982,6 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-
 
 
                             <xs:element name="toteuttaja" minOccurs="0">

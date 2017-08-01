@@ -56,7 +56,7 @@
     (try
       (.close yhteys)
       (catch Exception e
-        (log/error e ("JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))))))
+        (log/error e "JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e)))))
   (loop [tila (aloita-yhdistaminen (poista-consumerit tila) asetukset (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?) yhteys-ok?)
          [[jonon-nimi kuuntelija] & kuuntelijat]
          (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]

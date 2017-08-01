@@ -11,11 +11,13 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
-  (k/post! :siirry-kokonaishintainen-toteuma toteuma-id))
+  (k/post! :siirry-toteuma toteuma-id))
 
 (defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id]}]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id
@@ -34,6 +36,24 @@
           (if (arvo-pred @atomi)
             true
             (recur (alts! [lopeta-odotus (async/timeout 100)]))))))))
+
+
+(defn nayta-varustetoteuma!
+  "Navigoi annetun urakan tietoihin ja näyttää varustetoteuman tiedot."
+  [toteuma-id]
+  (go
+    (let [{:keys [urakka-id hallintayksikko-id aikavali]}
+          (<! (hae-toteuman-siirtymatiedot toteuma-id))]
+
+      (varusteet/valitse-toteuman-idlla! toteuma-id)
+
+      (nav/aseta-valittu-valilehti! :toteumat :varusteet)
+      (nav/aseta-valittu-valilehti! :urakat :toteumat)
+      (nav/aseta-valittu-valilehti! :sivu :urakat)
+
+      (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
+
+      (urakka/valitse-aikavali! (:alku aikavali) (:loppu aikavali)))))
 
 (defn nayta-kokonaishintainen-toteuma!
   "Navigoi annetun urakan tietoihin ja näyttää kokonaishintaisen toteuman tiedot."
@@ -97,20 +117,28 @@
       (when-not (and valittu-urakka-id (= valittu-urakka-id kohteen-urakka-id urakka-id))
         (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id))
 
-        ;; Vaihdetaan välilehtiä jos tarvetta
-        (when-not (= nykyinen-valilehti-taso1 :urakat)
-          (nav/aseta-valittu-valilehti! :sivu :urakat))
+      ;; Vaihdetaan välilehtiä jos tarvetta
+      (when-not (= nykyinen-valilehti-taso1 :urakat)
+        (nav/aseta-valittu-valilehti! :sivu :urakat))
 
-        (when-not (= nykyinen-valilehti-taso2 :kohdeluettelo-paallystys)
-          (nav/aseta-valittu-valilehti! :urakat :kohdeluettelo-paallystys))
+      (when-not (= nykyinen-valilehti-taso2 :kohdeluettelo-paallystys)
+        (nav/aseta-valittu-valilehti! :urakat :kohdeluettelo-paallystys))
 
-        (when-not (= nykyinen-valilehti-taso3 :paallystysilmoitukset)
-          (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset))
+      (when-not (= nykyinen-valilehti-taso3 :paallystysilmoitukset)
+        (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset))
 
-      (when (= paallystyskohde-id yllapitokohde-id)  ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
+      (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
         (reset! paallystys/paallystysilmoitus-lomakedata
                 (assoc vastaus
                   :kirjoitusoikeus?
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             valittu-urakka-id)))))))
+
+(defn avaa-tietyoilmoitus
+  "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
+  [{:keys [tietyoilmoitus-id] :as yllapitokohde}]
+  (go
+    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
+    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
+    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))

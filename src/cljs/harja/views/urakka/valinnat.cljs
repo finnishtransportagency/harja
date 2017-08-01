@@ -12,9 +12,19 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero [tienumero-atom]
-  [tee-otsikollinen-kentta "Tienumero"
-   {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
-   tienumero-atom])
+  [tee-otsikollinen-kentta
+   {:otsikko "Tienumero"
+    :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
+    :arvo-atom tienumero-atom
+    :luokka "label-ja-kentta-puolikas"}
+   "Tienumero"])
+
+(defn yllapitokohteen-kohdenumero [kohdenumero-atom]
+  [tee-otsikollinen-kentta
+   {:otsikko "Kohdenumero"
+    :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla"}
+    :arvo-atom kohdenumero-atom
+    :luokka "label-ja-kentta-puolikas"}])
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
@@ -24,20 +34,29 @@
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
-   (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)
+   (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)
    u/valittu-hoitokauden-kuukausi
    u/valitse-hoitokauden-kuukausi!])
 
+(defn- urakan-vuosi
+  "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
+  ([ur]
+   (urakan-vuosi ur {}))
+  ([ur {:keys [kaikki-valinta?] :as optiot}]
+   [valinnat/vuosi optiot
+    (t/year (:alkupvm ur))
+    (t/year (:loppupvm ur))
+    u/valittu-urakan-vuosi
+    u/valitse-urakan-vuosi!]))
+
 (defn urakan-hoitokausi-ja-kuukausi [urakka]
-  (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
-    [valinnat/urakan-hoitokausi-ja-kuukausi
-     urakka
-     u/valitun-urakan-hoitokaudet
-     u/valittu-hoitokausi
-     u/valitse-hoitokausi!
-     kuukaudet
-     u/valittu-hoitokauden-kuukausi
-     u/valitse-hoitokauden-kuukausi!]))
+  (let [kuukaudet (vec (concat [nil] (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)))]
+    [valinnat/urakan-valinnat urakka {:hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                                                   :valittu-hoitokausi-atom u/valittu-hoitokausi
+                                                   :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+                                      :kuukausi {:hoitokauden-kuukaudet kuukaudet
+                                                 :valittu-kuukausi-atom u/valittu-hoitokauden-kuukausi
+                                                 :valitse-kuukausi-fn u/valitse-hoitokauden-kuukausi!}}]))
 
 (defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
@@ -59,16 +78,16 @@
          :as valittu-aikavali-nyt] @valittu-aikavali
 
         alkuvalinta (or
-                     (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
-                     (and valittu-aikavali-alku
-                             valittu-aikavali-loppu
-                             (some (fn [[nimi aikavali-fn :as valinta]]
-                                     (when aikavali-fn
-                                       (let [[alku loppu] (aikavali-fn)]
-                                         (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
-                                                    (pvm/sama-pvm? loppu valittu-aikavali-loppu))
-                                           valinta)))) aikavali-valinnat))
-                     (last aikavali-valinnat))
+                      (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
+                      (and valittu-aikavali-alku
+                           valittu-aikavali-loppu
+                           (some (fn [[nimi aikavali-fn :as valinta]]
+                                   (when aikavali-fn
+                                     (let [[alku loppu] (aikavali-fn)]
+                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
+                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu))
+                                         valinta)))) aikavali-valinnat))
+                      (last aikavali-valinnat))
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
         vapaa-aikavali? (r/atom false)
@@ -84,9 +103,9 @@
                       (reset! vapaa-aikavali? true))))]
     (valitse urakka alkuvalinta)
     (komp/luo
-     (komp/kun-muuttuu
-      (fn [urakka _]
-        (valitse urakka @valinta)))
+      (komp/kun-muuttuu
+        (fn [urakka _]
+          (valitse urakka @valinta)))
 
       (fn [urakka valittu-aikavali]
         (if-not (u/urakka-kaynnissa? urakka)
@@ -94,8 +113,8 @@
           [:span.aikavali-nykypvm-taakse
            [:div.label-ja-alasveto
             [:span.alasvedon-otsikko "Aikaväli"]
-            [livi-pudotusvalikko {:valinta    @valinta
-                                  :format-fn  first
+            [livi-pudotusvalikko {:valinta @valinta
+                                  :format-fn first
                                   :valitse-fn (partial valitse urakka)}
              aikavali-valinnat]]
            (when @vapaa-aikavali?
@@ -144,54 +163,89 @@
     {:component-will-mount
      (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
     (fn [ur]
-      (valinnat/urakan-sopimus-ja-hoitokausi
-        ur
-        u/valittu-sopimusnumero u/valitse-sopimusnumero!
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))))
+      (valinnat/urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                                              :valitse-sopimus-fn u/valitse-sopimusnumero!}
+                                    :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                                                 :valittu-hoitokausi-atom u/valittu-hoitokausi
+                                                 :valitse-hoitokausi-fn u/valitse-hoitokausi!}}))))
 
 (defn urakan-sopimus-ja-toimenpide [ur]
-  (valinnat/urakan-sopimus-ja-toimenpide
-    ur
-    u/valittu-sopimusnumero u/valitse-sopimusnumero!
-    u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+  (valinnat/urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                                          :valitse-sopimus-fn u/valitse-sopimusnumero!}
+                                :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                                             :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                                             :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}}))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
-  (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
-    ur
-    u/valittu-sopimusnumero u/valitse-sopimusnumero!
-    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-    u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
+  (valinnat/urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                                          :valitse-sopimus-fn u/valitse-sopimusnumero!}
+                                :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                                             :valittu-hoitokausi-atom u/valittu-hoitokausi
+                                             :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+                                :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                                             :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                                             :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}}))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
   (fn [ur]
-    (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
+    (valinnat/urakan-valinnat
       ur
-      u/valittu-sopimusnumero u/valitse-sopimusnumero!
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
-                           [{:tpi_nimi "Muut"}]))
-              identity)
-      u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+      {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                 :valitse-sopimus-fn u/valitse-sopimusnumero!}
+       :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :toimenpide {:urakan-toimenpideinstassit-atom (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                                                                          [{:tpi_nimi "Muut"}]))
+                                                             identity)
+                    :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                    :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (fn [ur]
-    (valinnat/urakan-hoitokausi-ja-toimenpide
+    (valinnat/urakan-valinnat
       ur
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+      {:hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                    :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                    :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
 
 (defn urakan-hoitokausi-ja-aikavali [ur]
   (fn [ur]
-    (valinnat/urakan-hoitokausi-ja-aikavali
+    (valinnat/urakan-valinnat
       ur
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      u/valittu-aikavali)))
+      {:hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :aikavali {:valittu-aikavali-atom u/valittu-aikavali}})))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (fn [ur]
-    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
+    (valinnat/urakan-valinnat
       ur
-      u/valittu-sopimusnumero u/valitse-sopimusnumero!
-      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-      u/valittu-aikavali
-      u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
+      {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                 :valitse-sopimus-fn u/valitse-sopimusnumero!}
+       :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+       :aikavali {:valittu-aikavali-atom u/valittu-aikavali}
+       :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                    :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
+                    :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
+
+(defn urakan-sopimus-ja-hoitokausi-ja-aikavali
+  ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))
+  ([ur optiot]
+   (fn [ur]
+     (valinnat/urakan-valinnat
+       ur
+       (merge-with merge
+         {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
+                    :valitse-sopimus-fn u/valitse-sopimusnumero!}
+          :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                       :valittu-hoitokausi-atom u/valittu-hoitokausi
+                       :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+          :aikavali {:valittu-aikavali-atom u/valittu-aikavali}}
+         optiot)))))

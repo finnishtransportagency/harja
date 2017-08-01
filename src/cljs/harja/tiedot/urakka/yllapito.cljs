@@ -8,4 +8,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+;; Ylläpidon näkymien yhteiset suodattimet
 (def tienumero (atom nil))
+(def kohdenumero (atom nil))

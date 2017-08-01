@@ -35,10 +35,22 @@ SELECT
     AS "yksikkohintaiset-suunnitellut-tyot",
   COALESCE((SELECT SUM(hinta)
    FROM yllapito_muu_toteuma
-   WHERE urakka = :urakkaid
+   WHERE urakka = :urakkaid AND tyyppi = 'muu'
    AND pvm >= :alkupvm AND pvm <= :loppupvm
    AND poistettu IS NOT TRUE), 0)
     AS "muut-tyot",
+  COALESCE((SELECT SUM(hinta)
+            FROM yllapito_muu_toteuma
+            WHERE urakka = :urakkaid AND tyyppi = 'arvonmuutos'
+                  AND pvm >= :alkupvm AND pvm <= :loppupvm
+                  AND poistettu IS NOT TRUE), 0)
+    AS "arvonmuutokset",
+  COALESCE((SELECT SUM(hinta)
+            FROM yllapito_muu_toteuma
+            WHERE urakka = :urakkaid AND tyyppi = 'indeksi'
+                  AND pvm >= :alkupvm AND pvm <= :loppupvm
+                  AND poistettu IS NOT TRUE), 0)
+    AS "indeksit",
   COALESCE((SELECT SUM(maara)
    FROM sanktio
    WHERE poistettu IS NOT TRUE

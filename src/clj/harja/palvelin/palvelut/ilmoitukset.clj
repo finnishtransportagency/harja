@@ -5,8 +5,8 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
-            [harja.kyselyt.ilmoitukset :as q]
-            [harja.domain.ilmoitukset :as ilmoitukset-domain]
+            [harja.kyselyt.tieliikenneilmoitukset :as q]
+            [harja.domain.tieliikenneilmoitukset :as ilmoitukset-domain]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
@@ -126,7 +126,11 @@
                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
                                                  urakka-id
                                                  kayttaja))
-                  urakka urakoitsija urakkatyyppi hallintayksikko
+                  urakka urakoitsija
+                  (if (= :kaikki urakkatyyppi)
+                    nil
+                    urakkatyyppi)
+                  hallintayksikko
                   (first aikavali) (second aikavali))
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))

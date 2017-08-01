@@ -20,18 +20,15 @@
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.domain.urakan-tyotunnit :as ut]
+            [harja.domain.urakka :as u-domain]
+            [harja.ui.viesti :as viesti]
+            [harja.geo :as geo])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-(def +uusi-turvallisuuspoikkeama+
-  ^{:uusi? true}
-  {:tila :avoin
-   :vakavuusaste :lieva
-   :vaylamuoto :tie
-   :tyontekijanammatti :muu_tyontekija})
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
@@ -196,14 +193,13 @@
 (defn- voi-tallentaa? [tp toimenpiteet-virheet]
   (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
        (empty? toimenpiteet-virheet)
-       (if-not (:id tp)
-         (lomake/voi-tallentaa-ja-muokattu? tp)
-         (lomake/voi-tallentaa? tp))))
+       (lomake/voi-tallentaa-ja-muokattu? tp)))
 
-(defn turvallisuuspoikkeaman-tiedot []
+(defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
-        toimenpiteet-virheet (atom nil)]
-    (fnc []
+        toimenpiteet-virheet (atom nil)
+        vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
+    (fnc [urakka]
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                          ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
             vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
@@ -222,24 +218,26 @@
                                                      %)]
                         (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-           :footer [:div
-                    [napit/palvelinkutsu-nappi
-                     "Tallenna turvallisuuspoikkeama"
-                     #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                       (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                       (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                      :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                      :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]
-                    [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]]}
+           :footer-fn (fn [tp]
+                        [:div
+                         [napit/palvelinkutsu-nappi
+                          "Tallenna turvallisuuspoikkeama"
+                          #(tiedot/tallenna-turvallisuuspoikkeama (lomake/ilman-lomaketietoja tp))
+                          {:luokka "nappi-ensisijainen"
+                           :ikoni (ikonit/tallenna)
+                           :kun-onnistuu #(do
+                                            (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                            (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                           :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
+                           :disabled (not (voi-tallentaa? tp @toimenpiteet-virheet))}]
+                         [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
+                         [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string
             :pituus-max 1024
             :pakollinen? true
-            :validoi [[:ei-tyhja "Valitse tila"]]
+            :validoi [[:ei-tyhja "Anna otsikko"]]
             :palstoja 1}
            {:otsikko "Tapahtunut" :pakollinen? true
             :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
@@ -262,21 +260,37 @@
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                           :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
-                                      "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
-                                      "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
-           {:otsikko "Tierekisteriosoite"
-            :nimi :tr
-            :pakollinen? true
-            :tyyppi :tierekisteriosoite
-            :ala-nayta-virhetta-komponentissa? true
-            :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-            :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
-                              #(swap! turvallisuuspoikkeama assoc :sijainti %))}
+                          :vihje-leijuke [:div
+                                          [:p "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma."]
+                                          [:p "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma."]
+                                          [:p "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen."]]})
+           (if vesivaylaurakka?
+             {:nimi :sijainti
+              :otsikko "Sijainti"
+              :tyyppi :sijaintivalitsin
+              :paikannus? false
+              :pakollinen? true
+              ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
+              ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
+              ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
+              ;;                                                         (.-latitude coords)])]
+              ;;                         (swap! turvallisuuspoikkeama assoc :sijainti
+              ;;                                {:type :point :coordinates [(aget latlon 1)
+              ;;                                                            (aget latlon 0)]}))
+              ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
+              :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
+             {:otsikko "Tierekisteriosoite"
+              :nimi :tr
+              :pakollinen? true
+              :tyyppi :tierekisteriosoite
+              :ala-nayta-virhetta-komponentissa? true
+              :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+              :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
+                                #(swap! turvallisuuspoikkeama assoc :sijainti %))})
            {:otsikko "Paikan kuvaus"
             :nimi :paikan-kuvaus
             :tyyppi :string
-            :pituus-max 2048
+            :pituus-max 200
             :palstoja 1}
            {:uusi-rivi? true
             :otsikko "Tila"
@@ -332,7 +346,7 @@
             :tyyppi :komponentti
             :komponentti
             (fn [_]
-              [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
+              [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
                {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                          #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
                 :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}
@@ -361,10 +375,10 @@
                (lomake/ryhma {:rivi? true}
                              {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
                               :tyyppi :positiivinen-numero :kokonaisluku? true
-                              :validoi [[:rajattu-numero nil 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                              :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
                              {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
                               :tyyppi :positiivinen-numero :kokonaisluku? true
-                              :validoi [[:rajattu-numero nil 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                              :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
                              {:nimi :sairauspoissaolojatkuu
                               :palstoja 1
                               :tyyppi :checkbox
@@ -405,6 +419,20 @@
                                           turvallisuuspoikkeama
                                           toimenpiteet-virheet
                                           muokkaa-lomaketta])}
+                         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+                           {:otsikko (let [kolmannes (ut/kuluva-vuosikolmannes)]
+                                       (str "Urakan työtunnit ("
+                                            (case (::ut/vuosikolmannes kolmannes)
+                                              1 "tammikuu - huhtikuu"
+                                              2 "toukokuu - elokuu"
+                                              3 "syyskuu - joulukuu"
+                                              :else "")
+                                            " "
+                                            (::ut/vuosi kolmannes)
+                                            ")"))
+                            :nimi :urakan-tyotunnit
+                            :tyyppi :positiivinen-numero
+                            :kokonaisluku? true})
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
@@ -430,8 +458,10 @@
          [yleiset/tooltip {} :%
           (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
          [napit/uusi "Lisää turvallisuuspoikkeama"
-          #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
-          {:disabled (not oikeus?)}]))
+          #(tiedot/uusi-turvallisuuspoikkeama (:id urakka))
+          {:disabled (or
+                       @tiedot/turvallisuuspoikkeaman-luonti-kesken?
+                       (not oikeus?))}]))
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"
@@ -449,7 +479,7 @@
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
 
-(defn turvallisuuspoikkeamat []
+(defn turvallisuuspoikkeamat [urakka]
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
@@ -467,9 +497,9 @@
                       #(do
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
-    (fn []
+    (fn [urakka]
       [:span
        [kartta/kartan-paikka]
        (if @tiedot/valittu-turvallisuuspoikkeama
-         [turvallisuuspoikkeaman-tiedot]
+         [turvallisuuspoikkeaman-tiedot urakka]
          [turvallisuuspoikkeamalistaus])])))

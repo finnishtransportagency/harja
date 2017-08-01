@@ -16,7 +16,10 @@
             [harja.tyokalut.functor :as functor]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clojure.string :as str]
+            [harja.tyokalut.tuck :as tuck-tyokalut]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -46,12 +49,20 @@
                 ;; Valittu varustetoteuma
                 :varustetoteuma nil
 
+                ;; Voidaan antaa ulkopuolisesta siirtymästä valittu varustetoteuma
+                ;; id, joka valitaan kun haku on valmistunut
+                :valittu-toteumaid nil
+
+
                 ;; Tierekisterin varusteiden hakuehdot ja tulokset
                 :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
                                           :varusteet nil}}))
+
+(defn valitse-toteuman-idlla! [toteumaid]
+  (swap! varusteet assoc :valittu-toteumaid toteumaid))
 
 (defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
@@ -69,25 +80,24 @@
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
-(defn varustetoteumat-karttataso [toteumat]
+(defn varustetoteumat-karttataso [toteumat tierekisterin-varusteet valittu-varustetoteuma]
   (kartalla-esitettavaan-muotoon
-    toteumat
-    (constantly false)
-    (keep (fn [toteuma]
-            (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
-              (assoc toteuma
-                :tyyppi-kartalla :varustetoteuma
-                :tooltip (tooltip toteuma)
-                :sijainti {:type :point
-                           :coordinates sijainti}))))))
-
-(defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
-  (k/post! :urakan-varustetoteumat
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :tienumero tienumero}))
+    (concat (keep (fn [toteuma]
+                    (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
+                      (assoc toteuma
+                        :tyyppi-kartalla :varustetoteuma
+                        :tooltip (tooltip toteuma)
+                        :sijainti {:type :point
+                                   :coordinates sijainti})))
+                  toteumat)
+            (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
+    #(and valittu-varustetoteuma
+          (or (and (:id %)
+                   (= (:id valittu-varustetoteuma)
+                      (:id %)))
+              (and (get-in valittu-varustetoteuma [:arvot :tunniste])
+                   (= (get-in valittu-varustetoteuma [:arvot :tunniste])
+                      (get-in % [:varuste :tunniste])))))))
 
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
@@ -96,29 +106,36 @@
                                        sopimus-id
                                        aikavali
                                        tienumero] :as hakuehdot}
-                               {:keys [arvot
+                               {:keys [id
+                                       arvot
                                        sijainti
                                        puoli
                                        ajorata
                                        lisatieto
                                        tietolaji
                                        toiminto
+                                       toimenpide
                                        tierekisteriosoite
                                        alkupvm
-                                       loppupvm] :as toteuma}]
+                                       loppupvm
+                                       uusi-liite] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
-        toteuma {:arvot arvot
+        toteuma {:id id
+                 :arvot arvot
                  :sijainti sijainti
                  :puoli puoli
                  :ajorata ajorata
                  :tierekisteriosoite tierekisteriosoite
                  :lisatieto lisatieto
                  :tietolaji tietolaji
-                 :toiminto toiminto
+                 :toiminto (or toiminto toimenpide)
                  :urakka-id @nav/valittu-urakka-id
-                 :kuntoluokitus (when (:kuntoluokitus arvot) (js/parseInt (:kuntoluokitus arvot)))
+                 :kuntoluokitus (when (and (:kuntoluokitus arvot)
+                                           (not (str/blank? (:kuntoluokitus arvot))))
+                                  (js/parseInt (:kuntoluokitus arvot)))
                  :alkupvm alkupvm
-                 :loppupvm loppupvm}
+                 :loppupvm loppupvm
+                 :uusi-liite uusi-liite}
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
                    :alkupvm (first aikavali)
@@ -139,20 +156,24 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-   {:toiminto toiminto
-    :tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))
-    :alkupvm (or (:alkupvm tietue) (pvm/nyt))
-    :muokattava? true
-    :ajoradat varusteet-domain/oletus-ajoradat
-    :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
-    :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first varusteet-domain/tien-puolet))
-    :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-    :tierekisteriosoite (varusteen-osoite varuste)}))
+   (let [tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst (varusteet/muokattavat-tietolajit)))]
+     {:toiminto toiminto
+      :tietolaji tietolaji
+      :alkupvm (or (:alkupvm tietue) (pvm/nyt))
+      :muokattava? (not (= :nayta toiminto))
+      :ajoradat varusteet-domain/oletus-ajoradat
+      :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
+      :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first (varusteet-domain/tien-puolet tietolaji)))
+      :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
+      :tierekisteriosoite (varusteen-osoite varuste)
+      :sijainti (:sijainti varuste)})))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
-  (if valittu-toimenpide
-    (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-    toteumat))
+  (reverse
+    (sort-by :luotu
+             (if valittu-toimenpide
+               (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+               toteumat))))
 
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                     {uusi-tr :tierekisteriosoite}
@@ -171,6 +192,17 @@
     :toteumat toteumat
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
+(defn kartalle [app]
+  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app)
+                                                     (get-in app [:tierekisterin-varusteet :varusteet])
+                                                     (:varustetoteuma app))))
+
+(defn hae-sijainnin-osoite [sijainti]
+  (let [coords (.-coords sijainti)
+        koordinaatit {:x (.-longitude coords)
+                      :y (.-latitude coords)}]
+    (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
+
 (extend-protocol t/Event
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -178,48 +210,55 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
-      (go
-        (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat
-              vastaus (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero))]
-          (if (k/virhe? vastaus)
-            (t/send-async! (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe"))
-            (haku-valmis! vastaus))))
-      (assoc app
-        :toteumahaku-id nil)))
+
+    (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
+      (-> app
+          (tuck-tyokalut/palvelukutsu :urakan-varustetoteumat
+                                      {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id
+                                       :alkupvm (first aikavali)
+                                       :loppupvm (second aikavali)
+                                       :tienumero tienumero}
+                                      {:onnistui v/->VarusteToteumatHaettu
+                                       :epaonnistui (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe")})
+          (assoc :toteumahaku-id nil))))
 
   v/VarusteToteumatHaettu
-  (process-event [{toteumat :toteumat} app]
-    (let [valittu-toimenpide (:valittu-toimenpide app)]
+  (process-event [{toteumat :toteumat}
+                  {valittu-toimenpide :valittu-toimenpide
+                   valittu-toteumaid :valittu-toteumaid
+                   :as app}]
+    (kartalle
       (assoc app
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
         :toteumat toteumat
-        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat))))
+        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+        :varustetoteuma (when valittu-toteumaid
+                          (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                toteumat))
+        :valittu-toteumaid nil)))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
     (let [valittu-toimenpide (first tyyppi)
           naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)]
-      (assoc app
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :valinnat (assoc valinnat :tyyppi tyyppi)
-        :naytettavat-toteumat naytettavat-toteumat)))
+      (kartalle
+        (assoc app
+          :valinnat (assoc valinnat :tyyppi tyyppi)
+          :naytettavat-toteumat naytettavat-toteumat))))
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
-      (tulos!)))
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (= "virhe" (:tila toteuma)))))]
+      (kartalle (tulos!))))
 
   v/TyhjennaValittuToteuma
   (process-event [_ app]
-    (assoc app :varustetoteuma nil))
+    (kartalle (assoc app :varustetoteuma nil)))
 
   v/UusiVarusteToteuma
   (process-event [{:keys [toiminto varuste]} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
-      (dissoc (tulos!) :muokattava-varuste)))
+      (kartalle (dissoc (tulos!) :muokattava-varuste :naytettava-varuste))))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
@@ -232,7 +271,7 @@
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
-                         :arvot (merge (:arvot tiedot) koordinaatit))]
+                         :arvot (merge (or (:arvot tiedot) {}) koordinaatit))]
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
@@ -248,7 +287,7 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil)))
+      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil :naytettava-varuste nil)))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
@@ -260,12 +299,11 @@
   v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
     (let [toteumat (if toteumat toteumat [])]
-      (-> app
-          (dissoc :varustetoteuma)
-          (assoc :karttataso (varustetoteumat-karttataso toteumat)
-                 :karttataso-nakyvissa? true
-                 :toteumahaku-id nil)
-          (haetut-toteumat toteumat))))
+      (kartalle
+        (-> app
+            (assoc-in [:tierekisterin-varusteet :varusteet] nil)
+            (dissoc :varustetoteuma :toteumahaku-id)
+            (haetut-toteumat toteumat)))))
 
   v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
@@ -286,13 +324,36 @@
     (dissoc app :virhe))
 
   v/VarustetoteumatMuuttuneet
-  (process-event [{toteumat :varustetoteumat :as data} app]
-    (-> app
-        (dissoc :uudet-varustetoteumat)
-        (assoc
-          :karttataso (varustetoteumat-karttataso toteumat)
-          :karttataso-nakyvissa? true)
-        (haetut-toteumat toteumat))))
+  (process-event [{varustetoteumat :varustetoteumat :as data} app]
+    (kartalle (-> app
+                  (dissoc :uudet-varustetoteumat)
+                  (haetut-toteumat varustetoteumat))))
+
+  v/LisaaLiitetiedosto
+  (process-event [{liite :liite} app]
+    (assoc-in app [:varustetoteuma :uusi-liite] liite))
+
+  v/HaeSijainninOsoite
+  (process-event [{sijainti :sijainti} app]
+    (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Osoitteen haku epäonnistui käyttäjän sijainnilla."))
+          valmis! (t/send-async! v/->SijanninOsoiteHaettu)]
+      (go
+        (let [vastaus (<! (hae-sijainnin-osoite sijainti))]
+          (if (k/virhe? vastaus)
+            (virhe!)
+            (valmis! vastaus))))
+      app))
+
+  v/SijanninOsoiteHaettu
+  (process-event [{osoite :osoite} app]
+    (let [tiedot (assoc (:varustetoteuma app)
+                   :sijainti (:geometria osoite)
+                   :tierekisteriosoite {:numero (:tie osoite)
+                                        :alkuosa (:aosa osoite)
+                                        :alkuetaisyys (:aet osoite)
+                                        :loppuosa (:losa osoite)
+                                        :loppuetaisyys (:let osoite)})]
+      (-> ((t/send-async! (partial v/->AsetaToteumanTiedot tiedot)))))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

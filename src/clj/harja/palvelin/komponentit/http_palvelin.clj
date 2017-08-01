@@ -10,7 +10,7 @@
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
             ;; Metriikkadatan julkaisu
@@ -82,7 +82,7 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn- validoi-vastaus [spec data]
+(defn- validoi-vastaus! [spec data]
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
@@ -123,17 +123,17 @@
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                       (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
+                       (validoi-vastaus! (:vastaus-spec optiot) (:vastaus vastaus))
                        (http/send! channel vastaus)
                        (http/close channel))))
                  (do
-                   (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
+                   (validoi-vastaus! (:vastaus-spec optiot) palvelu-vastaus)
                    (transit-vastaus palvelu-vastaus))))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
              (catch Throwable e
-               (log/warn e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
+               (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
                {:virhe (.getMessage e)}))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
@@ -156,6 +156,7 @@
                    (not (.after last-modified if-modified-since)))
             {:status 304}
             (let [vastaus (palvelu-fn (:kayttaja req))]
+              (validoi-vastaus! (:vastaus-spec optiot) vastaus)
               {:status  200
                :headers (merge {"Content-Type" "application/transit+json"}
                                (if last-modified

@@ -42,7 +42,7 @@
     },
     "tarkastaja": {
       "id": "urn:harja/talvihoitotarkastus/tarkastaja",
-      "type": "object",
+      "type": ["object","null"],
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
       "required": false

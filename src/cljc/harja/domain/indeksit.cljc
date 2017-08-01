@@ -1,6 +1,6 @@
 (ns harja.domain.indeksit
   "Domain tietojen määrittely indekseillä. Palvelujen käyttämät specit."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             #?@(:clj [[clojure.future :refer :all]])
             [harja.domain.urakka :as urakka]))
 
@@ -17,7 +17,7 @@
 (s/def ::indeksinimi string?)
 (s/def ::arvo (s/nilable number?)) ; Arvo voi olla NULL (ei vielä tiedossa)
 (s/def ::raakaaine string?)
-(s/def ::urakkatyyppi ::urakka/tyyppi)
+(s/def ::urakkatyyppi ::urakka/urakkatyyppi-kw)
 
 (s/def ::indeksi
   (s/keys :req-un [::id ::indeksinimi]

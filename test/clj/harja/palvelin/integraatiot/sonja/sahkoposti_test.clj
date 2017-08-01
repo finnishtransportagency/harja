@@ -8,7 +8,8 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.integraatiot :as integraatiot]
-            [clojure.test :as t :refer :all]))
+            [clojure.test :as t :refer :all]
+            [harja.pvm :as pvm]))
 
 (def +sahkoposti-xsd+ "xsd/sahkoposti/sahkoposti.xsd")
 (def +sahkoposti-esimerkki+ "resources/xsd/sahkoposti/esimerkit/sahkoposti.xml")
@@ -20,13 +21,22 @@
     :sonja-sahkoposti (component/using
                         (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
                                                          {:sahkoposti-sisaan-jono "email-to-harja"
-                                                          :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
                                                           :sahkoposti-ulos-jono "harja-to-email"
                                                           :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                        [:sonja :db :integraatioloki])
-    ))
+                        [:sonja :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
+
+(defn kuittaus
+  "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
+  [{viesti-id :viesti-id} virheet]
+  [:sahkoposti:kuittaus {:xmlns:sahkoposti "http://www.liikennevirasto.fi/xsd/harja/sahkoposti"}
+   [:viestiId viesti-id]
+   [:aika (xml/formatoi-xsd-datetime (pvm/nyt))]
+   [:onnistunut (nil? virheet)]
+   (when virheet
+     (for [virhe virheet]
+       [:virheet virhe]))])
 
 (deftest viestin-luku
   (let [{:keys [viesti-id lahettaja vastaanottaja otsikko sisalto]}
@@ -40,24 +50,19 @@
 (deftest sahkopostin-vastaanotto
   (let [viesti-xml (slurp +sahkoposti-esimerkki+)
         saapunut (atom nil)
-        kuittaus (atom nil)
         poista-kuuntelija-fn (sahkoposti/rekisteroi-kuuntelija! (:sonja-sahkoposti jarjestelma)
-                                                                #(reset! saapunut %))
-        poista-kuittaus-kuuntelija (sonja/kuuntele (:sonja jarjestelma) "email-to-harja-ack"
-                                                   #(reset! kuittaus (sanomat/lue-kuittaus (.getText %))))]
+                                                                #(reset! saapunut %))]
 
     ;; Lähetetään sähköpostiviesti Harjaan
     (sonja/laheta (:sonja jarjestelma) "email-to-harja" viesti-xml)
 
-    (odota-ehdon-tayttymista #(and @saapunut @kuittaus) "Odotetaan, että sähköposti on vastaanotettu ja kuitattu" 500)
+    (odota-ehdon-tayttymista #(not (nil? @saapunut)) "Odotetaan, että sähköposti on vastaanotettu" 500)
 
     ;; Varmistetaan, että viesti on saapunut oikein kuuntelijalle ja, että kuittaus
     ;; on lähetetty takaisin kuittausjonoon
     (is (= (:otsikko @saapunut) "Testiviesti"))
-    (is (= (:viesti-id @saapunut) (:viesti-id @kuittaus)))
 
-    (poista-kuuntelija-fn)
-    (poista-kuittaus-kuuntelija)))
+    (poista-kuuntelija-fn)))
 
 (deftest sahkopostin-lahetys
   (let [lahetetty (atom nil)]
@@ -90,7 +95,7 @@
       (is (not (integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)))
 
       ;; Lähetetään kuittaus ja varmistetaan, että integraatiotapahtuma on merkitty päättyneeksi
-      (let [kuittaus-xml (xml/tee-xml-sanoma (sanomat/kuittaus {:viesti-id viesti-id} nil))]
+      (let [kuittaus-xml (xml/tee-xml-sanoma (kuittaus {:viesti-id viesti-id} nil))]
         (sonja/laheta (:sonja jarjestelma) "harja-to-email-ack" kuittaus-xml)
 
         (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)

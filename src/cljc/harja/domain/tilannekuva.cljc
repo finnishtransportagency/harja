@@ -30,6 +30,8 @@
   [tur :tiedoitus "TUR"]
   [urk :kysely "URK"]
 
+  [tietyoilmoitukset :tietyoilmoitukset "Tietyöilmoitukset"]
+
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
   [tietyomaat :tietyomaat "Tietyömaat"]
@@ -83,7 +85,9 @@
   [aurausviitoitus-ja-kinostimet "aurausviitoitus ja kinostimet"
    "Aurausviitoitus ja kinostimet"]
   [lumensiirto "lumensiirto" "Lumensiirto"]
-  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"])
+  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
+
+  [varustetoteumat "varustetoteumat" "Varustetoteumat"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
@@ -226,8 +230,9 @@
       :else
       (recur t loput))))
 
-(defn valitut-kentat [valinnat]
+(defn valitut-kentat
   "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
+  [valinnat]
   (valitut-kentat* [] valinnat))
 
 (defn valittujen-suodattimien-idt [valinnat]

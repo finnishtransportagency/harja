@@ -7,7 +7,6 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as y]
             [harja.pvm :as pvm]
-            [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
             [cljs.core.async :refer [<!]]
@@ -16,8 +15,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.views.urakka.valinnat :as valinnat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -68,7 +67,7 @@
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
-     [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+     [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 256}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                     (pvm/pvm-opt %)
                                                                     "Ei takarajaa")
@@ -249,13 +248,6 @@
                                  [:span.grid-solu-varoitus "punaisella"]
                                  [:span "."]]])]))
 
-(defn- valinnat [urakka]
-  [valinnat/vuosi {:kaikki-valinta? true}
-   (t/year (:alkupvm urakka))
-   (t/year (:loppupvm urakka))
-   urakka/valittu-urakan-vuosi
-   urakka/valitse-urakan-vuosi!])
-
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
@@ -273,7 +265,7 @@
                     (urakka/valitse-urakan-oletusvuosi! ur)))
       (fn [ur]
         [:div.valitavoitteet
-         [valinnat ur]
+         [valinnat/urakan-vuosi ur {:kaikki-valinta? true}]
 
          (when nayta-urakkakohtaiset-grid?
            [urakan-omat-valitavoitteet

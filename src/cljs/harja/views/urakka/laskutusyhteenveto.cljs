@@ -16,9 +16,10 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.raportti :refer [muodosta-html]] 
+            [harja.ui.raportti :refer [muodosta-html]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t])
+            [harja.transit :as t]
+            [harja.ui.yleiset :as yleiset])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -59,7 +60,8 @@
          [valinnat/hoitokauden-kuukausi]
          
          (when-let [p @laskutusyhteenvedon-parametrit]
-           [upotettu-raportti/raportin-vientimuodot])
+           [upotettu-raportti/raportin-vientimuodot p])
          
-         (when-let [tiedot @laskutusyhteenvedon-tiedot]
-           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)])]))))
+         (if-let [tiedot @laskutusyhteenvedon-tiedot]
+           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)]
+           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))

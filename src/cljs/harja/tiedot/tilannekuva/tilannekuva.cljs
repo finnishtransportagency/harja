@@ -62,6 +62,7 @@ hakutiheys-historiakuva 1200000)
                             tk/tur false
                             tk/urk false}}
      :turvallisuus {tk/turvallisuuspoikkeamat false}
+     :tietyoilmoitukset {tk/tietyoilmoitukset false}
      :laatupoikkeamat {tk/laatupoikkeama-tilaaja false
                        tk/laatupoikkeama-urakoitsija false
                        tk/laatupoikkeama-konsultti false}
@@ -112,7 +113,19 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :alueet oletusalueet}))
+     :alueet oletusalueet
+     :varustetoteumat {tk/varustetoteumat false}}))
+
+(defn alueita-valittu?
+  [suodattimet]
+  (let [elyt (vals (:alueet suodattimet))
+        urakat (mapcat vals elyt)
+        valitut (mapcat vals urakat)]
+    (some? (some true? valitut))))
+
+(defonce paivita-aluevalinta
+  (run! (let [valittuja? (alueita-valittu? @suodattimet)]
+          (reset! nav/tilannekuvassa-alueita-valittu? valittuja?))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -350,29 +363,30 @@ hakutiheys-historiakuva 1200000)
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
-  (go
-    ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui
-    ;; käyttäjän vaihdettua suodattimia
-    (when (suodattimet-muuttuneet?)
-      (reset! edellisen-haun-kayttajan-suodattimet
-              {:tila @valittu-tila
-               :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
-               :aikavali-historia @historiakuvan-aikavali
-               :suodattimet @suodattimet})
-      (kartta/aseta-paivitetaan-karttaa-tila! true))
+  (when (#{:nykytilanne :historiakuva} @valittu-tila)
+    (go
+     ;; Asetetaan kartalle "Päivitetään karttaa" viesti jos haku tapahtui
+     ;; käyttäjän vaihdettua suodattimia
+     (when (suodattimet-muuttuneet?)
+       (reset! edellisen-haun-kayttajan-suodattimet
+               {:tila @valittu-tila
+                :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
+                :aikavali-historia @historiakuvan-aikavali
+                :suodattimet @suodattimet})
+       (kartta/aseta-paivitetaan-karttaa-tila! true))
 
-    ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
-    ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
-    (reset! tilannekuva-kartalla/url-hakuparametrit
-            (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
+     ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
+     ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
+     (reset! tilannekuva-kartalla/url-hakuparametrit
+             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
-    (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))
-          tulos (kasittele-tilannekuvan-hakutulos tulos)]
-      (when @nakymassa?
-        (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
-        (reset! tilannekuva-kartalla/haetut-asiat tulos))
-      (kartta/aseta-paivitetaan-karttaa-tila! false))))
+     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
+                     (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+           tulos (kasittele-tilannekuvan-hakutulos tulos)]
+       (when @nakymassa?
+         (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
+         (reset! tilannekuva-kartalla/haetut-asiat tulos))
+       (kartta/aseta-paivitetaan-karttaa-tila! false)))))
 
 (def asioiden-haku
   (reaction<! [hakuparametrit @hakuparametrit

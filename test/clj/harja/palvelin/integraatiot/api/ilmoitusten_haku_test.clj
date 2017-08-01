@@ -37,16 +37,13 @@
    "ilmoittaja" {"email" "matti.meikalainen@palvelu.fi"
                  "etunimi" "Matti"
                  "matkapuhelin" "08023394852"
-                 "sukunimi" "Meikäläinen"
-                 "tyopuhelin" nil}
+                 "sukunimi" "Meikäläinen"}
    "ilmoitusid" 123456789
    "tunniste" "UV-1509-1a"
    "ilmoitustyyppi" "toimenpidepyynto"
    "lahettaja" {"email" "pekka.paivystaja@livi.fi"
                 "etunimi" "Pekka"
-                "matkapuhelin" nil
-                "sukunimi" "Päivystäjä"
-                "tyopuhelin" nil}
+                "sukunimi" "Päivystäjä"}
    "lisatieto" "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."
    "otsikko" "Korkeat vallit"
    "paikankuvaus" "Jossain kentällä."

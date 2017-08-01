@@ -83,8 +83,8 @@
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/paallystys_tyomenetelma.schema.json"
                   },
-                  "kokonaismassamaara": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kokonaismassamaara",
+                  "massamaara": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/massamaara",
                     "type": "number"
                   }
                 }

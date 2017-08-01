@@ -4,7 +4,9 @@
             [harja.testutils.shared-testutils :as u]
             [reagent.core :as r]
             [clojure.string :as str]
-            [cljs-react-test.simulate :as sim])
+            [harja.loki :refer [log tarkkaile! error]]
+            [cljs-react-test.simulate :as sim]
+            [harja.ui.grid :as grid])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -170,4 +172,53 @@
       (is (= (u/text (u/grid-solu "g3" 2 1 "")) "Erlang"))
       (is (= (u/text (u/grid-solu "g3" 2 2 "")) "1986")))))
 
-;; FIXME: muokkaus-grid kaipaa testiä myös
+(def muokkaus-gridin-data
+  {1 {:id 1 :nimi "Rich Hickey" :kieli "Clojure" :vuosi 2009}
+   2 {:id 2 :nimi "Martin Odersky" :kieli "Scala" :vuosi 2004}
+   3 {:id 3 :nimi "Joe Armstrong" :kieli "Erlang" :vuosi 1986}})
+
+(deftest muokkaus-grid-datalla
+  (let [data (r/atom muokkaus-gridin-data)]
+    (komponenttitesti
+      [g/muokkaus-grid {:id "mg1"
+                        :otsikko "Teiden hoitourakoiden sydäntalven testimuokkausgridi"
+                        :voi-muokata? true
+                        :voi-poistaa? (constantly false)
+                        :piilota-toiminnot? true
+                        :voi-lisata? false
+                        :tyhja "Ei kieliä"
+                        :jarjesta :id
+                        :virheet (atom nil)
+                        :tunniste :id}
+       skeema
+       data]
+
+     "Tekstit ovat riveillä oikein"
+      (is (= "Rich Hickey" (.-value (u/grid-solu "mg1" 0 0))))
+      (is (= "Scala" (.-value (u/grid-solu "mg1" 1 1))))
+      (is (= "Erlang" (.-value (u/grid-solu "mg1" 2 1))))
+
+      "Muokataan ja tallennetaan"
+
+      (u/change (u/grid-solu "mg1" 2 1 "input") "Haskell")
+      --
+      (is (= "Haskell" (.getAttribute (u/grid-solu "mg1" 2 1) "value")))
+
+      "Toimintonappeja ei ole"
+      (is (= "Kumoa" (u/text (u/sel1 :button)))))))
+
+(deftest rivi-piilotetun-otsikon-alla
+  (let [testirivit [(grid/otsikko "A" {:id :A}) 1 2 3 4
+                    (grid/otsikko "B" {:id :B}) 5 6
+                    (grid/otsikko "C" {:id :C}) 7 8]]
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 1 testirivit #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 2 testirivit #{:B})))
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 9 testirivit #{:B})))
+
+    (is (true? (g/rivi-piilotetun-otsikon-alla? 6 testirivit #{:B})))
+    (is (true? (g/rivi-piilotetun-otsikon-alla? 7 testirivit #{:B})))
+
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 0 testirivit #{:B}))
+        "Otsikkorivi ei koskaan ole piilotetun otsikon alla")
+    (is (false? (g/rivi-piilotetun-otsikon-alla? 5 testirivit #{:B}))
+        "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))

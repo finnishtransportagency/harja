@@ -119,3 +119,6 @@
 
 (def +urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+ "api/schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json")
 (def urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request (tee-validaattori "api/schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json"))
+
+(def +urakan-tyotuntien-kirjaus-request+ "api/schemas/urakan-tyotuntien-kirjaus-request.schema.json")
+(def urakan-tyotuntien-kirjaus-request (tee-validaattori "api/schemas/urakan-tyotuntien-kirjaus-request.schema.json"))

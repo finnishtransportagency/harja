@@ -73,5 +73,7 @@
   (is (nil? (validoi json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto-request json-esimerkit/+yllapitokohteen-tarkastuksen-poisto-request+)))
 
   (is (nil? (validoi json-skeemat/urakan-tiemerkintatoteuman-kirjaus-request json-esimerkit/+urakan-tiemerkintatoteuman-kirjaus-request+)))
-  (is (nil? (validoi json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request json-esimerkit/+urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+))))
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request json-esimerkit/+urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+)))
+
+  (is (nil? (validoi json-skeemat/urakan-tyotuntien-kirjaus-request json-esimerkit/+urakan-tyotuntien-kirjaus-request+))))
 

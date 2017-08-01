@@ -219,7 +219,11 @@
                                (= :aloitettu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
                 :tyyppi :pvm :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
-               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :palstoja 1 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
+               {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :string :palstoja 1
+                :hae #(if @kokonaishinta
+                        (fmt/euro-opt @kokonaishinta)
+                        0)
+                :muokattava? (constantly false)}
                (when (or (= :valmis (:tila @paikkaus/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                  {:otsikko "Kommentit" :nimi :kommentit
@@ -324,7 +328,7 @@
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20 :hae (fn [rivi]
-                                                                                                        (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
+                                                                                                        (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys 20 :komponentti (fn [rivi]
                                                                                                                          (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
          {:otsikko "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti

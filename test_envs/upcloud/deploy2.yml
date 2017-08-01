@@ -38,7 +38,7 @@
       sudo_user: harja
       command: psql -p5432 -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'harja' AND pid <> pg_backend_pid();"
       ignore_errors: true
-      
+
     - name: tuhoa kanta
       sudo: yes
       sudo_user: postgres
@@ -96,6 +96,13 @@
         chdir: /opt/harja-build/harja-repo/tietokanta
       when: '{{harja_migrate_only}} == false'
 
+    - name: aseta specql db yhteys
+      sudo: yes
+      lineinfile:
+        destfile: /opt/harja-build/harja-repo/.specql-db
+        regexp: 'jdbc'
+        line: 'jdbc:postgresql://localhost/harja?user=postgres'
+
     - name: buildi
       sudo: yes
       sudo_user: harja
@@ -112,7 +119,7 @@
       command: cp test_envs/upcloud/templates/asetukset_dev.edn /opt/harja/asetukset.edn
       args:
         chdir: /opt/harja-build/harja-repo
-        
+
     - name: Kopioi käynnistysskripti
       command: cp test_envs/upcloud/templates/harja.sh /opt/harja/harja.sh
       args:
@@ -122,8 +129,3 @@
       sudo: yes
       service: name=harja state=restarted
       register: start
-
-      
-
-    
-  

@@ -25,12 +25,31 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest hallintayksikoiden-haku-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hallintayksikot +kayttaja-jvh+ :tie)]
+  (testing "Tie-hallintayksiköiden haku"
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hallintayksikot +kayttaja-jvh+ {:liikennemuoto :tie})]
 
-    (is (not (nil? vastaus)))
-    (is (>= (count vastaus) 5))
-    (mapv (fn [hallintayksikko] (is (string? (:nimi hallintayksikko)))) vastaus)))
+     (is (not (nil? vastaus)))
+     (is (every? (comp (partial = "T") :liikennemuoto) vastaus))
+     (is (>= (count vastaus) 5))
+     (mapv (fn [hallintayksikko] (is (string? (:nimi hallintayksikko)))) vastaus)))
+
+  (testing "Vesi-hallintayksiköiden haku"
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hallintayksikot +kayttaja-jvh+ {:liikennemuoto :vesi})]
+
+      (is (not (nil? vastaus)))
+      (is (every? (comp (partial = "V") :liikennemuoto) vastaus))
+      (is (>= (count vastaus) 3))
+      (mapv (fn [hallintayksikko] (is (string? (:nimi hallintayksikko)))) vastaus)))
+
+  (testing "Kaikkien hallintayksiköiden haku"
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hallintayksikot +kayttaja-jvh+ {:liikennemuoto nil})]
+
+      (is (not (nil? vastaus)))
+      (is (>= (count vastaus) 5))
+      (mapv (fn [hallintayksikko] (is (string? (:nimi hallintayksikko)))) vastaus))))
 
 (deftest organisaation-haku-idlla-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

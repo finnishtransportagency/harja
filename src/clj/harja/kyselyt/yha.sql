@@ -27,8 +27,15 @@ WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
 UPDATE yllapitokohde
-set poistettu = TRUE
+SET poistettu = TRUE
 WHERE urakka = :urakka;
+
+-- name: poista-urakan-yllapitokohdeosat!
+UPDATE yllapitokohdeosa
+SET poistettu = TRUE
+WHERE yllapitokohde IN (SELECT id
+                        FROM yllapitokohde
+                        WHERE urakka = :urakka);
 
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT
@@ -94,7 +101,7 @@ VALUES (
   0,
   0,
   :nimi,
-  :vuodet::integer[]);
+  :vuodet :: INTEGER []);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
@@ -120,12 +127,6 @@ VALUES (
                                       CAST(:tr_loppuetaisyys AS INTEGER))),
   :yhaid);
 
--- name: hae-yllapitokohde-idlla
--- single?: true
-SELECT *
-FROM yllapitokohde
-WHERE yhatunnus = :yhatunnus;
-
 -- name: hae-urakan-yha-id
 -- single?: true
 SELECT yhaid
@@ -135,7 +136,7 @@ WHERE urakka = :urakkaid;
 -- name: hae-urakan-kohteiden-yha-idt
 SELECT yhaid
 FROM yllapitokohde
-WHERE urakka = :urakkaid;
+WHERE urakka = :urakkaid AND poistettu IS FALSE;
 
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
 UPDATE yhatiedot

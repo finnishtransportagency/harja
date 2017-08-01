@@ -114,19 +114,19 @@
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
   (if (kustannussuunnitelmat/onko-olemassa? db numero)
-    (if (lukitse-kustannussuunnitelma db numero)
-      (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-            maksuera (hae-maksueran-tiedot db numero)
-            muodosta-xml #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml maksuera)]
-        (try
-          (let [viesti-id (jms-lahettaja muodosta-xml nil)]
+    (try
+      (if (lukitse-kustannussuunnitelma db numero)
+        (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+              muodosta-sanoma #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))]
+
+          (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
             (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
-            (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero)))
-          (catch Exception e
-            (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-            (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-            (throw e))))
-      (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+            (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
+        (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+      (catch Exception e
+        (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
+        (throw e)))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+

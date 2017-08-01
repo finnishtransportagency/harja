@@ -114,3 +114,6 @@
 
 (defn print-html []
   (println (.-innerHTML @*test-container*)))
+
+(defn lomake-input [nimi]
+  (sel1 (str "label[for='" nimi "'] + input")))

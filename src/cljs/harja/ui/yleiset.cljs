@@ -260,10 +260,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          13 ;; enter
                                          (reset! auki? false)))))
 
-                                 (do
+                                 (do ;; Valitaan inputtia vastaava vaihtoehto
                                    (reset! term (char kc))
                                    (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                     (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
+                                                                     (= (.indexOf (.toLowerCase (str (format-fn vaihtoehto)))
                                                                                   (.toLowerCase @term)) 0))
                                                                    vaihtoehdot))]
                                      (valitse-fn itemi)
@@ -318,21 +318,44 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
 (defn tietoja
   "Tekee geneerisen tietonäkymän.
-Optiot on mäppi, joka tukee seuraavia optioita:
-  :class   asetetaan lisäluokaksi containerille
-  :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
-  [{:keys [class otsikot-omalla-rivilla?]} & otsikot-ja-arvot]
-  (let [attrs (if otsikot-omalla-rivilla?
-                {:style {:display "block"}}
-                {})]
+
+   Optiot on mäppi, joka tukee seuraavia optioita:
+  :class                        Asetetaan lisäluokaksi containerille
+  :tietokentan-leveys           Tietokentän minimileveys (oletus 150px)
+  :kavenna?                     Jos true, jättää tyhjää tilaa tietorivien väliin
+  :jata-kaventamatta            Setti otsikoita, joita ei kavenneta, vaikka 'kavenna?' olisi true
+  :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
+  :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
+  :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
+  :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)"
+  [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys]} & otsikot-ja-arvot]
+  (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
+        otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
+        jata-kaventamatta (or jata-kaventamatta #{})
+        tietokentta-attrs {:style
+                           (merge
+                             (when otsikot-omalla-rivilla?
+                               {:display "block"})
+                             (when tietokentan-leveys
+                               {:min-width tietokentan-leveys}))}]
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
          (when arvo
-           ^{:key (str i otsikko)}
-           [:div.tietorivi
-            [:span.tietokentta attrs otsikko]
-            [:span.tietoarvo arvo]]))
+           (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
+                                     {:style {:display "auto"}})]
+             ^{:key (str i otsikko)}
+             [:div.tietorivi (merge
+                               (when-not piirra-viivat?
+                                 {:class "tietorivi-ilman-alaviivaa"})
+                               (when (and kavenna?
+                                          (not (jata-kaventamatta otsikko)))
+                                 {:style {:margin-bottom "0.5em"}}))
+              [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
+              [:span.tietoarvo arvo]
+              (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
@@ -382,22 +405,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [otsikko komp]
   [:span [:h4 otsikko]
    komp])
-
-;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
-;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
-;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
-(def lasipaneeli-tyyli {:display "block"
-                        :position "absolute"
-                        :top 0
-                        :bottom 0
-                        :opacity 0.5
-                        :background-color "black"
-                        :height "expression(parentElement.scrollHeight+'px')"
-                        :width "100%"})
-
-(defn lasipaneeli [& sisalto]
-  [:div {:style lasipaneeli-tyyli}
-   sisalto])
 
 (defn keskita
   "Div-elementti, joka on absoluuttisesti positioitu top 50% left 50%"
@@ -634,28 +641,3 @@ jatkon."
              containee
              %) container-component)
     containee))
-
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn
-                                    hyvaksy hyvaksy-ikoni hyvaksy-napin-luokka]}]
-  "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
-
-  Parametrimap:
-  :otsikko = dialogin otsikko
-  :sisalto = dialogin sisältö
-  :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
-  :hyvaksy-ikoni = hyvaksy-ikoni
-  :hyvaksy-napin-luokka = hyvaksy-napin-luokka
-  :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä"
-  (modal/nayta! {:otsikko otsikko
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           [:span (ikonit/livicon-ban) " Peruuta"]]
-                          [:button {:class hyvaksy-napin-luokka
-                                    :type "button"
-                                    :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!)
-                                                                    (toiminto-fn))}
-                           [:span hyvaksy-ikoni hyvaksy]]]}
-                sisalto))

@@ -11,9 +11,10 @@
       "required": true
     },
     "tunnus": {
-      "id": "urn:harja/yllapitokohde/kohdenumero",
+      "id": "urn:harja/yllapitokohde/tunnus",
       "required": false,
-      "type": "string"
+      "type": "string",
+      "maxLength": 1
     },
     "nimi": {
       "id": "urn:harja/yllapitokohde/nimi",

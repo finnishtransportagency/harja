@@ -58,7 +58,7 @@
      (fn [user urakka-id]
        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
        (async
-        (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id)))
+        (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
 
      :hae-urakan-vastuuhenkilot
      (fn [user urakka-id]
@@ -81,7 +81,7 @@
                      :tallenna-urakan-vastuuhenkilot-roolille)
     this))
 
-(defn hae-urakan-kayttajat [db fim user urakka-id]
+(defn hae-urakan-kayttajat [db fim urakka-id]
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
@@ -104,7 +104,6 @@
                (map #(dissoc % :yu :organisaatio_id :urakoitsija_nimi
                              :organisaatio_tyyppi :organisaatio_lyhenne)))
               tulokset)]
-    ;; palauta yhteyshenkilöt ja päivystykset erikseen?
     yhteyshenkilot))
 
 (defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]
@@ -159,11 +158,20 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (let [kaynnissaolevan-hoitokauden-alkupvm (c/from-date (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
         paivystajat (into []
-                          (map #(if-let [org-id (:organisaatio %)]
-                                 (assoc % :organisaatio {:tyyppi (keyword (str (:urakoitsija_tyyppi %)))
-                                                         :id org-id
-                                                         :nimi (:urakoitsija_nimi %)})
-                                 %))
+                          (map #(as-> % rivi
+                                  (if-let [org-id (:organisaatio_id rivi)]
+                                    (assoc rivi :organisaatio
+                                           {:tyyppi (keyword (str (:organisaatio_tyyppi rivi)))
+                                            :id org-id
+                                            :nimi (:organisaatio_nimi rivi)})
+                                    rivi)
+
+                                  (if-let [org-id (:urakoitsija_id rivi)]
+                                    (assoc rivi :urakoitsija
+                                           {:tyyppi (keyword (str (:urakoitsija_tyyppi rivi)))
+                                            :id org-id
+                                            :nimi (:urakoitsija_nimi rivi)})
+                                    rivi)))
                           (q/hae-urakan-paivystajat db urakka-id nil nil))
         paivystajat (filterv #(pvm/sama-tai-jalkeen? (c/from-sql-time (:loppu %))
                                                      kaynnissaolevan-hoitokauden-alkupvm)

@@ -43,4 +43,9 @@
 ;; Ala muokkaamaan valittua varustetta
 (defrecord MuokkaaVarustetta [varuste])
 
+(defrecord LisaaLiitetiedosto [liite])
+
+(defrecord HaeSijainninOsoite [sijainti])
+
+(defrecord SijanninOsoiteHaettu [osoite])
 

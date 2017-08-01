@@ -116,5 +116,3 @@
 
 (defn feikki-labyrintti []
   (->FeikkiLabyrintti))
-
-

@@ -7,17 +7,24 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan urakoitsijat
 \i testidata/urakoitsijat.sql
 
+-- Testikäyttäjiä
+\i testidata/kayttajat.sql
+
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
+\i testidata/vesivaylat/vesivaylien_urakat.sql
+
+
+
+-- Liitä käyttäjät urakoihin
+\i testidata/kayttajaroolit.sql
+
 -- Luodaan sanktiotyypit
 \i testidata/sanktiotyypit.sql
-
--- Testikäyttäjiä
-\i testidata/kayttajat.sql
 
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
@@ -126,10 +133,16 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/tietyomaat.sql
 
-
 -- Tietyöilmoitukset
 \i testidata/tietyoilmoitukset.sql
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
--- ****
+-- Vesiväylät
+
+\i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
+\i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
+\i testidata/vesivaylat/vesivaylien_materiaalit.sql
+
+-- Muunnetaan testidatan reittipisteet uuteen tallennusmuotoon
+SELECT siirra_kaikki_reittipisteet();

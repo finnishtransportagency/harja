@@ -76,9 +76,9 @@
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
      :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
     {:otsikko "Taka\u00ADrajan toisto\u00ADpäi\u00ADvä" :leveys 10 :nimi :takaraja-toistopaiva
-     :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
+     :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero 1 31 "Anna päivä välillä 1 - 31"]]}
     {:otsikko "Taka\u00ADrajan toisto\u00ADkuu\u00ADkausi" :leveys 10 :nimi :takaraja-toistokuukausi
-     :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
+     :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero 1 12 "Anna kuukausi välillä 1 - 12"]]}]
    (sort-by (juxt :takaraja-toistokuukausi :takaraja-toistopaiva)
             (filter #(= (:urakkatyyppi %)
                         (:arvo @yhteiset/valittu-urakkatyyppi))

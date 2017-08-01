@@ -20,6 +20,7 @@
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tuntematon-yllapitokohde+ "tuntematon-yllapitokohde")
 (def +urakkaan-kuulumaton-yllapitokohde+ "urakkaan-kuulumaton-yllapitokohde")
+(def +viallinen-yllapitokohteen-aikataulu+ "viallinen-yllapitokohteen-aikataulu")
 (def +viallinen-yllapitokohteen-tai-alikohteen-sijainti+ "viallinen-yllapitokohteen-tai-alikohteen-sijainti")
 (def +tietokanta-yhteys-poikki+ "tietokanta-yhteys-poikki")
 (def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
@@ -38,7 +39,8 @@
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
 (def +virheellinen-paivamaara+ "virheellinen-paivamaara")
 (def +sopimusta-ei-loydy+ "sopimusta ei löydy")
-(def +paallystysilmoitus-lukittu+ "paallystysilmoitus-kukittu")
+(def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
+(def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
 
 (defn heita-poikkeus [tyyppi virheet]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)

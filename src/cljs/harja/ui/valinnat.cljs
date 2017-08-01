@@ -10,18 +10,26 @@
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [goog.events.EventType :as EventType]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.dom :as dom]
+            [harja.domain.urakka :as u-domain]))
 
 (defn urakan-sopimus
-  [ur valittu-sopimusnumero-atom valitse-fn]
-  [:div.label-ja-alasveto.sopimusnumero
-   [:span.alasvedon-otsikko "Sopimusnumero"]
-   [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
-                         :format-fn second
-                         :valitse-fn valitse-fn
-                         :li-luokka-fn #(when (= (first %) (:paasopimus ur))
-                                          "bold")}
-    (:sopimukset ur)]])
+  ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
+  ([ur valittu-sopimusnumero-atom valitse-fn {:keys [kaikki-valinta?] :as optiot}]
+   [:div.label-ja-alasveto.sopimusnumero
+    [:span.alasvedon-otsikko "Sopimusnumero"]
+    [livi-pudotusvalikko {:valinta @valittu-sopimusnumero-atom
+                          :format-fn second
+                          :valitse-fn valitse-fn
+                          :li-luokka-fn #(when (= (first %) (:paasopimus ur))
+                                           "bold")}
+     (if kaikki-valinta?
+       (merge (:sopimukset ur) {nil "Kaikki"})
+       (:sopimukset ur))]]))
 
 (defn urakkatyyppi
   [valittu-urakkatyyppi-atom urakkatyypit valitse-fn]
@@ -80,14 +88,6 @@
                                        "Koko hoitokausi")
                          :valitse-fn valitse-fn}
     hoitokauden-kuukaudet]])
-
-(defn urakan-hoitokausi-ja-kuukausi
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn
-   hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]
-  [:span
-   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-   [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]])
 
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
@@ -164,87 +164,18 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-;; Parametreja näissä on melkoisen hurja määrä, mutta ei voi mitään
-(defn urakan-sopimus-ja-hoitokausi
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn] ;; urakan-hoitokausi
-
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
   [:span
-   [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
-   [urakan-hoitokausi ur hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]])
-
-(defn urakan-sopimus-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-   [urakan-sopimus ur valittu-sopimusnumero-atom valitse-sopimus-fn]
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-
-
-(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-   [urakan-sopimus-ja-hoitokausi
-    ur
-    valittu-sopimusnumero-atom valitse-sopimus-fn
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-(defn urakan-hoitokausi-ja-toimenpide
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide]
-  [:span
-   [urakan-hoitokausi
-    ur
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [urakan-toimenpide
-    urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
-
-
-(defn urakan-hoitokausi-ja-aikavali
-  [ur
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   valittu-aikavali-atom ;; hoitokauden-aikavali
-   ]
-
-  [:span
-
-   [urakan-hoitokausi
-    ur
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [aikavali valittu-aikavali-atom]])
-
-
-
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
-  [ur
-   valittu-sopimusnumero-atom valitse-sopimus-fn ;; urakan-sopimus
-   hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn ;; urakan-hoitokausi
-   valittu-aikavali-atom ;; hoitokauden-aikavali
-   urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn] ;; urakan-toimenpide
-
-  [:span
-
-   [urakan-sopimus-ja-hoitokausi
-    ur
-    valittu-sopimusnumero-atom valitse-sopimus-fn
-    hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]
-
-   [aikavali valittu-aikavali-atom]
-
-   [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]])
+   (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
+     [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])
+   (when-let [{:keys [hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]} hoitokausi]
+     [urakan-hoitokausi urakka hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])
+   (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
+     [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn])
+   (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
+     [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
+   (when-let [{:keys [valittu-aikavali-atom]} aikavali]
+     [aikavali valittu-aikavali-atom])])
 
 (defn vuosi
   ([ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
@@ -279,6 +210,125 @@
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta @valittu-varustetoteumatyyppi-atom
                           :format-fn #(if % (second %) "Kaikki")
-
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
+
+(defn aikavalivalitsin
+  ([otsikko aikavalit valinnat-nyt] (aikavalivalitsin otsikko aikavalit valinnat-nyt nil))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet false))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm]
+   (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:valokioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
+         alkuaika (:alkuaika valinnat-nyt)
+         vakio-aikavalikentta {:nimi (or (:valokioaikavali kenttien-nimet) :vakioaikavali)
+                               :otsikko otsikko
+                               :fmt :nimi
+                               :tyyppi :valinta
+                               :valinnat aikavalit
+                               :valinta-nayta :nimi
+                               :alasveto-luokka "aikavalinta"}
+         alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
+                         :otsikko "Alku"
+                         :tyyppi (if vain-pvm :pvm :pvm-aika)
+                         :validoi [[:ei-tyhja "Anna alkuaika"]]}
+         loppuaikakentta {:nimi (or (:loppuaika kenttien-nimet) :loppuaika)
+                          :otsikko "Loppu"
+                          :tyyppi (if vain-pvm :pvm :pvm-aika)
+                          :validoi [[:ei-tyhja "Anna loppuaika"]
+                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
+
+     (if vapaa-aikavali?
+       (lomake/ryhma
+         {:rivi? true}
+         vakio-aikavalikentta
+         alkuaikakentta
+         loppuaikakentta)
+       (lomake/ryhma
+         {:rivi? true}
+         vakio-aikavalikentta)))))
+
+(defn vaylatyyppi
+  [valittu-vaylatyyppi-atom vaylatyypit format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Väylätyyppi"]
+   [livi-pudotusvalikko {:valinta @valittu-vaylatyyppi-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vaylatyyppi-atom %)}
+    vaylatyypit]])
+
+(defn vayla
+  [valittu-vayla-atom vaylat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Väylä"]
+   [livi-pudotusvalikko {:valinta @valittu-vayla-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vayla-atom %)}
+    vaylat]])
+
+(defn tyolaji
+  [valittu-tyolaji-atom tyolajit format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Työlaji"]
+   [livi-pudotusvalikko {:valinta @valittu-tyolaji-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-tyolaji-atom %)}
+    tyolajit]])
+
+(defn tyoluokka
+  [valittu-tyoluokka-atom tyoluokat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Työluokka"]
+   [livi-pudotusvalikko {:valinta @valittu-tyoluokka-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-tyoluokka-atom %)}
+    tyoluokat]])
+
+(defn toimenpide
+  [valittu-toimenpide-atom toimenpiteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Toimenpide"]
+   [livi-pudotusvalikko {:valinta @valittu-toimenpide-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-toimenpide-atom %)}
+    toimenpiteet]])
+
+(defn urakkavalinnat [{:keys [urakka]} & sisalto]
+  [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
+                         {:class "urakkavalinnat-tyyliton"})
+   sisalto])
+
+(defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
+  (let [naulattu? (atom false)
+        elementin-etaisyys-ylareunaan (atom nil)
+        maarita-sticky! (fn []
+                          (if (and
+                                sticky?
+                                (> (dom/scroll-sijainti-ylareunaan) (+ @elementin-etaisyys-ylareunaan 20)))
+                            (reset! naulattu? true)
+                            (reset! naulattu? false)))
+        kasittele-scroll-event (fn [this _]
+                                 (maarita-sticky!))
+        kasittele-resize-event (fn [this _]
+                                 (maarita-sticky!))]
+    (komp/luo
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL kasittele-scroll-event
+                           EventType/RESIZE kasittele-resize-event)
+      (komp/kun-muuttuu (fn [_ _ {:keys [disabled] :as optiot}]
+                          (maarita-sticky!)))
+      (komp/piirretty #(reset! elementin-etaisyys-ylareunaan
+                               (dom/elementin-etaisyys-dokumentin-ylareunaan
+                                 (r/dom-node %))))
+      (fn [{:keys [urakka] :as optiot} & sisalto]
+        [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
+                                           (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
+                                             "urakkatoiminnot-tyyliton "))}
+         sisalto]))))
+
+(defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
+  [:div.row
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma1]
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma2]
+   [:div.valintaryhma.col-sm-12.col-md-4
+    ryhma3]])

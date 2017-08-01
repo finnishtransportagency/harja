@@ -3,8 +3,8 @@
             [harja.pvm :as pvm]
             [harja.ui.bootstrap :as bs]
             [clojure.string :refer [capitalize]]
-            [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitukset
+            [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
+            [harja.domain.tieliikenneilmoitukset
              :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                      +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                      +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit

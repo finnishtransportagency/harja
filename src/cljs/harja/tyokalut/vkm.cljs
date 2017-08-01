@@ -43,7 +43,7 @@
             (.setAttribute "src" kutsu-url))
         ch (chan)
         tulos #(do
-                 (log "VKM VASTAUS: " %)
+                 (log "VKM VASTAUS: " (pr-str %))
                  (put! ch (js->clj %))
                  (close! ch)
                  (.removeChild (.-head js/document) s)

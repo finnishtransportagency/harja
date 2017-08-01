@@ -55,7 +55,7 @@
                       [:div
                        [:button.nappi-toissijainen.nappi-grid
                         {:on-click #(tiedot/valitse-paivan-toteuma-id! avain (:id rivi))}
-                        (ikonit/eye-open) " Toteuma"]])}]
+                        (ikonit/ikoni-ja-teksti (ikonit/eye-open) "Toteuma")]])}]
      tiedot]))
 
 (defn taulukko []
@@ -74,7 +74,7 @@
                                      (tiedot/valitse-paivakohtainen-tehtava!
                                       (:pvm %) (:toimenpidekoodi %)))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
-       :mahdollista-rivin-valinta true
+       :mahdollista-rivin-valinta? true
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste tunniste
@@ -157,7 +157,9 @@
                              :ikoni        (ikonit/tallenna)
                              :kun-onnistuu #(do
                                              (tiedot/toteuman-tallennus-onnistui %)
-                                             (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                                             (tiedot/poista-toteuman-valinta!)
+                                             ;; Päiväkohtaiset tiedot vanhentui -> tyhjennä
+                                             (reset! tiedot/toteumien-paivakohtaiset-tiedot {}))
                              :disabled     (or (not (lomake/voi-tallentaa? tiedot))
                                                jarjestelman-lisaama-toteuma?
                                                (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
@@ -211,7 +213,8 @@
              :nimi :suorittajan-ytunnus
              :hae (comp :ytunnus :suorittaja)
              :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
-             :pituus-max 256
+             :pituus-max 9
+             :validoi [[:ytunnus]]
              :tyyppi :string
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
             (lomake/ryhma

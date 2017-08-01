@@ -16,7 +16,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :liitteiden-hallinta (component/using (liitteet/->Liitteet) [:db])
+    :liitteiden-hallinta (component/using (liitteet/->Liitteet nil) [:db])
     :api-pistetoteuma (component/using
                         (api-tarkastukset/->Tarkastukset)
                         [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
@@ -125,4 +125,5 @@
 
         tarkastuksia-kannassa (ffirst (q (str "SELECT count(id) FROM tarkastus WHERE ulkoinen_id IN (" (str/join "," tarkastus-idt) ");")))]
     (is (= 200 (:status vastaus)) "Kutsu on onnistunut")
-    (is (= (count tarkastus-idt) tarkastuksia-kannassa) "Kaikki tarkastukset ovat kirjautuneet kantaan oikein")))
+    (is (= (count tarkastus-idt) tarkastuksia-kannassa)
+        "Kaikki tarkastukset ovat kirjautuneet kantaan oikein")))

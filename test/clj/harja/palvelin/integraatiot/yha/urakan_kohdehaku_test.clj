@@ -24,8 +24,7 @@
 (defn hae-yha-id [urakka-id]
   (first (first (q (format "SELECT yhaid\nFROM yhatiedot\nWHERE urakka = %s;" urakka-id)))))
 
-(defn tee-url []
-  (str +yha-url+ "haeUrakanKohteet"))
+(def urakan-kohteet-url (str +yha-url+ "haeUrakanKohteet"))
 
 (deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
@@ -77,7 +76,7 @@
                            :yllapitokohdetyotyyppi :paikkaus
                            :yllapitokohdetyyppi "paallyste"
                            :yllapitoluokka 1}]
-        url (tee-url)]
+        url urakan-kohteet-url]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
       (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")]
         (is (= odotettu-vastaus vastaus))))))
@@ -85,13 +84,13 @@
 (deftest tarkista-epaonnistunut-kutsu
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)]
-    (with-fake-http [{:url (tee-url) :method :get} 500]
+    (with-fake-http [{:url urakan-kohteet-url :method :get} 500]
       (is (thrown? Exception (yha/hae-kohteet (:yha jarjestelma) yha-id ""))
           "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
 (deftest tarkista-virhevastaus
   (let [urakka-id (hae-urakka-id)]
-    (with-fake-http [(tee-url) +virhevastaus+]
+    (with-fake-http [urakan-kohteet-url +virhevastaus+]
       (try+
         (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")
         (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")

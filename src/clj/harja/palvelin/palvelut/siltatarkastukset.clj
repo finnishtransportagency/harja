@@ -123,13 +123,19 @@
       (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
       (when (or (empty? sillan-urakat)
                 (not (some #(= urakka-id %) sillan-urakat)))
-        (throw (SecurityException. "Siltatarkastus ei kuulu väitettyyn urakkaan."))))))
+        (throw (SecurityException.
+                 (format "Siltatarkastusta ei voi kirjata sillalle (%s), koska se ei kuulu urakkaan (%s).
+                          Silta on merkitty kuuluvaksi urakoille: %s"
+                         silta-id
+                         urakka-id
+                         sillan-urakat)))))))
 
-(defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
-  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
-  (doseq [[kohdenumero uusi-liite] uudet-liitteet]
-    (log/debug "Tallenna liite: " (pr-str (:nimi uusi-liite)))
-    (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id uusi-liite)))
+(defn tallenna-siltatarkastuksen-liitteet [db tarkastus kohteiden-liitteet]
+  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str kohteiden-liitteet))
+  (doseq [[kohdenumero liitteet] kohteiden-liitteet]
+    (doseq [liite liitteet]
+      (log/debug "Tallenna liite: " (pr-str (:nimi liite)))
+      (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id liite))))
   (log/debug "Liitteet tallennettu!"))
 
 (defn tallenna-siltatarkastus!

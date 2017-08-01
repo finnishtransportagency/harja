@@ -151,8 +151,8 @@
   (muunna rivi kentat double))
 
 (defn seq->array
-  "Muuntaa yksittäisen arvon Clojure-kokoelmasta JDBC arrayksi.
-   Itemien tulisi olla joko tekstiä, numeroita ja keywordeja, sillä
+  "Muuntaa arvot Clojure-kokoelmasta JDBC arrayksi.
+   Itemien tulisi olla joko tekstiä, numeroita tai keywordeja, sillä
    ne muunnetaan aina tekstiksi."
   [collection]
   (let [kasittele #(if (= Keyword (type %))

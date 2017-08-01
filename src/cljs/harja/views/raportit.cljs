@@ -13,7 +13,7 @@
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.views.kartta :as kartta]
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.ui.raportti :as raportti]
@@ -26,7 +26,8 @@
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t]
             [harja.fmt :as fmt]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.kentat :as kentat])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -134,7 +135,7 @@
                            [nil]
                            (cond
                              hk
-                             (pvm/hoitokauden-kuukausivalit hk)
+                             (pvm/aikavalin-kuukausivalit hk)
 
                              vuosi
                              (pvm/vuoden-kuukausivalit vuosi)
@@ -234,7 +235,7 @@
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
-           (u/hoitokaudet ur)
+           (u/hoito-tai-sopimuskaudet ur)
            (u/edelliset-hoitokaudet 5 true))
          valittu-hoitokausi
          #(do
@@ -321,7 +322,7 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset (:id urakka))]
                                  (when (and urakka nakymassa? oikeus?)
                                   (k/post! :hae-urakan-sillat
                                            {:urakka-id (:id urakka)
@@ -340,8 +341,8 @@
                                                  :kaikki
                                                  (:id %))}))
       :format-fn #(case %
-                   :kaikki "Kaikki"
-                   (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
+                    :kaikki (if (empty? @urakan-sillat) "Ei siltoja" "Kaikki")
+                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
      (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
 
@@ -429,7 +430,15 @@
                        valittu?])]))))]])))
 
 (defmethod raportin-parametri :default [p arvo]
-  [:span (pr-str p)])
+  (if (keyword? (:tyyppi p))
+    ;; Tehdään suoraan lomake kenttä annetuilla spekseillä
+    (let [nimi (:nimi p)]
+      [:div.label-ja-kentta
+       [:span (:otsikko p)]
+       [kentat/tee-kentta p (r/wrap (nimi @arvo)
+                                    #(swap! arvo merge {nimi %}))]])
+
+    [:span (pr-str p)]))
 
 ;; Tarkistaa raporttityypin mukaan voiko näillä parametreilla suorittaa
 (defmulti raportin-voi-suorittaa? (fn [raporttityyppi parametrit] (:nimi raporttityyppi)))

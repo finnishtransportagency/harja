@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -96,9 +97,9 @@
   (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
-(defn hae-alikohteet [db kohde-id paallystys-ilmoitus]
+(defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (get-in paallystys-ilmoitus [:ilmoitustiedot :osoitteet])]
+        osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
 
             (let [id (:id alikohde)
@@ -108,11 +109,14 @@
 
 (defn hae-kohteen-tiedot [db kohde-id]
   (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
-    (let [paallystys-ilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
-          alikohteet (hae-alikohteet db kohde-id paallystys-ilmoitus)]
+    (let [maaramuutokset (:tulos (maaramuutokset/hae-ja-summaa-maaramuutokset
+                                   db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
+          paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
+          paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+          alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
       {:kohde kohde
        :alikohteet alikohteet
-       :paallystys-ilmoitus paallystys-ilmoitus})
+       :paallystysilmoitus paallystysilmoitus})
     (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
       (log/error virhe)
       (throw+

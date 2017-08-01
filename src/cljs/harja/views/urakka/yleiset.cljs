@@ -6,6 +6,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
+            [harja.domain.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.tiedot.urakka.yhteystiedot :as yht]
@@ -31,8 +32,10 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
+            [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
-            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -61,30 +64,7 @@
         (reset! yhteyshenkilot res)
         true)))
 
-(defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
-  (log "tallenna päivystäjät!" (pr-str uudet-paivystajat))
-  (go (let [tallennettavat
-            (into []
-                  ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  (comp (filter #(not (:poistettu %)))
-                        (map #(if-let [nimi (:nimi %)]
-                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                  (assoc %
-                                    :etunimi (str/trim etu)
-                                    :sukunimi (str/trim suku)))
-                                %)))
-                  uudet-paivystajat)
-            poistettavat
-            (into []
-                  (keep #(when (and (:poistettu %)
-                                    (> (:id %) 0))
-                           (:id %)))
-                  uudet-paivystajat)
-            vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-          (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
-              true)))))
+
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
@@ -143,74 +123,48 @@
      []
      kayttajat)])
 
-(defn paivystajalista
-  [ur paivystajat tallenna!]
+
+
+
+
+(defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
    [grid/grid
-    {:otsikko "Päivystystiedot"
-     :tyhja "Ei päivystystietoja."
+    {:otsikko "TURI-työtunnit"
+     :tyhja "Ei TURI-työtunteja."
      :tallenna tallenna!
-     :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
-                               (< (pvm/nyt) (:loppu %)))
-                      " bold")}
-    [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                              nimi
-                              (str (:etunimi %)
-                                   (when-let [suku (:sukunimi %)]
-                                     (str " " suku))))
-      :aseta (fn [yht arvo]
-               (assoc yht :nimi arvo))
+     :voi-lisata? false
+     :voi-poistaa? (constantly false)
+     :tunniste :vuosi
+     :piilota-toiminnot? true}
+    [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :positiivinen-numero :muokattava? (constantly false)}
+     {:otsikko "Tammikuu - Huhtikuu" :nimi :ensimmainen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Toukokuu - Elokuu" :nimi :toinen-vuosikolmannes :tyyppi :positiivinen-numero}
+     {:otsikko "Syyskuu - Joulukuu" :nimi :kolmas-vuosikolmannes :tyyppi :positiivinen-numero}]
+    tyotunnit]])
 
-
-      :tyyppi :string :leveys 15
-      :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-     {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
-      :tyyppi :valinta
-      :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-      :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
-     {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
-      :pituus 16}
-     {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
-      :pituus 16}
-     {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
-      :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-     {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-      :validoi [[:ei-tyhja "Aseta alkupvm"]
-                (fn [alku rivi]
-                  (let [loppu (:loppu rivi)]
-                    (when (and alku loppu
-                               (t/before? loppu alku))
-                      "Alkupvm ei voi olla lopun jälkeen.")))
-                ]}
-     {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-      :validoi [[:ei-tyhja "Aseta loppupvm"]
-                (fn [loppu rivi]
-                  (let [alku (:alku rivi)]
-                    (when (and alku loppu
-                               (t/before? loppu alku))
-                      "Loppupvm ei voi olla alkua ennen.")))]}
-     {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
-      :leveys 10
-      :fmt fmt/totuus :tasaa :keskita}]
-    paivystajat]
-   [yleiset/vihje "Kaikista ilmoituksista lähetetään aina kaikille vuorossaoleville päivystäjille tieto sähköpostilla.
-   Uusista toimenpidepyynnöistä lähetetään tekstiviesti vain vuorossaoleville vastuuhenkilöille"]])
-
-(defn paivystajat [ur]
-  (let [paivystajat (atom nil)
+(defn urakan-tyotunnit [{:keys [id alkupvm loppupvm]}]
+  (let [vuodet (reverse (mapv #(hash-map :vuosi %) (pvm/vuodet-valissa alkupvm loppupvm)))
+        tyotunnit (atom nil)
         hae! (fn [urakka-id]
-               (reset! paivystajat nil)
-               (go (reset! paivystajat
-                           (reverse (sort-by :loppu
-                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
-    (hae! (:id ur))
+               (reset! tyotunnit vuodet)
+               (go
+                 (let [vastaus (<! (urakan-tyotunnit/hae-urakan-tyotunnit urakka-id))]
+                   (if (k/virhe? vastaus)
+                     (viesti/nayta! "Urakan työtuntien haku epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                     (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus))))))
+        tallenna! (fn [ur]
+                    [urakan-tyotuntilista @tyotunnit
+                     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                       (fn [uudet]
+                         (go (let [vastaus (<! (urakan-tyotunnit/tallenna-urakan-tyotunnit id uudet))]
+                               (if (k/virhe? vastaus)
+                                 (viesti/nayta! "Urakan työtuntien tallennus epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                                 (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus)))))))])]
+    (hae! id)
     (komp/luo
-      (komp/kun-muuttuu (comp hae! :id))
-      (fn [ur]
-        [paivystajalista ur @paivystajat
-         (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-           #(tallenna-paivystajat ur paivystajat %))]))))
+      (komp/kun-muuttuu (comp hae! :id :vuosi))
+      tallenna!)))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
@@ -320,7 +274,7 @@
            (ikonit/livicon-wrench)
            " "]
           (when @auki?
-            [napit/yleinen "Poista indeksi käytöstä"
+            [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
                (modal/nayta! {}
                              [:div
@@ -337,8 +291,8 @@
                                                                                 assoc :indeksi nil)
                                                     (modal/piilota!)
                                                     (reset! auki? false))}]
-                               [napit/yleinen "Peruuta" #(do (modal/piilota!)
-                                                             (reset! auki? false))
+                               [napit/yleinen-toissijainen "Peruuta" #(do (modal/piilota!)
+                                                                          (reset! auki? false))
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
@@ -415,10 +369,10 @@
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                        {:otsikko (str "Urakan ensisijainen "
-                                                       (case rooli
-                                                         "ELY_Urakanvalvoja" "urakanvalvoja"
-                                                         "vastuuhenkilo" "vastuuhenkilö"))}
+                                       {:otsikko (str "Urakan ensisijainen "
+                                                      (case rooli
+                                                        ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
+                                                        "vastuuhenkilo" "vastuuhenkilö"))}
                                         [aseta-vastuuhenkilo
                                          paivita-vastuuhenkilot!
                                          urakka-id kayttaja kayttajat
@@ -454,7 +408,10 @@
                          [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
+                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
+                         (if (u/vesivaylaurakka? ur)
+                           "Tilaajan_Urakanvalvoja"
+                           "ELY_Urakanvalvoja")]
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
@@ -469,6 +426,7 @@
 
       "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                     [urakan-indeksi ur])]]))
+
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -521,23 +479,19 @@
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."
-  [ur]
-  (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
-        paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
-                                           (= (:tyyppi ur) :paikkaus))
-        paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-        sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])
-        palvelusopimus? (= :palvelusopimus (:sopimustyyppi ur))]
+  [urakka]
+  (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? urakka)
+        paallystys-tai-paikkausurakka? (or (= (:tyyppi urakka) :paallystys)
+                                           (= (:tyyppi urakka) :paikkaus))
+        paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot urakka))
+        sidonta-lukittu? (get-in urakka [:yhatiedot :sidonta-lukittu?])
+        palvelusopimus? (= :palvelusopimus (:sopimustyyppi urakka))]
     (when (and yha-tuontioikeus?
                paallystys-tai-paikkausurakka?
                (not paallystys-tai-paikkausurakka-sidottu?)
                (not sidonta-lukittu?)
                (not palvelusopimus?))
-      (yha/nayta-tuontidialogi ur))))
-
-
-
-
+      (yha/nayta-tuontidialogi urakka))))
 
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
@@ -564,4 +518,6 @@
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat ur])]))))
+           [paivystajat/paivystajat ur])
+         (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+           [urakan-tyotunnit ur])]))))

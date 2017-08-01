@@ -31,6 +31,10 @@ div.tietorivi {
   }
 }
 
+div.tietorivi-ilman-alaviivaa {
+  border-bottom: none;
+}
+
 div.tietokentta {
   font-weight: bold;
   min-width: 150px;
@@ -132,6 +136,7 @@ button > .ajax-loader {
 
 .label-ja-kentta {
   display: inline-block;
+  vertical-align: top;
   margin: 5px;
   .kentan-otsikko {
     font-weight: bold;
@@ -139,14 +144,59 @@ button > .ajax-loader {
   .livi-alasveto(@valintakontrollin-leveys);
   input {
     height: @valintakontrollin-korkeus;
-    max-width: @valintakontrollin-leveys;
+    width: 100%;
   }
 }
+
+.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
+  display: inline-block;
+  vertical-align: top;
+  margin: @margin;
+  max-width: 100%;
+  width: @leveys;
+  .aikavali-valinnat {
+    text-align: center;
+  }
+  .pvm-kentta {
+    width: 46%;
+  }
+  .pvm-valiviiva-wrap {
+    display: inline-block;
+    height: @input-korkeus;
+    text-align: center;
+    width: 7%;
+
+  }
+  .pvm {
+    height: @valintakontrollin-korkeus;
+    max-width: 100%;
+    position: relative;
+    top: 1px;
+  }
+}
+
+.label-ja-aikavali {
+  .label-ja-aikavali-tpl(@valintakontrollin-leveys);
+}
+.label-ja-aikavali-lyhyt {
+  .label-ja-aikavali-tpl(85px);
+}
+
+.label-ja-aikavali-lomake {
+  .label-ja-aikavali-tpl(100%, 0px);
+  .pvm { width: 100%; }
+}
+
+.label-ja-kentta-puolikas {
+  .label-ja-kentta();
+  width: @valintakontrollin-leveys / 2;
+  min-width: initial;
+  max-width: initial;
+}
+
 .testikaytto-alasveto {
   .livi-alasveto(215px);
 }
-
-
 
 //vain "demo-koodia"
 .harjan-ikonit {
@@ -247,13 +297,13 @@ button > .ajax-loader {
   font-weight: bold;
 }
 
-.tr-valitsin-teksti {
+.karttasijaintivalitsin-teksti {
   background-color: @harjan-taustavari;
   border: none;
   padding: 6px 4px;
 }
 
-.tr-valitsin-virhe {
+.karttavalitsin-virhe {
   color: @vaara;
 }
 
@@ -307,3 +357,7 @@ button > .ajax-loader {
   }
 }
 
+/* Yleinen kentän puuttuva arvo -luokka, joko gridissä tai lomakkeessa */
+.puuttuva-arvo {
+   border-bottom: solid 1px @vaara !important;
+}

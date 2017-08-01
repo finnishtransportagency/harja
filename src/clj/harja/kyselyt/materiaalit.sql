@@ -85,7 +85,7 @@ FROM materiaalin_kaytto
 WHERE urakka = :urakka
       AND materiaalin_kaytto.alkupvm :: DATE >= :alkuvpm
       AND materiaalin_kaytto.alkupvm :: DATE <= :alkupvm
-      AND poistettu IS NOT TRUE;
+      AND materiaalin_kaytto.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-toteutuneet-materiaalit-raportille
 -- Palauttaa urakan materiaalit ja määrät omilla riveillä.
@@ -135,7 +135,8 @@ SELECT
   urakka.nimi             AS "urakka-nimi",
   o.nimi                  AS "hallintayksikko-nimi",
   materiaalikoodi.nimi    AS "materiaali-nimi",
-  materiaalikoodi.yksikko AS "materiaali-yksikko"
+  materiaalikoodi.yksikko AS "materiaali-yksikko",
+  o.elynumero
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
   INNER JOIN toteuma ON toteuma.id = toteuma
@@ -146,7 +147,7 @@ FROM toteuma_materiaali
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
   WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
-GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, materiaalikoodi.yksikko;
+GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

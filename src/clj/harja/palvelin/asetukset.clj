@@ -1,10 +1,11 @@
 (ns harja.palvelin.asetukset
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [harja.palvelin.lokitus.hipchat :as hipchat]
-            [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
+            [harja.palvelin.lokitus.slack :as slack]
+            [taoensso.timbre.appenders.postal :refer [postal-appender]]))
 
 
 (def Tietokanta {:palvelin s/Str
@@ -28,7 +29,7 @@
                                            (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
-                                           (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
+                                           (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword}
 
                                            (s/optional-key :email)   {:taso          s/Keyword
                                                                       :palvelin      s/Str
@@ -42,7 +43,6 @@
                                        (s/optional-key :suora?) s/Bool
                                        (s/optional-key :palvelin) s/Str
                                        :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
-                                               (s/optional-key :sahkoposti-sisaan-kuittausjono) s/Str
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
    (s/optional-key :sampo)                {:lahetysjono-sisaan       s/Str
@@ -54,9 +54,12 @@
                                            :ilmoituskuittausjono   s/Str
                                            :toimenpideviestijono   s/Str
                                            :toimenpidekuittausjono s/Str
+                                           (s/optional-key :tietyoilmoitusviestijono) s/Str
+                                           (s/optional-key :tietyoilmoituskuittausjono) s/Str
                                            :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
-   (s/optional-key :turi)                 {:url s/Str
+   (s/optional-key :turi)                 {:turvallisuuspoikkeamat-url s/Str
+                                           :urakan-tyotunnit-url s/Str
                                            :kayttajatunnus s/Str
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
@@ -98,8 +101,7 @@
                                            (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-alk-osoite)             s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str
-                                           }
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str}
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str
@@ -122,7 +124,34 @@
    (s/optional-key :sonja-jms-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
                                                  (s/optional-key :jono)                    s/Str}
 
-   (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}})
+   (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
+
+   (s/optional-key :sahke)                  {:lahetysjono       s/Str
+                                             (s/optional-key :uudelleenlahetysaika) [s/Num]}
+
+   (s/optional-key :turvalaitteet)          {:geometria-url       s/Str
+                                             :paivittainen-tarkistusaika [s/Num]
+                                             :paivitysvali-paivissa s/Num}
+
+   (s/optional-key :vaylat)                 {:geometria-url       s/Str
+                                             :paivittainen-tarkistusaika [s/Num]
+                                             :paivitysvali-paivissa s/Num}
+
+   (s/optional-key :tyotunti-muistutukset)   {:paivittainen-aika [s/Num]}
+
+   (s/optional-key :vkm)   {:url s/Str}
+
+   (s/optional-key :liitteet)   {:fileyard-url s/Str}
+
+   (s/optional-key :reimari)                {:url                     s/Str
+                                             :kayttajatunnus          s/Str
+                                             :salasana                s/Str
+                                             (s/optional-key :paivittainen-toimenpidehaku)  [s/Num]
+                                             (s/optional-key :paivittainen-komponenttityyppihaku)  [s/Num]
+                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]}
+
+   (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
@@ -161,31 +190,30 @@
 (defn crlf-filter [msg]
   (assoc msg :args (mapv (fn [s]
                            (if (string? s)
-                             (clojure.string/replace s #"[\n\r]" "")
+                             (str/replace s #"[\n\r]" "")
                              s))
                          (:args msg))))
 
 (defn konfiguroi-lokitus [asetukset]
-  (log/set-config! [:middleware] [crlf-filter])
+  (log/merge-config! {:middleware [crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
-    (log/set-config! [:appenders :standard-out :min-level] :info))
+    (log/merge-config! {:appenders {:println {:min-level :info}}}))
 
   (when-let [gelf (-> asetukset :log :gelf)]
-    (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
+    (log/merge-config! {:shared-appender-config {:gelf {:host (:palvelin gelf)}}}))
 
-  (when-let [hipchat (-> asetukset :log :hipchat)]
-    (log/set-config! [:appenders :hipchat]
-                     (hipchat/luo-hipchat-appender (:huone-id hipchat) (:token hipchat) (:taso hipchat))))
+  (when-let [slack (-> asetukset :log :slack)]
+    (log/merge-config! {:appenders
+                        {:slack
+                         (slack/luo-slack-appender (str/trim (:webhook-url slack))
+                                                   (:taso slack))}}))
 
   (when-let [email (-> asetukset :log :email)]
-    (log/set-config! [:appenders :postal]
-                     (make-postal-appender
-                       {:enabled?   true
-                        :rate-limit [1 30000]               ; 1 viesti / 30 sekuntia rajoitus
-                        :async?     true
-                        :min-level  (:taso email)}
-                       {:postal-config
-                        ^{:host (:palvelin email)}
-                        {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
-                         :to   (:vastaanottaja email)}}))))
+    (log/merge-config!
+     {:appenders
+      {:postal
+       (postal-appender
+         ^{:host (:palvelin email)}
+         {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
+          :to   (:vastaanottaja email)})}})))

@@ -1,6 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset
   (:require
-    [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
+    [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
     [jeesql.core :refer [defqueries]]
     [harja.tyokalut.functor :refer [fmap]]
     [clojure.string :as str]

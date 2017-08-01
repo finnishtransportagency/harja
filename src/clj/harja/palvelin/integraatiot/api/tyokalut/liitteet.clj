@@ -2,7 +2,8 @@
   (:require [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat])
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.kyselyt.siltatarkastukset :as siltatarkastukset])
   (:import (java.util Base64)))
 
 (defn dekoodaa-base64 [data]
@@ -34,3 +35,7 @@
 (defn tallenna-liitteet-turvallisuuspoikkeamalle [db liitteiden-hallinta urakan-id tp-id kirjaaja liitteet]
   (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
                 #(turvallisuuspoikkeamat/liita-liite<! db tp-id %)))
+
+(defn tallenna-liitteet-siltatarkastuskohteelle [db liitteiden-hallinta kirjaaja urakan-id siltatarkastus-id tarkastuskohde-id liitteet]
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
+                #(siltatarkastukset/lisaa-liite-siltatarkastuskohteelle<! db siltatarkastus-id tarkastuskohde-id %)))

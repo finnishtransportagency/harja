@@ -12,11 +12,13 @@
                     {:yllapitokohde yllapitokohde-id}))))
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
-  (into []
-        (comp
-          (map #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
-                                                  [:tila]]))
-          (map #(yllapitokohteet-q/liita-kohdeosat db % (:paallystyskohde-id %))))
-        (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
-                                              :sopimus sopimus-id
-                                              :vuosi vuosi})))
+  (let [paallytysilmoitukset (into []
+                                   (comp
+                                     (map #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
+                                                                             [:tila]])))
+                                   (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
+                                                                         :sopimus sopimus-id
+                                                                         :vuosi vuosi}))
+        paallytysilmoitukset (yllapitokohteet-q/liita-kohdeosat-kohteisiin
+                               db paallytysilmoitukset :paallystyskohde-id)]
+    paallytysilmoitukset))

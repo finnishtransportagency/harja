@@ -11,7 +11,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.toteumat.tiemerkinta-muut-tyot :as muut-tyot]))
+            [harja.views.urakka.toteumat.tiemerkinta-muut-kustannukset :as muut-kustannukset]))
 
 
 (defn toteutus [ur]
@@ -38,8 +38,8 @@
              tyy-tiedot/tiemerkinnan-toteumat
              tyy-tiedot/paallystysurakan-kohteet])
 
-          "Muut työt"
+          "Muut kustannukset"
           :muut
-          (when (oikeudet/urakat-toteutus-muuttyot id)
-            ^{:key "muut-tyot"}
-            [muut-tyot/muut-tyot ur])]]))))
+          (when (oikeudet/urakat-toteutus-muutkustannukset id)
+            ^{:key "muut-kustannukset"}
+            [muut-kustannukset/muut-kustannukset ur])]]))))

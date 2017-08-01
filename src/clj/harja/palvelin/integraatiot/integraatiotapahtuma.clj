@@ -2,7 +2,19 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [specql.core :refer [fetch]]
+            [specql.rel :as rel]
+            [specql.op :as op]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [clojure.string :as str]))
+
+(define-tables ["integraatio" :harja.palvelin.integraatiot/integraatio])
+
+(define-tables
+  ["integraatiotapahtuma" ::tapahtuma
+   {"integraatio" ::integraatio-id
+    ::integraatio (rel/has-one ::integraatio-id :harja.palvelin.integraatiot/integraatio :harja.palvelin.integraatiot/id)}])
 
 (defmulti laheta-integraatioviesti (fn [konteksti tyyppi asetukset payload] tyyppi))
 (defmethod laheta-integraatioviesti :http [{:keys [lokittaja tapahtuma-id] :as konteksti} _

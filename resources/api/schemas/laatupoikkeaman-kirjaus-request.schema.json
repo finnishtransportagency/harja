@@ -55,6 +55,10 @@
       "format": "date-time",
       "required": true
     },
+    "sisaltaa-poikkeamaraportin": {
+      "id": "urn:harja/sisaltaa-poikkeamaraportin",
+      "type": "boolean"
+    },
     "liitteet": {
       "id": "urn:harja/liitteet",
       "type": "object",

@@ -8,7 +8,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]))
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn otsikko
   "Näyttää infopaneelin asialle otsikon, jota klikkaamalla asian saa auki/kiinni"
@@ -19,8 +20,9 @@
     [:span.ip-haitari-otsikko.klikattava otsikko]]])
 
 (defn- kentan-arvo [skeema data]
-  (let [arvo-fn (or (:hae skeema) (:nimi skeema))
-        arvo (when arvo-fn (arvo-fn data))]
+  (let [fmt (or (:fmt skeema) identity)
+        arvo-fn (or (:hae skeema) (:nimi skeema))
+        arvo (fmt (when arvo-fn (arvo-fn data)))]
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
     (when arvo
       (r/wrap arvo
@@ -37,16 +39,18 @@
     [:div.ip-osio
      (when-let [linkit (tyyppi linkin-kasittelijat)]
        [:div
-        (doall
-         (map-indexed
-          (fn [i {:keys [teksti ikoni tooltip toiminto]}]
-            ^{:key (str "ip-toiminto-" i)}
-            [yleiset/wrap-if tooltip
-             [yleiset/tooltip {} :% tooltip]
-             [napit/yleinen teksti #(toiminto data) {:ikoni ikoni
-                                                     :luokka "ip-toiminto btn-xs"}]])
+        (for*
+         [{:keys [teksti ikoni tooltip toiminto] :as linkki}
           (if (vector? linkit)
-            linkit [linkit])))])
+            linkit [linkit])
+
+          ;; Jos :when avaimella on määritelty ehdollisuus linkille, tarkistetaan se
+          :when (or (nil? (:when linkki))
+                    ((:when linkki) data))]
+         [yleiset/wrap-if tooltip
+          [yleiset/tooltip {} :% tooltip]
+          [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
+                                                               :luokka "ip-toiminto btn-xs"}]])])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]
@@ -57,7 +61,7 @@
 (defn sulje-nappi [piilota-fn!]
   (when piilota-fn!
     [:div
-     [napit/sulje piilota-fn!]]))
+     [napit/sulje-ruksi piilota-fn!]]))
 
 (defn infopaneeli-komponentti [{:keys [haetaan? avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]} asiat]
   [:span

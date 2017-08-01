@@ -9,8 +9,8 @@
   yhteen tiehen ja aikaväliin. Tällä mallilla ei tarvitse tehdä erikseen enää
   karttakuvan klikkauksesta hakua vaan kaikki tienäkymän tieto on jo frontilla.
 
-  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden
-  ja parametrimäpin, jossa on seuraavat tiedot:
+  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden ja parametrimäpin,
+  jossa on seuraavat tiedot:
   - hakualueen extent: :x1, :y1, :x2 ja :y2
   - tierekisteriosoitteen geometria: :sijainti
   - tierekisteriosoite: :numero, :alkuosa, :alkuetaisyys, :loppuosa ja :loppuetaisyys
@@ -29,8 +29,10 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [harja.kyselyt.tienakyma :as q]
+            [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
+            [harja.palvelin.palvelut.toteumat :as toteumat]
             [clojure.core.async :as async]
             [harja.kyselyt.kursori :as kursori]
             [harja.domain.tienakyma :as d]))
@@ -66,6 +68,10 @@
                     (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
+(defn- hae-varustetoteumat [db parametrit]
+  (kursori/hae-kanavaan
+   (async/chan 32 (toteumat/varustetoteuma-xf))
+   db q/hae-varustetoteumat parametrit))
 
 (defn- hae-tarkastukset [db parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
@@ -103,6 +109,18 @@
         (async/close! ch)))
     ch))
 
+(defn- hae-tietyoilmoitukset [db parametrit]
+  (let [ch (async/chan 32)]
+    (async/thread
+      (let [tulokset (into []
+                           (map #(assoc % :tyyppi-kartalla :tietyoilmoitus))
+                           (tietyoilmoitukset-q/hae-ilmoitukset-tienakymaan db parametrit))]
+        (loop [[t & tulokset] tulokset]
+          (when (and t (async/>!! ch t))
+            (recur tulokset)))
+        (async/close! ch)))
+    ch))
+
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
   tienakyma-haut
@@ -110,7 +128,9 @@
    :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
-   :laatupoikkeamat #'hae-laatupoikkeamat})
+   :laatupoikkeamat #'hae-laatupoikkeamat
+   :tietyoilmoitukset #'hae-tietyoilmoitukset
+   :varustetoteumat #'hae-varustetoteumat})
 
 (def +haun-max-kesto+ 20000)
 
@@ -149,7 +169,8 @@
 
 (defrecord Tienakyma []
   component/Lifecycle
-  (start [{db :db http :http-palvelin :as this}]
+  (start [{db :db http :http-palvelin
+           :as this}]
     (julkaise-palvelu
      http
      :hae-tienakymaan

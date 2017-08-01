@@ -6,7 +6,11 @@
             [harja.ui.kentat :refer [tee-kentta nayta-arvo atomina]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [taoensso.truss :as truss :refer-macros [have have! have?]])
+            [taoensso.truss :as truss :refer-macros [have have! have?]]
+            [harja.pvm :as pvm]
+            [clojure.string :as str]
+            [harja.ui.leijuke :as leijuke]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [harja.makrot :refer [kasittele-virhe]]))
 
 (defrecord Ryhma [otsikko optiot skeemat])
@@ -73,7 +77,10 @@ ja kaikki pakolliset kentät on täytetty"
           ::virheet
           ::varoitukset
           ::huomautukset
-          ::puuttuvat-pakolliset-kentat))
+          ::puuttuvat-pakolliset-kentat
+          ::ensimmainen-muokkaus
+          ::viimeisin-muokkaus
+          ::skeema))
 
 (defn lomake-lukittu-huomautus
   [nykyinen-lukko]
@@ -158,20 +165,37 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                    (+ palstoja kentan-palstat)
                    skeemat)))))))
 
+(defn kentan-vihje-inline [vihje]
+  (let [vihjeet (if (vector? vihje) vihje [vihje])]
+    [:div {:class
+           (str "inline-block yleinen-pikkuvihje")}
+     [:div.vihjeen-sisalto
+      (harja.ui.ikonit/livicon-info-sign)
+      [:span (str " " (first vihjeet))]
+      (map-indexed
+        (fn [i vihje]
+          ^{:key i}
+          [:div.vihjeen-lisarivi (str "  " vihje)])
+        (rest vihjeet))]]))
 
-(defn kentan-vihje [{vihje :vihje}]
-  (when vihje
-    (let [vihjeet (if (vector? vihje) vihje [vihje])]
+(defn kentan-vihje-leijuke [leijuke-sisalto]
+  (let [nakyvissa? (atom false)]
+    (fn [leijuke-sisalto]
       [:div {:class
-             (str "inline-block yleinen-pikkuvihje")}
-       [:div.vihjeen-sisalto
-        (harja.ui.ikonit/livicon-info-sign)
-        [:span (str " " (first vihjeet))]
-        (map-indexed
-          (fn [i vihje]
-            ^{:key i}
-            [:div.vihjeen-lisarivi (str "  " vihje)])
-          (rest vihjeet))]])))
+             (str "inline-block yleinen-pikkuvihje klikattava")}
+       [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
+        (if @nakyvissa?
+          [leijuke/leijuke {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
+                            :sulje! #(reset! nakyvissa? false)}
+           [:div {:style {:min-width "300px"}}
+            leijuke-sisalto]]
+          (harja.ui.ikonit/livicon-info-sign))]])))
+
+(defn kentan-vihje [{:keys [vihje vihje-leijuke] :as skeema}]
+  (when vihje
+    [kentan-vihje-inline vihje])
+  (when vihje-leijuke
+    [kentan-vihje-leijuke vihje-leijuke]))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
@@ -192,11 +216,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
-    [:div.form-group {:class (str (or col-luokka
-                                      (case (or palstoja 1)
-                                        1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
-                                        3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
+    [:div.form-group {:class (str (or
+                                    ;; salli skeeman ylikirjoittaa ns-avaimella
+                                    (::col-luokka s)
+                                    col-luokka
+                                    (case (or palstoja 1)
+                                      1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                      2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                      3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)
@@ -281,6 +308,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
       ::huomautukset kaikki-huomautukset
       ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))
 
+(defn- muokkausaika [{ensimmainen ::ensimmainen-muokkaus
+                      viimeisin ::viimeisin-muokkaus :as tiedot}]
+  (assoc tiedot
+    ::ensimmainen-muokkaus (or ensimmainen (pvm/nyt))
+    ::viimeisin-muokkaus (pvm/nyt)))
+
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
   Ottaa kolme parametria: optiot, skeeman (vektori kenttiä) sekä datan (mäppi).
@@ -319,14 +352,17 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                true)
                 muokkaa-kenttaa-fn (fn [nimi]
                                      (fn [uudet-tiedot]
+                                       (assert muokkaa! (str ":muokkaa! puuttuu, opts:" (pr-str opts)))
                                        (-> uudet-tiedot
+                                           muokkausaika
                                            (validoi skeema)
                                            (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
                                                                        #{}) nimi))
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
             [:div
-             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia") )}
+             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia")
+                          luokka)}
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall
@@ -357,7 +393,44 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (footer-fn validoitu-data)
+                                 (footer-fn (assoc validoitu-data
+                                              ::skeema skeema))
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))
+
+(defn numero
+  "Näyttää numeron tekstinä, yli kymmenen numeroina alle kymmenen sanoina."
+  [n]
+  (if (> n 10)
+    (str n)
+    (case n
+      0 "nolla"
+      1 "yksi"
+      2 "kaksi"
+      3 "kolme"
+      4 "neljä"
+      5 "viisi"
+      6 "kuusi"
+      7 "seitsemän"
+      8 "kahdeksan"
+      9 "yhdeksän"
+      10 "kymmenen")))
+
+(defn nayta-puuttuvat-pakolliset-kentat [{skeema ::skeema puuttuvat ::puuttuvat-pakolliset-kentat}]
+  (let [lkm (count puuttuvat)]
+    (if (zero? lkm)
+      [:span]
+      [:span.puuttuvat-pakolliset-kentat
+       (str/capitalize (numero lkm))
+       (if (= 1 lkm)
+         " pakollinen kenttä "
+         " pakollista kenttää ")
+       "puuttuu: "
+
+       (str/join ", "
+                 (let [skeema (pura-ryhmat skeema)]
+                   (for [puuttuva-nimi puuttuvat
+                         :let [{:keys [otsikko] :as s}
+                               (first (filter #(= puuttuva-nimi (:nimi %)) skeema))]]
+                     otsikko)))])))

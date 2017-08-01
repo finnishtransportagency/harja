@@ -14,12 +14,21 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
-            [harja.kyselyt.livitunnisteet :as livitunnisteet]
+            [harja.kyselyt.livitunnisteet :as livitunnisteet-q]
+            [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset-q]
+            [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clojure.string :as str]
-            [harja.domain.tierekisteri.tietolajit :as tietolajit])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.geo :as geo]
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
+            [clojure.set :as set]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -76,7 +85,8 @@
   (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri nil)]
     (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
-(defn hae-tietolaji [tierekisteri parametrit kayttaja]
+(defn hae-tietolajit [tierekisteri parametrit kayttaja]
+  (oikeudet/ei-oikeustarkistusta!)
   (let [tunniste (get parametrit "tunniste")]
     (if (not (str/blank? tunniste))
       (do
@@ -86,7 +96,19 @@
         (log/debug "Haetaan kaikkien tietolajien kuvaukset käyttäjälle: " kayttaja)
         (hae-kaikki-tietolajit tierekisteri)))))
 
-(defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
+(defn hae-geometria-varusteelle [db {:keys [numero aosa aet losa let] :as tiesijainti}]
+  (when (and numero aosa aet)
+    (if (and losa let)
+      (tieverkko-q/tierekisteriosoite-viivaksi db {:tie numero
+                                                   :aosa aosa
+                                                   :aet aet
+                                                   :losa losa
+                                                   :loppuet let})
+      (tieverkko-q/tierekisteriosoite-pisteeksi db {:tie numero
+                                                    :aosa aosa
+                                                    :aet aet}))))
+
+(defn- muodosta-tietueiden-hakuvastaus [tierekisteri db vastausdata]
   {:varusteet
    (mapv
      (fn [tietue]
@@ -94,29 +116,31 @@
              vastaus (tierekisteri/hae-tietolaji tierekisteri tietolaji nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
-             arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
+             arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)
+             tiesijainti (get-in tietue [:tietue :sijainti :tie])]
          {:varuste
           {:tunniste (get-in tietue [:tietue :tunniste])
            :tietue
-           {:sijainti {:tie {:numero (get-in tietue [:tietue :sijainti :tie :numero]),
-                             :aosa (get-in tietue [:tietue :sijainti :tie :aosa]),
-                             :aet (get-in tietue [:tietue :sijainti :tie :aet]),
-                             :losa (get-in tietue [:tietue :sijainti :tie :losa]),
-                             :let (get-in tietue [:tietue :sijainti :tie :let]),
-                             :ajr (get-in tietue [:tietue :sijainti :tie :ajr]),
-                             :puoli (get-in tietue [:tietue :sijainti :tie :puoli]),
-                             :kaista (get-in tietue [:tietue :sijainti :tie :kaista])}},
+           {:sijainti {:tie {:numero (:numero tiesijainti),
+                             :aosa (:aosa tiesijainti),
+                             :aet (:aet tiesijainti),
+                             :losa (:losa tiesijainti),
+                             :let (:let tiesijainti),
+                             :ajr (:ajr tiesijainti),
+                             :puoli (:puoli tiesijainti),
+                             :kaista (:kaista tiesijainti)}},
             :alkupvm (get-in tietue [:tietue :alkupvm])
             :loppupvm (get-in tietue [:tietue :loppupvm])
             :karttapvm (get-in tietue [:tietue :karttapvm]),
             :kuntoluokitus (get-in tietue [:tietue :kuntoluokka]),
             :ely (Integer/parseInt (get-in tietue [:tietue :piiri]))
             :tietolaji {:tunniste tietolaji,
-                        :arvot arvot-mappina}}}}))
+                        :arvot arvot-mappina}}}
+          :sijainti (geo/pg->clj (hae-geometria-varusteelle db tiesijainti))}))
      (:tietueet vastausdata))})
 
 
-(defn hae-varusteet [tierekisteri parametrit kayttaja]
+(defn hae-varusteet [tierekisteri db parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
@@ -130,27 +154,43 @@
                                              tietolajitunniste
                                              voimassaolopvm
                                              tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri db vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
-        {}))))
+        {:varusteet []}))))
 
-(defn hae-varuste [tierekisteri parametrit kayttaja]
+(defn hae-varuste [tierekisteri db parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         tietolajitunniste (get parametrit "tietolajitunniste")
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastaus (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri db vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
-        {}))))
+        {:varusteet []}))))
 
-(defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
+(defn muunna-sijainti [vkm db tiedot]
+  (let [harjan-karttapvm (geometriapaivitykset-q/harjan-verkon-pvm db)
+        karttapvm (some->
+                    (get-in tiedot [:varuste :tietue :karttapvm])
+                    (parametrit/pvm-aika))
+        vanha-sijainti (set/rename-keys (get-in tiedot [:varuste :tietue :sijainti :tie]) {:numero :tie})]
+    (if (and karttapvm (not= karttapvm harjan-karttapvm))
+      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti] karttapvm harjan-karttapvm))
+            uusi-sijainti (set/rename-keys uusi-sijainti {:tie :numero})]
+        (if uusi-sijainti
+          (-> tiedot
+              (assoc-in [:varuste :tietue :karttapvm] (pvm/aika-iso8601-aikavyohykkeen-kanssa harjan-karttapvm))
+              (assoc-in [:varuste :tietue :sijainti :tie] uusi-sijainti))
+          tiedot))
+      tiedot)))
+
+(defn lisaa-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
-  (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-        toimenpiteen-tiedot (:varusteen-lisays data)
+  (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
+        toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-lisays data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietolajin-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste livitunniste)
         arvot-string (when tietolajin-arvot
@@ -168,9 +208,9 @@
       {:id livitunniste
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
-(defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
+(defn paivita-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
-  (let [toimenpiteen-tiedot (:varusteen-paivitys data)
+  (let [toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-paivitys data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietueen-tunniste (get-in toimenpiteen-tiedot [:varuste :tunniste])
         tietueen-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste tietueen-tunniste)
@@ -197,89 +237,102 @@
 (defn hae-varusteita
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
-  [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (let [nyt (t/now)
-        tulos
-        (cond
-          (not (str/blank? tunniste))
-          (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+  (try+
+    (let [nyt (t/now)
+          tulos
+          (cond
+            (not (str/blank? tunniste))
+            (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-          (and tierekisteriosoite
-               (not (str/blank? tietolaji)))
-          (tierekisteri/hae-tietueet
-            tierekisteri
-            {:numero (:numero tierekisteriosoite)
-             :aet (:alkuetaisyys tierekisteriosoite)
-             :aosa (:alkuosa tierekisteriosoite)
-             :let (:loppuetaisyys tierekisteriosoite)
-             :losa (:loppuosa tierekisteriosoite)}
-            tietolaji
-            nyt nyt)
+            (and tierekisteriosoite
+                 (not (str/blank? tietolaji)))
+            (tierekisteri/hae-tietueet
+              tierekisteri
+              {:numero (:numero tierekisteriosoite)
+               :aet (:alkuetaisyys tierekisteriosoite)
+               :aosa (:alkuosa tierekisteriosoite)
+               :let (:loppuetaisyys tierekisteriosoite)
+               :losa (:loppuosa tierekisteriosoite)}
+              tietolaji
+              nyt nyt)
 
-          :default
-          {:error "Ei hakuehtoja"})]
+            :default
+            {:error "Ei hakuehtoja"})]
 
-    (if (:onnistunut tulos)
-      (merge {:onnistunut true}
-             (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-             (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
-      tulos)))
+      (if (:onnistunut tulos)
+        (merge {:onnistunut true}
+               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+               (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
+        tulos))
+
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      {:onnistunut false
+       :virheet virheet})))
 
 (defrecord Varusteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri vkm :vkm :as this}]
     (julkaise-reitti
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
-                                 (hae-tietolaji tierekisteri parametrit kayttaja)))))
+                                 (validointi/tarkista-ominaisuus :varuste-api)
+                                 (hae-tietolajit tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/haku" request
         (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
-                                 (hae-varusteet tierekisteri parametrit kayttaja)))))
+                                 (validointi/tarkista-ominaisuus :varuste-api)
+                                 (hae-varusteet tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
-                                 (hae-varuste tierekisteri parametrit kayttaja)))))
+                                 (validointi/tarkista-ominaisuus :varuste-api)
+                                 (hae-varuste tierekisteri db parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/varusteen-lisays json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
-                                 (lisaa-varuste tierekisteri db data kayttaja)))))
+                                 (validointi/tarkista-ominaisuus :varuste-api)
+                                 (lisaa-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
       http :paivita-tietue
       (PUT "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/varusteen-paivitys json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
-                                 (paivita-varuste tierekisteri data kayttaja)))))
+                                 (validointi/tarkista-ominaisuus :varuste-api)
+                                 (paivita-varuste tierekisteri vkm db data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
         (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
+                                 (validointi/tarkista-ominaisuus :varuste-api)
                                  (poista-varuste tierekisteri data kayttaja)))))
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
-                        (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
+                        (let [tietolajit (hae-tietolajit tierekisteri {"tunniste" tietolaji} user)]
+                          (:tietolaji (first (:tietolajit tietolajit))))))
 
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
                         (async
-                          (hae-varusteita user tierekisteri tiedot))))
+                          (hae-varusteita user tierekisteri db tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]

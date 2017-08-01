@@ -6,6 +6,7 @@
                                      jvh-fixture]]
             [reagent.core :as r]
             [harja.views.urakka.yleiset :as yleiset]
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat]
             [harja.pvm :as pvm])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
@@ -36,7 +37,7 @@
 (deftest paivystajat
   (let [data (r/atom paivystajadata)]
     (komponenttitesti
-      [yleiset/paivystajalista urakka
+      [paivystajat/paivystajalista urakka
        @data
        (fn [uudet]
          (reset! data uudet))]
@@ -56,7 +57,7 @@
       (swap! data assoc-in [0 :loppu] (pvm/->pvm "1.1.2015"))
       --
       (is (= 1 (count (u/sel [:tbody :tr.bold]))))
-      
+
       "Muokkaustoimintojen nappien määrä kun toiminnot kiinni"
       (is (= 1 (count (u/sel [:button]))))
       (is (= 1 (count (u/sel [:.muokkaustoiminnot :button]))))
@@ -67,5 +68,3 @@
       (is (= 7 (count (u/sel [:button]))))
       (is (= 4 (count (u/sel [:.muokkaustoiminnot :button]))))
       (is (= 3 (count (u/sel [:.livi-alasveto :button])))))))
-
-

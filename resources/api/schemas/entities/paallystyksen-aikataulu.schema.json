@@ -6,32 +6,27 @@
   "properties": {
     "kohde-aloitettu": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde-aloitettu",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "paallystys-aloitettu": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-aloitettu",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "paallystys-valmis": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-valmis",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "valmis-tiemerkintaan": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis-tiemerkintaan",
-      "type": "string",
-      "format": "date-time"
-    },
-    "tiemerkinta-takaraja": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "kohde-valmis": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde-valmis",
-      "type": "string",
+      "type": ["string","null"],
       "format": "date-time"
     },
     "paallystysilmoitus": {

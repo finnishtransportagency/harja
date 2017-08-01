@@ -1,11 +1,27 @@
 (ns harja.tiedot.urakka.yhteystiedot
   "Tämä nimiavaruus hallinnoi urakan yhteystietoja ja päivystäjiä."
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [reagent.core :as r]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defonce aikajana
+  (local-storage/local-storage-atom :paivystajat-aikajana
+                                    {:nayta-aikajana? false
+                                     :vain-urakoitsijat? false} nil))
+
+(defonce nayta-aikajana? (r/cursor aikajana [:nayta-aikajana?]))
+(defonce aikajana-vain-urakoitsijat? (r/cursor aikajana [:vain-urakoitsijat?]))
+
+(defn toggle-nayta-aikajana! []
+  (swap! nayta-aikajana? not))
+
+(defn toggle-aikajana-vain-urakoitsijat! []
+  (swap! aikajana-vain-urakoitsijat? not))
 
 (def yhteyshenkilotyypit-kaikille-urakoille
   (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"])))

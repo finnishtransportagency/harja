@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
-            [harja.testi :as testi])
+            [harja.testi :as testi]
+            [clojure.string :as str])
   (:import (javax.jms TextMessage)))
 
 (def +testihanke-sanoma+
@@ -154,9 +155,14 @@
 (defn hae-hankkeet []
   (q "select id from hanke where sampoid = 'TESTIHANKE';"))
 
-(defn tuo-urakka []
-  (let [urakat (:urakat (sampo-sanoma/lue-viesti +testi-hoitourakka-sanoma+))]
-    (urakat/kasittele-urakat testi/ds urakat)))
+(defn tuo-urakka
+  ([] (tuo-urakka nil))
+  ([sampo-id]
+   (let [sanoma (if sampo-id
+                  (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id )
+                  +testi-hoitourakka-sanoma+)
+         urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
+     (urakat/kasittele-urakat testi/ds urakat))))
 
 (defn poista-urakka []
   (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")

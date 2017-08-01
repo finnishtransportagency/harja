@@ -6,7 +6,7 @@
 
 
 INSERT INTO yllapitokohde
-(yllapitoluokka, urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
+(yllapitoluokka, urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
  suorittava_tiemerkintaurakka, vuodet, keskimaarainen_vuorokausiliikenne, poistettu)
 VALUES
@@ -18,7 +18,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      'L03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0, 'paallyste' :: yllapitokohdetyyppi,
+      3, 'L03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 1233534,
                                              20, 1, 0, 3, 0, 1, 1, (SELECT id
                                                                     FROM urakka
@@ -33,7 +33,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      308, 'Oulun ohitusramppi', 9000, 200, 565, 100, 'paallyste' :: yllapitokohdetyyppi,
+      308, '308a', 'Oulun ohitusramppi', 9000, 200, 565, 100, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 54523243,
                                              20, 4, 334, 10, 10, 1, 1, (SELECT id
                                                                         FROM urakka
@@ -48,7 +48,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      'L010', 'Nakkilan ramppi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+      308, '308b', 'Nakkilan ramppi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 265257,
                                              20, 12, 1, 19, 2, 1, 1, (SELECT id
                                                                       FROM urakka
@@ -63,7 +63,7 @@ VALUES
         WHERE urakka = (SELECT id
                         FROM urakka
                         WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-       310, 'Oulaisten ohitusramppi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+       310, '310', 'Oulaisten ohitusramppi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
        'paallystys' ::yllapitokohdetyotyyppi, 456896958,
                                               20, 19, 5, 21, 15, 1, 1, NULL, '{2017}', 900, FALSE),
   (2, (SELECT id
@@ -74,7 +74,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      666, 'Kuusamontien testi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+      666, '666', 'Kuusamontien testi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 456896959,
                                              20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
@@ -85,7 +85,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      3456, 'Ei YHA-kohde', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi, 'paallystys' ::yllapitokohdetyotyyppi,
+      3456, '3456', 'Ei YHA-kohde', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi, 'paallystys' ::yllapitokohdetyotyyppi,
     NULL,
     20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, FALSE),
   (2, (SELECT id
@@ -96,7 +96,7 @@ VALUES
        WHERE urakka = (SELECT id
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
-      3456, 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+      3457, '3457', 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, NULL,
                                              20, 26, 1, 41, 15, 1, 1, NULL, '{2017}', 66, TRUE);
 
@@ -106,30 +106,30 @@ INSERT INTO yllapitokohteen_aikataulu
 VALUES
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Leppäjärven ramppi'), '2017-05-19 06:00:00+02',
-                                        '2017-05-19 06:00:00+02', '2017-05-21 16:00:00+02', '2017-05-22 16:00:00+02',
-                                        '2017-05-23 16:00:00+02',
-                                        '2017-05-24 16:00:00+02', (SELECT id
+    WHERE nimi = 'Leppäjärven ramppi'), '2017-05-19',
+                                        '2017-05-19', '2017-05-21', '2017-05-22',
+                                        '2017-05-23',
+                                        '2017-05-24', (SELECT id
                                                                    FROM kayttaja
                                                                    WHERE kayttajanimi = 'jvh'), NOW(),
-                                        '2017-05-21 16:00:00+02', '2017-06-04 16:00:00+02'),
+                                        '2017-05-21', '2017-06-04'),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulun ohitusramppi'), '2017-05-21 06:00:00+02',
-                                        '2017-05-21 06:00:00+02', NULL, NULL, NULL,
+    WHERE nimi = 'Oulun ohitusramppi'), '2017-05-21',
+                                        '2017-05-21', NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja
                                                WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Oulaisten ohitusramppi'), '2017-05-26 06:00:00+02',
+    WHERE nimi = 'Oulaisten ohitusramppi'), '2017-05-26',
                                             NULL, NULL, NULL, NULL,
                                             NULL, (SELECT id
                                                    FROM kayttaja
                                                    WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Kuusamontien testi'), '2017-06-02 06:00:00+02',
+    WHERE nimi = 'Kuusamontien testi'), '2017-06-02',
                                         NULL, NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja
@@ -143,6 +143,21 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                FROM yllapitokohde
                                                                WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN'));
+
+
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 1, 'Puolet');
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 2, 'Puolet');
+INSERT INTO yllapitokohteen_maksueratunnus (yllapitokohde, maksueratunnus)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 'TUNNUS123');
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 1, '1/3');
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 2, '1/3');
+INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 3, '1/3');
+
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
 -- oikeaa id:n (ei voi hakea id:tä nimellä, koska ilmoitustiedot ovat JSON-muodossa)
@@ -207,6 +222,16 @@ VALUES ((SELECT id
                                                             FROM kayttaja
                                                             WHERE kayttajanimi = 'jvh'));
 
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
+                                         yksikko, tilattu_maara, ennustettu_maara, yksikkohinta, luoja,
+                                         poistettu)
+VALUES ((SELECT id
+         FROM yllapitokohde
+         WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste' ::maaramuutos_tyon_tyyppi,
+        'POISTETTU TYÖ EI SAA NÄKYÄ TAI TULLA LASKUIHIN', 'kg', 99999, 1, 9999, (SELECT id
+                                                            FROM kayttaja
+                                                            WHERE kayttajanimi = 'jvh'), true);
+
 -- Päällystysilmoitukset
 
 -- Leppäjärven ilmoitustiedoissa on kirjattu tietoja olemattomalle kohdeosalle (osa on ehkä myöhemmin poistettu)
@@ -234,8 +259,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       },
       {
         "rc%": 12,
@@ -253,8 +277,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       }
     ],
     "alustatoimet": [
@@ -295,8 +318,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       }
     ],
     "alustatoimet": [
@@ -335,8 +357,7 @@ VALUES ((SELECT id
       "tyomenetelma": 21,
       "sideainetyyppi": 2,
       "paallystetyyppi": 2,
-      "kokonaismassamaara": 12,
-      "edellinen-paallystetyyppi": 2
+      "kokonaismassamaara": 12
     }
   ],
   "alustatoimet": [
@@ -375,8 +396,7 @@ VALUES ((SELECT id
       "tyomenetelma": 21,
       "sideainetyyppi": 2,
       "paallystetyyppi": 2,
-      "kokonaismassamaara": 12,
-      "edellinen-paallystetyyppi": 2
+      "kokonaismassamaara": 12
     }
   ],
   "alustatoimet": [

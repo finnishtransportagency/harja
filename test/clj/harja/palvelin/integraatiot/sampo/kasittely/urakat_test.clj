@@ -57,8 +57,17 @@
 
   (let [osat (urakat/pura-alueurakkanro "TESTI" "THS-0666")]
     (is (= "THS" (:tyypit osat)) "Tyyppi on päätelty oikein ")
-    (is (= "0666" (:alueurakkanro osat))   "Alueurakkanumero on purettu oikein"))
+    (is (= "0666" (:alueurakkanro osat)) "Alueurakkanumero on purettu oikein"))
 
   (let [osat (urakat/pura-alueurakkanro "TESTI" "T--0FF666")]
     (is (nil? (:tyypit osat)) "Tyyppiä ei ole päätelty")
     (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu")))
+
+(deftest tarkista-harjassa-luodun-urakan-kasittely
+  (u "UPDATE urakka SET harjassa_luotu = true WHERE id = (select id from urakka where sampoid = '1242141-OULU2') ;")
+  (let [alkuperainen-urakka (first (q "select * from urakka where sampoid = '1242141-OULU2'"))]
+    (is alkuperainen-urakka "Lähtötilanteessa löytyy urakka Sampo id:llä")
+    (tuo-urakka "1242141-OULU2")
+    (let [urakka-lahetyksen-jalkeen (first (q "select * from urakka where sampoid = '1242141-OULU2'"))]
+      (is (= alkuperainen-urakka urakka-lahetyksen-jalkeen)
+      "Urakan tietoja ei ole päivitetty urakalle, joka on luotu Harjassa"))))

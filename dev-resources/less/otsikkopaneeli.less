@@ -1,0 +1,34 @@
+.otsikkopaneeli {
+  .otsikkopaneeli-otsikko {
+    height: 32px;
+    color: @valkoinen;
+    padding: 5px;
+    background-color: @primaari-sininen;
+    position: relative;
+
+    > .otsikkopaneeli-avausindikaattori {
+      position: absolute;
+      font-size: 1.15em;
+      left: 8px;
+      top: 5px;
+      text-align: center;
+    }
+
+    > .otsikkopaneeli-otsikkoteksti {
+      margin-left: 25px;
+    }
+
+    > .otsikkopaneeli-custom-paneelikomponentti {
+      position: absolute;
+    }
+  }
+
+  // Sisällön halutaan olevan tiivis
+  .otsikkopaneeli-sisalto {
+
+    .panel, .panel-heading, .panel-body {
+      padding: 0;
+      margin: 0;
+    }
+  }
+}

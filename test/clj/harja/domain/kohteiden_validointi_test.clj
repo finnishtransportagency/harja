@@ -3,7 +3,7 @@
             [harja.testi :refer :all]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
-            [harja.domain.yllapitokohteet :as yllapitokohteet]))
+            [harja.domain.yllapitokohde :as yllapitokohteet]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
   (and

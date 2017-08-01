@@ -66,8 +66,9 @@
             kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
-      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus]}
-        (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
+      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
+        (when (not ei-kriittinen?)
+          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet))
         (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id (str virheet)))
       (catch Exception e
         (log/error e "Sampo sisäänluvussa tapahtui poikkeus.")

@@ -22,12 +22,12 @@
             <xs:enumeration value="tl514"/>
             <xs:enumeration value="tl509"/>
             <xs:enumeration value="tl515"/>
-            <xs:enumeration value="tl503"/>
-            <xs:enumeration value="tl510"/>
+            <xs:enumeration value="tl503"/> 
             <xs:enumeration value="tl512"/>
             <xs:enumeration value="tl165"/>
             <xs:enumeration value="tl516"/>
-            <xs:enumeration value="tl511"/>
+            <xs:enumeration value="tl323"/>
+            <xs:enumeration value="tl524"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

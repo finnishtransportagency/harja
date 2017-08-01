@@ -201,6 +201,7 @@ FROM toteuma_tehtava tt
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
+  tt.id, -- Jotta "sarakkeet vektoriin" toimii oikein
   tt.id              AS tehtava_id,
   tt.toteuma         AS toteuma_id,
   tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
@@ -219,8 +220,11 @@ SELECT
   tr_loppuetaisyys,
   tr_loppuosa,
   reitti,
-
-
+  l.id   as liite_id,
+  l.nimi as liite_nimi,
+  l.tyyppi as liite_tyyppi,
+  l.koko as liite_koko,
+  l.liite_oid as liite_oid,
   tpk.emo            AS tehtava_emo,
   tpk.nimi           AS tehtava_nimi,
   o.nimi             AS organisaatio,
@@ -240,6 +244,8 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN toteuma_liite tl ON tl.toteuma = t.id
+  LEFT JOIN liite l ON l.id = tl.liite
   LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
@@ -279,7 +285,7 @@ FROM toteuma_tehtava tt
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
--- name: paivita-toteuma!
+-- name: paivita-toteuma<!
 UPDATE toteuma
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
@@ -455,19 +461,13 @@ WHERE
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi);
 
--- name: luo-reittipiste<!
--- Luo uuden reittipisteen
-INSERT INTO reittipiste (toteuma, aika, luotu, sijainti, talvihoitoluokka, soratiehoitoluokka)
-VALUES (:toteuma, :aika, NOW(), ST_MakePoint(:x, :y) :: POINT,
-        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'talvihoito' :: hoitoluokan_tietolajitunniste,
-                              250 :: INTEGER),
-        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, 'soratie' :: hoitoluokan_tietolajitunniste,
-                              250 :: INTEGER));
-
--- name: poista-reittipiste-toteuma-idlla!
--- Poistaa toteuman kaikki reittipisteet
-DELETE FROM reittipiste
-WHERE toteuma = :id;
+-- name: hae-pisteen-hoitoluokat
+SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'talvihoito'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS talvihoitoluokka,
+       hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
+                             'soratie'::hoitoluokan_tietolajitunniste,
+			     250::INTEGER) AS soratiehoitoluokka;
 
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
@@ -493,32 +493,6 @@ VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja);
 -- Poistaa toteuman materiaalit
 DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
-
--- name: luo-reitti_tehtava<!
--- Luo uuden reitin tehtävän
-INSERT INTO reitti_tehtava (reittipiste, luotu, toimenpidekoodi, maara)
-VALUES (:reittipiste, NOW(), :toimenpidekoodi, :maara);
-
--- name: poista-reitti_tehtava-reittipiste-idlla!
--- Poistaa reitin tehtävät
-DELETE FROM reitti_tehtava
-WHERE reittipiste = :id;
-
--- name: luo-reitti_materiaali<!
--- Luo uuden reitin materiaalin
-INSERT INTO reitti_materiaali (reittipiste, luotu, materiaalikoodi, maara)
-VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
-
--- name: poista-reitti_materiaali-reittipiste-idlla!
--- Poistaa reitin materiaalit
-DELETE FROM reitti_materiaali
-WHERE reittipiste = :id;
-
--- name: hae-toteuman-reittipisteet-idlla
-SELECT *
-FROM reittipiste
-WHERE toteuma = :id
-ORDER BY aika ASC;
 
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
@@ -577,6 +551,32 @@ VALUES (:tunniste,
   :tr_puoli,
   :tr_ajorata,
   :sijainti);
+
+
+-- name: paivita-varustetoteuma!
+-- Päivittää annetun varustetoteuman
+UPDATE varustetoteuma
+SET
+  tunniste                = :tunniste,
+  toteuma                 = :toteuma,
+  toimenpide              = :toimenpide :: VARUSTETOTEUMA_TYYPPI,
+  tietolaji               = :tietolaji,
+  arvot                   = :arvot,
+  karttapvm               = :karttapvm,
+  alkupvm                 = :alkupvm,
+  loppupvm                = :loppupvm,
+  piiri                   = :piiri,
+  kuntoluokka             = :kuntoluokka,
+  tierekisteriurakkakoodi = :tierekisteriurakkakoodi,
+  tr_numero               = :tr_numero,
+  tr_alkuosa              = :tr_alkuosa,
+  tr_alkuetaisyys         = :tr_alkuetaisyys,
+  tr_loppuosa             = :tr_loppuosa,
+  tr_loppuetaisyys        = :tr_loppuetaisyys,
+  tr_puoli                = :tr_puoli,
+  tr_ajorata              = :tr_ajorata,
+  sijainti                = :sijainti
+WHERE id = :id;
 
 -- name: poista-toteuman-varustetiedot!
 DELETE FROM varustetoteuma
@@ -640,11 +640,17 @@ SELECT
   tk.yksikko                                                AS tehtava_yksikko,
   tt.toteuma                                                AS tehtava_id,
   tk.nimi                                                   AS toimenpide,
+  mk.nimi AS materiaalitoteuma_materiaali_nimi,
+  mk.yksikko AS materiaalitoteuma_materiaali_yksikko,
+  tm.maara AS materiaalitoteuma_maara,
+  tm.id AS materiaalitoteuma_id,
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1) :: TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma AND tm.poistettu IS NOT TRUE
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
   t.urakka = :urakka-id
   AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
@@ -741,14 +747,13 @@ WHERE
   tt.toteuma = :toteuma_id AND tt.poistettu IS NOT TRUE;
 
 -- name: hae-toteuman-reittipisteet
-SELECT
-  rp.id       AS id,
-  rp.aika     AS aika,
-  rp.sijainti AS sijainti
-FROM reittipiste rp
-WHERE
-  rp.toteuma = :toteuma_id
-ORDER BY rp.aika ASC;
+SELECT rp.aika     AS aika,
+       rp.sijainti AS sijainti,
+       rp.ordinality AS id
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+       JOIN LATERAL unnest(reittipisteet) WITH ORDINALITY rp ON TRUE
+ WHERE t.id = :toteuma_id
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
@@ -779,6 +784,7 @@ SELECT
   tunniste,
   toimenpide,
   tietolaji,
+  vt.luotu,
   vt.tr_numero        AS tierekisteriosoite_numero,
   vt.tr_alkuosa       AS tierekisteriosoite_alkuosa,
   vt.tr_alkuetaisyys  AS tierekisteriosoite_alkuetaisyys,
@@ -806,11 +812,15 @@ SELECT
   alkupvm,
   loppupvm,
   lahetetty,
-  tila
+  lahetysvirhe,
+  tila,
+  k.etunimi           AS "luojan-etunimi",
+  k.sukunimi          AS "luojan-sukunimi"
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  left join kayttaja k on vt.luoja = k.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
@@ -818,7 +828,7 @@ WHERE urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR vt.tr_numero = :tienumero)
       AND t.poistettu IS NOT TRUE
       AND tt.poistettu IS NOT TRUE
-ORDER BY t.alkanut DESC
+ORDER BY vt.luotu DESC
 LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
@@ -874,12 +884,12 @@ SELECT
   vt.tr_ajorata,
   vt.tr_puoli,
   vt.luotu,
-  yh.etunimi || ' ' || yh.sukunimi AS henkilo,
-  o.nimi                           AS organisaatio,
-  o.ytunnus                        AS yTunnus
+  k.etunimi || ' ' || k.sukunimi AS henkilo,
+  o.nimi                         AS organisaatio,
+  o.ytunnus                      AS yTunnus
 FROM varustetoteuma vt
-  JOIN yhteyshenkilo yh ON vt.luoja = yh.id
-  JOIN organisaatio o ON yh.organisaatio = o.id
+  JOIN kayttaja k ON vt.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
 WHERE vt.id = :id;
 
 -- name: hae-varustetoteuma-toteumalla
@@ -934,29 +944,28 @@ WHERE id = :id;
 -- Hakee toteumat, joille on olemassa reittipisteitä, mutta reittiä ei ole jostain syystä saatu tehtyä.
 -- Käytetään ajastetussa tehtävässä
 SELECT DISTINCT t.id
-FROM toteuma t
-  JOIN reittipiste rp ON t.id = rp.toteuma
-WHERE t.reitti IS NULL;
+  FROM toteuma t
+       JOIN toteuman_reittipisteet tr ON t.id = tr.toteuma
+ WHERE t.reitti IS NULL;
 
 -- name: hae-reitittomat-mutta-osoitteelliset-toteumat
 -- Hakee toteumat, joille on tr-osoite, mutta reittiä ei ole saatu laskettua.
 -- Käytetään ajastetussa tehtävässä
-SELECT
-  id,
-  tr_numero        AS numero,
-  tr_alkuosa       AS alkuosa,
-  tr_alkuetaisyys  AS alkuetaisyys,
-  tr_loppuosa      AS loppuosa,
-  tr_loppuetaisyys AS loppuetaisyys
-FROM toteuma t
-WHERE reitti IS NULL
-      AND t.tr_numero IS NOT NULL
-      AND t.tr_alkuosa IS NOT NULL
-      AND t.tr_alkuetaisyys IS NOT NULL;
+SELECT id,
+       tr_numero        AS numero,
+       tr_alkuosa       AS alkuosa,
+       tr_alkuetaisyys  AS alkuetaisyys,
+       tr_loppuosa      AS loppuosa,
+       tr_loppuetaisyys AS loppuetaisyys
+  FROM toteuma t
+ WHERE reitti IS NULL
+   AND t.tr_numero IS NOT NULL
+   AND t.tr_alkuosa IS NOT NULL
+   AND t.tr_alkuetaisyys IS NOT NULL;
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
-SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
@@ -970,20 +979,36 @@ SELECT
 FROM
   (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
 
--- name: siirry-kokonaishintainen-toteuma
--- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
+-- name: siirry-toteuma
+-- Palauttaa tiedot, joita tarvitaan frontilla toteumaan siirtymiseen ja
 -- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu
 SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko-id",
+       t.tyyppi,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
        tpk3.koodi AS tehtava_toimenpideinstanssi,
        hk.alkupvm AS aikavali_alku,
        hk.loppupvm AS aikavali_loppu
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
-       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       LEFT JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE
-        OR u.urakoitsija = :urakoitsija-id)
+        OR u.urakoitsija = :urakoitsija-id);
+
+-- name: tallenna-liite-toteumalle<!
+INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
+
+-- name: hae-toteuman-liitteet
+SELECT
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
+FROM liite l
+  JOIN toteuma_liite tl ON l.id = tl.liite
+WHERE tl.toteuma = :toteumaid
+ORDER BY l.luotu ASC;

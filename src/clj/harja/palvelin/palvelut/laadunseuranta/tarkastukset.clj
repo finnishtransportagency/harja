@@ -6,7 +6,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]

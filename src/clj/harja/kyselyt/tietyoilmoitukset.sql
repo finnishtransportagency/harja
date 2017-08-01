@@ -1,72 +1,72 @@
--- name: hae-tietyoilmoitukset
+-- name: hae-yllapitokohteen-tiedot-tietyoilmoitukselle
 SELECT
-  tti.id,
-  tti.tloik_id,
-  tti.paatietyoilmoitus,
-  tti.tloik_paatietyoilmoitus_id,
-  tti.luotu,
-  tti.luoja,
-  tti.muokattu,
-  tti.muokkaaja,
-  tti.poistettu,
-  tti.poistaja,
-  tti.ilmoittaja,
-  tti.ilmoittaja_etunimi,
-  tti.ilmoittaja_sukunimi,
-  tti.ilmoittaja_matkapuhelin,
-  tti.ilmoittaja_sahkoposti,
-  tti.urakka,
-  tti.urakka_nimi,
-  tti.urakoitsijayhteyshenkilo,
-  tti.urakoitsijayhteyshenkilo_etunimi,
-  tti.urakoitsijayhteyshenkilo_sukunimi,
-  tti.urakoitsijayhteyshenkilo_matkapuhelin,
-  tti.urakoitsijayhteyshenkilo_sahkoposti,
-  tti.tilaaja,
-  tti.tilaajan_nimi,
-  tti.tilaajayhteyshenkilo,
-  tti.tilaajayhteyshenkilo_etunimi,
-  tti.tilaajayhteyshenkilo_sukunimi,
-  tti.tilaajayhteyshenkilo_matkapuhelin,
-  tti.tilaajayhteyshenkilo_sahkoposti,
-  tti.luvan_diaarinumero,
-  tti.tr_numero,
-  tti.tr_alkuosa,
-  tti.tr_alkuetaisyys,
-  tti.tr_loppuosa,
-  tti.tr_loppuetaisyys,
-  tti.tien_nimi,
-  tti.kunnat,
-  tti.alkusijainnin_kuvaus,
-  tti.loppusijainnin_kuvaus,
-  tti.alku,
-  tti.loppu,
-  tti.viivastys_normaali_liikenteessa,
-  tti.viivastys_ruuhka_aikana,
-  tti.ajoneuvo_max_korkeus,
-  tti.ajoneuvo_max_leveys,
-  tti.ajoneuvo_max_pituus,
-  tti.ajoneuvo_max_paino,
-  tti.ajoittaiset_pysatykset,
-  tti.ajoittain_suljettu_tie,
-  tti.pysaytysten_alku,
-  tti.pysaytysten_loppu,
-  tti.lisatietoja,
-  tti.urakkatyyppi,
-  tti.tyotyypit,
-  tti.sijainti,
-  tti.tyoajat,
-  tti.vaikutussuunta,
-  tti.kaistajarjestelyt,
-  tti.nopeusrajoitukset,
-  tti.tienpinnat,
-  tti.kiertotien_mutkaisuus,
-  tti.kiertotienpinnat,
-  tti.liikenteenohjaus,
-  tti.liikenteenohjaaja,
-  tti.huomautukset
-FROM tietyoilmoitus tti
- WHERE (:alku BETWEEN alku AND loppu) OR (:loppu BETWEEN alku AND loppu)
-  AND (tti.urakka IS NULL OR tti.urakka IN (:urakat))
-ORDER BY tti.luotu DESC
-LIMIT :max-maara :: INTEGER;
+  ypk.id                 AS "yllapitokohde-id",
+  ypk.tr_numero          AS "tr-numero",
+  ypk.tr_alkuosa         AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa        AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
+  ypkat.kohde_alku       AS alku,
+  ypkat.paallystys_loppu AS loppu,
+  u.id                   AS "urakka-id",
+  u.nimi                 AS "urakka-nimi",
+  u.tyyppi               AS "urakkatyyppi",
+  u.sampoid              AS "urakka-sampo-id",
+  urk.id                 AS "urakoitsija-id",
+  urk.nimi               AS "urakoitsija-nimi",
+  ely.id                 AS "tilaaja-id",
+  ely.nimi               AS "tilaaja-nimi"
+FROM yllapitokohde ypk
+  JOIN yllapitokohteen_aikataulu ypkat ON ypk.id = ypkat.yllapitokohde
+  JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio ely ON u.hallintayksikko = ely.id
+WHERE ypk.id = :kohdeid;
+
+-- name: hae-urakan-tiedot-tietyoilmoitukselle
+SELECT
+  u.id        AS "urakka-id",
+  u.nimi      AS "urakka-nimi",
+  u.tyyppi    AS "urakkatyyppi",
+  u.sampoid   AS "urakka-sampo-id",
+  urk.id      AS "urakoitsija-id",
+  urk.nimi    AS "urakoitsija-nimi",
+  urk.ytunnus AS "urakoitsija-ytunnus",
+  ely.id      AS "tilaaja-id",
+  ely.nimi    AS "tilaaja-nimi"
+FROM urakka u
+  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN organisaatio ely ON u.hallintayksikko = ely.id
+WHERE u.id = :urakkaid;
+
+-- name: merkitse-tietyoilmoitus-odottamaan-vastausta!
+UPDATE tietyoilmoitus
+SET lahetysid = :lahetysid, tila = 'odottaa_vastausta', lahetetty = current_timestamp
+WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitus-lahetetyksi!
+UPDATE tietyoilmoitus
+SET lahetetty = current_timestamp, tila = 'lahetetty'
+WHERE lahetysid = :lahetysid;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE id = :id;
+
+-- name: hae-lahettamattomat-tietyoilmoitukset
+SELECT id
+FROM tietyoilmoitus
+WHERE
+  (tila IS NULL OR tila = 'virhe') AND
+  kuittaustyyppi != 'valitys';
+
+-- name: lahetetty
+SELECT tila = 'lahetetty' as "lahetetty?"
+FROM tietyoilmoitus
+WHERE id = :id;
+
+-- name: merkitse-tietyoilmoitukselle-lahetysvirhe-lahetysidlla!
+UPDATE tietyoilmoitus
+SET tila = 'virhe'
+WHERE lahetysid = :lahetysid;

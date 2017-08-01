@@ -1,14 +1,15 @@
 (ns harja.palvelin.integraatiot.tloik.sahkoposti
   "Ilmoitusten lähettäminen urakoitsijalle ja kuittausten vastaanottaminen"
   (:require [hiccup.core :refer [html]]
-            [harja.domain.ilmoitukset :as apurit]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]
-            [harja.domain.ilmoitukset :as ilm]
+            [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
+            [harja.domain.tieliikenneilmoitukset :as ilm]
             [taoensso.timbre :as log]
-            [harja.tyokalut.html :as html-tyokalut]
+            [hiccup.core :refer [html]]
+            [harja.tyokalut.html :refer [sanitoi] :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri :as tierekisteri]))
@@ -25,7 +26,7 @@ kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
-kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
+kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu|Muutettu|Vastattu|Väärä urakka)\]")
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
 +virheellinen-toimenpide-viesti+
@@ -54,17 +55,6 @@ goole-static-map-url-template
        (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
        (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
 
-(defn- html-nappi [napin-teksti linkki]
-  [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}
-   [:tr
-    [:td
-     [:table {:border "0" :cellspacing "0" :cellpadding "0"}
-      [:tr
-       [:td {:bgcolor "#EB7035" :style "padding: 12px; border-radius: 3px;" :align "center"}
-        [:a {:href linkki
-             :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
-         napin-teksti]]]]]]])
-
 (def +vastausohje+ (str "Läheta tämä viesti kuitataksesi. Älä muuta otsikkoa tai hakasuluissa "
                         "olevaa kuittaustyyppiä. Voit kirjoittaa myös kommentin viestin alkuun."))
 
@@ -72,14 +62,14 @@ goole-static-map-url-template
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
   [vastausosoite napin-teksti subject body]
-  (html-nappi napin-teksti
-              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
+  (html-tyokalut/nappilinkki napin-teksti
+                             (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
     [:div
      [:table
-      (html-tyokalut/taulukko
+      (html-tyokalut/tietoja
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
@@ -90,7 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
          ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
          ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
-     [:blockquote (:lisatieto ilmoitus)]
+     [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
          [:img {:src (format goole-static-map-url-template

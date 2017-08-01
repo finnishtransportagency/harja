@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.aikataulu
   "Ylläpidon urakoiden aikataulu"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.ui.protokollat :refer [Haku hae]]
@@ -10,13 +10,33 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+
+(defonce modal-data (atom {}))
+
 (defonce aikataulu-nakymassa? (atom false))
+
+(defonce valinnat
+  (local-storage/local-storage-atom
+   :aikataulu-valinnat
+   {:nayta-aikajana? true
+    :jarjestys :aika}
+   nil))
+
+(defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
+
+(defn toggle-nayta-aikajana! []
+  (swap! valinnat update :nayta-aikajana? not))
+
+(defn jarjesta-kohteet! [kentta]
+  (swap! valinnat assoc :jarjestys kentta))
 
 (defn hae-aikataulu [urakka-id sopimus-id vuosi]
   (k/post! :hae-yllapitourakan-aikataulu {:urakka-id urakka-id
@@ -26,9 +46,12 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
-(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm urakka-id sopimus-id vuosi]}]
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
+                                                      urakka-id sopimus-id vuosi]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
+                                                    :kopio-itselle? kopio-itselle?
+                                                    :saate saate
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
@@ -44,11 +67,19 @@
 
 (def aikataulurivit-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
-                  aikataulurivit @aikataulurivit]
+                  kohdenumero @yllapito-tiedot/kohdenumero
+                  aikataulurivit @aikataulurivit
+                  jarjestys (:jarjestys @valinnat)]
               (when aikataulurivit
-                (filterv #(or (nil? tienumero)
-                              (= (:tr-numero %) tienumero))
-                         aikataulurivit)))))
+                (let [kohteet (yllapitokohteet/suodata-yllapitokohteet aikataulurivit
+                                                                       {:tienumero tienumero
+                                                                        :kohdenumero kohdenumero})]
+                  (if (= :aika jarjestys)
+                    kohteet
+                    (sort-by (case jarjestys
+                               :tr tr-domain/tieosoitteen-jarjestys
+                               :kohdenumero :kohdenumero)
+                             kohteet)))))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -97,7 +128,8 @@
                                           (pvm/nyt))
             aikataulurivit))
 
-(defn tallenna-yllapitokohteiden-aikataulu [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
+(defn tallenna-yllapitokohteiden-aikataulu
+  [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
                                {:urakka-id urakka-id

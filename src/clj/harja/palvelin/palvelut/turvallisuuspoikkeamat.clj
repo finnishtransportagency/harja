@@ -7,12 +7,15 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
+            [harja.kyselyt.urakan-tyotunnit :as urakan-tyotunnit-q]
+            [harja.domain.urakan-tyotunnit :as urakan-tyotunnit-d]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
             [harja.id :refer [id-olemassa?]]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
 
 (defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
   ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
@@ -26,10 +29,10 @@
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (let [turpot (konv/sarakkeet-vektoriin
-     (into []
-           q/turvallisuuspoikkeama-xf
-           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
-     {:korjaavatoimenpide :korjaavattoimenpiteet})]
+                 (into []
+                       q/turvallisuuspoikkeama-xf
+                       (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+                 {:korjaavatoimenpide :korjaavattoimenpiteet})]
     (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
@@ -39,7 +42,8 @@
 (defn hae-urakan-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
+  (let [tyotunnit (::urakan-tyotunnit-d/tyotunnit (urakan-tyotunnit-q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id))
+        tulos (as-> (first (konv/sarakkeet-vektoriin (into []
                                                            q/turvallisuuspoikkeama-xf
                                                            (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
                                                      {:kommentti :kommentit
@@ -52,11 +56,12 @@
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
                                        (:korjaavattoimenpiteet turpo)))
                     (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
+                    (assoc turpo :urakan-tyotunnit tyotunnit)
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                                       (dissoc % :liite)
-                                                       %)
+                                                        (dissoc % :liite)
+                                                        %)
                                                      kommentit)))))]
     (log/debug "Tulos: " (pr-str tulos))
     tulos))
@@ -125,7 +130,7 @@
                    ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
-                                                      vaaralliset-aineet))
+                                                       vaaralliset-aineet))
         vaarallisten-aineiden-vuoto? (boolean (some #{:vaarallisten-aineiden-vuoto}
                                                     vaaralliset-aineet))
         parametrit
@@ -192,7 +197,10 @@
 
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
-    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)
+          tyotunnit (:urakan-tyotunnit tp)]
+      (when tyotunnit
+        (urakan-tyotunnit-q/paivita-urakan-kuluvan-vuosikolmanneksen-tyotunnit db urakka tyotunnit))
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
       (tallenna-turvallisuuspoikkeaman-liite db tp)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
@@ -207,19 +215,29 @@
         (throw (SecurityException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan."))))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
-  (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
-  ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
-  (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db (:urakka tp) (:id tp))
-  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti (:urakka tp))]
-    (when turi
-      ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
-      (turi/laheta-turvallisuuspoikkeama turi id)))
-  (hae-urakan-turvallisuuspoikkeamat db
-                                     user
-                                     {:urakka-id (:urakka tp)
-                                      :alku (first hoitokausi)
-                                      :loppu (second hoitokausi)}))
+  (let [{:keys [id urakka urakan-tyotunnit]} tp]
+    (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka)
+    ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
+    (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db urakka id)
+
+    (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti urakka)]
+      (when turi
+        ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
+        (turi/laheta-turvallisuuspoikkeama turi id)
+        (when (and (ominaisuudet/ominaisuus-kaytossa? :urakan-tyotunnit) urakan-tyotunnit)
+          (let [kolmannes (urakan-tyotunnit-d/kuluva-vuosikolmannes)]
+            (turi/laheta-urakan-vuosikolmanneksen-tyotunnit
+              turi
+              urakka
+              (::urakan-tyotunnit-d/vuosi kolmannes)
+              (::urakan-tyotunnit-d/vuosikolmannes kolmannes))))))
+
+    (hae-urakan-turvallisuuspoikkeamat db
+                                       user
+                                       {:urakka-id urakka
+                                        :alku (first hoitokausi)
+                                        :loppu (second hoitokausi)})))
 
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))

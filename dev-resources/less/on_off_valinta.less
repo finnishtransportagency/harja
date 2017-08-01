@@ -6,7 +6,7 @@
         border: 1px solid @harmaa7;
         background-color: @valkoinen;
         height: 20px;
-        width: 50px;
+        width: 40px;
         border-radius: 20px;
 
         > .harja-on-off-pallo {
@@ -14,6 +14,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
+	    top: -1px;
             background-color: @sininen4;
             -webkit-transition: all 0.2s ease-in-out;
             -moz-transition: all 0.2s ease-in-out;
@@ -22,4 +23,19 @@
             transition: all 0.2s ease-in-out;
         }
     }
+}
+
+.harja-on-off-tila-off { left: 0px; }
+.harja-on-off-tila-on { left: 20px; }
+
+
+.harja-on-off-otsikolla {
+  display: inline-block;
+  .harja-on-off-otsikko {
+    display: inline-block;
+    position: relative;
+    top: -0.4em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+  }
 }

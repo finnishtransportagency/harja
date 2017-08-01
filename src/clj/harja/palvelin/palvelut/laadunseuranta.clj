@@ -30,7 +30,7 @@
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
-            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -51,7 +51,8 @@
              :omat laatupoikkeamat-q/hae-omat-laatupoikkeamat
              :kaikki laatupoikkeamat-q/hae-kaikki-laatupoikkeamat
              :selvitys laatupoikkeamat-q/hae-selvitysta-odottavat-laatupoikkeamat
-             :kasitellyt laatupoikkeamat-q/hae-kasitellyt-laatupoikkeamat)
+             :kasitellyt laatupoikkeamat-q/hae-kasitellyt-laatupoikkeamat
+             :poikkeamaraportilliset laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat)
             db
             {:urakka urakka-id
              :alku (konv/sql-timestamp alku)
@@ -92,17 +93,20 @@
 
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu]}]
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
 
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
-  (into []
-        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-              (map konv/alaviiva->rakenne)
-              (map #(konv/decimal->double % :summa))
-              (map #(assoc % :laji (keyword (:laji %)))))
-        (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
+  (log/debug "Hae sanktiot (" urakka-id alku loppu vain-yllapitokohteettomat?")")
+  (let [sanktiot (into []
+                       (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
+                             (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
+                             (map konv/alaviiva->rakenne)
+                             (map #(konv/decimal->double % :summa))
+                             (map #(assoc % :laji (keyword (:laji %)))))
+                       (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)))]
+    (if vain-yllapitokohteettomat?
+      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
+      sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id]
@@ -113,8 +117,9 @@
       (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
                                       sanktiotyypin-id))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan [db urakka-id sanktio-id]
+(defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
+  [db urakka-id sanktio-id]
   (when (id-olemassa? sanktio-id)
     (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
       (when-not (= sanktion-urakka urakka-id)

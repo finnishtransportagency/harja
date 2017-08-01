@@ -9,7 +9,8 @@
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]
+            [harja.domain.reittipiste :as rp])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
@@ -93,12 +94,14 @@
                                            :reitti reitti}))
 
 (defn tallenna-sijainti [db sijainti aika toteuma-id]
-  (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
-  (q-toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
-  (q-toteumat/luo-reittipiste<! db toteuma-id aika
-                                (get-in sijainti [:koordinaatit :x])
-                                (get-in sijainti [:koordinaatit :y])))
+  (q-toteumat/tallenna-toteuman-reittipisteet!
+   db
+   {::rp/toteuma-id toteuma-id
+    ::rp/reittipisteet
+    [(rp/reittipiste aika
+                     (:koordinaatit sijainti)
+                     (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")

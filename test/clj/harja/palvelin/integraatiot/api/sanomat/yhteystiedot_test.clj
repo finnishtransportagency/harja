@@ -4,7 +4,8 @@
             [harja.palvelin.integraatiot.api.sanomat.yhteystiedot :as yhteystiedot]
             [harja.tyokalut.json-validointi :as json]
             [cheshire.core :as cheshire]
-            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]))
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.tyokalut.spec-apurit :as spec-apurit]))
 
 (def testiurakan-tiedot
   {:urakoitsija-ytunnus "1565583-5"
@@ -89,4 +90,5 @@
                                                                   :vastuuhenkilo false}}]}}
         data (yhteystiedot/urakan-yhteystiedot testiurakan-tiedot testi-fim-kayttajat testi-harja-kayttajat)]
     (is (= odotettu-data data) "Data on muodostettu odotetun mukaisesti")
-    (json/validoi json-skeemat/+urakan-yhteystietojen-haku-vastaus+ (cheshire/encode data))))
+    (json/validoi json-skeemat/+urakan-yhteystietojen-haku-vastaus+
+                  (cheshire/encode (spec-apurit/poista-nil-avaimet data)))))

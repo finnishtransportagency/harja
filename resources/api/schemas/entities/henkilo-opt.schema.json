@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
-  "type": "object",
+  "type": ["object","null"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -10,27 +10,27 @@
     },
     "etunimi": {
       "id": "urn:harja/etunimi",
-      "type": "string"
+      "type": ["string","null"]
     },
     "sukunimi": {
       "id": "urn:harja/sukunimi",
-      "type": "string"
+      "type": ["string","null"]
     },
     "email": {
       "id": "urn:harja/paivystykset/0/paivystys/email",
-      "type": "string"
+      "type": ["string","null"]
     },
     "matkapuhelin": {
       "id": "urn:harja/paivystykset/0/paivystys/matkapuhelin",
-      "type": "string"
+      "type": ["string","null"]
     },
     "tyopuhelin": {
       "id": "urn:harja/paivystykset/0/paivystys/tyopuhelin",
-      "type": "string"
+      "type": ["string","null"]
     },
     "liviTunnus": {
       "id": "urn:harja/paivystykset/0/paivystys/puhelinnumero",
-      "type": "string"
+      "type": ["string","null"]
     }
   }
 }

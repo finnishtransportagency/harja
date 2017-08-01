@@ -13,8 +13,10 @@
 (defn hae-urakan-maksuerat [urakka-id]
   (k/post! :hae-urakan-maksuerat urakka-id))
 
-(defn laheta-maksuerat [maksueranumerot]
-  (k/post! :laheta-maksuerat-sampoon (into [] maksueranumerot)))
+(defn laheta-maksuerat [maksueranumerot urakka-id]
+  (k/post! :laheta-maksuerat-sampoon {:maksueranumerot (into [] maksueranumerot)
+                                      :urakka-id urakka-id}))
+
 
 (defonce nakymassa? (atom false))
 

@@ -11,13 +11,6 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "tunniste": {
-      "id": "urn:harja/tunniste",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
-    },
     "viimeksipaivitetty": {
       "id": "urn:harja/viimeksipaivitetty",
       "type": "string"

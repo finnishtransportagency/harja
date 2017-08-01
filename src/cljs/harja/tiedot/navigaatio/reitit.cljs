@@ -2,7 +2,8 @@
   "Määrittelee välilehtien valinnat ja hoittaa URL-muodostuksen
   sekä #-polun tulkinnan"
   (:require [clojure.string :as str]
-            [reagent.core :refer [atom wrap]]))
+            [reagent.core :refer [atom wrap]]
+            [harja.loki :refer [log logt tarkkaile!]]))
 
 ;; Atomi, joka sisältää valitun sivun ja eri osioiden valitut välilehdet
 (defonce url-navigaatio
@@ -10,14 +11,17 @@
          :urakat :yleiset
          :suunnittelu :kokonaishintaiset
          :toteumat :kokonaishintaiset-tyot
+         :toimenpiteet :kokonaishintaiset-toimenpiteet
          :toteutus :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
          :hallinta :indeksit
+         :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
          :raportit nil
-         :tilannekuva :nykytilanne}))
+         :tilannekuva :nykytilanne
+         :ilmoitukset :tieliikenne}))
 
 (defn aseta-valittu-valilehti!
   [osio valilehti]

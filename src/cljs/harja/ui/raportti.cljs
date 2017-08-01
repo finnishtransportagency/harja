@@ -21,7 +21,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.aikajana :as aikajana]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -101,9 +102,12 @@
                                                     (:tasaa sarake))}
                              (when raporttielementteja?
                                {:komponentti (fn [rivi]
-                                               (let [elementti (get rivi i)]
+                                               (let [elementti (get rivi i)
+                                                     liite? (if (vector? elementti)
+                                                              (= :liitteet (first elementti))
+                                                              false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
                                                  (muodosta-html
-                                                   (if (raportti-domain/formatoi-solu? elementti)
+                                                   (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
                                                      (raportti-domain/raporttielementti-formatterilla elementti format-fn)
                                                      elementti))))}))))
                         sarakkeet))
@@ -188,6 +192,9 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
+
+(defmethod muodosta-html :aikajana [[_ optiot rivit]]
+  (aikajana/aikajana optiot rivit))
 
 (defmethod muodosta-html :default [elementti]
   (log "HTML-raportti ei tue elementtiä: " elementti)

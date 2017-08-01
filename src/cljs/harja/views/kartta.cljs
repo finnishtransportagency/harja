@@ -63,6 +63,12 @@
 (def +kartan-napit-padding+ 26)
 (def +kartan-korkeus-s+ 0)
 
+(def tasot-joita-zoomataan-aina
+  ^{:doc "Jos näitä tasoja liittyy uuteen kartan geometriaan,
+  zoomataan aina geometrioihin."}
+  #{:kokonaishintaisten-turvalaitteet
+    :yksikkohintaisten-turvalaitteet})
+
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
                             kork @dom/korkeus
@@ -274,7 +280,6 @@
           (ikonit/compress) " Piilota kartta"]])]]))
 
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
-
 
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
@@ -513,10 +518,20 @@
   ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
   ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään
   ;; zoomaus (urakka/hallintayksikkö muutos)
+  ;; Lisätty näkymäkohtainen zoom-logiikan ylikirjoitus. Karvainen ratkaisu,
+  ;; mutta tähän hätään paras. Vesiväylien toimenpidenäkymissä käy usein niin,
+  ;; että kartalla on aluksi yksi turvalaite, ja siihen vaihdetaan tilalle toinen
+  ;; turvalaite. Aiemmin tässä tilanteessa zoomaus ei toiminut, koska muutos
+  ;; tehdään lukumäärän perusteella. Ohitettavia tasoja ei oteta huomioon, jos
+  ;; edellisestä tai uudesta tilasta löytyy infopaneelin merkki
   (when @tiedot/pida-geometriat-nakyvilla?
-    (let [vanha (dissoc vanha :infopaneelin-merkki)
-          uusi (dissoc uusi :infopaneelin-merkki)]
-      (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
+    (let [vanha-maara (geometria-maarat vanha)
+          uusi-maara (geometria-maarat uusi)]
+      (when (or (and (not= 1 (:infopaneelin-merkki vanha-maara))
+                     (not= 1 (:infopaneelin-merkki uusi-maara))
+                     (some tasot-joita-zoomataan-aina (keys uusi-maara)))
+                (not= (dissoc vanha-maara :infopaneelin-merkki)
+                      (dissoc uusi-maara :infopaneelin-merkki))
                 (not= (:organisaatio vanha) (:organisaatio uusi)))
         (tiedot/zoomaa-geometrioihin)))))
 

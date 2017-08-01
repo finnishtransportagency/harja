@@ -4,11 +4,10 @@
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.tilannekuva.tienakyma :as tienakyma]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
+            [harja.views.tilannekuva.yllapito :as yllapito]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.dom :as dom]
@@ -17,20 +16,16 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
-            [harja.ui.on-off-valinta :as on-off]
             [harja.domain.tilannekuva :as tk]
-            [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.tilannekuva :as domain]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
             [harja.domain.roolit :as roolit]
-            [harja.ui.grid :as grid]
-            [clojure.string :as str])
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction-writable]]))
+                   [harja.atom :refer [reaction-writable]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
 
@@ -219,10 +214,7 @@
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
                                              (nil? @tiedot/uudet-aluesuodattimet))
             tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))
-            alueita-valittu? (let [elyt (vals (:alueet @tiedot/suodattimet))
-                                   urakat (mapcat vals elyt)
-                                   valitut (mapcat vals urakat)]
-                               (some? (some true? valitut)))]
+            alueita-valittu? (tiedot/alueita-valittu? @tiedot/suodattimet)]
         [:div
          [asetuskokoelma
           (cond
@@ -243,6 +235,16 @@
          (when (and (not alueita-valittu?) (not ensimmainen-haku-kaynnissa?))
            [yleiset/vihje "Yhtään aluetta ei ole valittu."])]))))
 
+(def ^{:private true
+       :doc "Mahdolliset checkbox valintaryhmät nykytilanne/historia näkymissä."}
+  suodatinryhmat
+  [["Ilmoitukset" [:ilmoitukset :tyypit]]
+   ["Ylläpito" [:yllapito]]
+   ["Talvihoitotyöt" [:talvi]]
+   ["Kesähoitotyöt" [:kesa]]
+   ["Laatupoikkeamat" [:laatupoikkeamat]]
+   ["Tarkastukset" [:tarkastukset]]])
+
 (defn- aikasuodattimet []
   (let [yleiset-asetukset {:luokka "taustavari-taso3 ylaraja"
                            :otsikon-luokka "fontti-taso3"
@@ -262,21 +264,22 @@
       [:div.tk-yksittaiset-suodattimet.fontti-taso3
        [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
         tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-        auki-oleva-checkbox-ryhma]]
+        auki-oleva-checkbox-ryhma]
+       (when
+         (harja.tiedot.istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
+         [yksittainen-suodatincheckbox "Tietyöilmoitukset"
+         tiedot/suodattimet [:tietyoilmoitukset tk/tietyoilmoitukset]
+          auki-oleva-checkbox-ryhma])
+       ]
       [:div {:class "tk-suodatinryhmat"}
-       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]
-       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:yllapito]) false)})]
-       [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)})]
-       [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)})]
-       [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)})]
-       [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset]
-        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
-                                  :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
+       (for*
+        [[otsikko polku] suodatinryhmat]
+        [checkbox-suodatinryhma otsikko tiedot/suodattimet polku
+         (merge yleiset-asetukset
+                {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]
+      [:div.tk-yksittaiset-suodattimet.fontti-taso3
+       [yksittainen-suodatincheckbox "Varustetoteumat"
+        tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]]]))
 
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
@@ -328,26 +331,7 @@
 
    "Hallintapaneeli" :hallintapaneeli [suodattimet]])
 
-(defn- yllapitokohteen-yhteyshenkilot-modal [yhteyshenkilot]
-  (log "Näytetään yhteyshenkilöt modalissa: " (pr-str yhteyshenkilot))
-  (modal/nayta!
-    {:otsikko "Kohteen urakan yhteyshenkilöt"
-     :footer [:span
-              [:button.nappi-toissijainen {:type "button"
-                                           :on-click #(do (.preventDefault %)
-                                                          (modal/piilota!))}
-               "Sulje"]]}
-    [:div
-     [grid/grid
-      {:otsikko "Yhteyshenkilöt"
-       :tyhja "Ei yhteyshenkilöitä."}
-      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-       {:otsikko "Nimi" :nimi :nimi :tyyppi :string
-        :hae #(str (:etunimi %) " " (:sukunimi %))}
-       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
-       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
-       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-      yhteyshenkilot]]))
+
 
 (defn- nayta-vai-piilota? [tila]
   (case tila
@@ -358,36 +342,48 @@
 (defn- nayta-tai-piilota-karttataso! [tila]
   (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? tila)))
 
+(def tilannekuvan-infopaneelin-linkit
+  {:paallystys
+   {:toiminto (fn [yllapitokohdeosa]
+                (yllapito/nayta-yhteyshenkilot-modal!
+                 (:yllapitokohde-id yllapitokohdeosa)))
+    :teksti "Näytä yhteyshenkilöt"}
+
+   :varustetoteuma
+   {:toiminto (comp siirtymat/nayta-varustetoteuma! :id)
+    :teksti "Toteumanäkymään"
+    :tooltip "Siirry urakan varustetoteumiin"
+
+    ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
+    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}})
+
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
     (komp/watcher tiedot/valittu-tila
                   (fn [_ _ uusi]
                     (nayta-tai-piilota-karttataso! uusi)))
-    (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
-                           ;; Karttatason näyttäminen/piilottaminen täytyy tehdä täällä,
-                           ;; koska aktiivinen tila voi olla tienäkymä, eikä tienäkymässä
-                           ;; haluta näyttää esim. organisaatiorajoja. Jos tienäkymä
-                           ;; hallitsisi itse tason näkyvyyttä, ei se voisi tietää,
-                           ;; poistuttiinko tienäkymästä nykytilanteeseen (-> taso päälle)
-                           ;; vai toiseen näkymään (-> taso pois)
-                           (nayta-tai-piilota-karttataso! @tiedot/valittu-tila)
-                           (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
-                           (when (:id @nav/valittu-urakka) (tiedot/aseta-urakka-valituksi! (:id @nav/valittu-urakka)))
-                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit!
-                             {:paallystys
-                              {:toiminto (fn [yllapitokohdeosa]
-                                           (yllapitokohteen-yhteyshenkilot-modal
-                                             (get-in yllapitokohdeosa [:yllapitokohde :yhteyshenkilot])))
-                               :teksti "Näytä yhteyshenkilöt"}})
-                           (tiedot/seuraa-alueita!))
-                      #(do (kartta/aseta-paivitetaan-karttaa-tila! false)
-                           (reset! tilannekuva-kartalla/karttataso-tilannekuva false)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                           (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
-                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
-                           (tiedot/lopeta-alueiden-seuraus!)))
+    (komp/sisaan-ulos
+     #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
+          ;; Karttatason näyttäminen/piilottaminen täytyy tehdä täällä,
+          ;; koska aktiivinen tila voi olla tienäkymä, eikä tienäkymässä
+          ;; haluta näyttää esim. organisaatiorajoja. Jos tienäkymä
+          ;; hallitsisi itse tason näkyvyyttä, ei se voisi tietää,
+          ;; poistuttiinko tienäkymästä nykytilanteeseen (-> taso päälle)
+          ;; vai toiseen näkymään (-> taso pois)
+          (nayta-tai-piilota-karttataso! @tiedot/valittu-tila)
+          (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
+          (when (:id @nav/valittu-urakka) (tiedot/aseta-urakka-valituksi! (:id @nav/valittu-urakka)))
+          (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
+          (kartta-tiedot/kasittele-infopaneelin-linkit! tilannekuvan-infopaneelin-linkit)
+          (tiedot/seuraa-alueita!))
+     #(do (kartta/aseta-paivitetaan-karttaa-tila! false)
+          (reset! tilannekuva-kartalla/karttataso-tilannekuva false)
+          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
+          (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
+          (reset! kartta-tiedot/pida-geometriat-nakyvilla?
+                  kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
+          (tiedot/lopeta-alueiden-seuraus!)))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])
     (fn []

@@ -226,8 +226,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                               jarjestelman-luoma?]) :tyyppi :komponentti}
              {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256
               :muokattava? (constantly (not jarjestelman-luoma?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256
-              :nimi :ytunnus :muokattava? (constantly (not jarjestelman-luoma?)) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 9
+              :nimi :ytunnus :muokattava? (constantly (not jarjestelman-luoma?)) :validoi [[:ei-tyhja "Anna y-tunnus"]
+                                                                                           [:ytunnus]]}
              {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
               :nimi :lisatieto :muokattava? (constantly (not jarjestelman-luoma?))}]
             tiedot]])))))

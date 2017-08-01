@@ -19,6 +19,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 @livitaulukon-rivi-korkeus: 24px;
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
+@infolaatikko-leveys: 300px;
 
 .livi-taulukon-reunat {
   border: 1px solid @harmaa7;
@@ -95,8 +96,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       > .varoitukset,
       > .virheet,
       > .huomautukset {
-            display: block;
-       }
+        display: block;
+      }
     }
 
     width: 100%;
@@ -204,7 +205,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   tr.korostettu-rivi {
     background-color: @varoitus;
   }
-  tr.klikattava:hover {
+  tr.klikattava:hover:not(.gridin-collapsoitava-valiotsikko) {
     cursor: pointer;
     background-color: #D2CFCE;
   }
@@ -249,6 +250,60 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
 }
 
+.livi-grid-infolaatikolla {
+  width: calc(~'100% - ' @infolaatikko-leveys);
+}
+
+.livi-grid.livi-grid-infolaatikolla {
+  @livi-grid-infolaatikko-sisennys: 10px;
+
+  tr td:last-child {
+    position: relative;
+
+    .livi-grid-infolaatikko {
+      text-align: left;
+      color: @fontin-vari-leipateksti;
+      position: absolute;
+      top: 0;
+      right: -@infolaatikko-leveys;
+      width: @infolaatikko-leveys;
+      z-index: 100;
+
+      > .livi-grid-infolaatikko-yhdistysviiva {
+        height: 42px; // TODO Pitäisi olla rivin korkeus, mutta hankala määrittää?
+        background-color: @harmaa8;
+      }
+
+      > .livi-grid-infolaatikko-sisalto {
+        background-color: @harmaa8;
+        padding: @livi-grid-infolaatikko-sisennys;
+        width: 90%;
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        .tietorivi {
+          border: none;
+        }
+
+        .livi-grid-infolaatikko-footer {
+          background-color: @harmaa10;
+          margin-top: @livi-grid-infolaatikko-sisennys;
+          margin-left: -@livi-grid-infolaatikko-sisennys;
+          margin-right: -@livi-grid-infolaatikko-sisennys;
+          margin-bottom: -@livi-grid-infolaatikko-sisennys;
+          padding: @livi-grid-infolaatikko-sisennys;
+          padding-top: @livi-grid-infolaatikko-sisennys / 2;
+
+          > h5 {
+            text-transform: uppercase;
+          }
+        }
+      }
+    }
+  }
+}
+
 .gridin-napit-alhaalla {
   .panel-heading {
     padding: 2px 0px;
@@ -261,6 +316,39 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   margin: 0;
   padding: 1px 4px;
   z-index: 1;
+}
+
+.arvo-ja-nappi-container {
+  .arvo-ja-nappi-arvo {
+    float: left;
+    position: relative;
+    top: 5px;
+  }
+
+  .arvo-ja-nappi-nappi {
+    float: right;
+  }
+}
+
+// Oikeasti tämän pitäisi toimia niin, että vaihdetaan inline-blockiksi kun sarakkeesta
+// alkaa loppua tila. Tämä on kuitenkin vaikeaa toteuttaa CSS:llä, joten tehdään yleispätevä
+// ratkaisu: tehdään vasen-oikea jaottelu silloin kun tilaa on varmuudela
+// riittävästi, ja epävarmassa tapauksessa mennään inline-blockilla.
+@media (max-width: @screen-lg) {
+  .arvo-ja-nappi-container {
+    .arvo-ja-nappi-arvo {
+      display: inline-block;
+      float: none;
+      position: static;
+      top: auto;
+    }
+
+    .arvo-ja-nappi-nappi {
+      display: inline-block;
+      margin-left: 5px;
+      float: none;
+    }
+  }
 }
 
 .nappi-grid {
@@ -286,6 +374,35 @@ tr.otsikko {
   background-color: @harmaa5;
   color: @valkoinen;
 
+  td {
+    position: relative;
+
+    span[class^="livicon"] {
+      position: absolute;
+      left: 5px;
+      top: 12px;
+    }
+
+    .grid-valiotsikko-custom-komponentti {
+      position: absolute;
+    }
+  }
+}
+
+.gridin-collapsoitava-valiotsikko {
+  td {
+    position: relative;
+
+    h5 {
+      margin-left: 20px;
+    }
+
+    span[class^="livicon"] {
+      position: absolute;
+      left: 5px;
+      top: 12px;
+    }
+  }
 }
 
 > * {

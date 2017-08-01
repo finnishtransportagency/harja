@@ -7,8 +7,9 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-vastaus-virheet [virheet virhe-viesti virhe-koodi]
+  (log/error (str virhe-viesti " Virheet: " (string/join virheet)))
   (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
-           :virheet [{:viesti (str virhe-viesti " Virheet: " (string/join virheet))
+           :virheet [{:viesti (str "Virheet: " (string/join virheet))
                       :koodi virhe-koodi}]}))
 
 (defn kirjaa-vastaus-varoitukset [virheet varoitus-viesti]

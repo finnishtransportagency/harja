@@ -2,6 +2,7 @@
   "Palvelut organisaatioiden perustietojen ja urakoiden hakemiseksi.
   Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
+            [clojure.spec.alpha :as s]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
@@ -10,19 +11,23 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
 
+(s/def ::liikennemuoto (s/nilable #{:tie :vesi}))
+
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
 (defn hae-hallintayksikot
   "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
-  [db user liikennemuoto]
+  [db user tiedot]
   (oikeudet/ei-oikeustarkistusta!)
-  (into []
-        (muunna-pg-tulokset :alue)
-        (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
-                                                     :tie "T"
-                                                     :vesi "V"
-                                                     :rata "R"))))
+  (let [liikennemuoto (:liikennemuoto tiedot)]
+    (into []
+         (muunna-pg-tulokset :alue)
+         (q/listaa-hallintayksikot-kulkumuodolle db (when liikennemuoto
+                                                      (case liikennemuoto
+                                                       :tie "T"
+                                                       :vesi "V"
+                                                       :rata "R"))))))
 
 
 (defn hae-organisaatio
@@ -40,8 +45,9 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hallintayksikot (fn [user liikennemuoto]
-                                         (hae-hallintayksikot (:db this) user liikennemuoto)))
+                      :hallintayksikot (fn [user tiedot]
+                                         (hae-hallintayksikot (:db this) user tiedot))
+                      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
     (julkaise-palvelu (:http-palvelin this)
                       :hae-organisaatio (fn [user org-id]
                                           (hae-organisaatio (:db this) user org-id)))
