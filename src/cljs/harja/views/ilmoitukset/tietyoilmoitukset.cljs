@@ -19,7 +19,7 @@
    [cljs.core.async.macros :refer [go]]))
 
 (defn ilmoitukset* [e! ilmoitukset]
-  (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
+  (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
