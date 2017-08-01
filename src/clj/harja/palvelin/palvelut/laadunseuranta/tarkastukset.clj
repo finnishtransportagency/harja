@@ -171,6 +171,7 @@
             (map #(assoc % :tyyppi-kartalla :tarkastus))
             (map #(konv/string->keyword % :tyyppi))
             (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+            (map laadunseuranta/tarkastus-tiedolla-onko-ok)
             (map konv/alaviiva->rakenne))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
             db

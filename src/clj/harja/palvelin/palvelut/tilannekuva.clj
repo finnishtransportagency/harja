@@ -544,9 +544,10 @@
         (comp
           (map #(konv/array->set % :vakiohavainnot))
           (map #(assoc % :tyyppi-kartalla :tarkastus))
-          (map konv/alaviiva->rakenne)
           (map #(konv/string->keyword % :tyyppi))
-          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+          (map tarkastus-domain/tarkastus-tiedolla-onko-ok)
+          (map konv/alaviiva->rakenne))
         (q/hae-tarkastusten-asiat db
                                   (as-> parametrit p
                                         (suodattimet-parametreista p)
