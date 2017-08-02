@@ -29,15 +29,20 @@ tehtävän avain (ks. avatut-toteumat)."}
   ^{:doc "Toteumalomakkeelle avatun yksittäisen toteuman päiväkohtainen avain ja id."}
   valitun-toteuman-paiva-ja-id (atom nil))
 
-(defonce valittu-kokonaishintainen-toteuma (atom nil))
-
-(defonce ^:private valitse-paivan-toteuma-idlla
-  (run!
-   (let [paivakohtaiset-tiedot @toteumien-paivakohtaiset-tiedot
-         [avain id] @valitun-toteuman-paiva-ja-id]
-     (reset! valittu-kokonaishintainen-toteuma
-             (first (filter #(= id (:id %))
-                            (get paivakohtaiset-tiedot avain)))))))
+(defonce valittu-kokonaishintainen-toteuma
+   (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                [pv toteuma-id] @valitun-toteuman-paiva-ja-id]
+               (when (and urakka-id toteuma-id)
+                 (go
+                   (let [toteuma (<! (k/post! :urakan-toteuma
+                                              {:urakka-id urakka-id
+                                               :toteuma-id toteuma-id}))
+                         tehtava (first (:tehtavat toteuma))]
+                     (when tehtava
+                       (dissoc
+                         (assoc toteuma :tehtava tehtava
+                                        :jarjestelma (:jarjestelmanlisaama toteuma))
+                         :tehtavat)))))))
 
 (defn uusi-kokonaishintainen-toteuma []
   {:alkanut    (-> (pvm/nyt) (pvm/keskipaiva))
@@ -201,9 +206,9 @@ tehtävän avain (ks. avatut-toteumat)."}
    :reitti (:reitti t)
    :tr (:tr t)
    :toteuma-id (:id t)
-   :tehtavat [{:tehtava-id (get-in t [:tehtava :id])
+   :tehtavat [{:tehtava-id (get-in t [:tehtava :tehtava-id])
                :poistettu false
-               :toimenpidekoodi (get-in t [:tehtava :toimenpidekoodi :id])
+               :toimenpidekoodi (get-in t [:tehtava :tpk-id])
                :maara (get-in t [:tehtava :maara])}]})
 
 (defn tallenna-kokonaishintainen-toteuma! [toteuma]

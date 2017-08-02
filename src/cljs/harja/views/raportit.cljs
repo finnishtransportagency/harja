@@ -627,7 +627,7 @@
     (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
               [nil]
               [])
-            @hy/hallintayksikot)]
+            @hy/vaylamuodon-hallintayksikot)]
    " "
    [yleiset/livi-pudotusvalikko
     {:valitse-fn nav/vaihda-urakkatyyppi!
