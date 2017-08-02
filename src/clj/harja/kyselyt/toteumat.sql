@@ -41,6 +41,7 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja               AS luojaid,
+
   o.nimi                AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma         AS jarjestelmanlisaama,
@@ -54,13 +55,19 @@ SELECT
   tt.id                 AS "tehtava_tehtava-id",
   tpk.id                AS "tehtava_tpk-id",
   tpk.nimi              AS tehtava_nimi,
-  tt.maara              AS tehtava_maara
+  tpk.yksikko           AS tehtava_yksikko,
+  tt.maara              AS tehtava_maara,
+  tpi.id                AS tehtava_toimenpideinstanssi_id,
+  tpi.nimi              AS tehtava_toimenpideinstanssi_nimi
 
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
   JOIN toteuma_tehtava tt ON (tt.toteuma = t.id AND tt.poistettu IS NOT TRUE)
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN toimenpidekoodi emo ON tpk.emo = emo.id
+  LEFT JOIN toimenpideinstanssi tpi ON emo.id = tpi.toimenpide
+                                       AND tpi.urakka = t.urakka
 WHERE
   t.urakka = :urakka
   AND t.id = :toteuma

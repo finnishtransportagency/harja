@@ -245,10 +245,10 @@
                :valinnat      @tehtavat
                :valinta-arvo  :id
                :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-               :hae           (comp :id :toimenpidekoodi :tehtava)
+               :hae           (comp :tpk-id :tehtava)
                :aseta         (fn [rivi arvo]
                                 (-> rivi
-                                    (assoc-in [:tehtava :toimenpidekoodi :id] arvo)
+                                    (assoc-in [:tehtava :tpk-id] arvo)
                                     (assoc-in [:tehtava :yksikko] (:yksikko
                                                                     (urakan-toimenpiteet/tehtava-idlla
                                                                      arvo nelostason-tehtavat)))))
