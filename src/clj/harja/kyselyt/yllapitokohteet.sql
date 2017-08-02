@@ -437,12 +437,13 @@ VALUES (:yllapitokohde,
   :tyomenetelma,
   :massamaara,
   :ulkoinen-id,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+  (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+   FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                          CAST(:tr_alkuosa AS INTEGER),
+                                          CAST(:tr_alkuetaisyys AS INTEGER),
+                                          CAST(:tr_loppuosa AS INTEGER),
+                                          CAST(:tr_loppuetaisyys AS INTEGER),
+                                          CAST(:tr_ajorata AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
@@ -482,12 +483,13 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
-  sijainti         = (SELECT tierekisteriosoitteelle_viiva AS geom
-                      FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                                         CAST(:tr_alkuosa AS INTEGER),
-                                                         CAST(:tr_alkuetaisyys AS INTEGER),
-                                                         CAST(:tr_loppuosa AS INTEGER),
-                                                         CAST(:tr_loppuetaisyys AS INTEGER)))
+  sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+                      FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                                             CAST(:tr_alkuosa AS INTEGER),
+                                                             CAST(:tr_alkuetaisyys AS INTEGER),
+                                                             CAST(:tr_loppuosa AS INTEGER),
+                                                             CAST(:tr_loppuetaisyys AS INTEGER),
+                                                             CAST(:tr_ajorata AS INTEGER)))
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
