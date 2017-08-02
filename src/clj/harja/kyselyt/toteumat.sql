@@ -41,6 +41,7 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja               AS luojaid,
+  ST_Length(t.reitti)   AS pituus,
 
   o.nimi                AS organisaatio,
   k.kayttajanimi,
