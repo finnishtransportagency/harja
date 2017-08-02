@@ -1,5 +1,6 @@
 (ns harja.paneeliapurit
-  (:require [harja.ui.kartta.infopaneelin-sisalto :as paneeli]))
+  (:require [harja.ui.kartta.infopaneelin-sisalto :as paneeli]
+            [taoensso.timbre :as log]))
 
 (def infopaneeli-skeema (var paneeli/infopaneeli-skeema))
 (def skeema-ilman-tyhjia-riveja (var paneeli/skeema-ilman-tyhjia-riveja))
@@ -19,7 +20,7 @@
              (skeema-ilman-tyhjia-riveja)
              (validoi-infopaneeli-skeema true)))
        (catch Exception e
-         (taoensso.timbre/debug e)
+         (log/debug e)
          false)))))
 
 (defn skeeman-luonti-onnistuu-kaikille?
