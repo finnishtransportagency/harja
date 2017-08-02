@@ -117,22 +117,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae (constantly "Sakko")
                 :muokattava? (constantly false)}
                {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
-               :nimi :laji
-               :aseta (fn [rivi arvo]
-                        (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                          (if-not (sanktio-domain/sakko? paivitetty)
-                            (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                            paivitetty)))
-               :valinnat mahdolliset-sanktiolajit
-               :valinta-nayta #(case %
-                                 :A "Ryhmä A"
-                                 :B "Ryhmä B"
-                                 :C "Ryhmä C"
-                                 :muistutus "Muistutus"
-                                 :yllapidon_muistutus "Muistutus"
-                                 :yllapidon_sakko "Sakko"
-                                 "- valitse laji -")
-               :validoi [[:ei-tyhja "Valitse laji"]]})
+                :nimi :laji
+                :aseta (fn [rivi arvo]
+                         (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                           (if-not (sanktio-domain/sakko? paivitetty)
+                             (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                             paivitetty)))
+                :valinnat mahdolliset-sanktiolajit
+                :valinta-nayta #(case %
+                                  :A "Ryhmä A"
+                                  :B "Ryhmä B"
+                                  :C "Ryhmä C"
+                                  :muistutus "Muistutus"
+                                  :yllapidon_muistutus "Muistutus"
+                                  :yllapidon_sakko "Sakko"
+                                  "- valitse laji -")
+                :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
                    {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
@@ -351,7 +351,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                  :palstoja 1}
 
-                (if yllapitokohdeurakka?
+                (when yllapitokohdeurakka?
                   {:otsikko "Yllä\u00ADpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
                    :palstoja 1
                    :pakollinen? true
@@ -370,7 +370,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                       (if muokattava?
                                         "- Valitse kohde -"
                                         "")))
-                   :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+                   :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
+
+                (when (and (not yllapitokohdeurakka?) (not vesivayla?))
                   {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                    :palstoja 1
                    :pakollinen? true

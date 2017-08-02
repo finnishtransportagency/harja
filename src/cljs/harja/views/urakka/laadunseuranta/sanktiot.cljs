@@ -119,7 +119,7 @@
                                       [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                                        "Ei voi olla ennen havaintoa"]]})
 
-             (if yllapitokohdeurakka?
+             (when yllapitokohdeurakka?
                {:otsikko "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
                 :palstoja 1 :pakollinen? false :muokattava? (constantly voi-muokata?)
                 :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
@@ -136,7 +136,8 @@
                                      "- Valitse kohde -"
                                      (if (and voi-muokata? (nil? (:id arvo)))
                                        "Ei liity kohteeseen"
-                                       ""))))}
+                                       ""))))})
+             (when (and (not yllapitokohdeurakka?) (not vesivayla?))
                {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                 :hae (comp :kohde :laatupoikkeama)
                 :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -269,6 +270,7 @@
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
         yllapito? (:yllapito? optiot)
+        vesivayla? (:vesivayla? optiot)
         yhteensa (reduce + (map :summa sanktiot))
         yhteensa (when yhteensa
                    (if yllapito?
@@ -282,13 +284,14 @@
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
-       (if yllapitokohdeurakka?
+       (when yllapitokohdeurakka?
          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (if (get-in rivi [:yllapitokohde :id])
                    (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                  :nimi (get-in rivi [:yllapitokohde :nimi])})
-                   "Ei liity kohteeseen"))}
+                   "Ei liity kohteeseen"))})
+       (when (and (not yllapitokohdeurakka?) (not vesivayla?))
          {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1})
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        (if yllapito?
