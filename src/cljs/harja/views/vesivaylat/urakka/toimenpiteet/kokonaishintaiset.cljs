@@ -15,7 +15,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
@@ -41,6 +42,15 @@
                                                 oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                 (:id @nav/valittu-urakka))))}])
 
+(defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
+  (if (to/toimenpiteilla-kiintioita? toimenpiteet)
+    (varmista-kayttajalta/varmista-kayttajalta
+      {:otsikko "Siirto yksikköhintaisiin"
+       :sisalto [:div "Osa siirrettävistä toimennpiteistä kuuluu kiintiöön. Siirrettävät toimenpiteet irrotetaan kiintiöstä. Haluatko jatkaa?"]
+       :hyvaksy "Siirrä yksikköhintaisiin"
+       :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
+    (e! (tiedot/->SiirraValitutYksikkohintaisiin))))
+
 (defn- liita-kiintioon [e! app]
   [:span
    [:span {:style {:margin-right "10px"}} "Liitä valitut kiintiöön"]
@@ -52,7 +62,7 @@
   [jaettu/siirtonappi e!
    app
    "Siirrä yksikköhintaisiin"
-   #(e! (tiedot/->SiirraValitutYksikkohintaisiin))
+   #(valmistele-toimenpiteiden-siirto e! (:toimenpiteet app))
    #(oikeudet/on-muu-oikeus? "siirrä-yksikköhintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                              (:id @nav/valittu-urakka))]

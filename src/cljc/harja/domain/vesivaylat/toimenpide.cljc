@@ -399,6 +399,9 @@ reimari-tilat
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
   (boolean (::oma-hinnoittelu toimenpide)))
 
+(defn toimenpiteilla-kiintioita? [toimenpiteet]
+  (not (empty? (map ::kiintio toimenpiteet))))
+
 ;; Palvelut
 
 (s/def ::hae-vesivaylien-toimenpiteet-kysely
