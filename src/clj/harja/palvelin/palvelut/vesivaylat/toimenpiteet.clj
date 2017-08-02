@@ -13,7 +13,8 @@
             [harja.transit :as transit]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.vesivaylat.toimenpiteet :as q]))
+            [harja.kyselyt.vesivaylat.toimenpiteet :as q]
+            [harja.kyselyt.vesivaylat.kiintiot :as kiintiot-q]))
 
 (defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -46,7 +47,8 @@
       (oikeudet/vaadi-oikeus "siirrä-yksikköhintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
-        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
+        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)
+        (kiintiot-q/irrota-toimenpiteet-kiintiosta db user tiedot)))
     (::to/idt tiedot)))
 
 (defn lisaa-toimenpiteelle-liite [db user tiedot]
