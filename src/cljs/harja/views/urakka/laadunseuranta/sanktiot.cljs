@@ -119,7 +119,7 @@
                                       [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                                        "Ei voi olla ennen havaintoa"]]})
 
-             (if yllapitokohdeurakka?
+             (when yllapitokohdeurakka?
                {:otsikko "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
                 :palstoja 1 :pakollinen? false :muokattava? (constantly voi-muokata?)
                 :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
@@ -137,13 +137,14 @@
                                      (if (and voi-muokata? (nil? (:id arvo)))
                                        "Ei liity kohteeseen"
                                        ""))))}
-               {:otsikko "Kohde" :tyyppi :string :nimi :kohde
-                :hae (comp :kohde :laatupoikkeama)
-                :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
-                :palstoja 1
-                :pakollinen? true
-                :muokattava? (constantly voi-muokata?)
-                :validoi [[:ei-tyhja "Anna sanktion kohde"]]})
+               (when (and (not yllapitokohdeurakka?) (not vesivayla?))
+                 {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+                  :hae (comp :kohde :laatupoikkeama)
+                  :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
+                  :palstoja 1
+                  :pakollinen? true
+                  :muokattava? (constantly voi-muokata?)
+                  :validoi [[:ei-tyhja "Anna sanktion kohde"]]}))
 
              {:otsikko "Käsitelty" :nimi :kasittelytapa
               :pakollinen? true
