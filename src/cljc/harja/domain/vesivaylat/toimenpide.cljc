@@ -400,7 +400,7 @@ reimari-tilat
   (boolean (::oma-hinnoittelu toimenpide)))
 
 (defn toimenpiteilla-kiintioita? [toimenpiteet]
-  (not (empty? (map ::kiintio toimenpiteet))))
+  (not (empty? (keep ::kiintio toimenpiteet))))
 
 ;; Palvelut
 

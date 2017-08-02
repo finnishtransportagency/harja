@@ -43,10 +43,10 @@
                                                 (:id @nav/valittu-urakka))))}])
 
 (defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
-  (if (to/toimenpiteilla-kiintioita? toimenpiteet)
+  (if (to/toimenpiteilla-kiintioita? (filter :valittu? toimenpiteet))
     (varmista-kayttajalta/varmista-kayttajalta
       {:otsikko "Siirto yksikköhintaisiin"
-       :sisalto [:div "Osa siirrettävistä toimennpiteistä kuuluu kiintiöön. Siirrettävät toimenpiteet irrotetaan kiintiöstä. Haluatko jatkaa?"]
+       :sisalto [:div "Osa siirrettävistä toimenpiteistä kuuluu kiintiöön. Siirrettävät toimenpiteet irrotetaan kiintiöstä. Haluatko jatkaa?"]
        :hyvaksy "Siirrä yksikköhintaisiin"
        :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
     (e! (tiedot/->SiirraValitutYksikkohintaisiin))))
