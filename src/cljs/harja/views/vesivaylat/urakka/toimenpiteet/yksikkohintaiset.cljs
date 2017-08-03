@@ -95,20 +95,20 @@
   (let [valitut-toimenpiteet (filter :valittu? toimenpiteet)]
     [:div
      (when (to/toimenpiteilla-hintaryhmia? valitut-toimenpiteet)
-       (let [nayta-max 10
-             hintaryhmalliset-toimenpitet (filter ::to/hintaryhma-id valitut-toimenpiteet)
-             naytettavat-toimenpiteet (take nayta-max hintaryhmalliset-toimenpitet)]
-         [:div
-          [:p "Seuraavat toimenpiteet kuuluvat tilaukseen:"]
-          [:ul
-           (for* [toimenpide naytettavat-toimenpiteet]
-                 [:li (str (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
-                           ". Tilaus: " (::h/nimi (h/hinnoittelu-idlla hintaryhmat (::to/hintaryhma-id toimenpide))))])
-           (when (> (count hintaryhmalliset-toimenpitet) nayta-max)
-             [:li (str "...sekä " (- (count hintaryhmalliset-toimenpitet) nayta-max) " muuta toimenpidettä.")])]
-          [:p "Nämä toimenpiteet irrotetaan tilauksesta siirron aikana."]]))
+       (jaettu/varmistusdialog-ohje
+         {:varmistusehto ::to/hintaryhma-id
+          :valitut-toimenpiteet valitut-toimenpiteet
+          :nayta-max 5
+          :toimenpide-lisateksti-fn #(str "Tilaus: " (::h/nimi (h/hinnoittelu-idlla hintaryhmat (::to/hintaryhma-id %))) ".")
+          :varmistusteksti-header "Seuraavat toimenpiteet kuuluvat tilaukseen:"
+          :varmistusteksti-footer "Nämä toimenpiteet irrotetaan tilauksesta siirron aikana."}))
      (when (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet))
-       [:p "Osa siirrettävistä toimenpiteistä sisältää hinnoittelutietoja, jotka poistetaan siirron yhteydessä."])
+       (jaettu/varmistusdialog-ohje
+         {:varmistusehto ::to/oma-hinnoittelu
+          :valitut-toimenpiteet valitut-toimenpiteet
+          :nayta-max 5
+          :varmistusteksti-header "Seuraavat toimenpiteet sisältävät hinnoittelutietoja:"
+          :varmistusteksti-footer "Näiden toimenpiteiden hinnoittelutiedot poistetaan siirron aikana."}))
      [:p "Haluatko jatkaa?"]]))
 
 (defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet hintaryhmat]

@@ -36,7 +36,8 @@
      [:p varmistusteksti-header]
      [:ul
       (for* [toimenpide naytettavat-toimenpiteet]
-        [:li (str (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)) ". " (toimenpide-lisateksti-fn toimenpide))])
+        [:li (str (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)) ". " (when toimenpide-lisateksti-fn
+                                                                                        (toimenpide-lisateksti-fn toimenpide)))])
       (when (> (count varmistettavat-toimenpiteet) nayta-max)
         [:li (str "...sekä " (- (count varmistettavat-toimenpiteet) nayta-max) " muuta toimenpidettä.")])]
      [:p varmistusteksti-footer]]))
