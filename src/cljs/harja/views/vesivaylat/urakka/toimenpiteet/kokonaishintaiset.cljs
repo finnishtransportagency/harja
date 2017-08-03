@@ -48,18 +48,14 @@
     (if (to/toimenpiteilla-kiintioita? valitut-toimenpiteet)
       (varmista-kayttajalta/varmista-kayttajalta
         {:otsikko "Siirto yksikköhintaisiin"
-         :sisalto (let [nayta-max 10
-                        kiintiolliset-toimenpiteet (filter ::to/kiintio valitut-toimenpiteet)
-                        naytettavat-toimenpiteet (take nayta-max kiintiolliset-toimenpiteet)]
-                    [:div
-                     [:p "Seuraavat toimenpiteet kuuluvat kiintiöön:"]
-                     [:ul
-                      (for* [toimenpide naytettavat-toimenpiteet]
-                        [:li (str (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
-                                  ". Kiintiö: " (get-in toimenpide [::to/kiintio ::kiintio/nimi]) ".")])
-                      (when (> (count kiintiolliset-toimenpiteet) nayta-max)
-                        [:li (str "...sekä " (- (count kiintiolliset-toimenpiteet) nayta-max) " muuta toimenpidettä.")])]
-                     [:p "Nämä toimenpiteet irrotetaan kiintiöstä siirron aikana. Haluatko jatkaa?"]])
+         :sisalto
+         [jaettu/varmistusdialog-ohje {:varmistusehto ::to/kiintio
+                                       :valitut-toimenpiteet valitut-toimenpiteet
+                                       :nayta-max 10
+                                       :toimenpide-lisateksti-fn #(str "Kiintiö: " (get-in % [::to/kiintio ::kiintio/nimi]) ".")
+                                       :varmistusteksti-header "Seuraavat toimenpiteet kuuluvat kiintiöön:"
+                                       :varmistusteksti-footer "Nämä toimenpiteet irrotetaan kiintiöstä siirron aikana. Haluatko jatkaa?"}]
+
          :hyvaksy "Siirrä yksikköhintaisiin"
          :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
       (e! (tiedot/->SiirraValitutYksikkohintaisiin)))))
