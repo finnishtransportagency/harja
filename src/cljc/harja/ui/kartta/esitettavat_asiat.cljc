@@ -355,6 +355,15 @@
                                 ikoni
                                 viiva))))
 
+(def paallystys-selitteet
+  (into #{}
+        (for [t [:valmis :ei-aloitettu :kesken]
+              :let [viiva (ulkoasu/yllapidon-viiva false t :paallystys)]]
+          {:teksti (str "Päällystyskohde ("
+                        (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla t))
+                        ")")
+           :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)})))
+
 (defmethod asia-kartalle :paallystys [pt valittu?]
   (assoc (yllapitokohde :paallystys pt valittu? "Päällystyskohde")
     :type :paallystys))
