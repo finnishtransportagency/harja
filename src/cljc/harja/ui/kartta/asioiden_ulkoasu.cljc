@@ -425,4 +425,11 @@ tr-ikoni {:img (pinni-ikoni "musta")
     :width 3}])
 
 (defn tehtavan-viivat-tyokoneelle [viivat]
-  (map #(assoc % :dash +tyokoneviivan-dash+) viivat))
+  (let [levein (or (apply max (map :width viivat)) +normaali-leveys+)]
+    (concat
+      ;; Näiden pohjalle tulevien viivojen pitää olla leveämpiä
+      ;; kuin "varsinaisen viivan", sillä palvelinpäässä viivat piirretään
+      ;; leveimmästä kapeimpaan, jolloin osa katkoviivasta voi peittyä.
+      [{:width (+ 2 levein) :color puhtaat/musta}
+       {:width (+ 1 levein) :color puhtaat/harmaa}]
+      (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
