@@ -14,6 +14,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.vesivaylat.toimenpiteet :as q]
+            [harja.kyselyt.vesivaylat.hinnoittelut :as hinnoittelut-q]
             [harja.kyselyt.vesivaylat.kiintiot :as kiintiot-q]))
 
 (defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
@@ -30,7 +31,8 @@
       (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
-        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen)))
+        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen)
+        (hinnoittelut-q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))))
     (::to/idt tiedot)))
 
 (defn hae-kokonaishintaiset-toimenpiteet [db user tiedot]
