@@ -329,12 +329,12 @@
         (not-empty soratiemittaus))
     (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-viivojen-varit))
 
-    (and valittu? ok?)
+    ok?
     (pinni-ikoni (case tekija
                    :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
                    :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
                    :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
-                   (:ok-tarkastus tiepuolen-viivojen-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+                   (:ok-tarkastus tiepuolen-viivojen-varit)))))
 
 (defn tarkastuksen-reitti [{:keys [ok? tekija] :as tarkastus}]
   (if-not ok? ;;laadunalitus
