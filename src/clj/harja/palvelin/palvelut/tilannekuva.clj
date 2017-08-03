@@ -356,6 +356,11 @@
        :loppu loppu
        :organisaatio (get-in user [:organisaatio :id])})))
 
+(defn- hae-paallystysten-reitit
+  [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} _]
+  (q/hae-paallystysten-reitit db ch
+                              (merge alue
+                                     {:toleranssi toleranssi})))
 (defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
   (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
@@ -557,6 +562,7 @@
                                        (merge p (select-keys parametrit [:x :y])))))
     {:tehtava :tehtavat
      :materiaalitoteuma :materiaalit}))
+
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]
@@ -622,6 +628,20 @@
        :yhteyshenkilot (vec yhteyshenkilot)})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+(defn hae-paallystysten-sijainnit-kartalle
+  "Hakee ylläpidon päällystystöiden geometriatiedot karttakuvan piirtoa varten"
+  [db user parametrit]
+  (hae-karttakuvan-tiedot db user parametrit
+                          hae-paallystysten-reitit
+                          (comp
+                           (map #(assoc % :tyyppi-kartalla :paallystys))
+                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                           (map #(update % :sijainti geo/pg->clj)))))
+
+(defn hae-paallystysten-tiedot-kartalle
+  "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
+  [db user {:keys [x y] :as parametrit}])
+
 (defrecord Tilannekuva []
   component/Lifecycle
   (start [{karttakuvat :karttakuvat
@@ -653,6 +673,11 @@
       (partial #'hae-tyokoneiden-sijainnit-kartalle db)
       (partial #'hae-tyokoneiden-tiedot-kartalle db)
       "tk")
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tilannekuva-paallystys
+     (partial #'hae-paallystysten-sijainnit-kartalle db)
+     (partial #'hae-paallystysten-tiedot-kartalle db)
+     "tk")
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
@@ -662,4 +687,5 @@
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-toteumat)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tarkastukset)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tyokoneet)
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-paallystys)
     this))
