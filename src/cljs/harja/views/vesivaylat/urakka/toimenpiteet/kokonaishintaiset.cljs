@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
@@ -43,13 +44,25 @@
                                                 (:id @nav/valittu-urakka))))}])
 
 (defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
-  (if (to/toimenpiteilla-kiintioita? (filter :valittu? toimenpiteet))
-    (varmista-kayttajalta/varmista-kayttajalta
-      {:otsikko "Siirto yksikköhintaisiin"
-       :sisalto [:div "Osa siirrettävistä toimenpiteistä kuuluu kiintiöön. Siirrettävät toimenpiteet irrotetaan kiintiöstä. Haluatko jatkaa?"]
-       :hyvaksy "Siirrä yksikköhintaisiin"
-       :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
-    (e! (tiedot/->SiirraValitutYksikkohintaisiin))))
+  (let [valitut-toimenpiteet (filter :valittu? toimenpiteet)]
+    (if (to/toimenpiteilla-kiintioita? valitut-toimenpiteet)
+      (varmista-kayttajalta/varmista-kayttajalta
+        {:otsikko "Siirto yksikköhintaisiin"
+         :sisalto (let [nayta-max 10
+                        kiintiolliset-toimenpiteet (filter ::to/kiintio valitut-toimenpiteet)
+                        naytettavat-toimenpiteet (take nayta-max kiintiolliset-toimenpiteet)]
+                    [:div
+                     [:p "Seuraavat toimenpiteet kuuluvat kiintiöön:"]
+                     [:ul
+                      (for* [toimenpide naytettavat-toimenpiteet]
+                        [:li (str (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
+                                  ". Kiintiö: " (get-in toimenpide [::to/kiintio ::kiintio/nimi]) ".")])
+                      (when (> (count kiintiolliset-toimenpiteet) nayta-max)
+                        [:li (str "...sekä " (- (count kiintiolliset-toimenpiteet) nayta-max) " muuta toimenpidettä.")])]
+                     [:p "Nämä toimenpiteet irrotetaan kiintiöstä siirron aikana. Haluatko jatkaa?"]])
+         :hyvaksy "Siirrä yksikköhintaisiin"
+         :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
+      (e! (tiedot/->SiirraValitutYksikkohintaisiin)))))
 
 (defn- liita-kiintioon [e! app]
   [:span
