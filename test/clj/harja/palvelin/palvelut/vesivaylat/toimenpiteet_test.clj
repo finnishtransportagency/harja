@@ -377,20 +377,26 @@
 
 (deftest yksikkohintaisiin-siirto
   (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
+        toimenpiteiden-kiintio-idt-ennen (apurit/hae-toimenpiteiden-kiintio-idt kokonaishintaiset-toimenpide-idt)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt kokonaishintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :siirra-toimenpiteet-yksikkohintaisiin +kayttaja-jvh+
                                 kysely-params)
+        toimenpiteiden-kiintio-idt-jalkeen (apurit/hae-toimenpiteiden-kiintio-idt kokonaishintaiset-toimenpide-idt)
         nykyiset-kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
         siirrettyjen-uudet-tyypit (apurit/hae-toimenpiteiden-tyyppi kokonaishintaiset-toimenpide-idt)]
     (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-kysely kysely-params))
     (is (s/valid? ::toi/siirra-toimenpiteet-yksikkohintaisiin-vastaus vastaus))
 
+    (is (not (empty? toimenpiteiden-kiintio-idt-ennen)) "Testi vaatii, että joku toimenpide on liitetty kiintiöön")
+
     (is (= vastaus kokonaishintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
-    (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")))
+    (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")
+
+    (is (empty? toimenpiteiden-kiintio-idt-jalkeen) "Toimenpiteet irrotettiin kiintiöistä")))
 
 (deftest siirra-toimenpide-yksikkohintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

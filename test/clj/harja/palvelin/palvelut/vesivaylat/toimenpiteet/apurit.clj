@@ -15,6 +15,10 @@
             (q-map "SELECT id FROM reimari_toimenpide
                     WHERE hintatyyppi = 'kokonaishintainen'"))))
 
+(defn hae-toimenpiteiden-kiintio-idt [toimenpide-idt]
+  (set (keep :kiintio-id (q-map (str "SELECT \"kiintio-id\" FROM reimari_toimenpide
+                    WHERE id IN (" (str/join ", " toimenpide-idt) ")")))))
+
 (defn hae-yksikkohintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide
