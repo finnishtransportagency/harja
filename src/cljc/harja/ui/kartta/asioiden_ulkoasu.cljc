@@ -321,11 +321,11 @@
                              :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
                              (:ei-ok-tarkastus tiepuolen-ikonien-varit)))
     (not (empty? vakiohavainnot)) (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-ikonien-varit))
-    (and valittu? ok?) (pinni-ikoni (case tekija
-                                      :tilaaja (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
-                                      :konsultti (:ok-tarkastus-konsultti tiepuolen-ikonien-varit)
-                                      :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
-                                      (:ok-tarkastus tiepuolen-ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+    ok? (pinni-ikoni (case tekija
+                       :tilaaja (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
+                       :konsultti (:ok-tarkastus-konsultti tiepuolen-ikonien-varit)
+                       :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
+                       (:ok-tarkastus tiepuolen-ikonien-varit)))))
 
 (defn tarkastuksen-reitti [ok? vakiohavainnot tekija]
   (if-not ok? ;;laadunalitus
