@@ -245,6 +245,9 @@ SELECT ypk.id,
  WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
    AND ypk.poistettu IS NOT TRUE
 
+-- name: hae-paallystysten-viimeisin-muokkaus
+-- single?: true
+SELECT MAX(muokattu) FROM yllapitokohde WHERE yllapitokohdetyyppi='paallyste';
 
 -- name: hae-paallystykset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat

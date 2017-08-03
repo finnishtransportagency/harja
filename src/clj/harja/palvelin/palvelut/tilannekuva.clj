@@ -34,7 +34,16 @@
   Karttakuvien lisäksi rekisteröidään jokaiselle palvelimella
   renderöintävälle karttatasolle funktio, joka hakee klikkauspisteessä
   löytyvät asiat ja palauttaa niiden tiedot infopaneelissa näyttämistä
-  varten."
+  varten.
+
+  Karttakuvia varten silti palautetaan normaalissa haussa osio, jossa voi
+  olla indikaattoreita tai legend otsikoita. Hyvän indikaattorin palauttaminen
+  normaalista osiohausta on tärkeää, koska kuvataso luodaan uudestaan, jos se
+  muuttuu. Jos indikaattoriarvo muuttuu liikaa, ladataan tarpeettomasti uusia
+  kuvia ja 'räpsyntää' esiintyy. Jos indikaattori ei muutu vaikka data olisi
+  oikeasti muuttunut, ei kuvissa näy kaikki geometriat.
+
+  "
   (:require [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [union]]
@@ -197,8 +206,18 @@
         vastaus))))
 
 (defn- hae-paallystystyot
-  [db user suodattimet urakat]
-  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paallystys") urakat))
+  "Hakee indikaattoritiedon siitä milloin päällystystyöt ovat muuttuneet viimeksi.
+  Frontti käyttää tätä tietoa uuden karttatason luomiseen."
+  [db user {nykytilanne? :nykytilanne? yllapito :yllapito} urakat]
+  (when (tk/valittu? yllapito tk/paallystys)
+    ;; Indikaattori on merkkijono, joka sisältää tiedon siitä onko nykytilanne (n)
+    ;; vai historiakuva (h) sekä viimeisimmän kohteen muutosaikaleiman.
+    [(str (if nykytilanne?
+            "n" "h")
+          (or (some-> db
+                      q/hae-paallystysten-viimeisin-muokkaus
+                      .getTime)
+              0))]))
 
 (defn- hae-paikkaustyot
   [db user suodattimet urakat]
