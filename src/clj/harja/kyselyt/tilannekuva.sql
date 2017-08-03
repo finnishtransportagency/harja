@@ -228,6 +228,24 @@ WHERE
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu);
 
+-- name: hae-paallystysten-reitit
+-- fetch-size: 64
+-- Hakee päällystystöiden reitit karttapiirtoa varten
+SELECT ypk.id,
+       ypka.kohde_alku AS "kohde-alkupvm",
+       ypka.paallystys_alku AS "paallystys-alkupvm",
+       ypka.paallystys_loppu AS "paallystys-loppupvm",
+       ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+       ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+       ypka.kohde_valmis AS "kohde-valmispvm",
+       ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti
+  FROM yllapitokohde ypk
+       LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+       JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
+ WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+   AND ypk.poistettu IS NOT TRUE
+
+
 -- name: hae-paallystykset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat
 -- valmistuneet viikon sisällä.
