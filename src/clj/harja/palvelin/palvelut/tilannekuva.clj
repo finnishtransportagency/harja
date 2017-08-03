@@ -608,7 +608,7 @@
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
                                  (as-> parametrit p
-                                       (suodattimet-parametreista p)
+                                   (suodattimet-parametreista p)
                                        (assoc p
                                          :urakat (luettavat-urakat user p)
                                          :x x
@@ -638,9 +638,25 @@
                            (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                            (map #(update % :sijainti geo/pg->clj)))))
 
+(def ^{:private true
+       :doc "Päällystyskohdeosan tietojen muunto infopaneelia varten"}
+  paallystyskohdeosan-tiedot-xf
+  (comp (map #(assoc % :tyyppi-kartalla :paallystys))
+        (map #(konv/string->keyword % :yllapitokohde_yllapitokohdetyotyyppi))
+        (map konv/alaviiva->rakenne)
+        (map #(assoc-in % [:yllapitokohde :tila]
+                        (yllapitokohteet-domain/yllapitokohteen-tarkka-tila (:yllapitokohde %))))))
+
 (defn hae-paallystysten-tiedot-kartalle
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
-  [db user {:keys [x y] :as parametrit}])
+  [db user {:keys [x y] :as parametrit}]
+  (log/info "Hae päällystystiedot: " parametrit)
+  (let [r
+        (into []
+              paallystyskohdeosan-tiedot-xf
+              (q/hae-paallystysten-tiedot db parametrit))]
+    (println "R: " (pr-str r))
+    r))
 
 (defrecord Tilannekuva []
   component/Lifecycle

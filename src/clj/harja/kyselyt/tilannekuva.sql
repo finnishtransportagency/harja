@@ -243,11 +243,47 @@ SELECT ypk.id,
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
  WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+   -- FIXME:aikarajaus nyky/historia
    AND ypk.poistettu IS NOT TRUE
 
 -- name: hae-paallystysten-viimeisin-muokkaus
 -- single?: true
 SELECT MAX(muokattu) FROM yllapitokohde WHERE yllapitokohdetyyppi='paallyste';
+
+-- name: hae-paallystysten-tiedot
+-- Hakee päällystysten tiedot klikkauspisteella
+SELECT ypko.id,
+       ypk.yllapitokohdetyotyyppi AS "yllapitokohde_yllapitokohdetyotyyppi",
+       ypk.nimi as yllapitokohde_nimi,
+       ypk.kohdenumero as yllapitokohde_kohdenumero,
+       ypk.tr_numero as "yllapitokohde_tr-numero",
+       ypk.tr_alkuosa as "yllapitokohde_tr-alkuosa",
+       ypk.tr_alkuetaisyys as "yllapitokohde_tr-alkuetaisyys",
+       ypk.tr_loppuosa as "yllapitokohde_tr-loppuosa",
+       ypk.tr_loppuetaisyys as "yllapitokohde_tr-loppuetaisyys",
+       ypko.nimi,
+       ypko.tr_numero AS "tr-numero",
+       ypko.tr_alkuosa AS "tr-alkuosa",
+       ypko.tr_alkuetaisyys AS "tr-alkuetaisyys",
+       ypko.tr_loppuosa AS "tr-loppuosa",
+       ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       ypk.nykyinen_paallyste AS "yllapitokohde_nykyinen-paallyste",
+       ypk.keskimaarainen_vuorokausiliikenne AS "yllapitokohde_keskimaarainen-vuorokausiliikenne",
+       ypko.toimenpide,
+       ypka.kohde_alku AS "yllapitokohde_kohde-alkupvm",
+       ypka.paallystys_alku AS "yllapitokohde_paallystys-alkupvm",
+       ypka.paallystys_loppu AS "yllapitokohde_paallystys-loppupvm",
+       ypka.tiemerkinta_alku AS "yllapitokohde_tiemerkinta-alkupvm",
+       ypka.tiemerkinta_loppu AS "yllapitokohde_tiemerkinta-loppupvm",
+       ypka.kohde_valmis AS "yllapitokohde_kohde-valmispvm",
+       u.nimi AS yllapitokohde_urakka,
+       o.nimi AS yllapitokohde_urakoitsija
+  FROM yllapitokohdeosa ypko
+       JOIN yllapitokohde ypk ON ypk.id = ypko.yllapitokohde
+       LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+       JOIN urakka u ON ypk.urakka = u.id
+       JOIN organisaatio o ON u.urakoitsija = o.id
+ WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi;
 
 -- name: hae-paallystykset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat
