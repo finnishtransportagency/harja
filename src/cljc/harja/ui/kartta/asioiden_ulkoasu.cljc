@@ -4,7 +4,8 @@
             [clojure.string :as str]
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
-            [harja.domain.vesivaylat.turvalaite :as tu]))
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -313,28 +314,25 @@
     :dash [3 9]
     :width 3}])
 
-(defn tarkastuksen-ikoni [valittu? ok? havainnot vakiohavainnot talvihoitomittaus soratiemittaus reitti? tekija]
+(defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond
     reitti? nil
     (not ok?)
     (pinni-ikoni (case tekija
-                   :tilaaja (:ei-ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
-                   :konsultti (:ei-ok-tarkastus-konsultti tiepuolen-viivojen-varit)
-                   :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
-                   (:ei-ok-tarkastus tiepuolen-viivojen-varit)))
+                   :tilaaja (:ei-ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
+                   :konsultti (:ei-ok-tarkastus-konsultti tiepuolen-ikonien-varit)
+                   :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
+                   (:ei-ok-tarkastus tiepuolen-ikonien-varit)))
 
-    (or (not-empty vakiohavainnot)
-        (not-empty havainnot)
-        (not-empty talvihoitomittaus)
-        (not-empty soratiemittaus))
-    (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-viivojen-varit))
+    (tarkastus-domain/tarkastus-sisaltaa-havaintoja? tarkastus)
+    (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-ikonien-varit))
 
     ok?
     (pinni-ikoni (case tekija
-                   :tilaaja (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)
-                   :konsultti (:ok-tarkastus-konsultti tiepuolen-viivojen-varit)
-                   :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-viivojen-varit)
-                   (:ok-tarkastus tiepuolen-viivojen-varit)))))
+                   :tilaaja (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
+                   :konsultti (:ok-tarkastus-konsultti tiepuolen-ikonien-varit)
+                   :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
+                   (:ok-tarkastus tiepuolen-ikonien-varit)))))
 
 (defn tarkastuksen-reitti [{:keys [ok? tekija] :as tarkastus}]
   (if-not ok? ;;laadunalitus

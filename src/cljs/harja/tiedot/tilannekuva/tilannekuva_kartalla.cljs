@@ -86,8 +86,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
   (muodosta-kuva-karttataso
-   :tilannekuva-tarkastukset (set/union esitettavat-asiat/tarkastus-selitteet
-                                        esitettavat-asiat/tarkastus-selitteet-tie)
+   :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet-reiteille
    @url-hakuparametrit))
 
 (defmethod muodosta-karttataso :tyokoneet [taso {:keys [tehtavat viimeisin]}]
