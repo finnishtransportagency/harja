@@ -90,11 +90,20 @@
    [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
+(defn- varmistusdialogi-sisalto [toimenpiteet]
+  [:div
+   (when (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
+     [:p "Osa siirrettävistä toimenpiteistä kuuluu tilaukseen. Siirrettävät toimenpiteet irrotetaan tilauksesta."])
+   (when (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet))
+     [:p "Osa siirrettävistä toimenpiteistä sisältää hinnoittelutietoja, jotka poistetaan siirron yhteydessä."])
+   [:p "Haluatko jatkaa?"]])
+
 (defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
-  (if (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
+  (if (or (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
+          (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet)))
     (varmista-kayttajalta/varmista-kayttajalta
       {:otsikko "Siirto kokonaishintaisiin"
-       :sisalto [:div "Osa siirrettävistä toimenpiteistä kuuluu tilaukseen. Siirrettävät toimenpiteet irrotetaan tilauksesta. Haluatko jatkaa?"]
+       :sisalto (varmistusdialogi-sisalto toimenpiteet)
        :hyvaksy "Siirrä kokonaishintaisiin"
        :toiminto-fn #(e! (tiedot/->SiirraValitutKokonaishintaisiin))})
     (e! (tiedot/->SiirraValitutKokonaishintaisiin))))
