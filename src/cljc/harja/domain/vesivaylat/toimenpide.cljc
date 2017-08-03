@@ -402,6 +402,9 @@ reimari-tilat
 (defn toimenpiteilla-kiintioita? [toimenpiteet]
   (not (empty? (keep ::kiintio toimenpiteet))))
 
+(defn toimenpiteilla-hintaryhmia? [toimenpiteet]
+  (not (empty? (keep ::hintaryhma-id toimenpiteet))))
+
 ;; Palvelut
 
 (s/def ::hae-vesivaylien-toimenpiteet-kysely

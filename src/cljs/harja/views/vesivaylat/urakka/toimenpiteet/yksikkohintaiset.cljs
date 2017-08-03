@@ -23,7 +23,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;;;;;;;
@@ -89,11 +90,20 @@
    [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
+(defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
+  (if (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
+    (varmista-kayttajalta/varmista-kayttajalta
+      {:otsikko "Siirto kokonaishintaisiin"
+       :sisalto [:div "Osa siirrettävistä toimenpiteistä kuuluu tilaukseen. Siirrettävät toimenpiteet irrotetaan tilauksesta. Haluatko jatkaa?"]
+       :hyvaksy "Siirrä kokonaishintaisiin"
+       :toiminto-fn #(e! (tiedot/->SiirraValitutKokonaishintaisiin))})
+    (e! (tiedot/->SiirraValitutKokonaishintaisiin))))
+
 (defn- urakkatoiminnot [e! app]
   [^{:key "siirto"}
   [jaettu/siirtonappi e! app
    "Siirrä kokonaishintaisiin"
-   #(e! (tiedot/->SiirraValitutKokonaishintaisiin))
+   #(valmistele-toimenpiteiden-siirto e! (:toimenpiteet app))
    #(oikeudet/on-muu-oikeus? "siirrä-kokonaishintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                              (:id @nav/valittu-urakka))]
