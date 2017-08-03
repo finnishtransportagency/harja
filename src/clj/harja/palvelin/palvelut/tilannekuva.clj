@@ -143,7 +143,7 @@
                                                                           :tilaaja? (roolit/tilaajan-kayttaja? user))))))
 
 (defn- hae-yllapitokohteet
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi]} urakat]
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
   ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
   ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
@@ -171,12 +171,16 @@
                               "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               (konv/sql-date loppu)
-                                                                               (konv/sql-date alku))
+                                                                               {:loppu (konv/sql-date loppu)
+                                                                                :alku (konv/sql-date alku)})
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                           (konv/sql-date loppu)
-                                                                           (konv/sql-date alku)))))
-            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id)
+                                                                           {:loppu (konv/sql-date loppu)
+                                                                            :alku (konv/sql-date alku)}))))
+            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
+                                                                  {:alue alue
+                                                                   :toleranssi toleranssi})
+            vastaus (remove #(empty? (:kohdeosat %)) vastaus)
+
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus

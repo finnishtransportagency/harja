@@ -70,13 +70,14 @@
                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
                 "Ei laatupoikkeamia")}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-       (if (or (= :paallystys nakyma)
-               (= :paikkaus nakyma)
-               (= :tiemerkinta nakyma))
+       (when (or (= :paallystys nakyma)
+                 (= :paikkaus nakyma)
+                 (= :tiemerkinta nakyma))
          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                               :nimi (get-in rivi [:yllapitokohde :nimi])}))}
+                                                               :nimi (get-in rivi [:yllapitokohde :nimi])}))})
+       (when (= :hoito nakyma)
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        (when-not (urakka/vesivaylaurakkatyyppi? nakyma)
          {:otsikko "TR-osoite"

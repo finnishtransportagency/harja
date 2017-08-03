@@ -552,7 +552,7 @@
                               :loppuet 1
                               :losa 17
                               :numero 20}
-          alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
+          alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))
           oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
                                                      :ajorata 1
                                                      :aosa 14
@@ -569,9 +569,9 @@
                                                 :numero 20}]
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
       (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
-      (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
+      (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
-      (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
+      (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
           "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
 
       (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
@@ -744,8 +744,8 @@
                                   :kaista 1}
               odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
               odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
-              alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)]
+              alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
           (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
-          (is (= odotettu-1-alikohteen-osoite (first alikohteiden-tr-osoitteet)))
-          (is (= odotettu-2-alikohteen-osoite (second alikohteiden-tr-osoitteet))))))))
+          (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
+          (is (alikohteiden-tr-osoitteet odotettu-2-alikohteen-osoite)))))))
