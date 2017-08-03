@@ -32,7 +32,8 @@
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :kokonaishintainen)
-        (hinnoittelut-q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))))
+        (hinnoittelut-q/poista-toimenpiteet-hintaryhmistaan! db user (::to/idt tiedot))
+        (hinnoittelut-q/poista-toimenpiteet-omista-hinnoitteluista! db user (::to/idt tiedot))))
     (::to/idt tiedot)))
 
 (defn hae-kokonaishintaiset-toimenpiteet [db user tiedot]
