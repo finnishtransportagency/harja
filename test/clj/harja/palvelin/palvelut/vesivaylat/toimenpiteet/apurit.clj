@@ -25,6 +25,12 @@
                                          " AND \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS TRUE AND poistettu IS NOT TRUE)
                                            AND poistettu IS NOT TRUE")))))
 
+(defn hae-toimenpiteiden-omien-hinnoittelujen-idt [toimenpide-idt]
+  (set (keep :hinnoittelu-id (q-map (str "SELECT \"hinnoittelu-id\" FROM vv_hinnoittelu_toimenpide
+                                          WHERE \"toimenpide-id\" IN ( " (str/join ", " toimenpide-idt) ")"
+                                         " AND \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS FALSE AND poistettu IS NOT FALSE)
+                                           AND poistettu IS NOT TRUE")))))
+
 (defn hae-yksikkohintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide

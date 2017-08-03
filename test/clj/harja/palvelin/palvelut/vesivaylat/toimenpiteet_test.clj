@@ -92,6 +92,7 @@
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         hintaryhma-idt-ennen (apurit/hae-toimenpiteiden-hintaryhma-idt yksikkohintaiset-toimenpide-idt)
+        omat-hinnoittelu-idt-ennen (apurit/hae-toimenpiteiden-omien-hinnoittelujen-idt yksikkohintaiset-toimenpide-idt)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}
@@ -99,6 +100,7 @@
                                 :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
                                 kysely-params)
         hintaryhma-idt-jalkeen (apurit/hae-toimenpiteiden-hintaryhma-idt yksikkohintaiset-toimenpide-idt)
+        omat-hinnoittelu-idt-jalkeen (apurit/hae-toimenpiteiden-omien-hinnoittelujen-idt yksikkohintaiset-toimenpide-idt)
         nykyiset-kokonaishintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         siirrettyjen-uudet-tyypit (apurit/hae-toimenpiteiden-tyyppi yksikkohintaiset-toimenpide-idt)]
 
@@ -106,12 +108,14 @@
     (is (s/valid? ::toi/siirra-toimenpiteet-kokonaishintaisiin-vastaus vastaus))
 
     (is (not (empty? hintaryhma-idt-ennen)) "Testi vaatii, että joku toimenpide kuuluu hintaryhmään")
+    (is (not (empty? omat-hinnoittelu-idt-ennen)) "Testi vaatii, että joku toimenpide sisältää omat hinnoittelutiedot")
 
     (is (= vastaus yksikkohintaiset-toimenpide-idt) "Vastauksena siirrettyjen id:t")
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "kokonaishintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")
 
-    (is (empty? hintaryhma-idt-jalkeen) "Toimenpiteet irrotettiin hintaryhmistä")))
+    (is (empty? hintaryhma-idt-jalkeen) "Toimenpiteet irrotettiin hintaryhmistä")
+    (is (empty? omat-hinnoittelu-idt-jalkeen) "Toimenpiteet irrotettiin omista hinnoitteluista")))
 
 (deftest siirra-toimenpide-kokonaishintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
