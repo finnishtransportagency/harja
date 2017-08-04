@@ -172,6 +172,16 @@ WHERE hallintayksikko = :hallintayksikko
                OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = urk.id)));
 
+-- name: listaa-aikavalilla-kaynnissaolevat-hoitourakat-hallintayksikolle
+-- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat
+SELECT id, nimi, indeksi
+  FROM urakka u
+ WHERE u.hallintayksikko = :hallintayksikkoid AND
+       u.tyyppi = 'hoito' AND
+       (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
+        u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
+       u.urakkanro IS NOT NULL;
+
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
 SELECT

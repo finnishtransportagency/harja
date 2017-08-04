@@ -1,11 +1,14 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+            [harja.kyselyt.urakat :as urakat-q]
+
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
             [clj-time.local :as l]
             [harja.fmt :as fmt]
@@ -25,14 +28,14 @@
     (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
     (let [tulos (vec
-            (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
-                     (into []
-                           (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                                      (konv/sql-date hk-alkupvm)
-                                                                      (konv/sql-date hk-loppupvm)
-                                                                      (konv/sql-date alkupvm)
-                                                                      (konv/sql-date loppupvm)
-                                                                      urakka-id))))]
+                  (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
+                           (into []
+                                 (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                                            (konv/sql-date hk-alkupvm)
+                                                                            (konv/sql-date hk-loppupvm)
+                                                                            (konv/sql-date alkupvm)
+                                                                            (konv/sql-date loppupvm)
+                                                                            urakka-id))))]
       #_(log/debug (pr-str tulos))
       tulos)))
 
@@ -66,30 +69,30 @@
    laskutettu-teksti laskutetaan-teksti
    yhteenveto yhteenveto-teksti summa-fmt]
   [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
-             :viimeinen-rivi-yhteenveto? true}
-  (rivi
-    {:otsikko otsikko :leveys 36}
-    (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
-    (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
-    {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})
+              :viimeinen-rivi-yhteenveto? true}
+   (rivi
+     {:otsikko otsikko :leveys 36}
+     (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
+     (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
+     {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})
 
-  (into []
-        (concat
-          (map (fn [[nimi {laskutettu :tulos laskutettu-ind-puuttui? :indeksi-puuttui?}
-                     {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}]]
-                 (rivi
-                   nimi
-                   (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
-                                                                :tyyli (when laskutettu-ind-puuttui? :virhe)}])
-                   (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
-                                                                :tyyli (when laskutetaan-ind-puuttui? :virhe)}])
-                   (if (and laskutettu laskutetaan)
-                     [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
-                                          :tyyli (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
-                                                  :virhe)}]
-                     [:varillinen-teksti {:arvo (summa-fmt nil)
-                                          :tyyli :virhe}]))) taulukon-tiedot)
-          [yhteenveto]))])
+   (into []
+         (concat
+           (map (fn [[nimi {laskutettu :tulos laskutettu-ind-puuttui? :indeksi-puuttui?}
+                      {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}]]
+                  (rivi
+                    nimi
+                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
+                                                                 :tyyli (when laskutettu-ind-puuttui? :virhe)}])
+                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
+                                                                 :tyyli (when laskutetaan-ind-puuttui? :virhe)}])
+                    (if (and laskutettu laskutetaan)
+                      [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
+                                           :tyyli (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
+                                                    :virhe)}]
+                      [:varillinen-teksti {:arvo (summa-fmt nil)
+                                           :tyyli :virhe}]))) taulukon-tiedot)
+           [yhteenveto]))])
 
 (defn- summaa-korotetut
   [rivit]
@@ -187,10 +190,46 @@
     (concat [(assoc-in ensimmainen [1 :sheet-nimi] "Laskutusyhteenveto")]
             muut)))
 
-(defn suorita [db user {:keys [alkupvm loppupvm urakka-id] :as parametrit}]
+(def laskettavat-kentat
+  [:kht_laskutettu :kht_laskutetaan
+   :yht_laskutettu :yht_laskutetaan
+   :sakot_laskutettu :sakot_laskutetaan
+   :suolasakot_laskutettu :suolasakot_laskutetaan
+   :muutostyot_laskutettu :muutostyot_laskutetaan
+   :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan
+   :vahinkojen_korjaukset_laskutettu :vahinkojen_korjaukset_laskutetaan
+   :bonukset_laskutettu :bonukset_laskutetaan
+   :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan
+   :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus
+   :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus
+   :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus
+   :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus
+   :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus
+   :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus
+   :vahinkojen_korjaukset_laskutettu_ind_korotus :vahinkojen_korjaukset_laskutetaan_ind_korotus
+   :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus
+   :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus
+   :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus
+   :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus])
+
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [{urakan-nimi :nimi indeksi :indeksi} (first (urakat-q/hae-urakka db urakka-id))
-        indeksi-kaytossa? (some? indeksi)
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :urakka)
+        {alueen-nimi :nimi indeksi :indeksi} (first
+                                               (if (= konteksti :hallintayksikko)
+                                                 (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
+                                                 (urakat-q/hae-urakka db urakka-id)))
+        urakat (when (= konteksti :hallintayksikko)
+                 (urakat-q/listaa-aikavalilla-kaynnissaolevat-hoitourakat-hallintayksikolle
+                   db {:alkupvm alkupvm :loppupvm loppupvm :hallintayksikkoid hallintayksikko-id}))
+
+        urakka-idt (if (= konteksti :urakka)
+                     [urakka-id]
+                     (mapv :id urakat))
+        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id %) urakka-idt)
+        indeksi-kaytossa? (or hallintayksikko-id (some? indeksi))
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
@@ -202,28 +241,38 @@
                                  (if kyseessa-vuosi-vali?
                                    (str "Vuonna " (pvm/vuosi (l/to-local-date-time alkupvm)) " yhteensä" " \u20AC")
                                    (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) " yhteensä"))))
-        tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
+        laskutusyhteenvedot (mapv (fn [urakan-parametrit]
+                                    (hae-laskutusyhteenvedon-tiedot db user urakan-parametrit))
+                                  urakoiden-parametrit)
+        tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
+        kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
+        kaikki-tuotteittain-summattuna (fmap #(apply merge-with +
+                                                     (map (fn [rivi]
+                                                            (select-keys rivi laskettavat-kentat))
+                                                          %))
+                                             kaikki-tuotteittain)
+        tiedot (into []
+                     (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
         avaimet (map name (keys (first tiedot)))
         ;; poistetaan suolasakot-kentät, koska sen nil voi aiheutua myös lämpötilojen puuttumisesta.
         ;; Halutaan selvittää mahd. tarkasti erikseen puuttuuko indeksiarvoja, lämpötiloja vai molempia
         laskutettu-korotus-kentat (mapv keyword (filter #(and
-                                                          (re-find #"laskutettu_ind_korotus" %)
-                                                          (not (re-find #"suolasakot_laskutettu_ind_korotus" %))) avaimet))
+                                                           (re-find #"laskutettu_ind_korotus" %)
+                                                           (not (re-find #"suolasakot_laskutettu_ind_korotus" %))) avaimet))
         laskutetaan-korotus-kentat (mapv keyword (filter #(and
-                                                           (re-find #"laskutetaan_ind_korotus" %)
-                                                           (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
+                                                            (re-find #"laskutetaan_ind_korotus" %)
+                                                            (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
         indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
         indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
+
         perusluku (:perusluku (first tiedot))
         kkn-indeksiarvo (when kyseessa-kk-vali?
                           (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
-        _ (log/debug "talvisuolasakko käytössä?" talvisuolasakko-kaytossa?)
         suolasakkojen-laskenta-epaonnistui? (some
                                               #(nil? (val %))
                                               (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
                                                            [:suolasakot_laskutetaan :suolasakot_laskutettu]))
-        _ (log/debug "suolasakkojen-laskenta-epaonnistui?" suolasakkojen-laskenta-epaonnistui?)
         nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkojen-laskenta-epaonnistui?)
                                         (first (keep #(true? (:lampotila_puuttuu %))
                                                      tiedot)))
@@ -253,7 +302,7 @@
 
         varoitus-tietojen-puuttumisesta
         (when (or (not (str/blank? varoitus-indeksitietojen-puuttumisesta))
-                (not (str/blank? varoitus-lampotilojen-puuttumisesta)))
+                  (not (str/blank? varoitus-lampotilojen-puuttumisesta)))
           [:varoitusteksti (str varoitus-indeksitietojen-puuttumisesta
                                 varoitus-lampotilojen-puuttumisesta
                                 vain-jvh-voi-muokata-tietoja-viesti)])
@@ -345,11 +394,17 @@
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
-                [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
-                (when (and indeksi-kaytossa? perusluku)
+                [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
+                (when (and indeksi-kaytossa? perusluku urakka-id)
                   (yleinen/indeksitiedot {:perusluku perusluku :kyseessa-kk-vali? kyseessa-kk-vali?
                                           :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo}))
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
-                  taulukot)]))))
+                  taulukot)
+
+                (when (and hallintayksikko-id (< 0 (count urakat)))
+                  [:otsikko "Raportti sisältää seuraavien urakoiden tiedot: "])
+                (when (and hallintayksikko-id (< 0 (count urakat)))
+                  (for [u (sort-by :nimi urakat)]
+                    [:teksti (:nimi u)]))]))))

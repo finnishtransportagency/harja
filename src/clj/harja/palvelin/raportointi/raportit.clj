@@ -55,7 +55,7 @@
 
    {:nimi :laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti #{"urakka"}
+    :konteksti #{"hallintayksikko" "urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita
     :urakkatyyppi #{:hoito}}
