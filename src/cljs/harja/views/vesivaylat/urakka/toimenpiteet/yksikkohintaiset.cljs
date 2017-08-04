@@ -107,6 +107,9 @@
          {:varmistusehto ::to/oma-hinnoittelu
           :valitut-toimenpiteet valitut-toimenpiteet
           :nayta-max 5
+          :toimenpide-lisateksti-fn #(str "Hinta: " (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
+                                                                    (get-in % [::to/oma-hinnoittelu ::h/hinnat])))
+                                          ".")
           :varmistusteksti-header "Seuraavat toimenpiteet sisältävät hinnoittelutietoja:"
           :varmistusteksti-footer "Näiden toimenpiteiden hinnoittelutiedot poistetaan siirron aikana."}))
      [:p "Haluatko jatkaa?"]]))
