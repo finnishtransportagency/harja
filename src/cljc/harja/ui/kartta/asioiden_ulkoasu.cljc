@@ -254,11 +254,6 @@
 (defn tyokoneen-nuoli [nuolen-vari]
   (toteuman-nuoli nuolen-vari))
 
-(defn yllapidon-ikoni []
-  {:paikka [:loppu]
-   :tyyppi :merkki
-   :img (:yllapito tiepuolen-ikonien-varit)})
-
 (defn yllapidon-viiva [valittu? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
         leveydet (range (cond

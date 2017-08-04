@@ -356,10 +356,8 @@ hakutiheys-historiakuva 1200000)
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
 (defn- kasittele-tilannekuvan-hakutulos [tulos]
-  (let [paallystykset (yllapitokohteet/yllapitokohteet-kartalle (:paallystys tulos))
-        paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
-  (assoc tulos :paallystys paallystykset
-               :paikkaus paikkaukset)))
+  (let [paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
+  (assoc tulos :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
