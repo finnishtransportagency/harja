@@ -45,11 +45,11 @@
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
 
-;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
+
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
 (defn- validoi-merkkiasetukset [merkit]
   (cond
-    (empty? merkit) [{}]
+    (empty? merkit) []
     (string? merkit) [{:img merkit}]
     (map? merkit) [merkit]
     :else merkit))
@@ -345,7 +345,7 @@
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
-        ikoni [] ;; ei ikonia
+        ikoni nil ;; ei ikonia
         viiva (ulkoasu/yllapidon-viiva valittu? tila-kartalla tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
