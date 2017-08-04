@@ -256,7 +256,7 @@
     {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true :tekija :urakoitsija}))}
     {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true :havainnot "Vesakko raivaamatta"}))}
     {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true
-                                                                                                                 :havainnot "Lumista"}))}
+                                                                                                                 :vakiohavainnot #{"Lumista"}}))}
     {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false}))}
     {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false :tekija :urakoitsija}))}})
 
