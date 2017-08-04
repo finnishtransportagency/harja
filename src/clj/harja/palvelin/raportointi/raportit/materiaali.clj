@@ -34,7 +34,7 @@
                                (assoc materiaalitoteuma :kokonaismaara 0)
                                materiaalitoteuma))
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
-    lopullinen-tulos))
+    (sort-by :elynumero lopullinen-tulos)))
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
@@ -118,7 +118,7 @@
                  :sheet-nimi raportin-nimi}
       (into []
             (concat
-              [{:otsikko "Urakka"}]
+              [{:otsikko (if (= konteksti :koko-maa) "Hallintayksikkö" "Urakka")}]
               (map (fn [mat]
                      {:otsikko mat :fmt :numero})
                    materiaaliotsikot)))

@@ -15,8 +15,10 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 (defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
@@ -41,6 +43,23 @@
                                                 oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                 (:id @nav/valittu-urakka))))}])
 
+(defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet]
+  (let [valitut-toimenpiteet (filter :valittu? toimenpiteet)]
+    (if (to/toimenpiteilla-kiintioita? valitut-toimenpiteet)
+      (varmista-kayttajalta/varmista-kayttajalta
+        {:otsikko "Siirto yksikköhintaisiin"
+         :sisalto
+         [jaettu/varmistusdialog-ohje {:varmistusehto ::to/kiintio
+                                       :valitut-toimenpiteet valitut-toimenpiteet
+                                       :nayta-max 10
+                                       :toimenpide-lisateksti-fn #(str "Kiintiö: " (get-in % [::to/kiintio ::kiintio/nimi]) ".")
+                                       :varmistusteksti-header "Seuraavat toimenpiteet kuuluvat kiintiöön:"
+                                       :varmistusteksti-footer "Nämä toimenpiteet irrotetaan kiintiöstä siirron aikana. Haluatko jatkaa?"}]
+
+         :hyvaksy "Siirrä yksikköhintaisiin"
+         :toiminto-fn #(e! (tiedot/->SiirraValitutYksikkohintaisiin))})
+      (e! (tiedot/->SiirraValitutYksikkohintaisiin)))))
+
 (defn- liita-kiintioon [e! app]
   [:span
    [:span {:style {:margin-right "10px"}} "Liitä valitut kiintiöön"]
@@ -52,7 +71,7 @@
   [jaettu/siirtonappi e!
    app
    "Siirrä yksikköhintaisiin"
-   #(e! (tiedot/->SiirraValitutYksikkohintaisiin))
+   #(valmistele-toimenpiteiden-siirto e! (:toimenpiteet app))
    #(oikeudet/on-muu-oikeus? "siirrä-yksikköhintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                              (:id @nav/valittu-urakka))]
