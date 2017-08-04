@@ -100,6 +100,8 @@
                                 :siirra-toimenpiteet-kokonaishintaisiin +kayttaja-jvh+
                                 kysely-params)
         hintaryhma-idt-jalkeen (apurit/hae-toimenpiteiden-hintaryhma-idt yksikkohintaiset-toimenpide-idt)
+        omat-hinnoittelut-poistettu-jalkeen (apurit/hae-hinnoittelujen-poistotiedot omat-hinnoittelu-idt-ennen)
+        omat-hinnat-poistettu-jalkeen (apurit/hae-hintojen-poistotiedot omat-hinnoittelu-idt-ennen)
         omat-hinnoittelu-idt-jalkeen (apurit/hae-toimenpiteiden-omien-hinnoittelujen-idt yksikkohintaiset-toimenpide-idt)
         nykyiset-kokonaishintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         siirrettyjen-uudet-tyypit (apurit/hae-toimenpiteiden-tyyppi yksikkohintaiset-toimenpide-idt)]
@@ -115,7 +117,9 @@
     (is (every? #(= % "kokonaishintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")
 
     (is (empty? hintaryhma-idt-jalkeen) "Toimenpiteet irrotettiin hintaryhmistä")
-    (is (empty? omat-hinnoittelu-idt-jalkeen) "Toimenpiteet irrotettiin omista hinnoitteluista")))
+    (is (empty? omat-hinnoittelu-idt-jalkeen) "Toimenpiteet irrotettiin omista hinnoitteluista")
+    (is (every? true? omat-hinnoittelut-poistettu-jalkeen) "Entiset hinnoittelut merkittiin poistetuksi")
+    (is (every? true? omat-hinnat-poistettu-jalkeen) "Entiset hinnat merkittiin poistetuksi")))
 
 (deftest siirra-toimenpide-kokonaishintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
