@@ -84,13 +84,13 @@
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      (str/includes? (:vakiohavainnot data) "Liukasta"))))
+      ((:vakiohavainnot data) "Liukasta"))))
 
 (defn luminen-vakiohavainto? [data]
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      (str/includes? (:vakiohavainnot data) "Lumista"))))
+      ((:vakiohavainnot data) "Lumista"))))
 
 (defn luminen-tai-liukas-vakiohavainto? [data]
   (boolean
