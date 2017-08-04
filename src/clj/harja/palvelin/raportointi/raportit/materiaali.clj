@@ -118,7 +118,7 @@
                  :sheet-nimi raportin-nimi}
       (into []
             (concat
-              [{:otsikko "Urakka"}]
+              [{:otsikko (if (= konteksti :koko-maa) "Hallintayksikkö" "Urakka")}]
               (map (fn [mat]
                      {:otsikko mat :fmt :numero})
                    materiaaliotsikot)))
