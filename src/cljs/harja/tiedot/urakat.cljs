@@ -16,6 +16,12 @@
 (defn hae-hallintayksikon-urakat [hallintayksikko]
   (k/post! :hallintayksikon-urakat (:id hallintayksikko) urakka-xf))
 
+(defn aiheuta-errori []
+  (let [a (aiheuta-toinen-errori)]
+    a))
+(defn aiheuta-toinen-errori []
+  (WAAAT!))
+
 (def urakka-haku
   "Yleinen urakoista hakeva hakulähde."
   (reify Haku

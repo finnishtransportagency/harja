@@ -18,7 +18,8 @@
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [cljs.source-map :as sm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -30,6 +31,7 @@
         [:span
          [:h5.haku-otsikko "Valitse hallintayksikkö"]
          [:div
+          [:button {:on-click #(ur/aiheuta-errori)} "error"]
           ^{:key "hy-lista"}
           [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
