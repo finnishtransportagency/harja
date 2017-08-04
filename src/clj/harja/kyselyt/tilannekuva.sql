@@ -282,7 +282,8 @@ SELECT ypko.id,
        ypka.tiemerkinta_loppu AS "yllapitokohde_tiemerkinta-loppupvm",
        ypka.kohde_valmis AS "yllapitokohde_kohde-valmispvm",
        u.nimi AS yllapitokohde_urakka,
-       o.nimi AS yllapitokohde_urakoitsija
+       o.nimi AS yllapitokohde_urakoitsija,
+       ypk.id AS "yllapitokohde-id"
   FROM yllapitokohdeosa ypko
        JOIN yllapitokohde ypk ON ypk.id = ypko.yllapitokohde
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
