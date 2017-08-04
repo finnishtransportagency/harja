@@ -44,7 +44,7 @@
     :on-click #(do
                  (.stopPropagation %)
                  (varmista-kayttajalta/varmista-kayttajalta
-                   {:otsikko "Poista liite?"
+                   {:otsikko "Liitteen poistaminen"
                     :sisalto (str "Haluatko varmasti poistaa liitteen " (:nimi liite) "?")
                     :hyvaksy "Poista"
                     :toiminto-fn (fn []
