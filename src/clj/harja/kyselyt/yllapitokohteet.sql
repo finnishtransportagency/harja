@@ -326,6 +326,33 @@ FROM yllapitokohdeosa ypko
 WHERE yllapitokohde IN (:idt)
       AND ypko.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-yllapitokohteiden-yllapitokohdeosat-alueelle
+-- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
+SELECT
+  ypko.id,
+  ypk.id                AS "yllapitokohde-id",
+  ypko.nimi,
+  ypko.tunnus,
+  ypko.tr_numero        AS "tr-numero",
+  ypko.tr_alkuosa       AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "tr-ajorata",
+  ypko.tr_kaista        AS "tr-kaista",
+  paallystetyyppi,
+  raekoko,
+  tyomenetelma,
+  massamaara            AS "massamaara",
+  toimenpide,
+  ST_Simplify(sijainti, :toleranssi) AS sijainti
+FROM yllapitokohdeosa ypko
+  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+                            AND ypk.poistettu IS NOT TRUE
+WHERE yllapitokohde IN (:idt)
+      AND ypko.poistettu IS NOT TRUE
+      AND ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti);
+
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
@@ -410,12 +437,13 @@ VALUES (:yllapitokohde,
   :tyomenetelma,
   :massamaara,
   :ulkoinen-id,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+  (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+   FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                          CAST(:tr_alkuosa AS INTEGER),
+                                          CAST(:tr_alkuetaisyys AS INTEGER),
+                                          CAST(:tr_loppuosa AS INTEGER),
+                                          CAST(:tr_loppuetaisyys AS INTEGER),
+                                          CAST(:tr_ajorata AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
@@ -455,12 +483,13 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
-  sijainti         = (SELECT tierekisteriosoitteelle_viiva AS geom
-                      FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                                         CAST(:tr_alkuosa AS INTEGER),
-                                                         CAST(:tr_alkuetaisyys AS INTEGER),
-                                                         CAST(:tr_loppuosa AS INTEGER),
-                                                         CAST(:tr_loppuetaisyys AS INTEGER)))
+  sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+                      FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                                             CAST(:tr_alkuosa AS INTEGER),
+                                                             CAST(:tr_alkuetaisyys AS INTEGER),
+                                                             CAST(:tr_loppuosa AS INTEGER),
+                                                             CAST(:tr_loppuetaisyys AS INTEGER),
+                                                             CAST(:tr_ajorata AS INTEGER)))
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde

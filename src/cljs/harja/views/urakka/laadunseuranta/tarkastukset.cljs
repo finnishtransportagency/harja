@@ -496,7 +496,7 @@
                                   tarkastus-ja-laatupoikkeama)))
                             {:disabled (not (lomake/voi-tallentaa? tarkastus))
                              :kun-onnistuu (fn [tarkastus]
-                                             (reset! tarkastus-atom tarkastus)
+                                             (reset! tarkastus-atom nil)
                                              (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
                              :virheviesti "Tarkastuksen tallennus epäonnistui."
                              :ikoni (ikonit/livicon-arrow-right)

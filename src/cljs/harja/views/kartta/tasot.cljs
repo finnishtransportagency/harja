@@ -167,7 +167,7 @@
       (into []
            (keep organisaation-geometria)
            (urakat-ja-organisaatiot-kartalla*
-             @hal/hallintayksikot
+             @hal/vaylamuodon-hallintayksikot
              @nav/valittu-hallintayksikko
              @nav/valittu-urakka
              @nav/valittu-sivu

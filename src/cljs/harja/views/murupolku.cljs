@@ -55,7 +55,7 @@
 
      ;; Alasvetovalikko yksikön nopeaa vaihtamista varten
      [:ul.dropdown-menu.livi-alasvetolista {:role "menu"}
-      (for [muu-yksikko (filter #(not= % valittu) @hal/hallintayksikot)]
+      (for [muu-yksikko (filter #(not= % valittu) @hal/vaylamuodon-hallintayksikot)]
         ^{:key (str "hy-" (:id muu-yksikko))}
         [:li.harja-alasvetolistaitemi
          [linkki (hal/elynumero-ja-nimi muu-yksikko)
