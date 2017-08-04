@@ -184,12 +184,8 @@
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                           (if nykytilanne?
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
                               "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               {:loppu (konv/sql-date loppu)
-                                                                                :alku (konv/sql-date alku)})
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            {:loppu (konv/sql-date loppu)
                                                                             :alku (konv/sql-date alku)}))))
@@ -209,7 +205,13 @@
   "Hakee indikaattoritiedon siitä milloin päällystystyöt ovat muuttuneet viimeksi.
   Frontti käyttää tätä tietoa uuden karttatason luomiseen."
   [db user {nykytilanne? :nykytilanne? yllapito :yllapito} urakat]
-  (when (tk/valittu? yllapito tk/paallystys)
+  (when (and
+         (tk/valittu? yllapito tk/paallystys)
+         (or (not (empty? urakat))
+             (oikeudet/voi-lukea? (if nykytilanne?
+                                    oikeudet/tilannekuva-nykytilanne
+                                    oikeudet/tilannekuva-historia)
+                                  nil user)))
     ;; Indikaattori on merkkijono, joka sisältää tiedon siitä onko nykytilanne (n)
     ;; vai historiakuva (h) sekä viimeisimmän kohteen muutosaikaleiman.
     [(str (if nykytilanne?
@@ -357,10 +359,14 @@
        :organisaatio (get-in user [:organisaatio :id])})))
 
 (defn- hae-paallystysten-reitit
-  [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} _]
+  [db ch user {:keys [toleranssi alue alku loppu nykytilanne?] :as tiedot} _]
   (q/hae-paallystysten-reitit db ch
                               (merge alue
-                                     {:toleranssi toleranssi})))
+                                     {:toleranssi toleranssi
+                                      :nykytilanne nykytilanne?
+                                      :historiakuva (not nykytilanne?)
+                                      :alku alku
+                                      :loppu loppu})))
 (defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
   (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
@@ -649,14 +655,21 @@
 
 (defn hae-paallystysten-tiedot-kartalle
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
-  [db user {:keys [x y] :as parametrit}]
-  (log/info "Hae päällystystiedot: " parametrit)
-  (let [r
-        (into []
-              paallystyskohdeosan-tiedot-xf
-              (q/hae-paallystysten-tiedot db parametrit))]
-    (println "R: " (pr-str r))
-    r))
+  [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
+  (let [urakat (luettavat-urakat user parametrit)]
+    (when (or (not (empty? urakat))
+              (oikeudet/voi-lukea? (if nykytilanne?
+                                     oikeudet/tilannekuva-nykytilanne
+                                     oikeudet/tilannekuva-historia)
+                                   nil user))
+      (into []
+            paallystyskohdeosan-tiedot-xf
+            (q/hae-paallystysten-tiedot db {:x x :y y
+                                            :toleranssi toleranssi
+                                            :nykytilanne nykytilanne?
+                                            :historiakuva (not nykytilanne?)
+                                            :alku alku
+                                            :loppu loppu})))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
