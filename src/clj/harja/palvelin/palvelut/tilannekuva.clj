@@ -662,14 +662,24 @@
                                      oikeudet/tilannekuva-nykytilanne
                                      oikeudet/tilannekuva-historia)
                                    nil user))
-      (into []
-            paallystyskohdeosan-tiedot-xf
-            (q/hae-paallystysten-tiedot db {:x x :y y
-                                            :toleranssi toleranssi
-                                            :nykytilanne nykytilanne?
-                                            :historiakuva (not nykytilanne?)
-                                            :alku alku
-                                            :loppu loppu})))))
+      (let [vastaus (into []
+                          paallystyskohdeosan-tiedot-xf
+                          (q/hae-paallystysten-tiedot db {:x x :y y
+                                                          :toleranssi toleranssi
+                                                          :nykytilanne nykytilanne?
+                                                          :historiakuva (not nykytilanne?)
+                                                          :alku alku
+                                                          :loppu loppu}))
+            yllapitokohteet (map :yllapitokohde vastaus)
+            osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db yllapitokohteet)
+
+            vastaus (mapv (fn [kohdeosa]
+                            (update kohdeosa :yllapitokohde
+                                    #(assoc %
+                                            :pituus
+                                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))))
+                          vastaus)]
+        vastaus))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
