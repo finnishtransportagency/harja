@@ -228,105 +228,74 @@ WHERE
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu);
 
--- name: hae-paallystykset-nykytilanteeseen
--- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat
--- valmistuneet viikon sisällä.
-SELECT
-  ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
-  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
-  ypk.kohdenumero,
-  ypk.nimi,
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  yllapitoluokka,
-  ypk.tr_numero                         AS "tr-numero",
-  ypk.tr_alkuosa                        AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                       AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypk.tr_ajorata                        AS "tr-ajorata",
-  ypk.tr_kaista                         AS "tr-kaista",
-  ypk.yhaid,
-  ypk.yllapitokohdetyyppi,
-  ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku AS "kohde-alkupvm",
-  ypka.paallystys_alku AS "paallystys-alkupvm",
-  ypka.paallystys_loppu AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis AS "kohde-valmispvm",
-  o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
-FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
-  LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
-WHERE ypk.poistettu IS NOT TRUE
-      AND ypk.yllapitokohdetyotyyppi = 'paallystys'
-      AND (ypka.kohde_valmis IS NULL OR
-           (now() - ypka.kohde_valmis) < INTERVAL '7 days');
+-- name: hae-paallystysten-reitit
+-- fetch-size: 64
+-- Hakee päällystystöiden reitit karttapiirtoa varten
+SELECT ypk.id,
+       ypka.kohde_alku AS "kohde-alkupvm",
+       ypka.paallystys_alku AS "paallystys-alkupvm",
+       ypka.paallystys_loppu AS "paallystys-loppupvm",
+       ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+       ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+       ypka.kohde_valmis AS "kohde-valmispvm",
+       ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti
+  FROM yllapitokohde ypk
+       LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+       JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
+ WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+   AND ypk.poistettu IS NOT TRUE
+   AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
+                           (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+        OR
+        (:historiakuva AND (ypka.kohde_alku < :loppu
+                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
 
--- name: hae-paallystykset-historiakuvaan
--- Hakee historiakuvaan kaikki päällystyskohteet, jotka ovat olleet aktiivisia
--- annetulla aikavälillä
-SELECT
-  ypk.id,
-  pi.id                                 AS "paallystysilmoitus-id",
-  pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
-  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
-  ypk.kohdenumero,
-  ypk.nimi,
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  yllapitoluokka,
-  ypk.tr_numero                         AS "tr-numero",
-  ypk.tr_alkuosa                        AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                       AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypk.tr_ajorata                        AS "tr-ajorata",
-  ypk.tr_kaista                         AS "tr-kaista",
-  ypk.yhaid,
-  ypk.yllapitokohdetyyppi,
-  ypk.yllapitokohdetyotyyppi,
-  ypka.kohde_alku AS "kohde-alkupvm",
-  ypka.paallystys_alku AS "paallystys-alkupvm",
-  ypka.paallystys_loppu AS "paallystys-loppupvm",
-  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypka.kohde_valmis AS "kohde-valmispvm",
-  o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
-FROM yllapitokohde ypk
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
-  LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
-WHERE ypk.poistettu IS NOT TRUE
-      AND ypk.yllapitokohdetyotyyppi = 'paallystys'
-      AND (ypka.kohde_alku < :loppu
-           AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku));
+-- name: hae-paallystysten-viimeisin-muokkaus
+-- single?: true
+SELECT MAX(muokattu) FROM yllapitokohde WHERE yllapitokohdetyyppi='paallyste';
+
+-- name: hae-paallystysten-tiedot
+-- Hakee päällystysten tiedot klikkauspisteella
+SELECT ypko.id,
+       ypk.yllapitokohdetyotyyppi AS "yllapitokohde_yllapitokohdetyotyyppi",
+       ypk.nimi as yllapitokohde_nimi,
+       ypk.kohdenumero as yllapitokohde_kohdenumero,
+       ypk.tr_numero as "yllapitokohde_tr-numero",
+       ypk.tr_alkuosa as "yllapitokohde_tr-alkuosa",
+       ypk.tr_alkuetaisyys as "yllapitokohde_tr-alkuetaisyys",
+       ypk.tr_loppuosa as "yllapitokohde_tr-loppuosa",
+       ypk.tr_loppuetaisyys as "yllapitokohde_tr-loppuetaisyys",
+       ypko.nimi,
+       ypko.tr_numero AS "tr-numero",
+       ypko.tr_alkuosa AS "tr-alkuosa",
+       ypko.tr_alkuetaisyys AS "tr-alkuetaisyys",
+       ypko.tr_loppuosa AS "tr-loppuosa",
+       ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+       ypk.nykyinen_paallyste AS "yllapitokohde_nykyinen-paallyste",
+       ypk.keskimaarainen_vuorokausiliikenne AS "yllapitokohde_keskimaarainen-vuorokausiliikenne",
+       ypko.toimenpide,
+       ypka.kohde_alku AS "yllapitokohde_kohde-alkupvm",
+       ypka.paallystys_alku AS "yllapitokohde_paallystys-alkupvm",
+       ypka.paallystys_loppu AS "yllapitokohde_paallystys-loppupvm",
+       ypka.tiemerkinta_alku AS "yllapitokohde_tiemerkinta-alkupvm",
+       ypka.tiemerkinta_loppu AS "yllapitokohde_tiemerkinta-loppupvm",
+       ypka.kohde_valmis AS "yllapitokohde_kohde-valmispvm",
+       u.nimi AS yllapitokohde_urakka,
+       o.nimi AS yllapitokohde_urakoitsija,
+       ypk.id AS "yllapitokohde-id"
+  FROM yllapitokohdeosa ypko
+       JOIN yllapitokohde ypk ON ypk.id = ypko.yllapitokohde
+       LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+       JOIN urakka u ON ypk.urakka = u.id
+       JOIN organisaatio o ON u.urakoitsija = o.id
+ WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
+   AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
+                          (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
+        OR
+        (:historiakuva AND (ypka.kohde_alku < :loppu
+                            AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku))));
 
 -- name: hae-paikkaukset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki paikkauskohteet, jotka eivät ole valmiita tai ovat
