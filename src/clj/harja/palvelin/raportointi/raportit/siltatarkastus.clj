@@ -220,9 +220,12 @@
         yksittaisen-sillan-perustiedot (when (and (= konteksti :urakka)
                                                   (not= silta-id :kaikki))
                                          (first (hae-sillan-tarkastus db {:urakka urakka-id
-                                                                          :vuosi  vuosi
-                                                                          :silta  silta-id})))
+                                                                          :vuosi vuosi
+                                                                          :silta silta-id})))
         datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
+        urakan-vuoden-tarkastusmaarat (when (= konteksti :urakka)
+                                        (first (hae-urakan-tarkastettujen-siltojen-lkm db {:urakka urakka-id
+                                                                                           :vuosi vuosi})))
         raportin-nimi "Siltatarkastusraportti"
         liita (fn [rivi kentta arvo] (assoc (if (map? rivi) rivi {:rivi rivi}) kentta arvo))
         kentta-indeksilla (fn [rivi indeksi] (nth (if (map? rivi) (:rivi rivi) rivi) indeksi))
@@ -268,7 +271,7 @@
                             (cond
                               (and (= konteksti :urakka) (= silta-id :kaikki))
                               (indeksi 1)
-                              
+
                               (and (= konteksti :hallintayksikko))
                               (indeksi 0)
 
@@ -278,11 +281,11 @@
         jarjesta-ryhmien-sisallot (fn [tila-ja-rivit]
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
-                          (let [jarjestys (fn [a b] (let [arvo {[true false]  0 ;; kts. alla oleva juxt
-                                                                [false true]  1
-                                                                [false false] 2}]
-                                                      (< (arvo a) (arvo b))))]
-                            (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe?) rivit))))
+                           (let [jarjestys (fn [a b] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
+                                                                 [false true] 1
+                                                                 [false false] 2}]
+                                                       (< (arvo a) (arvo b))))]
+                             (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe?) rivit))))
         otsikko (case konteksti
                   :urakka
                   (if (= silta-id :kaikki)
@@ -294,16 +297,19 @@
                   (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
                   :koko-maa
                   (str raportin-nimi ", KOKO MAA " vuosi))]
+
+    (println "DEBUGGAA " urakan-vuoden-tarkastusmaarat)
+
     [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
-                 :tyhja                      (if silta-id
-                                               "Sillalle ei ole tehty tarkastusta valittuna vuonna."
-                                               "Ei raportoitavia siltatarkastuksia.")
+                :nimi raportin-nimi}
+     [:taulukko {:otsikko otsikko
+                 :tyhja (if silta-id
+                          "Sillalle ei ole tehty tarkastusta valittuna vuonna."
+                          "Ei raportoitavia siltatarkastuksia.")
                  :viimeinen-rivi-yhteenveto? (or (and (= konteksti :urakka) (= silta-id :kaikki))
                                                  (= konteksti :hallintayksikko)
                                                  (= konteksti :koko-maa))
-                 :sheet-nimi                 raportin-nimi}
+                 :sheet-nimi raportin-nimi}
       otsikkorivit
       (cond
         (and (= konteksti :urakka) (= silta-id :kaikki))
@@ -335,6 +341,23 @@
                         jarjesta))
               (last datarivit))
         :else datarivit)]
+
      (when yksittaisen-sillan-perustiedot
        [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
-                     ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])]))
+                     ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])
+
+     (when (= konteksti :urakka)
+       [:yhteenveto [["Siltoja urakassa" (:sillat-lkm urakan-vuoden-tarkastusmaarat)]
+                     [(str "Tarkastettu " vuosi) (str (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat) " "
+                                                      "(" (fmt/prosentti (* (/ (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat)
+                                                                               (:sillat-lkm urakan-vuoden-tarkastusmaarat))
+                                                                            100))
+                                                      ")")]
+                     [(str "Tarkastamatta " vuosi) (str (- (:sillat-lkm urakan-vuoden-tarkastusmaarat)
+                                                           (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat))
+                                                        " "
+                                                        "(" (fmt/prosentti (* (/ (- (:sillat-lkm urakan-vuoden-tarkastusmaarat)
+                                                                                    (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat))
+                                                                                 (:sillat-lkm urakan-vuoden-tarkastusmaarat))
+                                                                              100))
+                                                        ")")]]])]))
