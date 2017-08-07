@@ -252,20 +252,19 @@ ORDER BY h.elynumero;
 -- name: hae-urakan-tarkastettujen-siltojen-lkm
 SELECT
   (SELECT COUNT(*)
-   FROM (SELECT
-         FROM silta s
-         WHERE s.id IN (SELECT silta
-                        FROM sillat_alueurakoittain
-                        WHERE urakka = :urakka)) as foo) AS "sillat-lkm",
+   FROM silta s
+   WHERE s.id IN (SELECT silta
+                  FROM sillat_alueurakoittain
+                  WHERE urakka = :urakka)) AS "sillat-lkm",
+
   (SELECT COUNT(*)
-   FROM (SELECT
-         FROM silta s
-         WHERE s.id IN (SELECT silta
-                        FROM sillat_alueurakoittain
-                        WHERE urakka = :urakka)
-               AND EXISTS(SELECT tarkastusaika
-                          FROM siltatarkastus st
-                          WHERE st.silta = S.id
-                                AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
-                                AND st.poistettu = FALSE
-                          LIMIT 1)) as foo) AS "tarkastukset-lkm"
+   FROM silta s
+   WHERE s.id IN (SELECT silta
+                  FROM sillat_alueurakoittain
+                  WHERE urakka = :urakka)
+         AND EXISTS(SELECT tarkastusaika
+                    FROM siltatarkastus st
+                    WHERE st.silta = s.id
+                          AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                          AND st.poistettu = FALSE
+                    LIMIT 1))              AS "tarkastukset-lkm"
