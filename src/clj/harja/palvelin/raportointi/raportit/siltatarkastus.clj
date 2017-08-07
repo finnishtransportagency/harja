@@ -346,7 +346,8 @@
        [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
                      ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])
 
-     (when (= konteksti :urakka)
+     (when (and (= konteksti :urakka)
+                (> (:sillat-lkm urakan-vuoden-tarkastusmaarat) 0))
        [:yhteenveto [["Siltoja urakassa" (:sillat-lkm urakan-vuoden-tarkastusmaarat)]
                      [(str "Tarkastettu " vuosi) (str (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat) " "
                                                       "(" (fmt/prosentti (* (/ (:tarkastukset-lkm urakan-vuoden-tarkastusmaarat)
