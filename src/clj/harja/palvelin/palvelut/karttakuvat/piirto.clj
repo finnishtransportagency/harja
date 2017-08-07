@@ -61,13 +61,14 @@
          (fn [kuvat]
            (if (contains? kuvat tiedosto)
              kuvat
-             (assoc kuvat tiedosto
-                    (ImageIO/read
-                     (ClassLoader/getSystemResourceAsStream tiedosto))))))
-  (if-let [kuva (get @kuvat tiedosto)]
-    kuva
-    (do (log/warn "Karttakuvaa " tiedosto " ei voitu ladata!")
-        nil)))
+             (if-let [kuva (try
+                             (ImageIO/read
+                              (ClassLoader/getSystemResourceAsStream tiedosto))
+                             (catch Exception e
+                               (log/warn e (str "Kuvaa \"" tiedosto "\" ei voitu lukea."))))]
+               (assoc kuvat tiedosto kuva)
+               kuvat))))
+  (get @kuvat tiedosto))
 
 (def ^:private
   ;; Rajapinnan tarvima ImageObserver, joka ei tee mitään

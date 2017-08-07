@@ -13,7 +13,8 @@
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [taoensso.timbre :as log])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,7 +34,6 @@
    :tarkastukset           #(assoc % :tyyppi-kartalla :tarkastus)
    :laatupoikkeamat        #(assoc % :tyyppi-kartalla :laatupoikkeama)
    :paikkaus               #(assoc % :tyyppi-kartalla :paikkaus)
-   :paallystys             #(assoc % :tyyppi-kartalla :paallystys)
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
    :tietyomaat    #(assoc % :tyyppi-kartalla :tietyomaa)
    :tietyoilmoitukset #(assoc % :tyyppi-kartalla :tietyoilmoitus)
@@ -94,7 +94,13 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    @url-hakuparametrit
    viimeisin))
 
-(def kuvataso? #{:tarkastukset :toteumat})
+(defmethod muodosta-karttataso :paallystys [taso [ind]]
+  (muodosta-kuva-karttataso
+   :tilannekuva-paallystys esitettavat-asiat/paallystys-selitteet
+   @url-hakuparametrit
+   ind))
+
+(def kuvataso? #{:tarkastukset :toteumat :paallystys})
 
 (defn- yhdista-uudet-tasot [vanhat-tasot uudet-tasot]
   (reduce-kv (fn [nykyiset-tasot nimi taso]
@@ -136,6 +142,10 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
                      ;; kartalla esitettävä muoto
                      (or (not= vanhat-asiat uudet-asiat)
+                         ;; PENDING: Tätä ei varmaan tarvittaisi, koska tason indikaattori
+                         ;; muuttuu kun tasolla tapahtuu relevantti muutos.
+                         ;; Toisaalta kuvat tulevat selaimen cachesta joka tapauksessa
+                         ;; jos indikaattoriarvo on sama.
                          (kuvataso? taso))
                      (assoc uudet-tasot
                             tason-nimi (muodosta-karttataso taso uudet-asiat))

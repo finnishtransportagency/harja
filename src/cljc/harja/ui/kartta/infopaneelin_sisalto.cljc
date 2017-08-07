@@ -188,7 +188,10 @@
                       ;; palvelimelta.
                       (constantly false)))
      :otsikko (case (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-                :paallystys "Päällystyskohde"
+                ;; Näytetään päällystykselle kohteen nimi ja osan TR-osoite
+                :paallystys (str (:nimi (:yllapitokohde yllapitokohdeosa))
+                                 " (" (tr-domain/tierekisteriosoite-tekstina
+                                       yllapitokohdeosa {:teksti-tie? false}) ")")
                 :paikkaus "Paikkauskohde"
                 nil)
      :tiedot [{:otsikko "Kohde" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :nimi]}
