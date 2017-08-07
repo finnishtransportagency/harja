@@ -692,8 +692,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      "Kertoo onko annettu pvm-väli täysi vuosi. Käyttää aikavyöhykekonversiota mistä halutaan ehkä joskus eroon."
      [alkupvm loppupvm]
      (let [alku (l/to-local-date-time alkupvm)
-           loppu (l/to-local-date-time loppupvm)
-           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu)]
+           loppu (l/to-local-date-time loppupvm)]
        (and (= 1 (paiva alku))
             (= 1 (kuukausi alku))
             (= 31 (paiva loppu))
