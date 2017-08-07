@@ -204,7 +204,7 @@
              (map (comp namespacefy/unnamespacefy liitteet) toimenpiteen-liitteet)))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
-                                   tyyppi luotu-alku luotu-loppu urakoitsija-id] :as tiedot}]
+                                   tyyppi urakoitsija-id] :as tiedot}]
   (let [yksikkohintaiset? (= :yksikkohintainen tyyppi)
         kokonaishintaiset? (= :kokonaishintainen tyyppi)
         urakka-id (::vv-toimenpide/urakka-id tiedot)
@@ -233,8 +233,6 @@
                              (op/and
                                {::m/poistettu? false}
                                {::vv-toimenpide/urakka-id urakka-id}
-                               (when (and luotu-alku luotu-loppu)
-                                 {::m/reimari-luotu (op/between luotu-alku luotu-loppu)})
                                (when urakoitsija-id
                                  {::vv-toimenpide/reimari-urakoitsija {::vv-urakoitsija/r-id urakoitsija-id}})
                                (when kokonaishintaiset?
@@ -244,7 +242,7 @@
                                (when sopimus-id
                                  {::vv-toimenpide/sopimus-id sopimus-id})
                                (when (and alku loppu)
-                                 {::vv-toimenpide/reimari-luotu (op/between alku loppu)})
+                                 {::vv-toimenpide/suoritettu (op/between alku loppu)})
                                (when vaylatyyppi
                                  {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
                                (when vayla-id
