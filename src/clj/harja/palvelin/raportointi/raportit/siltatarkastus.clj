@@ -298,8 +298,6 @@
                   :koko-maa
                   (str raportin-nimi ", KOKO MAA " vuosi))]
 
-    (println "DEBUGGAA " urakan-vuoden-tarkastusmaarat)
-
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
