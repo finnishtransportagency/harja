@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-08-07",
+    "title": "HARJA:n siltatarkastusraportilla nähtävillä urakan siltamäärä ja tarkastusprosentti",
+    "body": "Urakkakohtaiselle siltatarkastusraportille on lisätty urakassa olevien siltojen määrä. Lisäksi raportilla näkyy valitun vuoden aikana tehtyjen tarkastusten määrä ja montako siltaa on vielä tarkastamatta. Tämä ominaisuus tulee käyttöön HARJA:an tämän viikon aikana"
+  },
+  {
     "date": "2017-07-27",
     "title": "HARJA:n käyttökatko maanantaina 31.7.2017 kello 19.00-19.15",
     "body": "Liikenneviraston pääsynhallinnassa tehdään huoltotöitä maanantaina 31.7.2017 kello 19.00-19.15. Tällä aikavälillä useimpiin pääsynhallintaan liitettyihin selainsovelluksiin pääsy katkeaa, eikä uudelleen kirjautuminen onnistu. Katkon jälkeen uudelleenkirjautuminen saattaa edellyttää kaikkien selainikkunoiden sulkemista."
