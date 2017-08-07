@@ -45,11 +45,11 @@
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
 
-;; Varmistaa, että merkkiasetukset ovat vähintään [{}].
+
 ;; Jos annettu asetus on merkkijono, palautetaan [{:img merkkijono}]
 (defn- validoi-merkkiasetukset [merkit]
   (cond
-    (empty? merkit) [{}]
+    (empty? merkit) []
     (string? merkit) [{:img merkit}]
     (map? merkit) [merkit]
     :else merkit))
@@ -349,7 +349,7 @@
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
-        ikoni (ulkoasu/yllapidon-ikoni)
+        ikoni nil ;; ei ikonia
         viiva (ulkoasu/yllapidon-viiva valittu? tila-kartalla tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
@@ -358,6 +358,15 @@
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
                                 viiva))))
+
+(def paallystys-selitteet
+  (into #{}
+        (for [t [:valmis :ei-aloitettu :kesken]
+              :let [viiva (ulkoasu/yllapidon-viiva false t :paallystys)]]
+          {:teksti (str "Päällystyskohde ("
+                        (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla t))
+                        ")")
+           :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)})))
 
 (defmethod asia-kartalle :paallystys [pt valittu?]
   (assoc (yllapitokohde :paallystys pt valittu? "Päällystyskohde")
