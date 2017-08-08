@@ -81,8 +81,9 @@
                                  :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:vuosi 2007
                                               :silta-id :kaikki}})]
+
     (is (vector? vastaus))
-    (is (= 4 (count vastaus)))))
+    (is (= 5 (count vastaus)))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
