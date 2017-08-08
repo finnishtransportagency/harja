@@ -85,8 +85,8 @@
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/modal-data (merge data {:lomakedata uusi-data})))}
        [(when valmis-tiemerkintaan-lomake?
-         {:otsikko "Tiemerkinnän saa aloittaa"
-          :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
+          {:otsikko "Tiemerkinnän saa aloittaa"
+           :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
          :koko [90 8]
          :nimi :saate :palstoja 3 :tyyppi :text}
@@ -207,7 +207,7 @@
 
             otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
                                         (otsikoi-aikataulurivit
-                                         (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
+                                          (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                         aikataulurivit)
 
             voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
@@ -216,7 +216,8 @@
                                            saa-merkita-valmiiksi?
                                            (:valmis-tiemerkintaan %))
             aikajana? (:nayta-aikajana? @tiedot/valinnat)
-            yllapito-pvm-fmt (partial pvm/pvm-opt {:nayta-vuosi-fn #(do (not= (pvm/vuosi %) vuosi))})]
+            yllapito-pvm-fmt (fn [arvo]
+                               (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
         [:div.aikataulu
 
          [valinnat ur]
@@ -224,8 +225,8 @@
          (when aikajana?
            [aikajana/aikajana
             {:muuta! #(tallenna-aikataulu
-                       urakka-id sopimus-id vuosi
-                       (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+                        urakka-id sopimus-id vuosi
+                        (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
 
@@ -282,7 +283,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt yllapito-pvm-fmt
               :muokattava? voi-muokata-paallystys?})
@@ -336,11 +337,11 @@
                              ;; Jos ei olla päällystyksessä, read only
                              (if-not (= (:nakyma optiot) :paallystys)
                                (if (:valmis-tiemerkintaan rivi)
-                                 [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
+                                 [:span (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
                                  [:span "Ei"])
                                ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
                                (if muokataan?
-                                 [:div (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
+                                 [:div (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
                                  [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
                                                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
                                                      :default nil)}
