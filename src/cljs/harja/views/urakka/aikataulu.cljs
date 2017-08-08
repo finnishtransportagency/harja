@@ -328,7 +328,7 @@
               :komponentti (fn []
                              ;; TODO HAEPAS PÄÄLLYSTYSURAKKA TÄHÄN
                              (grid/arvo-ja-nappi
-                               {:arvo-ja-nappi-napin-teksti (ikonit/livicon-eye)
+                               {:arvo-ja-nappi-napin-teksti (ikonit/user)
                                 :arvo-ja-nappi-toiminto-fn #(log "KLIKKASIT NAPPIA")
                                 :arvo "Testiurakka"}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
