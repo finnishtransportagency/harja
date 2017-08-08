@@ -265,7 +265,7 @@
 
 (def fi-pvm-ilman-vuotta
   "Päivämäärän formatointi suomalaisessa muodossa ilman vuotta"
-  (luo-format "dd.MM"))
+  (luo-format "dd.MM."))
 
 (def fi-pvm-parse
   "Parsintamuoto päivämäärästä, sekä nolla etuliite ja ilman kelpaa."

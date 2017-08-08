@@ -170,10 +170,12 @@
                                                    0)}))))]]])
 
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
-  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])]
+  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
+        toimenpiteen-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id rivi)))
+       ;; Piirrä leijuke
        [:div
         [:span "Hinta: 0€"]
         [leijuke {:otsikko "Hinnoittele toimenpide"
@@ -212,20 +214,20 @@
                                                          oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                          (:id @nav/valittu-urakka))))}]]]]]
 
-       (grid/arvo-ja-nappi
-         {:voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                  (get-in app* [:valinnat :urakka-id]))
-          :ehto-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
-          :nappi-teksti "Hinnoittele"
-          :uusi-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :muokkaa-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
-                                       (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                     (:id @nav/valittu-urakka))))}
-          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
-                                (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])))
-          :ikoninappi? true}))]))
+       (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                     (get-in app* [:valinnat :urakka-id]))
+         (grid/arvo-ja-nappi
+           {:pelkka-nappi-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
+            :pelkka-nappi-teksti "Hinnoittele"
+            :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+            :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+            :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
+                                         (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                       (:id @nav/valittu-urakka))))}
+            :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))
+            :ikoninappi? true})
+         [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))]))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
