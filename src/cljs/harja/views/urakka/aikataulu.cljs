@@ -326,7 +326,11 @@
               :leveys 10 :nimi :paallystysurakka
               :tyyppi :komponentti
               :komponentti (fn []
-                             [:span "TODO"])})
+                             ;; TODO HAEPAS PÄÄLLYSTYSURAKKA TÄHÄN
+                             (grid/arvo-ja-nappi
+                               {:arvo-ja-nappi-napin-teksti (ikonit/livicon-eye)
+                                :arvo-ja-nappi-toiminto-fn #(log "KLIKKASIT NAPPIA")
+                                :arvo "Testiurakka"}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
@@ -359,7 +363,7 @@
                                        :pelkka-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
                                                                                                    {:nakyvissa? true
                                                                                                     :valittu-lomake :valmis-tiemerkintaan}))
-                                       :muokkaa-ikoni "Peru"
+                                       :arvo-ja-nappi-napin-teksti "Peru"
                                        :arvo-ja-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
                                                                                                     {:nakyvissa? true
                                                                                                      :valittu-lomake :peru-valmius-tiemerkintaan}))

@@ -1005,7 +1005,8 @@
        ")"))
 
 (defn arvo-ja-nappi
-  "Piirtää arvon ja napin. Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
+  "Piirtää arvon ja napin, tai pelkän napin optioista riippuen.
+   Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
 
   Optiot:
   pelkka-nappi-fn               Jos ehto on false, piirtää kentän arvon tekstinä sekä napin.
@@ -1015,11 +1016,11 @@
   pelkka-nappi-toiminto-fn      Funktio, jota kutsutaan silloin kun piirretään pelkkä nappi ja sitä klikataan.
   nappi-optiot                  Lisäoptiot, jotka annetaan pelkälle napille tai napille arvon kanssa.
   arvo-ja-nappi-toiminto-fn     Funktio, jota kutsutaan silloin kun piirretään arvo ja nappi, ja nappia painetaan.
-  arvo-ja-nappi-ikoni           Ikoni joka piirretään napille arvon kanssa.
+  arvo-ja-nappi-napin-teksti    Teksti tai ikoni, joka piirretään napille arvon kanssa.
   ikoninappi?                   Jos true, arvon kanssa piirrettävä nappi käyttää ikoninappi-tyyliä"
   [{:keys [pelkka-nappi-fn pelkka-nappi-teksti nappi-optiot
            pelkka-nappi-toiminto-fn arvo-ja-nappi-toiminto-fn arvo
-           arvo-ja-nappi-ikoni ikoninappi?] :as optiot}]
+           arvo-ja-nappi-napin-teksti ikoninappi?] :as optiot}]
   (let [pelkka-nappi-fn (or pelkka-nappi-fn (constantly false))]
     [:div.arvo-ja-nappi-container
      (if (pelkka-nappi-fn)
@@ -1032,7 +1033,7 @@
         [:span.arvo-ja-nappi-arvo
          arvo]
         [napit/yleinen-toissijainen
-         (or arvo-ja-nappi-ikoni (ikonit/muokkaa))
+         (or arvo-ja-nappi-napin-teksti (ikonit/muokkaa))
          arvo-ja-nappi-toiminto-fn
          (merge {:ikoninappi? ikoninappi?
                  :luokka (str "btn-xs arvo-ja-nappi-nappi")}
