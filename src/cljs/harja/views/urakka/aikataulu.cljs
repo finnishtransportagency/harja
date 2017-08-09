@@ -30,7 +30,8 @@
             [harja.ui.upotettu-raportti :as upotettu-raportti]
             [harja.tiedot.raportit :as raportit]
             [harja.ui.kentat :as kentat]
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view])
+            [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
+            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -327,7 +328,8 @@
               :komponentti (fn [rivi]
                              (grid/arvo-ja-nappi
                                {:arvo-ja-nappi-napin-teksti (ikonit/user)
-                                :arvo-ja-nappi-toiminto-fn #(log "KLIKKASIT NAPPIA") ;; TODO Näytä modal dialog
+                                :arvo-ja-nappi-toiminto-fn
+                                #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal! (:id rivi))
                                 :arvo (:paallystysurakka rivi)}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
