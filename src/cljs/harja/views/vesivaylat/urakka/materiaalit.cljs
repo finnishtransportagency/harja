@@ -13,7 +13,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -30,7 +31,20 @@
                                     "materiaali-miinus"
                                     "materiaali-plus")}
          maara " kpl"]
-        [:td {:width "70%"} lisatieto]])]]])
+        [:td {:width "60%"} lisatieto]
+        [:td {:width "10%"} [:span.klikattava
+                             {:on-click (fn []
+                                          (varmista-kayttajalta/varmista-kayttajalta
+                                            {:otsikko "Poistetaanko kirjaus?"
+                                             :sisalto [:span
+                                                       (str "Poistetaanko "
+                                                            (pvm/pvm pvm)
+                                                            " kirjattu materiaalinkäyttö: "
+                                                            maara " kpl?")]
+
+                                             :hyvaksy "Poista"
+                                             :toiminto-fn #(log "TODO POISTA")}))}
+                             (ikonit/livicon-trash)]]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
