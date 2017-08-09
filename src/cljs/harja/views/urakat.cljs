@@ -30,6 +30,7 @@
         [:span
          [:h5.haku-otsikko "Valitse hallintayksikkö"]
          [:div
+          [:button {:on-click #(foo)} "error"]
           ^{:key "hy-lista"}
           [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
