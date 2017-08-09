@@ -8,7 +8,9 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [clojure.java.io :as io]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen])
   (:import (com.atlassian.sourcemap SourceMapImpl SourceMap SourceMap$EachMappingCallback)))
 
 (defn stack-tracen-rivit-sarakkeet-ja-tiedostopolku
@@ -16,8 +18,8 @@
   (let [loydetyt-tiedot (re-seq #"\/([\/\w-]+\.js):(\d+):(\d+)" (str stack-trace))]
     (mapv #(hash-map :rivi (Integer. (nth % 2))
                      :sarake (Integer. (last %))
-                     :tiedostopolku (if (.exists (io/as-file "resources/public/js/harja.js"))
-                                      "resources/public/js/harja.js" ;; Tän pitäs olla prod:issa totta
+                     :tiedostopolku (if (.exists (io/as-file "public/js/harja.js"))
+                                      "public/js/harja.js" ;; Tän pitäs olla prod:issa totta
                                       (str "dev-resources/" (second %)))) ;Tän taas dev:issä
           loydetyt-tiedot)))
 
@@ -64,11 +66,14 @@
                               generoitu-rivi (.getGeneratedLine mapping)
                               generoitu-sarake (.getGeneratedColumn mapping)
                               rivin-tiedot (get @paikat generoitu-rivi)
-                              tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku)) ;Otetaan '.js' pois
-                              lahdetiedosto (some (fn [tiedostopaate]
-                                                    (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                                      (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                                  [".cljs" ".cljc"])
+                              lahdetiedosto (if (= tiedostopolku "public/js/harja.js") ;; Jos totta käytetään prod buildia
+                                              (str "public/js/" (.getSourceFileName mapping))
+                                              (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
+                                                (some (fn [tiedostopaate]
+                                                        (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
+                                                          (str tiedostopolku-ilman-paatetta tiedostopaate)))
+                                                      [".cljs" ".cljc"])))
+                              _ (log/debug "LAHDETIEDOSTO: " lahdetiedosto)
                               muutama-rivi-lahdekoodia #(let [numeroi-rivit (fn [rivit]
                                                                               (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
                                                             (as-> lahdetiedosto $
@@ -98,8 +103,6 @@
         rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet % selain) rivit-sarakkeet-ja-tiedostoppolku)
         stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake %)
                                rivit-ja-sarakkeet-oikaistu)
-        _ (println (pr-str "->" rivit-ja-sarakkeet-oikaistu))
-        _ (println (pr-str "->>" stack-rivit-lahde))
         stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
                                            generoitu-sarake (-> (vals %) first keys first)
                                            lahde-tiedot (-> (vals %) first vals ffirst)]
@@ -110,7 +113,8 @@
                                     stack-rivit-lahde))
         stack-lahde (if selain
                       stack-lahde
-                      (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde))]
+                      (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde))
+        _ (log/debug "STACK LAHDE: " stack-lahde)]
       stack-lahde))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]

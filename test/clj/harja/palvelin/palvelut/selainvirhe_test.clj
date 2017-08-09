@@ -8,6 +8,7 @@
 
 
 (deftest raportoi-selainvirhe-testi
+  (testing "Chromelta tuleva selainvirhe")
   (let [kayttaja +kayttaja-jvh+
         viesti "Uncaught TypeError: Failed to construct 'ErrorEvent': 1 argument required, but only 0 present."
         url "http://localhost:3000/js/out/harja/views/hallinta/yhteydenpito.js"
@@ -35,14 +36,7 @@
                      :stack stack}
         formatoitu-virhe (formatoi-selainvirhe kayttaja selainvirhe)
         formatoitu-virhe-ilman-stack (formatoi-selainvirhe kayttaja (assoc selainvirhe :stack nil))]
-    (is (= formatoitu-virhe {:fields  [{:title "Selainvirhe" :value viesti}
-                                       {:title "Sijainti Harjassa" :value sijainti}
-                                       {:title "URL" :value url}
-                                       {:title "Selain" :value selain}
-                                       {:title "Rivi" :value rivi}
-                                       {:title "Sarake" :value sarake}
-                                       {:title "Käyttäjä" :value (str (:kayttajanimi kayttaja) " (" (:id kayttaja) ")")}
-                                       {:title "Stack" :value stack}]}))
+    (is (string? formatoitu-virhe))
     (is (= formatoitu-virhe-ilman-stack {:fields  [{:title "Selainvirhe" :value viesti}
                                                    {:title "Sijainti Harjassa" :value sijainti}
                                                    {:title "URL" :value url}
