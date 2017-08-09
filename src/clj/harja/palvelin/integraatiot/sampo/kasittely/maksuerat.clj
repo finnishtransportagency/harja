@@ -128,4 +128,4 @@
           (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
           (merkitse-maksueralle-lahetysvirhe db maksueranumero))
         (merkitse-maksuera-lahetetyksi db maksueranumero))
-      (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+      (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
