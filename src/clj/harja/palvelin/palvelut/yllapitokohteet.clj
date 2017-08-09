@@ -429,12 +429,10 @@
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
-  ;; TODO Oikeustarkistus!?
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
-          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user))
+          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user)
+          (yy/lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? db user yllapitokohde-id))
     (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id)
-
           fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
           yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
       {:fim-kayttajat (vec fim-kayttajat)
