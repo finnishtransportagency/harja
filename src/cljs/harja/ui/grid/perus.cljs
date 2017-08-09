@@ -1009,26 +1009,27 @@
    Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
 
   Optiot:
-  pelkka-nappi-fn               Jos ehto on false, piirtää kentän arvon tekstinä sekä napin.
-                                Jos palautta true, näyttää gridissä pelkän napin.
-                                Oletuksena tämä funktio palauttaa sisäisesti false.
+  sisalto                       Jokin seuraavista: :arvo-ja-nappi (oletus), :pelkka-nappi, :pelkka-arvo
   pelkka-nappi-teksti           Teksti joka näytetään silloin kun piirretään pelkkä nappi.
   pelkka-nappi-toiminto-fn      Funktio, jota kutsutaan silloin kun piirretään pelkkä nappi ja sitä klikataan.
   nappi-optiot                  Lisäoptiot, jotka annetaan pelkälle napille tai napille arvon kanssa.
   arvo-ja-nappi-toiminto-fn     Funktio, jota kutsutaan silloin kun piirretään arvo ja nappi, ja nappia painetaan.
   arvo-ja-nappi-napin-teksti    Teksti tai ikoni, joka piirretään napille arvon kanssa.
   ikoninappi?                   Jos true, arvon kanssa piirrettävä nappi käyttää ikoninappi-tyyliä"
-  [{:keys [pelkka-nappi-fn pelkka-nappi-teksti nappi-optiot
+  [{:keys [sisalto pelkka-nappi-teksti nappi-optiot
            pelkka-nappi-toiminto-fn arvo-ja-nappi-toiminto-fn arvo
            arvo-ja-nappi-napin-teksti ikoninappi?] :as optiot}]
-  (let [pelkka-nappi-fn (or pelkka-nappi-fn (constantly false))]
+  (let [sisalto (or sisalto :arvo-ja-nappi)]
     [:div.arvo-ja-nappi-container
-     (if (pelkka-nappi-fn)
+     (case sisalto
+       :pelkka-nappi
        [napit/yleinen-ensisijainen
         pelkka-nappi-teksti
         pelkka-nappi-toiminto-fn
         (merge {:luokka (str "nappi-grid")}
                nappi-optiot)]
+
+       :arvo-ja-nappi
        [:div.arvo-ja-nappi
         [:span.arvo-ja-nappi-arvo
          arvo]
@@ -1037,4 +1038,7 @@
          arvo-ja-nappi-toiminto-fn
          (merge {:ikoninappi? ikoninappi?
                  :luokka (str "btn-xs arvo-ja-nappi-nappi")}
-                nappi-optiot)]])]))
+                nappi-optiot)]]
+
+       :pelkka-arvo
+       [:span arvo])]))

@@ -214,20 +214,25 @@
                                                          oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                          (:id @nav/valittu-urakka))))}]]]]]
 
-       (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                     (get-in app* [:valinnat :urakka-id]))
-         (grid/arvo-ja-nappi
-           {:pelkka-nappi-fn #(not (to/toimenpiteella-oma-hinnoittelu? rivi))
-            :pelkka-nappi-teksti "Hinnoittele"
-            :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-            :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-            :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
-                                         (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                       (:id @nav/valittu-urakka))))}
-            :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))
-            :ikoninappi? true})
-         [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))]))]))
+       (grid/arvo-ja-nappi
+         {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (get-in app* [:valinnat :urakka-id])))
+                         :pelkka-arvo
+
+                         (not (to/toimenpiteella-oma-hinnoittelu? rivi))
+                         :pelkka-nappi
+
+                         :default
+                         :arvo-ja-nappi)
+          :pelkka-nappi-teksti "Hinnoittele"
+          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
+                                       (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                     (:id @nav/valittu-urakka))))}
+          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))
+          :ikoninappi? true}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])

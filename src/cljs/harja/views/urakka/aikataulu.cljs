@@ -356,22 +356,22 @@
                                                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
                                                      :default nil)}
 
-                                  (if voi-muokata-paallystys?
-                                    (grid/arvo-ja-nappi
-                                      {:pelkka-nappi-fn #(not (:valmis-tiemerkintaan rivi))
-                                       :pelkka-nappi-teksti "Aseta päivä\u00ADmäärä"
-                                       :pelkka-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
-                                                                                                   {:nakyvissa? true
-                                                                                                    :valittu-lomake :valmis-tiemerkintaan}))
-                                       :arvo-ja-nappi-napin-teksti "Peru"
-                                       :arvo-ja-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
-                                                                                                    {:nakyvissa? true
-                                                                                                     :valittu-lomake :peru-valmius-tiemerkintaan}))
-                                       :nappi-optiot {:disabled (or
-                                                                  (not paallystys-valmis?)
-                                                                  (not suorittava-urakka-annettu?))}
-                                       :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})
-                                    [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))])]))))}
+                                  (grid/arvo-ja-nappi
+                                    {:sisalto (cond (not voi-muokata-paallystys?) :pelkka-arvo
+                                                    (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
+                                                    :default :arvo-ja-nappi)
+                                     :pelkka-nappi-teksti "Aseta päivä\u00ADmäärä"
+                                     :pelkka-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
+                                                                                                 {:nakyvissa? true
+                                                                                                  :valittu-lomake :valmis-tiemerkintaan}))
+                                     :arvo-ja-nappi-napin-teksti "Peru"
+                                     :arvo-ja-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
+                                                                                                  {:nakyvissa? true
+                                                                                                   :valittu-lomake :peru-valmius-tiemerkintaan}))
+                                     :nappi-optiot {:disabled (or
+                                                                (not paallystys-valmis?)
+                                                                (not suorittava-urakka-annettu?))}
+                                     :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})]))))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :fmt yllapito-pvm-fmt
