@@ -180,7 +180,6 @@
                 :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
-                           :source-map-timestamp false
                            ;:parallel-build false Failaa randomisti
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"

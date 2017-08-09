@@ -18,8 +18,7 @@
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [cljs.source-map :as sm])
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
