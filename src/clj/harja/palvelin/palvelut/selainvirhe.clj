@@ -16,25 +16,26 @@
   (let [loydetyt-tiedot (re-seq #"\/([\/\w-]+\.js):(\d+):(\d+)" (str stack-trace))]
     (mapv #(hash-map :rivi (Integer. (nth % 2))
                      :sarake (Integer. (last %))
-                     :tiedostopolku (second %))
+                     :tiedostopolku (if (.exists (io/as-file "resources/public/js/harja.js"))
+                                      "resources/public/js/harja.js" ;; Tän pitäs olla prod:issa totta
+                                      (str "dev-resources/" (second %)))) ;Tän taas dev:issä
           loydetyt-tiedot)))
 
 (defn tunnista-selain-user-agentista
   [user-agent]
   (cond
-    (and (re-find #"Chrome" user-agent)
-         (re-find #"Safari" user-agent))       "Chrome"
-    (and (re-find #"Safari" user-agent)
-         (not (re-find #"Chrome" user-agent))) "Safari"
-    (re-find #"Firefox" user-agent)            "Firefox"
-    (re-find #"Trident/.*rv:([0-9]{1,}[\.0-9]{0,})|
-               MSIE ([0-9]{1,}[\.0-9]{0,})" user-agent) "IE"
+    (re-find #"Chrome/([0-9]{1,}[\.0-9]{0,}) Safari/([0-9]{1,}[\.0-9]{0,})$" user-agent) "Chrome"
+    (re-find #"Safari/([0-9]{1,}[\.0-9]{0,})$" user-agent) "Safari"
+    (re-find #"Firefox" user-agent) "Firefox"
+    (or (re-find #"Trident/.*rv:([0-9]{1,}[\.0-9]{0,})" user-agent)
+        (re-find #"MSIE ([0-9]{1,}[\.0-9]{0,})" user-agent)
+        (re-find #"Edge/([0-9]{1,}[\.0-9]{0,})" user-agent)) "IE"
     :else nil))
 
 (defn oikaise-virheen-rivit-ja-sarakkeet
   [{:keys [rivi sarake tiedostopolku]} selain]
   (let [rivi (dec rivi)
-        rivi-teksti (-> (str "dev-resources/" tiedostopolku)
+        rivi-teksti (-> tiedostopolku
                         slurp
                         (st/split #"\n")
                         (get rivi))
@@ -44,15 +45,16 @@
                  "Firefox" (dec sarake)
                  "Chrome" (as-> rivi-teksti-alku $ (st/reverse $) (st/index-of $ " ") (- (count rivi-teksti-alku) $))
                  "Safari" (as-> rivi-teksti-alku $ (st/reverse $) (st/index-of $ " ") (- (count rivi-teksti-alku) $))
-                 nil)]
+                 nil (dec sarake))]
     {:rivi rivi
-     :sarake sarake}))
+     :sarake sarake
+     :tiedostopolku tiedostopolku}))
 
 (defn tiedosto-rivi-ja-sarake
   [{:keys [rivi sarake tiedostopolku]}]
   (let [paikat (atom {})
         source-map (when (re-find #"harja" tiedostopolku)
-                    (SourceMapImpl. (slurp (str "dev-resources/" tiedostopolku ".map"))))]
+                    (SourceMapImpl. (slurp (str tiedostopolku ".map"))))]
     (when source-map
       (.eachMapping source-map
                     (reify SourceMap$EachMappingCallback
@@ -61,18 +63,15 @@
                               lahde-sarake (.getSourceColumn mapping)
                               generoitu-rivi (.getGeneratedLine mapping)
                               generoitu-sarake (.getGeneratedColumn mapping)
-                              lahde-tiedosto (.getSourceFileName mapping)
-                              lahde-symboli (.getSourceSymbolName mapping) ;; Valitettavasti ei anna oikeaa symbolia.
                               rivin-tiedot (get @paikat generoitu-rivi)
-                              muutama-rivi-lahdekoodia #(let [tiedostopolku (str "dev-resources/" tiedostopolku)
-                                                              tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku)) ;Otetaan '.js' pois
-                                                              tiedosto (some (fn [tiedostopaate]
-                                                                                (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                                                                  (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                                                             [".cljs" ".cljc"])
-                                                              numeroi-rivit (fn [rivit]
+                              tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku)) ;Otetaan '.js' pois
+                              lahdetiedosto (some (fn [tiedostopaate]
+                                                    (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
+                                                      (str tiedostopolku-ilman-paatetta tiedostopaate)))
+                                                  [".cljs" ".cljc"])
+                              muutama-rivi-lahdekoodia #(let [numeroi-rivit (fn [rivit]
                                                                               (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
-                                                            (as-> tiedosto $
+                                                            (as-> lahdetiedosto $
                                                                   (slurp $)
                                                                   (st/split $ #"\n")
                                                                   (numeroi-rivit $)
@@ -88,29 +87,30 @@
                                            (fn [lahde-tiedot]
                                             (conj lahde-tiedot {:rivi (inc lahde-rivi)
                                                                 :sarake (inc lahde-sarake)
-                                                                :lahde-tiedosto lahde-tiedosto
-                                                                :symboli lahde-symboli
+                                                                :lahdetiedosto lahdetiedosto
                                                                 :muutama-rivi-koodia (apply str (map #(str % "(slack-n)") (muutama-rivi-lahdekoodia)))}))))))))))
     @paikat))
 
 (defn stack-trace-lahdekoodille
-  [stack selain]
+  [stack user-agent]
   (let [rivit-sarakkeet-ja-tiedostoppolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack)
-        selain (tunnista-selain-user-agentista selain)
+        selain (tunnista-selain-user-agentista user-agent)
         rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet % selain) rivit-sarakkeet-ja-tiedostoppolku)
         stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake %)
-                               (map #(merge %1 %2) rivit-sarakkeet-ja-tiedostoppolku rivit-ja-sarakkeet-oikaistu))
+                               rivit-ja-sarakkeet-oikaistu)
+        _ (println (pr-str "->" rivit-ja-sarakkeet-oikaistu))
+        _ (println (pr-str "->>" stack-rivit-lahde))
         stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
                                            generoitu-sarake (-> (vals %) first keys first)
                                            lahde-tiedot (-> (vals %) first vals ffirst)]
-                                        (str "at " (apply str (map (fn [kansio]
-                                                                     (str kansio "/"))
-                                                                   (-> (:symboli lahde-tiedot) (st/split #"\.") butlast)))
-                                                   (:lahde-tiedosto lahde-tiedot) ":"
+                                        (str "at " (:lahdetiedosto lahde-tiedot) ":"
                                                    (:rivi lahde-tiedot) ":"
                                                    (:sarake lahde-tiedot) "(slack-n)"
                                              "```" (:muutama-rivi-koodia lahde-tiedot) "```(slack-n)"))
-                                    stack-rivit-lahde))]
+                                    stack-rivit-lahde))
+        stack-lahde (if selain
+                      stack-lahde
+                      (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde))]
       stack-lahde))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
