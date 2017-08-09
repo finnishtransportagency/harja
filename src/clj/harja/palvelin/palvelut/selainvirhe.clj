@@ -14,13 +14,14 @@
   (:import (com.atlassian.sourcemap SourceMapImpl SourceMap SourceMap$EachMappingCallback)))
 
 (defn stack-tracen-rivit-sarakkeet-ja-tiedostopolku
-  [stack-trace]
+  [stack-trace kehitysmoodi]
   (let [loydetyt-tiedot (re-seq #"\/([\/\w-]+\.js):(\d+):(\d+)" (str stack-trace))]
     (mapv #(hash-map :rivi (Integer. (nth % 2))
                      :sarake (Integer. (last %))
-                     :tiedostopolku (if (.exists (io/as-file "public/js/harja.js"))
-                                      "public/js/harja.js" ;; Tän pitäs olla prod:issa totta
-                                      (str "dev-resources/" (second %)))) ;Tän taas dev:issä
+                     :tiedostopolku (if kehitysmoodi
+                                      (str "dev-resources/" (second %))
+                                      "public/js/harja.js"))
+
           loydetyt-tiedot)))
 
 (defn tunnista-selain-user-agentista
@@ -37,6 +38,7 @@
 (defn oikaise-virheen-rivit-ja-sarakkeet
   [{:keys [rivi sarake tiedostopolku]} selain]
   (let [rivi (dec rivi)
+        _ (log/debug "TIEDOSTOPOLKU: " tiedostopolku)
         rivi-teksti (-> tiedostopolku
                         slurp
                         (st/split #"\n")
@@ -53,7 +55,7 @@
      :tiedostopolku tiedostopolku}))
 
 (defn tiedosto-rivi-ja-sarake
-  [{:keys [rivi sarake tiedostopolku]}]
+  [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
   (let [paikat (atom {})
         source-map (when (re-find #"harja" tiedostopolku)
                     (SourceMapImpl. (slurp (str tiedostopolku ".map"))))]
@@ -66,13 +68,15 @@
                               generoitu-rivi (.getGeneratedLine mapping)
                               generoitu-sarake (.getGeneratedColumn mapping)
                               rivin-tiedot (get @paikat generoitu-rivi)
-                              lahdetiedosto (if (= tiedostopolku "public/js/harja.js") ;; Jos totta käytetään prod buildia
-                                              (str "public/js/" (.getSourceFileName mapping))
+                              lahdetiedosto (if kehitysmoodi
                                               (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
                                                 (some (fn [tiedostopaate]
                                                         (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
                                                           (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                                      [".cljs" ".cljc"])))
+                                                      [".cljs" ".cljc"]))
+                                              (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))]
+                                                (str "public/js/" (second lahdetiedosto))
+                                                (str "public/js/" (.getSourceFileName mapping))))
                               _ (log/debug "LAHDETIEDOSTO: " lahdetiedosto)
                               muutama-rivi-lahdekoodia #(let [numeroi-rivit (fn [rivit]
                                                                               (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
@@ -97,11 +101,11 @@
     @paikat))
 
 (defn stack-trace-lahdekoodille
-  [stack user-agent]
-  (let [rivit-sarakkeet-ja-tiedostoppolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack)
+  [stack user-agent kehitysmoodi]
+  (let [rivit-sarakkeet-ja-tiedostoppolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)
         selain (tunnista-selain-user-agentista user-agent)
         rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet % selain) rivit-sarakkeet-ja-tiedostoppolku)
-        stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake %)
+        stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake % kehitysmoodi)
                                rivit-ja-sarakkeet-oikaistu)
         stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
                                            generoitu-sarake (-> (vals %) first keys first)
@@ -117,9 +121,9 @@
         _ (log/debug "STACK LAHDE: " stack-lahde)]
       stack-lahde))
 
-(defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
+(defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]} kehitysmoodi]
   (let [titles ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack") (when stack "Stack lähde")]
-        stack-lahde (when stack (stack-trace-lahdekoodille stack selain))
+        stack-lahde (when stack (stack-trace-lahdekoodille stack selain kehitysmoodi))
         values [viesti sijainti url selain rivi sarake (str kayttajanimi " (" id ")") stack stack-lahde]]
     {:fields (vec (keep-indexed #(when (not (nil? %2))
                                     {:title %2 :value (get values %1)})
@@ -143,9 +147,9 @@
 
 (defn raportoi-selainvirhe
   "Logittaa yksittäisen selainvirheen"
-  [user virhetiedot]
+  [user virhetiedot kehitysmoodi]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (log/error (formatoi-selainvirhe user virhetiedot)))
+  (log/error (formatoi-selainvirhe user virhetiedot kehitysmoodi)))
 
 (defn raportoi-yhteyskatkos
   "Logittaa yksittäisen käyttäjän raportoimat selainvirheet"
@@ -156,12 +160,12 @@
   {:ok? true})
 
 
-(defrecord Selainvirhe []
+(defrecord Selainvirhe [kehitysmoodi]
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
                       :raportoi-selainvirhe (fn [user virhe]
-                                              (raportoi-selainvirhe user virhe)))
+                                              (raportoi-selainvirhe user virhe kehitysmoodi)))
     (julkaise-palvelu (:http-palvelin this)
                       :raportoi-yhteyskatkos (fn [user virhe]
                                                (raportoi-yhteyskatkos user virhe)))
