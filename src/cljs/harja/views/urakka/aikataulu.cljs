@@ -204,7 +204,6 @@
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)
 
-
             otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
                                         (otsikoi-aikataulurivit
                                           (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
@@ -323,14 +322,13 @@
               :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
            (when (= (:nakyma optiot) :tiemerkinta)
              {:otsikko "Pääl\u00ADlys\u00ADtys\u00ADurak\u00ADka"
-              :leveys 10 :nimi :paallystysurakka
+              :leveys 13 :nimi :paallystysurakka
               :tyyppi :komponentti
-              :komponentti (fn []
-                             ;; TODO HAEPAS PÄÄLLYSTYSURAKKA TÄHÄN
+              :komponentti (fn [rivi]
                              (grid/arvo-ja-nappi
                                {:arvo-ja-nappi-napin-teksti (ikonit/user)
-                                :arvo-ja-nappi-toiminto-fn #(log "KLIKKASIT NAPPIA")
-                                :arvo "Testiurakka"}))})
+                                :arvo-ja-nappi-toiminto-fn #(log "KLIKKASIT NAPPIA") ;; TODO Näytä modal dialog
+                                :arvo (:paallystysurakka rivi)}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
