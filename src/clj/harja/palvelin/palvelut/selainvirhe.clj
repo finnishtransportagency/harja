@@ -38,18 +38,17 @@
 (defn oikaise-virheen-rivit-ja-sarakkeet
   [{:keys [rivi sarake tiedostopolku]} selain]
   (let [rivi (dec rivi)
-        _ (log/debug "TIEDOSTOPOLKU: " tiedostopolku)
         rivi-teksti (-> tiedostopolku
                         slurp
                         (st/split #"\n")
                         (get rivi))
         rivi-teksti-alku (subs rivi-teksti 0 sarake)
         sarake (case selain
-                 "IE" (dec sarake)
-                 "Firefox" (dec sarake)
-                 "Chrome" (as-> rivi-teksti-alku $ (st/reverse $) (st/index-of $ " ") (- (count rivi-teksti-alku) $))
-                 "Safari" (as-> rivi-teksti-alku $ (st/reverse $) (st/index-of $ " ") (- (count rivi-teksti-alku) $))
-                 nil (dec sarake))]
+                 ("IE" "Firefox" nil) (dec sarake)
+                 ("Chrome" "Safari") (as-> rivi-teksti-alku $
+                                           (st/reverse $)
+                                           (st/index-of $ " ")
+                                           (- (count rivi-teksti-alku) $)))]
     {:rivi rivi
      :sarake sarake
      :tiedostopolku tiedostopolku}))
@@ -74,18 +73,19 @@
                                                         (when (.exists (io/as-file (str tiedostopolku-ilman-paatetta tiedostopaate)))
                                                           (str tiedostopolku-ilman-paatetta tiedostopaate)))
                                                       [".cljs" ".cljc"]))
-                                              (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))]
+                                              (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))] ;; lähdetiedoston perässä saattaa olla timestamp. Otetaan se pois, jos on.
                                                 (str "public/js/" (second lahdetiedosto))
                                                 (str "public/js/" (.getSourceFileName mapping))))
-                              _ (log/debug "LAHDETIEDOSTO: " lahdetiedosto)
-                              muutama-rivi-lahdekoodia #(let [numeroi-rivit (fn [rivit]
+                              muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
                                                                               (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
-                                                            (as-> lahdetiedosto $
-                                                                  (slurp $)
-                                                                  (st/split $ #"\n")
-                                                                  (numeroi-rivit $)
-                                                                  (drop (- lahde-rivi 2) $)
-                                                                  (take 5 $)))]
+                                                          (try (as-> lahdetiedosto $
+                                                                     (slurp $)
+                                                                     (st/split $ #"\n")
+                                                                     (numeroi-rivit $)
+                                                                     (drop (- lahde-rivi 2) $)
+                                                                     (take 5 $))
+                                                               (catch java.io.FileNotFoundException e
+                                                                 (str "Lähdetiedostoa " lahdetiedosto " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))]
                           (if (and (= generoitu-rivi rivi)
                                    (= generoitu-sarake sarake))
                             (swap! paikat
@@ -97,28 +97,34 @@
                                             (conj lahde-tiedot {:rivi (inc lahde-rivi)
                                                                 :sarake (inc lahde-sarake)
                                                                 :lahdetiedosto lahdetiedosto
-                                                                :muutama-rivi-koodia (apply str (map #(str % "(slack-n)") (muutama-rivi-lahdekoodia)))}))))))))))
+                                                                :muutama-rivi-koodia (if (string? muutama-rivi-lahdekoodia)
+                                                                                        muutama-rivi-lahdekoodia
+                                                                                        (apply str (map #(str % "(slack-n)") muutama-rivi-lahdekoodia)))}))))))))))
     @paikat))
 
 (defn stack-trace-lahdekoodille
   [stack user-agent kehitysmoodi]
   (let [rivit-sarakkeet-ja-tiedostoppolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)
-        selain (tunnista-selain-user-agentista user-agent)
-        rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet % selain) rivit-sarakkeet-ja-tiedostoppolku)
-        stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake % kehitysmoodi)
-                               rivit-ja-sarakkeet-oikaistu)
-        stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
-                                           generoitu-sarake (-> (vals %) first keys first)
-                                           lahde-tiedot (-> (vals %) first vals ffirst)]
-                                        (str "at " (:lahdetiedosto lahde-tiedot) ":"
-                                                   (:rivi lahde-tiedot) ":"
-                                                   (:sarake lahde-tiedot) "(slack-n)"
-                                             "```" (:muutama-rivi-koodia lahde-tiedot) "```(slack-n)"))
-                                    stack-rivit-lahde))
-        stack-lahde (if selain
-                      stack-lahde
-                      (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde))
-        _ (log/debug "STACK LAHDE: " stack-lahde)]
+        stack-lahde (if (-> rivit-sarakkeet-ja-tiedostoppolku first :tiedostopolku (io/as-file) (.exists))
+                      (let [selain (tunnista-selain-user-agentista user-agent)
+                            rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet % selain) rivit-sarakkeet-ja-tiedostoppolku)
+                            stack-rivit-lahde (map #(tiedosto-rivi-ja-sarake % kehitysmoodi)
+                                                   rivit-ja-sarakkeet-oikaistu)
+                            stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
+                                                               generoitu-sarake (-> (vals %) first keys first)
+                                                               lahde-tiedot (-> (vals %) first vals ffirst)]
+                                                            (str "at " (:lahdetiedosto lahde-tiedot) ":"
+                                                                       (:rivi lahde-tiedot) ":"
+                                                                       (:sarake lahde-tiedot) "(slack-n)"
+                                                                       (if (re-find #"\(slack-n\)" (:muutama-rivi-koodia lahde-tiedot))
+                                                                         (str "```" (:muutama-rivi-koodia lahde-tiedot) "```")
+                                                                         (:muutama-rivi-koodia lahde-tiedot))
+                                                                       "(slack-n)"))
+                                                        stack-rivit-lahde))]
+                        (if selain
+                          stack-lahde
+                          (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde)))
+                      "Generoitua javascript tiedostoa ei löytynyt...")]
       stack-lahde))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]} kehitysmoodi]
