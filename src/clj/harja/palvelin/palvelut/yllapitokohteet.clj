@@ -428,6 +428,19 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
+(defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
+  ;; TODO Oikeustarkistus!?
+  (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
+          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user))
+    (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id)
+
+          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
+      {:fim-kayttajat (vec fim-kayttajat)
+       :yhteyshenkilot (vec yhteyshenkilot)})
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
@@ -491,6 +504,9 @@
                           fim
                           email
                           (:paivittainen-sahkopostin-lahetysaika asetukset)))
+      (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
+                        (fn [user tiedot]
+                          (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))
       this))
 
   (stop [this]
