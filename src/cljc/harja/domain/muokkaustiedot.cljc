@@ -18,6 +18,14 @@
   poistaja-sarake
   {"poistaja" ::poistaja-id})
 
+(def muokkaus-ja-poistotiedot
+  {"luoja" ::luoja-id
+   "luotu" ::luotu
+   "muokkaaja" ::muokkaaja-id
+   "muokattu" ::muokattu
+   "poistettu" ::poistettu?
+   "poistaja" ::poistaja-id})
+
 (def muokkauskentat
   #{::muokattu
     ::muokkaaja-id

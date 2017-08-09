@@ -10,7 +10,7 @@
 
 (define-tables
   ["vv_materiaali" ::materiaali
-   harja.domain.muokkaustiedot/muokkaustiedot]
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot]
   ["vv_materiaali_muutos" ::muutos]
   ["vv_materiaalilistaus" ::materiaalilistaus])
 
