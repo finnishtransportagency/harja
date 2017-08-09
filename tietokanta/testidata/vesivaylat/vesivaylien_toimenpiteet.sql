@@ -120,12 +120,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     'Kiintiöön kuuluva jutska',
-    '2017-05-05T23:23Z',
-    '2017-05-05',
+    '2017-08-05T23:23Z',
+    '2017-08-05',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-05',
+    '2017-08-05',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -181,12 +181,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     NULL,
-    '2017-05-05T23:23Z',
-    '2017-05-05',
+    '2017-08-05T23:23Z',
+    '2017-08-05',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-05',
+    '2017-08-05',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -238,12 +238,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     NULL,
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542049',
@@ -296,12 +296,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     NULL,
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542049',
@@ -455,12 +455,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     NULL,
-    '2017-05-03T23:23Z',
-    '2017-05-03',
+    '2017-08-03T23:23Z',
+    '2017-08-03',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-03',
+    '2017-08-03',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -516,12 +516,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren poiju'),
     NULL,
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -582,12 +582,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu otos 2',
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -644,12 +644,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu',
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -677,12 +677,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Lisää poijujen korjausta',
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -710,12 +710,12 @@ VALUES
      FROM vv_turvalaite
      WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Oulaisten poijujen korjaus',
-    '2017-05-08T23:23Z',
-    '2017-05-08',
+    '2017-08-08T23:23Z',
+    '2017-08-08',
     (SELECT id
      FROM kayttaja
      WHERE kayttajanimi = 'tero'),
-    '2017-05-08',
+    '2017-08-08',
     '(MBKE24524, MS Piggy)',
     '1022541202',
     '1022542001',
@@ -847,7 +847,7 @@ VALUES
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Hietasaaren poijujen korjasusta otos 2', FALSE,
+  ('Hietasaaren poijujen korjausta otos 2', FALSE,
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'),
@@ -913,7 +913,7 @@ INSERT INTO vv_hinta
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Hietasaaren poijujen korjasusta otos 2'),
+    WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
    'Työ', 70, (SELECT id
                FROM kayttaja
                WHERE kayttajanimi = 'tero'));
@@ -952,7 +952,7 @@ VALUES
     WHERE lisatieto = 'Poijujen korjausta kuten on sovittu otos 2'),
    (SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Hietasaaren poijujen korjasusta otos 2'),
+    WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));

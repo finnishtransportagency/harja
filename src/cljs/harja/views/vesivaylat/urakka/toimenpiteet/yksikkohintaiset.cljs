@@ -23,8 +23,10 @@
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.kartta :as kartta])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.views.kartta :as kartta]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
 ;;;;;;;
 ;; Urakkatoiminnot: Hintaryhmän valitseminen
@@ -89,11 +91,44 @@
    [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
+(defn- varmistusdialogi-sisalto [toimenpiteet hintaryhmat]
+  (let [valitut-toimenpiteet (filter :valittu? toimenpiteet)]
+    [:div
+     (when (to/toimenpiteilla-hintaryhmia? valitut-toimenpiteet)
+       (jaettu/varmistusdialog-ohje
+         {:varmistusehto ::to/hintaryhma-id
+          :valitut-toimenpiteet valitut-toimenpiteet
+          :nayta-max 5
+          :toimenpide-lisateksti-fn #(str "Tilaus: " (::h/nimi (h/hinnoittelu-idlla hintaryhmat (::to/hintaryhma-id %))) ".")
+          :varmistusteksti-header "Seuraavat toimenpiteet kuuluvat tilaukseen:"
+          :varmistusteksti-footer "Nämä toimenpiteet irrotetaan tilauksesta siirron aikana."}))
+     (when (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet))
+       (jaettu/varmistusdialog-ohje
+         {:varmistusehto ::to/oma-hinnoittelu
+          :valitut-toimenpiteet valitut-toimenpiteet
+          :nayta-max 5
+          :toimenpide-lisateksti-fn #(str "Hinta: " (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
+                                                                    (get-in % [::to/oma-hinnoittelu ::h/hinnat])))
+                                          ".")
+          :varmistusteksti-header "Seuraavat toimenpiteet sisältävät hinnoittelutietoja:"
+          :varmistusteksti-footer "Näiden toimenpiteiden hinnoittelutiedot poistetaan siirron aikana."}))
+     [:p "Haluatko jatkaa?"]]))
+
+(defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet hintaryhmat]
+  (if (or (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
+          (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet)))
+    (varmista-kayttajalta/varmista-kayttajalta
+      {:otsikko "Siirto kokonaishintaisiin"
+       :sisalto (varmistusdialogi-sisalto toimenpiteet hintaryhmat)
+       :hyvaksy "Siirrä kokonaishintaisiin"
+       :toiminto-fn #(e! (tiedot/->SiirraValitutKokonaishintaisiin))})
+    (e! (tiedot/->SiirraValitutKokonaishintaisiin))))
+
 (defn- urakkatoiminnot [e! app]
   [^{:key "siirto"}
   [jaettu/siirtonappi e! app
    "Siirrä kokonaishintaisiin"
-   #(e! (tiedot/->SiirraValitutKokonaishintaisiin))
+   #(valmistele-toimenpiteiden-siirto e! (:toimenpiteet app) (:hintaryhmat app))
    #(oikeudet/on-muu-oikeus? "siirrä-kokonaishintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                              (:id @nav/valittu-urakka))]
@@ -277,6 +312,7 @@
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
+         [debug/debug app]
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 

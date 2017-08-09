@@ -132,22 +132,27 @@
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (suodata-valitavoitteet-urakkavuodella @kaikki-valitavoitteet-atom valittu-urakan-vuosi)]))
 
+(defn takaraja-poikkeaa-valtakunnallisesta? [{:keys [takaraja valtakunnallinen-takaraja
+                                                     valtakunnallinen-takarajan-toistopaiva
+                                                     valtakunnallinen-takarajan-toistokuukausi]}]
+  (boolean
+   (or
+    ;; Kertaluontoinen takaraja poikkeaa
+    (and valtakunnallinen-takaraja
+         (not= takaraja valtakunnallinen-takaraja))
+    ;; Toistuva takaraja poikkeaa
+    (and valtakunnallinen-takarajan-toistopaiva
+         valtakunnallinen-takarajan-toistokuukausi
+         (or (nil? takaraja)
+             (not= valtakunnallinen-takarajan-toistopaiva
+                   (t/day takaraja))
+             (not= valtakunnallinen-takarajan-toistokuukausi
+                   (t/month takaraja)))))))
+
 (defn ainakin-yksi-tavoite-muutettu-urakkaan? [rivit]
-  (boolean (some #(or
-                    ;; Kertaluontoinen takaraja poikkeaa
-                    (and (:valtakunnallinen-takaraja %)
-                         (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
-
-                    ;; Toistuva takaraja poikkeaa
-                    (and (:valtakunnallinen-takarajan-toistopaiva %)
-                         (:valtakunnallinen-takarajan-toistokuukausi %)
-                         (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
-                                   (t/day (:takaraja %)))
-                             (not= (:valtakunnallinen-takarajan-toistokuukausi %)
-                                   (t/month (:takaraja %)))))
-
-                    ;; Välitavoitteen nimi poikkeaa
-                    (not= (:valtakunnallinen-nimi %) (:nimi %)))
+  (boolean (some #(or (takaraja-poikkeaa-valtakunnallisesta? %)
+                      ;; Välitavoitteen nimi poikkeaa
+                      (not= (:valtakunnallinen-nimi %) (:nimi %)))
                  rivit)))
 
 (defn valtakunnalliset-valitavoitteet
@@ -213,15 +218,7 @@
         :solun-luokka
         (fn [_ rivi]
           (let [poikkeava "grid-solu-varoitus"]
-            (when (or
-                    (and (:valtakunnallinen-takaraja rivi)
-                         (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
-                    (and (:valtakunnallinen-takarajan-toistopaiva rivi)
-                         (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                         (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
-                                   (t/day (:takaraja rivi)))
-                             (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                                   (t/month (:takaraja rivi))))))
+            (when (takaraja-poikkeaa-valtakunnallisesta? rivi)
               poikkeava)))
         :tyyppi :pvm
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
