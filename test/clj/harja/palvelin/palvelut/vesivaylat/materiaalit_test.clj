@@ -120,7 +120,7 @@
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id})))))
 
-(deftest materiaalen-poisto-ilman-oikeutta
+(deftest materiaalen-poisto-eri-urakasta
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
         poistettava-materiaali-id (:id (first (q-map "SELECT id FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1")))]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
