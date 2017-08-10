@@ -43,12 +43,11 @@
                   {::m/id (::m/id tiedot)})
   (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
 
-(defn- muuta-materiaalin-alkuperainen-maara [db user uudet-alkuperaiset-maarat]
-  (doseq [materiaali uudet-alkuperaiset-maarat]
-    (m-q/paivita-materiaalin-alkuperainen-maara<!
-      db
-      {:maara (::m/alkuperainen-maara materiaali)
-       :nimi (::m/nimi materiaali)})))
+(defn- muuta-materiaalin-alkuperainen-maara [db materiaali]
+  (m-q/paivita-materiaalin-alkuperainen-maara<!
+    db
+    {:maara (::m/alkuperainen-maara materiaali)
+     :nimi (::m/nimi materiaali)}))
 
 (defn- muuta-materiaalien-alkuperainen-maara [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)
@@ -60,7 +59,7 @@
         (vaadi-materiaali-kuuluu-urakkaan db urakka-id materiaali-id)))
 
     (doseq [materiaali uudet]
-      (muuta-materiaalin-alkuperainen-maara db user materiaali))
+      (muuta-materiaalin-alkuperainen-maara db materiaali))
 
     (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
