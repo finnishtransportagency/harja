@@ -89,7 +89,7 @@
                           testi/+kayttaja-jvh+
                           {::m/urakka-id urakka-id
                            ::m/id (:id poistettava-materiaali-ennen)})
-        poistettava-materiaali-jalkeen (first (q-map "SELECT id, poistettu FROM vv_materiaali LIMIT 1"))
+        poistettava-materiaali-jalkeen (first (q-map "SELECT id, poistettu FROM vv_materiaali WHERE id = " (:id poistettava-materiaali-ennen)))
         materiaalien-lkm-jalkeen (:maara (first (q-map "SELECT COUNT(*) as maara FROM vv_materiaali WHERE poistettu IS NOT TRUE")))]
 
     ;; Ei-poistettu materiaali merkittiin poistetuksi
@@ -98,3 +98,5 @@
 
     ;; Muita matskuja ei poistettu
     (is (= materiaalien-lkm-ennen (+ materiaalien-lkm-jalkeen 1)))))
+
+;; TODO Lisää testit näille ilman oikeuksia

@@ -49,5 +49,5 @@ poistaja-sarake
         (dissoc ::luoja-id ::luotu))))
 
 (defn poistotiedot [user]
-  {:poistettu? true
-   :poistaja (:id user)})
+  {::poistettu? true
+   ::poistaja-id (:id user)})
