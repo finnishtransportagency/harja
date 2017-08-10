@@ -83,9 +83,9 @@
 (deftest materiaalen-haku-ilman-oikeutta
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :hae-vesivayla-materiaalilistaus
-                                          testi/+kayttaja-ulle+
-                                          {::m/urakka-id urakka-id})))))
+                                           :hae-vesivayla-materiaalilistaus
+                                           testi/+kayttaja-ulle+
+                                           {::m/urakka-id urakka-id})))))
 
 (deftest materiaalen-kirjaus-ilman-oikeutta
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
@@ -124,7 +124,24 @@
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
         poistettava-materiaali-id (:id (first (q-map "SELECT id FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1")))]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :poista-materiaalikirjaus
-                                           testi/+kayttaja-jvh+
+                                                   :poista-materiaalikirjaus
+                                                   testi/+kayttaja-jvh+
+                                                   {::m/urakka-id urakka-id
+                                                    ::m/id poistettava-materiaali-id})))))
+
+(deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :muuta-materiaalien-alkuperainen-maara
+                                           testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id
-                                            ::m/id poistettava-materiaali-id})))))
+                                            :uudet-alkuperaiset-maarat []})))))
+
+(deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
+  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :muuta-materiaalien-alkuperainen-maara
+                                                   testi/+kayttaja-jvh+
+                                                   {::m/urakka-id urakka-id
+                                                    :uudet-alkuperaiset-maarat [{::m/nimi "Hiekkasäkki"
+                                                                                 ::m/alkuperainen-maara 666}]})))))

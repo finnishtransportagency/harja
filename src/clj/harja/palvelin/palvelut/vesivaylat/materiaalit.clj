@@ -56,7 +56,7 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                     (::m/urakka-id tiedot))
     (doseq [materiaali uudet]
-      (let [materiaali-id (:id (first (m-q/materiaalin-id-nimella (::m/nimi materiaali))))]
+      (let [materiaali-id (:id (first (m-q/materiaalin-id-nimella db {:nimi (::m/nimi materiaali)})))]
         (vaadi-materiaali-kuuluu-urakkaan db urakka-id materiaali-id)))
 
     (doseq [materiaali uudet]
