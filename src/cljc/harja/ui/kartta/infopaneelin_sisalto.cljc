@@ -552,7 +552,8 @@
                                                     (::to/suoritettu toimenpide))]
                                        (pvm/pvm s)
                                        "-")
-                                     " " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide)))])
+                                     " - " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))
+                                     " - " (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)))])
                         (when kaikkia-ei-piirretty?
                           [:div (str "...sekä "
                                      (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
