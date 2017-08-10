@@ -129,6 +129,24 @@
                                                    {::m/urakka-id urakka-id
                                                     ::m/id poistettava-materiaali-id})))))
 
+(deftest materiaalien-alkuperaisen-maaran-muokkaus
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+        materiaali-nimi "Hiekkasäkki"
+        uusi-alkuperainen-maara 48598
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :muuta-materiaalien-alkuperainen-maara
+                          testi/+kayttaja-jvh+
+                          {::m/urakka-id urakka-id
+                           :uudet-alkuperaiset-maarat [{::m/nimi materiaali-nimi
+                                                        ::m/alkuperainen-maara uusi-alkuperainen-maara}]})
+        uudet-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-vesivayla-materiaalilistaus
+                                          testi/+kayttaja-jvh+
+                                          {::m/urakka-id urakka-id})
+        hiekkasakki (first (filter #(= (::m/nimi %) materiaali-nimi) uudet-materiaalit))]
+
+    (is (= (::m/alkuperainen-maara hiekkasakki) uusi-alkuperainen-maara))))
+
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
