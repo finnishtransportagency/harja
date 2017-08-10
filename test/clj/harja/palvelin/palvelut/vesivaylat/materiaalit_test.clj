@@ -123,7 +123,7 @@
 (deftest materiaalen-poisto-eri-urakasta
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
         poistettava-materiaali-id (:id (first (q-map "SELECT id FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1")))]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :poista-materiaalikirjaus
                                            testi/+kayttaja-jvh+
                                            {::m/urakka-id urakka-id
