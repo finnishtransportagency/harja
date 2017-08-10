@@ -175,7 +175,7 @@
                                                                #(select-keys % [::m/nimi ::m/alkuperainen-maara])
                                                                sisalto)
                                   :chan ch}))
-                           (go (<! ch)))))
+                           ch)))
            :vetolaatikot (into {}
                                (map (juxt ::m/nimi
                                           (fn [{muutokset ::m/muutokset}]

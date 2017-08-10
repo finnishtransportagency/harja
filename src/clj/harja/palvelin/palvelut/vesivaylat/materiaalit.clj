@@ -7,6 +7,7 @@
             [harja.domain.muokkaustiedot :as muok]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :as id]
+            [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [taoensso.timbre :as log]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
@@ -42,9 +43,12 @@
                   {::m/id (::m/id tiedot)})
   (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
 
-(defn- muuta-materiaalin-alkuperainen-maara [db user tiedot]
-  ;; TODO
-  )
+(defn- muuta-materiaalin-alkuperainen-maara [db user {:keys [uudet-alkuperaiset-maarat]}]
+  (doseq [materiaali uudet-alkuperaiset-maarat]
+    (m-q/paivita-materiaalin-alkuperainen-maara<!
+      db
+      {:maara (::m/alkuperainen-maara materiaali)
+       :nimi (::m/nimi materiaali)})))
 
 (defn- muuta-materiaalien-alkuperainen-maara [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)

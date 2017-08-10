@@ -4,11 +4,12 @@
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.vesivaylat.materiaali :as m]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >!]]
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.tyokalut.tuck :refer [palvelukutsu]]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään viestityypit
@@ -86,17 +87,20 @@
   (process-event [{tiedot :tiedot} app]
     (let [uudet-alkuperaiset-maarat (:uudet-alkuperaiset-maarat tiedot)
           urakka-id (:urakka-id tiedot)
-          chan (:chan tiedot)]
-      (-> app
-          (assoc :tallennus-kaynnissa? true)
-          (palvelukutsu :muuta-materiaalien-alkuperainen-maara
-                        {::m/urakka-id urakka-id
-                         :uudet-alkuperaiset-maarat uudet-alkuperaiset-maarat}
-                        {:onnistui ->ListausHaettu
-                         :onnistui-parametrit [chan]
-                         :epaonnistui ->Virhe
-                         :epaonnistui-parametrit [chan]})))
-    app)
+          chan (:chan tiedot)
+          onnistui! (tuck/send-async! ->ListausHaettu)
+          epaonnistui! (tuck/send-async! ->Virhe)]
+
+      (go
+        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperainen-maara
+                                   {::m/urakka-id urakka-id
+                                    :uudet-alkuperaiset-maarat uudet-alkuperaiset-maarat}))]
+          (if (k/virhe? vastaus)
+            (epaonnistui! vastaus)
+            (onnistui! vastaus))
+          (>! chan vastaus)))
+
+      (assoc app :tallennus-kaynnissa? true)))
 
   AloitaMateriaalinKirjaus
   (process-event [{nimi :nimi tyyppi :tyyppi} app]
