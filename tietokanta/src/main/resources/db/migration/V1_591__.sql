@@ -5,6 +5,8 @@ ALTER TABLE vv_materiaali ADD CONSTRAINT poistaja_olemassa CHECK (poistettu IS N
 
 -- Päivitä materiaalilistaus-view, älä listaa poistettuja kirjauksia
 
+ALTER TYPE vv_materiaali_muutos ADD ATTRIBUTE id INTEGER;
+
 CREATE OR REPLACE VIEW vv_materiaalilistaus AS
   SELECT DISTINCT ON (m1."urakka-id", m1.nimi)
     m1."urakka-id", m1.nimi,
@@ -20,7 +22,7 @@ CREATE OR REPLACE VIEW vv_materiaalilistaus AS
           AND m3.nimi = m1.nimi
           AND m3.poistettu IS NOT TRUE) AS "maara-nyt",
     -- Kerätään kaikki muutokset omaan taulukkoon
-    (SELECT array_agg(ROW(l.pvm, l.maara, l.lisatieto)::vv_materiaali_muutos)
+    (SELECT array_agg(ROW(l.pvm, l.maara, l.lisatieto, l.id)::vv_materiaali_muutos)
      FROM vv_materiaali l
      WHERE l."urakka-id" = m1."urakka-id"
            AND m1.poistettu IS NOT TRUE

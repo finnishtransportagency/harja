@@ -20,3 +20,5 @@
 
 (s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::nimi ::maara ::pvm]
                                    :opt [::lisatieto]))
+
+(s/def ::poista-materiaalikirjaus (s/keys :req [::id]))

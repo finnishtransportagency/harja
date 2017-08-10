@@ -24,7 +24,7 @@
    [:table
     [:tbody
      (for*
-       [{::m/keys [pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
+       [{::m/keys [id pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
        [:tr
         [:td {:width "15%"} (pvm/pvm pvm)]
         [:td {:width "15%" :class (if (neg? maara)
@@ -32,19 +32,20 @@
                                     "materiaali-plus")}
          maara " kpl"]
         [:td {:width "60%"} lisatieto]
-        [:td {:width "10%"} [:span.klikattava
-                             {:on-click (fn []
-                                          (varmista-kayttajalta/varmista-kayttajalta
-                                            {:otsikko "Poistetaanko kirjaus?"
-                                             :sisalto [:span
-                                                       (str "Poistetaanko "
-                                                            (pvm/pvm pvm)
-                                                            " kirjattu materiaalinkäyttö: "
-                                                            maara " kpl?")]
+        [:td {:width "10%"}
+         [:span.klikattava
+          {:on-click (fn []
+                       (varmista-kayttajalta/varmista-kayttajalta
+                         {:otsikko "Poistetaanko kirjaus?"
+                          :sisalto [:span
+                                    (str "Poistetaanko "
+                                         (pvm/pvm pvm)
+                                         " kirjattu materiaalinkäyttö: "
+                                         maara " kpl?")]
 
-                                             :hyvaksy "Poista"
-                                             :toiminto-fn #(log "TODO POISTA")}))}
-                             (ikonit/livicon-trash)]]])]]])
+                          :hyvaksy "Poista"
+                          :toiminto-fn #(log "TODO POISTA " id)}))}
+          (ikonit/livicon-trash)]]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
@@ -135,7 +136,7 @@
     (komp/sisaan #(e! (tiedot/->PaivitaUrakka @nav/valittu-urakka)))
     (komp/watcher nav/valittu-urakka (fn [_ _ ur]
                                        (e! (tiedot/->PaivitaUrakka ur))))
-    (fn [e! {:keys [materiaalilistaus materiaalin-kaytto lisaa-materiaali tallennus-kaynnissa?]
+    (fn [e! {:keys [materiaalilistaus lisaa-materiaali tallennus-kaynnissa?]
              :as app}]
       (let [voi-kirjata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivayla-materiaalit
                                                    (:urakka-id app))]
