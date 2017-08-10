@@ -19,6 +19,7 @@
 (defrecord PaivitaLisattavaMateriaali [tiedot])
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
+(defrecord MuutaAlkuperainenMaara [tiedot])
 
 (defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
@@ -80,6 +81,22 @@
   PeruMateriaalinLisays
   (process-event [_ app]
     (dissoc app :lisaa-materiaali))
+
+  MuutaAlkuperainenMaara
+  (process-event [{tiedot :tiedot} app]
+    (let [uudet-alkuperaiset-maarat (:uudet-alkuperaiset-maarat tiedot)
+          urakka-id (:urakka-id tiedot)
+          chan (:chan tiedot)]
+      (-> app
+          (assoc :tallennus-kaynnissa? true)
+          (palvelukutsu :muuta-materiaalien-alkuperainen-maara
+                        {::m/urakka-id urakka-id
+                         :uudet-alkuperaiset-maarat uudet-alkuperaiset-maarat}
+                        {:onnistui ->ListausHaettu
+                         :onnistui-parametrit [chan]
+                         :epaonnistui ->Virhe
+                         :epaonnistui-parametrit [chan]})))
+    app)
 
   AloitaMateriaalinKirjaus
   (process-event [{nimi :nimi tyyppi :tyyppi} app]
