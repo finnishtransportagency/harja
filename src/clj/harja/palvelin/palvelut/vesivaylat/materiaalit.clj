@@ -67,5 +67,6 @@
     (http-palvelin/poista-palvelut
       (:http-palvelin this)
       :hae-vesivayla-materiaalilistaus
-      :kirjaa-vesivayla-materiaali)
+      :kirjaa-vesivayla-materiaali
+      :poista-materiaalikirjaus)
     this))

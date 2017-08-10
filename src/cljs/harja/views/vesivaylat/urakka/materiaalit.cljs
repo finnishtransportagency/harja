@@ -44,7 +44,9 @@
                                          maara " kpl?")]
 
                           :hyvaksy "Poista"
-                          :toiminto-fn #(log "TODO POISTA " id)}))}
+                          :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
+                                                                                ;; TODO Urakka-id mistä!?
+                                                                                :urakka-id urakka-id}))}))}
           (ikonit/livicon-trash)]]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}

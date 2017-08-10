@@ -22,6 +22,7 @@
 
 (defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
+(defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
 
@@ -90,6 +91,13 @@
   PaivitaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
     (update app :kirjaa-materiaali merge tiedot))
+
+  PoistaMateriaalinKirjaus
+  (process-event [_ {:keys [urakka-id materiaali-id] :as app}]
+    (palvelukutsu app :poista-materiaalikirjaus {::m/urakka-id urakka-id
+                                                 ::m/id materiaali-id}
+                  {:onnistui ->ListausHaettu
+                   :epaonnistui ->Virhe}))
 
   PeruMateriaalinKirjaus
   (process-event [_ app]
