@@ -529,7 +529,7 @@
    :data tietyomaa})
 
 (defmethod infopaneeli-skeema :turvalaite [turvalaite]
-  (let [max-toimenpiteet-lkm 10]
+  (let [nayta-max-toimenpidetta 10]
     {:tyyppi :turvalaite
      :jarjesta-fn (constantly false)
      :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
@@ -541,17 +541,23 @@
                    (hakufunktio
                      #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
                      #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
-                  {:otsikko "Toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
+                  {:otsikko "Tehdyt toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
                    :komponentti
                    (fn []
-                     [:div
-                      (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take max-toimenpiteet-lkm (:toimenpiteet turvalaite)))]
-                        ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
-                        [:div (str (if-let [s (or (::to/pvm toimenpide)
-                                                  (::to/suoritettu toimenpide))]
-                                     (pvm/pvm s)
-                                     "-")
-                                   " " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide)))])])}]))
+                     (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
+                       [:div
+                        (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
+                          ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                          [:div (str (if-let [s (or (::to/pvm toimenpide)
+                                                    (::to/suoritettu toimenpide))]
+                                       (pvm/pvm s)
+                                       "-")
+                                     " " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide)))])
+                        (when kaikkia-ei-piirretty?
+                          [:div (str "...sekä "
+                                     (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
+                                     " muuta toimenpidettä.")])
+                        ]))}]))
      :data turvalaite}))
 
 (defmethod infopaneeli-skeema :default [x]
