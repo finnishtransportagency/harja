@@ -6,7 +6,8 @@
             [harja.domain.vesivaylat.materiaali :as m]
             [harja.domain.muokkaustiedot :as muok]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :as id]))
+            [harja.id :as id]
+            [taoensso.timbre :as log]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
