@@ -20,7 +20,7 @@
                      :sarake (Integer. (last %))
                      :tiedostopolku (if kehitysmoodi
                                       (str "dev-resources/" (second %))
-                                      "public/js/harja.js"))
+                                      (io/resource "harja.js")))
 
           loydetyt-tiedot)))
 
@@ -124,7 +124,7 @@
                         (if selain
                           stack-lahde
                           (str "*Selainta ei tunnistettu, joten lähde stack ei välttämättä ole oikein*(slack-n)" stack-lahde)))
-                      "Generoitua javascript tiedostoa ei löytynyt...")]
+                      (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostoppolku first :tiedostopolku)))]
       stack-lahde))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]} kehitysmoodi]
