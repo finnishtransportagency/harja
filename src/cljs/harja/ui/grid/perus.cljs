@@ -969,8 +969,8 @@
                                                  alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
                    (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
-                         [:td {:colSpan (or sarakkeita 1) :class luokka}
-                          teksti])])]])
+                     [:td {:colSpan (or sarakkeita 1) :class luokka}
+                      teksti])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
@@ -1005,27 +1005,40 @@
        ")"))
 
 (defn arvo-ja-nappi
-  "Jos annettu ehto on true, näyttää gridissä napin, jolla kenttää voidaan muokata.
-   Jos ehto on false, piirtää kentän arvon tekstinä sekä napin kynä-ikonilla,
-   jolla arvoa voi muokata."
-  [{:keys [ehto-fn nappi-teksti nappi-optiot
-           uusi-fn muokkaa-fn arvo voi-muokata?
-           muokkaa-ikoni ikoninappi?] :as optiot}]
-  (if voi-muokata?
+  "Piirtää arvon ja napin, tai pelkän napin optioista riippuen.
+   Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
+
+  Optiot:
+  sisalto                       Jokin seuraavista: :arvo-ja-nappi (oletus), :pelkka-nappi, :pelkka-arvo
+  pelkka-nappi-teksti           Teksti joka näytetään silloin kun piirretään pelkkä nappi.
+  pelkka-nappi-toiminto-fn      Funktio, jota kutsutaan silloin kun piirretään pelkkä nappi ja sitä klikataan.
+  nappi-optiot                  Lisäoptiot, jotka annetaan pelkälle napille tai napille arvon kanssa.
+  arvo-ja-nappi-toiminto-fn     Funktio, jota kutsutaan silloin kun piirretään arvo ja nappi, ja nappia painetaan.
+  arvo-ja-nappi-napin-teksti    Teksti tai ikoni, joka piirretään napille arvon kanssa.
+  ikoninappi?                   Jos true, arvon kanssa piirrettävä nappi käyttää ikoninappi-tyyliä"
+  [{:keys [sisalto pelkka-nappi-teksti nappi-optiot
+           pelkka-nappi-toiminto-fn arvo-ja-nappi-toiminto-fn arvo
+           arvo-ja-nappi-napin-teksti ikoninappi?] :as optiot}]
+  (let [sisalto (or sisalto :arvo-ja-nappi)]
     [:div.arvo-ja-nappi-container
-     (if (ehto-fn)
+     (case sisalto
+       :pelkka-nappi
        [napit/yleinen-ensisijainen
-        nappi-teksti
-        uusi-fn
+        pelkka-nappi-teksti
+        pelkka-nappi-toiminto-fn
         (merge {:luokka (str "nappi-grid")}
                nappi-optiot)]
+
+       :arvo-ja-nappi
        [:div.arvo-ja-nappi
         [:span.arvo-ja-nappi-arvo
          arvo]
         [napit/yleinen-toissijainen
-         (or muokkaa-ikoni (ikonit/muokkaa))
-         muokkaa-fn
+         (or arvo-ja-nappi-napin-teksti (ikonit/muokkaa))
+         arvo-ja-nappi-toiminto-fn
          (merge {:ikoninappi? ikoninappi?
                  :luokka (str "btn-xs arvo-ja-nappi-nappi")}
-                nappi-optiot)]])]
-    [:span arvo]))
+                nappi-optiot)]]
+
+       :pelkka-arvo
+       [:span arvo])]))
