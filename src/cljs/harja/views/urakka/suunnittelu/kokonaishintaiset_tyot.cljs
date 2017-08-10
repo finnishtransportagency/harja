@@ -403,7 +403,9 @@
                :tyyppi        :positiivinen-numero :leveys 25
                :tayta-alas?   #(not (nil? %))
                :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
-              {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %) (- (:kuukausi %) 1) 15)
+              {:otsikko       "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %)
+                                                                                    (- (:kuukausi %) 1)
+                                                                                    15)
                :tyyppi        :pvm :fmt #(if % (pvm/pvm %)) :leveys 25
                :tayta-alas?   #(not (nil? %))
                :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
