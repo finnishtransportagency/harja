@@ -52,7 +52,7 @@
                gen/string-alphanumeric)))
 
 (deftest materiaalen-kirjaus-ja-haku
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id 1]
     (loop [testauskerrat 50
            generoidut-materiaalit []]
 
