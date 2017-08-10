@@ -18,6 +18,15 @@
                   (muok/lisaa-muokkaustiedot materiaali ::m/id user))
   (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
 
+(defn- poista-materiaalikirjaus [db user materiaali]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
+                                  (::m/urakka-id materiaali))
+  ;; TODO Vaadi materiaali kuuluu urakkaan
+  (specql/update! db ::m/materiaali
+                  (muok/poistotiedot user)
+                  {::m/id (::m/id materiaali)})
+  (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
+
 (defrecord Materiaalit []
   component/Lifecycle
   (start [{db :db
@@ -31,6 +40,11 @@
                                     (fn [user materiaali]
                                       (kirjaa-materiaali db user materiaali))
                                     {:kysely-spec ::m/materiaalikirjaus
+                                     :vastaus-spec ::m/materiaalilistauksen-vastaus})
+    (http-palvelin/julkaise-palvelu http :poista-materiaalikirjaus
+                                    (fn [user tiedot]
+                                      (poista-materiaalikirjaus db user tiedot))
+                                    {:kysely-spec ::m/poista-materiaalikirjaus
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 
