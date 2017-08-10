@@ -5,7 +5,21 @@
             [com.stuartsierra.component :as component]
             [harja.domain.vesivaylat.materiaali :as m]
             [harja.domain.muokkaustiedot :as muok]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.id :as id]))
+
+(defn vaadi-materiaali-kuuluu-urakkaan
+  [db urakka-id materiaali-id]
+  "Tarkistaa, että materiaali kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
+  (assert urakka-id "Urakka-id puuttuu")
+  (when (id/id-olemassa? materiaali-id)
+    (let [materiaalin-urakka-id (::m/urakka-id (first (specql/fetch db
+                                                                    ::m/materiaali
+                                                                    #{::m/urakka-id}
+                                                                    {::m/id materiaali-id})))]
+      (when (not= materiaalin-urakka-id urakka-id)
+        (throw (SecurityException. (str "Materiaali " materiaali-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " materiaalin-urakka-id)))))))
 
 (defn- hae-materiaalilistaus [db user params]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
@@ -21,7 +35,7 @@
 (defn- poista-materiaalikirjaus [db user materiaali]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaali))
-  ;; TODO Vaadi materiaali kuuluu urakkaan
+  (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id materiaali) (::m/id materiaali))
   (specql/update! db ::m/materiaali
                   (muok/poistotiedot user)
                   {::m/id (::m/id materiaali)})
