@@ -46,8 +46,8 @@
   (process-event [{urakka :urakka} app]
     (let [u (:id urakka)]
       (palvelukutsu (assoc app
-                           :urakka-id u
-                           :materiaalilistaus nil)
+                      :urakka-id u
+                      :materiaalilistaus nil)
                     :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
                     {:onnistui ->ListausHaettu
                      :epaonnistui ->Virhe})))
@@ -55,10 +55,10 @@
   ListausHaettu
   (process-event [{tulokset :tulokset} app]
     (assoc app
-           :materiaalilistaus tulokset
-           :lisaa-materiaali nil
-           :kirjaa-materiaali nil
-           :tallennus-kaynnissa? false))
+      :materiaalilistaus tulokset
+      :lisaa-materiaali nil
+      :kirjaa-materiaali nil
+      :tallennus-kaynnissa? false))
 
   AloitaMateriaalinLisays
   (process-event [_ app]
@@ -93,9 +93,9 @@
     (update app :kirjaa-materiaali merge tiedot))
 
   PoistaMateriaalinKirjaus
-  (process-event [_ {:keys [urakka-id materiaali-id] :as app}]
-    (palvelukutsu app :poista-materiaalikirjaus {::m/urakka-id urakka-id
-                                                 ::m/id materiaali-id}
+  (process-event [{tiedot :tiedot} app]
+    (palvelukutsu app :poista-materiaalikirjaus {::m/urakka-id (:urakka-id tiedot)
+                                                 ::m/id (:materiaali-id tiedot)}
                   {:onnistui ->ListausHaettu
                    :epaonnistui ->Virhe}))
 
@@ -109,12 +109,12 @@
         (assoc :tallennus-kaynnissa? true)
         (palvelukutsu :kirjaa-vesivayla-materiaali
                       (as-> kirjaa-materiaali m
-                        (lomake/ilman-lomaketietoja m)
-                        ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
-                        (if (= :- (:tyyppi m))
-                          (update m ::m/maara -)
-                          m)
-                        (dissoc m :tyyppi))
+                            (lomake/ilman-lomaketietoja m)
+                            ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
+                            (if (= :- (:tyyppi m))
+                              (update m ::m/maara -)
+                              m)
+                            (dissoc m :tyyppi))
                       {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
 

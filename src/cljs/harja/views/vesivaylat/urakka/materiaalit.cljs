@@ -18,7 +18,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
-(defn- materiaaliloki [e! rivit]
+(defn- materiaaliloki [e! urakka-id rivit]
   [:div.vv-materiaaliloki
    [:h3 "Muutokset"]
    [:table
@@ -45,7 +45,6 @@
 
                           :hyvaksy "Poista"
                           :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
-                                                                                ;; TODO Urakka-id mistä!?
                                                                                 :urakka-id urakka-id}))}))}
           (ikonit/livicon-trash)]]])]]])
 
@@ -165,7 +164,7 @@
                      :vetolaatikot (into {}
                                          (map (juxt ::m/nimi
                                                     (fn [{muutokset ::m/muutokset}]
-                                                      [materiaaliloki e! muutokset])))
+                                                      [materiaaliloki e! (:urakka-id app) muutokset])))
                                          materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}

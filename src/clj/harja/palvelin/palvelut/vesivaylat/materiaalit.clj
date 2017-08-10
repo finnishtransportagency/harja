@@ -33,14 +33,14 @@
                   (muok/lisaa-muokkaustiedot materiaali ::m/id user))
   (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
 
-(defn- poista-materiaalikirjaus [db user materiaali]
+(defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
-                                  (::m/urakka-id materiaali))
-  (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id materiaali) (::m/id materiaali))
+                                  (::m/urakka-id tiedot))
+  (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id tiedot) (::m/id tiedot))
   (specql/update! db ::m/materiaali
                   (muok/poistotiedot user)
-                  {::m/id (::m/id materiaali)})
-  (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
+                  {::m/id (::m/id tiedot)})
+  (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
 
 (defrecord Materiaalit []
   component/Lifecycle
