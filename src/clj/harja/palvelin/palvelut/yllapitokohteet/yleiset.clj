@@ -87,6 +87,15 @@
         (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " kohteen-urakka)))))))
 
+(defn lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? [db user yllapitokohde-id]
+  (assert yllapitokohde-id "Ylläpitokohde-id puuttuu")
+  (let [kohteen-urakka-id (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+        kohteen-suorittava-tiemerkintaurakka-id (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                              db
+                                                              {:id yllapitokohde-id})))]
+    (boolean (or (oikeudet/voi-lukea? oikeudet/urakat-aikataulu kohteen-urakka-id user)
+                 (oikeudet/voi-lukea? oikeudet/urakat-aikataulu kohteen-suorittava-tiemerkintaurakka-id user)))))
+
 (defn laske-osien-pituudet
   "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
   [db yllapitokohteet]
@@ -189,12 +198,12 @@
 
 (def urakan-yllapitokohde-xf
   (comp
-   yllapitokohteet-domain/yllapitoluokka-xf
-   (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
-   (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-   (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
+    yllapitokohteet-domain/yllapitoluokka-xf
+    (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+    (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+    (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+    (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+    (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
 
 (defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
   (let [yllapitokohteet (into []
@@ -210,8 +219,8 @@
                              (q/yllapitokohteet-joille-linkityksia db {:idt idt}))
         yllapitokohteiden-aikataulu-muokattu (q/hae-yllapitokohteiden-aikataulun-muokkaus-aika db {:idt idt})
         etsi-yllapitokohde (fn [id]
-                            (some #(when (= id (:yllapitokohde %)) %)
-                                  yllapitokohteiden-aikataulu-muokattu))
+                             (some #(when (= id (:yllapitokohde %)) %)
+                                   yllapitokohteiden-aikataulu-muokattu))
         yllapitokohteet (->> yllapitokohteet
                              (map #(assoc % :pituus
                                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)
