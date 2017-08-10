@@ -42,6 +42,24 @@
                   {::m/id (::m/id tiedot)})
   (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
 
+(defn- muuta-materiaalin-alkuperainen-maara [db user tiedot]
+  ;; TODO
+  )
+
+(defn- muuta-materiaalien-alkuperainen-maara [db user tiedot]
+  (let [urakka-id (::m/urakka-id tiedot)
+        uudet (:uudet-alkuperaiset-maarat tiedot)]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
+                                    (::m/urakka-id tiedot))
+    (doseq [materiaali uudet]
+      ;; TODO Ei onnistu nyt vaatiminen koska id puuttuu?
+      #_(vaadi-materiaali-kuuluu-urakkaan db urakka-id (::m/id tiedot)))
+
+    (doseq [materiaali uudet]
+      (muuta-materiaalin-alkuperainen-maara db user tiedot))
+
+    (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
+
 (defrecord Materiaalit []
   component/Lifecycle
   (start [{db :db
@@ -60,6 +78,11 @@
                                     (fn [user tiedot]
                                       (poista-materiaalikirjaus db user tiedot))
                                     {:kysely-spec ::m/poista-materiaalikirjaus
+                                     :vastaus-spec ::m/materiaalilistauksen-vastaus})
+    (http-palvelin/julkaise-palvelu http :muuta-materiaalien-alkuperainen-maara
+                                    (fn [user tiedot]
+                                      (muuta-materiaalien-alkuperainen-maara db user tiedot))
+                                    {:kysely-spec ::m/muuta-materiaalien-alkuperainen-maara
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 
