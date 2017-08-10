@@ -6,3 +6,6 @@ WHERE id = (SELECT id
             WHERE nimi = :nimi
             ORDER BY luotu
             LIMIT 1);
+
+-- name: materiaalin-id-nimella
+SELECT id FROM vv_materiaali WHERE nimi = :nimi LIMIT 1;

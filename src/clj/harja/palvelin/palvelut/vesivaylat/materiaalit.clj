@@ -43,7 +43,7 @@
                   {::m/id (::m/id tiedot)})
   (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
 
-(defn- muuta-materiaalin-alkuperainen-maara [db user {:keys [uudet-alkuperaiset-maarat]}]
+(defn- muuta-materiaalin-alkuperainen-maara [db user uudet-alkuperaiset-maarat]
   (doseq [materiaali uudet-alkuperaiset-maarat]
     (m-q/paivita-materiaalin-alkuperainen-maara<!
       db
@@ -56,11 +56,11 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                     (::m/urakka-id tiedot))
     (doseq [materiaali uudet]
-      ;; TODO Ei onnistu nyt vaatiminen koska id puuttuu?
-      #_(vaadi-materiaali-kuuluu-urakkaan db urakka-id (::m/id tiedot)))
+      (let [materiaali-id (:id (first (m-q/materiaalin-id-nimella (::m/nimi materiaali))))]
+        (vaadi-materiaali-kuuluu-urakkaan db urakka-id materiaali-id)))
 
     (doseq [materiaali uudet]
-      (muuta-materiaalin-alkuperainen-maara db user tiedot))
+      (muuta-materiaalin-alkuperainen-maara db user materiaali))
 
     (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
