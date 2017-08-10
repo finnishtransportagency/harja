@@ -622,18 +622,6 @@
                                          :nayta-kaikki (roolit/tilaajan-kayttaja? user)
                                          :organisaatio (-> user :organisaatio :id))))))
 
-(defn hae-kohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
-  (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
-          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user))
-    (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id)
-
-          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
-      {:fim-kayttajat (vec fim-kayttajat)
-       :yhteyshenkilot (vec yhteyshenkilot)})
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
-
 (defn hae-paallystysten-sijainnit-kartalle
   "Hakee ylläpidon päällystystöiden geometriatiedot karttakuvan piirtoa varten"
   [db user parametrit]
@@ -694,9 +682,7 @@
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
                       (fn [user tiedot]
                         (hae-urakat db user tiedot)))
-    (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
-                      (fn [user tiedot]
-                        (hae-kohteen-urakan-yhteyshenkilot db fim user tiedot)))
+
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumien-sijainnit-kartalle db)

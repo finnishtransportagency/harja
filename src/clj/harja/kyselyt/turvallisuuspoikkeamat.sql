@@ -20,6 +20,7 @@ SELECT
   t.tyyppi,
   t.luotu,
   t.lahetetty,
+  t.vakavuusaste,
   t.lahetys_onnistunut     AS lahetysonnistunut,
   t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,

@@ -121,7 +121,7 @@
 
 (def vesivaylien-ikonien-varit
   {"merimajakka" "magenta"
-   "muu-merkki" "oranssi"
+   "muu merkki" "oranssi"
    "poiju" "keltainen"
    "reunamerkki" "lime"
    "sektoriloisto" "vihrea"

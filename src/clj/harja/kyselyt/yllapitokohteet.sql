@@ -578,10 +578,12 @@ SELECT
   ypk.tr_ajorata            AS "tr-ajorata",
   ypk.tr_kaista             AS "tr-kaista",
   ypk.yllapitoluokka,
-  tti.id                    AS "tietyoilmoitus-id"
+  tti.id                    AS "tietyoilmoitus-id",
+  paallystysurakka.nimi     AS paallystysurakka
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
+  LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
 WHERE
   ypk.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(ypk.vuodet) = 0
