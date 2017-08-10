@@ -540,15 +540,18 @@
                   {:otsikko "Väylä" :tyyppi :string :hae
                    (hakufunktio
                      #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
-                     #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}]
-                 (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take max-toimenpiteet-lkm (:toimenpiteet turvalaite)))]
-                   ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
-                   {:otsikko (if-let [s (or (::to/pvm toimenpide)
-                                            (::to/suoritettu toimenpide))]
-                               (pvm/pvm s)
-                               "-")
-                    :tyyppi :string
-                    :hae (hakufunktio (constantly true) (constantly (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))))})))
+                     #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
+                  {:otsikko "Toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
+                   :komponentti
+                   (fn []
+                     [:div
+                      (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take max-toimenpiteet-lkm (:toimenpiteet turvalaite)))]
+                        ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                        [:div (str (if-let [s (or (::to/pvm toimenpide)
+                                                  (::to/suoritettu toimenpide))]
+                                     (pvm/pvm s)
+                                     "-")
+                                   " " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide)))])])}]))
      :data turvalaite}))
 
 (defmethod infopaneeli-skeema :default [x]
