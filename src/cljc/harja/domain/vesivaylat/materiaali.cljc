@@ -18,7 +18,7 @@
 (s/def ::materiaalilistauksen-haku (s/keys :req [::urakka-id]))
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
 
-(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::nimi ::maara ::pvm]
+(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm]
                                    :opt [::lisatieto]))
 
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))

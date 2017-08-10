@@ -11,6 +11,7 @@
             [clojure.test.check.properties :as prop]
             [clojure.spec.alpha :as s]
             [harja.domain.vesivaylat.materiaali :as m]
+            [clj-time.core :as time]
             [harja.pvm :as pvm]
             [harja.tyokalut.functor :refer [fmap]]))
 
@@ -92,7 +93,10 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :kirjaa-vesivayla-materiaali
                                            testi/+kayttaja-ulle+
-                                           {::m/urakka-id urakka-id})))))
+                                           {::m/urakka-id urakka-id
+                                            ::m/nimi "Ulle"
+                                            ::m/maara 80000
+                                            ::m/pvm (time/now)})))))
 
 (deftest materiaalien-poisto
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
@@ -118,7 +122,8 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :poista-materiaalikirjaus
                                            testi/+kayttaja-ulle+
-                                           {::m/urakka-id urakka-id})))))
+                                           {::m/urakka-id urakka-id
+                                            ::m/id 666})))))
 
 (deftest materiaalen-poisto-eri-urakasta
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
