@@ -96,7 +96,7 @@
                                            {::m/urakka-id urakka-id
                                             ::m/nimi "Ulle"
                                             ::m/maara 80000
-                                            ::m/pvm (time/now)})))))
+                                            ::m/pvm (pvm/nyt)})))))
 
 (deftest materiaalien-poisto
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
