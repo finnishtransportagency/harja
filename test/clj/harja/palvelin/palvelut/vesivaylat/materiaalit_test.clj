@@ -80,6 +80,20 @@
                             m)
             (recur (dec testauskerrat) (conj generoidut-materiaalit m))))))))
 
+(deftest materiaalen-haku-ilman-oikeutta
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-vesivayla-materiaalilistaus
+                                          testi/+kayttaja-ulle+
+                                          {::m/urakka-id urakka-id})))))
+
+(deftest materiaalen-kirjaus-ilman-oikeutta
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :kirjaa-vesivayla-materiaali
+                                           testi/+kayttaja-ulle+
+                                           {::m/urakka-id urakka-id})))))
+
 (deftest materiaalien-poisto
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
         poistettava-materiaali-ennen (first (q-map "SELECT id, poistettu FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1"))
@@ -99,4 +113,9 @@
     ;; Muita matskuja ei poistettu
     (is (= materiaalien-lkm-ennen (+ materiaalien-lkm-jalkeen 1)))))
 
-;; TODO Lisää testit näille ilman oikeuksia
+(deftest materiaalen-poisto-ilman-oikeutta
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :poista-materiaalikirjaus
+                                           testi/+kayttaja-ulle+
+                                           {::m/urakka-id urakka-id})))))
