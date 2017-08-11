@@ -53,17 +53,17 @@
      ^{:key "integraatioloki"}
      [integraatioloki/integraatioloki])
 
-   "Häiriöilmoitukset"
-   :hairioilmoitukset
-   (when true ;; TODO OIKEUSTARKISTUS
-     ^{:key "integraatioloki"}
-     [hairiot/hairiot])
-
    "Yhteydenpito"
    :yhteydenpito
    (when (oikeudet/hallinta-yhteydenpito)
      ^{:key "yhteydenpito"}
      [yhteydenpito/yhteydenpito])
+
+   "Häiriöilmoitukset"
+   :hairioilmoitukset
+   (when true ;; TODO OIKEUSTARKISTUS
+     ^{:key "integraatioloki"}
+     [hairiot/hairiot])
 
    "API-järjestelmätunnukset"
    :api-jarjestelmatunnukset
