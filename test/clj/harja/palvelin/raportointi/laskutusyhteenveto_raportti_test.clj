@@ -80,6 +80,8 @@
           indeksitarkistukset-muut-kuin-kokhint (arvo-vastauksen-nnesta-elementista vastaus 18)
           indeksitarkistukset-kaikki (arvo-vastauksen-nnesta-elementista vastaus 19)
           kaikki-paitsi-kokhint-yhteensa (arvo-vastauksen-nnesta-elementista vastaus 20)
+          kaikki-yhteensa (arvo-vastauksen-nnesta-elementista vastaus 21)
+          _ (log/debug " kaikki-yhteensa " kaikki-yhteensa )
 
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))
           _ (log/debug " nurkkasumma  " nurkkasumma)
@@ -105,8 +107,8 @@
       (is (= indeksitarkistukset-bonukset "4,07"))
       (is (= indeksitarkistukset-erilliskustannukset "24,90"))
       (is (= indeksitarkistukset-muut-kuin-kokhint "43,13"))
-      (is (= indeksitarkistukset-kaikki "1000,20"))
-      (is (= kaikki-paitsi-kokhint-yhteensa "-6759,80"))
+      (is (= indeksitarkistukset-kaikki "1 000,20"))
+      (is (= kaikki-paitsi-kokhint-yhteensa "-6 759,80"))
 
 
-      (is (= nurkkasumma "155 250,20")))))
+      (is (= kaikki-yhteensa nurkkasumma "155 250,20")))))
