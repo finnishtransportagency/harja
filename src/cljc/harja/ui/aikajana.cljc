@@ -96,7 +96,7 @@
                           :clj  (t/day-of-week p))) (not= viikko-nyt viikko))
            ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
            (recur (conj acc
-                        ^{:key viikko-nyt}
+                        ^{:key (str viikko-nyt x)}
                         [:text {:x x :y (- alku-y 10)
                                 :font-size 8}
                          (str viikko-nyt)])
