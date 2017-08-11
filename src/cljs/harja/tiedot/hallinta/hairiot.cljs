@@ -27,6 +27,7 @@
   (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus {::hairio/viesti viesti}))]
         (reset! tallennus-kaynnissa? false)
         (reset! asetetaan-hairioilmoitus? false)
+        (reset! tuore-hairioviesti nil)
         (when-not (k/virhe? vastaus)
           (reset! hairiot vastaus)
           (hairio-ui/hae-tuorein-hairioilmoitus)))))
