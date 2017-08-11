@@ -13,6 +13,6 @@
 
 (define-tables
   ["hairioilmoitus" ::hairioilmoitus
-   {:voimassa ::voimassa?}])
+   {"voimassa" ::voimassa?}])
 
 (def sarakkeet #{::id ::viesti ::pvm ::voimassa?})
