@@ -16,6 +16,7 @@
 
 (def tarkkailyvali-ms 60000)
 (def tuore-hairioilmoitus (atom nil))
+(def tarkkaile-hairioilmoituksia? (atom false))
 
 (defn hae-tuorein-hairioilmoitus []
   (go (let [vastaus (<! (k/post! :hae-tuorein-voimassaoleva-hairioilmoitus {}))]
@@ -23,8 +24,10 @@
           (reset! tuore-hairioilmoitus vastaus)))))
 
 (defn tarkkaile-hairioilmoituksia []
-  (hae-tuorein-hairioilmoitus)
-  (go-loop []
-    (<! (timeout tarkkailyvali-ms))
+  (when-not @tarkkaile-hairioilmoituksia?
+    (reset! tarkkaile-hairioilmoituksia? true)
     (hae-tuorein-hairioilmoitus)
-    (recur)))
+    (go-loop []
+      (<! (timeout tarkkailyvali-ms))
+      (hae-tuorein-hairioilmoitus)
+      (recur))))
