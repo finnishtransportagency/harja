@@ -33,7 +33,7 @@
           (viesti/nayta! "Häiriöilmoituksen asettaminen epäonnistui!" :warn)
           (do (reset! hairiot vastaus)
               (reset! tuore-hairioviesti nil)
-              (hairio-ui/hae-tuorein-hairioilmoitus))))))
+              (hairio-ui/hae-tuorein-hairioilmoitus!))))))
 
 (defn poista-hairioilmoitus []
   (reset! tallennus-kaynnissa? true)
@@ -42,4 +42,4 @@
         (if (k/virhe? vastaus)
           (viesti/nayta! "Häiriöilmoituksen poistaminen epäonnistui!" :warn)
           (do (reset! hairiot vastaus)
-              (hairio-ui/hae-tuorein-hairioilmoitus))))))
+              (hairio-ui/hae-tuorein-hairioilmoitus!))))))
