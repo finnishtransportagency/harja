@@ -148,11 +148,11 @@
                                     (::m/maara-nyt %)) listaus)
                  kaytettava-maara (::m/maara kirjaa-materiaali)]
              [yleiset/tietoja {}
-              " Määrä nyt: " maara-nyt
-              " Muutos: " (case tyyppi
+              "Määrä nyt: " maara-nyt
+              "Muutos: " (case tyyppi
                             :- (if kaytettava-maara (- kaytettava-maara) " ")
                             :+ (or kaytettava-maara " "))
-              " Määrä jälkeen: " ((case tyyppi
+              "Määrä jälkeen: " ((case tyyppi
                                     :- -
                                     :+ +)
                                    maara-nyt
@@ -170,25 +170,25 @@
         [:div.vv-materiaalit
          (when voi-kirjata?
            [valinnat/urakkatoiminnot {}
-            ^{:key " lisaa-materiaali "}
+            ^{:key "lisaa-materiaali"}
             [:div.inline-block
              [napit/uusi " Lisää materiaali " #(e! (tiedot/->AloitaMateriaalinLisays))
               {:disabled lisaa-materiaali}]
              (when lisaa-materiaali
                [:div.vv-lisaa-materiaali-leijuke
-                [leijuke/leijuke {:otsikko " Lisää materiaali "
+                [leijuke/leijuke {:otsikko "Lisää materiaali"
                                   :sulje! #(e! (tiedot/->PeruMateriaalinLisays))
-                                  :ankkuri " lisaa-nappi " :suunta :oikea}
+                                  :ankkuri "lisaa-nappi" :suunta :oikea}
                  [materiaali-lomake {:muokkaa! #(e! (tiedot/->PaivitaLisattavaMateriaali %))
                                      :tallenna! #(e! (tiedot/->LisaaMateriaali))
-                                     :maara-placeholder " Syötä alkutilanne "}
+                                     :maara-placeholder "Syötä alkutilanne"}
                   lisaa-materiaali materiaalilistaus tallennus-kaynnissa?]]])]])
 
          [grid/grid
           {:voi-lisata? false
-           :id " vv-materiaalilistaus "
+           :id "vv-materiaalilistaus"
            :tunniste ::m/nimi
-           :tyhja " Ei materiaaleja "
+           :tyhja "Ei materiaaleja"
            :tallenna (when
                        voi-kirjata?
                        (fn [sisalto]
@@ -206,11 +206,11 @@
                                             [materiaaliloki e! (:urakka-id app) muutokset])))
                                materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
-           {:otsikko " Materiaali " :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
-           {:otsikko " Alkuperäinen määrä " :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
-           {:otsikko " Määrä nyt " :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
+           {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
+           {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
+           {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
            (when voi-kirjata?
-             {:otsikko " Kirjaa " :leveys 15 :tyyppi :komponentti
+             {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
               :komponentti (fn [{nimi ::m/nimi}]
                              [materiaalin-kirjaus e! app nimi])})]
           materiaalilistaus]]))))
