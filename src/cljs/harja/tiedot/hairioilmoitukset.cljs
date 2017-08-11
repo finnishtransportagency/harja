@@ -14,7 +14,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
 
-(def tarkkailyvali-ms (* 1000 60))
+(def tarkkailuvali-ms (* 1000 60))
 (def hairion-piilotusaika-ms (* 1000 60 60))
 (def tuore-hairioilmoitus (atom nil))
 (def tarkkaile-hairioilmoituksia? (atom false))
@@ -30,7 +30,7 @@
     (reset! tarkkaile-hairioilmoituksia? true)
     (hae-tuorein-hairioilmoitus!)
     (go-loop []
-      (<! (timeout tarkkailyvali-ms))
+      (<! (timeout tarkkailuvali-ms))
       (hae-tuorein-hairioilmoitus!)
       (recur))))
 
