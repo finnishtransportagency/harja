@@ -16,3 +16,9 @@
    {"voimassa" ::voimassa?}])
 
 (def sarakkeet #{::id ::viesti ::pvm ::voimassa?})
+
+(defn tuorein-voimassaoleva-hairio [hairiot]
+  (->> hairiot
+       (filter #(true? (::voimassa? %)))
+       (sort-by ::pvm)
+       (first)))

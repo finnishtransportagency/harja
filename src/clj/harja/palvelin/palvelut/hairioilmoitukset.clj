@@ -18,10 +18,8 @@
 
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
   ;; TODO OIKEUSCHECK
-  {:hairioilmoitus (->> (hae-kaikki-hairioilmoitukset db user)
-                        (filter #(true? (::hairio/voimassa? %)))
-                        (sort-by ::hairio/pvm)
-                        (first))})
+  {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user)
+                       (hairio/tuorein-voimassaoleva-hairio))})
 
 (defn- aseta-kaikki-hairioilmoitukset-pois [db user]
   ;; TODO OIKEUSCHECK
@@ -46,13 +44,13 @@
     (julkaise-palvelu
       http
       :hae-hairioilmoitukset
-      (fn [user]
+      (fn [user _]
         (hae-kaikki-hairioilmoitukset db user)))
 
     (julkaise-palvelu
       http
       :hae-tuorein-voimassaoleva-hairioilmoitus
-      (fn [user]
+      (fn [user _]
         (hae-tuorein-voimassaoleva-hairioilmoitus db user)))
 
     (julkaise-palvelu
@@ -64,7 +62,7 @@
     (julkaise-palvelu
       http
       :aseta-kaikki-hairioilmoitukset-pois
-      (fn [user]
+      (fn [user _]
         (aseta-kaikki-hairioilmoitukset-pois db user)))
     this)
 
