@@ -61,7 +61,7 @@
 
    "Häiriöilmoitukset"
    :hairioilmoitukset
-   (when true ;; TODO OIKEUSTARKISTUS
+   (when (oikeudet/hairioilmoitukset)
      ^{:key "integraatioloki"}
      [hairiot/hairiot])
 
