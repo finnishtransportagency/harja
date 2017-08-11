@@ -34,9 +34,8 @@
                     (-> (str tiedostopolku ".map") (io/resource) slurp (SourceMapImpl.)))]
     (log/debug "TIEDOSTOPOLKU: " (io/resource tiedostopolku))
     (log/debug "LÄHDETIEDOSTO: " tiedostopolku)
-    (when source-map
-      (let [mapping (.getMapping source-map rivi sarake)
-            lahde-rivi (.getSourceLine mapping)
+    (when-let [mapping (.getMapping source-map rivi sarake)]
+      (let [lahde-rivi (.getSourceLine mapping)
             lahde-sarake (.getSourceColumn mapping)
             generoitu-rivi (.getGeneratedLine mapping)
             generoitu-sarake (.getGeneratedColumn mapping)
