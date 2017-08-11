@@ -19,7 +19,7 @@
                                                {}))))
 
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
+  (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
   {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user)
                        (hairio/tuorein-voimassaoleva-hairio))})
 
