@@ -57,6 +57,7 @@
       (when tuore-hairio
         [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus
          {:disabled @tiedot/tallennus-kaynnissa?}])])
+
    [yleiset/vihje "Tuorein häiriöilmoitus näytetään kaikille Harjan käyttäjille selaimen alapalkissa."]])
 
 (defn hairiot []
