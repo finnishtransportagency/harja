@@ -9,7 +9,8 @@
             [harja.loki :refer [log]]
             [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- listaa-hairioilmoitus [hairio]
@@ -55,7 +56,8 @@
 
       (when tuore-hairio
         [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus
-         {:disabled @tiedot/tallennus-kaynnissa?}])])])
+         {:disabled @tiedot/tallennus-kaynnissa?}])])
+   [yleiset/vihje "Tuorein häiriöilmoitus näytetään kaikille Harjan käyttäjille selaimen alapalkissa."]])
 
 (defn hairiot []
   (komp/luo
