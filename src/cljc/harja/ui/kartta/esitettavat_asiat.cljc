@@ -36,7 +36,7 @@
     [asia]))
 
 (defn reitillinen-asia? [asia]
-  (case (:type (or (:sijainti asia) asia))
+  (case (:type (or (:sijainti asia) (:reitti asia) asia))
     :point false
     :line true
     :multiline true
