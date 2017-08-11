@@ -11,6 +11,7 @@
             [harja.ui.viesti :refer [viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
+            [harja.tiedot.hairioilmoitukset :as hairiotiedot]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
@@ -26,6 +27,7 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.hairioilmoitus :as hairio]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit])
@@ -146,8 +148,8 @@
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
-(defn hairioilmoitus []
-  [:div.hairioilmoitin "Häiriö Harjassa!"])
+(defn hairioilmoitus [hairiotiedot]
+  [:div.hairioilmoitin (::hairio/viesti hairiotiedot)])
 
 (defn paasisalto [sivu korkeus]
   [:div
@@ -166,8 +168,8 @@
      (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
      [yhteys-palautunut-ilmoitus])
 
-   (when true ;; TODO HÄIRIÖVIESTI SAATAVILLA
-     [hairioilmoitus])
+   (when-let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
+     [hairioilmoitus hairiotiedot])
 
    [:div.container
     [header sivu]]
@@ -233,6 +235,7 @@
   []
   (varoita-jos-vanha-ie)
   (kuuntele-oikeusvirheita)
+  (hairiotiedot/tarkkaile-hairioilmoituksia)
   (komp/luo
     (fn []
       (if @nav/render-lupa?
