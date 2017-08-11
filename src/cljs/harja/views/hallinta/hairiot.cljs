@@ -48,7 +48,7 @@
      [:div
       [:p (if tuore-hairio
             (listaa-hairioilmoitus tuore-hairio)
-            "Ei voimassaolevaa häiriöilmoitusta")]
+            "Ei voimassaolevaa häiriöilmoitusta. Kun asetat häiriöilmoituksen, se näytetään kaikille Harjan käyttäjille selaimen alapalkissa.")]
 
       (when-not tuore-hairio
         [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
@@ -56,9 +56,7 @@
 
       (when tuore-hairio
         [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus
-         {:disabled @tiedot/tallennus-kaynnissa?}])])
-
-   [yleiset/vihje "Tuorein häiriöilmoitus näytetään kaikille Harjan käyttäjille selaimen alapalkissa."]])
+         {:disabled @tiedot/tallennus-kaynnissa?}])])])
 
 (defn hairiot []
   (komp/luo
