@@ -22,34 +22,46 @@
 
 
 (defn- materiaaliloki [e! urakka-id rivit]
-  [:div.vv-materiaaliloki
-   [:h3 "Muutokset"]
-   [:table
-    [:tbody
-     (for*
-       [{::m/keys [id pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
-       [:tr
-        [:td {:width "15%"} (pvm/pvm pvm)]
-        [:td {:width "15%" :class (if (neg? maara)
-                                    "materiaali-miinus"
-                                    "materiaali-plus")}
-         maara " kpl"]
-        [:td {:width "60%"} lisatieto]
-        [:td {:width "10%"}
-         [:span.klikattava
-          {:on-click (fn []
-                       (varmista-kayttajalta/varmista-kayttajalta
-                         {:otsikko "Poistetaanko kirjaus?"
-                          :sisalto [:span
-                                    (str "Poistetaanko "
-                                         (pvm/pvm pvm)
-                                         " kirjattu materiaalinkäyttö: "
-                                         maara " kpl?")]
+  (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
+        rivin-voi-poistaa? (fn [rivi]
+                             ;; Ensimmäistä luontiajan mukaista kirjausta käytetään määrittämään
+                             ;; materiaalin alkuperäinen määrä, siksi sen saa poistaa vain jos se on ainoa kirjaus,
+                             ;; jolloin koko materiaali poistuu.
+                             ;; Kirjauspvm:ää ei voi käyttää määrittämään alkuperäistä määrää, koska ensimmäiselle
+                             ;; kirjauspäivälle saattaa olla useita kirjauksia.
+                             (or (and (= rivi (last rivit-jarjestyksessa))
+                                      (= (count rivit) 1))
+                                 ;; Muut kirjaukset saa poistaa aina
+                                 (not= rivi (last rivit-jarjestyksessa))))]
+    [:div.vv-materiaaliloki
+     [:h3 "Muutokset"]
+     [:table
+      [:tbody
+       (for*
+         [{::m/keys [id pvm maara lisatieto] :as rivi} rivit-jarjestyksessa]
+         [:tr
+          [:td {:width "15%"} (pvm/pvm pvm)]
+          [:td {:width "15%" :class (if (neg? maara)
+                                      "materiaali-miinus"
+                                      "materiaali-plus")}
+           maara " kpl"]
+          [:td {:width "60%"} lisatieto]
+          [:td {:width "10%"}
+           (when (rivin-voi-poistaa? rivi)
+             [:span.klikattava
+              {:on-click (fn []
+                           (varmista-kayttajalta/varmista-kayttajalta
+                             {:otsikko "Poistetaanko kirjaus?"
+                              :sisalto [:span
+                                        (str "Poistetaanko "
+                                             (pvm/pvm pvm)
+                                             " kirjattu materiaalinkäyttö: "
+                                             maara " kpl?")]
 
-                          :hyvaksy "Poista"
-                          :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
-                                                                                :urakka-id urakka-id}))}))}
-          (ikonit/livicon-trash)]]])]]])
+                              :hyvaksy "Poista"
+                              :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
+                                                                                    :urakka-id urakka-id}))}))}
+              (ikonit/livicon-trash)])]])]]]))
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
