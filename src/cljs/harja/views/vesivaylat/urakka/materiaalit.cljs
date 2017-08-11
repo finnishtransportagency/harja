@@ -1,5 +1,6 @@
 (ns harja.views.vesivaylat.urakka.materiaalit
   (:require [tuck.core :as tuck]
+            [cljs.core.async :as async :refer [put! <! chan close!]]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.domain.vesivaylat.materiaali :as m]
@@ -13,24 +14,41 @@
             [harja.ui.ikonit :as ikonit]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.oikeudet :as oikeudet])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]
+                   [cljs.core.async.macros :refer [go]]))
 
 
-(defn- materiaaliloki [e! rivit]
+(defn- materiaaliloki [e! urakka-id rivit]
   [:div.vv-materiaaliloki
    [:h3 "Muutokset"]
    [:table
     [:tbody
      (for*
-       [{::m/keys [pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
+       [{::m/keys [id pvm maara lisatieto] :as rivi} (reverse (sort-by ::m/pvm rivit))]
        [:tr
         [:td {:width "15%"} (pvm/pvm pvm)]
         [:td {:width "15%" :class (if (neg? maara)
                                     "materiaali-miinus"
                                     "materiaali-plus")}
          maara " kpl"]
-        [:td {:width "70%"} lisatieto]])]]])
+        [:td {:width "60%"} lisatieto]
+        [:td {:width "10%"}
+         [:span.klikattava
+          {:on-click (fn []
+                       (varmista-kayttajalta/varmista-kayttajalta
+                         {:otsikko "Poistetaanko kirjaus?"
+                          :sisalto [:span
+                                    (str "Poistetaanko "
+                                         (pvm/pvm pvm)
+                                         " kirjattu materiaalinkäyttö: "
+                                         maara " kpl?")]
+
+                          :hyvaksy "Poista"
+                          :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
+                                                                                :urakka-id urakka-id}))}))}
+          (ikonit/livicon-trash)]]])]]])
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
@@ -121,7 +139,7 @@
     (komp/sisaan #(e! (tiedot/->PaivitaUrakka @nav/valittu-urakka)))
     (komp/watcher nav/valittu-urakka (fn [_ _ ur]
                                        (e! (tiedot/->PaivitaUrakka ur))))
-    (fn [e! {:keys [materiaalilistaus materiaalin-kaytto lisaa-materiaali tallennus-kaynnissa?]
+    (fn [e! {:keys [materiaalilistaus lisaa-materiaali tallennus-kaynnissa?]
              :as app}]
       (let [voi-kirjata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivayla-materiaalit
                                                    (:urakka-id app))]
@@ -142,18 +160,31 @@
                                      :maara-placeholder "Syötä alkutilanne"}
                   lisaa-materiaali materiaalilistaus tallennus-kaynnissa?]]])]])
 
-         [grid/grid {:id "vv-materiaalilistaus"
-                     :tunniste ::m/nimi
-                     :tyhja "Ei materiaaleja"
-                     :vetolaatikot (into {}
-                                         (map (juxt ::m/nimi
-                                                    (fn [{muutokset ::m/muutokset}]
-                                                      [materiaaliloki e! muutokset])))
-                                         materiaalilistaus)}
+         [grid/grid
+          {:voi-lisata? false
+           :id "vv-materiaalilistaus"
+           :tunniste ::m/nimi
+           :tyhja "Ei materiaaleja"
+           :tallenna (when
+                       voi-kirjata?
+                       (fn [sisalto]
+                         (let [ch (chan)]
+                           (e! (tiedot/->MuutaAlkuperainenMaara
+                                 {:urakka-id (:urakka-id app)
+                                  :uudet-alkuperaiset-maarat (map
+                                                               #(select-keys % [::m/nimi ::m/alkuperainen-maara])
+                                                               sisalto)
+                                  :chan ch}))
+                           ch)))
+           :vetolaatikot (into {}
+                               (map (juxt ::m/nimi
+                                          (fn [{muutokset ::m/muutokset}]
+                                            [materiaaliloki e! (:urakka-id app) muutokset])))
+                               materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
-           {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30}
+           {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
            {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
-           {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10}
+           {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
            (when voi-kirjata?
              {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
               :komponentti (fn [{nimi ::m/nimi}]
