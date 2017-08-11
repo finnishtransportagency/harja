@@ -12,11 +12,13 @@
   (:import (com.atlassian.sourcemap SourceMapImpl SourceMap SourceMap$EachMappingCallback)))
 
 (defn stack-tracen-rivit-sarakkeet-ja-tiedostopolku
-  [stack-trace]
+  [stack-trace kehitysmoodi]
   (let [loydetyt-tiedot (re-seq #"\/([\/\w-]+\.js):(\d+):(\d+)" (str stack-trace))]
     (mapv #(hash-map :rivi (Integer. (nth % 2))
                      :sarake (Integer. (last %))
-                     :tiedostopolku (second %))
+                     :tiedostopolku (if kehitysmoodi
+                                      (second %)
+                                      "public/js/harja.js"))
           loydetyt-tiedot)))
 
 (defn oikaise-virheen-rivit-ja-sarakkeet
@@ -77,7 +79,7 @@
 
 (defn stack-trace-lahdekoodille
   [stack user-agent kehitysmoodi]
-  (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack)
+  (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)
         stack-lahde (if (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku (io/resource))
                       (let [rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet %) rivit-sarakkeet-ja-tiedostopolku)
                             stack-rivit-lahde (vec (keep #(tiedosto-rivi-ja-sarake % kehitysmoodi)
