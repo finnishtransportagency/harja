@@ -149,7 +149,7 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  [:div.hairioilmoitin (::hairio/viesti hairiotiedot)])
+  [:div.hairioilmoitin (str "Häiriötiedote: " (::hairio/viesti hairiotiedot))])
 
 (defn paasisalto [sivu korkeus]
   [:div
