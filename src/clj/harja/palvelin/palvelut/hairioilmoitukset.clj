@@ -14,9 +14,9 @@
 
 (defn- hae-kaikki-hairioilmoitukset [db user]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
-  (specql/fetch db ::hairio/hairioilmoitus
-                hairio/sarakkeet
-                {}))
+  (reverse (sort-by ::hairio/pvm (specql/fetch db ::hairio/hairioilmoitus
+                                               hairio/sarakkeet
+                                               {}))))
 
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
@@ -35,7 +35,7 @@
   (aseta-kaikki-hairioilmoitukset-pois db user)
   (specql/insert! db ::hairio/hairioilmoitus
                   {::hairio/viesti (::hairio/viesti tiedot)
-                   ::hairio/pvm (c/to-sql-date  (t/now))
+                   ::hairio/pvm (c/to-sql-date (t/now))
                    ::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user))
 
