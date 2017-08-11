@@ -13,25 +13,25 @@
             [clj-time.coerce :as c]))
 
 (defn- hae-kaikki-hairioilmoitukset [db user]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hairioilmoitukset user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (specql/fetch db ::hairio/hairioilmoitus
                 hairio/sarakkeet
                 {}))
 
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hairioilmoitukset user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user)
                        (hairio/tuorein-voimassaoleva-hairio))})
 
 (defn- aseta-kaikki-hairioilmoitukset-pois [db user]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hairioilmoitukset user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (specql/update! db ::hairio/hairioilmoitus
                   {::hairio/voimassa? false}
                   {::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user))
 
 (defn- aseta-hairioilmoitus [db user tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hairioilmoitukset user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (aseta-kaikki-hairioilmoitukset-pois db user)
   (specql/insert! db ::hairio/hairioilmoitus
                   {::hairio/viesti (::hairio/viesti tiedot)

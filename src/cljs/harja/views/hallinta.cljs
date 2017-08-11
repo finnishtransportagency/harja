@@ -61,7 +61,7 @@
 
    "Häiriöilmoitukset"
    :hairioilmoitukset
-   (when (oikeudet/hairioilmoitukset)
+   (when (oikeudet/hallinta-hairioilmoitukset)
      ^{:key "integraatioloki"}
      [hairiot/hairiot])
 
