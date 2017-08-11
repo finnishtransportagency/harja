@@ -27,23 +27,33 @@
         (when (not= (::hairio/id hairio) (::hairio/id tuorein-hairio))
           [:li (listaa-hairioilmoitus hairio)]))])])
 
-(defn- tuore-hairioilmoitus [tuore-hairio]
-  [:div [:h3 "Nykyinen häiriöilmoitus"]
-   [:p (if tuore-hairio
-         (listaa-hairioilmoitus tuore-hairio)
-         "Ei voimassaolevaa häiriöilmoitusta")]
+(defn- aseta-hairioilmoitus []
+  [:div
+   [kentat/tee-kentta {:tyyppi :text :nimi :viesti
+                       :koko [80 5]}
+    (r/wrap @tiedot/tuore-hairioviesti
+            #(reset! tiedot/tuore-hairioviesti %))]
+   [napit/tallenna "Aseta" aseta-hairioilmoitus]
+   [napit/peruuta
+    #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
+         (reset! tiedot/tuore-hairioviesti nil))]])
 
-   (when @tiedot/asetetaan-hairioilmoitus?
-     [kentat/tee-kentta {:tyyppi :text :nimi :viesti
-                         :koko [80 5]}
-      (r/wrap @tiedot/tuore-hairioviesti
-              #(swap! tiedot/tuore-hairioviesti %))])
-   (when (and (not tuore-hairio)
-              (not @tiedot/asetetaan-hairioilmoitus?))
-     [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
-      #(reset! tiedot/aseta-hairioilmoitus true)])
-   (when tuore-hairio
-     [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus])])
+(defn- tuore-hairioilmoitus [tuore-hairio]
+  [:div
+   [:h3 "Nykyinen häiriöilmoitus"]
+   (if @tiedot/asetetaan-hairioilmoitus?
+     [aseta-hairioilmoitus]
+     [:div
+      [:p (if tuore-hairio
+            (listaa-hairioilmoitus tuore-hairio)
+            "Ei voimassaolevaa häiriöilmoitusta")]
+
+      (when-not tuore-hairio
+        [napit/yleinen-ensisijainen "Aseta häiriöilmoitus"
+         #(reset! tiedot/asetetaan-hairioilmoitus? true)])
+
+      (when tuore-hairio
+        [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus])])])
 
 (defn hairiot []
   (komp/luo
@@ -51,11 +61,11 @@
     (komp/ulos #(reset! tiedot/hairiot nil))
     (komp/sisaan tiedot/hae-hairiot)
     (fn []
-      (let [hairiot @tiedot/hairiot
-            tuorein-voimassaoleva-hairio (hairio/tuorein-voimassaoleva-hairio hairiot)]
-        (if (nil? hairiot)
+      (let [hairiotilmoitukset @tiedot/hairiot
+            tuorein-voimassaoleva-hairio (hairio/tuorein-voimassaoleva-hairio hairiotilmoitukset)]
+        (if (nil? hairiotilmoitukset)
           [ajax-loader "Haetaan..."]
 
           [:div
            [tuore-hairioilmoitus tuorein-voimassaoleva-hairio]
-           [vanhat-hairioilmoitukset hairiot tuorein-voimassaoleva-hairio]])))))
+           [vanhat-hairioilmoitukset hairiotilmoitukset tuorein-voimassaoleva-hairio]])))))
