@@ -17,6 +17,7 @@
 (def tarkkailyvali-ms 60000)
 (def tuore-hairioilmoitus (atom nil))
 (def tarkkaile-hairioilmoituksia? (atom false))
+(def nayta-hairioilmoitus? (atom true))
 
 (defn hae-tuorein-hairioilmoitus []
   (go (let [vastaus (<! (k/post! :hae-tuorein-voimassaoleva-hairioilmoitus {}))]

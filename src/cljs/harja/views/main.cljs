@@ -31,7 +31,8 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -150,8 +151,10 @@
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
 (defn hairioilmoitus [hairiotiedot]
-  [:div.hairioilmoitin (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
-                            (::hairio/viesti hairiotiedot))])
+  [:div.hairioilmoitin
+   [napit/sulje-ruksi #(reset! hairiotiedot/nayta-hairioilmoitus? false)]
+   [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+              (::hairio/viesti hairiotiedot))]])
 
 (defn paasisalto [sivu korkeus]
   [:div
@@ -170,8 +173,9 @@
      (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
      [yhteys-palautunut-ilmoitus])
 
-   (when-let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
-     [hairioilmoitus hairiotiedot])
+   (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
+     (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
+       [hairioilmoitus hairiotiedot]))
 
    [:div.container
     [header sivu]]
