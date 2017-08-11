@@ -47,8 +47,8 @@
                                         (str "dev-resources/" tiedostopolku-ilman-paatetta tiedostopaate)))
                                     [".cljs" ".cljc"]))
                             (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))] ;; lähdetiedoston perässä saattaa olla timestamp. Otetaan se pois, jos on.
-                              (second lahdetiedosto)
-                              (.getSourceFileName mapping)))
+                              (str "public/js/" (second lahdetiedosto))
+                              (str "public/js/" (.getSourceFileName mapping))))
             muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
                                                             (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
                                         (try (as-> lahdetiedosto $
