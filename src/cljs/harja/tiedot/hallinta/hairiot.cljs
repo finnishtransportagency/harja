@@ -36,4 +36,5 @@
   (go (let [vastaus (<! (k/post! :aseta-kaikki-hairioilmoitukset-pois {}))]
         (reset! tallennus-kaynnissa? false)
         (when-not (k/virhe? vastaus)
-          (reset! hairiot vastaus)))))
+          (reset! hairiot vastaus)
+          (hairio-ui/hae-tuorein-hairioilmoitus)))))
