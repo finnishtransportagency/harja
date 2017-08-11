@@ -31,6 +31,7 @@
 (defn- aseta-hairioilmoitus []
   [:div
    [kentat/tee-kentta {:tyyppi :text :nimi :viesti
+                       :pituus-max 1024
                        :koko [80 5]}
     (r/wrap @tiedot/tuore-hairioviesti
             #(reset! tiedot/tuore-hairioviesti %))]
