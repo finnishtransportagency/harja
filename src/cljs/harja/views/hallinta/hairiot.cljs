@@ -33,7 +33,8 @@
                        :koko [80 5]}
     (r/wrap @tiedot/tuore-hairioviesti
             #(reset! tiedot/tuore-hairioviesti %))]
-   [napit/tallenna "Aseta" aseta-hairioilmoitus]
+   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioviesti)
+    {:disabled @tiedot/tallennus-kaynnissa?}]
    [napit/peruuta
     #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
          (reset! tiedot/tuore-hairioviesti nil))]])
@@ -53,12 +54,14 @@
          #(reset! tiedot/asetetaan-hairioilmoitus? true)])
 
       (when tuore-hairio
-        [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus])])])
+        [napit/poista "Poista häiriöilmoitus" tiedot/poista-hairioilmoitus
+         {:disabled @tiedot/tallennus-kaynnissa?}])])])
 
 (defn hairiot []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/ulos #(reset! tiedot/hairiot nil))
+    (komp/ulos #(do (reset! tiedot/hairiot nil)
+                    (reset! tiedot/asetetaan-hairioilmoitus? false)))
     (komp/sisaan tiedot/hae-hairiot)
     (fn []
       (let [hairiotilmoitukset @tiedot/hairiot

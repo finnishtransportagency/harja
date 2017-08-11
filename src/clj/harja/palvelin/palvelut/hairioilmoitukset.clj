@@ -8,7 +8,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.muokkaustiedot :as muok]
             [harja.domain.hairioilmoitus :as hairio]
-            [specql.core :as specql]))
+            [specql.core :as specql]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn- hae-kaikki-hairioilmoitukset [db user]
   ;; TODO OIKEUSCHECK
@@ -25,7 +27,7 @@
   ;; TODO OIKEUSCHECK
   (specql/update! db ::hairio/hairioilmoitus
                   {::hairio/voimassa? false}
-                  {})
+                  {::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user))
 
 (defn- aseta-hairioilmoitus [db user tiedot]
@@ -33,7 +35,7 @@
   (aseta-kaikki-hairioilmoitukset-pois db user)
   (specql/insert! db ::hairio/hairioilmoitus
                   {::hairio/viesti (::hairio/viesti tiedot)
-                   ::hairio/pvm (::hairio/pvm tiedot)
+                   ::hairio/pvm (c/to-sql-date  (t/now))
                    ::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user))
 
