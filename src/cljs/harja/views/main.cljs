@@ -152,7 +152,7 @@
 
 (defn hairioilmoitus [hairiotiedot]
   [:div.hairioilmoitin
-   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!)]
+   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
    [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
               (::hairio/viesti hairiotiedot))]])
 
