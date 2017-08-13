@@ -29,8 +29,8 @@
   (is (true? (pvm/sama-tai-ennen? (t/local-date-time 2005 10 10 11 11 11)
                                   (t/local-date-time 2005 10 10 11 11 11)
                                   false)))
-  (is (true? (pvm/sama-tai-ennen? (t/plus nyt (t/hours 4))
-                                  nyt)))
+  (is (false? (pvm/sama-tai-ennen? (t/plus nyt (t/hours 4))
+                                   nyt)))
   (is (true? (pvm/sama-tai-ennen? nyt
                                   nyt)))
   (is (true? (pvm/sama-tai-ennen? nyt
@@ -58,9 +58,9 @@
   (is (true? (pvm/sama-tai-jalkeen? (t/local-date-time 2005 10 10 11 11 11)
                                     (t/local-date-time 2005 10 10 11 11 11)
                                     false)))
-  (is (true? (pvm/sama-tai-jalkeen? nyt
-                                    (t/plus nyt (t/hours 4))
-                                    true)))
+  (is (false? (pvm/sama-tai-jalkeen? nyt
+                                     (t/plus nyt (t/hours 4))
+                                     true)))
   (is (true? (pvm/sama-tai-jalkeen? nyt
                                     nyt)))
   (is (true? (pvm/sama-tai-jalkeen? (t/plus nyt (t/hours 4))
