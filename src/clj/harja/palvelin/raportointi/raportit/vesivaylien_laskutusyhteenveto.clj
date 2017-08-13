@@ -114,6 +114,7 @@
                                  (concat
                                    (map :summa (:yksikkohintaiset tiedot))
                                    [(:sanktiot tiedot)]
+                                   [(:erilliskustannukset tiedot)]
                                    (map :toteutunut-maara (vals (:kokonaishintaiset tiedot))))))])
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
