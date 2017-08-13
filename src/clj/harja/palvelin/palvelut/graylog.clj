@@ -269,6 +269,29 @@
                                         palvelu-asetukset-kayttoon)]
     katkos-asetukset-kayttoon))
 
+(defn analyysit-yhteyskatkoksista
+  [yhteyskatkokset {analysointimetodi :analysointimetodi analyysit :analyysit}]
+  (let [ok-yhteyskatkos-data (filter :yhteyskatkokset yhteyskatkokset)
+        rikkinaiset-lokitukset (when (contains? analyysit :rikkinaiset-lokitukset)
+                                  (count (filter :rikkinainen yhteyskatkokset)))
+        yhteyskatkokset-ryhmittain (when (contains? analyysit :eniten-katkosryhmia)
+                                    (mapcat #(mapv (fn [mappi]
+                                                     (assoc mappi :katkokset 1))
+                                                   (:yhteyskatkokset %))
+                                            ok-yhteyskatkos-data))
+        eniten-katkosryhmia (when (contains? analyysit :eniten-katkosryhmia)
+                              (into {}
+                                (take-last 5 (sort-by (fn [mappi]
+                                                        (second mappi))
+                                                 (reduce #(if (contains? %1 (:palvelut %2))
+                                                            (update %1 (:palvelut %2) inc)
+                                                            (assoc %1 (:palvelut %2) 1))
+                                                         {} yhteyskatkokset-ryhmittain)))))
+        eniten-katkoksia (when (contains? analyysit :eniten-katkoksia) {:foo 1337})
+        pisimmat-katkokset (when (contains? analyysit :pisimmat-katkokset) {:bar 13})]
+    {:eniten-katkoksia eniten-katkoksia :pisimmat-katkokset pisimmat-katkokset
+     :rikkinaiset-lokitukset rikkinaiset-lokitukset :eniten-katkosryhmia eniten-katkosryhmia}))
+
 (defn bool-keyword
   [avain]
   (keyword (str (name avain) "?")))
@@ -302,9 +325,16 @@
         haettavat-tiedot-lokituksista (cond-> #{}
                                               (tehtava-analyysi? :eniten-katkoksia) (conj :palvelut)
                                               (tehtava-analyysi? :pisimmat-katkokset) (conj :ensimmaiset-katkokset
-                                                                                            :viimeiset-katkokset))
-        yhteyskatkokset-mappina (map #(yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)
-                                     graylogista-haetut-lokitukset)]))
+                                                                                            :viimeiset-katkokset)
+                                              (tehtava-analyysi? :eniten-katkosryhmia) (conj :palvelut))
+        haettavat-tiedot-lokituksista (zipmap haettavat-tiedot-lokituksista
+                                              (repeat (count haettavat-tiedot-lokituksista) true))
+        yhteyskatkokset-mappina (map #(let [mappaus-yritys (yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
+                                        (if (contains? mappaus-yritys :yhteyskatkokset)
+                                          mappaus-yritys
+                                          {:rikkinainen mappaus-yritys}))
+                                     graylogista-haetut-lokitukset)]
+    (analyysit-yhteyskatkoksista yhteyskatkokset-mappina hakuasetukset)))
 
 
 (defrecord Graylog [data-csvna]

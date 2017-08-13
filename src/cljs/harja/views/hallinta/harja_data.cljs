@@ -52,6 +52,15 @@
                 ;  :on-legend-click (fn [nakyma]
                 ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkokset-jarjestys-data nakyma) yhteyskatkokset-data-avain)))}
                 yhteyskatkokset-jarjestys-data])))
+
+(defn yhteyskatkosanalyysi
+  [{:keys [eniten-katkoksia pisimmat-katkokset rikkinaiset-lokitukset eniten-katkosryhmia]}]
+  [:div
+    [:p (str "Rikkinaisia lokituksia: " rikkinaiset-lokitukset)]
+    [:p (str "Eniten katkoksia näillä palvelukutsuilla: " (pr-str eniten-katkoksia))]
+    [:p (str "Eniten katkosryhmiä näillä palvelukutsuilla: " (pr-str eniten-katkosryhmia))]
+    [:p (str "Pisimmät katkosvälit näillä palvelukutsuilla: " (pr-str pisimmat-katkokset))]])
+
 (defn hae-kaikki-yhteyskatkosdatat
   [e!]
   (e! (tiedot/->HaeYhteyskatkosData :pvm :palvelut))
@@ -84,7 +93,7 @@
   (fn [e! {:keys [analyysit valittu-analyysi yhteyskatkokset-pvm-data yhteyskatkokset-palvelut-data
                   valittu-yhteyskatkokset-jarjestys yhteyskatkokset-jarjestykset haku-kaynnissa valittu-yhteyskatkokset-arvo
                   yhteyskatkokset-arvot yhteyskatkosryhma-pvm-data yhteyskatkosryhma-palvelut-data
-                  hakuasetukset-nakyvilla? hakuasetukset]}]
+                  hakuasetukset-nakyvilla? hakuasetukset analyysi-tehty? analyysi]}]
     (if (empty? haku-kaynnissa)
       [:span
        [:div.container
@@ -131,14 +140,20 @@
                 [:h3 "Järjestys palvelukutsujen mukaan"]
                 (case valittu-yhteyskatkokset-arvo
                   "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-bars e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
-                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])))]]
-
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])
+            ^{:key "yhteyskatkosanalyysi"}
+            [:div
+              [:h3 "Yhteyskatkosanalyysi"]
+              (if analyysi-tehty?
+                [yhteyskatkosanalyysi analyysi]
+                [y/ajax-loader])]))]]
       [y/ajax-loader])))
 
 (defn harja-data* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (hae-kaikki-yhteyskatkosdatat e!))
+                           (hae-kaikki-yhteyskatkosdatat e!)
+                           (e! (tiedot/->HaeAnalyysi)))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! app]
       [:div

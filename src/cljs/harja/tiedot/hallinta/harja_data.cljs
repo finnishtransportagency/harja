@@ -27,7 +27,9 @@
                     :kaytossa {:min-katkokset 0
                                :naytettavat-ryhmat #{:tallenna :hae :urakan :muut}}
                     :hakuasetukset {:min-katkokset 0
-                                    :naytettavat-ryhmat #{:tallenna :hae :urakka :muut}}}))
+                                    :naytettavat-ryhmat #{:tallenna :hae :urakka :muut}}
+                    :analyysi-tehty? false
+                    :analyysi {}}))
 
 (defn graylog-palvelukutsu
   "Hakee serveriltä yhteyskatkosdatan."
@@ -47,12 +49,20 @@
                            :min-katkokset min-katkokset})
     (update app :haku-kaynnissa #(conj % hakukoodi))))
 
+(defn graylog-hae-analyysi
+  [callback hakuasetukset]
+  (graylog-palvelukutsu :graylog-hae-analyysi
+                        (tuck/send-async! callback)
+                        hakuasetukset))
+
 (defrecord PaivitaArvo [arvo avain])
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeYhteyskatkosData [ryhma-avain jarjestys-avain])
 (defrecord HaeYhteyskatkosryhmaData [ryhma-avain jarjestys-avain])
 (defrecord PaivitaYhteyskatkosArvot [data hakukoodi app-avain])
 (defrecord PaivitaArvoFunktio [funktio avain])
+(defrecord HaeAnalyysi [])
+(defrecord PaivitaAnalyysiArvot [analyysi])
 
 (extend-protocol Event
   PaivitaArvo
@@ -70,6 +80,16 @@
   HaeYhteyskatkosryhmaData
   (process-event [parametrit app]
     (graylog-haku :yhteyskatkosryhma parametrit app))
+  HaeAnalyysi
+  (process-event [_ app]
+    (graylog-hae-analyysi ->PaivitaAnalyysiArvot {:analysointimetodi :naivi
+                                                  :analyysit #{:eniten-katkoksia :pisimmat-katkokset
+                                                               :rikkinaiset-lokitukset :eniten-katkosryhmia}})
+    app)
   PaivitaYhteyskatkosArvot
   (process-event [{data :data hakukoodi :hakukoodi app-avain :app-avain} app]
-    (assoc app app-avain data :haku-kaynnissa (disj (:haku-kaynnissa app) hakukoodi :alku))))
+    (assoc app app-avain data :haku-kaynnissa (disj (:haku-kaynnissa app) hakukoodi :alku)))
+  PaivitaAnalyysiArvot
+  (process-event [{analyysi :analyysi} app]
+    (assoc app :analyysi analyysi
+               :analyysi-tehty? true)))
