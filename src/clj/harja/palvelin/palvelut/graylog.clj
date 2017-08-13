@@ -51,6 +51,14 @@
   [teksti string?] string?
   (st/replace teksti #"�_" "ä"))
 
+(defn re-escape
+  [teksti]
+  (st/escape teksti {\. "\\." \\ "\\\\" \+ "\\+"
+                     \* "\\*" \? "\\?" \^ "\\^"
+                     \$ "\\$" \[ "\\[" \] "\\]"
+                     \( "\\(" \) "\\)" \{ "\\{"
+                     \} "\\}" \| "\\|" \/ "\\/"
+                     \space "\\s"}))
 
 (defn+ etsi-arvot-valilta
   "Tällä voi hakea stringin 'teksti' sisältä substringin alku- ja loppu-tekstin
@@ -62,28 +70,11 @@
    ([teksti string? alku-teksti string? loppu-teksti string] string?
     (etsi-arvot-valilta teksti alku-teksti loppu-teksti false))
    ([teksti string? alku-teksti string? loppu-teksti string? kaikki? ::boolean] string?
-    (loop [kasiteltava-teksti (ilman-skandeja teksti)
-           tekstin-alku (if-let [alku-tekstin-alku (st/index-of kasiteltava-teksti alku-teksti)]
-                          (+ alku-tekstin-alku (count alku-teksti)) nil)
-           tekstin-loppu (if tekstin-alku (st/index-of kasiteltava-teksti loppu-teksti tekstin-alku) nil)
-           arvo (if (and tekstin-alku tekstin-loppu)
-                  [(subs kasiteltava-teksti tekstin-alku tekstin-loppu)]
-                  nil)]
-        (if (and tekstin-alku tekstin-loppu)
-          (if kaikki?
-              (let [kasiteltava-teksti (subs kasiteltava-teksti tekstin-loppu)
-                    tekstin-alku (if (st/index-of kasiteltava-teksti alku-teksti) (+ (st/index-of kasiteltava-teksti alku-teksti) (count alku-teksti)) nil)
-                    tekstin-loppu (if tekstin-alku (st/index-of kasiteltava-teksti loppu-teksti tekstin-alku) nil)
-                    uusi-arvo (if (and tekstin-alku tekstin-loppu) (subs kasiteltava-teksti tekstin-alku tekstin-loppu) nil)]
-                (recur
-                  kasiteltava-teksti
-                  tekstin-alku
-                  tekstin-loppu
-                  (if uusi-arvo
-                    (conj arvo uusi-arvo)
-                    arvo)))
-              (first arvo))
-          arvo))))
+    (let [re (re-pattern (str (re-escape alku-teksti) "([^"
+                              (re-escape loppu-teksti) "]+)"))]
+      (if kaikki?
+        (mapv second (re-seq re teksti))
+        (second (re-find re teksti))))))
 
 (defn hae-yhteyskatkos-data
   "Lukee csv tiedoston poistaen header-rivin.
