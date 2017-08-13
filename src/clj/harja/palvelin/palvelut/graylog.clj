@@ -107,6 +107,9 @@
             kello? (assoc :kello (etsi-arvot-valilta  aika "T" "."))
             kayttaja? (assoc :kayttaja (etsi-arvot-valilta loki-teksti "[:div Käyttäjä  " " ")))))
 
+(defn slack-yhteyskatkos-lokituksen-tiedot
+  [loki-teksti aika & avaimet])
+
 (defn html-yhteyskatkos-lokituksen-yhteyskatkokset
   [loki-teksti & avaimet]
   (let [palvelut? (some #(= :palvelut %) avaimet)
@@ -132,6 +135,13 @@
               ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (get yhteyskatkos-tiedot 2))
               viimeiset-katkokset? (assoc :viimeiset-katkokset (last yhteyskatkos-tiedot))))))
 
+(defn tekstin-formatointi
+  [teksti]
+  (cond
+    (re-find #"\[:table" teksti) :html
+    (re-find #"(slack-n)" teksti) :slack
+    :else nil))
+
 (defn yhteyskatkokset-lokitus-string->yhteyskatkokset-map
   "Ottaa graylogista luetut yhteyskatkokslokituksen ja palauttaa kutsujan määrittämät
    tiedot mapissa. Katkoksien lukumäärä palautetaan aina.
@@ -148,10 +158,15 @@
   [lokitus {:keys [pvm kello kayttaja palvelut ensimmaiset-katkokset viimeiset-katkokset]}]
   (let [aika (first lokitus)
         loki-teksti (last lokitus)
-        html-yhteyskatkos-tiedot (html-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
-        html-yhteyskatkos-yhteyskatkokset (html-yhteyskatkos-lokituksen-yhteyskatkokset loki-teksti palvelut ensimmaiset-katkokset viimeiset-katkokset)
-        html-yhtyeksatkokset (merge html-yhteyskatkos-tiedot {:yhteyskatkokset html-yhteyskatkos-yhteyskatkokset})]
-    html-yhtyeksatkokset))
+        kaytetty-formatointi (tekstin-formatointi loki-teksti)
+        yhteyskatkoksien-metadata (case kaytetty-formatointi
+                                    :html (html-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
+                                    :slack (slack-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
+                                    nil)
+        yhteyskatkokset (case kaytetty-formatointi
+                          :html (html-yhteyskatkos-lokituksen-yhteyskatkokset loki-teksti palvelut ensimmaiset-katkokset viimeiset-katkokset)
+                          nil)]
+    (merge yhteyskatkoksien-metadata {:yhteyskatkokset yhteyskatkokset})))
 
 (defn jarjestele-yhteyskatkos-data-visualisointia-varten
   [yhteyskatkos-data ryhma-avain jarjestys-avain]
@@ -269,6 +284,18 @@
         asetuksien-mukainen-data (asetukset-kayttoon jarjestelty-data hakuasetukset)]
     asetuksien-mukainen-data))
 
+(defn hae-yhteyskatkosanalyysi
+  [{analysointimetodi :analysointimetodi analyysit :analyysit :as hakuasetukset} data-csvna]
+  (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
+        tehtava-analyysi? #(contains? analyysit %)
+        haettavat-tiedot-lokituksista (cond-> #{}
+                                              (tehtava-analyysi? :eniten-katkoksia) (conj :palvelut)
+                                              (tehtava-analyysi? :pisimmat-katkokset) (conj :ensimmaiset-katkokset
+                                                                                            :viimeiset-katkokset))
+        yhteyskatkokset-mappina (map #(yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)
+                                     graylogista-haetut-lokitukset)]))
+
+
 (defrecord Graylog [data-csvna]
   component/Lifecycle
   (start [this]
@@ -280,8 +307,12 @@
                            :graylog-hae-yhteyskatkosryhma
                            (fn [_ hakuasetukset]
                             (hae-yhteyskatkosten-data hakuasetukset (st/trim (:polku data-csvna)) true)))
+    (http/julkaise-palvelu (:http-palvelin this)
+                           :graylog-hae-analyysi
+                           (fn [_ hakuasetukset]
+                            (hae-yhteyskatkosanalyysi hakuasetukset (st/trim (:polku data-csvna)))))
     this)
 
   (stop [this]
-    (http/poista-palvelut (:http-palvelin this) :graylog-hae-yhteyskatkokset :graylog-hae-yhteyskatkosryhma)
+    (http/poista-palvelut (:http-palvelin this) :graylog-hae-yhteyskatkokset :graylog-hae-yhteyskatkosryhma :graylog-hae-analyysi)
     this))
