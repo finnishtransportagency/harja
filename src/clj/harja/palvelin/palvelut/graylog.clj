@@ -88,56 +88,53 @@
    (fn [teksti]
       (if (and (string? teksti) (re-find re teksti)) nil teksti))))
 
-(defn html-yhteyskatkos-lokituksen-tiedot
-  [loki-teksti aika & avaimet]
-  (let [pvm? (some #(= :pvm %) avaimet)
-        kello? (some #(= :kello %) avaimet)
-        kayttaja? (some #(= :kayttaja %) avaimet)]
-    (cond-> {}
-            pvm? (assoc :pvm (etsi-arvot-valilta aika "" "T"))
-            kello? (assoc :kello (etsi-arvot-valilta  aika "T" "."))
-            kayttaja? (assoc :kayttaja (etsi-arvot-valilta loki-teksti "[:div Käyttäjä  " " ")))))
 
-(defn slack-yhteyskatkos-lokituksen-tiedot
-  [loki-teksti aika & avaimet])
-
-(defn html-yhteyskatkos-lokituksen-yhteyskatkokset
-  [loki-teksti & avaimet]
-  (let [palvelut? (some #(= :palvelut %) avaimet)
-        ensimmaiset-katkokset? (some #(= :ensimmaiset-katkokset %) avaimet)
-        viimeiset-katkokset? (some #(= :viimeiset-katkokset %) avaimet)
-        yhteyskatkos-tiedot [(when palvelut?
-                               (etsi-arvot-valilta loki-teksti "[:tr [:td {:valign top} [:b :" "]]" true))
-                             (mapv (fn [x]
-                                    (Integer. x))
-                                   (etsi-arvot-valilta loki-teksti "[:pre Katkoksia " " " true))
-                             (when ensimmaiset-katkokset?
-                               (etsi-arvot-valilta loki-teksti "ensimmäinen: " "viimeinen" true))
-                             (when viimeiset-katkokset?
-                               (etsi-arvot-valilta loki-teksti "viimeinen: " "]]]" true))]
-        map-vec->vec-map (fn [mappi-vektoreita]
-                           (apply mapv (fn [& arvot]
-                                         (zipmap (keys mappi-vektoreita) arvot))
-                                       (vals mappi-vektoreita)))]
-    (map-vec->vec-map
-      (cond-> {}
-              palvelut? (assoc :palvelut (first yhteyskatkos-tiedot))
-              true (assoc :katkokset (second yhteyskatkos-tiedot))
-              ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (get yhteyskatkos-tiedot 2))
-              viimeiset-katkokset? (assoc :viimeiset-katkokset (last yhteyskatkos-tiedot))))))
 
 (defn tekstin-formatointi
   [teksti]
   (cond
-    (re-find #"\[:table" teksti) :html
-    (re-find #"(slack-n)" teksti) :slack
-    :else nil))
+    (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
+         (re-find #"\]\]\]\)\]\]$" teksti)) :html
+    (re-find #":td|:tr|:table|:div|:pre|:valign" teksti) :html-rikkinainen
+    (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
+         (re-find #"\}\]\}$" teksti)) :slack
+    (re-find #":title|:value" teksti) :slack-rikkinainen
+    :else :joku-rikkinainen))
+
+(defn yhteyskatkokset-formatoinnille
+  [loki-teksti aika {:keys [pvm? kello? kayttaja? palvelut? ensimmaiset-katkokset? viimeiset-katkokset? :as haettavat-tiedot-lokituksista]}
+   {:keys [pvm kello kayttaja palvelut katkokset ensimmaiset-katkokset viimeiset-katkokset :as tekstit]}]
+  (let [yhteyskatkoksien-metadata  (cond-> {}
+                                           pvm? (assoc :pvm (apply etsi-arvot-valilta aika pvm))
+                                           kello? (assoc :kello (apply etsi-arvot-valilta aika kello))
+                                           kayttaja? (assoc :kayttaja (apply etsi-arvot-valilta loki-teksti kayttaja)))
+
+        yhteyskatkos-tiedot [(when palvelut?
+                               (apply etsi-arvot-valilta loki-teksti (conj palvelut true)))
+                             (mapv (fn [x]
+                                    (Integer. x))
+                                   (apply etsi-arvot-valilta loki-teksti (conj katkokset true)))
+                             (when ensimmaiset-katkokset?
+                               (apply etsi-arvot-valilta loki-teksti (conj ensimmaiset-katkokset true)))
+                             (when viimeiset-katkokset?
+                               (apply etsi-arvot-valilta loki-teksti (conj viimeiset-katkokset true)))]
+        map-vec->vec-map (fn [mappi-vektoreita]
+                           (apply mapv (fn [& arvot]
+                                         (zipmap (keys mappi-vektoreita) arvot))
+                                       (vals mappi-vektoreita)))
+        yhteyskatkokset (map-vec->vec-map
+                          (cond-> {}
+                                  palvelut? (assoc :palvelut (first yhteyskatkos-tiedot))
+                                  true (assoc :katkokset (second yhteyskatkos-tiedot))
+                                  ensimmaiset-katkokset? (assoc :ensimmaiset-katkokset (get yhteyskatkos-tiedot 2))
+                                  viimeiset-katkokset? (assoc :viimeiset-katkokset (last yhteyskatkos-tiedot))))]
+      (merge yhteyskatkoksien-metadata {:yhteyskatkokset yhteyskatkokset})))
 
 (defn yhteyskatkokset-lokitus-string->yhteyskatkokset-map
   "Ottaa graylogista luetut yhteyskatkokslokituksen ja palauttaa kutsujan määrittämät
    tiedot mapissa. Katkoksien lukumäärä palautetaan aina.
 
-   Kutsuja määrittää haluamansa tiedot setissä keywordeina. Keywordit voivat olla
+   Kutsuja määrittää haluamansa tiedot mapissa boolean arvoina. Keywordit voivat olla
    :pvm
    :kello
    :kayttaja
@@ -146,18 +143,30 @@
    :viimeiset-katkokset
    , joista :pvm, :kello ja :kayttaja palauttavat yksittäisiä arvoja yhdestä
    lokituksesta, kun taas loput palauttavat vektoriarvoja."
-  [lokitus {:keys [pvm kello kayttaja palvelut ensimmaiset-katkokset viimeiset-katkokset]}]
+  [lokitus haettavat-tiedot-lokituksista]
   (let [aika (first lokitus)
         loki-teksti (last lokitus)
-        kaytetty-formatointi (tekstin-formatointi loki-teksti)
-        yhteyskatkoksien-metadata (case kaytetty-formatointi
-                                    :html (html-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
-                                    :slack (slack-yhteyskatkos-lokituksen-tiedot loki-teksti aika pvm kello kayttaja)
-                                    nil)
-        yhteyskatkokset (case kaytetty-formatointi
-                          :html (html-yhteyskatkos-lokituksen-yhteyskatkokset loki-teksti palvelut ensimmaiset-katkokset viimeiset-katkokset)
-                          nil)]
-    (merge yhteyskatkoksien-metadata {:yhteyskatkokset yhteyskatkokset})))
+        tekstin-formatointi (tekstin-formatointi loki-teksti)]
+    (case tekstin-formatointi
+      :html (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+                                            {:pvm ["" "T"]
+                                             :kello ["T" "."]
+                                             :kayttaja ["[:div Käyttäjä  " " "]
+                                             :palvelut ["[:tr [:td {:valign top} [:b :" "]]"]
+                                             :katkokset ["[:pre Katkoksia " " "]
+                                             :ensimmaiset-katkokset ["ensimmäinen: " "viimeinen"]
+                                             :viimeiset-katkokset ["viimeinen: " "]]]"]})
+      :html-rikkinainen {:rikkinainen "foo"}
+      :slack (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+                                             {:pvm ["" "T"]
+                                              :kello ["T" "."]
+                                              :kayttaja ["{:text \"\"Käyttäjä " " "]
+                                              :palvelut ["{:title \"\"" "\"\""]
+                                              :katkokset [", :value \"\"Katkoksia " " "]
+                                              :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
+                                              :viimeiset-katkokset ["viimeinen: " "\"\""]})
+      :slack-rikkinainen {:rikkinainen "foo"}
+      :joku-rikkinainen {:rikkinainen "foo"})))
 
 (defn jarjestele-yhteyskatkos-data-visualisointia-varten
   [yhteyskatkos-data ryhma-avain jarjestys-avain]
@@ -260,18 +269,29 @@
                                         palvelu-asetukset-kayttoon)]
     katkos-asetukset-kayttoon))
 
+(defn bool-keyword
+  [avain]
+  (keyword (str (name avain) "?")))
+
 (defn hae-yhteyskatkosten-data [{ryhma-avain :ryhma-avain jarjestys-avain :jarjestys-avain :as hakuasetukset} data-csvna ryhmana?]
   (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
-        haettavat-tiedot-lokituksista #{ryhma-avain jarjestys-avain}
-        yhteyskatkokset-mappina (map #(yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista) graylogista-haetut-lokitukset)
-        yhteyskatkokset-mappina (if ryhmana?
+        haettavat-tiedot-lokituksista {(bool-keyword ryhma-avain) true (bool-keyword jarjestys-avain) true}
+        yhteyskatkokset-mappina (map #(let [mappaus-yritys (yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
+                                        (if (contains? mappaus-yritys :yhteyskatkokset)
+                                          mappaus-yritys
+                                          {:rikkinainen mappaus-yritys}))
+                                     graylogista-haetut-lokitukset)
+        rikkinaiset-mappaukset (count (filter :rikkinainen yhteyskatkokset-mappina))
+        _ (log/debug "RIKKINAISET MAPPAUKSET: " rikkinaiset-mappaukset)
+        onnistuneet-mappaukset (filter :yhteyskatkokset yhteyskatkokset-mappina)
+        onnistuneet-mappaukset (if ryhmana?
                                   (map #(assoc % :yhteyskatkokset
                                                  (mapv (fn [mappi]
                                                          (assoc mappi :katkokset 1))
                                                        (:yhteyskatkokset %)))
-                                       yhteyskatkokset-mappina)
-                                  yhteyskatkokset-mappina)
-        jarjestelty-data (jarjestele-yhteyskatkos-data-visualisointia-varten yhteyskatkokset-mappina ryhma-avain jarjestys-avain)
+                                       onnistuneet-mappaukset)
+                                  onnistuneet-mappaukset)
+        jarjestelty-data (jarjestele-yhteyskatkos-data-visualisointia-varten onnistuneet-mappaukset ryhma-avain jarjestys-avain)
         asetuksien-mukainen-data (asetukset-kayttoon jarjestelty-data hakuasetukset)]
     asetuksien-mukainen-data))
 
