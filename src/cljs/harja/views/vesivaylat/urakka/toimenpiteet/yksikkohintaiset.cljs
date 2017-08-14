@@ -172,8 +172,9 @@
 
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
-        toimenpiteen-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
-        toimenpidekoodilliset-hinnoittelut (filter #(not (::h/toimenpidekoodi %)) toimenpiteen-hinnat)]
+        toimenpiteen-nykyiset-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
+        hintaelementit (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+        toimenpidekoodilliset-hinnoittelut (filter (comp not ::hinta/otsikko) hintaelementit)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id rivi)))
@@ -286,7 +287,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
-          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-hinnat))
+          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat))
           :ikoninappi? true}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
