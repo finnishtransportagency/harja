@@ -172,7 +172,8 @@
 
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
-        toimenpiteen-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])]
+        toimenpiteen-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
+        toimenpidekoodilliset-hinnoittelut (filter ::h/toimenpidekoodi toimenpiteen-hinnat)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id rivi)))
@@ -191,40 +192,41 @@
              [:th {:style {:width "30%"}} "Hinta / määrä"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
-            [:tr
-             [:td.otsikkosarake.tyot-osio [:b "Työt"]]
+            [:tr.otsikkorivi
+             [:td.tyot-osio [:b "Työt"]]
              [:td.tyot-osio]
              [:td.tyot-osio]]
-            [:tr.tyon-hinnoittelu-rivi
-             [:td.tyot-osio
-              [yleiset/livi-pudotusvalikko
-               {:valitse-fn #(log "TODO VALITSE FN")
-                :format-fn #(or % "Valitse tyyppi")
-                :class "livi-alasveto-250"
-                :valinta nil
-                :disabled false}
-               []]]
-             [:td.tyot-osio
-              [:span
-               [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
-                (r/wrap (hinta/hinnan-maara-otsikolla
-                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                          ;; TODO toimenpidekoodi
-                          1)
-                        (fn [uusi]
-                          (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
-                                {::hinta/toimenpidekoodi 1 ;; TODO TPK
-                                 ::hinta/maara uusi}))))]
-               [:span " "]
-               [:span "kpl (TODO €)"]]]
-             [:td.tyot-osio]]
+            (for* [hinnoittelu toimenpidekoodilliset-hinnoittelut]
+              [:tr.tyon-hinnoittelu-rivi
+               [:td.tyot-osio
+                [yleiset/livi-pudotusvalikko
+                 {:valitse-fn #(log "TODO VALITSE FN")
+                  :format-fn #(or % "Valitse tyyppi")
+                  :class "livi-alasveto-250"
+                  :valinta nil
+                  :disabled false}
+                 []]]
+               [:td.tyot-osio
+                [:span
+                 [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
+                  (r/wrap (hinta/hinnan-maara-otsikolla
+                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                            ;; TODO toimenpidekoodi
+                            1)
+                          (fn [uusi]
+                            (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
+                                  {::hinta/toimenpidekoodi 1 ;; TODO TPK
+                                   ::hinta/maara uusi}))))]
+                 [:span " "]
+                 [:span "kpl (TODO €)"]]]
+               [:td.tyot-osio]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
               [napit/uusi "Lisää työrivi" #(log "TODO LISÄÄPÄS!")]]
              [:td.tyot-osio]
              [:td.tyot-osio]]
-            [:tr
-             [:td.otsikkosarake [:b "Muut"]]
+            [:tr.otsikkorivi
+             [:td [:b "Muut"]]
              [:td]
              [:td]]
             [:tr.muu-hinnoittelu-rivi
