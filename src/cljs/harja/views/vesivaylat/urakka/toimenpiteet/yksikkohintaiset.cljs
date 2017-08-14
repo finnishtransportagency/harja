@@ -201,7 +201,7 @@
                [:td.tyot-osio
                 [yleiset/livi-pudotusvalikko
                  {:valitse-fn #(log "TODO VALITSE FN")
-                  :format-fn #(or % "Valitse tyyppi")
+                  :format-fn #(or % "Valitse työ")
                   :class "livi-alasveto-250"
                   :valinta nil
                   :disabled false}
