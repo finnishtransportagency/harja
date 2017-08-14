@@ -37,16 +37,18 @@
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " alken: " muutosaika))
     ((:vastaus-fn hakuparametrit) db body)))
 
-(defn kutsu-reimari-integraatiota [nimi haku-fn db integraatioloki pohja-url kayttajatunnus salasana]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
+(defn kutsu-reimari-integraatiota [hakuparametrit db integraatioloki pohja-url kayttajatunnus salasana]
+  (let [haun-nimi (:haun-nimi hakuparametrit)
+        muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
     (if-not muutosaika
-      (log/info "Reimarin vikahaku: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
+      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
       (lukko/yrita-ajaa-lukon-kanssa
-       db (str"reimari-" haun-nimi)
+       db (str "reimari-" haun-nimi)
        (fn []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
-          (fn [konteksti] (haku-fn konteksti db pohja-url kayttajatunnus salasana muutosaika))))))))
+          (fn [konteksti]
+            (kutsu-reimari-integraatiota* hakuparametrit konteksti db pohja-url kayttajatunnus salasana muutosaika))))))))
 
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (::integraatiotapahtuma/alkanut
