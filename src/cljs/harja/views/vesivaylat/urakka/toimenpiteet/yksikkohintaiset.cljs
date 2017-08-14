@@ -189,10 +189,10 @@
           [:table.vv-toimenpiteen-hinnoittelutiedot-grid
            [:thead
             [:tr
-             [:th {:style {:width "47%"}}]
-             [:th {:style {:width "27%"}} "Hinta / määrä"]
-             [:th {:style {:width "17%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
-             [:th {:style {:width "9%"}} ""]]]
+             [:th {:style {:width "48%"}}]
+             [:th {:style {:width "28%"}} "Hinta / määrä"]
+             [:th {:style {:width "18%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
+             [:th {:style {:width "6%"}} ""]]]
            [:tbody
             [:tr.otsikkorivi
              [:td.tyot-osio [:b "Työt"]]
