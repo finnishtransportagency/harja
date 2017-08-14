@@ -153,7 +153,7 @@
                                    [org.seleniumhq.selenium/selenium-java "3.0.1"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "3.0.1"]]}}
 
-  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
+  :jvm-opts ^:replace ["-Xms256m" "-Xmx2g" "-XX:-OmitStackTraceInFastThrow"]
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]

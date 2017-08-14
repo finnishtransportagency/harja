@@ -107,8 +107,8 @@
       (is (= indeksitarkistukset-bonukset "4,07"))
       (is (= indeksitarkistukset-erilliskustannukset "24,90"))
       (is (= indeksitarkistukset-muut-kuin-kokhint "43,13"))
-      (is (= indeksitarkistukset-kaikki "1 000,20"))
-      (is (= kaikki-paitsi-kokhint-yhteensa "-6 759,80"))
+      (is (= indeksitarkistukset-kaikki "1 000,20"))
+      (is (= kaikki-paitsi-kokhint-yhteensa "-6 759,80"))
 
 
       (is (= kaikki-yhteensa nurkkasumma "155 250,20")))))
