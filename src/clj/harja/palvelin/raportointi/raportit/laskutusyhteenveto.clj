@@ -190,32 +190,32 @@
     (concat [(assoc-in ensimmainen [1 :sheet-nimi] "Laskutusyhteenveto")]
             muut)))
 
-(defn laskettavat-kentat [rivi]
-  (let [aina-mukana [:kht_laskutettu :kht_laskutetaan
-                     :yht_laskutettu :yht_laskutetaan
-                     :sakot_laskutettu :sakot_laskutetaan
-                     :muutostyot_laskutettu :muutostyot_laskutetaan
-                     :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan
-                     :vahinkojen_korjaukset_laskutettu :vahinkojen_korjaukset_laskutetaan
-                     :bonukset_laskutettu :bonukset_laskutetaan
-                     :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan
-                     :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus
-                     :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus
-                     :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus
-                     :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus
-                     :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus
-                     :vahinkojen_korjaukset_laskutettu_ind_korotus :vahinkojen_korjaukset_laskutetaan_ind_korotus
-                     :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus
-                     :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus
-                     :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus
-                     :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus]]
+(defn- kustannuslajin-kaikki-kentat [kentan-kantanimi]
+  [(keyword (str kentan-kantanimi "_laskutettu"))
+   (keyword (str kentan-kantanimi "_laskutettu_ind_korotus"))
+   (keyword (str kentan-kantanimi "_laskutettu_ind_korotettuna"))
+   (keyword (str kentan-kantanimi "_laskutetaan"))
+   (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
+   (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
+
+(defn- laskettavat-kentat [rivi]
+  (let [kustannusten-kentat (into []
+                                  (apply concat [(kustannuslajin-kaikki-kentat "kht")
+                                                 (kustannuslajin-kaikki-kentat "yht")
+                                                 (kustannuslajin-kaikki-kentat "sakot")
+                                                 (kustannuslajin-kaikki-kentat "muutostyot")
+                                                 (kustannuslajin-kaikki-kentat "akilliset_hoitotyot")
+                                                 (kustannuslajin-kaikki-kentat "vahinkojen_korjaukset")
+                                                 (kustannuslajin-kaikki-kentat "bonukset")
+                                                 (kustannuslajin-kaikki-kentat "erilliskustannukset")
+                                                 (kustannuslajin-kaikki-kentat "kaikki_paitsi_kht")
+                                                 (kustannuslajin-kaikki-kentat "kaikki")]))]
     (if (and (some? (:suolasakot_laskutettu rivi))
              (some?(:suolasakot_laskutetaan rivi)))
       (into []
-            (concat aina-mukana
-                    [:suolasakot_laskutettu :suolasakot_laskutetaan
-                     :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus]))
-      aina-mukana)))
+            (concat kustannusten-kentat
+                    (kustannuslajin-kaikki-kentat "suolasakot")))
+      kustannusten-kentat)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
@@ -300,9 +300,6 @@
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
 
-        ; FIXME: nämä debugit lopulta pois
-        kaikki-mika-nil (keep #(when (nil? (val %)) (key %)) (first tiedot))
-        _ (println "kaikki-mika-nil " kaikki-mika-nil)
         avaimet (map name (keys (first tiedot)))
         ;; poistetaan suolasakot-kentät, koska sen nil voi aiheutua myös lämpötilojen puuttumisesta.
         ;; Halutaan selvittää mahd. tarkasti erikseen puuttuuko indeksiarvoja, lämpötiloja vai molempia
@@ -348,6 +345,7 @@
                  "Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
                  nil)))))
         vain-jvh-voi-muokata-tietoja-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan."
+
         kentat-kaikki-paitsi-kht #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
                                    "vahinkojen_korjaukset" "bonukset" "erilliskustannukset"}
         kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht")
