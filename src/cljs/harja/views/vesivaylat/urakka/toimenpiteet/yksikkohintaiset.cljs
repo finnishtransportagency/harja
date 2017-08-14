@@ -151,7 +151,7 @@
                otsikko)
              (fn [uusi]
                (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko otsikko
-                                                                   ::hinta/maara uusi}))))]]
+                                                                   ::hinta/summa uusi}))))]]
    [:span " "]
    [:span "€"]])
 
@@ -216,7 +216,7 @@
                           (fn [uusi]
                             (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
                                   {::hinta/toimenpidekoodi 1 ;; TODO TPK
-                                   ::hinta/maara uusi}))))]
+                                   ::hinta/summa uusi}))))]
                  [:span " "]
                  [:span "kpl (TODO €)"]]]
                [:td.tyot-osio]])
@@ -314,7 +314,7 @@
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->HinnoitteleHintaryhmaKentta
                           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                           ::hinta/maara %})))]
+                           ::hinta/summa %})))]
           [:span " "]
           [:span "€"]]
          [napit/tallenna

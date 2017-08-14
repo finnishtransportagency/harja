@@ -1,1 +1,7 @@
-ALTER TABLE reimari_toimenpide DROP CONSTRAINT "reimari_toimenpide_reimari-vayla_check";
+-- vv_hinta -taululle viittaus toimenpidekoodiin
+-- Omaa otsikkoa ei ole enää pakko olla jos on toimenpidekoodi
+ALTER TABLE vv_hinta ADD COLUMN toimenpidekoodi INTEGER REFERENCES toimenpidekoodi(id);
+ALTER TABLE vv_hinta ALTER COLUMN otsikko DROP NOT NULL;
+ALTER TABLE vv_hinta RENAME COLUMN maara TO summa;
+-- ALTER TABLE vv_hinta ADD COLUMN maara NUMERIC NOT NULL;
+ALTER TABLE vv_hinta ADD CONSTRAINT otsikko_tai_tpk CHECK (otsikko IS NOT NULL OR (otsikko IS NULL AND toimenpidekoodi IS NOT NULL));

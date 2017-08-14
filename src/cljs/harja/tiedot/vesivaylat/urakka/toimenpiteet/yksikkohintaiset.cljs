@@ -139,7 +139,7 @@
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
    ::hinta/otsikko otsikko
-   ::hinta/maara (or (::hinta/maara hinta) 0)
+   ::hinta/summa (or (::hinta/summa hinta) 0)
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
                                 yleiskustannuslisa
                                 0)})
@@ -161,8 +161,8 @@
   (mapv (fn [hinta]
           (if (= (ominaisuus hinta) (ominaisuus uudet-hintatiedot))
             (cond-> hinta
-                    (::hinta/maara uudet-hintatiedot)
-                    (assoc ::hinta/maara (::hinta/maara uudet-hintatiedot))
+                    (::hinta/summa uudet-hintatiedot)
+                    (assoc ::hinta/summa (::hinta/summa uudet-hintatiedot))
 
                     (some? (::hinta/yleiskustannuslisa uudet-hintatiedot))
                     (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa uudet-hintatiedot)))
@@ -353,7 +353,7 @@
                                                                 (when-let [id (::hinta/id hinta)]
                                                                   {::hinta/id id})
                                                                 {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                 ::hinta/maara (::hinta/maara hinta)
+                                                                 ::hinta/summa (::hinta/summa hinta)
                                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                             (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
                                       {:onnistui ->ToimenpiteenHinnoitteluTallennettu
@@ -373,7 +373,7 @@
                                                                 (when-let [id (::hinta/id hinta)]
                                                                   {::hinta/id id})
                                                                 {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                 ::hinta/maara (::hinta/maara hinta)
+                                                                 ::hinta/summa (::hinta/summa hinta)
                                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                             (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]))}
                                       {:onnistui ->HintaryhmanHinnoitteluTallennettu

@@ -26,12 +26,12 @@
                               :harja.domain.vesivaylat.hinnoittelu/id)])}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
-(s/def ::maara number?)
+(s/def ::summa number?)
 (s/def ::yleiskustannuslisa number?)
 
 (def perustiedot
   #{::otsikko
-    ::maara
+    ::summa
     ::yleiskustannuslisa
     ::id})
 
@@ -49,7 +49,7 @@
   (reduce + 0
           (keep
             (fn [hinta]
-              (let [maara (::maara hinta)
+              (let [maara (::summa hinta)
                     yleiskustannuslisa (::yleiskustannuslisa hinta)]
                 (when yleiskustannuslisa
                   (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
@@ -58,7 +58,7 @@
 (defn perushinta
   "Palauttaa hintojen summan ilman yleiskustannuslisiä"
   [hinnat]
-  (reduce + 0 (map ::maara hinnat)))
+  (reduce + 0 (map ::summa hinnat)))
 
 (defn hinnan-ominaisuus-otsikolla [hinnat otsikko ominaisuus]
   (->> hinnat
@@ -73,10 +73,10 @@
        ominaisuus))
 
 (defn hinnan-maara-otsikolla [hinnat otsikko]
-  (hinnan-ominaisuus-otsikolla hinnat otsikko ::maara))
+  (hinnan-ominaisuus-otsikolla hinnat otsikko ::summa))
 
 (defn hinnan-maara-toimenpidekoodilla [hinnat toimenpidekoodi]
-  (hinnan-ominaisuus-otsikolla hinnat toimenpidekoodi ::maara))
+  (hinnan-ominaisuus-otsikolla hinnat toimenpidekoodi ::summa))
 
 (defn hinnan-yleiskustannuslisa [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::yleiskustannuslisa))

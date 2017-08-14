@@ -195,7 +195,7 @@
                         (merge
                           hinta
                           ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
-                          (if ((some-fn nil? zero?) (::hinta/maara hinta))
+                          (if ((some-fn nil? zero?) (::hinta/summa hinta))
                             {::m/poistettu? true
                              ::m/poistaja-id (:id user)}
                             {::m/muokattu (pvm/nyt)

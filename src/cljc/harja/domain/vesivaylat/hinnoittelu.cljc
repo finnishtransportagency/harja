@@ -112,7 +112,7 @@
 
 (s/def ::hintaelementit
   (s/coll-of
-    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
+    (s/keys :req [::hinta/summa ::hinta/otsikko ::hinta/yleiskustannuslisa]
             :opt [::id])))
 
 (s/def ::tallenna-hintaryhmalle-hinta-kysely
