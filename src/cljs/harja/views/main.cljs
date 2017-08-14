@@ -11,6 +11,7 @@
             [harja.ui.viesti :refer [viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
+            [harja.tiedot.hairioilmoitukset :as hairiotiedot]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
@@ -26,17 +27,20 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.hairioilmoitus :as hairio]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.viesti :as viesti]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.pvm :as pvm]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
   (let [{:keys [etunimi sukunimi]} @kayttaja
         kayttajainfo [:a {:href "#" :on-click #(do
-                                  (.preventDefault %)
-                                  (haku/nayta-kayttaja @kayttaja))}
-       etunimi " " sukunimi]]
+                                                 (.preventDefault %)
+                                                 (haku/nayta-kayttaja @kayttaja))}
+                      etunimi " " sukunimi]]
     (if-not (istunto/testikaytto-mahdollista?)
       kayttajainfo
 
@@ -46,12 +50,12 @@
            [:span.alert-warning "TESTIKÄYTTÖ"]
            kayttajainfo)
          [livi-pudotusvalikko {:valinta testikayttaja
-                                       :class      "testikaytto-alasveto"
-                                       :title "Järjestelmän vastuuhenkilönä voit testata Harjaa myös muissa rooleissa."
-                                       :format-fn #(if %
-                                                     (:kuvaus %)
-                                                     (str "- Ei testikäyttäjänä -"))
-                                       :valitse-fn istunto/aseta-testikayttaja!}
+                               :class "testikaytto-alasveto"
+                               :title "Järjestelmän vastuuhenkilönä voit testata Harjaa myös muissa rooleissa."
+                               :format-fn #(if %
+                                             (:kuvaus %)
+                                             (str "- Ei testikäyttäjänä -"))
+                               :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info []
@@ -67,8 +71,8 @@
 (defn header [s]
   [bs/navbar {:luokka (when (k/kehitysymparistossa?) "testiharja")}
    [:span
-    [:img#harja-brand-icon {:alt      "HARJA"
-                            :src      "images/harja_logo_soft.svg"
+    [:img#harja-brand-icon {:alt "HARJA"
+                            :src "images/harja_logo_soft.svg"
                             :on-click #(.reload js/window.location)}]
     (when (k/kehitysymparistossa?)
       [:span#testiharja "TESTI"])]
@@ -129,10 +133,10 @@
      (komp/luo
        (komp/ulos (let [pisteanimaatio-kaynnissa (atom true)]
                     (go-loop [[teksti & tekstit] (cycle ["" "." ".." "..."])]
-                             (when @pisteanimaatio-kaynnissa
-                               (<! (timeout 1000))
-                               (reset! pisteanimaation-pisteet teksti)
-                               (recur tekstit)))
+                      (when @pisteanimaatio-kaynnissa
+                        (<! (timeout 1000))
+                        (reset! pisteanimaation-pisteet teksti)
+                        (recur tekstit)))
                     #(reset! pisteanimaatio-kaynnissa false)))
        (fn []
          [:div.yhteysilmoitin.yhteys-katkennut-varoitus
@@ -146,17 +150,33 @@
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
+(defn hairioilmoitus [hairiotiedot]
+  [:div.hairioilmoitin
+   [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+   [:div (str "Häiriötiedote " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+              (::hairio/viesti hairiotiedot))]])
+
 (defn paasisalto [sivu korkeus]
   [:div
    (cond
-     @k/istunto-vanhentunut? [yleinen-varoituspalkki
-                              "Istunto on vanhentunut."
-                              {:linkki "Lataa sivu uudelleen"
-                               :linkki-fn #(.reload js/location)}]
-     @k/yhteys-katkennut? [yleinen-varoituspalkki
-                           "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
-                           {:nayta-pisteanimaatio? true}]
-     (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten) [yhteys-palautunut-ilmoitus])
+     @k/istunto-vanhentunut?
+     [yleinen-varoituspalkki
+      "Istunto on vanhentunut."
+      {:linkki "Lataa sivu uudelleen"
+       :linkki-fn #(.reload js/location)}]
+
+     @k/yhteys-katkennut?
+     [yleinen-varoituspalkki
+      "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+      {:nayta-pisteanimaatio? true}]
+
+     (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
+     [yhteys-palautunut-ilmoitus])
+
+   (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
+     (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
+       [hairioilmoitus hairiotiedot]))
+
    [:div.container
     [header sivu]]
 
@@ -196,11 +216,11 @@
 (defn varoita-jos-vanha-ie []
   (if dom/ei-tuettu-ie?
     (modal/nayta! {:otsikko "Käytössä vanha Internet Explorer"
-                   :footer  [:span
-                             [:button.nappi-toissijainen {:type     "button"
-                                                          :on-click #(do (.preventDefault %)
-                                                                         (modal/piilota!))}
-                              "OK"]]}
+                   :footer [:span
+                            [:button.nappi-toissijainen {:type "button"
+                                                         :on-click #(do (.preventDefault %)
+                                                                        (modal/piilota!))}
+                             "OK"]]}
                   [:div
                    [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
 
@@ -221,6 +241,7 @@
   []
   (varoita-jos-vanha-ie)
   (kuuntele-oikeusvirheita)
+  (hairiotiedot/tarkkaile-hairioilmoituksia!)
   (komp/luo
     (fn []
       (if @nav/render-lupa?
@@ -234,7 +255,7 @@
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
                 [:div.ei-kayttooikeutta-wrap
-                 [:img#harja-brand-icon {:src      "images/harja_logo_soft.svg"}]
+                 [:img#harja-brand-icon {:src "images/harja_logo_soft.svg"}]
                  [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))
