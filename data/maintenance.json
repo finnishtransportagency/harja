@@ -2,7 +2,7 @@
   {
     "date": "2017-08-14",
     "title": "Parannuksia aikataulunäkymään",
-    "body": "Ylläpidon urakoiden aikataulunäkymään on toteutettu muutamia pieniä käytettävyysparannuksia. Tiemerkintäurakoitsija näkee jatkossa kohteen päällystysurakan nimen ja sen yhteyshenkilöt omassa sarakkeessa. Tilan säästämiseksi päivämääräkentissä ei enää näytetä vuotta jos se on sama kuin suodattimesta valittu vuosi. Päivämäärää asetettaessa näkyvä kalenteri asettuu alustavasti aina samalle kuukaudelle jolle kohteen edellinen päivämäärämerkintä on asetettu. Aikajanalle piirretään nykyisen päivän kohdalle punainen viiva, joka auttaa hahmottamaan paremmin aikataulun etenemistä. Lisäksi aikajanalla näkyy nyt myös koko kohteen alku ja loppu myös silloin kun vain toinen näistä on asetettu. Kaikki nämä muutokset ovat nyt käytössä Harjassa."
+    "body": "Ylläpidon urakoiden aikataulunäkymään on toteutettu muutamia pieniä käytettävyysparannuksia. Tiemerkintäurakoitsija näkee jatkossa kohteen päällystysurakan nimen ja sen yhteyshenkilöt omassa sarakkeessa. Tilan säästämiseksi päivämääräkentissä ei enää näytetä vuotta jos se on sama kuin suodattimesta valittu vuosi. Päivämäärää asetettaessa näkyvä kalenteri asettuu alustavasti aina samalle kuukaudelle jolle kohteen edellinen päivämäärämerkintä on asetettu. Aikajanalle piirretään nykyisen päivän kohdalle punainen viiva, joka auttaa hahmottamaan paremmin aikataulun etenemistä. Lisäksi aikajanalla näkyy nyt myös koko kohteen alku ja loppu myös silloin kun vain toinen näistä on asetettu. Kaikki nämä muutokset tulevat Harjaan lähipäivinä."
   },
   {
     "date": "2017-07-10",
