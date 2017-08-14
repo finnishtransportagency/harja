@@ -24,6 +24,30 @@
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
 
+(defn kutsu-reimari-integraatiota* [hakuparametrit konteksti db pohja-url kayttajatunnus salasana muutosaika]
+  (let [otsikot {"Content-Type" "text/xml"
+                 "SOAPAction" (:soap-action hakuparametrit)}
+        http-asetukset {:metodi :POST
+                        :url pohja-url
+                        :otsikot otsikot
+                        :kayttajatunnus kayttajatunnus
+                        :salasana salasana
+                        :muutosaika muutosaika}
+        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) muutosaika))]
+    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " alken: " muutosaika))
+    ((:vastaus-fn hakuparametrit) db body)))
+
+(defn kutsu-reimari-integraatiota [nimi haku-fn db integraatioloki pohja-url kayttajatunnus salasana]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
+    (if-not muutosaika
+      (log/info "Reimarin vikahaku: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
+      (lukko/yrita-ajaa-lukon-kanssa
+       db (str"reimari-" haun-nimi)
+       (fn []
+         (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "reimari" haun-nimi
+          (fn [konteksti] (haku-fn konteksti db pohja-url kayttajatunnus salasana muutosaika))))))))
+
 (defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
   (::integraatiotapahtuma/alkanut
    (last (sort-by ::integraatiotapahtuma/alkanut
