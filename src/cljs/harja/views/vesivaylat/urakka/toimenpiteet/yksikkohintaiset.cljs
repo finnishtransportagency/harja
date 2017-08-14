@@ -173,7 +173,7 @@
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
-        toimenpidekoodilliset-hinnoittelut (filter ::h/toimenpidekoodi toimenpiteen-hinnat)]
+        toimenpidekoodilliset-hinnoittelut (filter #(not (::h/toimenpidekoodi %)) toimenpiteen-hinnat)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id rivi)))
@@ -222,7 +222,7 @@
                [:td.tyot-osio]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
-              [napit/uusi "Lisää työrivi" #(log "TODO LISÄÄPÄS!")]]
+              [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
              [:td.tyot-osio]
              [:td.tyot-osio]]
             [:tr.otsikkorivi

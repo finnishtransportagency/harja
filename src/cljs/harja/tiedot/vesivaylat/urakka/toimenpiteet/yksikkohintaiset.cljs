@@ -135,6 +135,7 @@
 (defrecord HintaryhmatEiPoistettu [])
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+(defrecord LisaaHinnoiteltavaTyorivi [])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -455,6 +456,13 @@
                                         (into #{}))]
       (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
           (assoc :korostettu-hintaryhma (::h/id hintaryhma)))))
+
+  LisaaHinnoiteltavaTyorivi
+  (process-event [_ app]
+    ;; TODO TESTI
+    (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
+          paivitetyt-hintaelementit (conj hintaelementit {})]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] paivitetyt-hintaelementit)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]
