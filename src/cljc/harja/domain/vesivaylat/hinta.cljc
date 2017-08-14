@@ -72,11 +72,11 @@
        (first)
        ominaisuus))
 
-(defn hinnan-maara-otsikolla [hinnat otsikko]
+(defn hinnan-summa-otsikolla [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::summa))
 
 (defn hinnan-maara-toimenpidekoodilla [hinnat toimenpidekoodi]
-  (hinnan-ominaisuus-otsikolla hinnat toimenpidekoodi ::summa))
+  (hinnan-ominaisuus-toimenpidekoodilla hinnat toimenpidekoodi ::maara))
 
 (defn hinnan-yleiskustannuslisa [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::yleiskustannuslisa))

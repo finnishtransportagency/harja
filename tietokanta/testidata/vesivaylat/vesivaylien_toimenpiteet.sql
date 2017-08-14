@@ -898,7 +898,7 @@ VALUES
    TRUE);
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", summa, luoja, toimenpidekoodi)
+("hinnoittelu-id", maara, luoja, toimenpidekoodi)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -912,7 +912,7 @@ VALUES
    WHERE nimi = 'Henkilöstö: Ammattimies'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", summa, luoja, toimenpidekoodi)
+("hinnoittelu-id", maara, luoja, toimenpidekoodi)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu

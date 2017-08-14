@@ -146,7 +146,7 @@
   [:span
    [:span
     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (hinta/hinnan-maara-otsikolla
+     (r/wrap (hinta/hinnan-summa-otsikolla
                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                otsikko)
              (fn [uusi]
@@ -309,7 +309,7 @@
           [tee-kentta {:tyyppi :numero
                        :placeholder "Syötä hinta"
                        :kokonaisosan-maara 7}
-           (r/wrap (hinta/hinnan-maara-otsikolla
+           (r/wrap (hinta/hinnan-summa-otsikolla
                      (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->HinnoitteleHintaryhmaKentta

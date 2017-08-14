@@ -12,7 +12,7 @@
                                             :foobar
                                             :barbar)))
   (is (= :baz
-         (hinta/hinnan-maara-otsikolla [{::hinta/otsikko :foobar ::hinta/summa :baz}]
+         (hinta/hinnan-summa-otsikolla [{::hinta/otsikko :foobar ::hinta/summa :baz}]
                                        :foobar)))
   (is (= :baz
          (hinta/hinnan-yleiskustannuslisa [{::hinta/otsikko :foobar ::hinta/yleiskustannuslisa :baz}]
@@ -34,7 +34,7 @@
                                    {::hinta/summa 3 ::hinta/otsikko "C"}]
                                             "B" ::hinta/summa)
          2))
-  (is (= (hinta/hinnan-maara-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
+  (is (= (hinta/hinnan-summa-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
                               {::hinta/summa 2 ::hinta/otsikko "B"}
                               {::hinta/summa 3 ::hinta/otsikko "C"}]
                                        "C")
