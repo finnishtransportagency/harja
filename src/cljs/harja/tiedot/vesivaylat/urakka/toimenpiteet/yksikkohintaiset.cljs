@@ -119,7 +119,8 @@
 (defrecord ValitutEiLiitettyHintaryhmaan [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
-(defrecord HinnoitteleToimenpideKentta [tiedot])
+(defrecord HinnoitteleToimenpideKenttaOtsikolla [tiedot])
+(defrecord HinnoitteleToimenpideKenttaToimenpidekoodilla [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
@@ -155,19 +156,28 @@
 (defn- hintaryhman-hintakentat [hinnat]
   [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
 
-(defn- paivita-hintajoukon-hinta
-  "Päivittää hintojen joukosta yksittäisen hinnan tiedot."
-  [hinnat uudet-hintatiedot]
-  (mapv (fn [hinnoittelu]
-          (if (= (::hinta/otsikko hinnoittelu) (::hinta/otsikko uudet-hintatiedot))
-            (cond-> hinnoittelu
+(defn- paivita-hintajoukon-hinta-ominaisuudella
+  [hinnat ominaisuus uudet-hintatiedot]
+  (mapv (fn [hinta]
+          (if (= (ominaisuus hinta) (ominaisuus uudet-hintatiedot))
+            (cond-> hinta
                     (::hinta/maara uudet-hintatiedot)
                     (assoc ::hinta/maara (::hinta/maara uudet-hintatiedot))
 
                     (some? (::hinta/yleiskustannuslisa uudet-hintatiedot))
                     (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa uudet-hintatiedot)))
-            hinnoittelu))
+            hinta))
         hinnat))
+
+(defn- paivita-hintajoukon-hinta-otsikolla
+  "Päivittää hintojen joukosta yksittäisen hinnan tiedot otsikolla."
+  [hinnat uudet-hintatiedot]
+  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::hinta/otsikko uudet-hintatiedot))
+
+(defn- paivita-hintajoukon-hinta-toimenpidekoodilla
+  "Päivittää hintojen joukosta yksittäisen hinnan tiedot toimenpidekoodilla."
+  [hinnat uudet-hintatiedot]
+  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::hinta/toimenpidekoodi uudet-hintatiedot))
 
 (extend-protocol tuck/Event
 
@@ -313,15 +323,23 @@
                  {::h/id hintaryhma-id
                   ::h/hintaelementit (hintaryhman-hintakentat hinnat)})))
 
-  HinnoitteleToimenpideKentta
+  HinnoitteleToimenpideKenttaOtsikolla
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-              (paivita-hintajoukon-hinta (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]) tiedot)))
+              (paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-toimenpide
+                                                                ::h/hintaelementit]) tiedot)))
+
+  HinnoitteleToimenpideKenttaToimenpidekoodilla
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
+              (paivita-hintajoukon-hinta-toimenpidekoodilla (get-in app [:hinnoittele-toimenpide
+                                                                         ::h/hintaelementit]) tiedot)))
 
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hintaelementit]
-              (paivita-hintajoukon-hinta (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]) tiedot)))
+              (paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-hintaryhma
+                                                                ::h/hintaelementit]) tiedot)))
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]

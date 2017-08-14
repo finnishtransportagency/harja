@@ -60,17 +60,26 @@
   [hinnat]
   (reduce + 0 (map ::maara hinnat)))
 
-(defn hinnan-ominaisuus [hinnat otsikko ominaisuus]
+(defn hinnan-ominaisuus-otsikolla [hinnat otsikko ominaisuus]
   (->> hinnat
        (filter #(= (::otsikko %) otsikko))
        (first)
        ominaisuus))
 
-(defn hinnan-maara [hinnat otsikko]
-  (hinnan-ominaisuus hinnat otsikko ::maara))
+(defn hinnan-ominaisuus-toimenpidekoodilla [hinnat toimenpidekoodi ominaisuus]
+  (->> hinnat
+       (filter #(= (::toimenpidekoodi %) toimenpidekoodi))
+       (first)
+       ominaisuus))
+
+(defn hinnan-maara-otsikolla [hinnat otsikko]
+  (hinnan-ominaisuus-otsikolla hinnat otsikko ::maara))
+
+(defn hinnan-maara-toimenpidekoodille [hinnat toimenpidekoodi]
+  (hinnan-ominaisuus-otsikolla hinnat toimenpidekoodi ::maara))
 
 (defn hinnan-yleiskustannuslisa [hinnat otsikko]
-  (hinnan-ominaisuus hinnat otsikko ::yleiskustannuslisa))
+  (hinnan-ominaisuus-otsikolla hinnat otsikko ::yleiskustannuslisa))
 
 (defn kokonaishinta-yleiskustannuslisineen [hinnat]
   (+ (perushinta hinnat)

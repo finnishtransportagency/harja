@@ -146,12 +146,12 @@
   [:span
    [:span
     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (hinta/hinnan-maara
+     (r/wrap (hinta/hinnan-maara-otsikolla
                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                otsikko)
              (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                          ::hinta/maara uusi}))))]]
+               (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko otsikko
+                                                                   ::hinta/maara uusi}))))]]
    [:span " "]
    [:span "€"]])
 
@@ -164,7 +164,7 @@
              (pos? yleiskustannuslisa)
              false)
            (fn [uusi]
-             (e! (tiedot/->HinnoitteleToimenpideKentta
+             (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla
                    {::hinta/otsikko otsikko
                     ::hinta/yleiskustannuslisa (if uusi
                                                  hinta/yleinen-yleiskustannuslisa
@@ -187,8 +187,8 @@
           [:table.vv-toimenpiteen-hinnoittelutiedot-grid
            [:thead
             [:tr
-             [:th {:style {:width "60%"}}]
-             [:th {:style {:width "20%"}} "Hinta / määrä"]
+             [:th {:style {:width "50%"}}]
+             [:th {:style {:width "30%"}} "Hinta / määrä"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
             [:tr
@@ -204,7 +204,19 @@
                 :valinta nil
                 :disabled false}
                []]]
-             [:td.tyot-osio "TODO Määrä tähän"]
+             [:td.tyot-osio
+              [:span
+               [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
+                (r/wrap (hinta/hinnan-maara-otsikolla
+                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                          ;; TODO toimenpidekoodi
+                          1)
+                        (fn [uusi]
+                          (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
+                                {::hinta/toimenpidekoodi 1 ;; TODO TPK
+                                 ::hinta/maara uusi}))))]
+               [:span " "]
+               [:span "kpl (TODO €)"]]]
              [:td.tyot-osio]]
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
@@ -295,7 +307,7 @@
           [tee-kentta {:tyyppi :numero
                        :placeholder "Syötä hinta"
                        :kokonaisosan-maara 7}
-           (r/wrap (hinta/hinnan-maara
+           (r/wrap (hinta/hinnan-maara-otsikolla
                      (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->HinnoitteleHintaryhmaKentta

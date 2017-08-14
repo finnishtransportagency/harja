@@ -423,7 +423,7 @@
   (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                         (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko "Yleiset materiaalit"
                                                                     ::hinta/maara 666})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
@@ -453,7 +453,7 @@
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                         (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko "Yleiset materiaalit"
                                                                     ::hinta/yleiskustannuslisa 12})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
