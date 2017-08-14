@@ -209,7 +209,7 @@
                [:td.tyot-osio
                 [:span
                  [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
-                  (r/wrap (hinta/hinnan-maara-otsikolla
+                  (r/wrap (hinta/hinnan-maara-toimenpidekoodilla ;; TODO Nyt haetaankin kappalemäärä
                             (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                             ;; TODO toimenpidekoodi
                             1)

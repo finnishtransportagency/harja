@@ -75,7 +75,7 @@
 (defn hinnan-maara-otsikolla [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::maara))
 
-(defn hinnan-maara-toimenpidekoodille [hinnat toimenpidekoodi]
+(defn hinnan-maara-toimenpidekoodilla [hinnat toimenpidekoodi]
   (hinnan-ominaisuus-otsikolla hinnat toimenpidekoodi ::maara))
 
 (defn hinnan-yleiskustannuslisa [hinnat otsikko]
