@@ -4,11 +4,12 @@
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.vesivaylat.materiaali :as m]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! >!]]
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.tyokalut.tuck :refer [palvelukutsu]]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään viestityypit
@@ -19,9 +20,11 @@
 (defrecord PaivitaLisattavaMateriaali [tiedot])
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
+(defrecord MuutaAlkuperainenMaara [tiedot])
 
 (defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
+(defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
 
@@ -45,8 +48,8 @@
   (process-event [{urakka :urakka} app]
     (let [u (:id urakka)]
       (palvelukutsu (assoc app
-                           :urakka-id u
-                           :materiaalilistaus nil)
+                      :urakka-id u
+                      :materiaalilistaus nil)
                     :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
                     {:onnistui ->ListausHaettu
                      :epaonnistui ->Virhe})))
@@ -54,10 +57,10 @@
   ListausHaettu
   (process-event [{tulokset :tulokset} app]
     (assoc app
-           :materiaalilistaus tulokset
-           :lisaa-materiaali nil
-           :kirjaa-materiaali nil
-           :tallennus-kaynnissa? false))
+      :materiaalilistaus tulokset
+      :lisaa-materiaali nil
+      :kirjaa-materiaali nil
+      :tallennus-kaynnissa? false))
 
   AloitaMateriaalinLisays
   (process-event [_ app]
@@ -80,6 +83,25 @@
   (process-event [_ app]
     (dissoc app :lisaa-materiaali))
 
+  MuutaAlkuperainenMaara
+  (process-event [{tiedot :tiedot} app]
+    (let [uudet-alkuperaiset-maarat (:uudet-alkuperaiset-maarat tiedot)
+          urakka-id (:urakka-id tiedot)
+          chan (:chan tiedot)
+          onnistui! (tuck/send-async! ->ListausHaettu)
+          epaonnistui! (tuck/send-async! ->Virhe)]
+
+      (go
+        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperainen-maara
+                                   {::m/urakka-id urakka-id
+                                    :uudet-alkuperaiset-maarat uudet-alkuperaiset-maarat}))]
+          (if (k/virhe? vastaus)
+            (epaonnistui! vastaus)
+            (onnistui! vastaus))
+          (>! chan vastaus)))
+
+      (assoc app :tallennus-kaynnissa? true)))
+
   AloitaMateriaalinKirjaus
   (process-event [{nimi :nimi tyyppi :tyyppi} app]
     (assoc app :kirjaa-materiaali {::m/urakka-id (:urakka-id app)
@@ -91,6 +113,13 @@
   (process-event [{tiedot :tiedot} app]
     (update app :kirjaa-materiaali merge tiedot))
 
+  PoistaMateriaalinKirjaus
+  (process-event [{tiedot :tiedot} app]
+    (palvelukutsu app :poista-materiaalikirjaus {::m/urakka-id (:urakka-id tiedot)
+                                                 ::m/id (:materiaali-id tiedot)}
+                  {:onnistui ->ListausHaettu
+                   :epaonnistui ->Virhe}))
+
   PeruMateriaalinKirjaus
   (process-event [_ app]
     (dissoc app :kirjaa-materiaali))
@@ -101,12 +130,12 @@
         (assoc :tallennus-kaynnissa? true)
         (palvelukutsu :kirjaa-vesivayla-materiaali
                       (as-> kirjaa-materiaali m
-                        (lomake/ilman-lomaketietoja m)
-                        ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
-                        (if (= :- (:tyyppi m))
-                          (update m ::m/maara -)
-                          m)
-                        (dissoc m :tyyppi))
+                            (lomake/ilman-lomaketietoja m)
+                            ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
+                            (if (= :- (:tyyppi m))
+                              (update m ::m/maara -)
+                              m)
+                            (dissoc m :tyyppi))
                       {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
 
