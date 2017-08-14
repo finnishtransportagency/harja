@@ -1,6 +1,6 @@
 -- vv_hinta -taululle viittaus toimenpidekoodiin
 ALTER TABLE vv_hinta ADD COLUMN toimenpidekoodi INTEGER REFERENCES toimenpidekoodi(id);
-ALTER TABLE vv_hinta ALTER COLUMN otsikko DROP NOT NULL; -- Otsikkoa ei tarvi jos oN TPK
+ALTER TABLE vv_hinta ALTER COLUMN otsikko DROP NOT NULL; -- Otsikkoa ei tarvi jos on TPK
 ALTER TABLE vv_hinta RENAME COLUMN maara TO summa; -- Määrä tarkoittaa jatkossa kpl-määrää
 ALTER TABLE vv_hinta ALTER COLUMN summa DROP NOT NULL; -- Summaa ei tarvi jos on määrä ja TPK
 ALTER TABLE vv_hinta ADD COLUMN maara NUMERIC;
