@@ -32,4 +32,5 @@
                                   [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
                                                                         :harja.palvelin.integraatiot/jarjestelma}] }
                                 {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                     :harja.palvelin.integraatiot/nimi nimi}})))))
+                                                                     :harja.palvelin.integraatiot/nimi nimi}
+                                 ::integraatiotapahtuma/onnistunut true })))))
