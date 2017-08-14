@@ -751,7 +751,7 @@ VALUES
     WHERE lisatieto = 'Oulaisten poijujen korjaus'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja)
+("hinnoittelu-id", otsikko, summa, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -761,7 +761,7 @@ VALUES
                          WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja)
+("hinnoittelu-id", otsikko, summa, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -856,7 +856,7 @@ VALUES
     WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja)
+("hinnoittelu-id", otsikko, summa, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -866,7 +866,7 @@ VALUES
                 WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+("hinnoittelu-id", otsikko, summa, luoja, poistettu)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -876,7 +876,7 @@ VALUES
                                               WHERE kayttajanimi = 'tero'), TRUE);
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+("hinnoittelu-id", otsikko, summa, luoja, poistettu)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -886,7 +886,7 @@ VALUES
                                                                     WHERE kayttajanimi = 'tero'), TRUE);
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja, poistettu)
+("hinnoittelu-id", otsikko, summa, luoja, poistettu)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -898,7 +898,7 @@ VALUES
    TRUE);
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", maara, luoja, toimenpidekoodi)
+("hinnoittelu-id", summa, luoja, toimenpidekoodi)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -912,7 +912,7 @@ VALUES
    WHERE nimi = 'Henkilöstö: Ammattimies'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", maara, luoja, toimenpidekoodi)
+("hinnoittelu-id", summa, luoja, toimenpidekoodi)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -926,7 +926,7 @@ VALUES
     WHERE nimi = 'Henkilöstö: Työnjohto'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja)
+("hinnoittelu-id", otsikko, summa, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
@@ -936,7 +936,7 @@ VALUES
               WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
-("hinnoittelu-id", otsikko, maara, luoja)
+("hinnoittelu-id", otsikko, summa, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
