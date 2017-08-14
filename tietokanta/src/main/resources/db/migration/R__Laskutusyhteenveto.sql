@@ -716,17 +716,33 @@ CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_ind() RETURNS trigger AS
 DECLARE
   alku DATE;
   loppu DATE;
+  rivi RECORD;
 BEGIN
-  IF NEW.kuukausi >= 10 THEN
+  IF TG_OP != 'DELETE' THEN
+    rivi := NEW;
+  ELSE
+    rivi := OLD;
+  END IF;
+
+  -- Indeksilaskennan perusluvun muutoksesta johtuvat puhdistukset
+  -- Jos delete, voi urakan indeksilaskennan perusluku muuttua / nullautua. Tällöin poistetaan cachesta ne urakat, joiden peruslukuun vaikutus kohdistuu.
+  -- esim 1.10.2014 alkaneen hoitourakan peruslukuun vaikuttaa 12/2013, 1/2014 ja 2/2014.
+  IF (rivi.kuukausi = 12) THEN
+    DELETE FROM laskutusyhteenveto_cache WHERE urakka in (SELECT id FROM urakka WHERE alkupvm = make_date(rivi.vuosi+1, 10, 1));
+  ELSIF rivi.kuukausi IN (1,2) THEN
+    DELETE FROM laskutusyhteenveto_cache WHERE urakka in (SELECT id FROM urakka WHERE alkupvm = make_date(rivi.vuosi, 10, 1));
+  END IF;
+
+  IF rivi.kuukausi >= 10 THEN
     -- Jos kuukausi on: loka - joulu, poista tästä seuraavan vuoden
     -- syyskuuhun asti (nykyisen hoitokauden loppuun)
-    alku := make_date(NEW.vuosi, 10, 1);
-    loppu := make_date(NEW.vuosi+1, 9, 30);
+    alku := make_date(rivi.vuosi, 10, 1);
+    loppu := make_date(rivi.vuosi+1, 9, 30);
   ELSE
     -- Jos kuukausi on: tammi - syys, poista edellisen vuoden
     -- lokakuusta tämän vuoden syyskuuhun asti
-    alku := make_date(NEW.vuosi-1, 10, 1);
-    loppu := make_date(NEW.vuosi, 9, 30);
+    alku := make_date(rivi.vuosi-1, 10, 1);
+    loppu := make_date(rivi.vuosi, 9, 30);
   END IF;
   RAISE NOTICE 'Poistetaan muistetut laskutusyhteenvedot % - %', alku, loppu;
   DELETE FROM laskutusyhteenveto_cache
