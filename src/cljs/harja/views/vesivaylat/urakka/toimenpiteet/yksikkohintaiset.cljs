@@ -138,36 +138,37 @@
 ;;;;;;;;;;;;
 ;; Hinnan antamisen leijuke
 
-(defn- kenttarivi
+;; HOX Hinnan antamisessa otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
+;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
+
+(defn- muu-tyo
   [e! app* otsikko]
-  ;; HOX Otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
-  ;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
-  [:tr
-   [:td [:b otsikko]]
-   [:td
-    [:span
-     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-      (r/wrap (hinta/hinnan-maara
-                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                otsikko)
-              (fn [uusi]
-                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                           ::hinta/maara uusi}))))]
-     [:span " "]
-     "€"]]
-   [:td
-    [tee-kentta {:tyyppi :checkbox}
-     (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
-                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                                           otsikko)]
-               (pos? yleiskustannuslisa)
-               false)
-             (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta
-                     {::hinta/otsikko otsikko
-                      ::hinta/yleiskustannuslisa (if uusi
-                                                   hinta/yleinen-yleiskustannuslisa
-                                                   0)}))))]]])
+  [:span
+   [:td [:b (str otsikko ":")]]
+   [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+    (r/wrap (hinta/hinnan-maara
+              (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+              otsikko)
+            (fn [uusi]
+              (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                         ::hinta/maara uusi}))))]
+   [:span " "]
+   "€"])
+
+(defn- yleiskustannuslisa
+  [e! app* otsikko]
+  [tee-kentta {:tyyppi :checkbox}
+   (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
+                                         (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                                         otsikko)]
+             (pos? yleiskustannuslisa)
+             false)
+           (fn [uusi]
+             (e! (tiedot/->HinnoitteleToimenpideKentta
+                   {::hinta/otsikko otsikko
+                    ::hinta/yleiskustannuslisa (if uusi
+                                                 hinta/yleinen-yleiskustannuslisa
+                                                 0)}))))])
 
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
@@ -187,14 +188,28 @@
            [:thead
             [:tr
              [:th {:style {:width "45%"}}]
-             [:th {:style {:width "35%"}} "Hinta"]
+             [:th {:style {:width "35%"}} "Hinta / määrä"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
-            [kenttarivi e! app* "Työ"]
-            [kenttarivi e! app* "Komponentit"]
-            [kenttarivi e! app* "Yleiset materiaalit"]
-            [kenttarivi e! app* "Matkakulut"]
-            [kenttarivi e! app* "Muut kulut"]]]
+            [:tr
+             [:td "Työt"]
+             [:td]
+             [:td]]
+            [:tr
+             [:td "Muut"]
+             [:td
+              ;; TODO Työ ei enää käytössä, miten migratoidaan!?
+              [muu-tyo e! app* "Työ"]
+              [muu-tyo e! app* "Komponentit"]
+              [muu-tyo e! app* "Yleiset materiaalit"]
+              [muu-tyo e! app* "Matkakulut"]
+              [muu-tyo e! app* "Muut kulut"]]
+             [:td
+              [yleiskustannuslisa e! app* "Työ"]
+              [yleiskustannuslisa e! app* "Komponentit"]
+              [yleiskustannuslisa e! app* "Yleiset materiaalit"]
+              [yleiskustannuslisa e! app* "Matkakulut"]
+              [yleiskustannuslisa e! app* "Muut kulut"]]]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
