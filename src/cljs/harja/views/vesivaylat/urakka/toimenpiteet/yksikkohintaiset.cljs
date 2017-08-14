@@ -192,34 +192,46 @@
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
             [:tr
-             [:td.otsikkosarake.tyot-osa [:b "Työt"]]
-             [:td.tyot-osa]
-             [:td.tyot-osa]]
-            [:tr
-             [:td.tyot-osa "TODO Työn valinta"]
-             [:td.tyot-osa "TODO Määrä tähän"]
-             [:td.tyot-osa]]
+             [:td.otsikkosarake.tyot-osio [:b "Työt"]]
+             [:td.tyot-osio]
+             [:td.tyot-osio]]
+            [:tr.tyon-hinnoittelu-rivi
+             [:td.tyot-osio
+              [yleiset/livi-pudotusvalikko
+               {:valitse-fn #(log "TODO VALITSE FN")
+                :format-fn #(or % "Valitse tyyppi")
+                :class "livi-alasveto-250"
+                :valinta nil
+                :disabled false}
+               []]]
+             [:td.tyot-osio "TODO Määrä tähän"]
+             [:td.tyot-osio]]
+            [:tr.tyon-hinnoittelu-rivi
+             [:td.tyot-osio
+              [napit/uusi "Lisää työrivi" #(log "TODO LISÄÄPÄS!")]]
+             [:td.tyot-osio]
+             [:td.tyot-osio]]
             [:tr
              [:td.otsikkosarake [:b "Muut"]]
              [:td]
              [:td]]
-            [:tr.muu-tyo-rivi
+            [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Työ:"]
              [:td [muu-tyo e! app* "Työ"]]
              [:td [yleiskustannuslisa e! app* "Työ"]]]
-            [:tr.muu-tyo-rivi
+            [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Komponentit:"]
              [:td [muu-tyo e! app* "Komponentit"]]
              [:td [yleiskustannuslisa e! app* "Komponentit"]]]
-            [:tr.muu-tyo-rivi
+            [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Yleiset materiaalit:"]
              [:td [muu-tyo e! app* "Yleiset materiaalit"]]
              [:td [yleiskustannuslisa e! app* "Yleiset materiaalit"]]]
-            [:tr.muu-tyo-rivi
+            [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Matkakulut:"]
              [:td [muu-tyo e! app* "Matkakulut"]]
              [:td [yleiskustannuslisa e! app* "Matkakulut"]]]
-            [:tr.muu-tyo-rivi
+            [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Muut kulut:"]
              [:td [muu-tyo e! app* "Muut kulut"]]
              [:td [yleiskustannuslisa e! app* "Muut kulut"]]]]]
@@ -242,6 +254,7 @@
                                                          oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                          (:id @nav/valittu-urakka))))}]]]]]
 
+       ;; Solun sisältö
        (grid/arvo-ja-nappi
          {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (get-in app* [:valinnat :urakka-id])))
