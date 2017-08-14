@@ -309,9 +309,9 @@ VALUES
     '1022541903',
     '(123,Akonniemen väylät,55)',
     30,
-    (SELECT id
-     FROM vv_vayla
-     WHERE nimi = 'Akonniemen väylät'));
+   (SELECT id
+    FROM vv_vayla
+    WHERE nimi = 'Akonniemen väylät'));
 
 -- ***********************************************
 -- KOKONAISHINTAISET TOIMENPITEET VIALLA
@@ -855,7 +855,6 @@ VALUES
     FROM urakka
     WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
-
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
 VALUES
@@ -897,6 +896,34 @@ VALUES
                                                                                                     WHERE kayttajanimi =
                                                                                                           'tero'),
    TRUE);
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", maara, luoja, toimenpidekoodi)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   30,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+   WHERE nimi = 'Henkilöstö: Ammattimies'));
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", maara, luoja, toimenpidekoodi)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   15,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+    WHERE nimi = 'Henkilöstö: Työnjohto'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
