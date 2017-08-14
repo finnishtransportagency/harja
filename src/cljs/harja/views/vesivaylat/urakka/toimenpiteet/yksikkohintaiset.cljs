@@ -141,7 +141,7 @@
 ;; HOX Hinnan antamisessa otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
 ;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
 
-(defn- muu-tyo
+(defn- muu-tyo-kentta
   [e! app* otsikko]
   [:span
    [:span
@@ -155,7 +155,7 @@
    [:span " "]
    [:span "€"]])
 
-(defn- yleiskustannuslisa
+(defn- yleiskustannuslisa-kentta
   [e! app* otsikko]
   [tee-kentta {:tyyppi :checkbox}
    (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
@@ -229,24 +229,24 @@
              [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Työ:"]
-             [:td [muu-tyo e! app* "Työ"]]
-             [:td [yleiskustannuslisa e! app* "Työ"]]]
+             [:td [muu-tyo-kentta e! app* "Työ"]]
+             [:td [yleiskustannuslisa-kentta e! app* "Työ"]]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Komponentit:"]
-             [:td [muu-tyo e! app* "Komponentit"]]
-             [:td [yleiskustannuslisa e! app* "Komponentit"]]]
+             [:td [muu-tyo-kentta e! app* "Komponentit"]]
+             [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Yleiset materiaalit:"]
-             [:td [muu-tyo e! app* "Yleiset materiaalit"]]
-             [:td [yleiskustannuslisa e! app* "Yleiset materiaalit"]]]
+             [:td [muu-tyo-kentta e! app* "Yleiset materiaalit"]]
+             [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Matkakulut:"]
-             [:td [muu-tyo e! app* "Matkakulut"]]
-             [:td [yleiskustannuslisa e! app* "Matkakulut"]]]
+             [:td [muu-tyo-kentta e! app* "Matkakulut"]]
+             [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Muut kulut:"]
-             [:td [muu-tyo e! app* "Muut kulut"]]
-             [:td [yleiskustannuslisa e! app* "Muut kulut"]]]]]
+             [:td [muu-tyo-kentta e! app* "Muut kulut"]]
+             [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
