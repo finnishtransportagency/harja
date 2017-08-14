@@ -189,12 +189,14 @@
           [:table.vv-toimenpiteen-hinnoittelutiedot-grid
            [:thead
             [:tr
-             [:th {:style {:width "50%"}}]
-             [:th {:style {:width "30%"}} "Hinta / määrä"]
-             [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
+             [:th {:style {:width "47%"}}]
+             [:th {:style {:width "27%"}} "Hinta / määrä"]
+             [:th {:style {:width "17%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
+             [:th {:style {:width "9%"}} ""]]]
            [:tbody
             [:tr.otsikkorivi
              [:td.tyot-osio [:b "Työt"]]
+             [:td.tyot-osio]
              [:td.tyot-osio]
              [:td.tyot-osio]]
             (for* [hinnoittelu toimenpidekoodilliset-hinnoittelut]
@@ -220,36 +222,48 @@
                                    ::hinta/summa uusi}))))]
                  [:span " "]
                  [:span "kpl (TODO €)"]]]
-               [:td.tyot-osio]])
+               [:td.tyot-osio]
+               [:td.tyot-osio
+                [:span
+                 ;; TODO Rivin poisto
+                 {:on-click #(log "TODO Klikkasit roskista :O")}
+                 (ikonit/livicon-trash)]]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
               [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
+             [:td.tyot-osio]
              [:td.tyot-osio]
              [:td.tyot-osio]]
             [:tr.otsikkorivi
              [:td [:b "Muut"]]
              [:td]
+             [:td]
              [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Työ:"]
              [:td [muu-tyo-kentta e! app* "Työ"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Työ"]]]
+             [:td [yleiskustannuslisa-kentta e! app* "Työ"]]
+             [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Komponentit:"]
              [:td [muu-tyo-kentta e! app* "Komponentit"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]]
+             [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]
+             [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Yleiset materiaalit:"]
              [:td [muu-tyo-kentta e! app* "Yleiset materiaalit"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]]
+             [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]
+             [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Matkakulut:"]
              [:td [muu-tyo-kentta e! app* "Matkakulut"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]]
+             [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]
+             [:td]]
             [:tr.muu-hinnoittelu-rivi
              [:td.tyon-otsikko "Muut kulut:"]
              [:td [muu-tyo-kentta e! app* "Muut kulut"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]]]]
+             [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]
+             [:td]]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
