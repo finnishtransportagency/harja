@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-08-14",
+    "title": "HARJA:n siltatarkastusraportilla nähtävillä urakan siltamäärä ja tarkastusprosentti",
+    "body": "Ylläpidon urakoiden aikataulunäkymään on toteutettu muutamia pieniä käytettävyysparannuksia. Tiemerkintäurakoitsija näkee jatkossa kohteen päällystysurakan nimen ja sen yhteyshenkilöt omassa sarakkeessa. Tilan säästämiseksi päivämääräkentissä ei enää näytetä vuotta jos se on sama kuin suodattimesta valittu vuosi. Päivämäärää asetettaessa näkyvä kalenteri asettuu alustavasti aina samalle kuukaudelle jolle kohteen edellinen päivämäärämerkintä on asetettu. Aikajanalle piirretään nykyisen päivän kohdalle punainen viiva, joka auttaa hahmottamaan paremmin aikataulun etenemistä. Lisäksi aikajanalla näkyy nyt myös koko kohteen alku ja loppu myös silloin kun vain toinen näistä on asetettu. Kaikki nämä muutokset ovat nyt käytössä Harjassa."
+  },
+  {
     "date": "2017-07-10",
     "title": "Tiemerkinnän suunnitellun päivämäärän merkitseminen & sähköposti-ilmoitukset",
     "body": "Jatkossa sähköposti tiemerkinnän valmistumisesta lähetetään vasta tiemerkinnän valmistumispäivänä. Jos tiemerkintä merkitään valmistuneeksi kuluvana päivänä tai menneisyydessä, lähetetään viesti heti. Kyseinen toiminnallisuus tulee käyttöön kuluvan viikon aikana."
