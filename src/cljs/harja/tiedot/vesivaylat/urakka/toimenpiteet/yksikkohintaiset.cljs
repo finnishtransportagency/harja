@@ -136,6 +136,7 @@
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
 (defrecord LisaaHinnoiteltavaTyorivi [])
+(defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
@@ -461,8 +462,16 @@
   (process-event [_ app]
     ;; TODO TESTI
     (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
-          paivitetyt-hintaelementit (conj hintaelementit {})]
+          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (map ::hinta/id hintaelementit))))
+          paivitetyt-hintaelementit (conj hintaelementit {::hinta/id seuraava-vapaa-neg-id})]
       (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] paivitetyt-hintaelementit)))
+
+  PoistaHinnoiteltavaTyorivi
+  (process-event [{tiedot :vastaus} app]
+    ;; TODO TESTI
+    (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
+          hintaelementit-ilman-poistettavaa (filter #(not= (::hinta/id %) (::hinta/id tiedot)) hintaelementit)]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] hintaelementit-ilman-poistettavaa)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

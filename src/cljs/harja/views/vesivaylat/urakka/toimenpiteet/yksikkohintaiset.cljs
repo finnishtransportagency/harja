@@ -224,9 +224,8 @@
                  [:span "kpl (TODO €)"]]]
                [:td.tyot-osio]
                [:td.tyot-osio
-                [:span
-                 ;; TODO Rivin poisto
-                 {:on-click #(log "TODO Klikkasit roskista :O")}
+                [:span.klikattava
+                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::hinta/id (::hinta/id hinnoittelu)}))}
                  (ikonit/livicon-trash)]]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
