@@ -144,16 +144,16 @@
 (defn- muu-tyo
   [e! app* otsikko]
   [:span
-   [:td [:b (str otsikko ":")]]
-   [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-    (r/wrap (hinta/hinnan-maara
-              (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-              otsikko)
-            (fn [uusi]
-              (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
-                                                         ::hinta/maara uusi}))))]
+   [:span
+    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+     (r/wrap (hinta/hinnan-maara
+               (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+               otsikko)
+             (fn [uusi]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                          ::hinta/maara uusi}))))]]
    [:span " "]
-   "€"])
+   [:span "€"]])
 
 (defn- yleiskustannuslisa
   [e! app* otsikko]
@@ -192,24 +192,37 @@
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
             [:tr
-             [:td "Työt"]
+             [:td [:b "Työt"]]
              [:td]
              [:td]]
             [:tr
-             [:td "Muut"]
-             [:td
-              ;; TODO Työ ei enää käytössä, miten migratoidaan!?
-              [muu-tyo e! app* "Työ"]
-              [muu-tyo e! app* "Komponentit"]
-              [muu-tyo e! app* "Yleiset materiaalit"]
-              [muu-tyo e! app* "Matkakulut"]
-              [muu-tyo e! app* "Muut kulut"]]
-             [:td
-              [yleiskustannuslisa e! app* "Työ"]
-              [yleiskustannuslisa e! app* "Komponentit"]
-              [yleiskustannuslisa e! app* "Yleiset materiaalit"]
-              [yleiskustannuslisa e! app* "Matkakulut"]
-              [yleiskustannuslisa e! app* "Muut kulut"]]]]]
+             [:td "TODO Työn valinta"]
+             [:td "TODO Määrä tähän"]
+             [:td]]
+            [:tr
+             [:td [:b "Muut"]]
+             [:td]
+             [:td]]
+            [:tr.muu-tyo-rivi
+             [:td.tyon-otsikko "Työ:"]
+             [:td [muu-tyo e! app* "Työ"]]
+             [:td [yleiskustannuslisa e! app* "Työ"]]]
+            [:tr.muu-tyo-rivi
+             [:td.tyon-otsikko "Komponentit:"]
+             [:td [muu-tyo e! app* "Komponentit"]]
+             [:td [yleiskustannuslisa e! app* "Komponentit"]]]
+            [:tr.muu-tyo-rivi
+             [:td.tyon-otsikko "Yleiset materiaalit:"]
+             [:td [muu-tyo e! app* "Yleiset materiaalit"]]
+             [:td [yleiskustannuslisa e! app* "Yleiset materiaalit"]]]
+            [:tr.muu-tyo-rivi
+             [:td.tyon-otsikko "Matkakulut:"]
+             [:td [muu-tyo e! app* "Matkakulut"]]
+             [:td [yleiskustannuslisa e! app* "Matkakulut"]]]
+            [:tr.muu-tyo-rivi
+             [:td.tyon-otsikko "Muut kulut:"]
+             [:td [muu-tyo e! app* "Muut kulut"]]
+             [:td [yleiskustannuslisa e! app* "Muut kulut"]]]]]
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
