@@ -1,0 +1,1 @@
+ALTER TABLE vv_hinta ADD COLUMN toimenpidekoodi INTEGER REFERENCES toimenpidekoodi(id);
