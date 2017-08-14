@@ -187,20 +187,20 @@
           [:table.vv-toimenpiteen-hinnoittelutiedot-grid
            [:thead
             [:tr
-             [:th {:style {:width "45%"}}]
-             [:th {:style {:width "35%"}} "Hinta / määrä"]
+             [:th {:style {:width "60%"}}]
+             [:th {:style {:width "20%"}} "Hinta / määrä"]
              [:th {:style {:width "20%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]]]
            [:tbody
             [:tr
-             [:td [:b "Työt"]]
-             [:td]
-             [:td]]
+             [:td.otsikkosarake.tyot-osa [:b "Työt"]]
+             [:td.tyot-osa]
+             [:td.tyot-osa]]
             [:tr
-             [:td "TODO Työn valinta"]
-             [:td "TODO Määrä tähän"]
-             [:td]]
+             [:td.tyot-osa "TODO Työn valinta"]
+             [:td.tyot-osa "TODO Määrä tähän"]
+             [:td.tyot-osa]]
             [:tr
-             [:td [:b "Muut"]]
+             [:td.otsikkosarake [:b "Muut"]]
              [:td]
              [:td]]
             [:tr.muu-tyo-rivi
