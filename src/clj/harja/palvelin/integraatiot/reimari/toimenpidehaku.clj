@@ -1,20 +1,14 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.reimari.apurit :refer [edellisen-integraatiotapahtuman-alkuaika
                                                                 formatoi-aika]]
-            [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
-            [harja.domain.vesivaylat.turvalaite :as turvalaite]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-toimenpiteet :as sanoma]
-            [harja.pvm :as pvm]
-            [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
             [harja.tyokalut.xml :as xml]
-            [clojure.string :as s]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
 

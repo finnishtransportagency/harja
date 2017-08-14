@@ -1,24 +1,17 @@
 (ns harja.palvelin.integraatiot.reimari.komponenttihaku
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.reimari.apurit :refer [edellisen-integraatiotapahtuman-alkuaika
                                                                 formatoi-aika]]
-            [harja.domain.vesivaylat.alus :as vv-alus]
             [harja.domain.vesivaylat.komponenttityyppi :as komponenttityyppi]
             [harja.domain.vesivaylat.turvalaitekomponentti :as turvalaitekomponentti]
-            [harja.domain.vesivaylat.turvalaite :as turvalaite]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-komponenttityypit :as kt-sanoma]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-turvalaitekomponentit :as tl-sanoma]
-            [harja.pvm :as pvm]
-            [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
-            [clojure.string :as s]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.tyokalut.lukot :as lukko]
-            [clojure.set :refer [rename-keys]]))
+            [harja.palvelin.tyokalut.lukot :as lukko]))
 
 (defn kasittele-komponenttityypit-vastaus [db vastaus-xml]
   (log/debug "kasittele-komponenttityypit-vastaus" vastaus-xml)
