@@ -97,8 +97,10 @@
     (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
          (re-find #"\]\]\]\)\]\]$|\]\]\]\)\]\]\"$" teksti)) :html
     (re-find #":td|:tr|:table|:div|:pre|:valign" teksti) :html-rikkinainen
-    (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
-         (re-find #"\}\]\}$" teksti)) :slack
+    (and (re-find #"raportoi yhteyskatkoksista palveluissa:," teksti)
+         (re-find #"\}\]\}\"$" teksti)) :slack1
+    (and (re-find #"raportoi yhteyskatkoksista palveluissa:\"\"" teksti)
+         (re-find #"\}\]\}\"$" teksti)) :slack2
     (re-find #":title|:value" teksti) :slack-rikkinainen
     :else :joku-rikkinainen))
 
@@ -121,7 +123,7 @@
         map-vec->vec-map (fn [mappi-vektoreita]
                            (apply mapv (fn [& arvot]
                                          (zipmap (keys mappi-vektoreita) arvot))
-                                       (vals mappi-vektoreita)))
+                                       (keep #(when-not (empty? %) %) (vals mappi-vektoreita))))
         yhteyskatkokset (map-vec->vec-map
                           (cond-> {}
                                   palvelut? (assoc :palvelut (first yhteyskatkos-tiedot))
@@ -149,7 +151,7 @@
         tekstin-formatointi (tekstin-formatointi loki-teksti)]
     (case tekstin-formatointi
       :html (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
-                                            {:pvm ["" "T"]
+                                            {:pvm ["" ","]
                                              :kello ["T" "."]
                                              :kayttaja ["[:div Käyttäjä  " " "]
                                              :palvelut ["[:tr [:td {:valign top} [:b :" "]]"]
@@ -157,15 +159,30 @@
                                              :ensimmaiset-katkokset ["ensimmäinen: " "viimeinen"]
                                              :viimeiset-katkokset ["viimeinen: " "]]]"]})
       :html-rikkinainen {:rikkinainen "foo"}
-      :slack (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
-                                             {:pvm ["" "T"]
+      :slack1 (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+                                             {:pvm ["" ","]
+                                              :kello ["T" "."]
+                                              :kayttaja ["{:text Käyttäjä " " "]
+                                              :palvelut ["{:title :" ", "]
+                                              :katkokset [", :value Katkoksia " " "]
+                                              :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
+                                              :viimeiset-katkokset ["viimeinen: " "}"]})
+      :slack2 (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+                                             {:pvm ["" ","]
                                               :kello ["T" "."]
                                               :kayttaja ["{:text \"\"Käyttäjä " " "]
-                                              :palvelut ["{:title \"\"" "\"\""]
+                                              :palvelut ["{:title \"\":" "\"\""]
                                               :katkokset [", :value \"\"Katkoksia " " "]
                                               :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
                                               :viimeiset-katkokset ["viimeinen: " "\"\""]})
-      :slack-rikkinainen {:rikkinainen "foo"}
+      :slack-rikkinainen {:rikkinainen (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+                                             {:pvm ["" ","]
+                                              :kello ["T" "."]
+                                              :kayttaja ["{:text Käyttäjä " " "]
+                                              :palvelut ["{:title :" ", "]
+                                              :katkokset [", :value Katkoksia " " "]
+                                              :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
+                                              :viimeiset-katkokset ["viimeinen: " "}"]})}
       :joku-rikkinainen {:rikkinainen "foo"})))
 
 (defn jarjestele-yhteyskatkos-data-visualisointia-varten
@@ -210,9 +227,8 @@
                                                                            :value (:arvo-avain uusi-map)}]}))))
                                            [] ryhmat-avattuna)]
     (sort-by :jarjestys-avain data-visualisointia-varten)))
-
-(defn asetukset-kayttoon
-  [data {:keys [jarjestys-avain naytettavat-ryhmat min-katkokset]}]
+(defn palvelujen-poisto-fn
+  [naytettavat-ryhmat]
   (let [ryhma-annettu? #(if (nil? naytettavat-ryhmat)
                           true
                           (contains? naytettavat-ryhmat %))
@@ -220,13 +236,17 @@
         tallenna? (ryhma-annettu? :tallenna)
         urakka? (ryhma-annettu? :urakka)
         muut? (ryhma-annettu? :muut)
-        palvelu-jarjestyksena? (= jarjestys-avain :palvelut)
-        min-katkokset (or min-katkokset 0)
         hae-fn (tekstin-hyvaksymis-fn hae? #"^(hae-)")
         tallenna-fn (tekstin-hyvaksymis-fn tallenna? #"^(tallenna-)")
         urakka-fn (tekstin-hyvaksymis-fn urakka? #"^(urakan-)")
-        muut-fn (tekstin-hyvaksymis-fn muut? #"^(?!hae-|tallenna-|urakan-)")
-        palvelujen-poisto-fn (apply comp (keep identity [hae-fn tallenna-fn urakka-fn muut-fn]))
+        muut-fn (tekstin-hyvaksymis-fn muut? #"^(?!hae-|tallenna-|urakan-)")]
+      (apply comp (keep identity [hae-fn tallenna-fn urakka-fn muut-fn]))))
+
+(defn asetukset-kayttoon
+  [data {:keys [jarjestys-avain naytettavat-ryhmat min-katkokset]}]
+  (let [palvelu-jarjestyksena? (= jarjestys-avain :palvelut)
+        min-katkokset (or min-katkokset 0)
+        palvelujen-poisto-fn (palvelujen-poisto-fn naytettavat-ryhmat)
         katkoksien-poisto-fn (fn [katkokset] (when (> katkokset min-katkokset) katkokset))
         palvelu-asetukset-kayttoon (vec
                                     (if palvelu-jarjestyksena?
@@ -269,40 +289,77 @@
                                         palvelu-asetukset-kayttoon)]
     katkos-asetukset-kayttoon))
 
+(defn analyysin-hakuasetukset-kayttoon
+  [onnistunut-mappaus {:keys [naytettavat-ryhmat ping-erikseen?]}]
+  (let [palvelujen-poisto-fn (palvelujen-poisto-fn naytettavat-ryhmat)
+        katkostiedot (keep (fn [{:keys [palvelut] :as mappi}]
+                              (if (and (= "ping" palvelut) ping-erikseen?)
+                                mappi
+                                (when (palvelujen-poisto-fn palvelut)
+                                  mappi)))
+                           (:yhteyskatkokset onnistunut-mappaus))]
+     (if (empty? katkostiedot)
+       nil
+       (assoc onnistunut-mappaus :yhteyskatkokset (vec katkostiedot)))))
+
+(defn yrita-korjata
+  [rikkinainen]
+  (map #(hash-map :palvelut (get-in % [:rikkinainen :yhteyskatkokset 0 :palvelut])
+                  :katkokset (get-in % [:rikkinainen :yhteyskatkokset 0 :katkokset]))
+       rikkinainen))
+
 (defn analyysit-yhteyskatkoksista
-  [yhteyskatkokset {analysointimetodi :analysointimetodi analyysit :analyysit}]
+  [yhteyskatkokset {analysointimetodi :analysointimetodi haettavat-analyysit :haettavat-analyysit}]
   (let [ok-yhteyskatkos-data (filter :yhteyskatkokset yhteyskatkokset)
-        rikkinaiset-lokitukset (when (contains? analyysit :rikkinaiset-lokitukset)
-                                  (count (filter :rikkinainen yhteyskatkokset)))
-        yhteyskatkokset-ryhmittain (when (contains? analyysit :eniten-katkosryhmia)
+        rikkinaiset-lokitukset (when (contains? haettavat-analyysit :rikkinaiset-lokitukset)
+                                  (count (filter #(when-let [arvo (:rikkinainen %)]
+                                                    (when (or (:kayttaja arvo) ; jotta sama rikkinainen lasketaan vain kerran
+                                                              (= arvo "foo"))
+                                                      true))
+                                                 yhteyskatkokset)))
+        eheytetyt-yhteyskatkokset (when (contains? haettavat-analyysit :rikkinaiset-lokitukset)
+                                    (yrita-korjata (filter #(when-let [arvo (:rikkinainen %)]
+                                                              (when-not (= arvo "foo")
+                                                                arvo))
+                                                           yhteyskatkokset)))
+        eheytetyt-yhteyskatkokset-lkm (when (contains? haettavat-analyysit :rikkinaiset-lokitukset)
+                                        (count eheytetyt-yhteyskatkokset))
+        yhteyskatkokset-ryhmittain (when (contains? haettavat-analyysit :eniten-katkosryhmia)
                                     (mapcat #(mapv (fn [mappi]
                                                      (assoc mappi :katkokset 1))
                                                    (:yhteyskatkokset %))
                                             ok-yhteyskatkos-data))
-        yhteyskatkokset (when (contains? analyysit :eniten-katkoksia)
-                          (mapcat :yhteyskatkokset ok-yhteyskatkos-data))
+        yhteyskatkokset (when (contains? haettavat-analyysit :eniten-katkoksia)
+                          (if (contains? haettavat-analyysit :rikkinaiset-lokitukset)
+                            (concat (mapcat :yhteyskatkokset ok-yhteyskatkos-data) eheytetyt-yhteyskatkokset)
+                            (mapcat :yhteyskatkokset ok-yhteyskatkos-data)))
+        yhteyskatkokset-ryhmittain (map #(assoc % :katkokset 1) yhteyskatkokset)
         ota-mapin-n-suurinta-arvoa #(into {}
                                       (take-last %2 (sort-by (fn [mappi]
                                                               (second mappi))
                                                              %1)))
-        eniten-katkosryhmia (when (contains? analyysit :eniten-katkosryhmia)
+        eniten-katkosryhmia (when (contains? haettavat-analyysit :eniten-katkosryhmia)
                               (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
                                                                      (update %1 (:palvelut %2) inc)
                                                                      (assoc %1 (:palvelut %2) 1))
                                                                   {} yhteyskatkokset-ryhmittain)
                                                           5))
-        eniten-katkoksia (when (contains? analyysit :eniten-katkoksia)
+        eniten-katkoksia (when (contains? haettavat-analyysit :eniten-katkoksia)
                           (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
                                                                  (update %1 (:palvelut %2) (fn [palvelun-katkokset]
                                                                                              (+ palvelun-katkokset (:katkokset %2))))
                                                                  (assoc %1 (:palvelut %2) (:katkokset %2)))
                                                               {} yhteyskatkokset)
                                                       5))
-        _ (println yhteyskatkokset)
-        katkoksien-pituudet #(let [ensimmainen-ms (.getTime (pvm/dateksi (:ensimmaiset-katkokset %)))
-                                   viimeinen-ms (.getTime (pvm/dateksi (:viimeiset-katkokset %)))]
-                              (Math/abs (- viimeinen-ms ensimmainen-ms))) ;abs, koska lokituksessa oli bugi alussa, jolloin ensimmainen olikin viimeinen
-        pisimmat-katkokset (when (contains? analyysit :pisimmat-katkokset)
+
+        katkoksien-pituudet #(let [ensimmainen-ms (when-let [ek (:ensimmaiset-katkokset %)]
+                                                    (.getTime (pvm/dateksi ek)))
+                                   viimeinen-ms (when-let [vk (:viimeiset-katkokset %)]
+                                                 (.getTime (pvm/dateksi vk)))]
+                              (if (and ensimmainen-ms viimeinen-ms)
+                                (Math/abs (- viimeinen-ms ensimmainen-ms)) ;abs, koska lokituksessa oli bugi alussa, jolloin ensimmainen olikin viimeinen
+                                0))
+        pisimmat-katkokset (when (contains? haettavat-analyysit :pisimmat-katkokset)
                               (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
                                                                      (update %1 (:palvelut %2) (fn [palvelun-katkoksen-pituus]
                                                                                                  (let [tarkasteltavan-mapin-katkoksen-pituus (katkoksien-pituudet %2)]
@@ -311,9 +368,36 @@
                                                                                                      palvelun-katkoksen-pituus))))
                                                                      (assoc %1 (:palvelut %2) (katkoksien-pituudet %2)))
                                                                   {} yhteyskatkokset)
-                                                          5))]
+                                                          5))
+        selain-sammutettu-katkoksen-aikana (when (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana)
+                                             (reduce #(let [lokitus-tapahtui (.getTime (pvm/dateksi (:pvm %2)))
+                                                            ping-yhteyskatkokset (some (fn [palvelun-katkokset]
+                                                                                         (when (= "ping" (:palvelut palvelun-katkokset))
+                                                                                           palvelun-katkokset))
+                                                                                       (:yhteyskatkokset %2))
+                                                            ; Tämä tehdään siltä varalta, että pingiä ei kerettyä tehdä. Siinä tapauksessa otetaan vain joku palvelukutsu
+                                                            ping-yhteyskatkokset (if ping-yhteyskatkokset
+                                                                                    ping-yhteyskatkokset
+                                                                                    (first (:yhteyskatkokset %2)))
+                                                            viimeinen-pingaus (if (> (.getTime (pvm/dateksi (:viimeiset-katkokset ping-yhteyskatkokset)))
+                                                                                     (.getTime (pvm/dateksi (:ensimmaiset-katkokset ping-yhteyskatkokset))))
+                                                                                 (.getTime (pvm/dateksi (:viimeiset-katkokset ping-yhteyskatkokset)))
+                                                                                 (.getTime (pvm/dateksi (:ensimmaiset-katkokset ping-yhteyskatkokset))))
+                                                            lokituksen-ja-pingauksen-vali (- lokitus-tapahtui viimeinen-pingaus)
+                                                            kutsutut-palvelut (keep (fn [palvelun-katkokset]
+                                                                                      (if (= "ping" (:palvelut palvelun-katkokset))
+                                                                                        nil
+                                                                                        (:palvelut palvelun-katkokset)))
+                                                                                    (:yhteyskatkokset %2))]
+                                                           (if (> lokituksen-ja-pingauksen-vali 10000)
+                                                             (merge-with + %1 (zipmap kutsutut-palvelut
+                                                                                      (repeat (count kutsutut-palvelut) 1)))
+                                                             %1))
+                                                     {} ok-yhteyskatkos-data))]
     {:eniten-katkoksia eniten-katkoksia :pisimmat-katkokset pisimmat-katkokset
-     :rikkinaiset-lokitukset rikkinaiset-lokitukset :eniten-katkosryhmia eniten-katkosryhmia}))
+     :rikkinaiset-lokitukset rikkinaiset-lokitukset :eniten-katkosryhmia eniten-katkosryhmia
+     :selain-sammutettu-katkoksen-aikana selain-sammutettu-katkoksen-aikana
+     :eheytetyt-yhteyskatkokset-lkm eheytetyt-yhteyskatkokset-lkm}))
 
 (defn bool-keyword
   [avain]
@@ -337,27 +421,43 @@
                                                        (:yhteyskatkokset %)))
                                        onnistuneet-mappaukset)
                                   onnistuneet-mappaukset)
+        onnistuneet-mappaukset (map #(assoc % :pvm (etsi-arvot-valilta (:pvm %) "" "T")) onnistuneet-mappaukset)
         jarjestelty-data (jarjestele-yhteyskatkos-data-visualisointia-varten onnistuneet-mappaukset ryhma-avain jarjestys-avain)
         asetuksien-mukainen-data (asetukset-kayttoon jarjestelty-data hakuasetukset)]
     asetuksien-mukainen-data))
 
 (defn hae-yhteyskatkosanalyysi
-  [{analysointimetodi :analysointimetodi analyysit :analyysit :as hakuasetukset} data-csvna]
+  [{:keys [analysointimetodi haettavat-analyysit hakuasetukset] :as analyysihaku} data-csvna]
   (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
-        tehtava-analyysi? #(contains? analyysit %)
+        tehtava-analyysi? #(contains? haettavat-analyysit %)
         haettavat-tiedot-lokituksista (cond-> #{}
                                               (tehtava-analyysi? :eniten-katkoksia) (conj :palvelut)
                                               (tehtava-analyysi? :pisimmat-katkokset) (conj :ensimmaiset-katkokset
                                                                                             :viimeiset-katkokset)
-                                              (tehtava-analyysi? :eniten-katkosryhmia) (conj :palvelut))
+                                              (tehtava-analyysi? :eniten-katkosryhmia) (conj :palvelut)
+                                              (tehtava-analyysi? :rikkinaiset-lokitukset) (conj :kayttaja)
+                                              (tehtava-analyysi? :selain-sammutettu-katkoksen-aikana) (conj :ensimmaiset-katkokset
+                                                                                                            :viimeiset-katkokset
+                                                                                                            :palvelut :pvm :kello)
+                                              (tehtava-analyysi? :vaihdettu-nakymaa-katkoksen-aikana) (conj :palvelut :pvm :kello)
+                                              (tehtava-analyysi? :monellako-kayttajalla) (conj :kayttaja))
+        ping-erikseen? (when (and (not (get-in hakuasetukset [:naytettavat-ryhmat :muut]))
+                                  (tehtava-analyysi? :selain-sammutettu-katkoksen-aikana))
+                          true)
         haettavat-tiedot-lokituksista (zipmap (map bool-keyword haettavat-tiedot-lokituksista)
                                               (repeat (count haettavat-tiedot-lokituksista) true))
-        yhteyskatkokset-mappina (map #(let [mappaus-yritys (yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
-                                        (if (contains? mappaus-yritys :yhteyskatkokset)
+        yhteyskatkokset-mappina (keep #(let [mappaus-yritys (yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
+                                        (if (contains? mappaus-yritys :rikkinainen)
                                           mappaus-yritys
-                                          {:rikkinainen mappaus-yritys}))
-                                     graylogista-haetut-lokitukset)]
-    (analyysit-yhteyskatkoksista yhteyskatkokset-mappina hakuasetukset)))
+                                          (analyysin-hakuasetukset-kayttoon mappaus-yritys (assoc hakuasetukset :ping-erikseen? ping-erikseen?))))
+                                      graylogista-haetut-lokitukset)
+        analyysit (analyysit-yhteyskatkoksista yhteyskatkokset-mappina analyysihaku)
+        pingin-poisto-fn #(into {} (map (fn [[analyysi tulos]]
+                                          [analyysi (if (map? tulos) (dissoc tulos "ping") tulos)])
+                                        %))]
+      (if ping-erikseen?
+        (pingin-poisto-fn analyysit)
+        analyysit)))
 
 
 (defrecord Graylog [data-csvna]
@@ -373,8 +473,8 @@
                             (hae-yhteyskatkosten-data hakuasetukset (st/trim (:polku data-csvna)) true)))
     (http/julkaise-palvelu (:http-palvelin this)
                            :graylog-hae-analyysi
-                           (fn [_ hakuasetukset]
-                            (hae-yhteyskatkosanalyysi hakuasetukset (st/trim (:polku data-csvna)))))
+                           (fn [_ analyysihaku]
+                            (hae-yhteyskatkosanalyysi analyysihaku (st/trim (:polku data-csvna)))))
     this)
 
   (stop [this]

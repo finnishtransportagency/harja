@@ -61,25 +61,24 @@
   (e! (tiedot/->HaeYhteyskatkosryhmaData :palvelut :pvm)))
 (defn hakuasetukset-leijuke
   [e! hakuasetukset]
-  (let [setti-ryhmia (atom #{:tallenna :hae :muut})]
-    (fn [e! hakuasetukset]
-      [leijuke/leijuke
-        {:otsikko "Hakuasetukset"
-         :sulje! #(e! (tiedot/->PaivitaArvoFunktio not :hakuasetukset-nakyvilla?))}
-        [lomake/lomake
-          {:muokkaa! #(e! (tiedot/->PaivitaArvo % :hakuasetukset))
-           :footer [napit/yleinen-ensisijainen "Päivitä" #(hae-kaikki-yhteyskatkosdatat e!)]}
-          [{:otsikko "Min katkokset"
-            :nimi :min-katkokset
-            :tyyppi :positiivinen-numero
-            ::lomake/col-luokka ""}
-           {:otsikko "Naytettavat ryhmät"
-            :nimi :naytettavat-ryhmat
-            :tyyppi :checkbox-group
-            :vaihtoehdot [:hae :tallenna :urakka :muut]
-            :nayta-rivina? true
-            ::lomake/col-luokka ""}]
-          hakuasetukset]])))
+  (fn [e! hakuasetukset]
+    [leijuke/leijuke
+      {:otsikko "Hakuasetukset"
+       :sulje! #(e! (tiedot/->PaivitaArvoFunktio not :hakuasetukset-nakyvilla?))}
+      [lomake/lomake
+        {:muokkaa! #(e! (tiedot/->PaivitaArvo % :hakuasetukset))
+         :footer [napit/yleinen-ensisijainen "Päivitä" #(hae-kaikki-yhteyskatkosdatat e!)]}
+        [{:otsikko "Min katkokset"
+          :nimi :min-katkokset
+          :tyyppi :positiivinen-numero
+          ::lomake/col-luokka ""}
+         {:otsikko "Naytettavat ryhmät"
+          :nimi :naytettavat-ryhmat
+          :tyyppi :checkbox-group
+          :vaihtoehdot [:hae :tallenna :urakka :muut]
+          :nayta-rivina? true
+          ::lomake/col-luokka ""}]
+        hakuasetukset]]))
 
 (defn diagrammit-paanakyma [e! app]
   (fn [e! {:keys [analyysit valittu-analyysi yhteyskatkokset-pvm-data yhteyskatkokset-palvelut-data
@@ -120,7 +119,7 @@
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
             ^{:key "line-plot"}
-            [vis/plot {:plot-type :line-plot :x [1 2 3 4 5] :y [4 9 16 25 36] :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))}]
+            ;[vis/plot {:plot-type :line-plot :x [1 2 3 4 5] :y [4 9 16 25 36] :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))}]
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "pvm"))
               ^{:key "jarjestys-pvm-mukaan"}
               [:div

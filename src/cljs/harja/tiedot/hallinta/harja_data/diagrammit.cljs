@@ -27,9 +27,7 @@
                     :kaytossa {:min-katkokset 0
                                :naytettavat-ryhmat #{:tallenna :hae :urakan :muut}}
                     :hakuasetukset {:min-katkokset 0
-                                    :naytettavat-ryhmat #{:tallenna :hae :urakka :muut}}
-                    :analyysi-tehty? false
-                    :analyysi {}}))
+                                    :naytettavat-ryhmat #{:tallenna :hae :urakka :muut}}}))
 
 (defn graylog-palvelukutsu
   "Hakee serveriltä yhteyskatkosdatan."
@@ -48,12 +46,6 @@
                            :naytettavat-ryhmat naytettavat-ryhmat
                            :min-katkokset min-katkokset})
     (update app :haku-kaynnissa #(conj % hakukoodi))))
-
-(defn graylog-hae-analyysi
-  [callback hakuasetukset]
-  (graylog-palvelukutsu :graylog-hae-analyysi
-                        (tuck/send-async! callback)
-                        hakuasetukset))
 
 (defrecord PaivitaArvo [arvo avain])
 (defrecord Nakymassa? [nakymassa?])
@@ -80,17 +72,6 @@
   HaeYhteyskatkosryhmaData
   (process-event [parametrit app]
     (graylog-haku :yhteyskatkosryhma parametrit app))
-  HaeAnalyysi
-  (process-event [_ app]
-    (let [app (assoc app :analyysi-tehty? false)]
-      (graylog-hae-analyysi ->PaivitaAnalyysiArvot {:analysointimetodi :naivi
-                                                    :analyysit #{:eniten-katkoksia :pisimmat-katkokset
-                                                                 :rikkinaiset-lokitukset :eniten-katkosryhmia}})
-      app))
   PaivitaYhteyskatkosArvot
   (process-event [{data :data hakukoodi :hakukoodi app-avain :app-avain} app]
-    (assoc app app-avain data :haku-kaynnissa (disj (:haku-kaynnissa app) hakukoodi :alku)))
-  PaivitaAnalyysiArvot
-  (process-event [{analyysi :analyysi} app]
-    (assoc app :analyysi analyysi
-               :analyysi-tehty? true)))
+    (assoc app app-avain data :haku-kaynnissa (disj (:haku-kaynnissa app) hakukoodi :alku))))
