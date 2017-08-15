@@ -35,15 +35,16 @@
   #{::hinnoittelu-id
     ::toimenpidekoodi-id})
 
-(defn- paivita-hintajoukon-hinta-ominaisuudella
-  [tyot ominaisuus uudet-hintatiedot]
+(defn- paivita-tyojoukon-tyon-tiedot-idlla
+  "Päivittää töiden joukosta yksittäisen työn, jolla annettu id."
+  [tyot tiedot]
   (mapv (fn [tyo]
-          (if (= (ominaisuus tyo) (ominaisuus uudet-hintatiedot))
-            (assoc tyo ::maara (::maara uudet-hintatiedot))
+          (if (= (::id tyo) (::id tiedot))
+            (cond-> tyo
+                    (::maara tiedot)
+                    (assoc ::maara (::maara tiedot))
+
+                    (::toimenpidekoodi-id tiedot)
+                    (assoc ::toimenpidekoodi-id (::toimenpidekoodi-id tiedot)))
             tyo))
         tyot))
-
-(defn- paivita-tyojoukon-tyon-maara-idlla
-  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
-  [tyot uudet-hintatiedot]
-  (paivita-hintajoukon-hinta-ominaisuudella tyot ::id uudet-hintatiedot))

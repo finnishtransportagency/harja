@@ -74,20 +74,16 @@
 (defn hinta-otsikolla [otsikko hinnat]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))
 
-(defn- paivita-hintajoukon-hinta-ominaisuudella
-  [hinnat ominaisuus uudet-hintatiedot]
+(defn- paivita-hintajoukon-hinnan-tiedot-otsikolla
+  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
+  [hinnat tiedot]
   (mapv (fn [hinta]
-          (if (= (ominaisuus hinta) (ominaisuus uudet-hintatiedot))
+          (if (= (::otsikko hinta) (::otsikko tiedot))
             (cond-> hinta
-                    (::maara uudet-hintatiedot)
-                    (assoc ::maara (::maara uudet-hintatiedot))
+                    (::maara tiedot)
+                    (assoc ::maara (::maara tiedot))
 
-                    (some? (::yleiskustannuslisa uudet-hintatiedot))
-                    (assoc ::yleiskustannuslisa (::yleiskustannuslisa uudet-hintatiedot)))
+                    (some? (::yleiskustannuslisa tiedot))
+                    (assoc ::yleiskustannuslisa (::yleiskustannuslisa tiedot)))
             hinta))
         hinnat))
-
-(defn- paivita-hintajoukon-hinta-otsikolla
-  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
-  [hinnat uudet-hintatiedot]
-  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::otsikko uudet-hintatiedot))

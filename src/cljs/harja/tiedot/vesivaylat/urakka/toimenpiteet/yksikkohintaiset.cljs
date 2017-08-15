@@ -131,6 +131,7 @@
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleTyo [tiedot])
+(defrecord AsetaTyolleTehtava [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -342,21 +343,28 @@
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-              (hinta/paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-toimenpide
-                                                                      ::h/hintaelementit]) tiedot)))
-
-  HinnoitteleTyo
-  (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-              (tyo/paivita-tyojoukon-tyon-maara-idlla (get-in app [:hinnoittele-toimenpide
-                                                                   ::h/tyot]) tiedot)))
+              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
+                                                                              ::h/hintaelementit]) tiedot)))
 
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hintaelementit]
-              (hinta/paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-hintaryhma
-                                                                      ::h/hintaelementit]) tiedot)))
+              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-hintaryhma
+                                                                              ::h/hintaelementit]) tiedot)))
 
+  HinnoitteleTyo
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+              (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                    ::h/tyot]) tiedot)))
+
+  AsetaTyolleTehtava
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO TESTI
+    (log "[DEBUG] ASETA TYÖLLE TEHTÄVÄ, TIEDOT: " (pr-str tiedot))
+    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+              (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                    ::h/tyot]) tiedot)))
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
