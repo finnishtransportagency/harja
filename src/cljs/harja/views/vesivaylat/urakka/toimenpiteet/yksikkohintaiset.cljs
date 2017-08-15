@@ -231,6 +231,7 @@
                    (ikonit/livicon-trash)]]])
               [:tr.tyon-hinnoittelu-rivi
                [:td.tyot-osio
+                ;; TODO Ilmaa tänne
                 [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
                [:td.tyot-osio]
                [:td.tyot-osio]
@@ -267,6 +268,7 @@
                [:td]]]])
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+           ;; TODO Tasaa muiden eurojen kanssa
            [yleiset/tietoja {:tietokentan-leveys "180px"}
             "Perushinta:" (fmt/euro-opt (hinta/perushinta
                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
@@ -277,6 +279,7 @@
 
           [:footer.vv-toimenpiteen-hinnoittelu-footer
            [napit/tallenna
+            ;; TODO Oikeaan reunaan tämä
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
