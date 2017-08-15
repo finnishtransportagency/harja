@@ -171,13 +171,13 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
+(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
-        toimenpiteen-nykyiset-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
+        toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
     [:div
      (if (and hinnoittele-toimenpide-id
-              (= hinnoittele-toimenpide-id (::to/id rivi)))
+              (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
        ;; Piirrä leijuke
        [:div
         [:span "Hinta: 0€"]
@@ -199,7 +199,7 @@
              [:td.tyot-osio]
              [:td.tyot-osio]
              [:td.tyot-osio]]
-            (for* [tyo tyot]
+            (for* [tyorivi tyot]
               [:tr.tyon-hinnoittelu-rivi
                [:td.tyot-osio
                 [yleiset/livi-pudotusvalikko
@@ -212,17 +212,17 @@
                [:td.tyot-osio
                 [:span
                  [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
-                  (r/wrap (::tyo/maara rivi)
+                  (r/wrap (::tyo/maara tyorivi)
                           (fn [uusi]
                             (e! (tiedot/->HinnoitteleTyo
-                                  {::tyo/id (::tyo/id rivi)
+                                  {::tyo/id (::tyo/id tyorivi)
                                    ::tyo/maara uusi}))))]
                  [:span " "]
                  [:span "kpl (TODO €)"]]]
                [:td.tyot-osio]
                [:td.tyot-osio
                 [:span.klikattava
-                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyo)}))}
+                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))}
                  (ikonit/livicon-trash)]]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
@@ -285,14 +285,14 @@
                                                         (get-in app* [:valinnat :urakka-id])))
                          :pelkka-arvo
 
-                         (not (to/toimenpiteella-oma-hinnoittelu? rivi))
+                         (not (to/toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
                          :pelkka-nappi
 
                          :default
                          :arvo-ja-nappi)
           :pelkka-nappi-teksti "Hinnoittele"
-          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
-          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id rivi)))
+          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
+          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
           :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset

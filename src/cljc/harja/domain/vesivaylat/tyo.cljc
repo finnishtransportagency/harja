@@ -45,5 +45,5 @@
 
 (defn- paivita-tyojoukon-tyon-maara-idlla
   "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
-  [hinnat uudet-hintatiedot]
-  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::id uudet-hintatiedot))
+  [tyot uudet-hintatiedot]
+  (paivita-hintajoukon-hinta-ominaisuudella tyot ::id uudet-hintatiedot))

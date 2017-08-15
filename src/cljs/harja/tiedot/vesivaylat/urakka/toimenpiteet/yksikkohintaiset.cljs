@@ -441,7 +441,7 @@
   (process-event [_ app]
     ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (map ::tyo/id tyot))))
+          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (keep ::tyo/id tyot))))
           paivitetyt-tyot (conj tyot {::tyo/id seuraava-vapaa-neg-id})]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
