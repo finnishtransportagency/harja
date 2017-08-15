@@ -17,3 +17,5 @@ ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-muokattu" TIMESTAMP NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-luontiaika" TIMESTAMP NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-luoja" TEXT NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-muokkaaja" TEXT NOT NULL;
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-viat');
