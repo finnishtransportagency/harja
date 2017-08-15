@@ -71,7 +71,8 @@
     (etsi-arvot-valilta teksti alku-teksti loppu-teksti false))
    ([teksti string? alku-teksti string? loppu-teksti string? kaikki? ::boolean] string?
     (let [re (re-pattern (str (re-escape alku-teksti) "([^"
-                              (re-escape loppu-teksti) "]+)"))]
+                              (re-escape loppu-teksti) "]+)"))
+          teksti (ilman-skandeja teksti)]
       (if kaikki?
         (mapv second (re-seq re teksti))
         (second (re-find re teksti))))))
@@ -94,7 +95,7 @@
   [teksti]
   (cond
     (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
-         (re-find #"\]\]\]\)\]\]$" teksti)) :html
+         (re-find #"\]\]\]\)\]\]$|\]\]\]\)\]\]\"$" teksti)) :html
     (re-find #":td|:tr|:table|:div|:pre|:valign" teksti) :html-rikkinainen
     (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
          (re-find #"\}\]\}$" teksti)) :slack
@@ -108,7 +109,6 @@
                                            pvm? (assoc :pvm (apply etsi-arvot-valilta aika pvm))
                                            kello? (assoc :kello (apply etsi-arvot-valilta aika kello))
                                            kayttaja? (assoc :kayttaja (apply etsi-arvot-valilta loki-teksti kayttaja)))
-
         yhteyskatkos-tiedot [(when palvelut?
                                (apply etsi-arvot-valilta loki-teksti (conj palvelut true)))
                              (mapv (fn [x]
@@ -279,16 +279,39 @@
                                                      (assoc mappi :katkokset 1))
                                                    (:yhteyskatkokset %))
                                             ok-yhteyskatkos-data))
+        yhteyskatkokset (when (contains? analyysit :eniten-katkoksia)
+                          (mapcat :yhteyskatkokset ok-yhteyskatkos-data))
+        ota-mapin-n-suurinta-arvoa #(into {}
+                                      (take-last %2 (sort-by (fn [mappi]
+                                                              (second mappi))
+                                                             %1)))
         eniten-katkosryhmia (when (contains? analyysit :eniten-katkosryhmia)
-                              (into {}
-                                (take-last 5 (sort-by (fn [mappi]
-                                                        (second mappi))
-                                                 (reduce #(if (contains? %1 (:palvelut %2))
-                                                            (update %1 (:palvelut %2) inc)
-                                                            (assoc %1 (:palvelut %2) 1))
-                                                         {} yhteyskatkokset-ryhmittain)))))
-        eniten-katkoksia (when (contains? analyysit :eniten-katkoksia) {:foo 1337})
-        pisimmat-katkokset (when (contains? analyysit :pisimmat-katkokset) {:bar 13})]
+                              (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
+                                                                     (update %1 (:palvelut %2) inc)
+                                                                     (assoc %1 (:palvelut %2) 1))
+                                                                  {} yhteyskatkokset-ryhmittain)
+                                                          5))
+        eniten-katkoksia (when (contains? analyysit :eniten-katkoksia)
+                          (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
+                                                                 (update %1 (:palvelut %2) (fn [palvelun-katkokset]
+                                                                                             (+ palvelun-katkokset (:katkokset %2))))
+                                                                 (assoc %1 (:palvelut %2) (:katkokset %2)))
+                                                              {} yhteyskatkokset)
+                                                      5))
+        _ (println yhteyskatkokset)
+        katkoksien-pituudet #(let [ensimmainen-ms (.getTime (pvm/dateksi (:ensimmaiset-katkokset %)))
+                                   viimeinen-ms (.getTime (pvm/dateksi (:viimeiset-katkokset %)))]
+                              (Math/abs (- viimeinen-ms ensimmainen-ms))) ;abs, koska lokituksessa oli bugi alussa, jolloin ensimmainen olikin viimeinen
+        pisimmat-katkokset (when (contains? analyysit :pisimmat-katkokset)
+                              (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelut %2))
+                                                                     (update %1 (:palvelut %2) (fn [palvelun-katkoksen-pituus]
+                                                                                                 (let [tarkasteltavan-mapin-katkoksen-pituus (katkoksien-pituudet %2)]
+                                                                                                   (if (> tarkasteltavan-mapin-katkoksen-pituus palvelun-katkoksen-pituus)
+                                                                                                     tarkasteltavan-mapin-katkoksen-pituus
+                                                                                                     palvelun-katkoksen-pituus))))
+                                                                     (assoc %1 (:palvelut %2) (katkoksien-pituudet %2)))
+                                                                  {} yhteyskatkokset)
+                                                          5))]
     {:eniten-katkoksia eniten-katkoksia :pisimmat-katkokset pisimmat-katkokset
      :rikkinaiset-lokitukset rikkinaiset-lokitukset :eniten-katkosryhmia eniten-katkosryhmia}))
 
@@ -327,7 +350,7 @@
                                               (tehtava-analyysi? :pisimmat-katkokset) (conj :ensimmaiset-katkokset
                                                                                             :viimeiset-katkokset)
                                               (tehtava-analyysi? :eniten-katkosryhmia) (conj :palvelut))
-        haettavat-tiedot-lokituksista (zipmap haettavat-tiedot-lokituksista
+        haettavat-tiedot-lokituksista (zipmap (map bool-keyword haettavat-tiedot-lokituksista)
                                               (repeat (count haettavat-tiedot-lokituksista) true))
         yhteyskatkokset-mappina (map #(let [mappaus-yritys (yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
                                         (if (contains? mappaus-yritys :yhteyskatkokset)

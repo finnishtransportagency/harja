@@ -269,7 +269,7 @@
                                                :fill   (if (map? colors)
                                                           ((keyword category) colors)
                                                           (nth colors j)) #_(color-fn d)
-                                               :on-mouse-over #(do (println (str category)))}]
+                                               :on-mouse-over #(do (log/debug (str category)))}]
                                        (when-not (hide-value? value)
                                          [:text {:x           (+ x (/ (* bar-padding bar-width) 2))
                                                  :y (- bars-bottom-y bar-height 2)
@@ -304,3 +304,90 @@
                                         leg]]))
                                   legend-row)))
               (range n-of-legend-rows))))]))
+
+(defn draw-axis
+  [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
+   y-label-orientation width height]
+  (let [x-tick (or x-tick 10)
+        y-tick (or y-tick 10)
+        x-axis-font-size 6
+        y-axis-font-size 6
+        x-txt-padding 2
+        y-txt-padding 2
+        x-label-space 10
+        y-label-space 10
+        axis-width (- width y-label-space x-txt-padding x-axis-font-size 20) ; 20 is marker width
+        axis-height (- height x-label-space y-txt-padding y-axis-font-size 20)
+        origin-x (+ y-label-space y-axis-font-size y-txt-padding)
+        origin-y (+ axis-height 20)]
+    ;määrritellään ne muuttujat svg:ssä, jotka on pakko
+     [^{:key "axis-def"}
+      [:defs
+        [:marker {:id "markerArrow" :markerWidth 21 :markerHeight 15
+                  :refX 0 :refY 10  :orient "auto"}
+          [:path {:d "M0,10 L0,15 L20,10 L0,5 L0,10"}
+                 [:style "fill: #000000;"]]]]
+      ^{:key "diagram-axis"}
+      [:g {:stroke "black" :stroke-width 0.5}
+        ;x-axis
+        [:line {:x1 origin-x :y1 origin-y
+                :x2 (+ axis-width y-label-space) :y2 origin-y :markerEnd "url(#markerArrow)"}]
+        ;y-axis
+        [:line {:x1 origin-x :y1 origin-y
+                :x2 origin-x :y2 20 :markerEnd "url(#markerArrow)"}]
+        ;x-ticks
+        (mapcat #(let [x-position (-> (/ axis-width x-tick) (* %) (+ origin-x))
+                       x-tick-value (-> (apply max x) (/ x-tick) (* %))]
+                  [^{:key (str % "-tick")}
+                   [:line {:x1 x-position :y1 origin-y
+                           :x2 x-position :y2 (- origin-y 4)}]
+                   ^{:key (str % "-txt")}
+                   [:text {:x x-position :y (+ origin-y x-txt-padding x-axis-font-size)
+                           :text-anchor "middle" :font-size (str x-axis-font-size)}
+                     x-tick-value]])
+                (range x-tick))
+        ;y-ticks
+        (mapcat #(let [y-position (->> (/ axis-height y-tick) (* %) (- axis-height) (+ 20))
+                       y-tick-value (-> (apply max y) (/ y-tick) (* %))]
+                  [^{:key (str % "-tick")}
+                   [:line {:x1 origin-x :y1 y-position
+                           :x2 (+ origin-x 4) :y2 y-position}]
+                   ^{:key (str % "-txt")}
+                   [:text {:x (- origin-x y-txt-padding y-axis-font-size) :y y-position
+                           :text-anchor "middle" :font-size (str y-axis-font-size)}
+                     y-tick-value]])
+                (range y-tick))]
+      {:axis-width axis-width
+       :axis-height axis-height
+       :origin-x origin-x
+       :origin-y origin-y}]))
+
+
+(defn draw-legend
+  [legend color])
+
+(defmulti plot
+  (fn [{plot-type :plot-type}]
+    (identity plot-type)))
+
+(defmethod plot :line-plot
+  [{:keys [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
+           legend marker color line-style y-label-orientation width height]}]
+  [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
+    (let [axis (draw-axis x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
+                          y-label-orientation width height)
+          {:keys [axis-width axis-height origin-x origin-y]} (last axis)
+          x-ratio (/ axis-width (apply max x))
+          y-ratio (/ axis-height (apply max y))]
+      [:g
+        (butlast axis)
+        ;draw lines
+        [:g {:stroke "black" :stroke-width 0.5}
+          (map #(identity
+                  ^{:key (str "line-" %1 %2 %3 %4)}
+                  [:line {:x1 (+ origin-x (* %1 x-ratio))
+                          :y1 (- origin-y (* %2 y-ratio))
+                          :x2 (+ origin-x (* %3 x-ratio))
+                          :y2 (- origin-y (* %4 y-ratio))}])
+               (conj (butlast x) 0) (conj (butlast y) 0) (rest x) (rest y))]
+        (draw-legend legend color)])])

@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.harja-data
+(ns harja.tiedot.hallinta.harja-data.diagrammit
   "Hallinnoi harja-datan tietoja"
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
@@ -82,10 +82,11 @@
     (graylog-haku :yhteyskatkosryhma parametrit app))
   HaeAnalyysi
   (process-event [_ app]
-    (graylog-hae-analyysi ->PaivitaAnalyysiArvot {:analysointimetodi :naivi
-                                                  :analyysit #{:eniten-katkoksia :pisimmat-katkokset
-                                                               :rikkinaiset-lokitukset :eniten-katkosryhmia}})
-    app)
+    (let [app (assoc app :analyysi-tehty? false)]
+      (graylog-hae-analyysi ->PaivitaAnalyysiArvot {:analysointimetodi :naivi
+                                                    :analyysit #{:eniten-katkoksia :pisimmat-katkokset
+                                                                 :rikkinaiset-lokitukset :eniten-katkosryhmia}})
+      app))
   PaivitaYhteyskatkosArvot
   (process-event [{data :data hakukoodi :hakukoodi app-avain :app-avain} app]
     (assoc app app-avain data :haku-kaynnissa (disj (:haku-kaynnissa app) hakukoodi :alku)))
