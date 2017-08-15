@@ -185,81 +185,84 @@
                   :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
          [:div.vv-toimenpiteen-hinnoittelutiedot
           {:on-click #(.stopPropagation %)}
-
-          [:table.vv-toimenpiteen-hinnoittelutiedot-grid
-           [:thead
-            [:tr
-             [:th {:style {:width "48%"}}]
-             [:th {:style {:width "28%"}} "Hinta / määrä"]
-             [:th {:style {:width "18%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
-             [:th {:style {:width "6%"}} ""]]]
-           [:tbody
-            [:tr.otsikkorivi
-             [:td.tyot-osio [:b "Työt"]]
-             [:td.tyot-osio]
-             [:td.tyot-osio]
-             [:td.tyot-osio]]
-            (for* [tyorivi tyot]
-              [:tr.tyon-hinnoittelu-rivi
-               [:td.tyot-osio
-                [yleiset/livi-pudotusvalikko
-                 {:valitse-fn #(log "TODO VALITSE FN")
-                  :format-fn #(or % "Valitse työ")
-                  :class "livi-alasveto-250"
-                  :valinta nil
-                  :disabled false}
-                 []]]
-               [:td.tyot-osio
-                [:span
-                 [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
-                  (r/wrap (::tyo/maara tyorivi)
-                          (fn [uusi]
-                            (e! (tiedot/->HinnoitteleTyo
-                                  {::tyo/id (::tyo/id tyorivi)
-                                   ::tyo/maara uusi}))))]
-                 [:span " "]
-                 [:span "kpl (TODO €)"]]]
-               [:td.tyot-osio]
-               [:td.tyot-osio
-                [:span.klikattava
-                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))}
-                 (ikonit/livicon-trash)]]])
-            [:tr.tyon-hinnoittelu-rivi
-             [:td.tyot-osio
-              [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
-             [:td.tyot-osio]
-             [:td.tyot-osio]
-             [:td.tyot-osio]]
-            [:tr.otsikkorivi
-             [:td [:b "Muut"]]
-             [:td]
-             [:td]
-             [:td]]
-            [:tr.muu-hinnoittelu-rivi
-             [:td.tyon-otsikko "Työ:"]
-             [:td [muu-tyo-kentta e! app* "Työ"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Työ"]]
-             [:td]]
-            [:tr.muu-hinnoittelu-rivi
-             [:td.tyon-otsikko "Komponentit:"]
-             [:td [muu-tyo-kentta e! app* "Komponentit"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]
-             [:td]]
-            [:tr.muu-hinnoittelu-rivi
-             [:td.tyon-otsikko "Yleiset materiaalit:"]
-             [:td [muu-tyo-kentta e! app* "Yleiset materiaalit"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]
-             [:td]]
-            [:tr.muu-hinnoittelu-rivi
-             [:td.tyon-otsikko "Matkakulut:"]
-             [:td [muu-tyo-kentta e! app* "Matkakulut"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]
-             [:td]]
-            [:tr.muu-hinnoittelu-rivi
-             [:td.tyon-otsikko "Muut kulut:"]
-             [:td [muu-tyo-kentta e! app* "Muut kulut"]]
-             [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]
-             [:td]]]]
+          (if (or (nil? (:suunnitellut-tyot app*)) (true? (:suunniteltujen-toiden-haku-kaynnissa? app*)))
+            [ajax-loader "Ladataan..."]
+            [:table.vv-toimenpiteen-hinnoittelutiedot-grid
+            [:thead
+             [:tr
+              [:th {:style {:width "48%"}}]
+              [:th {:style {:width "28%"}} "Hinta / määrä"]
+              [:th {:style {:width "18%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
+              [:th {:style {:width "6%"}} ""]]]
+            [:tbody
+             [:tr.otsikkorivi
+              [:td.tyot-osio [:b "Työt"]]
+              [:td.tyot-osio]
+              [:td.tyot-osio]
+              [:td.tyot-osio]]
+             (for* [tyorivi tyot]
+               [:tr.tyon-hinnoittelu-rivi
+                [:td.tyot-osio
+                 ;; TODO Näytä teksti jos suunniteltuja töitä ei ole?
+                 ;; TODO Valinnan tekeminen
+                 [yleiset/livi-pudotusvalikko
+                  {:valitse-fn #(log "TODO VALITSE FN")
+                   :format-fn #(or % "Valitse työ")
+                   :class "livi-alasveto-250"
+                   :valinta nil
+                   :disabled false}
+                  []]]
+                [:td.tyot-osio
+                 [:span
+                  [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
+                   (r/wrap (::tyo/maara tyorivi)
+                           (fn [uusi]
+                             (e! (tiedot/->HinnoitteleTyo
+                                   {::tyo/id (::tyo/id tyorivi)
+                                    ::tyo/maara uusi}))))]
+                  [:span " "]
+                  [:span "kpl (TODO €)"]]]
+                [:td.tyot-osio]
+                [:td.tyot-osio
+                 [:span.klikattava
+                  {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))}
+                  (ikonit/livicon-trash)]]])
+             [:tr.tyon-hinnoittelu-rivi
+              [:td.tyot-osio
+               [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
+              [:td.tyot-osio]
+              [:td.tyot-osio]
+              [:td.tyot-osio]]
+             [:tr.otsikkorivi
+              [:td [:b "Muut"]]
+              [:td]
+              [:td]
+              [:td]]
+             [:tr.muu-hinnoittelu-rivi
+              [:td.tyon-otsikko "Työ:"]
+              [:td [muu-tyo-kentta e! app* "Työ"]]
+              [:td [yleiskustannuslisa-kentta e! app* "Työ"]]
+              [:td]]
+             [:tr.muu-hinnoittelu-rivi
+              [:td.tyon-otsikko "Komponentit:"]
+              [:td [muu-tyo-kentta e! app* "Komponentit"]]
+              [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]
+              [:td]]
+             [:tr.muu-hinnoittelu-rivi
+              [:td.tyon-otsikko "Yleiset materiaalit:"]
+              [:td [muu-tyo-kentta e! app* "Yleiset materiaalit"]]
+              [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]
+              [:td]]
+             [:tr.muu-hinnoittelu-rivi
+              [:td.tyon-otsikko "Matkakulut:"]
+              [:td [muu-tyo-kentta e! app* "Matkakulut"]]
+              [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]
+              [:td]]
+             [:tr.muu-hinnoittelu-rivi
+              [:td.tyon-otsikko "Muut kulut:"]
+              [:td [muu-tyo-kentta e! app* "Muut kulut"]]
+              [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]
+              [:td]]]])
 
           [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
            [yleiset/tietoja {:tietokentan-leveys "180px"}
@@ -364,19 +367,21 @@
                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                       (:id @nav/valittu-urakka)))}]]]))]]))
 
-(defn- yksikkohintaiset-toimenpiteet-nakyma [e! app valinnat]
+(defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
-                         (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in valinnat [:urakka :id])
-                                                        :sopimus-id (first (:sopimus valinnat))
-                                                        :aikavali (:aikavali valinnat)}))
-                         (e! (tiedot/->HaeHintaryhmat)))
+                         (e! (tiedot/->PaivitaValinnat {:urakka-id (get-in ulkoiset-valinnat [:urakka :id])
+                                                        :sopimus-id (first (:sopimus ulkoiset-valinnat))
+                                                        :aikavali (:aikavali ulkoiset-valinnat)}))
+                         (e! (tiedot/->HaeHintaryhmat))
+                         (e! (tiedot/->HaeSuunnitellutTyot)))
                       #(do
                          (u/valitse-oletussopimus-jos-valittuna-kaikki!)
-                         (e! (tiedot/->Nakymassa? false))))
+                         (e! (tiedot/->Nakymassa? false))
+                         (e! (tiedot/->TyhjennaSuunnitellutTyot))))
     (fn [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa? hintaryhmat] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
@@ -386,7 +391,7 @@
         [:div
          [kartta/kartan-paikka]
          [debug/debug app]
-         [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka valinnat) tiedot/vaylahaku
+         [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka ulkoiset-valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
          [jaettu/tulokset e! app

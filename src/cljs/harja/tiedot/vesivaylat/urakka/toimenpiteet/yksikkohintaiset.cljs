@@ -57,6 +57,8 @@
          :liitteen-lisays-kaynnissa? false
          :liitteen-poisto-kaynnissa? false
          :toimenpiteet nil
+         :suunnitellut-tyot nil
+         :suunniteltujen-toiden-haku-kaynnissa? false
          :hintaryhmien-liittaminen-kaynnissa? false
          :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
          :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
@@ -102,8 +104,12 @@
   (assoc app :korostettu-hintaryhma false))
 
 (defrecord Nakymassa? [nakymassa?])
+(defrecord TyhjennaSuunnitellutTyot [])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])
+(defrecord HaeSuunnitellutTyot [])
+(defrecord SuunnitellutTyotHaettu [vastaus])
+(defrecord SuunnitellutTyotEiHaettu [virhe])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord UudenHintaryhmanLisays? [lisays-auki?])
@@ -167,6 +173,11 @@
     (assoc app :nakymassa? nakymassa?
                :karttataso-nakyvissa? nakymassa?))
 
+  TyhjennaSuunnitellutTyot
+  (process-event [_ app]
+    ;; TODO TESTI
+    (assoc app :suunnitellut-tyot nil))
+
   PaivitaValinnat
   ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
   ;; jotta näkymä pysyy synkassa valintojen kanssa
@@ -203,6 +214,30 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false))
+
+  HaeSuunnitellutTyot
+  (process-event [_ app]
+    ;; TODO TESTI
+    (let [urakka-id (get-in app [:valinnat :urakka-id])]
+      (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
+        (do (tuck-tyokalut/palvelukutsu :yksikkohintaiset-tyot
+                                        {:urakka urakka-id}
+                                        {:onnistui ->SuunnitellutTyotHaettu
+                                         :epaonnistui ->SuunnitellutTyotEiHaettu})
+            (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
+        app)))
+
+  SuunnitellutTyotHaettu
+  (process-event [{vastaus :vastaus} app]
+    ;; TODO TESTI
+    (assoc app :suunnitellut-tyot vastaus
+               :suunniteltujen-toiden-haku-kaynnissa? false))
+
+  SuunnitellutTyotEiHaettu
+  (process-event [_ app]
+    ;; TODO TESTI
+    (viesti/nayta! "Suunniteltujen töiden haku epäonnistui!" :danger)
+    (assoc app :suunniteltujen-toiden-haku-kaynnissa? false))
 
   UudenHintaryhmanLisays?
   (process-event [{lisays-auki? :lisays-auki?} app]
