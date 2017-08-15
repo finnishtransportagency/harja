@@ -119,8 +119,7 @@
 (defrecord ValitutEiLiitettyHintaryhmaan [virhe])
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
-(defrecord HinnoitteleToimenpideKenttaOtsikolla [tiedot])
-(defrecord HinnoitteleToimenpideKenttaToimenpidekoodilla [tiedot])
+(defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
@@ -141,7 +140,7 @@
 (defn- hintakentta [otsikko hinta]
   {::hinta/id (::hinta/id hinta)
    ::hinta/otsikko otsikko
-   ::hinta/summa (or (::hinta/summa hinta) 0)
+   ::hinta/maara (or (::hinta/maara hinta) 0)
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
                                 yleiskustannuslisa
                                 0)})
@@ -163,8 +162,8 @@
   (mapv (fn [hinta]
           (if (= (ominaisuus hinta) (ominaisuus uudet-hintatiedot))
             (cond-> hinta
-                    (::hinta/summa uudet-hintatiedot)
-                    (assoc ::hinta/summa (::hinta/summa uudet-hintatiedot))
+                    (::hinta/maara uudet-hintatiedot)
+                    (assoc ::hinta/maara (::hinta/maara uudet-hintatiedot))
 
                     (some? (::hinta/yleiskustannuslisa uudet-hintatiedot))
                     (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa uudet-hintatiedot)))
@@ -175,11 +174,6 @@
   "Päivittää hintojen joukosta yksittäisen hinnan tiedot otsikolla."
   [hinnat uudet-hintatiedot]
   (paivita-hintajoukon-hinta-ominaisuudella hinnat ::hinta/otsikko uudet-hintatiedot))
-
-(defn- paivita-hintajoukon-hinta-toimenpidekoodilla
-  "Päivittää hintojen joukosta yksittäisen hinnan tiedot toimenpidekoodilla."
-  [hinnat uudet-hintatiedot]
-  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::hinta/toimenpidekoodi uudet-hintatiedot))
 
 (extend-protocol tuck/Event
 
@@ -325,17 +319,11 @@
                  {::h/id hintaryhma-id
                   ::h/hintaelementit (hintaryhman-hintakentat hinnat)})))
 
-  HinnoitteleToimenpideKenttaOtsikolla
+  HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
               (paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-toimenpide
                                                                 ::h/hintaelementit]) tiedot)))
-
-  HinnoitteleToimenpideKenttaToimenpidekoodilla
-  (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-              (paivita-hintajoukon-hinta-toimenpidekoodilla (get-in app [:hinnoittele-toimenpide
-                                                                         ::h/hintaelementit]) tiedot)))
 
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
@@ -355,7 +343,7 @@
                                                                 (when-let [id (::hinta/id hinta)]
                                                                   {::hinta/id id})
                                                                 {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                 ::hinta/summa (::hinta/summa hinta)
+                                                                 ::hinta/maara (::hinta/maara hinta)
                                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                             (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
                                       {:onnistui ->ToimenpiteenHinnoitteluTallennettu
@@ -375,7 +363,7 @@
                                                                 (when-let [id (::hinta/id hinta)]
                                                                   {::hinta/id id})
                                                                 {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                 ::hinta/summa (::hinta/summa hinta)
+                                                                 ::hinta/maara (::hinta/maara hinta)
                                                                  ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                             (get-in app [:hinnoittele-hintaryhma ::h/hintaelementit]))}
                                       {:onnistui ->HintaryhmanHinnoitteluTallennettu

@@ -28,7 +28,7 @@
                 :hintaryhmat [{::h/id 666
                                ::h/hinnat [{::hinta/id 1
                                             ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                                            ::hinta/summa 600
+                                            ::hinta/maara 600
                                             ::hinta/yleiskustannuslisa 0}]}]
                 :hinnoittele-toimenpide {::to/id nil
                                          ::h/hintaelementit nil}
@@ -52,23 +52,23 @@
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
                                 ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 0
                                                                    ::hinta/otsikko "Työ"
-                                                                   ::hinta/summa 0
+                                                                   ::hinta/maara 0
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 1
                                                                    ::hinta/otsikko "Komponentit"
-                                                                   ::hinta/summa 1
+                                                                   ::hinta/maara 1
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 2
                                                                    ::hinta/otsikko "Yleiset materiaalit"
-                                                                   ::hinta/summa 2
+                                                                   ::hinta/maara 2
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 3
                                                                    ::hinta/otsikko "Matkakulut"
-                                                                   ::hinta/summa 3
+                                                                   ::hinta/maara 3
                                                                    ::hinta/yleiskustannuslisa 0}
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
-                                                                   ::hinta/summa 4
+                                                                   ::hinta/maara 4
                                                                    ::hinta/yleiskustannuslisa 12}]}
                                 :valittu? true}
                                {::to/id 2
@@ -343,24 +343,24 @@
               ::h/hintaelementit
               [{::hinta/id nil
                 ::hinta/otsikko "Työ"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Komponentit"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko
                 "Yleiset materiaalit"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id nil
                 ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
@@ -373,23 +373,23 @@
               ::h/hintaelementit
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
+                ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 2
+                ::hinta/maara 2
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
+                ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
+                ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-hinnoittelu
@@ -403,7 +403,7 @@
               ::h/hintaelementit
               [{::hinta/id nil
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
@@ -416,44 +416,44 @@
               ::h/hintaelementit
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 600
+                ::hinta/maara 600
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/summa 666})))]
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
+                                                                    ::hinta/maara 666})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hintaelementit
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
+                ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 666
+                ::hinta/maara 666
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
+                ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
+                ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko "Yleiset materiaalit"
+                         (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko "Yleiset materiaalit"
                                                                     ::hinta/yleiskustannuslisa 12})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
@@ -461,23 +461,23 @@
               ::h/hintaelementit
               [{::hinta/id 0
                 ::hinta/otsikko "Työ"
-                ::hinta/summa 0
+                ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 1
                 ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
+                ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 2
+                ::hinta/maara 2
                 ::hinta/yleiskustannuslisa 12}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
+                ::hinta/maara 3
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
+                ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-kentan-hinnoittelu
@@ -485,14 +485,14 @@
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
                          (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                                                                    ::hinta/summa 123})))]
+                                                                    ::hinta/maara 123})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hintaelementit])))
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 666
               ::h/hintaelementit
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 123
+                ::hinta/maara 123
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
@@ -523,36 +523,36 @@
                      {::to/id hinnoiteltava-toimenpide-id
                       ::h/hintaelementit
                       [{::hinta/otsikko "Työ"
-                        ::hinta/summa 10
+                        ::hinta/maara 10
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Komponentit"
-                        ::hinta/summa 20
+                        ::hinta/maara 20
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Yleiset materiaalit"
-                        ::hinta/summa 30
+                        ::hinta/maara 30
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Matkakulut"
-                        ::hinta/summa 40
+                        ::hinta/maara 40
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Muut kulut"
-                        ::hinta/summa 50
+                        ::hinta/maara 50
                         ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
                         {::h/hinnat
                          [{::hinta/otsikko "Työ"
-                           ::hinta/summa 10
+                           ::hinta/maara 10
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Komponentit"
-                           ::hinta/summa 20
+                           ::hinta/maara 20
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Yleiset materiaalit"
-                           ::hinta/summa 30
+                           ::hinta/maara 30
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Matkakulut"
-                           ::hinta/summa 40
+                           ::hinta/maara 40
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Muut kulut"
-                           ::hinta/summa 50
+                           ::hinta/maara 50
                            ::hinta/yleiskustannuslisa 0}]
                          ::h/hintaryhma? false
                          ::h/id 666
@@ -571,19 +571,19 @@
     (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
            {::h/hinnat
             [{::hinta/otsikko "Työ"
-              ::hinta/summa 10
+              ::hinta/maara 10
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Komponentit"
-              ::hinta/summa 20
+              ::hinta/maara 20
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Yleiset materiaalit"
-              ::hinta/summa 30
+              ::hinta/maara 30
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Matkakulut"
-              ::hinta/summa 40
+              ::hinta/maara 40
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Muut kulut"
-              ::hinta/summa 50
+              ::hinta/maara 50
               ::hinta/yleiskustannuslisa 0}]
             ::h/hintaryhma? false
             ::h/id 666
@@ -600,10 +600,10 @@
                      {::h/id hinnoiteltava-hintaryhma-id
                       ::h/hintaelementit
                       [{::hinta/otsikko "Ryhmähinta"
-                        ::hinta/summa 123
+                        ::hinta/maara 123
                         ::hinta/yleiskustannuslisa 0}]})
         palvelimen-vastaus {::h/hinnat [{::hinta/yleiskustannuslisa 0
-                                         ::hinta/summa 123
+                                         ::hinta/maara 123
                                          ::hinta/otsikko "Ryhmähinta"
                                          ::hinta/id 1}]
                             ::h/hintaryhma? true

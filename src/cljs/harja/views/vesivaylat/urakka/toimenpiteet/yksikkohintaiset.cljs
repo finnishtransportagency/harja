@@ -146,12 +146,12 @@
   [:span
    [:span
     [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
-     (r/wrap (hinta/hinnan-summa-otsikolla
+     (r/wrap (hinta/hinnan-maara-otsikolla
                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                otsikko)
              (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla {::hinta/otsikko otsikko
-                                                                   ::hinta/summa uusi}))))]]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                                   ::hinta/maara uusi}))))]]
    [:span " "]
    [:span "€"]])
 
@@ -164,7 +164,7 @@
              (pos? yleiskustannuslisa)
              false)
            (fn [uusi]
-             (e! (tiedot/->HinnoitteleToimenpideKenttaOtsikolla
+             (e! (tiedot/->HinnoitteleToimenpideKentta
                    {::hinta/otsikko otsikko
                     ::hinta/yleiskustannuslisa (if uusi
                                                  hinta/yleinen-yleiskustannuslisa
@@ -219,7 +219,7 @@
                           (fn [uusi]
                             (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
                                   {::hinta/toimenpidekoodi 1 ;; TODO TPK
-                                   ::hinta/summa uusi}))))]
+                                   ::hinta/maara uusi}))))]
                  [:span " "]
                  [:span "kpl (TODO €)"]]]
                [:td.tyot-osio]
@@ -323,12 +323,12 @@
           [tee-kentta {:tyyppi :numero
                        :placeholder "Syötä hinta"
                        :kokonaisosan-maara 7}
-           (r/wrap (hinta/hinnan-summa-otsikolla
+           (r/wrap (hinta/hinnan-maara-otsikolla
                      (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->HinnoitteleHintaryhmaKentta
                           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                           ::hinta/summa %})))]
+                           ::hinta/maara %})))]
           [:span " "]
           [:span "€"]]
          [napit/tallenna
