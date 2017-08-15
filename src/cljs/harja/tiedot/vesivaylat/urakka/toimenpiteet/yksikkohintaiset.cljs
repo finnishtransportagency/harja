@@ -8,6 +8,7 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -26,7 +27,8 @@
 
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
-   ::h/hintaelementit nil})
+   ::h/hintaelementit nil
+   ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
   {::h/id nil
@@ -449,17 +451,17 @@
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     ;; TODO TESTI
-    (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
-          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (map ::hinta/id hintaelementit))))
-          paivitetyt-hintaelementit (conj hintaelementit {::hinta/id seuraava-vapaa-neg-id})]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] paivitetyt-hintaelementit)))
+    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (map ::tyo/id tyot))))
+          paivitetyt-tyot (conj tyot {::tyo/id seuraava-vapaa-neg-id})]
+      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
-    (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
-          hintaelementit-ilman-poistettavaa (filter #(not= (::hinta/id %) (::hinta/id tiedot)) hintaelementit)]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] hintaelementit-ilman-poistettavaa)))
+    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+          tyot-ilman-poistettua (filter #(not= (::tyo/id %) (::tyo/id tiedot)) tyot)]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] tyot-ilman-poistettua)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

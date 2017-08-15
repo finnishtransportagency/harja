@@ -6,6 +6,7 @@
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
+    [harja.domain.vesivaylat.tyo :as tyo]
     [clojure.set :as set]
     [specql.rel :as rel]
 
@@ -41,7 +42,11 @@
     ::hinnat (specql.rel/has-many
                ::id
                ::hinta/hinta
-               ::hinta/hinnoittelu-id)}])
+               ::hinta/hinnoittelu-id)
+    ::tyot (specql.rel/has-many
+             ::id
+             ::tyo/tyo
+             ::tyo/hinnoittelu-id)}])
 
 (def perustiedot
   #{::nimi

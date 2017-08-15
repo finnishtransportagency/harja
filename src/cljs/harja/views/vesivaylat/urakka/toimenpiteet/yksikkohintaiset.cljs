@@ -19,6 +19,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
@@ -173,8 +174,7 @@
 (defn- hinnoittele-toimenpide [e! app* rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in rivi [::to/oma-hinnoittelu ::h/hinnat])
-        hintaelementit (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-        toimenpidekoodilliset-hinnoittelut (filter (comp not ::hinta/otsikko) hintaelementit)]
+        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id rivi)))
@@ -199,7 +199,7 @@
              [:td.tyot-osio]
              [:td.tyot-osio]
              [:td.tyot-osio]]
-            (for* [hinnoittelu toimenpidekoodilliset-hinnoittelut]
+            (for* [tyo tyot]
               [:tr.tyon-hinnoittelu-rivi
                [:td.tyot-osio
                 [yleiset/livi-pudotusvalikko
@@ -225,7 +225,7 @@
                [:td.tyot-osio]
                [:td.tyot-osio
                 [:span.klikattava
-                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::hinta/id (::hinta/id hinnoittelu)}))}
+                 {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyo)}))}
                  (ikonit/livicon-trash)]]])
             [:tr.tyon-hinnoittelu-rivi
              [:td.tyot-osio
