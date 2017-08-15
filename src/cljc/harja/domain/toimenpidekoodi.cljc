@@ -17,10 +17,10 @@
   ["toimenpidekoodi" ::toimenpidekoodi
    m/muokkaus-ja-poistotiedot
    {"emo" ::emo-id}
-   {#?@(:clj [::toimenpidekoodi (rel/has-one
+   #?@(:clj {[::toimenpidekoodi (rel/has-one
                                   ::emo-id
                                   :harja.domain.toimenpidekoodi/toimenpidekoodi
-                                  :harja.domain.toimenpidekoodi/id)])}])
+                                  :harja.domain.toimenpidekoodi/id)]})])
 
 
 (defn tuotteen-jarjestys [t2-koodi]
