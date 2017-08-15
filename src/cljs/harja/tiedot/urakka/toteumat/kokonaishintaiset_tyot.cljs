@@ -229,3 +229,6 @@ tehtävän avain (ks. avatut-toteumat)."}
 
 (defn sulje-toteuma! [pvm tpk jarjestelmanlisaama?]
   (swap! avatut-toteumat disj [pvm tpk jarjestelmanlisaama?]))
+
+(defn valitse-aikavali! [alku loppu]
+  (reset! valittu-aikavali [alku loppu]))
