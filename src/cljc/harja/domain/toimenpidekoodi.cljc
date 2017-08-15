@@ -12,15 +12,14 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-
 (define-tables
   ["toimenpidekoodi" ::toimenpidekoodi
-   m/muokkaus-ja-poistotiedot
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {"emo" ::emo-id}
-   #?@(:clj {[::toimenpidekoodi (rel/has-one
-                                  ::emo-id
-                                  :harja.domain.toimenpidekoodi/toimenpidekoodi
-                                  :harja.domain.toimenpidekoodi/id)]})])
+   {::toimenpidekoodi (specql.rel/has-one
+                        ::emo-id
+                        :harja.domain.toimenpidekoodi/toimenpidekoodi
+                        :harja.domain.toimenpidekoodi/id)}])
 
 
 (defn tuotteen-jarjestys [t2-koodi]

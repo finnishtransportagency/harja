@@ -14,11 +14,11 @@
 
 (define-tables
   ["vv_hinta" ::hinta
-   m/muokkaus-ja-poistotiedot
-   #?@(:clj {[::hinnoittelu (rel/has-one
-                              ::hinnoittelu-id
-                              :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
-                              :harja.domain.vesivaylat.hinnoittelu/id)]})])
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
+   {::hinnoittelu (specql.rel/has-one
+                    ::hinnoittelu-id
+                    :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
+                    :harja.domain.vesivaylat.hinnoittelu/id)}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
