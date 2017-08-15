@@ -467,7 +467,7 @@
       (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] paivitetyt-hintaelementit)))
 
   PoistaHinnoiteltavaTyorivi
-  (process-event [{tiedot :vastaus} app]
+  (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
     (let [hintaelementit (get-in app [:hinnoittele-toimenpide ::h/hintaelementit])
           hintaelementit-ilman-poistettavaa (filter #(not= (::hinta/id %) (::hinta/id tiedot)) hintaelementit)]
