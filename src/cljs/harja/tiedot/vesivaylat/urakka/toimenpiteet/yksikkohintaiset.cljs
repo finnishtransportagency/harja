@@ -124,6 +124,7 @@
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
+(defrecord HinnoitteleTyo [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -158,24 +159,6 @@
 
 (defn- hintaryhman-hintakentat [hinnat]
   [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
-
-(defn- paivita-hintajoukon-hinta-ominaisuudella
-  [hinnat ominaisuus uudet-hintatiedot]
-  (mapv (fn [hinta]
-          (if (= (ominaisuus hinta) (ominaisuus uudet-hintatiedot))
-            (cond-> hinta
-                    (::hinta/maara uudet-hintatiedot)
-                    (assoc ::hinta/maara (::hinta/maara uudet-hintatiedot))
-
-                    (some? (::hinta/yleiskustannuslisa uudet-hintatiedot))
-                    (assoc ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa uudet-hintatiedot)))
-            hinta))
-        hinnat))
-
-(defn- paivita-hintajoukon-hinta-otsikolla
-  "Päivittää hintojen joukosta yksittäisen hinnan tiedot otsikolla."
-  [hinnat uudet-hintatiedot]
-  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::hinta/otsikko uudet-hintatiedot))
 
 (extend-protocol tuck/Event
 
@@ -324,14 +307,20 @@
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit]
-              (paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-toimenpide
-                                                                ::h/hintaelementit]) tiedot)))
+              (hinta/paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-toimenpide
+                                                                      ::h/hintaelementit]) tiedot)))
+
+  HinnoitteleTyo
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+              (tyo/paivita-tyojoukon-tyon-maara-idlla (get-in app [:hinnoittele-toimenpide
+                                                                   ::h/tyot]) tiedot)))
 
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hintaelementit]
-              (paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-hintaryhma
-                                                                ::h/hintaelementit]) tiedot)))
+              (hinta/paivita-hintajoukon-hinta-otsikolla (get-in app [:hinnoittele-hintaryhma
+                                                                      ::h/hintaelementit]) tiedot)))
 
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
@@ -461,7 +450,7 @@
     ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           tyot-ilman-poistettua (filter #(not= (::tyo/id %) (::tyo/id tiedot)) tyot)]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hintaelementit] tyot-ilman-poistettua)))
+      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] tyot-ilman-poistettua)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

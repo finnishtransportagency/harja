@@ -212,14 +212,11 @@
                [:td.tyot-osio
                 [:span
                  [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
-                  (r/wrap (hinta/hinnan-maara-toimenpidekoodilla ;; TODO Nyt haetaankin kappalemäärä
-                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
-                            ;; TODO toimenpidekoodi
-                            1)
+                  (r/wrap (::tyo/maara rivi)
                           (fn [uusi]
-                            (e! (tiedot/->HinnoitteleToimenpideKenttaToimenpidekoodilla
-                                  {::hinta/toimenpidekoodi 1 ;; TODO TPK
-                                   ::hinta/maara uusi}))))]
+                            (e! (tiedot/->HinnoitteleTyo
+                                  {::tyo/id (::tyo/id rivi)
+                                   ::tyo/maara uusi}))))]
                  [:span " "]
                  [:span "kpl (TODO €)"]]]
                [:td.tyot-osio]

@@ -33,4 +33,17 @@
 
 (def viittaus-idt
   #{::hinnoittelu-id
-    ::toimenpidekoodi})
+    ::toimenpidekoodi-id})
+
+(defn- paivita-hintajoukon-hinta-ominaisuudella
+  [tyot ominaisuus uudet-hintatiedot]
+  (mapv (fn [tyo]
+          (if (= (ominaisuus tyo) (ominaisuus uudet-hintatiedot))
+            (assoc tyo ::maara (::maara uudet-hintatiedot))
+            tyo))
+        tyot))
+
+(defn- paivita-tyojoukon-tyon-maara-idlla
+  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
+  [hinnat uudet-hintatiedot]
+  (paivita-hintajoukon-hinta-ominaisuudella hinnat ::id uudet-hintatiedot))
