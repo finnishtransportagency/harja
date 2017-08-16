@@ -174,7 +174,8 @@
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
-        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
+        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        hinnalliset-suunnitellut-tyot (filter :yksikkohinta (:suunnitellut-tyot app*))]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
@@ -206,15 +207,14 @@
                   [yleiset/livi-pudotusvalikko
                    {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
                                                                    ::tyo/toimenpidekoodi-id (:tehtava %)}))
-                    :format-fn #(if (empty? (:suunnitellut-tyot app*))
+                    :format-fn #(if (empty? hinnalliset-suunnitellut-tyot)
                                   "Ei suunniteltuja töitä"
                                   (if % (:tehtavan_nimi %) "Valitse työ"))
                     :class "livi-alasveto-250"
                     :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
-                                            (:suunnitellut-tyot app*)))
+                                            hinnalliset-suunnitellut-tyot))
                     :disabled false}
-                   ;; TODO Vain jos kpl-hinta
-                   (:suunnitellut-tyot app*)]]
+                   hinnalliset-suunnitellut-tyot]]
                  [:td.tyot-osio
                   [:span
                    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
