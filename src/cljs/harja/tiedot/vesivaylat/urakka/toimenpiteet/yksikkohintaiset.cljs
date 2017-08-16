@@ -492,8 +492,14 @@
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          tyot-ilman-poistettua (filter #(not= (::tyo/id %) (::tyo/id tiedot)) tyot)]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] tyot-ilman-poistettua)))
+          poistettava-rivi (first (filter #(= (::tyo/id %) (::tyo/id tiedot)) tyot))
+          poistettava-rivi-uusi? (neg? (::tyo/id poistettava-rivi))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+                (if poistettava-rivi-uusi?
+                  ;; Jos kyseessä on uusi poistettu rivi, se filtteröidään kokonaan pois
+                  (filter #(not= (::tyo/id %) (::tyo/id tiedot)) tyot)
+                  ;; Jos taas kyseessä kantaan tallennettu rivi, jolla id, merkitään se poistetuksi.
+                  (tyo/paivita-tyojoukon-tyon-tiedot-idlla tyot {::tyo/poistettu? true})))))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

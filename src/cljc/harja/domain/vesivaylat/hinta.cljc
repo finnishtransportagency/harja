@@ -79,11 +79,6 @@
   [hinnat tiedot]
   (mapv (fn [hinta]
           (if (= (::otsikko hinta) (::otsikko tiedot))
-            (cond-> hinta
-                    (::maara tiedot)
-                    (assoc ::maara (::maara tiedot))
-
-                    (some? (::yleiskustannuslisa tiedot))
-                    (assoc ::yleiskustannuslisa (::yleiskustannuslisa tiedot)))
+            (merge hinta tiedot)
             hinta))
         hinnat))

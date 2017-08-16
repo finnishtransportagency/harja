@@ -41,12 +41,7 @@
   [tyot tiedot]
   (mapv (fn [tyo]
           (if (= (::id tyo) (::id tiedot))
-            (cond-> tyo
-                    (::maara tiedot)
-                    (assoc ::maara (::maara tiedot))
-
-                    (::toimenpidekoodi-id tiedot)
-                    (assoc ::toimenpidekoodi-id (::toimenpidekoodi-id tiedot)))
+            (merge tyo tiedot)
             tyo))
         tyot))
 
