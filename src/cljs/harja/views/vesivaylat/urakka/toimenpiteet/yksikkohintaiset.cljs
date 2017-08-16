@@ -287,7 +287,7 @@
                [:td]]
               [:tr.hinnoittelun-yhteenveto-rivi
                [:td.tyon-otsikko "Yleiskustannuslisät (12%):"]
-               [:td (fmt/euro-opt (hinta/perushinta
+               [:td (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
                                     (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
                [:td]
                [:td]]
