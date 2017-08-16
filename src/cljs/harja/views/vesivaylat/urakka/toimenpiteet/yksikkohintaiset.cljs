@@ -196,7 +196,7 @@
                [:th {:style {:width "6%"}} ""]]]
              [:tbody
               [:tr.otsikkorivi
-               [:td.tyot-osio [:b "Työt"]]
+               [:td.tyot-osio [:b "Sopimushintaiset työt"]]
                [:td.tyot-osio]
                [:td.tyot-osio]
                [:td.tyot-osio]]
@@ -213,6 +213,7 @@
                     :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
                                             (:suunnitellut-tyot app*)))
                     :disabled false}
+                   ;; TODO Vain jos kpl-hinta
                    (:suunnitellut-tyot app*)]]
                  [:td.tyot-osio
                   [:span
@@ -280,6 +281,7 @@
           [:footer.vv-toimenpiteen-hinnoittelu-footer
            [napit/tallenna
             ;; TODO Oikeaan reunaan tämä
+            ;; TODO Peruuta-nappi
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
@@ -395,7 +397,6 @@
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
-         [debug/debug app]
          [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka ulkoiset-valinnat) tiedot/vaylahaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
