@@ -4,17 +4,16 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [clojure.future :refer :all]
-            [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
-            [specql.op :as op]
-            [specql.rel :as rel]
-
-            [harja.kyselyt.konversio :as konv]
+            [harja.domain.toimenpidekoodi :as tpk]
             [taoensso.timbre :as log]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.vesivaylat.turvalaite :as tu]
-            [specql.transform :as xf]
-            [clojure.string :as str]
-            [harja.geo :as geo]))
+            [harja.domain.vesivaylat.tyo :as tyo]))
 
+(defn- hae-hinnoittelun-tyot [db hinnoittelu-d]
+  (specql/fetch db
+                ::tyo/tyo
+                tyo/perustiedot
+                {::tyo/hinnoittelu-id hinnoittelu-d
+                 ::m/poistettu? false}))

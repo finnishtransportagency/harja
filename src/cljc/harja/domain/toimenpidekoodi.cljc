@@ -21,6 +21,8 @@
                         :harja.domain.toimenpidekoodi/toimenpidekoodi
                         :harja.domain.toimenpidekoodi/id)}])
 
+(def perustiedot #{::id ::maara})
+(def viittaukset #{::toimenpidekoodi-id ::hinnoittelu-id})
 
 (defn tuotteen-jarjestys [t2-koodi]
   (case t2-koodi
