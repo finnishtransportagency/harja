@@ -6,6 +6,7 @@ CREATE UNIQUE INDEX VV_vikailmoitus_reimari_id_index ON vv_vikailmoitus("reimari
 ALTER TABLE vv_vikailmoitus ADD PRIMARY KEY USING INDEX vv_vikailmoitus_reimari_id_index;
 ALTER TABLE vv_vikailmoitus ALTER COLUMN "reimari-id" SET NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-ilmoittaja" TEXT NOT NULL;
+ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-turvalaitenro" TEXT NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-ilmoittajan-yhteystieto" TEXT NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-epakunnossa?" BOOLEAN NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-tyyppikoodi" TEXT NOT NULL;
