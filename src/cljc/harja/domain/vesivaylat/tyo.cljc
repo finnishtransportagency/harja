@@ -4,6 +4,7 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [harja.domain.muokkaustiedot :as m]
+    [harja.domain.toimenpidekoodi :as tpk]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]
@@ -48,3 +49,12 @@
                     (assoc ::toimenpidekoodi-id (::toimenpidekoodi-id tiedot)))
             tyo))
         tyot))
+
+(defn- toiden-kokonaishinta [tyot toimenpidekoodit]
+  (reduce + 0
+          (map (fn [tyo]
+                 (let [tyon-tpk (tpk/toimenpidekoodi-tehtavalla
+                                  toimenpidekoodit
+                                  (::toimenpidekoodi-id tyo))]
+                   (* (::maara tyo) (:yksikkohinta tyon-tpk))))
+               tyot)))

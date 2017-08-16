@@ -280,8 +280,9 @@
               ;; Yhteenveto
               [:tr.hinnoittelun-yhteenveto-rivi
                [:td.tyon-otsikko "Perushinta:"]
-               [:td (fmt/euro-opt (hinta/perushinta
-                                    (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+               [:td (fmt/euro-opt (+ (hinta/perushinta
+                                     (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]))
+                                     (tyo/toiden-kokonaishinta tyot aikavalin-hinnalliset-suunnitellut-tyot)))]
                [:td]
                [:td]]
               [:tr.hinnoittelun-yhteenveto-rivi
@@ -292,8 +293,9 @@
                [:td]]
               [:tr.hinnoittelun-yhteenveto-rivi
                [:td.tyon-otsikko "Yhteensä:"]
-               [:td (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
-                                    (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+               [:td (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
+                                     (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]))
+                                     (tyo/toiden-kokonaishinta tyot aikavalin-hinnalliset-suunnitellut-tyot)))]
                [:td]
                [:td]]]])
 
