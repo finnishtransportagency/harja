@@ -174,6 +174,9 @@
                                                  0)}))))])
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app* tyot suunnitellut-tyot]
+  ;; Työ hinnoiteltiin aiemmin yhtenä könttäsummana, nyt huomattavasti tarkemmin
+  ;; Jos kannassa on hinta nimellä "Työ", niin se näytetään kuten ennenkin, muutoin
+  ;; sitä ei tarjota, vaan työt pitää syöttää tarkemmin.
   (let [tyo-hinnoiteltu-konttana? (pos? (hinta/hinnan-maara-otsikolla
                                           (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                                           "Työ"))]
