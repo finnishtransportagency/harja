@@ -80,8 +80,8 @@
                                  (swap! tiedot/modal-data assoc :nakyvissa? false))}]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
-               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."
-               "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle.")]
+               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle."
+               "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle.")]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/modal-data (merge data {:lomakedata uusi-data})))}
@@ -418,5 +418,5 @@
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
           (yllapitokohteet-domain/lihavoi-vasta-muokatut otsikoidut-aikataulurivit)]
          (if (= (:nakyma optiot) :tiemerkinta)
-           [vihje "Tänään tai aiemmin valmistuneista kohteista lähetetään heti sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."])
+           [vihje "Tänään tai aiemmin valmistuneista kohteista lähetetään heti sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."])
          [tiemerkintavalmius-modal @tiedot/modal-data]]))))
