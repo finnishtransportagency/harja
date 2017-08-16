@@ -148,7 +148,7 @@
   [e! app* otsikko]
   [:span
    [:span
-    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 7}
+    [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
      (r/wrap (hinta/hinnan-maara-otsikolla
                (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
                otsikko)
@@ -209,7 +209,7 @@
            suunnitellut-tyot]]
          [:td.tyot-osio
           [:span
-           [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
+           [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
             (r/wrap (::tyo/maara tyorivi)
                     (fn [uusi]
                       (e! (tiedot/->HinnoitteleTyo

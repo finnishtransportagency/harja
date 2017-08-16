@@ -12,3 +12,7 @@ CREATE TABLE vv_tyo
   poistettu            BOOLEAN                                 NOT NULL DEFAULT FALSE,
   poistaja             INTEGER REFERENCES kayttaja (id)
 );
+
+
+ALTER TABLE vv_hinta ADD CONSTRAINT maara_positiivinen CHECK(maara >= 0);
+ALTER TABLE vv_tyo ADD CONSTRAINT maara_positiivinen CHECK(maara >= 0);
