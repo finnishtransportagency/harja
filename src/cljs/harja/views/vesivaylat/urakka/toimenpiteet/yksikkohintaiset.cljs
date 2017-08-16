@@ -287,7 +287,8 @@
                                                   #(and (:yksikkohinta %)
                                                         (pvm/sama-pvm? (:alkupvm %) (first valittu-aikavali))
                                                         (pvm/sama-pvm? (:loppupvm %) (second valittu-aikavali)))
-                                                  (:suunnitellut-tyot app*))]
+                                                  (:suunnitellut-tyot app*))
+        hinnoittelu-validi? (every? ::tyo/toimenpidekoodi-id tyot)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
@@ -306,14 +307,14 @@
             "Peruuta"
             #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
            [napit/tallenna
-            ;; TODO Validointisäännöt:
-            ;; - Työriville on pakko valita tehtävä
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
-            {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
-                           (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                         (:id @nav/valittu-urakka))))}]]]]]
+            {:disabled (or
+                         (not hinnoittelu-validi?)
+                         (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                         (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                       (:id @nav/valittu-urakka))))}]]]]]
 
        ;; Solun sisältö
        (grid/arvo-ja-nappi
