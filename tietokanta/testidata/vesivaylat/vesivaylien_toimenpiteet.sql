@@ -5,7 +5,7 @@
 INSERT INTO vv_vikailmoitus
 ("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
 "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
-"reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja")
+"reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja", "reimari-turvalaitenro")
 VALUES
   ('1234', 'Akonniemen kyltti on lähtenyt irti myrskyn takia',
   (SELECT id FROM vv_turvalaite WHERE nimi = 'Akonniemen kyltti'),
@@ -19,7 +19,8 @@ VALUES
    '2017-05-01T13:13:13', -- muokattu
    '2017-05-01T13:13:13', -- luontiaika
    'lauri luoja', -- luoja
-   'mikko muokkaaja' -- muokkaaja
+   'mikko muokkaaja', -- muokkaaja
+   '123' -- turvalaitenro
    );
 
 -- ***********************************************
@@ -416,7 +417,7 @@ INSERT INTO vv_vikailmoitus
 ("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
 "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
 "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja",
-"toimenpide-id")
+"toimenpide-id", "reimari-turvalaitenro")
 VALUES
 ('123', 'Hietasaaren viitta on kaatunut',
 (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
@@ -433,7 +434,8 @@ TRUE, -- reimari-epakunnossa?
 'mikko muokkaaja', -- muokkaaja
 (SELECT id
 FROM reimari_toimenpide
-WHERE lisatieto = 'TESTITOIMENPIDE 2'));
+WHERE lisatieto = 'TESTITOIMENPIDE 2'),
+'578'); -- turvalaitenro
 
 -- ***********************************************
 -- KOKONAISHINTAISIIN SIIRRETYT, REIMARISTA YKSIKKÖHINTAISENA RAPORTOIDUT TYÖT
