@@ -1,6 +1,7 @@
 ALTER TABLE vv_vikailmoitus DROP COLUMN "pvm";
 ALTER TABLE vv_vikailmoitus RENAME COLUMN kuvaus TO "reimari-lisatiedot";
 ALTER TABLE vv_vikailmoitus ALTER COLUMN "reimari-lisatiedot" SET NOT NULL;
+ALTER TABLE vv_vikailmoitus ALTER COLUMN "turvalaite-id" DROP NOT NULL;
 ALTER TABLE vv_vikailmoitus DROP COLUMN id;
 CREATE UNIQUE INDEX VV_vikailmoitus_reimari_id_index ON vv_vikailmoitus("reimari-id");
 ALTER TABLE vv_vikailmoitus ADD PRIMARY KEY USING INDEX vv_vikailmoitus_reimari_id_index;
