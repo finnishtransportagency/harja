@@ -48,8 +48,8 @@
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-vika-tietue
                        (first (sut/kasittele-viat-vastaus db (slurp "resources/xsd/reimari/viat-vastaus.xml"))))]
-    (tarkista-fn))
-  (t/testing "Haku reimari-id:llä toimii"
-    (t/is (= 1
-             (count (specql/fetch db ::vv-vikailmoitus/reimari-id
-                                  #{::vv-vikailmoitus/reimari-id} {::vv-vikailmoitus/reimari-id (::vv-vikailmoitus/reimari-id referenssi-vika-tietue)}))))))
+    (tarkista-fn)
+    (t/testing "Haku reimari-id:llä toimii"
+      (t/is (= 1
+               (count (specql/fetch db ::vv-vikailmoitus/reimari-id
+                                    #{::vv-vikailmoitus/reimari-id} {::vv-vikailmoitus/reimari-id (::vv-vikailmoitus/reimari-id referenssi-vika-tietue)})))))))
