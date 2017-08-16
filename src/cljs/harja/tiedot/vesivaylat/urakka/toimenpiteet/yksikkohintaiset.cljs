@@ -361,7 +361,6 @@
   AsetaTyolleTehtava
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
-    (log "[DEBUG] ASETA TYÖLLE TEHTÄVÄ, TIEDOT: " (pr-str tiedot))
     (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
               (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                     ::h/tyot]) tiedot)))
@@ -485,7 +484,8 @@
     ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           seuraava-vapaa-neg-id (dec (apply min (concat [-1] (keep ::tyo/id tyot))))
-          paivitetyt-tyot (conj tyot {::tyo/id seuraava-vapaa-neg-id})]
+          paivitetyt-tyot (conj tyot {::tyo/id seuraava-vapaa-neg-id
+                                      ::tyo/maara 0})]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   PoistaHinnoiteltavaTyorivi

@@ -29,3 +29,6 @@
     "23120" 3 ; Soratien hoito kolmantena
     ;; kaikki muut sen jälkeen
     4))
+
+(defn toimenpidekoodi-tehtavalla [rivit tehtava]
+  (first (filter #(= (:tehtava %) tehtava) rivit)))

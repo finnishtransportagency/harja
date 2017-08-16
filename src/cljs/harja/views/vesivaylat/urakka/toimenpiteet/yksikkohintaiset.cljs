@@ -20,6 +20,7 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.toimenpidekoodi :as tpk]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
@@ -230,7 +231,11 @@
                                     {::tyo/id (::tyo/id tyorivi)
                                      ::tyo/maara uusi}))))]
                    [:span " "]
-                   [:span "kpl (TODO €)"]]]
+                   [:span "kpl (" (fmt/euro (* (::tyo/maara tyorivi)
+                                               (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
+                                                                aikavalin-hinnalliset-suunnitellut-tyot
+                                                                (::tyo/toimenpidekoodi-id tyorivi)))))
+                    ")"]]]
                  [:td.tyot-osio]
                  [:td.tyot-osio
                   [:span.klikattava
@@ -297,6 +302,8 @@
             "Peruuta"
             #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
            [napit/tallenna
+            ;; TODO Validointisäännöt:
+            ;; - Työriville on pakko valita tehtävä
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
