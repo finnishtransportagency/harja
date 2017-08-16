@@ -3,6 +3,7 @@
             [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari-komponentti]
             [harja.domain.vesivaylat.vikailmoitus :as vv-vikailmoitus]
             [harja.testi :as ht]
+            [specql.core :as specql]
             [com.stuartsierra.component :as component]
             [clojure.test :as t]))
 
