@@ -97,8 +97,8 @@
       (fn [user tiedot]
         (let [urakka-id (::ur/id tiedot)]
           (hae-hintaryhmat db user urakka-id)))
-      {:kysely-spec ::h/:hae-hintaryhmat-kysely
-       :vastaus-spec ::h/:hae-hintaryhmat-vastaus})
+      {:kysely-spec ::h/hae-hintaryhmat-kysely
+       :vastaus-spec ::h/hae-hintaryhmat-vastaus})
 
     (julkaise-palvelu
       http
