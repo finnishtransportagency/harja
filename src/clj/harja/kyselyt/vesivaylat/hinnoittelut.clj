@@ -65,7 +65,7 @@
   (when (hinnoitteluun-kuuluu-toimenpiteita? db hinnoittelu-id)
     (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
 
-(defn hae-hinnoittelut [db urakka-id]
+(defn hae-hintaryhmat [db urakka-id]
   (->> (specql/fetch db
                      ::h/hinnoittelu
                      (set/union h/perustiedot h/hinnat)

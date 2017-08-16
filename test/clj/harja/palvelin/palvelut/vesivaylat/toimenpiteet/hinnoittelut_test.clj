@@ -268,7 +268,7 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-hinnoittelut +kayttaja-jvh+
+                                :hae-hintaryhmat +kayttaja-jvh+
                                 kysely-params)]
 
     (is (s/valid? ::h/hae-hinnoittelut-kysely kysely-params))
@@ -283,7 +283,7 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-hinnoittelut +kayttaja-tero+
+                                           :hae-hintaryhmat +kayttaja-tero+
                                            kysely-params)))))
 
 (deftest luo-hinnoittelu
@@ -311,7 +311,7 @@
 
     ;; Yritetään luoda samalla nimellä uusi hintaryhmä
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-hinnoittelut +kayttaja-tero+
+                                           :hae-hintaryhmat +kayttaja-tero+
                                            kysely-params))
         "Hintaryhmän nimi on jo olemassa urakassa, pitäisi tulla poikkeus")))
 

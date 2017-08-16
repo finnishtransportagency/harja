@@ -277,7 +277,7 @@
   HaeHintaryhmat
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :hae-hinnoittelut
+      (do (tuck-tyokalut/palvelukutsu :hae-hintaryhmat
                                       {::urakka/id (get-in app [:valinnat :urakka-id])}
                                       {:onnistui ->HintaryhmatHaettu
                                        :epaonnistui ->HintaryhmatEiHaettu})

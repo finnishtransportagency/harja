@@ -93,11 +93,11 @@
 
 ;; Palvelut
 
-(s/def ::hae-hinnoittelut-kysely
+(s/def ::hae-hintaryhmat-kysely
   (s/keys
     :req [::ur/id]))
 
-(s/def ::hae-hinnoittelut-vastaus
+(s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
     (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
 
@@ -126,7 +126,7 @@
           ::id
           ::hintaelementit]))
 
-(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hinnoittelut-vastaus)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hintaryhmat-vastaus)
 
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys

@@ -13,11 +13,11 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
-(defn hae-hinnoittelut [db user urakka-id]
+(defn hae-hintaryhmat [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
     (assert urakka-id "Urakka-id puuttuu!")
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
-    (q/hae-hinnoittelut db urakka-id)))
+    (q/hae-hintaryhmat db urakka-id)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -68,7 +68,7 @@
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
                                          (::h/hintaelementit tiedot))
-        (hae-hinnoittelut db user urakka-id)))))
+        (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -93,12 +93,12 @@
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-hinnoittelut
+      :hae-hintaryhmat
       (fn [user tiedot]
         (let [urakka-id (::ur/id tiedot)]
-          (hae-hinnoittelut db user urakka-id)))
-      {:kysely-spec ::h/hae-hinnoittelut-kysely
-       :vastaus-spec ::h/hae-hinnoittelut-vastaus})
+          (hae-hintaryhmat db user urakka-id)))
+      {:kysely-spec ::h/:hae-hintaryhmat-kysely
+       :vastaus-spec ::h/:hae-hintaryhmat-vastaus})
 
     (julkaise-palvelu
       http
@@ -144,7 +144,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-hinnoittelut
+      :hae-hintaryhmat
       :luo-hinnoittelu
       :poista-tyhjat-hinnoittelut
       :liita-toimenpiteet-hinnoitteluun
