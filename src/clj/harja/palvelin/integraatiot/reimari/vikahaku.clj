@@ -19,6 +19,7 @@
      ]]))
 
 (def avainmuunnokset {::vv-vikailmoitus/id ::vv-vikailmoitus/reimari-id
+                      ::vv-vikailmoitus/turvalaitenro ::vv-vikailmoitus/reimari-turvalaitenro
                       ::vv-vikailmoitus/epakunnossa ::vv-vikailmoitus/reimari-epakunnossa?
                       ::vv-vikailmoitus/ilmoittaja ::vv-vikailmoitus/reimari-ilmoittaja
                       ::vv-vikailmoitus/ilmoittajan-yhteystieto ::vv-vikailmoitus/reimari-ilmoittajan-yhteystieto
@@ -40,6 +41,7 @@
         kanta-tiedot (for [viat-tiedot sanoman-tiedot]
                        (specql/upsert! db ::vv-vikailmoitus/vikailmoitus
                                        (rename-keys viat-tiedot avainmuunnokset)))]
+    (clojure.pprint/pprint (rename-keys (first sanoman-tiedot) avainmuunnokset))
     (vec kanta-tiedot)))
 
 (defn hae-viat [db integraatioloki pohja-url kayttajatunnus salasana]
