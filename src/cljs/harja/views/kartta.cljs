@@ -760,8 +760,14 @@
 
          :geometries         @tasot/geometriat-kartalle
          :layers             [{:type  :mml
-                               :url   (str (k/wmts-polku) "maasto/wmts")
-                               :layer "taustakartta"}]}]))))
+                               :url   (str (k/wmts-polku-mml) "maasto/wmts")
+                               :layer "taustakartta"}
+                              {:type  :livi
+                               :id :tienumerot
+                               :nimi "tienumerot"
+                               :icon (ikonit/road)
+                               :url   (str (k/wmts-polku-livi) "wmts")
+                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
