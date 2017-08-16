@@ -836,7 +836,7 @@ VALUES
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Vanhaan urakan testihinnoittelu', TRUE,
+  ('Vantaan urakan testihinnoittelu', TRUE,
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'),
@@ -931,7 +931,7 @@ INSERT INTO vv_hinta
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Vanhaan urakan testihinnoittelu'),
+    WHERE nimi = 'Vantaan urakan testihinnoittelu'),
    'Työ', 5, (SELECT id
               FROM kayttaja
               WHERE kayttajanimi = 'tero'));

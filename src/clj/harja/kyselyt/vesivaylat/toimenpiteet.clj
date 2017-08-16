@@ -10,11 +10,14 @@
             [specql.rel :as rel]
             [taoensso.timbre :as log]
 
+            [harja.kyselyt.vesivaylat.tyot :as tyot-q]
+
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.liite :as liite]
             [harja.domain.vesivaylat.urakoitsija :as vv-urakoitsija]
             [harja.domain.vesivaylat.toimenpide :as vv-toimenpide]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
+            [harja.domain.vesivaylat.tyo :as vv-tyo]
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
@@ -150,6 +153,17 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
+(defn- toimenpiteet-tyotiedoilla [db toimenpiteet]
+  ;; TODO TESTI ETTÄ TÄMÄ ON MUKANA PAYLOADISSA
+  (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
+        tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
+    (map
+      (fn [toimenpide]
+        (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
+              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
+          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
+      toimenpiteet)))
+
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
   (let [turvalaitekomponentit (fetch
                                 db
@@ -200,8 +214,8 @@
     (for [{id ::vv-toimenpide/id :as toimenpide} toimenpiteet
           :let [toimenpiteen-liitteet (liite-idt-toimenpiteelle id)]]
       (assoc toimenpide
-             ::vv-toimenpide/liitteet
-             (map (comp namespacefy/unnamespacefy liitteet) toimenpiteen-liitteet)))))
+        ::vv-toimenpide/liitteet
+        (map (comp namespacefy/unnamespacefy liitteet) toimenpiteen-liitteet)))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi urakoitsija-id] :as tiedot}]
@@ -216,12 +230,12 @@
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
-                              vv-toimenpide/perustiedot
+                               vv-toimenpide/perustiedot
 
-                              ;; Haetaan liitteet erikseen,
-                              ;; specql 0.6 versio ei osaa hakea 2 has-many
-                              ;; joukkoa samalla tasolla
-                              ;;vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
+                               ;; Haetaan liitteet erikseen,
+                               ;; specql 0.6 versio ei osaa hakea 2 has-many
+                               ;; joukkoa samalla tasolla
+                               ;;vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
                                vv-toimenpide/vikailmoitus
                                vv-toimenpide/urakoitsija
                                vv-toimenpide/sopimus
@@ -255,7 +269,12 @@
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-turvalaitekomponentit db)
-                      (lisaa-liitteet db))]
-    (cond->> (into [] toimenpiteet-xf fetchattu)
-             yksikkohintaiset? (toimenpiteet-hintatiedoilla db)
-             kokonaishintaiset? (identity))))
+                      (lisaa-liitteet db))
+        toimenpiteet (into [] toimenpiteet-xf fetchattu)]
+    (cond
+      yksikkohintaiset?
+      (->> (toimenpiteet-hintatiedoilla db toimenpiteet)
+           (toimenpiteet-tyotiedoilla db))
+
+      kokonaishintaiset?
+      toimenpiteet)))

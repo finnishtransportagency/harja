@@ -330,7 +330,8 @@
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
-                  ::h/hintaelementit (toimenpiteen-hintakentat hinnat)})))
+                  ::h/hintaelementit (toimenpiteen-hintakentat hinnat)
+                  ::h/tyot (get-in hinnoiteltava-toimenpide [::to/oma-hinnoittelu ::h/tyot])})))
 
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]

@@ -9,11 +9,13 @@
             [harja.domain.toimenpidekoodi :as tpk]
             [taoensso.timbre :as log]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.vesivaylat.tyo :as tyo]))
+            [harja.domain.vesivaylat.tyo :as tyo]
+            [specql.op :as op]))
 
-(defn- hae-hinnoittelun-tyot [db hinnoittelu-d]
+(defn hae-hinnoittelujen-tyot [db hinnoittelu-idt]
   (specql/fetch db
                 ::tyo/tyo
-                tyo/perustiedot
-                {::tyo/hinnoittelu-id hinnoittelu-d
+                (set/union tyo/perustiedot
+                           tyo/viittaus-idt)
+                {::tyo/hinnoittelu-id (op/in hinnoittelu-idt)
                  ::m/poistettu? false}))
