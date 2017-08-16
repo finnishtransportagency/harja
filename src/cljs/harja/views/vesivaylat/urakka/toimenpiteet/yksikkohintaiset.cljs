@@ -231,8 +231,7 @@
                    {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))}
                    (ikonit/livicon-trash)]]])
               [:tr.tyon-hinnoittelu-rivi
-               [:td.tyot-osio
-                ;; TODO Ilmaa tänne
+               [:td.tyot-osio.lisaa-tyorivi-solu
                 [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
                [:td.tyot-osio]
                [:td.tyot-osio]
@@ -266,22 +265,32 @@
                [:td.tyon-otsikko "Muut kulut:"]
                [:td [muu-tyo-kentta e! app* "Muut kulut"]]
                [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]
+               [:td]]
+              ;; Yhteenveto
+              [:tr.hinnoittelun-yhteenveto-rivi
+               [:td.tyon-otsikko "Perushinta:"]
+               [:td (fmt/euro-opt (hinta/perushinta
+                                    (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+               [:td]
+               [:td]]
+              [:tr.hinnoittelun-yhteenveto-rivi
+               [:td.tyon-otsikko "Yleiskustannuslisät (12%):"]
+               [:td (fmt/euro-opt (hinta/perushinta
+                                    (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+               [:td]
+               [:td]]
+              [:tr.hinnoittelun-yhteenveto-rivi
+               [:td.tyon-otsikko "Yhteensä:"]
+               [:td (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
+                                    (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+               [:td]
                [:td]]]])
 
-          [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-           ;; TODO Tasaa muiden eurojen kanssa
-           [yleiset/tietoja {:tietokentan-leveys "180px"}
-            "Perushinta:" (fmt/euro-opt (hinta/perushinta
-                                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
-            "Yleiskustannuslisät (12%):" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
-                                                         (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))
-            "Yhteensä:" (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
-                                        (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]]
-
           [:footer.vv-toimenpiteen-hinnoittelu-footer
+           [napit/peruuta
+            "Peruuta"
+            #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
            [napit/tallenna
-            ;; TODO Oikeaan reunaan tämä
-            ;; TODO Peruuta-nappi
             "Valmis"
             #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (or (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
