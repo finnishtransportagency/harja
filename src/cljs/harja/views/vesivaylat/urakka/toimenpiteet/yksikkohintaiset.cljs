@@ -25,7 +25,8 @@
             [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.kartta :as kartta]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -175,7 +176,12 @@
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        hinnalliset-suunnitellut-tyot (filter :yksikkohinta (:suunnitellut-tyot app*))]
+        valittu-aikavali (get-in app* [:valinnat :aikavali])
+        aikavalin-hinnalliset-suunnitellut-tyot (filter
+                                                  #(and (:yksikkohinta %)
+                                                        (pvm/sama-pvm? (:alkupvm %) (first valittu-aikavali))
+                                                        (pvm/sama-pvm? (:loppupvm %) (second valittu-aikavali)))
+                                                  (:suunnitellut-tyot app*))]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
@@ -207,14 +213,14 @@
                   [yleiset/livi-pudotusvalikko
                    {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
                                                                    ::tyo/toimenpidekoodi-id (:tehtava %)}))
-                    :format-fn #(if (empty? hinnalliset-suunnitellut-tyot)
+                    :format-fn #(if (empty? aikavalin-hinnalliset-suunnitellut-tyot)
                                   "Ei suunniteltuja töitä"
                                   (if % (:tehtavan_nimi %) "Valitse työ"))
                     :class "livi-alasveto-250"
                     :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
-                                            hinnalliset-suunnitellut-tyot))
+                                            aikavalin-hinnalliset-suunnitellut-tyot))
                     :disabled false}
-                   hinnalliset-suunnitellut-tyot]]
+                   aikavalin-hinnalliset-suunnitellut-tyot]]
                  [:td.tyot-osio
                   [:span
                    [tee-kentta {:tyyppi :numero :kokonaisosan-maara 5}
