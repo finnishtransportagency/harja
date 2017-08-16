@@ -21,3 +21,20 @@ ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-luoja" TEXT NOT NULL;
 ALTER TABLE vv_vikailmoitus ADD COLUMN "reimari-muokkaaja" TEXT NOT NULL;
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('reimari', 'hae-viat');
+
+DROP FUNCTION IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger_proc();
+
+CREATE OR REPLACE FUNCTION vv_vikailmoituksen_turvalaite_id_trigger_proc()
+  RETURNS TRIGGER AS
+$$
+BEGIN
+   NEW."turvalaite-id" = (SELECT id FROM vv_turvalaite
+                          WHERE turvalaitenro::text IS NOT NULL AND turvalaitenro::text = NEW."reimari-turvalaitenro" LIMIT 1);
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger ON vv_vikailmoitus;
+CREATE TRIGGER vv_vikailmoituksen_turvalaite_id_trigger
+  BEFORE INSERT OR UPDATE ON vv_vikailmoitus
+  FOR EACH ROW
+  EXECUTE PROCEDURE vv_vikailmoituksen_turvalaite_id_trigger_proc();
