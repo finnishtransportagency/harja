@@ -51,5 +51,5 @@
     (tarkista-fn)
     (t/testing "Haku reimari-id:llä toimii"
       (t/is (= 1
-               (count (specql/fetch db ::vv-vikailmoitus/reimari-id
+               (count (specql/fetch db ::vv-vikailmoitus/vikailmoitus
                                     #{::vv-vikailmoitus/reimari-id} {::vv-vikailmoitus/reimari-id (::vv-vikailmoitus/reimari-id referenssi-vika-tietue)})))))))
