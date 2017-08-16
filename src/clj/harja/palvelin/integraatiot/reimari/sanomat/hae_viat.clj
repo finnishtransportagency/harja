@@ -17,6 +17,7 @@
             [harja.pvm :as pvm]))
 
 (def attribuutit {:id #(Integer/parseInt %)
+                  :turvalaitenro identity ;; #(Integer/parseInt %)
                   :lisatiedot identity
                   :ilmoittaja identity
                   :ilmoittajan-yhteystieto identity
