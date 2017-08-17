@@ -65,7 +65,7 @@
   #{[::tyot (set/union tyo/perustiedot tyo/viittaus-idt tyo/metatiedot)]})
 
 (def hinnoittelutiedot
-  (set/union perustiedot metatiedot hinnat tyot))
+  (set/union perustiedot metatiedot hinnat))
 
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})
