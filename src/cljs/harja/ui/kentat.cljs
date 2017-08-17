@@ -591,7 +591,7 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus placeholder]} data]
+       (fn [{:keys [on-focus placeholder rivi]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
