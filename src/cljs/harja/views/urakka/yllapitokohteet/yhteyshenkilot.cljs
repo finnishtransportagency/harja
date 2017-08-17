@@ -1,4 +1,4 @@
-(ns harja.views.tilannekuva.yllapito
+(ns harja.views.urakka.yllapitokohteet.yhteyshenkilot
   (:require [reagent.core :refer [atom]]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log]]

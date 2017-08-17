@@ -264,6 +264,10 @@
   "Päivämäärän formatointi suomalaisessa muodossa"
   (luo-format "dd.MM.yyyy"))
 
+(def fi-pvm-ilman-vuotta
+  "Päivämäärän formatointi suomalaisessa muodossa ilman vuotta"
+  (luo-format "dd.MM."))
+
 (def fi-pvm-parse
   "Parsintamuoto päivämäärästä, sekä nolla etuliite ja ilman kelpaa."
   (luo-format "d.M.yyyy"))
@@ -325,16 +329,27 @@
   (formatoi fi-pvm-aika-sek pvm))
 
 (defn pvm
-  "Formatoi päivämäärän suomalaisessa muodossa"
-  [pvm]
-  (formatoi fi-pvm pvm))
+  "Formatoi päivämäärän suomalaisessa muodossa.
+
+  Optiot:
+  nayta-vuosi-fn   Funktio, joka kertoo, näytetäänkö vuosi. Jos ei annettu, näytetään vuosi."
+  ([paivamaara] (pvm paivamaara {}))
+  ([paivamaara {:keys [nayta-vuosi-fn]}]
+   (let [nayta-vuosi-fn (or nayta-vuosi-fn (constantly true))]
+     (if (nayta-vuosi-fn paivamaara)
+       (formatoi fi-pvm paivamaara)
+       (formatoi fi-pvm-ilman-vuotta paivamaara)))))
 
 (defn pvm-opt
-  "Formatoi päivämäärän suomalaisessa muodossa tai tyhjä, jos nil."
-  [p]
-  (if p
-    (pvm p)
-    ""))
+  "Formatoi päivämäärän suomalaisessa muodossa tai tyhjä, jos nil.
+
+  Optiot:
+  nayta-vuosi-fn   Funktio, joka kertoo, näytetäänkö vuosi. Jos ei annettu, näytetään vuosi."
+  ([paivamaara] (pvm-opt paivamaara {}))
+  ([paivamaara optiot]
+   (if paivamaara
+     (pvm paivamaara optiot)
+     "")))
 
 (defn aika
   "Formatoi ajan suomalaisessa muodossa"

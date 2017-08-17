@@ -121,7 +121,7 @@
 
 (def vesivaylien-ikonien-varit
   {"merimajakka" "magenta"
-   "muu-merkki" "oranssi"
+   "muu merkki" "oranssi"
    "poiju" "keltainen"
    "reunamerkki" "lime"
    "sektoriloisto" "vihrea"
@@ -254,11 +254,6 @@
 (defn tyokoneen-nuoli [nuolen-vari]
   (toteuman-nuoli nuolen-vari))
 
-(defn yllapidon-ikoni []
-  {:paikka [:loppu]
-   :tyyppi :merkki
-   :img (:yllapito tiepuolen-ikonien-varit)})
-
 (defn yllapidon-viiva [valittu? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
         leveydet (range (cond
@@ -321,11 +316,11 @@
                              :urakoitsija (:ei-ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
                              (:ei-ok-tarkastus tiepuolen-ikonien-varit)))
     (not (empty? vakiohavainnot)) (pinni-ikoni (:tarkastus-vakiohavainnolla tiepuolen-ikonien-varit))
-    (and valittu? ok?) (pinni-ikoni (case tekija
-                                      :tilaaja (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
-                                      :konsultti (:ok-tarkastus-konsultti tiepuolen-ikonien-varit)
-                                      :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
-                                      (:ok-tarkastus tiepuolen-ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+    ok? (pinni-ikoni (case tekija
+                       :tilaaja (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)
+                       :konsultti (:ok-tarkastus-konsultti tiepuolen-ikonien-varit)
+                       :urakoitsija (:ok-tarkastus-urakoitsija tiepuolen-ikonien-varit)
+                       (:ok-tarkastus tiepuolen-ikonien-varit)))))
 
 (defn tarkastuksen-reitti [ok? vakiohavainnot tekija]
   (if-not ok? ;;laadunalitus
@@ -425,4 +420,11 @@ tr-ikoni {:img (pinni-ikoni "musta")
     :width 3}])
 
 (defn tehtavan-viivat-tyokoneelle [viivat]
-  (map #(assoc % :dash +tyokoneviivan-dash+) viivat))
+  (let [levein (or (apply max (map :width viivat)) +normaali-leveys+)]
+    (concat
+      ;; Näiden pohjalle tulevien viivojen pitää olla leveämpiä
+      ;; kuin "varsinaisen viivan", sillä palvelinpäässä viivat piirretään
+      ;; leveimmästä kapeimpaan, jolloin osa katkoviivasta voi peittyä.
+      [{:width (+ 2 levein) :color puhtaat/musta}
+       {:width (+ 1 levein) :color puhtaat/harmaa}]
+      (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))

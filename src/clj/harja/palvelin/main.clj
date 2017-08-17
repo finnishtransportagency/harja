@@ -78,6 +78,7 @@
     [harja.palvelin.palvelut.sopimukset :as sopimukset]
     [harja.palvelin.palvelut.urakan-tyotunnit :as urakan-tyotunnit]
     [harja.palvelin.palvelut.graylog :as graylog]
+    [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -452,6 +453,10 @@
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
                           [:db :pois-kytketyt-ominaisuudet :http-palvelin :turi])
+
+      :hairioilmoitukset (component/using
+                           (hairioilmoitukset/->Hairioilmoitukset)
+                           [:db :http-palvelin])
 
       :debug (component/using
                (debug/->Debug)

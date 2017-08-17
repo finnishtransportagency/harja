@@ -34,7 +34,16 @@
   Karttakuvien lisäksi rekisteröidään jokaiselle palvelimella
   renderöintävälle karttatasolle funktio, joka hakee klikkauspisteessä
   löytyvät asiat ja palauttaa niiden tiedot infopaneelissa näyttämistä
-  varten."
+  varten.
+
+  Karttakuvia varten silti palautetaan normaalissa haussa osio, jossa voi
+  olla indikaattoreita tai legend otsikoita. Hyvän indikaattorin palauttaminen
+  normaalista osiohausta on tärkeää, koska kuvataso luodaan uudestaan, jos se
+  muuttuu. Jos indikaattoriarvo muuttuu liikaa, ladataan tarpeettomasti uusia
+  kuvia ja 'räpsyntää' esiintyy. Jos indikaattori ei muutu vaikka data olisi
+  oikeasti muuttunut, ei kuvissa näy kaikki geometriat.
+
+  "
   (:require [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [union]]
@@ -151,7 +160,7 @@
                                                                           :tilaaja? (roolit/tilaajan-kayttaja? user))))))
 
 (defn- hae-yllapitokohteet
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi]} urakat]
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
   ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
   ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
@@ -175,16 +184,16 @@
                             (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                           (if nykytilanne?
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
                               "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
                             (case tyyppi
-                              "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               (konv/sql-date loppu)
-                                                                               (konv/sql-date alku))
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                           (konv/sql-date loppu)
-                                                                           (konv/sql-date alku)))))
-            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id)
+                                                                           {:loppu (konv/sql-date loppu)
+                                                                            :alku (konv/sql-date alku)}))))
+            vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
+                                                                  {:alue alue
+                                                                   :toleranssi toleranssi})
+            vastaus (remove #(empty? (:kohdeosat %)) vastaus)
+
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
@@ -193,8 +202,24 @@
         vastaus))))
 
 (defn- hae-paallystystyot
-  [db user suodattimet urakat]
-  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paallystys") urakat))
+  "Hakee indikaattoritiedon siitä milloin päällystystyöt ovat muuttuneet viimeksi.
+  Frontti käyttää tätä tietoa uuden karttatason luomiseen."
+  [db user {nykytilanne? :nykytilanne? yllapito :yllapito} urakat]
+  (when (and
+         (tk/valittu? yllapito tk/paallystys)
+         (or (not (empty? urakat))
+             (oikeudet/voi-lukea? (if nykytilanne?
+                                    oikeudet/tilannekuva-nykytilanne
+                                    oikeudet/tilannekuva-historia)
+                                  nil user)))
+    ;; Indikaattori on merkkijono, joka sisältää tiedon siitä onko nykytilanne (n)
+    ;; vai historiakuva (h) sekä viimeisimmän kohteen muutosaikaleiman.
+    [(str (if nykytilanne?
+            "n" "h")
+          (or (some-> db
+                      q/hae-paallystysten-viimeisin-muokkaus
+                      .getTime)
+              0))]))
 
 (defn- hae-paikkaustyot
   [db user suodattimet urakat]
@@ -333,6 +358,15 @@
        :loppu loppu
        :organisaatio (get-in user [:organisaatio :id])})))
 
+(defn- hae-paallystysten-reitit
+  [db ch user {:keys [toleranssi alue alku loppu nykytilanne?] :as tiedot} _]
+  (q/hae-paallystysten-reitit db ch
+                              (merge alue
+                                     {:toleranssi toleranssi
+                                      :nykytilanne nykytilanne?
+                                      :historiakuva (not nykytilanne?)
+                                      :alku alku
+                                      :loppu loppu})))
 (defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
   (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
@@ -534,6 +568,7 @@
                                        (merge p (select-keys parametrit [:x :y])))))
     {:tehtava :tehtavat
      :materiaalitoteuma :materiaalit}))
+
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]
@@ -579,7 +614,7 @@
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
                                  (as-> parametrit p
-                                       (suodattimet-parametreista p)
+                                   (suodattimet-parametreista p)
                                        (assoc p
                                          :urakat (luettavat-urakat user p)
                                          :x x
@@ -587,17 +622,52 @@
                                          :nayta-kaikki (roolit/tilaajan-kayttaja? user)
                                          :organisaatio (-> user :organisaatio :id))))))
 
-(defn hae-kohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
-  (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
-          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user))
-    (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user kohteen-urakka-id)
+(defn hae-paallystysten-sijainnit-kartalle
+  "Hakee ylläpidon päällystystöiden geometriatiedot karttakuvan piirtoa varten"
+  [db user parametrit]
+  (hae-karttakuvan-tiedot db user parametrit
+                          hae-paallystysten-reitit
+                          (comp
+                           (map #(assoc % :tyyppi-kartalla :paallystys))
+                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                           (map #(update % :sijainti geo/pg->clj)))))
 
-          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
-      {:fim-kayttajat (vec fim-kayttajat)
-       :yhteyshenkilot (vec yhteyshenkilot)})
-    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+(def ^{:private true
+       :doc "Päällystyskohdeosan tietojen muunto infopaneelia varten"}
+  paallystyskohdeosan-tiedot-xf
+  (comp (map #(assoc % :tyyppi-kartalla :paallystys))
+        (map #(konv/string->keyword % :yllapitokohde_yllapitokohdetyotyyppi))
+        (map konv/alaviiva->rakenne)
+        (map #(assoc-in % [:yllapitokohde :tila]
+                        (yllapitokohteet-domain/yllapitokohteen-tarkka-tila (:yllapitokohde %))))))
+
+(defn hae-paallystysten-tiedot-kartalle
+  "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
+  [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
+  (let [urakat (luettavat-urakat user parametrit)]
+    (when (or (not (empty? urakat))
+              (oikeudet/voi-lukea? (if nykytilanne?
+                                     oikeudet/tilannekuva-nykytilanne
+                                     oikeudet/tilannekuva-historia)
+                                   nil user))
+      (let [vastaus (into []
+                          paallystyskohdeosan-tiedot-xf
+                          (q/hae-paallystysten-tiedot db {:x x :y y
+                                                          :toleranssi toleranssi
+                                                          :nykytilanne nykytilanne?
+                                                          :historiakuva (not nykytilanne?)
+                                                          :alku alku
+                                                          :loppu loppu}))
+            yllapitokohteet (map :yllapitokohde vastaus)
+            osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db yllapitokohteet)
+
+            vastaus (mapv (fn [kohdeosa]
+                            (update kohdeosa :yllapitokohde
+                                    #(assoc %
+                                            :pituus
+                                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))))
+                          vastaus)]
+        vastaus))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -612,9 +682,7 @@
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
                       (fn [user tiedot]
                         (hae-urakat db user tiedot)))
-    (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
-                      (fn [user tiedot]
-                        (hae-kohteen-urakan-yhteyshenkilot db fim user tiedot)))
+
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumien-sijainnit-kartalle db)
@@ -630,6 +698,11 @@
       (partial #'hae-tyokoneiden-sijainnit-kartalle db)
       (partial #'hae-tyokoneiden-tiedot-kartalle db)
       "tk")
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tilannekuva-paallystys
+     (partial #'hae-paallystysten-sijainnit-kartalle db)
+     (partial #'hae-paallystysten-tiedot-kartalle db)
+     "tk")
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
@@ -639,4 +712,5 @@
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-toteumat)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tarkastukset)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tyokoneet)
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-paallystys)
     this))

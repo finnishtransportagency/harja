@@ -188,7 +188,10 @@
                       ;; palvelimelta.
                       (constantly false)))
      :otsikko (case (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-                :paallystys "Päällystyskohde"
+                ;; Näytetään päällystykselle kohteen nimi ja osan TR-osoite
+                :paallystys (str (:nimi (:yllapitokohde yllapitokohdeosa))
+                                 " (" (tr-domain/tierekisteriosoite-tekstina
+                                        yllapitokohdeosa {:teksti-tie? false}) ")")
                 :paikkaus "Paikkauskohde"
                 nil)
      :tiedot [{:otsikko "Kohde" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :nimi]}
@@ -526,38 +529,48 @@
    :data tietyomaa})
 
 (defmethod infopaneeli-skeema :turvalaite [turvalaite]
-  {:tyyppi :turvalaite
-   :jarjesta-fn (constantly false)
-   :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
-   :tiedot (vec
-             (concat
-               [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
-                {:otsikko "Kiinteä?" :nimi ::tu/kiintea :tyyppi :string :fmt fmt/totuus}
-                {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
-                {:otsikko "Väylä" :tyyppi :string :hae
-                 (hakufunktio
-                   #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
-                   #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}]
-               (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (:toimenpiteet turvalaite))]
-                 ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
-                 {:otsikko (if-let [s (or (::to/pvm toimenpide)
-                                          (::to/suoritettu toimenpide))]
-                             (pvm/pvm s)
-                             "-")
-                  :tyyppi :string
-                  :hae (hakufunktio (constantly true) (constantly (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))))})))
-   :data turvalaite})
+  (let [nayta-max-toimenpidetta 10]
+    {:tyyppi :turvalaite
+     :jarjesta-fn (constantly false)
+     :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
+     :tiedot (vec
+               (concat
+                 [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
+                  {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
+                  {:otsikko "Väylä" :tyyppi :string :hae
+                   (hakufunktio
+                     #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
+                     #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
+                  {:otsikko "Tehdyt toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
+                   :komponentti
+                   (fn []
+                     (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
+                       [:div
+                        (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
+                          ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                          [:div (str (if-let [s (or (::to/pvm toimenpide)
+                                                    (::to/suoritettu toimenpide))]
+                                       (pvm/pvm s)
+                                       "-")
+                                     " - " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))
+                                     " - " (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)))])
+                        (when kaikkia-ei-piirretty?
+                          [:div (str "...sekä "
+                                     (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
+                                     " muuta toimenpidettä.")])
+                        ]))}]))
+     :data turvalaite}))
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
-        ", palautetaan tyhjä itemille " (pr-str x))
+            ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do
     (log/debug viesti
-         ", rivin-skeema: " (pr-str rivin-skeema)
-         ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
+               ", rivin-skeema: " (pr-str rivin-skeema)
+               ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
     nil))
 
 (defn- rivin-skeema-ilman-haun-validointia [skeema]

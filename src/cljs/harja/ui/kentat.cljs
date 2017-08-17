@@ -72,6 +72,10 @@
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
+(defmethod nayta-arvo :komponentti [skeema data]
+  (let [komponentti (:komponentti skeema)]
+    [komponentti data]))
+
 (defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn
                                      kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
@@ -587,7 +591,7 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus placeholder]} data]
+       (fn [{:keys [on-focus placeholder rivi]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -1085,29 +1089,29 @@
                       (karttatasot/taso-paalle! :sijaintivalitsin)))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
       (fn [_ _]
-       [:div
-        (when paikannus?
-          [napit/yleinen-ensisijainen
-           "Paikanna"
-           #(when-not @paikannus-kaynnissa?
-              (aloita-paikannus))
-           {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-            :ikoni (ikonit/screenshot)
-            :tallennus-kaynnissa? @paikannus-kaynnissa?}])
+        [:div
+         (when paikannus?
+           [napit/yleinen-ensisijainen
+            "Paikanna"
+            #(when-not @paikannus-kaynnissa?
+               (aloita-paikannus))
+            {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+             :ikoni (ikonit/screenshot)
+             :tallennus-kaynnissa? @paikannus-kaynnissa?}])
 
-        (when karttavalinta?
-          (if-not @karttavalinta-kaynnissa?
-            [napit/yleinen-ensisijainen
-             "Valitse kartalta"
-             #(when-not @karttavalinta-kaynnissa?
-                (aloita-karttavalinta))
-             {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-              :ikoni (ikonit/map-marker)}]
-            [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
-                                                :kun-valmis #(do
-                                                               (lopeta-karttavalinta)
-                                                               (karttavalinta-tehty-fn
-                                                                 {:type :point :coordinates %}))}]))]))))
+         (when karttavalinta?
+           (if-not @karttavalinta-kaynnissa?
+             [napit/yleinen-ensisijainen
+              "Valitse kartalta"
+              #(when-not @karttavalinta-kaynnissa?
+                 (aloita-karttavalinta))
+              {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+               :ikoni (ikonit/map-marker)}]
+             [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
+                                                 :kun-valmis #(do
+                                                                (lopeta-karttavalinta)
+                                                                (karttavalinta-tehty-fn
+                                                                  {:type :point :coordinates %}))}]))]))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

@@ -428,6 +428,17 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
+(defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
+  (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
+          (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user)
+          (yy/lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? db user yllapitokohde-id))
+    (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
+          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
+      {:fim-kayttajat (vec fim-kayttajat)
+       :yhteyshenkilot (vec yhteyshenkilot)})
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
@@ -485,23 +496,25 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-      (julkaise-palvelu http :sahkopostin-lahetys
-                        (tee-ajastettu-sahkopostin-lahetystehtava
-                          db
-                          fim
-                          email
-                          (:paivittainen-sahkopostin-lahetysaika asetukset)))
-      this))
 
-  (stop [this]
-    (poista-palvelut
-      (:http-palvelin this)
-      :urakan-yllapitokohteet
-      :tiemerkintaurakalle-osoitetut-yllapitokohteet
-      :yllapitokohteen-yllapitokohdeosat
-      :tallenna-yllapitokohteet
-      :tallenna-yllapitokohdeosat
-      :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu
-      :sahkopostin-lahetys)
-    this))
+      (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
+                        (fn [user tiedot]
+                          (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))
+      (assoc this ::sahkopostin-lahetys
+             (tee-ajastettu-sahkopostin-lahetystehtava
+              db fim email
+              (:paivittainen-sahkopostin-lahetysaika asetukset)))))
+
+  (stop [{sahkopostin-lahetys ::sahkopostin-lahetys :as this}]
+    (poista-palvelut (:http-palvelin this)
+                     :urakan-yllapitokohteet
+                     :tiemerkintaurakalle-osoitetut-yllapitokohteet
+                     :yllapitokohteen-yllapitokohdeosat
+                     :tallenna-yllapitokohteet
+                     :tallenna-yllapitokohdeosat
+                     :hae-yllapitourakan-aikataulu
+                     :tallenna-yllapitokohteiden-aikataulu
+                     :sahkopostin-lahetys)
+    (when sahkopostin-lahetys
+      (sahkopostin-lahetys))
+    (dissoc this ::sahkopostin-lahetys)))

@@ -276,7 +276,9 @@
                                      :komponentissa-virheita?
                                      :aihe
                                      :type
-                                     :alue))
+                                     :alue)
+                             (update ::t/tyoajat
+                                     (partial remove :poistettu)))
                 vastaus-kanava (k/post! :tallenna-tietyoilmoitus ilmoitus)
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
