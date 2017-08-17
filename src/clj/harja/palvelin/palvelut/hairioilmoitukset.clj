@@ -12,15 +12,16 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn- hae-kaikki-hairioilmoitukset [db user]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
+(defn- hae-kaikki-hairioilmoitukset [db user tarkista-oikeus?]
+  (when tarkista-oikeus?
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user))
   (reverse (sort-by ::hairio/pvm (specql/fetch db ::hairio/hairioilmoitus
                                                hairio/sarakkeet
                                                {}))))
 
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
-  {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user)
+  {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user false)
                        (hairio/tuorein-voimassaoleva-hairio))})
 
 (defn- aseta-kaikki-hairioilmoitukset-pois [db user]
@@ -28,7 +29,7 @@
   (specql/update! db ::hairio/hairioilmoitus
                   {::hairio/voimassa? false}
                   {::hairio/voimassa? true})
-  (hae-kaikki-hairioilmoitukset db user))
+  (hae-kaikki-hairioilmoitukset db user false))
 
 (defn- aseta-hairioilmoitus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
@@ -37,7 +38,7 @@
                   {::hairio/viesti (::hairio/viesti tiedot)
                    ::hairio/pvm (c/to-sql-date (t/now))
                    ::hairio/voimassa? true})
-  (hae-kaikki-hairioilmoitukset db user))
+  (hae-kaikki-hairioilmoitukset db user false))
 
 (defrecord Hairioilmoitukset []
   component/Lifecycle
@@ -47,7 +48,7 @@
       http
       :hae-hairioilmoitukset
       (fn [user _]
-        (hae-kaikki-hairioilmoitukset db user)))
+        (hae-kaikki-hairioilmoitukset db user true)))
 
     (julkaise-palvelu
       http
