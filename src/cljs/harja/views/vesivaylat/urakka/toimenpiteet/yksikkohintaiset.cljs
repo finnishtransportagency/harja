@@ -209,6 +209,8 @@
             :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
                                     suunnitellut-tyot))
             :disabled false}
+           ;; TODO Lisää special tyypit Päivän hinta ja omakustannushinta
+           ;; Omakustannushinnassa on indeksi. Molemmissa kuitenkin syötetään hinta.
            suunnitellut-tyot]]
          [:td.tyot-osio
           [:span
