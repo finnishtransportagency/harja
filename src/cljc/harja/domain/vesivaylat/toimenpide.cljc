@@ -397,7 +397,8 @@ reimari-tilat
   (filter (comp not poistettavat-idt ::id) toimenpiteet))
 
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
-  (boolean (::oma-hinnoittelu toimenpide)))
+  (boolean (or (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/hinnat])))
+               (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/tyot]))))))
 
 (defn toimenpiteilla-kiintioita? [toimenpiteet]
   (not (empty? (keep ::kiintio toimenpiteet))))
