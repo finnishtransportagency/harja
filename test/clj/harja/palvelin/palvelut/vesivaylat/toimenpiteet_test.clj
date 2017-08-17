@@ -15,6 +15,7 @@
             [harja.domain.toteuma :as tot]
             [harja.domain.urakka :as u]
             [harja.domain.urakka :as u]
+            [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
             [clojure.spec.alpha :as s]
             [clj-time.core :as t]
@@ -40,7 +41,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest yks-hint-toimenpiteiden-haku
+(deftest kok-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -72,7 +73,7 @@
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
 
 
-(deftest kok-hint-toimenpiteiden-haku
+(deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -86,6 +87,8 @@
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
     (is (>= (count vastaus) 2))
+    (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/hinnat]))) vastaus))
+    (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/tyot]))) vastaus))
     (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
     (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
 
