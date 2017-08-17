@@ -100,6 +100,19 @@
                 (remove ::m/poistettu? linkit))))
     toimenpiteet))
 
+(defn- toimenpiteet-tyotiedoilla
+  "Liittää toimenpiteiden omiin hinnoittelutietoihin mukaan työt."
+  [db toimenpiteet]
+  ;; TODO TESTI ETTÄ TÄMÄ ON MUKANA PAYLOADISSA
+  (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
+        tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
+    (map
+      (fn [toimenpide]
+        (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
+              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
+          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
+      toimenpiteet)))
+
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
   (->> (fetch db
               ::vv-toimenpide/reimari-toimenpide
@@ -119,7 +132,9 @@
        (map #(if-let [hinnoitteluryhma-id (get-in % [::vv-toimenpide/hintaryhma ::vv-hinnoittelu/id])]
                (assoc % ::vv-toimenpide/hintaryhma-id hinnoitteluryhma-id)
                %))
-       (map #(dissoc % ::vv-toimenpide/hintaryhma))))
+       (map #(dissoc % ::vv-toimenpide/hintaryhma))
+       ;; Liitetään vielä mukaan työt (specql ei osannut joinia näitä suoraan)
+       (toimenpiteet-tyotiedoilla db)))
 
 (defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
   (update! db ::vv-toimenpide/reimari-toimenpide
@@ -224,7 +239,7 @@
                                ;; Haetaan liitteet erikseen,
                                ;; specql 0.6 versio ei osaa hakea 2 has-many
                                ;; joukkoa samalla tasolla
-                               ;;vv-toimenpide/liitteet ;; FIXME Vain yksi liite!? HAR-5707
+                               ;;vv-toimenpide/liitteet
                                vv-toimenpide/vikailmoitus
                                vv-toimenpide/urakoitsija
                                vv-toimenpide/sopimus
