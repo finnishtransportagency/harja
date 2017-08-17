@@ -88,7 +88,7 @@
                                                                               666M 555
                                                                               123M 321)))
                                                              (::h/hinnat insert-vastaus))
-                             :h/tallennettavat-tyot []}
+                             ::h/tallennettavat-tyot []}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                              update-params)
@@ -176,8 +176,7 @@
                                                      ::hinta/maara 666}
                                                     {::hinta/otsikko "Testihinta 2"
                                                      ::hinta/yleiskustannuslisa 12
-                                                     ::hinta/maara 123}]
-                         ::h/tallennettavat-tyot []}
+                                                     ::hinta/maara 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                          insert-params)
