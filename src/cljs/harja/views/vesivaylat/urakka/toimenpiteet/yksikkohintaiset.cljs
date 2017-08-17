@@ -110,6 +110,7 @@
          {:varmistusehto ::to/oma-hinnoittelu
           :valitut-toimenpiteet valitut-toimenpiteet
           :nayta-max 5
+          ;; TODO Huomioi tässä myös töiden hinnat!
           :toimenpide-lisateksti-fn #(str "Hinta: " (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
                                                                     (get-in % [::to/oma-hinnoittelu ::h/hinnat])))
                                           ".")
@@ -341,6 +342,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
+          ;; TODO Huomioi tässä myös työt
           :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat))
           :ikoninappi? true}))]))
 
@@ -351,6 +353,7 @@
                                                  nil?
                                                  (mapcat #(get-in % [::to/oma-hinnoittelu ::h/hinnat])
                                                          hintaryhman-toimenpiteet))
+        ;; TODO Huomioi tässä myös työt
         hintaryhman-toimenpiteiden-yhteishinta (hinta/kokonaishinta-yleiskustannuslisineen
                                                  hintaryhman-toimenpiteiden-omat-hinnat)
         hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
