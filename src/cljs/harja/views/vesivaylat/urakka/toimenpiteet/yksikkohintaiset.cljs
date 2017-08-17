@@ -178,6 +178,8 @@
   ;; Työ hinnoiteltiin aiemmin yhtenä könttäsummana, nyt huomattavasti tarkemmin
   ;; Jos kannassa on hinta nimellä "Työ", niin se näytetään kuten ennenkin, muutoin
   ;; sitä ei tarjota, vaan työt pitää syöttää tarkemmin.
+  ;; TODO Ei tehdäkään näin, vaan poistetaan Työ-kenttä kokonaan ja migratoidaan se
+  ;; tulevaan päivän hinta -työtyyppiin
   (let [tyo-hinnoiteltu-konttana? (pos? (hinta/hinnan-maara-otsikolla
                                           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
                                           "Työ"))]
@@ -217,6 +219,7 @@
                             {::tyo/id (::tyo/id tyorivi)
                              ::tyo/maara uusi}))))]
            [:span " "]
+           ;; TODO Näytä oikea yksikkö tässä
            [:span "kpl (" (fmt/euro (* (::tyo/maara tyorivi)
                                        (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
                                                         suunnitellut-tyot
