@@ -61,8 +61,11 @@
 (def hinnat
   #{[::hinnat (set/union hinta/perustiedot hinta/metatiedot)]})
 
+(def tyot
+  #{[::tyot (set/union tyo/perustiedot tyo/viittaus-idt tyo/metatiedot)]})
+
 (def hinnoittelutiedot
-  (set/union perustiedot metatiedot hinnat))
+  (set/union perustiedot metatiedot hinnat tyot))
 
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})

@@ -166,8 +166,7 @@
                          ::m/luoja-id (:id user)})))))
 
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  (::to/oma-hinnoittelu (to/toimenpide-idlla (to-q/hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})
-                                             toimenpide-id)))
+  (::to/oma-hinnoittelu (first (to-q/hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id}))))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu [db user toimenpide-id urakka-id]
   (let [hinnoittelu (specql/insert! db
