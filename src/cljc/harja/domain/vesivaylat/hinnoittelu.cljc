@@ -70,13 +70,6 @@
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})
 
-(def hinnoittelun-toimenpiteet
-  #{[::toimenpide-linkit
-     #{[::toimenpiteet
-        #{:harja.domain.vesivaylat.toimenpide/id
-          :harja.domain.vesivaylat.toimenpide/urakka-id
-          :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
-
 (s/def ::idt (s/coll-of ::id))
 (s/def ::tyhja? boolean?) ;; ;; Ei sisällä lainkaan toimenpiteitä kannassa
 
