@@ -302,7 +302,6 @@
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
        ;; Piirrä leijuke
        [:div
-        [:span "Hinta: 0€"]
         [leijuke {:otsikko "Hinnoittele toimenpide"
                   :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
          [:div.vv-toimenpiteen-hinnoittelutiedot
