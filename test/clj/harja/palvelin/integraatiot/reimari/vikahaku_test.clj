@@ -17,31 +17,22 @@
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
 
-(def referenssi-vika-tietue {:harja.domain.vesivaylat.vikailmoitus/reimari-ilmoittajan-yhteystieto
-                             "Seppo Seppola 055 555 555",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-epakunnossa? false,
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-tyyppikoodi
-                             "1022541001",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-havaittu
-                             #inst "2017-01-01T12:12:12.123-00:00",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-lisatiedot
-                             "lamppu rikki",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-kirjattu
-                             #inst "2017-01-01T17:12:12.123-00:00",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-turvalaitenro "234",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-korjattu
-                             #inst "2017-02-01T11:12:12.123-00:00",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-luontiaika
-                             #inst "2017-02-02T11:12:12.123-00:00",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-id 563,
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-muokattu
-                             #inst "2017-02-02T11:12:12.123-00:00",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-muokkaaja "Esa Esim",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-tilakoodi
-                             "1022541103",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-ilmoittaja
-                             "Lampuntutkijat oy",
-                             :harja.domain.vesivaylat.vikailmoitus/reimari-luoja "Esa Esim"})
+(def referenssi-vika-tietue
+  {::vv-vikailmoitus/reimari-ilmoittajan-yhteystieto "Seppo Seppola 055 555 555",
+   ::vv-vikailmoitus/reimari-epakunnossa? false,
+   ::vv-vikailmoitus/reimari-tyyppikoodi "1022541001",
+   ::vv-vikailmoitus/reimari-havaittu #inst "2017-01-01T12:12:12.123-00:00",
+   ::vv-vikailmoitus/reimari-lisatiedot "lamppu rikki",
+   ::vv-vikailmoitus/reimari-kirjattu #inst "2017-01-01T17:12:12.123-00:00",
+   ::vv-vikailmoitus/reimari-turvalaitenro "234",
+   ::vv-vikailmoitus/reimari-korjattu #inst "2017-02-01T11:12:12.123-00:00",
+   ::vv-vikailmoitus/reimari-luontiaika #inst "2017-02-02T11:12:12.123-00:00",
+   ::vv-vikailmoitus/reimari-id 563,
+   ::vv-vikailmoitus/reimari-muokattu #inst "2017-02-02T11:12:12.123-00:00",
+   ::vv-vikailmoitus/reimari-muokkaaja "Esa Esim",
+   ::vv-vikailmoitus/reimari-tilakoodi "1022541103",
+   ::vv-vikailmoitus/reimari-ilmoittaja "Lampuntutkijat oy",
+   ::vv-vikailmoitus/reimari-luoja "Esa Esim"})
 
 (t/deftest kasittele-vastaus-kantatallennus
   (let [db (:db ht/jarjestelma)
