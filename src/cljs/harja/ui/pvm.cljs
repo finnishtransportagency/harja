@@ -57,14 +57,13 @@
 
 (defn pvm-valintakalenteri
   "Luo uuden päivämäärävalinnan.
-Seuraavat optiot ovat mahdollisia:
 
-:pvm      tämänhetkinen päivämäärä (goog.date.Date)
-:vuosi    näytettävä vuosi, oletus nykyinen
-:kuukausi näytettävä kuukausi (0 - 11)
-:valitse  funktio, jota kutsutaan kun päivämäärä valitaan
+   Seuraavat optiot ovat mahdollisia:
 
-  ...muita tarpeen mukaan..."
+   :pvm      tämänhetkinen päivämäärä (goog.date.Date)
+   :vuosi    näytettävä vuosi, oletus nykyinen
+   :kuukausi näytettävä kuukausi (0 - 11)
+   :valitse  funktio, jota kutsutaan kun päivämäärä valitaan"
   [optiot]
   (let [pakota-suunta (:pakota-suunta optiot)
         sijainti-atom (atom (or pakota-suunta nil))
