@@ -109,7 +109,8 @@
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/tallennettavat-hinnat []}]
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-toimenpiteelle-hinta +kayttaja-tero+
