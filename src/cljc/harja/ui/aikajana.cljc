@@ -104,6 +104,16 @@
                   paivat)
            (recur acc viikko paivat)))))])
 
+(defn- nykyhetki
+  "Näyttää pystyviivan nykyisen päivän kohdalla"
+  [paiva-x alku-y korkeus]
+  (let [nykyhetki (t/now)
+        x (paiva-x nykyhetki)]
+    [:g.aikajana-nykyhetki-viiva
+     [:line {:x1 x :y1 (- alku-y 5)
+             :x2 x :y2 korkeus
+             :stroke "red"}]]))
+
 (defn- kuukausiotsikot
   "Väliotsikot kuukausille"
   [paiva-x korkeus kuukaudet]
@@ -360,6 +370,11 @@
                         :font-size 10}
                  (::otsikko rivi)]]))
            rivit)
+
+         #?(:cljs
+            [nykyhetki paiva-x alku-y korkeus]
+            :clj
+            (nykyhetki paiva-x alku-y korkeus))
 
          #?(:cljs [kuukausiotsikot paiva-x korkeus kuukaudet]
             :clj  (kuukausiotsikot paiva-x korkeus kuukaudet))
