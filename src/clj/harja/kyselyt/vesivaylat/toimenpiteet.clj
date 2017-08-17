@@ -153,17 +153,6 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
-(defn- toimenpiteet-tyotiedoilla [db toimenpiteet]
-  ;; TODO TESTI ETTÄ TÄMÄ ON MUKANA PAYLOADISSA
-  (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
-        tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
-    (map
-      (fn [toimenpide]
-        (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
-              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
-          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
-      toimenpiteet)))
-
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
   (let [turvalaitekomponentit (fetch
                                 db
@@ -273,8 +262,7 @@
         toimenpiteet (into [] toimenpiteet-xf fetchattu)]
     (cond
       yksikkohintaiset?
-      (->> (toimenpiteet-hintatiedoilla db toimenpiteet)
-           (toimenpiteet-tyotiedoilla db))
+      (toimenpiteet-hintatiedoilla db toimenpiteet)
 
       kokonaishintaiset?
       toimenpiteet)))
