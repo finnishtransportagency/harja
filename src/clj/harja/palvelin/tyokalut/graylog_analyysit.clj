@@ -10,6 +10,34 @@
           {:yhteyskatkokset [{:palvelu palvelu :katkokset katkokset}]})
        rikkinainen))
 
+(defn pvm-valinen-aika
+  [pvm-ennen pvm-jalkeen]
+  (let [ensimmainen-ms (when pvm-ennen
+                         (.getTime pvm-ennen))
+        viimeinen-ms (when pvm-jalkeen
+                      (.getTime pvm-jalkeen))]
+   (when (and ensimmainen-ms viimeinen-ms)
+     (- viimeinen-ms ensimmainen-ms))))
+
+(defn viimeinen-pingaus
+  [yhteyskatkokset-map]
+  (let [ping-yhteyskatkokset (some (fn [palvelun-katkokset]
+                                     (when (= "ping" (:palvelu palvelun-katkokset))
+                                       palvelun-katkokset))
+                                   (:yhteyskatkokset yhteyskatkokset-map))
+        ; Tämä tehdään siltä varalta, että pingiä ei kerettyä tehdä. Siinä tapauksessa otetaan vain joku palvelukutsu
+        ping-yhteyskatkokset (if ping-yhteyskatkokset
+                                ping-yhteyskatkokset
+                                (first (:yhteyskatkokset yhteyskatkokset-map)))
+        viimeinen-katkos (:viimeinen-katkos ping-yhteyskatkokset)
+        ensimmainen-katkos (:ensimmainen-katkos ping-yhteyskatkokset)]
+    (if (and viimeinen-katkos ensimmainen-katkos)
+      (if (> (.getTime viimeinen-katkos)
+             (.getTime ensimmainen-katkos))
+         viimeinen-katkos
+         ensimmainen-katkos)
+      nil)))
+
 (defn ok-yhteyskatkos-data
   [yhteyskatkokset]
   (filter :yhteyskatkokset yhteyskatkokset))
@@ -42,13 +70,29 @@
 (defn yhteyskatkokset-ryhmittain-analyysi
   [yhteyskatkos-data]
   (let [yhteyskatkokset-ryhmittain (map muunnokset/yhteyskatkokset-ryhmittain yhteyskatkos-data)
-        katkokset-ynnatty (apply muunnokset/yhdista-avaimet-kun + :katkokset :palvelu (mapcat :yhteyskatkokset yhteyskatkokset-ryhmittain))]
+        katkokset-ynnatty (apply muunnokset/yhdista-avaimet-kun + :katkokset [:palvelu] (mapcat :yhteyskatkokset yhteyskatkokset-ryhmittain))]
     {:eniten-katkoksia (take-last 5 (sort-by #(:katkokset %) katkokset-ynnatty))}))
 
 (defn yhteyskatkokset-analyysi
   [yhteyskatkos-data]
-  (let [katkokset-ynnatty (apply muunnokset/yhdista-avaimet-kun + :katkokset :palvelu (mapcat :yhteyskatkokset yhteyskatkos-data))]
+  (let [katkokset-ynnatty (apply muunnokset/yhdista-avaimet-kun + :katkokset [:palvelu] (mapcat :yhteyskatkokset yhteyskatkos-data))]
     {:eniten-katkoksia (take-last 5 (sort-by #(:katkokset %) katkokset-ynnatty))}))
+
+(defn selain-sammutettu-katkoksen-aikana
+  [yhteyskatkos-data]
+  (reduce #(let [lokitus-tapahtui (pvm/dateksi (:pvm %2))
+                 viimeinen-pingaus-tapahtui (viimeinen-pingaus %2)
+                 lokituksen-ja-pingauksen-vali (pvm-valinen-aika viimeinen-pingaus-tapahtui lokitus-tapahtui)
+                 kutsutut-palvelut (keep (fn [palvelun-katkokset]
+                                           (if (= "ping" (:palvelu palvelun-katkokset))
+                                             nil
+                                             (:palvelu palvelun-katkokset)))
+                                         (:yhteyskatkokset %2))]
+              (if (and lokituksen-ja-pingauksen-vali (> lokituksen-ja-pingauksen-vali 10000))
+                (merge-with + %1 (zipmap kutsutut-palvelut
+                                         (repeat (count kutsutut-palvelut) 1)))
+                %1))
+          {} yhteyskatkos-data))
 
 (defn analyysit-yhteyskatkoksista
   [yhteyskatkokset {analysointimetodi :analysointimetodi haettavat-analyysit :haettavat-analyysit}]
@@ -59,51 +103,11 @@
         yhteyskatkos-data (concat ok-yhteyskatkos-data (:eheytetyt-yhteyskatkokset rikkinaiset-lokitukset))
         yhteyskatkokset-ryhmittain-analyysi (when (contains? haettavat-analyysit :eniten-katkosryhmia)
                                               (yhteyskatkokset-ryhmittain-analyysi yhteyskatkos-data))
-        eniten-katkoksia (when (contains? haettavat-analyysit :eniten-katkoksia)
-                          (yhteyskatkokset-analyysi yhteyskatkos-data))]
-        ; katkoksien-pituudet #(let [ensimmainen-ms (when-let [ek (:ensimmainen-katkos %)]
-        ;                                             (.getTime ek))
-        ;                            viimeinen-ms (when-let [vk (:viimeinen-katkos %)]
-        ;                                          (.getTime vk))]
-        ;                       (if (and ensimmainen-ms viimeinen-ms)
-        ;                         (Math/abs (- viimeinen-ms ensimmainen-ms)) ;abs, koska lokituksessa oli bugi alussa, jolloin ensimmainen olikin viimeinen
-        ;                         0))
-        ; pisimmat-katkokset (when (contains? haettavat-analyysit :pisimmat-katkokset)
-        ;                       (ota-mapin-n-suurinta-arvoa (reduce #(if (contains? %1 (:palvelu %2))
-        ;                                                              (update %1 (:palvelu %2) (fn [palvelun-katkoksen-pituus]
-        ;                                                                                          (let [tarkasteltavan-mapin-katkoksen-pituus (katkoksien-pituudet %2)]
-        ;                                                                                            (if (> tarkasteltavan-mapin-katkoksen-pituus palvelun-katkoksen-pituus)
-        ;                                                                                              tarkasteltavan-mapin-katkoksen-pituus
-        ;                                                                                              palvelun-katkoksen-pituus))))
-        ;                                                              (assoc %1 (:palvelu %2) (katkoksien-pituudet %2)))
-        ;                                                           {} yhteyskatkokset)
-        ;                                                   5))
-        ; selain-sammutettu-katkoksen-aikana (when (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana)
-        ;                                      (reduce #(let [lokitus-tapahtui (.getTime (pvm/dateksi (:pvm %2)))
-        ;                                                     ping-yhteyskatkokset (some (fn [palvelun-katkokset]
-        ;                                                                                  (when (= "ping" (:palvelu palvelun-katkokset))
-        ;                                                                                    palvelun-katkokset))
-        ;                                                                                (:yhteyskatkokset %2))
-        ;                                                     ; Tämä tehdään siltä varalta, että pingiä ei kerettyä tehdä. Siinä tapauksessa otetaan vain joku palvelukutsu
-        ;                                                     ping-yhteyskatkokset (if ping-yhteyskatkokset
-        ;                                                                             ping-yhteyskatkokset
-        ;                                                                             (first (:yhteyskatkokset %2)))
-        ;                                                     viimeinen-pingaus (if (> (.getTime (:viimeinene-katkos ping-yhteyskatkokset))
-        ;                                                                              (.getTime (:ensimmainen-katkos ping-yhteyskatkokset)))
-        ;                                                                          (.getTime (:viimeinen-katkos ping-yhteyskatkokset))
-        ;                                                                          (.getTime (:ensimmainen-katkos ping-yhteyskatkokset)))
-        ;                                                     lokituksen-ja-pingauksen-vali (- lokitus-tapahtui viimeinen-pingaus)
-        ;                                                     kutsutut-palvelut (keep (fn [palvelun-katkokset]
-        ;                                                                               (if (= "ping" (:palvelu palvelun-katkokset))
-        ;                                                                                 nil
-        ;                                                                                 (:palvelu palvelun-katkokset)))
-        ;                                                                             (:yhteyskatkokset %2))]
-        ;                                                    (if (> lokituksen-ja-pingauksen-vali 10000)
-        ;                                                      (merge-with + %1 (zipmap kutsutut-palvelut
-        ;                                                                               (repeat (count kutsutut-palvelut) 1)))
-        ;                                                      %1))
-        ;                                              {} ok-yhteyskatkos-data))]
-    {:eniten-katkoksia eniten-katkoksia ;:pisimmat-katkokset pisimmat-katkokset
-     :rikkinaiset-lokitukset rikkinaiset-lokitukset :yhteyskatkokset-ryhmittain-analyysi yhteyskatkokset-ryhmittain-analyysi}))
-    ;  :selain-sammutettu-katkoksen-aikana selain-sammutettu-katkoksen-aikana
-    ;  :eheytetyt-yhteyskatkokset-lkm eheytetyt-yhteyskatkokset-lkm}))
+        yhteyskatkokset-analyysi (when (contains? haettavat-analyysit :eniten-katkoksia)
+                                   (yhteyskatkokset-analyysi yhteyskatkos-data))
+        selain-sammutettu-katkoksen-aikana (when (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana)
+                                             (selain-sammutettu-katkoksen-aikana yhteyskatkos-data))]
+    {:yhteyskatkokset-analyysi yhteyskatkokset-analyysi
+     :rikkinaiset-lokitukset rikkinaiset-lokitukset
+     :yhteyskatkokset-ryhmittain-analyysi yhteyskatkokset-ryhmittain-analyysi
+     :selain-sammutettu-katkoksen-aikana selain-sammutettu-katkoksen-aikana}))

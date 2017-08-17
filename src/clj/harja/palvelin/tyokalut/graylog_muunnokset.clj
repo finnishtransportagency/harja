@@ -11,34 +11,39 @@
               (keep #(when-not (empty? %) %) (vals mappi-vektoreita))))
 
 (defn yhdista-avaimet-kun
-  "esim. (yhdista-avaimet-kun + :a :b {:a 3 :b :foo :c 2} {:a 2 :b :foo} {:a 4 :d 3 :b :bar} {:a 6 :b :bar})
+  "esim. (yhdista-avaimet-kun + :a [:b] {:a 3 :b :foo :c 2} {:a 2 :b :foo} {:a 4 :d 3 :b :bar} {:a 6 :b :bar})
    palauttaa [{:b :foo, :a 5} {:b :bar, :a 10}]"
   [funktio yhdistettava-avain sama-avain & mapit]
-  (reduce (fn [yhdistetyt-mapit kasiteltava-mappi]
-            (if (and (contains? kasiteltava-mappi yhdistettava-avain)
-                     (contains? kasiteltava-mappi sama-avain))
-              (loop [[paa & hanta] yhdistetyt-mapit
-                      lopputulos []
-                      loytyi? false]
-                (if (and (not loytyi?) (nil? paa))
-                  (conj lopputulos {yhdistettava-avain (yhdistettava-avain kasiteltava-mappi)
-                                    sama-avain (sama-avain kasiteltava-mappi)})
-                  (if (and loytyi?)
-                    (if paa
-                      (concat (conj lopputulos paa) hanta)
-                      lopputulos)
-                    (let [loytyi-tasta? (= (sama-avain paa) (sama-avain kasiteltava-mappi))
-                          paivitetty-paa (if loytyi-tasta?
-                                          {yhdistettava-avain (funktio (yhdistettava-avain paa) (yhdistettava-avain kasiteltava-mappi))
-                                           sama-avain (sama-avain paa)}
-                                          ; (update paa yhdistettava-avain (fn [vanha-arvo]
-                                          ;                                 (funktio vanha-arvo (yhdistettava-avain kasiteltava-mappi))))
-                                          paa)]
-                      (recur hanta
-                             (conj lopputulos paivitetty-paa)
-                             (or loytyi-tasta? loytyi?))))))
-              yhdistetyt-mapit))
-          '() mapit))
+  (let [yhdistamis-fn #(zipmap (conj sama-avain yhdistettava-avain)
+                               (conj (mapv (fn [avain]
+                                             (avain %))
+                                           sama-avain)
+                                     (yhdistettava-avain %)))
+        samat-avaimet? (fn [map-1 map-2] (= (map #(% map-1) sama-avain) (map #(% map-2) sama-avain)))]
+    (reduce (fn [yhdistetyt-mapit kasiteltava-mappi]
+              (if (and (contains? kasiteltava-mappi yhdistettava-avain)
+                       (every? identity (map #(contains? kasiteltava-mappi %) sama-avain)))
+                (loop [[paa & hanta] yhdistetyt-mapit
+                        lopputulos []
+                        loytyi? false]
+                  (if (and (not loytyi?) (nil? paa))
+                    (conj lopputulos (yhdistamis-fn kasiteltava-mappi))
+                    (if loytyi?
+                      (if paa
+                        (concat (conj lopputulos paa) hanta)
+                        lopputulos)
+                      (let [loytyi-tasta? (samat-avaimet? paa kasiteltava-mappi)
+                            paivitetty-paa (if loytyi-tasta?
+                                            (merge (yhdistamis-fn kasiteltava-mappi)
+                                                   {yhdistettava-avain (funktio (yhdistettava-avain paa) (yhdistettava-avain kasiteltava-mappi))})
+                                            ; {yhdistettava-avain (funktio (yhdistettava-avain paa) (yhdistettava-avain kasiteltava-mappi))
+                                            ;  sama-avain (sama-avain paa)}
+                                            paa)]
+                        (recur hanta
+                               (conj lopputulos paivitetty-paa)
+                               (or loytyi-tasta? loytyi?))))))
+                yhdistetyt-mapit))
+            '() mapit)))
 
 ;;;;;;;;;;;;;;;;;;;; Yhteyskatkoksien parsimiseen graylogin stringeistä liittyvät funktiot ;;;;;;;;;;;;;
 (defn ilman-skandeja
@@ -76,14 +81,11 @@
   [teksti]
   (cond
     (and (re-find #"raportoi yhteyskatkoksista palveluissa" teksti)
-         (re-find #"\]\]\]\)\]\]$|\]\]\]\)\]\]\"$" teksti)) :html
+         (re-find #"\]\]\]\)\]\]$" teksti)) :html
     (re-find #":td|:tr|:table|:div|:pre|:valign" teksti) :html-rikkinainen
     (and (re-find #"raportoi yhteyskatkoksista palveluissa:," teksti)
-         (re-find #"\}\]\}\"$" teksti)) :slack1
-    (and (re-find #"raportoi yhteyskatkoksista palveluissa:\"\"" teksti)
-         (re-find #"\}\]\}\"$" teksti)) :slack2
-    (re-find #":title \"\"|:value \"\"" teksti) :slack2-rikkinainen
-    (re-find #":title|:value" teksti) :slack1-rikkinainen
+         (re-find #"\}\]\}$" teksti)) :slack
+    (re-find #":title|:value" teksti) :slack-rikkinainen
     :else :joku-rikkinainen))
 
 (defn yhteyskatkokset-formatoinnille
@@ -151,8 +153,8 @@
 (defn katkoksien-poisto-fn
   [min-katkokset]
   (fn [katkokset]
-    (when (and (not (nil? katkokset)))
-          (> katkokset min-katkokset)
+    (when (and (not (nil? katkokset))
+               (> katkokset min-katkokset))
       katkokset)))
 
 (defmulti asetukset-kayttoon
@@ -160,20 +162,15 @@
     tyyppi))
 
 (defmethod asetukset-kayttoon :diagrammi
-  [_ {yhteyskatkokset :yhteyskatkokset :as mappi} {:keys [jarjestys-avain naytettavat-ryhmat min-katkokset]}]
+  [_ mappi {:keys [ryhma-avain jarjestys-avain naytettavat-ryhmat min-katkokset]}]
   (let [min-katkokset (or min-katkokset 0)
         palvelujen-poisto-fn (palvelujen-poisto-fn naytettavat-ryhmat)
         katkoksien-poisto-fn (katkoksien-poisto-fn min-katkokset)
-        palvelu-asetukset-kayttoon (assoc mappi :yhteyskatkokset
-                                                (keep #(when (palvelujen-poisto-fn (:palvelu %))
-                                                          %)
-                                                      yhteyskatkokset))
-        katkos-asetukset-kayttoon (keep #(when (katkoksien-poisto-fn (:katkokset %))
-                                            %)
-                                        (:yhteyskatkokset palvelu-asetukset-kayttoon))]
-    (if (empty? katkos-asetukset-kayttoon)
-      nil
-      (assoc palvelu-asetukset-kayttoon :yhteyskatkokset katkos-asetukset-kayttoon))))
+        palvelu-asetukset-kayttoon (when (palvelujen-poisto-fn (:palvelu mappi))
+                                      mappi)
+        katkos-asetukset-kayttoon (when (katkoksien-poisto-fn (:katkokset palvelu-asetukset-kayttoon))
+                                    palvelu-asetukset-kayttoon)]
+    katkos-asetukset-kayttoon))
 
 (defmethod asetukset-kayttoon :analyysi
   [_ onnistunut-mappaus {:keys [naytettavat-ryhmat ping-erikseen?]}]
@@ -210,24 +207,13 @@
     (avain avain-mappaukset)))
 (defn jarjestele-yhteyskatkos-data-visualisointia-varten
   [yhteyskatkos-data ryhma-avain jarjestys-avain]
-  (let [yhteyskatkos-data (if (or (= ryhma-avain :pvm)
-                                  (= jarjestys-avain :pvm))
-                             ;; Jos halutaan näyttää dataa päivämäärän mukaan, niin oletettavasti tarkoitetaan
-                             ;; vain päivämäärää eikä millisekunnin tarkkaa aikaa. Sen takia tehdään tämä muunnos.
-                             (map #(assoc % :pvm (pvm/paiva-kuukausi (:pvm %))) yhteyskatkos-data)
-                             yhteyskatkos-data)
-        ryhma-avain (avain-monikko->yksikko ryhma-avain)
+  (let [ryhma-avain (avain-monikko->yksikko ryhma-avain)
         jarjestys-avain (avain-monikko->yksikko jarjestys-avain)
-        ryhmat-avattuna (mapcat #(map (fn [yhteyskatkokset-map]
-                                        {:jarjestys-avain (if (jarjestys-avain %)
-                                                            (jarjestys-avain %)
-                                                            (jarjestys-avain yhteyskatkokset-map))
-                                         :ryhma-avain (if (ryhma-avain %)
-                                                        (ryhma-avain %)
-                                                        (ryhma-avain yhteyskatkokset-map))
-                                         :arvo-avain (:katkokset yhteyskatkokset-map)})
-                                      (:yhteyskatkokset %))
-                                yhteyskatkos-data)
+        ryhmat-avattuna (map (fn [ryhma-jarjestys-map]
+                                {:jarjestys-avain (jarjestys-avain ryhma-jarjestys-map)
+                                 :ryhma-avain (ryhma-avain ryhma-jarjestys-map)
+                                 :arvo-avain (:katkokset ryhma-jarjestys-map)})
+                             yhteyskatkos-data)
         data-visualisointia-varten (reduce (fn [jarjestelty-data uusi-map]
                                              (let [loytynyt-jarjestys (some #(when (= (:jarjestys-avain %) (:jarjestys-avain uusi-map))
                                                                                %)
@@ -274,7 +260,7 @@
    lokituksesta, kun taas loput palauttavat vektoriarvoja."
   [lokitus haettavat-tiedot-lokituksista]
   (let [aika (first lokitus)
-        loki-teksti (last lokitus)
+        loki-teksti (st/replace (last lokitus) #"\"" "")
         tekstin-formatointi (tekstin-formatointi loki-teksti)]
     (case tekstin-formatointi
       :html (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
@@ -286,7 +272,7 @@
                                              :ensimmaiset-katkokset ["ensimmäinen: " "viimeinen"]
                                              :viimeiset-katkokset ["viimeinen: " "]]]"]})
       :html-rikkinainen {:rikkinainen "foo"}
-      :slack1 (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+      :slack (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
                                              {:pvm ["" ","]
                                               :kello ["T" "."]
                                               :kayttaja ["{:text Käyttäjä " " "]
@@ -294,15 +280,7 @@
                                               :katkokset [", :value Katkoksia " " "]
                                               :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
                                               :viimeiset-katkokset ["viimeinen: " "}"]})
-      :slack2 (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
-                                             {:pvm ["" ","]
-                                              :kello ["T" "."]
-                                              :kayttaja ["{:text \"\"Käyttäjä " " "]
-                                              :palvelut ["{:title \"\":" "\"\""]
-                                              :katkokset [", :value \"\"Katkoksia " " "]
-                                              :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
-                                              :viimeiset-katkokset ["viimeinen: " "\"\""]})
-      :slack1-rikkinainen {:rikkinainen (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
+      :slack-rikkinainen {:rikkinainen (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
                                              {:pvm ["" ","]
                                               :kello ["T" "."]
                                               :kayttaja ["{:text Käyttäjä " " "]
@@ -310,12 +288,4 @@
                                               :katkokset [", :value Katkoksia " " "]
                                               :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
                                               :viimeiset-katkokset ["viimeinen: " "}"]})}
-      :slack2-rikkinainen {:rikkinainen (yhteyskatkokset-formatoinnille loki-teksti aika haettavat-tiedot-lokituksista
-                                             {:pvm ["" ","]
-                                              :kello ["T" "."]
-                                              :kayttaja ["{:text \"\"Käyttäjä " " "]
-                                              :palvelut ["{:title \"\":" "\"\""]
-                                              :katkokset [", :value \"\"Katkoksia " " "]
-                                              :ensimmaiset-katkokset ["ensimmäinen: " "(slack-n)"]
-                                              :viimeiset-katkokset ["viimeinen: " "\"\""]})}
       :joku-rikkinainen {:rikkinainen "foo"})))

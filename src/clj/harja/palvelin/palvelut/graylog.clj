@@ -8,6 +8,7 @@
             [clojure.string :as st]
             [clj-time.coerce :as tc]
             [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.graylog-muunnokset :as muunnokset]
             [harja.palvelin.tyokalut.graylog-analyysit :as analyysit]
             [harja.domain.graylog :as dgl]))
@@ -55,21 +56,46 @@
   [avain]
   (keyword (str (name avain) "?")))
 
+(defn asetuksien-kytkenta
+  [yhteyskatkokset-map hakuasetukset haku-avain]
+  (let [asetukset-fn (fn [yhteyskatkokset-map]
+                       (muunnokset/asetukset-kayttoon haku-avain
+                                                      yhteyskatkokset-map
+                                                      hakuasetukset))]
+    (cond
+      (get-in yhteyskatkokset-map [:rikkinainen :yhteyskatkokset]) {:rikkinainen (asetukset-fn (:rikkinainen yhteyskatkokset-map))}
+      (:yhteyskatkokset yhteyskatkokset-map) (asetukset-fn yhteyskatkokset-map)
+      :else yhteyskatkokset-map)))
+
 (defn hae-yhteyskatkosten-data-visualisointia-varten [{ryhma-avain :ryhma-avain jarjestys-avain :jarjestys-avain :as hakuasetukset} data-csvna ryhmana?]
   (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
         haettavat-tiedot-lokituksista {(bool-keyword ryhma-avain) true (bool-keyword jarjestys-avain) true}
         yhteyskatkokset-mappina (map #(muunnokset/yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)
-                                     graylogista-haetut-lokitukset)
-        onnistuneet-mappaukset (filter :yhteyskatkokset yhteyskatkokset-mappina)
-        asetuksien-mukaiset-mappaukset (keep #(muunnokset/asetukset-kayttoon :diagrammi % hakuasetukset) onnistuneet-mappaukset)
+                                      graylogista-haetut-lokitukset)
         yhteyskatkokset (if ryhmana?
-                          (map #(assoc % :yhteyskatkokset
-                                         (mapv (fn [mappi]
-                                                 (assoc mappi :katkokset 1))
-                                               (:yhteyskatkokset %)))
-                               asetuksien-mukaiset-mappaukset)
-                          asetuksien-mukaiset-mappaukset)
-        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten yhteyskatkokset ryhma-avain jarjestys-avain)]
+                          (map #(muunnokset/yhteyskatkokset-ryhmittain %)
+                               yhteyskatkokset-mappina)
+                          yhteyskatkokset-mappina)
+        rikkinaisten-kasittely (keep #(cond
+                                        (:yhteyskatkokset %) %
+                                        (get-in % [:rikkinainen :yhteyskatkokset]) (:rikkinainen %)
+                                        :else nil)
+                                     yhteyskatkokset)
+        ryhma-jarjestys-map (mapcat (fn [mappi]
+                                      (map #(merge %
+                                                  (dissoc mappi :yhteyskatkokset))
+                                           (:yhteyskatkokset mappi)))
+                                    rikkinaisten-kasittely)
+        yhteyskatkokset (if (or (= ryhma-avain :pvm)
+                                (= jarjestys-avain :pvm))
+                           ;; Jos halutaan näyttää dataa päivämäärän mukaan, niin oletettavasti tarkoitetaan
+                           ;; vain päivämäärää eikä millisekunnin tarkkaa aikaa. Sen takia tehdään tämä muunnos.
+                           (map #(assoc % :pvm (pvm/paiva-kuukausi (:pvm %))) ryhma-jarjestys-map)
+                           ryhma-jarjestys-map)
+        yhteyskatkokset (apply muunnokset/yhdista-avaimet-kun + :katkokset [(muunnokset/avain-monikko->yksikko ryhma-avain) (muunnokset/avain-monikko->yksikko jarjestys-avain)] yhteyskatkokset)
+        asetukset-kayttoon (keep #(muunnokset/asetukset-kayttoon :diagrammi % hakuasetukset)
+                                 yhteyskatkokset)
+        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten asetukset-kayttoon ryhma-avain jarjestys-avain)]
     jarjestelty-data))
 
 (defn haettavat-tiedot-analyyseja-varten
@@ -97,14 +123,15 @@
                                   (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana))
                           true)
         haettavat-tiedot-lokituksista (haettavat-tiedot-analyyseja-varten haettavat-analyysit ping-erikseen?)
-        yhteyskatkokset-mappina (keep #(let [mappaus-yritys (muunnokset/yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)]
-                                        (if (contains? mappaus-yritys :rikkinainen)
-                                          mappaus-yritys
-                                          (muunnokset/asetukset-kayttoon :analyysi mappaus-yritys (assoc hakuasetukset :ping-erikseen? ping-erikseen?))))
+        yhteyskatkokset-mappina (map #(muunnokset/yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)
                                       graylogista-haetut-lokitukset)
-        analyysit (analyysit/analyysit-yhteyskatkoksista yhteyskatkokset-mappina analyysihaku)
+        asetukset-kayttoon (keep #(asetuksien-kytkenta % (assoc hakuasetukset :ping-erikseen? ping-erikseen?) :analyysi)
+                                 yhteyskatkokset-mappina)
+        analyysit (analyysit/analyysit-yhteyskatkoksista asetukset-kayttoon analyysihaku)
         pingin-poisto-fn #(into {} (map (fn [[analyysi tulos]]
-                                          [analyysi (if (map? tulos) (dissoc tulos "ping") tulos)])
+                                          [analyysi (cond
+                                                      (map? tulos) (dissoc tulos "ping")
+                                                      :else tulos)])
                                         %))]
       (if ping-erikseen?
         (pingin-poisto-fn analyysit)
