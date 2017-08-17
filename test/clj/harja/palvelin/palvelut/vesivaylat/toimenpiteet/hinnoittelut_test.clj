@@ -204,8 +204,7 @@
                                                                             (case (::hinta/maara hinta)
                                                                               666M 555
                                                                               123M 321)))
-                                                             (::h/hinnat paivitetty-hinnoittelu))
-                             ::h/tallennettavat-tyot []}
+                                                             (::h/hinnat paivitetty-hinnoittelu))}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                              update-params)
