@@ -271,14 +271,14 @@
                     (:perusluku (val (first urakoiden-lahtotiedot))))
         ainakin-yhdessa-urakassa-suolasakko-kaytossa? (some #(:suolasakko_kaytossa (val %)) urakoiden-lahtotiedot)
         ainakin-yhdessa-urakassa-indeksit-kaytossa? (some #(:indeksi (val %)) urakoiden-lahtotiedot)
-        urakat-joissa-indeksilaskennan-perusluku-puuttuu (into []
+        urakat-joissa-indeksilaskennan-perusluku-puuttuu (into #{}
                                                                (keep (fn [urakan-lahtotiedot]
                                                                        (let [tiedot (second urakan-lahtotiedot)]
                                                                          (when (and (:indeksi tiedot)
                                                                                     (nil? (:perusluku tiedot)))
                                                                            (:urakka-nimi (second urakan-lahtotiedot)))))
                                                                      urakoiden-lahtotiedot))
-        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (into []
+        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (into #{}
                                                                                  (keep (fn [urakan-lahtotiedot]
                                                                                          (let [tiedot (second urakan-lahtotiedot)]
                                                                                            (when (and (:suolasakko_kaytossa tiedot)
@@ -288,6 +288,21 @@
                                                                                              (:urakka-nimi (second urakan-lahtotiedot)))))
                                                                                        urakoiden-lahtotiedot))
 
+        suolasakko-kentat (kustannuslajin-kaikki-kentat "suolasakot")
+        urakat-joissa-raportin-aikavalilla-indeksiarvon-puute (into #{}
+                                                                    (apply concat
+                                                                           (keep
+                                                                             not-empty
+                                                                             (mapv (fn [laskutusyhteenveto]
+                                                                                     (set (keep
+                                                                                            #(some (fn [rivin-map-entry]
+                                                                                                     (println (:urakka-nimi %) "rivin-map-entry" rivin-map-entry)
+                                                                                                     (println "ss " suolasakko-kentat)
+                                                                                                     (when (nil? (val rivin-map-entry))
+                                                                                                       (get % :urakka-nimi)))
+                                                                                                   (apply dissoc % suolasakko-kentat))
+                                                                                            laskutusyhteenveto)))
+                                                                                   laskutusyhteenvedot))))
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
@@ -299,19 +314,6 @@
                                              kaikki-tuotteittain)
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
-
-        avaimet (map name (keys (first tiedot)))
-        ;; poistetaan suolasakot-kentät, koska sen nil voi aiheutua myös lämpötilojen puuttumisesta.
-        ;; Halutaan selvittää mahd. tarkasti erikseen puuttuuko indeksiarvoja, lämpötiloja vai molempia
-        laskutettu-korotus-kentat (mapv keyword (filter #(and
-                                                           (re-find #"laskutettu_ind_korotus" %)
-                                                           (not (re-find #"suolasakot_laskutettu_ind_korotus" %))) avaimet))
-        laskutetaan-korotus-kentat (mapv keyword (filter #(and
-                                                            (re-find #"laskutetaan_ind_korotus" %)
-                                                            (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
-        indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
-        indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
-
         kkn-indeksiarvo (when kyseessa-kk-vali?
                           (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
 
@@ -337,13 +339,11 @@
           ;; Muuten edetään aikaperustaiseen tarkasteluun
           (if varoitus-indeksilaskennan-perusluku-puuttuu
             varoitus-indeksilaskennan-perusluku-puuttuu
-            (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
-             "Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
-             (if indeksiarvo-puuttuu-jo-laskutetulta-ajalta?
-               "Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
-               (if indeksiarvo-puuttuu-valitulta-kklta?
-                 "Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
-                 nil)))))
+            (when-not (empty? urakat-joissa-raportin-aikavalilla-indeksiarvon-puute)
+              (str "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: "
+                   (str/join ", "
+                             (for [u urakat-joissa-raportin-aikavalilla-indeksiarvon-puute]
+                               u))))))
         vain-jvh-voi-muokata-tietoja-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan."
 
         kentat-kaikki-paitsi-kht #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
@@ -438,7 +438,7 @@
                   (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
                 (when (and ainakin-yhdessa-urakassa-indeksit-kaytossa? urakka-id)
                   (yleinen/kkn-indeksiarvo {:kyseessa-kk-vali? kyseessa-kk-vali?
-                                                    :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo}))
+                                            :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo}))
 
                 [:varoitusteksti varoitus-indeksitietojen-puuttumisesta]
                 [:varoitusteksti varoitus-lampotila-puuttuu]
