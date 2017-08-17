@@ -56,13 +56,15 @@
 
 (defn- korotettuna-jos-indeksi-saatavilla
   [rivi avain]
+  (let [avain-ind-korotus (keyword (str avain "_ind_korotus"))
+        ind-korotus (avain-ind-korotus rivi)
+        ilman-korotusta  ((keyword avain) rivi)]
+    (if-not ind-korotus  ;indeksipuutteen aiheuttama nil
+      {:tulos            ilman-korotusta
+       :indeksi-puuttui? true}
+      {:tulos (+ ilman-korotusta ind-korotus)
+       :indeksi-puuttui? false})))
 
-  (let [avain-ind-korototettuna (keyword (str avain "_ind_korotettuna"))]
-    (if-let [ind-korotettuna (avain-ind-korototettuna rivi)]
-      {:tulos            ind-korotettuna
-       :indeksi-puuttui? false}
-      {:tulos            ((keyword avain) rivi)
-       :indeksi-puuttui? true})))
 
 (defn taulukko-elementti
   [otsikko taulukon-tiedot kyseessa-kk-vali?
@@ -296,8 +298,6 @@
                                                                              (mapv (fn [laskutusyhteenveto]
                                                                                      (set (keep
                                                                                             #(some (fn [rivin-map-entry]
-                                                                                                     (println (:urakka-nimi %) "rivin-map-entry" rivin-map-entry)
-                                                                                                     (println "ss " suolasakko-kentat)
                                                                                                      (when (nil? (val rivin-map-entry))
                                                                                                        (get % :urakka-nimi)))
                                                                                                    (apply dissoc % suolasakko-kentat))

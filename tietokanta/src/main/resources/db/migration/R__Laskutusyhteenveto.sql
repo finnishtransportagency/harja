@@ -344,12 +344,18 @@ BEGIN
                                              hoitokauden_laskettu_suolasakon_maara, ur)
       INTO hoitokauden_laskettu_suolasakko_rivi;
 
-      -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
-      IF (hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER)
-          AND (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) < 10)
+      -- Jos suolasakko ei ole käytössä, ei edetä
+      IF (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi IS NULL AND
+          hoitokauden_suolasakko_rivi.indeksi IS NULL AND
+          hoitokauden_suolasakko_rivi.maksukuukausi IS NULL)
       THEN
-        RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
-        suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
+        RAISE NOTICE 'Suolasakko ei käytössä annetulla aikavälillä urakassa %, aikavali_alkupvm: %, hoitokauden_suolasakko_rivi: %', ur, aikavali_alkupvm, hoitokauden_suolasakko_rivi;
+      -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
+      ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER)
+             AND (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) < 10)
+        THEN
+          RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
+          suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
         suolasakot_laskutettu_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
         -- Jos valittu yksittäinen kuukausi on maksukuukausi TAI jos kyseessä koko hoitokauden raportti (poikkeustapaus)

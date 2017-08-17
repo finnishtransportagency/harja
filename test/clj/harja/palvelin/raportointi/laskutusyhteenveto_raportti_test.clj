@@ -136,7 +136,7 @@
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
       (is (= varoitus-indeksiarvojen-puuttumisesta
-             [:varoitusteksti "Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "]))
+             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019"]))
 
       (is (= yks-hint "7 882,50"))
       (is (= sanktiot "-1 900,67"))
@@ -226,24 +226,18 @@
                                               :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
     (is (vector? vastaus))
     (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2016-30.09.2017"
-
           saatu-otsikko (second (nth vastaus 2))
+          vastaus (butlast (butlast vastaus))
 
           yks-hint (arvo-raportin-nnesta-elementista vastaus 0)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 1)
 
-          indeksitarkistukset-yks-hint (arvo-raportin-nnesta-elementista vastaus 2)
-          indeksitarkistukset-sanktiot (arvo-raportin-nnesta-elementista vastaus 3)
-          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 4)
-          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 5)
-
+          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 2)
+          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 3)
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
       (is (= yks-hint "7 882,50"))
       (is (= sanktiot "-1 900,67"))
-      (is (= indeksitarkistukset-yks-hint "0,00"))
-      (is (= indeksitarkistukset-sanktiot "0,00"))
-      (is (= indeksitarkistukset-muut-kuin-kokhint "0,00"))
       (is (= kaikki-paitsi-kokhint-yhteensa "5 981,83"))
       (is (= kaikki-yhteensa nurkkasumma "5 981,83")))))
