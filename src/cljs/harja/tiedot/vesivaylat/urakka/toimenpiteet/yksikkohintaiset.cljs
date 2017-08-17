@@ -380,7 +380,8 @@
                                       {::hinta/otsikko (::hinta/otsikko hinta)
                                        ::hinta/maara (::hinta/maara hinta)
                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                  (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
+                                  (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))
+             ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))

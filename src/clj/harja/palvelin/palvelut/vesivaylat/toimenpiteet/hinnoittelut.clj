@@ -71,6 +71,7 @@
         (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
+  (log/debug "TALLENNA TOIMENPITEELLE HINTA: " (pr-str tiedot))
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
@@ -80,12 +81,22 @@
       (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]
         (when-not (empty? hinta-idt)
           (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
+      ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
+      ;; TODO TARKISTUS + TESTI
       (jdbc/with-db-transaction [db db]
-        (q/tallenna-toimenpiteelle-hinta! db user
-                                          (::to/id tiedot)
-                                          (::h/hintaelementit tiedot)
-                                          urakka-id)
-        (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot))))))
+        (let [hinnoittelu (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
+          (q/tallenna-toimenpiteelle-hinta!
+            {:db db
+             :user user
+             :hinnoittelu-id (::h/id hinnoittelu)
+             :hinnat (::h/hintaelementit tiedot)})
+          ;; TODO TESTI TALLENNUS + TESTI
+          (q/tallenna-toimenpiteelle-tyo!
+            {:db db
+             :user user
+             :hinnoittelu-id (::h/id hinnoittelu)
+             :tyot (::h/tallennettavat-tyot tiedot)})
+          (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot)))))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle

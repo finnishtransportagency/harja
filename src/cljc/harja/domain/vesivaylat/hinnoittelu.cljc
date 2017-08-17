@@ -116,11 +116,14 @@
     (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
             :opt [::id])))
 
+(s/def ::tallennettava-tyo (s/keys :req [::tyo/toimenpidekoodi-id ::tyo/maara]
+                                   :opt [::id]))
+
+(s/def ::tallennettavat-tyot (s/coll-of ::tallennettava-tyo))
+
 (s/def ::tallenna-hintaryhmalle-hinta-kysely
   (s/keys
-    :req [::ur/id
-          ::id
-          ::hintaelementit]))
+    :req [::ur/id ::id ::hintaelementit]))
 
 (s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hintaryhmat-vastaus)
 
@@ -128,7 +131,8 @@
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/urakka-id
           :harja.domain.vesivaylat.toimenpide/id
-          ::hintaelementit]))
+          ::hintaelementit
+          ::tallennettavat-tyot]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
 
