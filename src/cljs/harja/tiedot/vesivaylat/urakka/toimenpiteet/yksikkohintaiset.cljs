@@ -368,20 +368,21 @@
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :tallenna-toimenpiteelle-hinta
-                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
-                                       ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-                                       ::h/hintaelementit (mapv
-                                                            (fn [hinta]
-                                                              (merge
-                                                                (when-let [id (::hinta/id hinta)]
-                                                                  {::hinta/id id})
-                                                                {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                 ::hinta/maara (::hinta/maara hinta)
-                                                                 ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                            (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
-                                      {:onnistui ->ToimenpiteenHinnoitteluTallennettu
-                                       :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
+      (do (tuck-tyokalut/palvelukutsu
+            :tallenna-toimenpiteelle-hinta
+            {::to/urakka-id (get-in app [:valinnat :urakka-id])
+             ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
+             ::h/hintaelementit (mapv
+                                  (fn [hinta]
+                                    (merge
+                                      (when-let [id (::hinta/id hinta)]
+                                        {::hinta/id id})
+                                      {::hinta/otsikko (::hinta/otsikko hinta)
+                                       ::hinta/maara (::hinta/maara hinta)
+                                       ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                  (get-in app [:hinnoittele-toimenpide ::h/hintaelementit]))}
+            {:onnistui ->ToimenpiteenHinnoitteluTallennettu
+             :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
