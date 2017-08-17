@@ -151,7 +151,7 @@
    [:span
     [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
      (r/wrap (hinta/hinnan-maara-otsikolla
-               (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+               (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
                otsikko)
              (fn [uusi]
                (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
@@ -163,7 +163,7 @@
   [e! app* otsikko]
   [tee-kentta {:tyyppi :checkbox}
    (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
-                                         (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                                         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
                                          otsikko)]
              (pos? yleiskustannuslisa)
              false)
@@ -179,7 +179,7 @@
   ;; Jos kannassa on hinta nimellä "Työ", niin se näytetään kuten ennenkin, muutoin
   ;; sitä ei tarjota, vaan työt pitää syöttää tarkemmin.
   (let [tyo-hinnoiteltu-konttana? (pos? (hinta/hinnan-maara-otsikolla
-                                          (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])
+                                          (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
                                           "Työ"))]
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
@@ -268,20 +268,20 @@
       [:tr.hinnoittelun-yhteenveto-rivi
        [:td.tyon-otsikko "Perushinta:"]
        [:td (fmt/euro-opt (+ (hinta/perushinta
-                               (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]))
+                               (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
                              (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
        [:td]
        [:td]]
       [:tr.hinnoittelun-yhteenveto-rivi
        [:td.tyon-otsikko "Yleiskustannuslisät (12%):"]
        [:td (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
-                            (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit])))]
+                            (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
        [:td]
        [:td]]
       [:tr.hinnoittelun-yhteenveto-rivi
        [:td.tyon-otsikko "Yhteensä:"]
        [:td (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
-                               (get-in app* [:hinnoittele-toimenpide ::h/hintaelementit]))
+                               (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
                              (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
        [:td]
        [:td]]]]))
@@ -367,7 +367,7 @@
                        :placeholder "Syötä hinta"
                        :kokonaisosan-maara 7}
            (r/wrap (hinta/hinnan-maara-otsikolla
-                     (get-in app* [:hinnoittele-hintaryhma ::h/hintaelementit])
+                     (get-in app* [:hinnoittele-hintaryhma ::h/hinnat])
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->HinnoitteleHintaryhmaKentta
                           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko

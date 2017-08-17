@@ -170,8 +170,8 @@
   (::to/oma-hinnoittelu (first (to-q/hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id}))))
 
 (defn luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu [db user toimenpide-id urakka-id]
-  (if-let [hinnoittelu (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id)]
-    hinnoittelu
+  (if-let [hinnoittelu-id (::h/id (hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))]
+    hinnoittelu-id
     (let [hinnoittelu (specql/insert! db
                                       ::h/hinnoittelu
                                       {::h/urakka-id urakka-id
@@ -183,7 +183,7 @@
                        ::h/toimenpide-id toimenpide-id
                        ::m/luoja-id (:id user)})
 
-      hinnoittelu)))
+      (::h/id hinnoittelu))))
 
 (defn tallenna-toimenpiteelle-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
   (doseq [hinta hinnat]
@@ -228,4 +228,4 @@
                         tyo
                         {::m/luotu (pvm/nyt)
                          ::m/luoja-id (:id user)
-                         ::hinta/hinnoittelu-id hinnoittelu-id})))))
+                         ::tyo/hinnoittelu-id hinnoittelu-id})))))

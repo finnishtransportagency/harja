@@ -62,39 +62,38 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot)))
+      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/tallennettavat-hinnat tiedot)))
                                              (::h/id tiedot))
       (jdbc/with-db-transaction [db db]
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
-                                         (::h/hintaelementit tiedot))
+                                         (::h/tallennettavat-hinnat tiedot))
         (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
-  (log/debug "TALLENNA TOIMENPITEELLE HINTA: " (pr-str tiedot))
   (when (ominaisuus-kaytossa? :vesivayla)
     (let [urakka-id (::to/urakka-id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
-      (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]
+      (let [hinta-idt (set (keep ::hinta/id (::h/tallennettavat-hinnat tiedot)))]
         (when-not (empty? hinta-idt)
           (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
       ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
       ;; TODO TARKISTUS + TESTI
       (jdbc/with-db-transaction [db db]
-        (let [hinnoittelu (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
+        (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
           (q/tallenna-toimenpiteelle-hinta!
             {:db db
              :user user
-             :hinnoittelu-id (::h/id hinnoittelu)
-             :hinnat (::h/hintaelementit tiedot)})
+             :hinnoittelu-id hinnoittelu-id
+             :hinnat (::h/tallennettavat-hinnat tiedot)})
           ;; TODO TESTI TALLENNUS + TESTI
           (q/tallenna-toimenpiteelle-tyo!
             {:db db
              :user user
-             :hinnoittelu-id (::h/id hinnoittelu)
+             :hinnoittelu-id hinnoittelu-id
              :tyot (::h/tallennettavat-tyot tiedot)})
           (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot)))))))
 
