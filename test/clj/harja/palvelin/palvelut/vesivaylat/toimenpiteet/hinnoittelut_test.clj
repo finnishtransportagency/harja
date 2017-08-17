@@ -120,7 +120,8 @@
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/tallennettavat-hinnat []}]
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
@@ -134,7 +135,8 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}]}]
+                                                   ::hinta/maara 666}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
@@ -174,7 +176,8 @@
                                                      ::hinta/maara 666}
                                                     {::hinta/otsikko "Testihinta 2"
                                                      ::hinta/yleiskustannuslisa 12
-                                                     ::hinta/maara 123}]}
+                                                     ::hinta/maara 123}]
+                         ::h/tallennettavat-tyot []}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -202,7 +205,8 @@
                                                                             (case (::hinta/maara hinta)
                                                                               666M 555
                                                                               123M 321)))
-                                                             (::h/hinnat paivitetty-hinnoittelu))}
+                                                             (::h/hinnat paivitetty-hinnoittelu))
+                             ::h/tallennettavat-tyot []}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                              update-params)
@@ -230,7 +234,8 @@
                                                    ::hinta/maara 666}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/maara 123}]}]
+                                                   ::hinta/maara 123}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
@@ -244,7 +249,8 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}]}]
+                                                   ::hinta/maara 666}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
@@ -260,7 +266,8 @@
                                                    ::hinta/maara 666}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/maara 123}]}]
+                                                   ::hinta/maara 123}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hintaryhmalle-hinta +kayttaja-tero+

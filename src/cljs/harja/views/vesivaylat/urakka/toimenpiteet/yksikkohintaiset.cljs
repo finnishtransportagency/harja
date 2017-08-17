@@ -184,10 +184,10 @@
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
       [:tr
-       [:th {:style {:width "48%"}}]
-       [:th {:style {:width "28%"}} "Hinta / määrä"]
-       [:th {:style {:width "18%"}} "Yleis\u00ADkustan\u00ADnusli\u00ADsä"]
-       [:th {:style {:width "6%"}} ""]]]
+       [:th {:style {:width "55%"}}]
+       [:th {:style {:width "30%"}} "Hinta / määrä"]
+       [:th {:style {:width "10%"}} "YK-lisä"]
+       [:th {:style {:width "5%"}} ""]]]
      [:tbody
       [:tr.otsikkorivi
        [:td.tyot-osio [:b "Sopimushintaiset työt"]]
