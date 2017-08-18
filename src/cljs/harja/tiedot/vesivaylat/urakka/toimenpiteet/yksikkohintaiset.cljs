@@ -131,7 +131,7 @@
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleTyo [tiedot])
-(defrecord AsetaTyolleTehtava [tiedot])
+(defrecord AsetaHinnoiteltavalleTyolleTiedot [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -359,7 +359,7 @@
               (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                     ::h/tyot]) tiedot)))
 
-  AsetaTyolleTehtava
+  AsetaHinnoiteltavalleTyolleTiedot
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
     (assoc-in app [:hinnoittele-toimenpide ::h/tyot]

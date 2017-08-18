@@ -239,7 +239,7 @@
                                  (log "[DEBUG] TODO ASETA TYÖLLE HINTA")
 
                                  (instance? TyoValinta %)
-                                 (e! (tiedot/->AsetaTyolleTehtava
+                                 (e! (tiedot/->AsetaHinnoiteltavalleTyolleTiedot
                                        {::tyo/id (::tyo/id tyorivi)
                                         ::tyo/toimenpidekoodi-id (:toimenpidekoodi-id %)})))
               :format-fn #(cond (instance? HintaValinta %) (:nimi %)
