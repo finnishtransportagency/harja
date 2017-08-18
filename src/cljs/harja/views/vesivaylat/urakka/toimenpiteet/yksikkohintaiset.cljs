@@ -94,36 +94,41 @@
    [siirra-hinnoitteluun-nappi e! app]
    [hintaryhman-luonti e! app]])
 
-(defn- varmistusdialogi-sisalto [toimenpiteet hintaryhmat]
-  (let [valitut-toimenpiteet (filter :valittu? toimenpiteet)]
+(defn- varmistusdialogi-sisalto [app]
+  (let [valitut-toimenpiteet (filter :valittu? (:toimenpiteet app))]
     [:div
      (when (to/toimenpiteilla-hintaryhmia? valitut-toimenpiteet)
        (jaettu/varmistusdialog-ohje
          {:varmistusehto ::to/hintaryhma-id
           :valitut-toimenpiteet valitut-toimenpiteet
           :nayta-max 5
-          :toimenpide-lisateksti-fn #(str "Tilaus: " (::h/nimi (h/hinnoittelu-idlla hintaryhmat (::to/hintaryhma-id %))) ".")
+          :toimenpide-lisateksti-fn #(str "Tilaus: " (::h/nimi (h/hinnoittelu-idlla (:hintaryhmat app)
+                                                                                    (::to/hintaryhma-id %))) ".")
           :varmistusteksti-header "Seuraavat toimenpiteet kuuluvat tilaukseen:"
           :varmistusteksti-footer "Nämä toimenpiteet irrotetaan tilauksesta siirron aikana."}))
-     (when (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet))
+     (when (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? (:toimenpiteet app)))
        (jaettu/varmistusdialog-ohje
          {:varmistusehto ::to/oma-hinnoittelu
           :valitut-toimenpiteet valitut-toimenpiteet
           :nayta-max 5
-          ;; TODO Huomioi tässä myös töiden hinnat!
-          :toimenpide-lisateksti-fn #(str "Hinta: " (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen
-                                                                    (get-in % [::to/oma-hinnoittelu ::h/hinnat])))
+          :toimenpide-lisateksti-fn #(str "Hinta: " (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
+                                                                       (get-in % [::to/oma-hinnoittelu ::h/hinnat]))
+                                                                     (tyo/toiden-kokonaishinta
+                                                                       (get-in % [::to/oma-hinnoittelu ::h/tyot])
+                                                                       (tpk/aikavalin-hinnalliset-suunnitellut-tyot
+                                                                         (:suunnitellut-tyot app)
+                                                                         (get-in app [:valinnat :aikavali])))))
                                           ".")
           :varmistusteksti-header "Seuraavat toimenpiteet sisältävät hinnoittelutietoja:"
           :varmistusteksti-footer "Näiden toimenpiteiden hinnoittelutiedot poistetaan siirron aikana."}))
      [:p "Haluatko jatkaa?"]]))
 
-(defn- valmistele-toimenpiteiden-siirto [e! toimenpiteet hintaryhmat]
-  (if (or (to/toimenpiteilla-hintaryhmia? (filter :valittu? toimenpiteet))
-          (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? toimenpiteet)))
+(defn- valmistele-toimenpiteiden-siirto [app e!]
+  (if (or (to/toimenpiteilla-hintaryhmia? (filter :valittu? (:toimenpiteet app)))
+          (to/toimenpiteilla-omia-hinnoitteluja? (filter :valittu? (:toimenpiteet app))))
     (varmista-kayttajalta/varmista-kayttajalta
       {:otsikko "Siirto kokonaishintaisiin"
-       :sisalto (varmistusdialogi-sisalto toimenpiteet hintaryhmat)
+       :sisalto (varmistusdialogi-sisalto app)
        :hyvaksy "Siirrä kokonaishintaisiin"
        :toiminto-fn #(e! (tiedot/->SiirraValitutKokonaishintaisiin))})
     (e! (tiedot/->SiirraValitutKokonaishintaisiin))))
@@ -132,7 +137,7 @@
   [^{:key "siirto"}
   [jaettu/siirtonappi e! app
    "Siirrä kokonaishintaisiin"
-   #(valmistele-toimenpiteiden-siirto e! (:toimenpiteet app) (:hintaryhmat app))
+   #(valmistele-toimenpiteiden-siirto app e!)
    #(oikeudet/on-muu-oikeus? "siirrä-kokonaishintaisiin"
                              oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                              (:id @nav/valittu-urakka))]
