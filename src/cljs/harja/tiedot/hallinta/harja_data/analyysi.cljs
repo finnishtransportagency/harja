@@ -17,7 +17,8 @@
                     :analysointimetodi :naivi
                     :haettavat-analyysit #{:eniten-katkoksia :pisimmat-katkokset
                                            :rikkinaiset-lokitukset :eniten-katkosryhmia
-                                           :selain-sammutettu-katkoksen-aikana}}))
+                                           :selain-sammutettu-katkoksen-aikana
+                                           :vaihdettu-nakymaa-katkoksen-aikana}}))
 
 (defn graylog-palvelukutsu
   "Hakee serveriltä yhteyskatkosdatan."

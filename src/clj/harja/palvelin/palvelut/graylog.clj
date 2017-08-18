@@ -110,30 +110,39 @@
                                               (tehtava-analyysi? :selain-sammutettu-katkoksen-aikana) (conj :ensimmaiset-katkokset
                                                                                                             :viimeiset-katkokset
                                                                                                             :palvelut :pvm :kello)
-                                              (tehtava-analyysi? :vaihdettu-nakymaa-katkoksen-aikana) (conj :palvelut :pvm :kello)
+                                              (tehtava-analyysi? :vaihdettu-nakymaa-katkoksen-aikana) (conj :palvelut :ensimmaiset-katkokset :viimeiset-katkokset)
                                               (tehtava-analyysi? :monellako-kayttajalla) (conj :kayttaja)
                                               ping-erikseen? (conj :palvelut))]
     (zipmap (map bool-keyword haettavat-tiedot-lokituksista)
             (repeat (count haettavat-tiedot-lokituksista) true))))
 
+(defn analysointi-asetukset
+  [haettavat-analyysit hakuasetukset]
+  (let [ping-erikseen? (when (and (not (get-in hakuasetukset [:naytettavat-ryhmat :muut]))
+                                  (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana))
+                          true)
+        kiinnostava-palvelu (when (contains? haettavat-analyysit :vaihdettu-nakymaa-katkoksen-aikana)
+                              :tallenna)]
+    {:ping-erikseen? ping-erikseen?
+     :kiinnostava-palvelu kiinnostava-palvelu}))
+
 (defn hae-yhteyskatkosanalyysi
   [{:keys [analysointimetodi haettavat-analyysit hakuasetukset] :as analyysihaku} data-csvna]
   (let [graylogista-haetut-lokitukset (hae-yhteyskatkos-data data-csvna)
-        ping-erikseen? (when (and (not (get-in hakuasetukset [:naytettavat-ryhmat :muut]))
-                                  (contains? haettavat-analyysit :selain-sammutettu-katkoksen-aikana))
-                          true)
-        haettavat-tiedot-lokituksista (haettavat-tiedot-analyyseja-varten haettavat-analyysit ping-erikseen?)
+
+        analysointi-asetukset (analysointi-asetukset haettavat-analyysit hakuasetukset)
+        haettavat-tiedot-lokituksista (haettavat-tiedot-analyyseja-varten haettavat-analyysit (:ping-erikseen? analysointi-asetukset))
         yhteyskatkokset-mappina (map #(muunnokset/yhteyskatkokset-lokitus-string->yhteyskatkokset-map % haettavat-tiedot-lokituksista)
                                       graylogista-haetut-lokitukset)
-        asetukset-kayttoon (keep #(asetuksien-kytkenta % (assoc hakuasetukset :ping-erikseen? ping-erikseen?) :analyysi)
+        asetukset-kayttoon (keep #(asetuksien-kytkenta % (assoc hakuasetukset :ping-erikseen? (:ping-erikseen? analysointi-asetukset)) :analyysi)
                                  yhteyskatkokset-mappina)
-        analyysit (analyysit/analyysit-yhteyskatkoksista asetukset-kayttoon analyysihaku)
+        analyysit (analyysit/analyysit-yhteyskatkoksista asetukset-kayttoon analyysihaku analysointi-asetukset)
         pingin-poisto-fn #(into {} (map (fn [[analyysi tulos]]
                                           [analyysi (cond
                                                       (map? tulos) (dissoc tulos "ping")
                                                       :else tulos)])
                                         %))]
-      (if ping-erikseen?
+      (if (:ping-erikseen? analysointi-asetukset)
         (pingin-poisto-fn analyysit)
         analyysit)))
 

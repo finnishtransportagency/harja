@@ -5,7 +5,7 @@
         [[reagent.core :refer [atom] :as r]
          [cljs-time.core :as t]
          [cljs-time.coerce :as tc]])
-
+    [clojure.string :as st]
     [harja.pvm :as pvm]
     [taoensso.timbre :as log]))
 
@@ -378,16 +378,15 @@
                           y-label-orientation width height)
           {:keys [axis-width axis-height origin-x origin-y]} (last axis)
           x-ratio (/ axis-width (apply max x))
-          y-ratio (/ axis-height (apply max y))]
+          y-ratio (/ axis-height (apply max y))
+          points (st/trim (apply str (map #(str (* x-ratio %1) "," (- axis-height (* y-ratio %2)) " ") x y)))
+          _ (println (pr-str points))]
       [:g
         (butlast axis)
         ;draw lines
         [:g {:stroke "black" :stroke-width 0.5}
-          (map #(identity
-                  ^{:key (str "line-" %1 %2 %3 %4)}
-                  [:line {:x1 (+ origin-x (* %1 x-ratio))
-                          :y1 (- origin-y (* %2 y-ratio))
-                          :x2 (+ origin-x (* %3 x-ratio))
-                          :y2 (- origin-y (* %4 y-ratio))}])
-               (conj (butlast x) 0) (conj (butlast y) 0) (rest x) (rest y))]
+          [:polyline {:points points
+                      :fill "none"}
+                     [:style "stroke:#006600;"]]]
+
         (draw-legend legend color)])])
