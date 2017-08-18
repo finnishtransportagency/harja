@@ -9,8 +9,8 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(def +wmts-mml-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmts/")
-(def +wmts-livi-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmtslivi/")
+(def +wmts-mml-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmts")
+(def +wmts-livi-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmtslivi")
 
 
 (def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
