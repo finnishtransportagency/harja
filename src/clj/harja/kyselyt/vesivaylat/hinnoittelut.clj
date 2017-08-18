@@ -214,7 +214,8 @@
       (specql/update! db
                       ::tyo/tyo
                       (merge
-                        tyo
+                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
+                         ::tyo/maara (::tyo/maara tyo)}
                         (if (::tyo/poistettu? tyo)
                           {::m/poistettu? true
                            ::m/poistaja-id (:id user)}
@@ -225,7 +226,8 @@
       (specql/insert! db
                       ::tyo/tyo
                       (merge
-                        tyo
-                        {::m/luotu (pvm/nyt)
-                         ::m/luoja-id (:id user)
-                         ::tyo/hinnoittelu-id hinnoittelu-id})))))
+                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
+                         ::tyo/hinnoittelu-id hinnoittelu-id
+                         ::tyo/maara (::tyo/maara tyo)
+                         ::m/luotu (pvm/nyt)
+                         ::m/luoja-id (:id user)})))))
