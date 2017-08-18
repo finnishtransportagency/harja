@@ -307,7 +307,7 @@
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
         ;; Urakoiden datan yhdistäminen yhteenlaskulla
-        kaikki-tuotteittain-summattuna (fmap #(apply merge-with (fnil + 0)
+        kaikki-tuotteittain-summattuna (fmap #(apply merge-with (fnil + 0 0)
                                                      (map (fn [rivi]
                                                             (select-keys rivi (laskettavat-kentat rivi)))
                                                           %))
