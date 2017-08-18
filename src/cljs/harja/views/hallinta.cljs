@@ -12,6 +12,7 @@
             [harja.views.hallinta.yhteydenpito :as yhteydenpito]
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
+            [harja.views.hallinta.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
@@ -57,6 +58,12 @@
    (when (oikeudet/hallinta-yhteydenpito)
      ^{:key "yhteydenpito"}
      [yhteydenpito/yhteydenpito])
+
+   "Häiriöilmoitukset"
+   :hairioilmoitukset
+   (when (oikeudet/hallinta-hairioilmoitukset)
+     ^{:key "integraatioloki"}
+     [hairiot/hairiot])
 
    "API-järjestelmätunnukset"
    :api-jarjestelmatunnukset
