@@ -34,7 +34,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -147,8 +147,9 @@
       (is (= kaikki-paitsi-kokhint-yhteensa "5 981,83"))
       (is (= kaikki-yhteensa nurkkasumma "5 981,83")))))
 
-(deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+(deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015-kun-092015-indeksiarvo-puuttuu
+  (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi = 9 AND vuosi = 2015"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :laskutusyhteenveto
@@ -160,6 +161,7 @@
     (is (vector? vastaus))
     (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2014-30.09.2015"
           saatu-otsikko (second (nth vastaus 2))
+          varoitus-indeksiarvojen-puuttumisesta (nth vastaus 3)
 
           vastaus (butlast (butlast vastaus))
           kok-hint (arvo-raportin-nnesta-elementista vastaus 0)
@@ -189,6 +191,8 @@
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
+      (is (= varoitus-indeksiarvojen-puuttumisesta
+             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019, Kajaanin alueurakka 2014-2019"]) )
       (is (= kok-hint "324 020,00"))
       (is (= yks-hint "12 000,00"))
       (is (= sanktiot "-8 000,00"))
@@ -199,7 +203,7 @@
       (is (= bonukset "2 000,00"))
       (is (= erilliskustannukset "6 000,00"))
 
-      (is (= indeksitarkistukset-koh-hint "1 914,14"))
+      (is (= indeksitarkistukset-koh-hint "0,00"))
       (is (= indeksitarkistukset-yks-hint "113,03"))
       (is (= indeksitarkistukset-sanktiot "-99,81"))
       (is (= indeksitarkistukset-talvisuolasakot "-209,04"))
@@ -209,10 +213,10 @@
       (is (= indeksitarkistukset-bonukset "8,14"))
       (is (= indeksitarkistukset-erilliskustannukset "49,81"))
       (is (= indeksitarkistukset-muut-kuin-kokhint "86,26"))
-      (is (= indeksitarkistukset-kaikki "2 000,40"))
-      (is (= kaikki-paitsi-kokhint-yhteensa "-13 519,60"))
+      (is (= indeksitarkistukset-kaikki "247,13"))
+      (is (= kaikki-paitsi-kokhint-yhteensa "-15 433,74"))
 
-      (is (= kaikki-yhteensa nurkkasumma "310 500,40")))))
+      (is (= kaikki-yhteensa nurkkasumma "308 586,26")))))
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
