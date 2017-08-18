@@ -41,8 +41,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
                    [harja.loki :refer [mittaa-aika]]
-                   [harja.ui.openlayers :refer [disable-rendering]]
-                   [harja.tyokalut.ui :refer [for*]]))
+                   [harja.ui.openlayers :refer [disable-rendering]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
  kartan animoinnit on valmistuneet." :const true}
@@ -204,7 +203,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (ol.tilegrid.WMTS.
    (clj->js {:origin (ol-extent/getTopLeft (.getExtent projektio-livi))
              :resolutions [8192 4096 2048 1024 512 256 128 64 32 16 8 4 2 1 0.5 0.25]
-             :matrixIds (map str (range 16))
+             :matrixIds (range 16)
              :tileSize 256})))
 
 (defn- wmts-layer [projektio matrixset tilegrid-fn attribuutio url layer]
