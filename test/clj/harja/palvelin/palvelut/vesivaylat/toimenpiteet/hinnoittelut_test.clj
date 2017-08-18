@@ -118,10 +118,10 @@
                          ::toi/id toimenpide-id
                          ::h/tallennettavat-hinnat []
                          ::h/tallennettavat-tyot
-                         [{:harja.domain.vesivaylat.tyo/toimenpidekoodi-id toimenpidekoodi-id
-                           :harja.domain.vesivaylat.tyo/maara 666}
-                          {:harja.domain.vesivaylat.tyo/toimenpidekoodi-id toimenpidekoodi-id
-                           :harja.domain.vesivaylat.tyo/maara 123}]}
+                         [{::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           ::tyo/maara 666}
+                          {::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           ::tyo/maara 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -164,6 +164,26 @@
           (is (some #(== (::tyo/maara %) 321) (::h/tyot update-vastaus)))
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= tyot-ennen tyot-jalkeen)))))))
+
+(deftest tallenna-tyot-eri-urakan-toimenpiteelle
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpidekoodi-id (ffirst (q "SELECT id
+                                        FROM toimenpidekoodi
+                                        WHERE nimi = 'Henkilöstö: Ammattimies'"))
+        insert-params {::toi/urakka-id urakka-id
+                       ::toi/id toimenpide-id
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot
+                       [{::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                         ::tyo/maara 666
+                         ::tyo/id 1}
+                        {::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                         ::tyo/maara 123
+                         ::tyo/id 2}]}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   insert-params)))))
 
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
