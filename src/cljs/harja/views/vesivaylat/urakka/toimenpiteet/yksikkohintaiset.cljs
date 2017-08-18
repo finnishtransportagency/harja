@@ -218,7 +218,7 @@
       (for* [tyorivi tyot]
         [:tr.tyon-hinnoittelu-rivi
          [:td.tyot-osio
-          ;; TODO Tehdäänkö combobox
+          ;; TODO Tehdäänkö combobox?
           [yleiset/livi-pudotusvalikko
            {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
                                                            ::tyo/toimenpidekoodi-id (:tehtava %)}))
@@ -248,7 +248,7 @@
                  voidaan-laskea? (and yksikko yksikkohinta)]
              (when voidaan-laskea?
                [:span yksikko
-                " (x "
+                " (× "
                 (fmt/euro yksikkohinta)
                 " = "
                 (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta))
