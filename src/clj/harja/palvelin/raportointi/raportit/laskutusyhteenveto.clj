@@ -306,7 +306,8 @@
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
-        ;; Urakoiden datan yhdistäminen yhteenlaskulla
+        ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
+        ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
         kaikki-tuotteittain-summattuna (fmap #(apply merge-with (fnil + 0 0)
                                                      (map (fn [rivi]
                                                             (select-keys rivi (laskettavat-kentat rivi)))
