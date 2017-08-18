@@ -34,7 +34,7 @@
   "Tasovalinnan komponentti. Tekee openlayers kontrollin, jossa on on/off
   nappi kaikille valittaville tasoille."
   [ol3 layers]
-  (let [a (r/atom 0)
+  (let [a (r/atom 0) ; vain indikoimaan reagentille uudelleenpiirron tarve
         re-render! #(swap! a inc)]
     (control
      (fn []
