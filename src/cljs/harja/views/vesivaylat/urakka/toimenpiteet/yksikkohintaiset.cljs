@@ -300,6 +300,7 @@
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
+        toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         aikavalin-hinnalliset-suunnitellut-tyot (filter
@@ -352,8 +353,9 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
-          ;; TODO Huomioi tässä myös työt
-          :arvo (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat))
+          :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
+                                 (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
+                                                           aikavalin-hinnalliset-suunnitellut-tyot)))
           :ikoninappi? true}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]

@@ -47,11 +47,11 @@
             tyo))
         tyot))
 
-(defn- toiden-kokonaishinta [tyot toimenpidekoodit]
+(defn- toiden-kokonaishinta [tyot suunnitellut-tyot]
   (reduce + 0
           (map (fn [tyo]
                  (let [tyon-tpk (tpk/toimenpidekoodi-tehtavalla
-                                  toimenpidekoodit
+                                  suunnitellut-tyot
                                   (::toimenpidekoodi-id tyo))]
                    (* (::maara tyo) (:yksikkohinta tyon-tpk))))
                tyot)))
