@@ -193,6 +193,16 @@
    [:td]
    [:td]])
 
+;; Toimenpiteen hinnoittelun pudotusvalikkoon:
+(defrecord HintaValinta [nimi])
+(defrecord TyoValinta [nimi yksikko toimenpidekoodi-id yksikkohinta])
+
+(defn- suunniteltu-tyo->Record [suunniteltu-tyo]
+  (->TyoValinta (:tehtavan_nimi suunniteltu-tyo)
+                (:yksikko suunniteltu-tyo)
+                (:tehtava suunniteltu-tyo)
+                (:yksikkohinta suunniteltu-tyo)))
+
 (defn- toimenpiteen-hinnoittelutaulukko [e! app* tyot suunnitellut-tyot]
   ;; Työ hinnoiteltiin aiemmin yhtenä könttäsummana, nyt huomattavasti tarkemmin
   ;; Jos kannassa on hinta nimellä "Työ", niin se näytetään kuten ennenkin, muutoin
@@ -219,21 +229,33 @@
         [:tr.tyon-hinnoittelu-rivi
          [:td.tyot-osio
           ;; TODO Tehdäänkö combobox?
-          (let [hintavalinnat [{::hinta/nimi "Päivän hinta"}
-                               {::hinta/nimi "Omakustannushinta"}]
-                valinnat (concat hintavalinnat suunnitellut-tyot)]
+          (let [hintavalinnat [(->HintaValinta "Päivän hinta")
+                               (->HintaValinta "Omakustannushinta")]
+                tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
+                kaikki-valinnat (concat hintavalinnat tyovalinnat)]
             [yleiset/livi-pudotusvalikko
-             {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
-                                                             ::tyo/toimenpidekoodi-id (:tehtava %)}))
-              :format-fn #(or (:tehtavan_nimi %) (::hinta/nimi %) "Valitse työ")
-              :nayta-ryhmat   [:hinta :tyo]
-              :ryhmittely #(if (::hinta/nimi %) :hinta :tyo)
-              :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
+             {:valitse-fn #(cond (instance? HintaValinta %)
+                                 ;; TODO Aseta työlle hinta
+                                 (log "[DEBUG] TODO ASETA TYÖLLE HINTA")
+
+                                 (instance? TyoValinta %)
+                                 (e! (tiedot/->AsetaTyolleTehtava
+                                       {::tyo/id (::tyo/id tyorivi)
+                                        ::tyo/toimenpidekoodi-id (:toimenpidekoodi-id %)})))
+              :format-fn #(cond (instance? HintaValinta %) (:nimi %)
+                                (instance? TyoValinta %) (:nimi %)
+                                :default "Valitse työ")
+              :nayta-ryhmat [:hinta :tyo]
+              :ryhmittely #(cond (instance? HintaValinta %) :hinta
+                                 (instance? TyoValinta %) :tyo)
+              :ryhman-otsikko #(case :hinta "Hinta" :tyo "Sopimushinnat")
               :class "livi-alasveto-250"
-              :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
-                                      suunnitellut-tyot))
+              ;; TODO Valinta ei toimi hintarivien kanssa
+              :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
+                                          (:toimenpidekoodi-id %))
+                                      tyovalinnat))
               :disabled false}
-             valinnat])]
+             kaikki-valinnat])]
          [:td.tyot-osio
           [:span
            [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
