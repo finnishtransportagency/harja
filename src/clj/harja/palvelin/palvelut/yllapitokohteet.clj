@@ -496,26 +496,25 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-      (julkaise-palvelu http :sahkopostin-lahetys
-                        (tee-ajastettu-sahkopostin-lahetystehtava
-                          db
-                          fim
-                          email
-                          (:paivittainen-sahkopostin-lahetysaika asetukset)))
+
       (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
                         (fn [user tiedot]
                           (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))
-      this))
+      (assoc this ::sahkopostin-lahetys
+             (tee-ajastettu-sahkopostin-lahetystehtava
+              db fim email
+              (:paivittainen-sahkopostin-lahetysaika asetukset)))))
 
-  (stop [this]
-    (poista-palvelut
-      (:http-palvelin this)
-      :urakan-yllapitokohteet
-      :tiemerkintaurakalle-osoitetut-yllapitokohteet
-      :yllapitokohteen-yllapitokohdeosat
-      :tallenna-yllapitokohteet
-      :tallenna-yllapitokohdeosat
-      :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu
-      :sahkopostin-lahetys)
-    this))
+  (stop [{sahkopostin-lahetys ::sahkopostin-lahetys :as this}]
+    (poista-palvelut (:http-palvelin this)
+                     :urakan-yllapitokohteet
+                     :tiemerkintaurakalle-osoitetut-yllapitokohteet
+                     :yllapitokohteen-yllapitokohdeosat
+                     :tallenna-yllapitokohteet
+                     :tallenna-yllapitokohdeosat
+                     :hae-yllapitourakan-aikataulu
+                     :tallenna-yllapitokohteiden-aikataulu
+                     :sahkopostin-lahetys)
+    (when sahkopostin-lahetys
+      (sahkopostin-lahetys))
+    (dissoc this ::sahkopostin-lahetys)))

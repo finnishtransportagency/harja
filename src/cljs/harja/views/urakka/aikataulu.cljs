@@ -290,9 +290,11 @@
            {:otsikko "Pääl\u00ADlystyk\u00ADsen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm :fmt yllapito-pvm-fmt
             :muokattava? voi-muokata-paallystys?
+            :pvm-tyhjana #(:aikataulu-kohde-alku %)
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlystyk\u00ADsen lope\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm :fmt yllapito-pvm-fmt
+            :pvm-tyhjana #(:aikataulu-paallystys-alku %)
             :muokattava? voi-muokata-paallystys?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
@@ -333,6 +335,7 @@
                                 :arvo (:paallystysurakka rivi)}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
+            :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
                            (let [paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
@@ -374,16 +377,19 @@
                                      :arvo (pvm/pvm-opt (:valmis-tiemerkintaan rivi))})]))))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
+            :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :fmt yllapito-pvm-fmt
             :muokattava? (fn [rivi]
                            (and saa-asettaa-valmis-takarajan?
                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tiemer\u00ADkinnän aloi\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
+            :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :fmt yllapito-pvm-fmt
             :muokattava? voi-muokata-tiemerkinta?}
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
+            :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
             :fmt yllapito-pvm-fmt
             :muokattava? voi-muokata-tiemerkinta?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
@@ -395,6 +401,7 @@
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt yllapito-pvm-fmt
             :muokattava? voi-muokata-paallystys?
+            :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
                        "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
 

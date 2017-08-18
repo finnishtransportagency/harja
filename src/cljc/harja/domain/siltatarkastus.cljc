@@ -18,7 +18,7 @@
     10 "Sillan ja penkereen raja"
     ;; Varusteet ja laitteet
     11 "Kaiteiden ja suojaverkkojen vauriot"
-    12 "Liikuntasaumakaitteiden siisteys ja kunto"
+    12 "Liikuntasaumalaitteiden siisteys ja kunto"
     13 "Laakerit"
     14 "Syöksytorvet"
     15 "Tippuputket"
