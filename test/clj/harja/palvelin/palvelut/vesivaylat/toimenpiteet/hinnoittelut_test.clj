@@ -8,6 +8,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
@@ -74,7 +75,7 @@
       (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
       (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
-      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelut")
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
       (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
 
       (testing "Lisättyjen hintojen päivittäminen"
@@ -103,6 +104,66 @@
           (is (some #(== (::hinta/maara %) 321) (::h/hinnat update-vastaus)))
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= hinnat-ennen hinnat-jalkeen)))))))
+
+(deftest tallenna-toimenpiteelle-tyot
+  (testing "Uusien töiden lisäys"
+    (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
+          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          toimenpidekoodi-id (ffirst (q "SELECT id
+                                        FROM toimenpidekoodi
+                                        WHERE nimi = 'Henkilöstö: Ammattimies'"))
+          hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+          tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+          insert-params {::toi/urakka-id urakka-id
+                         ::toi/id toimenpide-id
+                         ::h/tallennettavat-hinnat []
+                         ::h/tallennettavat-tyot
+                         [{:harja.domain.vesivaylat.tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           :harja.domain.vesivaylat.tyo/maara 666}
+                          {:harja.domain.vesivaylat.tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           :harja.domain.vesivaylat.tyo/maara 123}]}
+          insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                         insert-params)
+          tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+          hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
+
+      (is (= (count (::h/tyot insert-vastaus)) 2))
+      (is (some #(== (::tyo/maara %) 666) (::h/tyot insert-vastaus)))
+      (is (some #(== (::tyo/maara %) 123) (::h/tyot insert-vastaus)))
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
+      (is (= (+ tyot-ennen 2) tyot-jalkeen) "Molemmat työt lisättiin")
+
+      (testing "Lisättyjen töiden päivittäminen"
+        (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+              tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+              update-params {::toi/urakka-id urakka-id
+                             ::toi/id toimenpide-id
+                             ::h/tallennettavat-tyot
+                             (mapv (fn [hinta]
+                                     (assoc hinta ::tyo/maara
+                                                  (case (::tyo/maara hinta)
+                                                    666M 555
+                                                    123M 321)))
+                                   (::h/tyot insert-vastaus))
+                             ::h/tallennettavat-hinnat []}
+              update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                             update-params)
+              tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+              hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
+
+          (is (= (count (::h/tyot update-vastaus)) 2))
+          (is (some #(== (::tyo/maara %) 555) (::h/tyot update-vastaus)))
+          (is (some #(== (::tyo/maara %) 321) (::h/tyot update-vastaus)))
+          (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
+          (is (= tyot-ennen tyot-jalkeen)))))))
 
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)

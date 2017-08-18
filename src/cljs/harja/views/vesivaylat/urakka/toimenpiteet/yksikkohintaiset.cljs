@@ -204,6 +204,7 @@
       (for* [tyorivi tyot]
         [:tr.tyon-hinnoittelu-rivi
          [:td.tyot-osio
+          ;; TODO Tehdäänkö combobox
           [yleiset/livi-pudotusvalikko
            {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
                                                            ::tyo/toimenpidekoodi-id (:tehtava %)}))
@@ -260,6 +261,7 @@
          [:td [muu-tyo-kentta e! app* "Työ"]]
          [:td [yleiskustannuslisa-kentta e! app* "Työ"]]
          [:td]])
+      ;; TODO Oma komponentti näistö
       [:tr.muu-hinnoittelu-rivi
        [:td.tyon-otsikko "Komponentit:"]
        [:td [muu-tyo-kentta e! app* "Komponentit"]]
