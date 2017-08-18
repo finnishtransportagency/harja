@@ -179,6 +179,20 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
+(defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* otsikko]
+  [:tr.muu-hinnoittelu-rivi
+   [:td.tyon-otsikko (str otsikko ":")]
+   [:td [muu-tyo-kentta e! app* otsikko]]
+   [:td [yleiskustannuslisa-kentta e! app* otsikko]]
+   [:td]])
+
+(defn toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
+  [:tr.hinnoittelun-yhteenveto-rivi
+   [:td.tyon-otsikko (str otsikko ":")]
+   [:td arvo]
+   [:td]
+   [:td]])
+
 (defn- toimenpiteen-hinnoittelutaulukko [e! app* tyot suunnitellut-tyot]
   ;; Työ hinnoiteltiin aiemmin yhtenä könttäsummana, nyt huomattavasti tarkemmin
   ;; Jos kannassa on hinta nimellä "Työ", niin se näytetään kuten ennenkin, muutoin
@@ -261,48 +275,26 @@
          [:td [muu-tyo-kentta e! app* "Työ"]]
          [:td [yleiskustannuslisa-kentta e! app* "Työ"]]
          [:td]])
-      ;; TODO Oma komponentti näistö
-      [:tr.muu-hinnoittelu-rivi
-       [:td.tyon-otsikko "Komponentit:"]
-       [:td [muu-tyo-kentta e! app* "Komponentit"]]
-       [:td [yleiskustannuslisa-kentta e! app* "Komponentit"]]
-       [:td]]
-      [:tr.muu-hinnoittelu-rivi
-       [:td.tyon-otsikko "Yleiset materiaalit:"]
-       [:td [muu-tyo-kentta e! app* "Yleiset materiaalit"]]
-       [:td [yleiskustannuslisa-kentta e! app* "Yleiset materiaalit"]]
-       [:td]]
-      [:tr.muu-hinnoittelu-rivi
-       [:td.tyon-otsikko "Matkakulut:"]
-       [:td [muu-tyo-kentta e! app* "Matkakulut"]]
-       [:td [yleiskustannuslisa-kentta e! app* "Matkakulut"]]
-       [:td]]
-      [:tr.muu-hinnoittelu-rivi
-       [:td.tyon-otsikko "Muut kulut:"]
-       [:td [muu-tyo-kentta e! app* "Muut kulut"]]
-       [:td [yleiskustannuslisa-kentta e! app* "Muut kulut"]]
-       [:td]]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Komponentit"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Yleiset materiaalit"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Matkakulut"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Muut kulut"]
       ;; Yhteenveto
-      [:tr.hinnoittelun-yhteenveto-rivi
-       [:td.tyon-otsikko "Perushinta:"]
-       [:td (fmt/euro-opt (+ (hinta/perushinta
-                               (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
-                             (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
-       [:td]
-       [:td]]
-      [:tr.hinnoittelun-yhteenveto-rivi
-       [:td.tyon-otsikko "Yleiskustannuslisät (12%):"]
-       [:td (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
-                            (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
-       [:td]
-       [:td]]
-      [:tr.hinnoittelun-yhteenveto-rivi
-       [:td.tyon-otsikko "Yhteensä:"]
-       [:td (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
-                               (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
-                             (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
-       [:td]
-       [:td]]]]))
+      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+       "Perushinta" (fmt/euro-opt (+ (hinta/perushinta
+                                       (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
+                                     (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
+      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+       "Yleiskustannuslisät (12%)" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
+                                                   (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
+      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+       "Yhteensä" (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
+                                     (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
+                                   (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]]]))
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
