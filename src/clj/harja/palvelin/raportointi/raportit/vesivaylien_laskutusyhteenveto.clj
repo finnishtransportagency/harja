@@ -124,6 +124,8 @@
                                             :loppupvm loppupvm})
         raportin-nimi "Laskutusyhteenveto"]
 
+    ;; TODO HUOMIOI TOIMENPITEIEN TYÖT TÄÄLLÄ
+
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
 
