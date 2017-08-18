@@ -152,24 +152,22 @@
     laskutettu-teksti laskutettu-kentta
     laskutetaan-teksti laskutetaan-kentta
     yhteenveto-teksti kyseessa-kk-vali?
-    tiedot summa-fmt]
+    tiedot summa-fmt kentat-joiden-laskennan-indeksipuute-sotki]
   (let [laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
                                         (reduce + (keep identity kentat)))
         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
-        laskutettu-summasta-puuttuu-indeksi? (some nil? laskutettu-kentat)
-        laskutetaan-summasta-puuttuu-indeksi? (some nil? laskutetaan-kentat)
         yhteenveto (rivi "Toimenpiteet yhteensä"
                          (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu-yht)
-                                                                      :tyyli (when laskutettu-summasta-puuttuu-indeksi? :virhe)}])
+                                                                      :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta) :virhe)}])
                          (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan-yht)
-                                                                      :tyyli (when laskutetaan-summasta-puuttuu-indeksi? :virhe)}])
+                                                                      :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta) :virhe)}])
                          (if (and laskutettu-yht laskutetaan-yht)
                            [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu-yht laskutetaan-yht))
-                                                :tyyli (when (or laskutettu-summasta-puuttuu-indeksi?
-                                                                laskutetaan-summasta-puuttuu-indeksi?) :virhe)}]
+                                                :tyyli (when (or (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)
+                                                                 (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)) :virhe)}]
                            nil))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
                                   (not (and (= 0.0M (:tulos laskutettu))
@@ -177,10 +175,10 @@
                                 (map (juxt :nimi
                                            (fn [rivi]
                                              {:tulos (laskutettu-kentta rivi)
-                                              :indeksi-puuttui? laskutettu-summasta-puuttuu-indeksi?})
+                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)})
                                            (fn [rivi]
                                              {:tulos (laskutetaan-kentta rivi)
-                                              :indeksi-puuttui? laskutetaan-summasta-puuttuu-indeksi?}))
+                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)}))
                                      tiedot))]
     (when-not (empty? taulukon-tiedot)
       (taulukko-elementti otsikko taulukon-tiedot kyseessa-kk-vali?
@@ -291,18 +289,20 @@
                                                                                        urakoiden-lahtotiedot))
 
         suolasakko-kentat (kustannuslajin-kaikki-kentat "suolasakot")
-        urakat-joissa-raportin-aikavalilla-indeksiarvon-puute (into #{}
-                                                                    (apply concat
-                                                                           (keep
-                                                                             not-empty
-                                                                             (mapv (fn [laskutusyhteenveto]
-                                                                                     (set (keep
-                                                                                            #(some (fn [rivin-map-entry]
-                                                                                                     (when (nil? (val rivin-map-entry))
-                                                                                                       (get % :urakka-nimi)))
-                                                                                                   (apply dissoc % suolasakko-kentat))
-                                                                                            laskutusyhteenveto)))
-                                                                                   laskutusyhteenvedot))))
+        urakoittain-kentat-joiden-laskennan-indeksipuute-sotki (apply merge
+                                                                      (mapv (fn [laskutusyhteenveto]
+                                                                              {(:urakka-nimi (first laskutusyhteenveto))
+                                                                               (into #{}
+                                                                                     (apply concat
+                                                                                            (keep
+                                                                                              #(keep (fn [rivin-map-entry]
+                                                                                                       (when (nil? (val rivin-map-entry))
+                                                                                                         (key rivin-map-entry)))
+                                                                                                     (apply dissoc % suolasakko-kentat))
+                                                                                              laskutusyhteenveto)))})
+                                                                            laskutusyhteenvedot))
+        urakat-joiden-laskennan-indeksipuute-sotki (into #{} (map #(key %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
+        kentat-joiden-laskennan-indeksipuute-sotki (apply clojure.set/union (map #(val %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
@@ -339,10 +339,10 @@
           ;; Muuten edetään aikaperustaiseen tarkasteluun
           (if varoitus-indeksilaskennan-perusluku-puuttuu
             varoitus-indeksilaskennan-perusluku-puuttuu
-            (when-not (empty? urakat-joissa-raportin-aikavalilla-indeksiarvon-puute)
-              (str "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: "
+            (when-not (empty? urakoittain-kentat-joiden-laskennan-indeksipuute-sotki)
+              (str "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: "
                    (str/join ", "
-                             (for [u urakat-joissa-raportin-aikavalilla-indeksiarvon-puute]
+                             (for [u urakat-joiden-laskennan-indeksipuute-sotki]
                                u))))))
         vain-jvh-voi-muokata-tietoja-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan."
 
@@ -361,7 +361,8 @@
                                 tiedot (or summa-fmt
                                            (if ainakin-yhdessa-urakassa-indeksit-kaytossa?
                                              fmt/luku-indeksikorotus
-                                             fmt/euro-opt)))))
+                                             fmt/euro-opt))
+                                kentat-joiden-laskennan-indeksipuute-sotki)))
                   [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
                     :kht_laskutettu :kht_laskutetaan tiedot]
                    [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "

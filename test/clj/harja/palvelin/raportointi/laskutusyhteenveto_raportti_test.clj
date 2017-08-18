@@ -10,9 +10,7 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.palvelin.raportointi.testiapurit :as apurit]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -136,7 +134,7 @@
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
       (is (= varoitus-indeksiarvojen-puuttumisesta
-             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019"]))
+             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019"]))
 
       (is (= yks-hint "7 882,50"))
       (is (= sanktiot "-1 900,67"))
@@ -192,7 +190,7 @@
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
       (is (= varoitus-indeksiarvojen-puuttumisesta
-             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu suorittaa koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019, Kajaanin alueurakka 2014-2019"]) )
+             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019, Kajaanin alueurakka 2014-2019"]) )
       (is (= kok-hint "324 020,00"))
       (is (= yks-hint "12 000,00"))
       (is (= sanktiot "-8 000,00"))
