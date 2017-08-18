@@ -16,19 +16,14 @@
             [ol]
             [ol.Map]
             [ol.Attribution]
-            [ol.layer.Tile]
-            [ol.source.WMTS]
-            [ol.tilegrid.WMTS]
+
             [ol.View]
-            [ol.extent :as ol-extent]
-            [ol.proj :as ol-proj]
 
             [ol.source.Vector]
             [ol.layer.Vector]
             [ol.layer.Layer]
 
             [ol.control :as ol-control]
-            [ol.control.Control]
             [ol.interaction :as ol-interaction]
 
             [ol.Overlay]                                    ;; popup
@@ -36,7 +31,10 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.openlayers.kuvataso :as kuvataso]
             [harja.ui.ikonit :as ikonit]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.ui.openlayers.tasovalinta :as tasovalinta]
+            [harja.ui.openlayers.projektiot :refer [projektio suomen-extent]]
+            [harja.ui.openlayers.taustakartta :as taustakartta])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
@@ -150,19 +148,7 @@
 
 (defonce openlayers-kartan-leveys (atom nil))
 
-(def suomen-extent
-  "Suomalaisissa kartoissa olevan projektion raja-arvot."
-  [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
 
-(def suomen-extent-livi
-  "Suomalaisissa livi (EPSG:3067_PTP_JHS180) kartoissa olevan projektion raja-arvot."
-  [-548576 6291456 1548576 8388608])
-
-(def projektio (ol-proj/Projection. #js {:code   "EPSG:3067"
-                                         :extent (clj->js suomen-extent)}))
-
-(def projektio-livi (ol-proj/Projection. #js {:code   "EPSG:3067"
-                                              :extent (clj->js suomen-extent-livi)}))
 
 
 (defn luo-kuvataso
@@ -183,53 +169,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (let [[x1 y1 x2 y2] (.getExtent geometria)]
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
-
-(defn mml-tilegrid []
-  (let [koko (/ (ol-extent/getWidth (.getExtent projektio)) 256)]
-    (loop [resoluutiot []
-           matrix-idt []
-           i 0]
-      (if (= i 16)
-        (let [optiot (clj->js
-                      {:origin (ol-extent/getTopLeft (.getExtent projektio))
-                       :resolutions (clj->js resoluutiot)
-                       :matrixIds   (clj->js matrix-idt)})]
-          (ol.tilegrid.WMTS. optiot))
-        (recur (conj resoluutiot (/ koko (Math/pow 2 i)))
-               (conj matrix-idt i)
-               (inc i))))))
-
-(defn livi-tilegrid []
-  (ol.tilegrid.WMTS.
-   (clj->js {:origin (ol-extent/getTopLeft (.getExtent projektio-livi))
-             :resolutions [8192 4096 2048 1024 512 256 128 64 32 16 8 4 2 1 0.5 0.25]
-             :matrixIds (range 16)
-             :tileSize 256})))
-
-(defn- wmts-layer [projektio matrixset tilegrid-fn attribuutio url layer]
-  (ol.layer.Tile.
-   #js {:source
-        (ol.source.WMTS. #js {:attributions [(ol.Attribution.
-                                              #js {:html attribuutio})]
-                              :url          url
-                              :layer        layer
-                              :matrixSet    matrixset
-                              :format       "image/png"
-                              :projection   projektio
-                              :tileGrid     (tilegrid-fn)
-                              :style        "default"
-                              :wrapX        true})}))
-
-(defmulti layer-by-type :type)
-
-(defmethod layer-by-type :mml [{:keys [url layer]}]
-  (log/info "Luodaan MML karttataso: " layer)
-  (wmts-layer projektio "ETRS-TM35FIN" mml-tilegrid "MML" url layer))
-
-(defmethod layer-by-type :livi [{:keys [url layer]}]
-  (log/info "Luodaan livi karttataso: layer")
-  (wmts-layer projektio-livi "EPSG:3067_PTP_JHS180" livi-tilegrid "Liikennevirasto"
-              url layer))
 
 (defn feature-geometria [feature]
   (.get feature "harja-geometria"))
@@ -388,47 +327,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn aseta-zoom [zoom]
   (some-> @the-kartta (.getView) (.setZoom zoom)))
 
-(defn- control [content-component]
-  (let [elt (js/document.createElement "span")
-        comp (reagent/render [content-component] elt)]
-    (ol.control.Control. #js {:element elt})))
 
-(defn layer-icon [icon visible? nimi the-layer on-change]
-  (reagent/create-class
-   {:reagent-render (fn [icon visible? nimi _]
-                      [:button.ol-layer-icon.klikattava
-                       {:title (str (if visible? "Piilota" "Näytä") " " nimi)
-                        :class (if visible?
-                                 "ol-layer-icon-on"
-                                 "ol-layer-icon-off")}
-                       icon])
-
-    ;; Tämä manuaalinen on-click käsittelijän lisäys on valitettavasti pakko tehdä,
-    ;; koska ol3/React eventtien käsittelyeroista johtuen :on-click asetetut
-    ;; handlerit eivät koskaan laukea.
-    :component-did-mount (fn [this]
-                           (let [d (reagent/dom-node this)]
-                             (set! (.-onclick d)
-                                   #(do
-                                      (.setVisible the-layer
-                                                   (not (.getVisible the-layer)))
-                                      (on-change)))))}))
-(defn- layer-icons [ol3 layers]
-  (let [a (atom 0)
-        re-render! #(swap! a inc)]
-    (control
-     (fn []
-       @a
-       [:div.ol-control.ol-layer-icons
-        (doall
-         (keep-indexed
-          (fn [layer-index {:keys [id icon nimi]}]
-            (let [the-layer (.item (.getLayers ol3) layer-index)
-                  visible? (.getVisible the-layer)]
-              (when (and icon id)
-                ^{:key layer-index}
-                [layer-icon icon visible? nimi the-layer re-render!])))
-          layers))]))))
 
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
@@ -441,13 +340,13 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                       oletukset)
         kontrollit (ol-control/defaults #js {})
 
-        map-optiot (clj->js {:layers       (mapv layer-by-type layers)
+        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
                              :target       (:id mapspec)
                              :controls     kontrollit
                              :interactions interaktiot})
         ol3 (ol/Map. map-optiot)
 
-        _ (.addControl ol3 (layer-icons ol3 layers))
+        _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers))
 
         _ (reset!
             openlayers-kartan-leveys
