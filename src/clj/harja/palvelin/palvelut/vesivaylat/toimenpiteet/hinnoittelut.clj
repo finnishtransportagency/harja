@@ -84,7 +84,6 @@
         (when-not (empty? hinta-idt)
           (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt toimenpide-id))
         ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
-        ;; TODO TESTI
         (q/vaadi-tyot-kuuluvat-toimenpiteeseen db tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
@@ -93,7 +92,6 @@
              :user user
              :hinnoittelu-id hinnoittelu-id
              :hinnat (::h/tallennettavat-hinnat tiedot)})
-          ;; TODO TESTI TALLENNUS + TESTI
           (q/tallenna-toimenpiteelle-tyo!
             {:db db
              :user user
