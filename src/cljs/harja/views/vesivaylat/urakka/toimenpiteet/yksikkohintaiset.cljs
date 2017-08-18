@@ -221,11 +221,14 @@
                             {::tyo/id (::tyo/id tyorivi)
                              ::tyo/maara uusi}))))]
            [:span " "]
-           ;; TODO Näytä oikea yksikkö tässä
-           [:span "kpl (" (fmt/euro (* (::tyo/maara tyorivi)
-                                       (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
-                                                        suunnitellut-tyot
-                                                        (::tyo/toimenpidekoodi-id tyorivi)))))
+           [:span (:yksikko (tpk/toimenpidekoodi-tehtavalla
+                                   suunnitellut-tyot
+                                   (::tyo/toimenpidekoodi-id tyorivi)))
+            " ("
+            (fmt/euro (* (::tyo/maara tyorivi)
+                         (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
+                                          suunnitellut-tyot
+                                          (::tyo/toimenpidekoodi-id tyorivi)))))
             ")"]]]
          [:td.tyot-osio]
          [:td.tyot-osio
