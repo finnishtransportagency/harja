@@ -103,7 +103,6 @@
 (defn- toimenpiteet-tyotiedoilla
   "Liittää toimenpiteiden omiin hinnoittelutietoihin mukaan työt."
   [db toimenpiteet]
-  ;; TODO TESTI ETTÄ TÄMÄ ON MUKANA PAYLOADISSA
   (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
         tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
     (map
