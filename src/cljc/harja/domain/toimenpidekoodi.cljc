@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
+    [harja.pvm :as pvm]
     [harja.domain.muokkaustiedot :as m]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -34,3 +35,10 @@
 
 (defn toimenpidekoodi-tehtavalla [rivit tehtava]
   (first (filter #(= (:tehtava %) tehtava) rivit)))
+
+(defn aikavalin-hinnalliset-suunnitellut-tyot [suunnitellut-tyot valittu-aikavali]
+      (filter
+        #(and (:yksikkohinta %)
+              (pvm/sama-pvm? (:alkupvm %) (first valittu-aikavali))
+              (pvm/sama-pvm? (:loppupvm %) (second valittu-aikavali)))
+        suunnitellut-tyot))

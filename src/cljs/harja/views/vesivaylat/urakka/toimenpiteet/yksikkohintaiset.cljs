@@ -303,11 +303,8 @@
         toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
-        aikavalin-hinnalliset-suunnitellut-tyot (filter
-                                                  #(and (:yksikkohinta %)
-                                                        (pvm/sama-pvm? (:alkupvm %) (first valittu-aikavali))
-                                                        (pvm/sama-pvm? (:loppupvm %) (second valittu-aikavali)))
-                                                  (:suunnitellut-tyot app*))
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       valittu-aikavali)
         hinnoittelu-validi? (every? ::tyo/toimenpidekoodi-id tyot)]
     [:div
      (if (and hinnoittele-toimenpide-id
@@ -320,7 +317,7 @@
           {:on-click #(.stopPropagation %)}
           (if (or (nil? (:suunnitellut-tyot app*)) (true? (:suunniteltujen-toiden-haku-kaynnissa? app*)))
             [ajax-loader "Ladataan..."]
-            [toimenpiteen-hinnoittelutaulukko e! app* tyot aikavalin-hinnalliset-suunnitellut-tyot])
+            [toimenpiteen-hinnoittelutaulukko e! app* tyot suunnitellut-tyot])
           [:footer.vv-toimenpiteen-hinnoittelu-footer
            [napit/peruuta
             "Peruuta"
@@ -355,19 +352,23 @@
                                                                      (:id @nav/valittu-urakka))))}
           :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
-                                                           aikavalin-hinnalliset-suunnitellut-tyot)))
+                                                           suunnitellut-tyot)))
           :ikoninappi? true}))]))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
         hintaryhman-toimenpiteet (:toimenpiteet app*)
-        hintaryhman-toimenpiteiden-omat-hinnat (remove
-                                                 nil?
-                                                 (mapcat #(get-in % [::to/oma-hinnoittelu ::h/hinnat])
-                                                         hintaryhman-toimenpiteet))
-        ;; TODO Huomioi tässä myös työt
-        hintaryhman-toimenpiteiden-yhteishinta (hinta/kokonaishinta-yleiskustannuslisineen
-                                                 hintaryhman-toimenpiteiden-omat-hinnat)
+        valittu-aikavali (get-in app* [:valinnat :aikavali])
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       valittu-aikavali)
+        hintaryhman-toimenpiteiden-omat-hinnat (remove nil? (mapcat #(get-in % [::to/oma-hinnoittelu ::h/hinnat])
+                                                                    hintaryhman-toimenpiteet))
+        hintaryhman-toimenpiteiden-omat-tyot (remove nil? (mapcat #(get-in % [::to/oma-hinnoittelu ::h/tyot])
+                                                                  hintaryhman-toimenpiteet))
+        hintaryhman-toimenpiteiden-yhteishinta (+ (hinta/kokonaishinta-yleiskustannuslisineen
+                                                    hintaryhman-toimenpiteiden-omat-hinnat)
+                                                  (tyo/toiden-kokonaishinta hintaryhman-toimenpiteiden-omat-tyot
+                                                                            suunnitellut-tyot))
         hinnoitellaan? (and hinnoittelu-id (= hinnoittelu-id (::h/id hintaryhma)))
         hinnat (::h/hinnat hintaryhma)
         hintaryhman-kokonaishinta (hinta/kokonaishinta-yleiskustannuslisineen hinnat)]
