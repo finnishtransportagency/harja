@@ -186,8 +186,8 @@
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
       [:tr
-       [:th {:style {:width "55%"}}]
-       [:th {:style {:width "30%"}} "Hinta / määrä"]
+       [:th {:style {:width "50%"}}]
+       [:th {:style {:width "35%"}} "Hinta / määrä"]
        [:th {:style {:width "10%"}} "YK-lisä"]
        [:th {:style {:width "5%"}} ""]]]
      [:tbody
@@ -222,9 +222,13 @@
                              ::tyo/maara uusi}))))]
            [:span " "]
            [:span (:yksikko (tpk/toimenpidekoodi-tehtavalla
-                                   suunnitellut-tyot
-                                   (::tyo/toimenpidekoodi-id tyorivi)))
-            " ("
+                              suunnitellut-tyot
+                              (::tyo/toimenpidekoodi-id tyorivi)))
+            " (x "
+            (fmt/euro (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
+                                       suunnitellut-tyot
+                                       (::tyo/toimenpidekoodi-id tyorivi))))
+            " = "
             (fmt/euro (* (::tyo/maara tyorivi)
                          (:yksikkohinta (tpk/toimenpidekoodi-tehtavalla
                                           suunnitellut-tyot
