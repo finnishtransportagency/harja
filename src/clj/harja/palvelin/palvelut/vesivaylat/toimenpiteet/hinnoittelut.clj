@@ -11,6 +11,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
 (defn hae-hintaryhmat [db user urakka-id]
@@ -72,16 +73,19 @@
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::to/urakka-id tiedot)]
+    (let [urakka-id (::to/urakka-id tiedot)
+          toimenpide-id (::to/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
-      ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
-      (let [hinta-idt (set (keep ::hinta/id (::h/tallennettavat-hinnat tiedot)))]
+      (let [hinta-idt (set (keep ::hinta/id (::h/tallennettavat-hinnat tiedot)))
+            tyo-idt (set (keep ::tyo/id (::h/tallennettavat-tyot tiedot)))]
+        ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
         (when-not (empty? hinta-idt)
-          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
-      ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
-      ;; TODO TARKISTUS + TESTI
+          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt toimenpide-id))
+        ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
+        ;; TODO TESTI
+        (q/vaadi-tyot-kuuluvat-toimenpiteeseen db tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
           (q/tallenna-toimenpiteelle-hinta!
@@ -95,7 +99,7 @@
              :user user
              :hinnoittelu-id hinnoittelu-id
              :tyot (::h/tallennettavat-tyot tiedot)})
-          (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot)))))))
+          (q/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle

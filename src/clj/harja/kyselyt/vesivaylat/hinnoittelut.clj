@@ -44,6 +44,23 @@
     (when-not (set/subset? (set hinta-idt) toimenpiteen-hinnat)
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
+(defn vaadi-tyot-kuuluvat-toimenpiteeseen [db tyo-idt toimenpide-id]
+  (let [toimenpiteen-hinnoittelu-idt (->> (specql/fetch
+                                           db
+                                           ::to/reimari-toimenpide
+                                           (set/union to/perustiedot to/hinnoittelu)
+                                           {::to/id toimenpide-id})
+                                         (mapcat ::to/hinnoittelu-linkit)
+                                         (map ::h/hinnoittelut)
+                                         (map ::h/id))
+        toiden-hinnoittelu-idt (map ::tyo/hinnoittelu-id (specql/fetch
+                                                           db
+                                                           ::tyo/tyo
+                                                           tyo/viittaus-idt
+                                                           {::tyo/id (op/in tyo-idt)}))]
+    (when-not (every? #(toimenpiteen-hinnoittelu-idt %) toiden-hinnoittelu-idt)
+      (throw (SecurityException. (str "Työt " tyo-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
+
 (defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
   (when-not (->> (specql/fetch
                    db
