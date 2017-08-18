@@ -71,7 +71,7 @@
   (let [db (:db ht/jarjestelma)
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
-                       (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
+                       (first (tohaku/kasittele-toimenpiteet-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
     (tarkista-fn)
     (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
              (::toimenpide/urakka-id (first (specql/fetch db
