@@ -219,19 +219,21 @@
         [:tr.tyon-hinnoittelu-rivi
          [:td.tyot-osio
           ;; TODO Tehdäänkö combobox?
-          [yleiset/livi-pudotusvalikko
-           {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
-                                                           ::tyo/toimenpidekoodi-id (:tehtava %)}))
-            :format-fn #(if (empty? suunnitellut-tyot)
-                          "Ei suunniteltuja töitä"
-                          (if % (:tehtavan_nimi %) "Valitse työ"))
-            :class "livi-alasveto-250"
-            :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
-                                    suunnitellut-tyot))
-            :disabled false}
-           ;; TODO Lisää special tyypit Päivän hinta ja omakustannushinta
-           ;; Omakustannushinnassa on indeksi. Molemmissa kuitenkin syötetään hinta.
-           suunnitellut-tyot]]
+          (let [hintavalinnat [{::hinta/nimi "Päivän hinta"}
+                               {::hinta/nimi "Omakustannushinta"}]
+                valinnat (concat hintavalinnat suunnitellut-tyot)]
+            [yleiset/livi-pudotusvalikko
+             {:valitse-fn #(e! (tiedot/->AsetaTyolleTehtava {::tyo/id (::tyo/id tyorivi)
+                                                             ::tyo/toimenpidekoodi-id (:tehtava %)}))
+              :format-fn #(or (:tehtavan_nimi %) (::hinta/nimi %) "Valitse työ")
+              :nayta-ryhmat   [:hinta :tyo]
+              :ryhmittely #(if (::hinta/nimi %) :hinta :tyo)
+              :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
+              :class "livi-alasveto-250"
+              :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi) (:tehtava %))
+                                      suunnitellut-tyot))
+              :disabled false}
+             valinnat])]
          [:td.tyot-osio
           [:span
            [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
