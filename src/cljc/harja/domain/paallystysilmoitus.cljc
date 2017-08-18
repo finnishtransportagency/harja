@@ -39,7 +39,8 @@
   (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat-ja-nil+))))
 
 (def +alustamenetelmat+
-  "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä"
+  "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä ja
+   :koodi 24 on asiakkaan jälkeenpäin pyytämä."
   [{:nimi "Massanvaihto" :lyhenne "MV" :koodi 1}
    {:nimi "Bitumiemusiostabilointi" :lyhenne "BEST" :koodi 11}
    {:nimi "Vaahtobitumistabilointi" :lyhenne "VBST" :koodi 12}
@@ -50,6 +51,7 @@
    {:nimi "Kantavan kerroksen AB" :lyhenne "ABK" :koodi 21}
    {:nimi "Sidekerroksen AB" :lyhenne "ABS" :koodi 22}
    {:nimi "Murske" :lyhenne "MS" :koodi 23}
+   {:nimi "Sekoitusjyrsintä" :lyhenne "SJYR" :koodi 24}
    {:nimi "Kuumennustasaus" :lyhenne "TASK" :koodi 31}
    {:nimi "Massatasaus" :lyhenne "TAS" :koodi 32}
    {:nimi "Tasausjyrsintä" :lyhenne "TJYR" :koodi 41}
