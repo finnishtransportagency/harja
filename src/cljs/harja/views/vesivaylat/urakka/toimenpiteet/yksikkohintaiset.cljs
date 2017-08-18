@@ -236,6 +236,8 @@
             [yleiset/livi-pudotusvalikko
              {:valitse-fn #(cond (instance? HintaValinta %)
                                  ;; TODO Aseta työlle hinta
+                                 ;; TODO Jos tyyppi vaihdetaan työstä hinnaksi, käytetään hinta-ns:n
+                                 ;; avaimia. Täytyy tehdä tällainen käsittely tähän...
                                  (log "[DEBUG] TODO ASETA TYÖLLE HINTA")
 
                                  (instance? TyoValinta %)
