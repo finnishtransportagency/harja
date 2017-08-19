@@ -305,39 +305,48 @@
                                   legend-row)))
               (range n-of-legend-rows))))]))
 
+(defn round-to-decimal
+  [n decimals]
+  (let [a (reduce * (repeat decimals 10))]
+    (-> n (* a) (Math/round) (/ a))))
+
 (defn draw-axis
-  [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
-   y-label-orientation width height]
+  [x-min x-max y-min y-max title x-label y-label x-tick y-tick
+   x-tick-value y-tick-value y-label-orientation width height]
   (let [x-tick (or x-tick 10)
         y-tick (or y-tick 10)
+        x-tick-values (or x-tick-value (mapv #(-> x-max (/ x-tick) (* %) (round-to-decimal 2))
+                                             (range 1 (inc x-tick))))
+        y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 2))
+                                             (range 1 (inc y-tick))))
         x-axis-font-size 6
         y-axis-font-size 6
         x-txt-padding 2
         y-txt-padding 2
         x-label-space 10
         y-label-space 10
-        axis-width (- width y-label-space x-txt-padding x-axis-font-size 20) ; 20 is marker width
-        axis-height (- height x-label-space y-txt-padding y-axis-font-size 20)
+        axis-width (- width y-label-space y-txt-padding y-axis-font-size 20) ; 20 is marker width
+        axis-height (- height x-label-space x-txt-padding x-axis-font-size 20)
         origin-x (+ y-label-space y-axis-font-size y-txt-padding)
         origin-y (+ axis-height 20)]
     ;määrritellään ne muuttujat svg:ssä, jotka on pakko
      [^{:key "axis-def"}
       [:defs
-        [:marker {:id "markerArrow" :markerWidth 21 :markerHeight 15
+        [:marker {:id "markerArrow" :markerWidth 20 :markerHeight 15
                   :refX 0 :refY 10  :orient "auto"}
-          [:path {:d "M0,10 L0,15 L20,10 L0,5 L0,10"}
-                 [:style "fill: #000000;"]]]]
+          [:path {:d "M0,10 L0,15 L20,10 L0,5 L0,10"}]]]
       ^{:key "diagram-axis"}
       [:g {:stroke "black" :stroke-width 0.5}
         ;x-axis
         [:line {:x1 origin-x :y1 origin-y
-                :x2 (+ axis-width y-label-space) :y2 origin-y :markerEnd "url(#markerArrow)"}]
+                :x2 (+ axis-width origin-x) :y2 origin-y :markerEnd "url(#markerArrow)"}]
         ;y-axis
         [:line {:x1 origin-x :y1 origin-y
-                :x2 origin-x :y2 20 :markerEnd "url(#markerArrow)"}]
+                :x2 origin-x :y2 (- origin-y axis-height) :markerEnd "url(#markerArrow)"}]
         ;x-ticks
-        (mapcat #(let [x-position (-> (/ axis-width x-tick) (* %) (+ origin-x))
-                       x-tick-value (-> (apply max x) (/ x-tick) (* %))]
+        (mapcat #(let [x-tick-space (/ axis-width x-tick)
+                       x-position (-> x-tick-space (* %) (+ origin-x x-tick-space))
+                       x-tick-value (get x-tick-values %)]
                   [^{:key (str % "-tick")}
                    [:line {:x1 x-position :y1 origin-y
                            :x2 x-position :y2 (- origin-y 4)}]
@@ -347,8 +356,9 @@
                      x-tick-value]])
                 (range x-tick))
         ;y-ticks
-        (mapcat #(let [y-position (->> (/ axis-height y-tick) (* %) (- axis-height) (+ 20))
-                       y-tick-value (-> (apply max y) (/ y-tick) (* %))]
+        (mapcat #(let [y-tick-space (/ axis-height y-tick)
+                       y-position (->> y-tick-space (* %) (- axis-height y-tick-space) (+ 20))
+                       y-tick-value (get y-tick-values %)]
                   [^{:key (str % "-tick")}
                    [:line {:x1 origin-x :y1 y-position
                            :x2 (+ origin-x 4) :y2 y-position}]
@@ -362,9 +372,39 @@
        :origin-x origin-x
        :origin-y origin-y}]))
 
+(defn vec-of-vecs?
+  [vec]
+  (if (vector? vec)
+    (not (some #(not (vector? %)) vec))
+    false))
+
+(defn apply-vecs
+  [f & x]
+  (let [fp (if-let [args (butlast x)]
+             (apply partial f args)
+             f)]
+    (apply fp (map #(apply fp %) (last x)))))
+
+(defn axis-points
+  [x y x-ratio y-ratio axis-height]
+  (st/trim
+    (apply str (map #(str (* x-ratio %1) ","
+                          (- axis-height (* y-ratio %2)) " ")
+                    x y))))
+
+(defn style-map
+  [{:keys [stroke stroke-width]}]
+  [:style {:stroke stroke
+           :stroke-width stroke-width}])
+
+(defn vector-disj
+  [vector index]
+  (vec
+    (concat (subvec vector 0 index)
+            (subvec vector (inc index)))))
 
 (defn draw-legend
-  [legend color])
+  [legend styles])
 
 (defmulti plot
   (fn [{plot-type :plot-type}]
@@ -372,21 +412,56 @@
 
 (defmethod plot :line-plot
   [{:keys [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
-           legend marker color line-style y-label-orientation width height]}]
-  [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
-    (let [axis (draw-axis x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
-                          y-label-orientation width height)
-          {:keys [axis-width axis-height origin-x origin-y]} (last axis)
-          x-ratio (/ axis-width (apply max x))
-          y-ratio (/ axis-height (apply max y))
-          points (st/trim (apply str (map #(str (* x-ratio %1) "," (- axis-height (* y-ratio %2)) " ") x y)))
-          _ (println (pr-str points))]
-      [:g
-        (butlast axis)
-        ;draw lines
-        [:g {:stroke "black" :stroke-width 0.5}
-          [:polyline {:points points
-                      :fill "none"}
-                     [:style "stroke:#006600;"]]]
-
-        (draw-legend legend color)])])
+           x-tick-value y-tick-value legend styles y-label-orientation
+           clicked hovered width height]}]
+  (let [_ (assert (or (and (vec-of-vecs? x) (vec-of-vecs? y))
+                      (and (vector? x) (vector? y)
+                           (not (vec-of-vecs? x)) (not (vec-of-vecs? y))))
+                  "both x and y needs to be either vectors or vector of vectors.")
+        xs (atom (if (vec-of-vecs? x) x [x]))
+        ys (atom (if (vec-of-vecs? y) y [y]))
+        styles (if (vector? styles) styles [styles])
+        styles (if (not= (count styles) (count @xs))
+                 (vec (map-indexed #(get styles %1) @xs))
+                 styles)
+        styles-a (atom styles)]
+    (fn [{:keys [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
+                 x-tick-value y-tick-value legend styles y-label-orientation
+                 clicked hovered width height]}]
+      [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
+        (let [x-max (or x-max (apply-vecs max @xs))
+              y-max (or y-max (apply-vecs max @ys))
+              x-min (or x-min (apply-vecs min @xs))
+              y-min (or y-min (apply-vecs min @ys))
+              axis (draw-axis x-min x-max y-min y-max title x-label y-label x-tick y-tick
+                              x-tick-value y-tick-value y-label-orientation width height)
+              {:keys [axis-width axis-height origin-x origin-y]} (last axis)
+              x-ratios (map #(/ axis-width (apply max %)) @xs)
+              y-ratios (map #(/ axis-height (apply max %)) @ys)
+              points (mapv #(axis-points %1 %2 %3 %4 axis-height)
+                           @xs @ys x-ratios y-ratios)
+              action-fn (fn [style-map index add?]
+                          (if (= style-map :delete)
+                            (do (reset! xs (vector-disj @xs index))
+                                (reset! ys (vector-disj @ys index))
+                                (reset! styles-a (vector-disj @styles-a index)))
+                            (if add?
+                              (swap! styles-a assoc index (merge (get @styles-a index) style-map))
+                              (swap! styles-a assoc index (apply dissoc (get @styles-a index) (keys style-map))))))]
+          [:g
+            (butlast axis)
+            ;draw lines
+            (doall
+              (map-indexed #(identity
+                              ^{:key (gensym "plot-line-")}
+                              [:g.klikattava
+                                  {:stroke "black" :stroke-width 1
+                                   :pointer-events "painted"
+                                   :on-click (fn [event] (action-fn clicked %1 false))
+                                   :on-mouse-enter (fn [event] (action-fn hovered %1 true))
+                                   :on-mouse-leave (fn [event] (action-fn hovered %1 false))}
+                                [:polyline (merge {:points (get points %1)
+                                                   :fill "none"}
+                                                  (style-map %2))]])
+                           @styles-a))
+            (draw-legend legend @styles-a)])])))

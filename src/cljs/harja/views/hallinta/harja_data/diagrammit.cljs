@@ -119,7 +119,9 @@
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
             ^{:key "line-plot"}
-            ;[vis/plot {:plot-type :line-plot :x [1 2 3 4 5] :y [4 9 16 25 36] :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))}]
+            [vis/plot {:plot-type :line-plot :x [[1 2 3 4 5] [1 3 5 7]] :y [[4 9 16 25 36] [7 9 15 30]]
+                       :x-tick-value ["foo" "bar" "asd" "dsa"] :x-tick 4 :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))
+                       :styles [{:stroke "red"}] :clicked :delete :hovered {:stroke-width 4}}]
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "pvm"))
               ^{:key "jarjestys-pvm-mukaan"}
               [:div
