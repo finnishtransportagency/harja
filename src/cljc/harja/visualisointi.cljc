@@ -311,32 +311,34 @@
     (-> n (* a) (Math/round) (/ a))))
 
 (defn draw-axis
-  [x-min x-max y-min y-max title x-label y-label x-tick y-tick
-   x-tick-value y-tick-value y-label-orientation width height]
+  [{:keys [x-min x-max y-min y-max title x-label y-label x-tick y-tick
+           x-tick-value y-tick-value y-label-orientation width height]}
+   {:keys [origin-x origin-y axis-width axis-height]}
+   {:keys [x-txt-padding x-axis-font-size y-txt-padding y-axis-font-size]}]
   (let [x-tick (or x-tick 10)
         y-tick (or y-tick 10)
         x-tick-values (or x-tick-value (mapv #(-> x-max (/ x-tick) (* %) (round-to-decimal 2))
                                              (range 1 (inc x-tick))))
         y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 2))
-                                             (range 1 (inc y-tick))))
-        x-axis-font-size 6
-        y-axis-font-size 6
-        x-txt-padding 2
-        y-txt-padding 2
-        x-label-space 10
-        y-label-space 10
-        axis-width (- width y-label-space y-txt-padding y-axis-font-size 20) ; 20 is marker width
-        axis-height (- height x-label-space x-txt-padding x-axis-font-size 20)
-        origin-x (+ y-label-space y-axis-font-size y-txt-padding)
-        origin-y (+ axis-height 20)]
+                                             (range 1 (inc y-tick))))]
+        ; _ (println "origin-x: " origin-x)
+        ; _ (println "origin-y: " origin-y)
+        ; _ (println "axis-width: " axis-width)
+        ; _ (println "axis-height: " axis-height)
+        ; _ (println "x-txt-padding: " x-txt-padding)
+        ; _ (println "x-axis-font-size: " x-axis-font-size)
+        ; _ (println "y-txt-padding: " y-txt-padding)
+        ; _ (println "y-axis-font-size: " y-axis-font-size)]
     ;määrritellään ne muuttujat svg:ssä, jotka on pakko
-     [^{:key "axis-def"}
-      [:defs
+    (seq
+     [
+      ^{:key "axis-def"}
+       [:defs
         [:marker {:id "markerArrow" :markerWidth 20 :markerHeight 15
                   :refX 0 :refY 10  :orient "auto"}
           [:path {:d "M0,10 L0,15 L20,10 L0,5 L0,10"}]]]
-      ^{:key "diagram-axis"}
-      [:g {:stroke "black" :stroke-width 0.5}
+       ^{:key "diagram-axis"}
+       [:g {:stroke "black" :stroke-width 0.5}
         ;x-axis
         [:line {:x1 origin-x :y1 origin-y
                 :x2 (+ axis-width origin-x) :y2 origin-y :markerEnd "url(#markerArrow)"}]
@@ -366,30 +368,26 @@
                    [:text {:x (- origin-x y-txt-padding y-axis-font-size) :y y-position
                            :text-anchor "middle" :font-size (str y-axis-font-size)}
                      y-tick-value]])
-                (range y-tick))]
-      {:axis-width axis-width
-       :axis-height axis-height
-       :origin-x origin-x
-       :origin-y origin-y}]))
+                (range y-tick))]])))
 
-(defn vec-of-vecs?
+(defn vec-of-maps?
   [vec]
-  (if (vector? vec)
-    (not (some #(not (vector? %)) vec))
+  (if (and (vector? vec) (not (empty? vec)))
+    (not (some #(not (map? %)) vec))
     false))
 
-(defn apply-vecs
-  [f & x]
+(defn apply-vec-maps
+  [f key-of-interest & x]
   (let [fp (if-let [args (butlast x)]
              (apply partial f args)
              f)]
-    (apply fp (map #(apply fp %) (last x)))))
+    (apply fp (map #(apply fp (key-of-interest %)) (last x)))))
 
 (defn axis-points
-  [x y x-ratio y-ratio axis-height]
+  [x y x-ratio y-ratio origin-x origin-y]
   (st/trim
-    (apply str (map #(str (* x-ratio %1) ","
-                          (- axis-height (* y-ratio %2)) " ")
+    (apply str (map #(str (+ origin-x (* x-ratio %1)) ","
+                          (- origin-y (* y-ratio %2)) " ")
                     x y))))
 
 (defn style-map
@@ -403,53 +401,171 @@
     (concat (subvec vector 0 index)
             (subvec vector (inc index)))))
 
+(defn sizes
+  [{:keys [x-axis-font-size y-axis-font-size legend-font-size marker-width
+           x-txt-padding y-txt-padding x-label-space y-label-space
+           legendbox-thickness legendbox-padding legend-label-x legend-label-y
+           max-legend-height n-of-legend-columns]}]
+  (let [x-axis-font-size (or x-axis-font-size 6)
+        y-axis-font-size (or y-axis-font-size 6)
+        legend-font-size (or legend-font-size 6)
+        marker-width (or marker-width 20)
+        x-txt-padding (or x-txt-padding 2)
+        y-txt-padding (or y-txt-padding 2)
+        x-label-space (or x-label-space 10)
+        y-label-space (or y-label-space 10)
+        legendbox-thickness (or legendbox-thickness 15)
+        legendbox-padding (or legendbox-padding 10)
+        legend-label-x (or legend-label-x 20)
+        legend-label-y (or legend-label-y 11)
+        max-legend-height (or max-legend-height 100)
+        n-of-legend-columns (or n-of-legend-columns 1)]
+    {:x-axis-font-size x-axis-font-size
+     :y-axis-font-size y-axis-font-size
+     :legend-font-size legend-font-size
+     :marker-width marker-width
+     :x-txt-padding x-txt-padding
+     :y-txt-padding y-txt-padding
+     :x-label-space x-label-space
+     :y-label-space y-label-space
+     :legendbox-thickness legendbox-thickness
+     :legendbox-padding legendbox-padding
+     :legend-label-x legend-label-x
+     :legend-label-y legend-label-y
+     :max-legend-height max-legend-height
+     :n-of-legend-columns n-of-legend-columns}))
+
+(defn diagram-points
+  [{:keys [x-axis-font-size y-axis-font-size marker-width x-txt-padding y-txt-padding
+           x-label-space y-label-space legendbox-thickness legendbox-padding
+           max-legend-height n-of-legend-columns]}
+   vals width height]
+  (let [n-of-legend-rows (count (partition-all n-of-legend-columns vals))
+        legend-area-true-height (* (+ legendbox-padding legendbox-thickness)
+                                   n-of-legend-rows)
+        legend-area-height (if (> legend-area-true-height max-legend-height)
+                             max-legend-height legend-area-true-height)
+        axis-width (- width y-label-space y-txt-padding y-axis-font-size marker-width)
+        axis-height (- height legend-area-height x-label-space x-txt-padding x-axis-font-size marker-width)
+        origin-x (+ y-label-space y-axis-font-size y-txt-padding)
+        origin-y (+ axis-height marker-width)
+        legend-area-top-x origin-x
+        legend-area-top-y (+ origin-y x-txt-padding x-axis-font-size x-label-space)]
+    {:legend-area-top-x legend-area-top-x
+     :legend-area-top-y legend-area-top-y
+     :legend-area-height legend-area-height
+     :legend-area-true-height legend-area-true-height
+     :axis-width axis-width
+     :axis-height axis-height
+     :origin-x origin-x
+     :origin-y origin-y}))
+
+
 (defn draw-legend
-  [legend styles])
+  [vals
+   {:keys [legend-label-x legend-label-y legendbox-thickness legendbox-padding
+           max-legend-height]}
+   {:keys [legend-area-top-y legend-area-top-x legend-area-height
+           legend-area-true-height]}
+   {:keys [clicked-fn mouse-enter-fn mouse-leave-fn n-of-legend-columns scroll-bars?
+           width height]}]
+  (let [n-of-legend-columns (or n-of-legend-columns 1)
+        column-width (/ width n-of-legend-columns)
+        vals-partioned (partition-all n-of-legend-columns vals)
+        legend-svg-elements (apply concat
+                              (map-indexed
+                                #(map-indexed (fn [column-index val]
+                                                (let [rect-x-val (+ legend-area-top-x (* column-width column-index))
+                                                      rect-y-val (+ legend-area-top-y
+                                                                    (* (+ legendbox-thickness legendbox-padding) %1))
+                                                      val-index (dec (* (inc column-index) (inc %1)))]
+                                                  ^{:key (gensym "legend-")}
+                                                  [:g {:on-click (clicked-fn val-index)
+                                                       :on-mouse-enter (mouse-enter-fn val-index)
+                                                       :on-mouse-leave (mouse-leave-fn val-index)}
+                                                    [:rect {:x rect-x-val
+                                                            :y rect-y-val
+                                                            :height legendbox-thickness
+                                                            :width  legendbox-thickness
+                                                            :fill   (get-in val [:style :fill])}]
+                                                    [:text {:x         (+ legend-label-x rect-x-val)
+                                                            :y         (+ legend-label-y rect-y-val)
+                                                            :font-size 6}
+                                                      (if-let [label (:label val)]
+                                                        label "line")]]))
+                                              %2)
+                                vals-partioned))]
+    (if (and scroll-bars? (= legend-area-height max-legend-height))
+      [:foreignObject {:width width
+                       :height legend-area-height
+                       :y legend-area-top-y}
+          [:div {:style {:xmlns "http://www.w3.org/1999/xhtml"
+                         :overflow "scroll"
+                         :width width
+                         :height max-legend-height}}
+            [:svg {:xmlns "http://www.w3.org/2000/svg"
+                   :width width
+                   :height legend-area-true-height
+                   :view-box (str 0 " " legend-area-top-y " " width " " max-legend-height)}
+              legend-svg-elements]]]
+      legend-svg-elements)))
+
+(defn draw-axis-and-legend
+  [vals clicked-fn mouse-enter-fn mouse-leave-fn
+   {:keys [x-min x-max y-min y-max title x-label y-label x-tick y-tick
+           x-tick-value y-tick-value clicked hovered width height
+           max-legend-height n-of-legend-columns scroll-bars?]}]
+  (let [x-max (or x-max (apply-vec-maps max :x @vals))
+        y-max (or y-max (apply-vec-maps max :y @vals))
+        x-min (or x-min (apply-vec-maps min :x @vals))
+        y-min (or y-min (apply-vec-maps min :y @vals))
+        sizes (sizes {})
+        diagram-points (diagram-points sizes @vals width height)
+        axis-params {:x-min x-min :x-max x-max :y-min y-min :y-max y-max :title title
+                     :x-label x-label :y-label y-label :x-tick x-tick :y-tick y-tick
+                     :x-tick-value x-tick-value :y-tick-value y-tick-value
+                     :width width :height height}
+        legend-params {:clicked-fn clicked-fn :mouse-enter-fn mouse-enter-fn
+                       :mouse-leave-fn mouse-leave-fn :n-of-legend-columns n-of-legend-columns
+                       :scroll-bars? scroll-bars? :width width :height height}]
+    [:g
+      (draw-axis axis-params diagram-points sizes)
+      (draw-legend @vals sizes diagram-points legend-params)]))
+
+
 
 (defmulti plot
   (fn [{plot-type :plot-type}]
     (identity plot-type)))
 
 (defmethod plot :line-plot
-  [{:keys [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
-           x-tick-value y-tick-value legend styles y-label-orientation
-           clicked hovered width height]}]
-  (let [_ (assert (or (and (vec-of-vecs? x) (vec-of-vecs? y))
-                      (and (vector? x) (vector? y)
-                           (not (vec-of-vecs? x)) (not (vec-of-vecs? y))))
-                  "both x and y needs to be either vectors or vector of vectors.")
-        xs (atom (if (vec-of-vecs? x) x [x]))
-        ys (atom (if (vec-of-vecs? y) y [y]))
-        styles (if (vector? styles) styles [styles])
-        styles (if (not= (count styles) (count @xs))
-                 (vec (map-indexed #(get styles %1) @xs))
-                 styles)
-        styles-a (atom styles)]
-    (fn [{:keys [x y x-min x-max y-min y-max title x-label y-label x-tick y-tick
-                 x-tick-value y-tick-value legend styles y-label-orientation
-                 clicked hovered width height]}]
+  [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
+  (let [vals (atom (if (vec-of-maps? values) values [values]))]
+    (fn [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
       [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
-        (let [x-max (or x-max (apply-vecs max @xs))
-              y-max (or y-max (apply-vecs max @ys))
-              x-min (or x-min (apply-vecs min @xs))
-              y-min (or y-min (apply-vecs min @ys))
-              axis (draw-axis x-min x-max y-min y-max title x-label y-label x-tick y-tick
-                              x-tick-value y-tick-value y-label-orientation width height)
-              {:keys [axis-width axis-height origin-x origin-y]} (last axis)
-              x-ratios (map #(/ axis-width (apply max %)) @xs)
-              y-ratios (map #(/ axis-height (apply max %)) @ys)
-              points (mapv #(axis-points %1 %2 %3 %4 axis-height)
-                           @xs @ys x-ratios y-ratios)
+        (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {}) @vals width height)
+              x-max (or x-max (apply-vec-maps max :x @vals))
+              y-max (or y-max (apply-vec-maps max :y @vals))
+              x-ratios (map #(/ axis-width x-max) @vals)
+              y-ratios (map #(/ axis-height y-max) @vals)
+              points (mapv #(axis-points (:x %1) (:y %1) %2 %3 origin-x origin-y)
+                           @vals x-ratios y-ratios)
+              _ (println (second points))
               action-fn (fn [style-map index add?]
                           (if (= style-map :delete)
-                            (do (reset! xs (vector-disj @xs index))
-                                (reset! ys (vector-disj @ys index))
-                                (reset! styles-a (vector-disj @styles-a index)))
+                            (reset! vals (vector-disj @vals index))
                             (if add?
-                              (swap! styles-a assoc index (merge (get @styles-a index) style-map))
-                              (swap! styles-a assoc index (apply dissoc (get @styles-a index) (keys style-map))))))]
+                              (swap! vals update-in [index :style] #(merge % style-map))
+                              (swap! vals update-in [index :style] #(apply dissoc % (keys style-map))))))
+              clicked-fn (fn [index]
+                          (fn [event] (action-fn clicked index false)))
+              mouse-enter-fn (fn [index]
+                              (fn [event] (action-fn hovered index true)))
+              mouse-leave-fn (fn [index]
+                              (fn [event] (action-fn hovered index false)))]
+
           [:g
-            (butlast axis)
+            (draw-axis-and-legend vals clicked-fn mouse-enter-fn mouse-leave-fn plot-params)
             ;draw lines
             (doall
               (map-indexed #(identity
@@ -457,11 +573,10 @@
                               [:g.klikattava
                                   {:stroke "black" :stroke-width 1
                                    :pointer-events "painted"
-                                   :on-click (fn [event] (action-fn clicked %1 false))
-                                   :on-mouse-enter (fn [event] (action-fn hovered %1 true))
-                                   :on-mouse-leave (fn [event] (action-fn hovered %1 false))}
+                                   :on-click (clicked-fn %1)
+                                   :on-mouse-enter (mouse-enter-fn %1)
+                                   :on-mouse-leave (mouse-leave-fn %1)}
                                 [:polyline (merge {:points (get points %1)
                                                    :fill "none"}
-                                                  (style-map %2))]])
-                           @styles-a))
-            (draw-legend legend @styles-a)])])))
+                                                  (style-map (:style %2)))]])
+                           @vals))])])))
