@@ -45,6 +45,24 @@
                 yhdistetyt-mapit))
             '() mapit)))
 
+(defn sort-by-vec
+  [paa-vektori & vektorit]
+  (let [jarjestelty-vektori (vec (sort paa-vektori))
+        jarjestely-indeksit (map #(.indexOf paa-vektori %) jarjestelty-vektori)
+        vektorit-jarjestelty (map (fn [vektori]
+                                    (loop [[indeksi & indeksi-hanta] jarjestely-indeksit
+                                           sijoitettava-arvo (get vektori indeksi)
+                                           kierros-n 0
+                                           jarjestetty vektori]
+                                      (if (nil? indeksi)
+                                        jarjestetty
+                                        (recur indeksi-hanta
+                                               (get vektori (first indeksi-hanta))
+                                               (inc kierros-n)
+                                               (assoc jarjestetty kierros-n sijoitettava-arvo)))))
+                                  vektorit)]
+    (conj vektorit-jarjestelty jarjestelty-vektori)))
+
 ;;;;;;;;;;;;;;;;;;;; Yhteyskatkoksien parsimiseen graylogin stringeistä liittyvät funktiot ;;;;;;;;;;;;;
 (defn ilman-skandeja
   "Korjaa ääkköset"
@@ -195,14 +213,6 @@
     (assoc data :yhteyskatkokset ryhmietty-yhteyskatkos)))
 
 ;;;;;;;;;;;;;;;;;;;; Parsitun datan muokkaamisen toiseen muotoon liittyvät funktiot ;;;;;;;;;;;;;
-(defn sort-by-vec
-  [paa-vektori & vektorit]
-  (let [jarjestelty-vektori (sort paa-vektori)
-        jarjestely-indeksit (map #(.indexOf paa-vektori %) jarjestelty-vektori)]
-    (map (fn [vektori]
-          (sort-by #()))  
-         vektorit)))
-
 (defn avain-monikko->yksikko
   [avain]
   (let [avain-mappaukset {:pvm :pvm
@@ -219,17 +229,25 @@
 
 (defmethod jarjestele-yhteyskatkos-data-visualisointia-varten :line-plot
   [_ yhteyskatkos-data ryhma-avain jarjestys-avain]
-  (reduce (fn [jarjestelty-data uusi-map]
-            (let [uusi-map-loytyi? (some #(= (:label %) (ryhma-avain uusi-map)) jarjestelty-data)]
-              (if uusi-map-loytyi?
-                (map (fn [kaytava-map]
-                      (if (= (:label kaytava-map) (ryhma-avain uusi-map))
-                        (let [x-updated (update kaytava-map :x #(conj % (jarjestys-avain uusi-map)))]
-                          (update x-updated :y #(conj % (:katkokset uusi-map))))
-                        kaytava-map))
-                     jarjestelty-data)
-                (conj jarjestelty-data {:x (jarjestys-avain uusi-map) :y (:katkokset uusi-map) :label (ryhma-avain uusi-map)}))))
-          [] yhteyskatkos-data))
+  (let [ryhma-avain (avain-monikko->yksikko ryhma-avain)
+        jarjestys-avain (avain-monikko->yksikko jarjestys-avain)
+        yhteyskatkokset-oikeassa-muodossa (reduce (fn [jarjestelty-data uusi-map]
+                                                    (let [uusi-map-loytyi? (some #(= (:label %) (ryhma-avain uusi-map)) jarjestelty-data)]
+                                                      (if uusi-map-loytyi?
+                                                        (map (fn [kaytava-map]
+                                                              (if (= (:label kaytava-map) (ryhma-avain uusi-map))
+                                                                (let [x-updated (update kaytava-map :x #(conj % (jarjestys-avain uusi-map)))]
+                                                                  (update x-updated :y #(conj % (:katkokset uusi-map))))
+                                                                kaytava-map))
+                                                             jarjestelty-data)
+                                                        (conj jarjestelty-data {:x [(jarjestys-avain uusi-map)]
+                                                                                :y [(:katkokset uusi-map)]
+                                                                                :label (ryhma-avain uusi-map)}))))
+                                                  [] yhteyskatkos-data)]
+    (mapv #(let [sortatut-kentat (sort-by-vec (:x %) (:y %))]
+             (assoc % :x (first sortatut-kentat)
+                      :y (second sortatut-kentat)))
+          yhteyskatkokset-oikeassa-muodossa)))
 
 (defmethod jarjestele-yhteyskatkos-data-visualisointia-varten :bars
   [_ yhteyskatkos-data ryhma-avain jarjestys-avain]

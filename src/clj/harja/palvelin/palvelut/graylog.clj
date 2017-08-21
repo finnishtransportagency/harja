@@ -90,13 +90,12 @@
                                 (= jarjestys-avain :pvm))
                            ;; Jos halutaan näyttää dataa päivämäärän mukaan, niin oletettavasti tarkoitetaan
                            ;; vain päivämäärää eikä millisekunnin tarkkaa aikaa. Sen takia tehdään tämä muunnos.
-                           (map #(assoc % :pvm (pvm/paiva-kuukausi (:pvm %))) ryhma-jarjestys-map)
+                           (map #(assoc % :pvm (->> (:pvm %) pvm/aika-iso8601 (take 10) (apply str))) ryhma-jarjestys-map)
                            ryhma-jarjestys-map)
         yhteyskatkokset (apply muunnokset/yhdista-avaimet-kun + :katkokset [(muunnokset/avain-monikko->yksikko ryhma-avain) (muunnokset/avain-monikko->yksikko jarjestys-avain)] yhteyskatkokset)
         asetukset-kayttoon (keep #(muunnokset/asetukset-kayttoon :diagrammi % hakuasetukset)
                                  yhteyskatkokset)
-        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten asetukset-kayttoon ryhma-avain jarjestys-avain)
-        _ (println jarjestelty-data)]
+        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten :line-plot asetukset-kayttoon ryhma-avain jarjestys-avain)]
     jarjestelty-data))
 
 (defn haettavat-tiedot-analyyseja-varten
