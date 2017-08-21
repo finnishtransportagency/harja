@@ -471,11 +471,13 @@
                  (let [{:keys [url kayttajatunnus salasana
                                paivittainen-toimenpidehaku
                                paivittainen-komponenttityyppihaku
-                               paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
+                               paivittainen-turvalaitekomponenttihaku
+                               paivittainen-vikahaku]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
                                       paivittainen-toimenpidehaku
                                       paivittainen-komponenttityyppihaku
-                                      paivittainen-turvalaitekomponenttihaku))
+                                      paivittainen-turvalaitekomponenttihaku
+                                      paivittainen-vikahaku))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :vkm (component/using
@@ -618,6 +620,7 @@
 
 (defn -main [& argumentit]
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
+  (println "ffff" (count (slurp (clojure.java.io/resource "public/js/harja/tiedot/navigaatio.cljs"))))
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []
