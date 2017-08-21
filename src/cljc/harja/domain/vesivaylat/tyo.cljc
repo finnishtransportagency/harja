@@ -38,15 +38,6 @@
 
 (def metatiedot m/muokkauskentat)
 
-(defn- paivita-tyojoukon-tyon-tiedot-idlla
-  "Päivittää töiden joukosta yksittäisen työn, jolla annettu id."
-  [tyot tiedot]
-  (mapv (fn [tyo]
-          (if (= (::id tyo) (::id tiedot))
-            (merge tyo tiedot)
-            tyo))
-        tyot))
-
 (defn- toiden-kokonaishinta [tyot suunnitellut-tyot]
   (reduce + 0
           (map (fn [tyo]
