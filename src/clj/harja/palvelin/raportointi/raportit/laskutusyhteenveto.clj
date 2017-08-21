@@ -301,7 +301,8 @@
                                                                                                      (apply dissoc % suolasakko-kentat))
                                                                                               laskutusyhteenveto)))})
                                                                             laskutusyhteenvedot))
-        urakat-joiden-laskennan-indeksipuute-sotki (into #{} (map #(key %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
+        urakat-joiden-laskennan-indeksipuute-sotki (into #{} (keep #(when (not-empty (val %))
+                                                                      (key %)) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
         kentat-joiden-laskennan-indeksipuute-sotki (apply clojure.set/union (map #(val %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
@@ -340,7 +341,7 @@
           ;; Muuten edetään aikaperustaiseen tarkasteluun
           (if varoitus-indeksilaskennan-perusluku-puuttuu
             varoitus-indeksilaskennan-perusluku-puuttuu
-            (when-not (empty? urakoittain-kentat-joiden-laskennan-indeksipuute-sotki)
+            (when-not (empty? urakat-joiden-laskennan-indeksipuute-sotki)
               (str "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: "
                    (str/join ", "
                              (for [u urakat-joiden-laskennan-indeksipuute-sotki]
