@@ -203,6 +203,24 @@
                 (:tehtava suunniteltu-tyo)
                 (:yksikkohinta suunniteltu-tyo)))
 
+(defn- hinnoittelun-yhteenveto [app* tyot suunnitellut-tyot]
+  (let [perushinnat-yhteensa (hinta/perushinta
+                               (concat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
+                                       (get-in app* [:hinnoittele-toimenpide ::h/tyot])))
+        hinnat-yleiskustannuslisineen-yhteensa (hinta/kokonaishinta-yleiskustannuslisineen
+                                                 (concat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
+                                                         (get-in app* [:hinnoittele-toimenpide ::h/tyot])))
+        tyot-yhteensa (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)
+        yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus
+                                     (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))]
+    [:tbody
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Perushinta" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Yleiskustannuslisät (12%)" (fmt/euro-opt yleiskustannuslisien-osuus)]
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
+
 (defn- toimenpiteen-hinnoittelutaulukko [e! app* tyot suunnitellut-tyot]
   [:table.vv-toimenpiteen-hinnoittelutiedot-grid
    [:thead
@@ -300,19 +318,8 @@
     [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
      e! app* "Matkakulut"]
     [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-     e! app* "Muut kulut"]
-    ;; Yhteenveto
-    [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-     "Perushinta" (fmt/euro-opt (+ (hinta/perushinta
-                                     (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
-                                   (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]
-    [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-     "Yleiskustannuslisät (12%)" (fmt/euro-opt (hinta/yleiskustannuslisien-osuus
-                                                 (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
-    [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-     "Yhteensä" (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen
-                                   (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
-                                 (tyo/toiden-kokonaishinta tyot suunnitellut-tyot)))]]])
+     e! app* "Muut kulut"]]
+   [hinnoittelun-yhteenveto app* tyot suunnitellut-tyot]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
