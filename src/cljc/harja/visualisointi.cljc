@@ -315,21 +315,28 @@
            x-tick-value y-tick-value y-label-orientation width height]}
    {:keys [origin-x origin-y axis-width axis-height]}
    {:keys [x-txt-padding x-axis-font-size y-txt-padding y-axis-font-size]}]
-  (let [x-tick (or x-tick (if (> (count x-tick-value) 10)
-                            10 (count x-tick-value)))
-        y-tick (or y-tick (if (> (count y-tick-value) 10)
-                            10 (count y-tick-value)))
+  (let [x-tick (cond
+                  x-tick x-tick
+                  (and (< (count x-tick-value) 10)
+                       (not (nil? x-tick-value))) (count x-tick-value)
+                  :else 10)
+        y-tick (cond
+                  y-tick y-tick
+                  (and (< (count y-tick-value) 10)
+                       (not (nil? y-tick-value))) (count y-tick-value)
+                  :else 10)
+        x-tick (dec x-tick)
+        y-tick (dec y-tick)
         x-tick-values (or x-tick-value (mapv #(-> x-max (/ x-tick) (* %) (round-to-decimal 2))
-                                             (range 1 (inc x-tick))))
+                                             (range (inc x-tick))))
         y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 2))
-                                             (range 1 (inc y-tick))))
+                                             (range (inc y-tick))))
         x-tick-all (if x-tick-value
-                    (count x-tick-value) x-tick)
-        _ (println "ASF" x-tick-values)]
+                    (dec (count x-tick-value)) x-tick)]
     ;määrritellään ne muuttujat svg:ssä, jotka on pakko
     (seq
-     [
-      ^{:key "axis-def"}
+      [
+       ^{:key "axis-def"}
        [:defs
         [:marker {:id "markerArrow" :markerWidth 20 :markerHeight 15
                   :refX 0 :refY 10  :orient "auto"}
@@ -345,7 +352,7 @@
         ;x-ticks
         (mapcat #(let [x-tick-space (/ axis-width x-tick-all)
                        space-timer (Math/round (* % (/ x-tick-all x-tick)))
-                       x-position (-> x-tick-space (* space-timer) (+ origin-x x-tick-space))
+                       x-position (-> x-tick-space (* space-timer) (+ origin-x))
                        x-tick-value (get x-tick-values space-timer)]
                   [^{:key (str % "-tick")}
                    [:line {:x1 x-position :y1 origin-y
@@ -354,10 +361,10 @@
                    [:text {:x x-position :y (+ origin-y x-txt-padding x-axis-font-size)
                            :text-anchor "middle" :font-size (str x-axis-font-size)}
                      x-tick-value]])
-                (range x-tick))
+                (range (inc x-tick)))
         ;y-ticks
         (mapcat #(let [y-tick-space (/ axis-height y-tick)
-                       y-position (->> y-tick-space (* %) (- axis-height y-tick-space) (+ 20))
+                       y-position (->> y-tick-space (* %) (- axis-height) (+ 20))
                        y-tick-value (get y-tick-values %)]
                   [^{:key (str % "-tick")}
                    [:line {:x1 origin-x :y1 y-position
@@ -366,7 +373,7 @@
                    [:text {:x (- origin-x y-txt-padding y-axis-font-size) :y y-position
                            :text-anchor "middle" :font-size (str y-axis-font-size)}
                      y-tick-value]])
-                (range y-tick))]])))
+                (range (inc y-tick)))]])))
 
 (defn vec-of-maps?
   [vec]
@@ -530,7 +537,30 @@
       (draw-axis axis-params diagram-points sizes)
       (draw-legend @vals sizes diagram-points legend-params)]))
 
+(defn index-of
+ [vektori elementti]
+ #?(:clj (.indexOf vektori elementti)
+    :cljs (.indexOf (to-array vektori) elementti)))
 
+(defn lisaa-suorille-nollat
+  [vals x-vals]
+  (map (fn [mappi]
+        (let [eka-indeksi (->> mappi :x first (index-of x-vals))
+              toka-indeksi (->> mappi :x last (index-of x-vals))
+              kaikki-x (subvec x-vals eka-indeksi (inc toka-indeksi))]
+          (assoc mappi :x (vec kaikki-x)
+                       :y (vec (loop [[paa & hanta] kaikki-x
+                                      [x-paa & x-hanta] (:x mappi)
+                                      [y-paa & y-hanta] (:y mappi)
+                                      tulos []]
+                                  (if (nil? paa)
+                                    tulos
+                                    (let [loytyi? (= x-paa paa)]
+                                      (recur hanta
+                                             (if loytyi? x-hanta (conj x-hanta x-paa))
+                                             (if loytyi? y-hanta (conj y-hanta y-paa))
+                                             (if loytyi? (conj tulos y-paa) (conj tulos 0))))))))))
+      vals))
 
 (defmulti plot
   (fn [{plot-type :plot-type}]
@@ -545,6 +575,7 @@
         x-tick-value (or (:x-tick-value plot-params)
                          (if x-number?
                            nil x-vals))
+        vals (lisaa-suorille-nollat vals x-vals)
         vals (atom (mapv #(let [x-vec (:x %)
                                 y-vec (:y %)]
                             (cond-> %
@@ -560,7 +591,7 @@
               y-ratios (map #(/ axis-height y-max) @vals)
               points (mapv #(axis-points (:x %1) (:y %1) %2 %3 origin-x origin-y)
                            @vals x-ratios y-ratios)
-              _ (println (second points))
+              _ (println (pr-str points))
               action-fn (fn [style-map index add?]
                           (if (= style-map :delete)
                             (reset! vals (vector-disj @vals index))
@@ -586,7 +617,12 @@
                                    :on-click (clicked-fn %1)
                                    :on-mouse-enter (mouse-enter-fn %1)
                                    :on-mouse-leave (mouse-leave-fn %1)}
-                                [:polyline (merge {:points (get points %1)
-                                                   :fill "none"}
-                                                  (style-map (:style %2)))]])
+                                (if (= 1 (count (:x %2)))
+                                  (do (str (re-find #"(.+)," (get points %1)) " " (re-find #",(.+)" (get points %1)))
+                                      [:circle {:cx (second (re-find #"(.+)," (get points %1)))
+                                                :cy (second (re-find #",(.+)" (get points %1)))
+                                                :r 2}])
+                                  [:polyline (merge {:points (get points %1)
+                                                     :fill "none"}
+                                                    (style-map (:style %2)))])])
                            @vals))])])))
