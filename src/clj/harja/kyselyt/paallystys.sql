@@ -43,6 +43,7 @@ SELECT
   takuupvm,
   ypk.id                       AS "yllapitokohde-id",
   ypk.nimi                     AS kohdenimi,
+  ypk.tunnus,
   ypk.kohdenumero,
   ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
