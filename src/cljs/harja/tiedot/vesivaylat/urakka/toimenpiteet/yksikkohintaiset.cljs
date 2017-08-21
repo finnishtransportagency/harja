@@ -251,7 +251,6 @@
 
   HaeSuunnitellutTyot
   (process-event [_ app]
-    ;; TODO TESTI
     (let [urakka-id (get-in app [:valinnat :urakka-id])]
       (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
         (do (tuck-tyokalut/palvelukutsu :yksikkohintaiset-tyot

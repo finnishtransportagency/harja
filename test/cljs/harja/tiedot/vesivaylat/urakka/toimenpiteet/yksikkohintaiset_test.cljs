@@ -685,5 +685,22 @@
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma true}))))
 
 (deftest suunniteltujen-toiden-tyhjennys
-  (is (nil? (e! (tiedot/->TyhjennaSuunnitellutTyot)
-                {:suunnitellut-tyot [1 2 3]}))))
+  (is (= (e! (tiedot/->TyhjennaSuunnitellutTyot)
+                {:suunnitellut-tyot [1 2 3]})
+         {:suunnitellut-tyot nil})))
+
+(deftest suunniteltujen-toiden-haku
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->SuunnitellutTyotHaettu tiedot/->SuunnitellutTyotEiHaettu}
+
+      (is (true? (:suunniteltujen-toiden-haku-kaynnissa? (e! (tiedot/->HaeSuunnitellutTyot)))))))
+
+  (testing "Uusi haku kun haku on jo käynnissä"
+    (vaadi-async-kutsut
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
+
+      (let [tila {:foo :bar :id 1 :suunniteltujen-toiden-haku-kaynnissa? true}]
+        (is (= tila
+               (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
