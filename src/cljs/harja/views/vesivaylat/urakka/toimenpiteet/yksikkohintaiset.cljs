@@ -265,7 +265,7 @@
                              :maara uusi}))))]
            [:span " "]
            (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla suunnitellut-tyot
-                                                                 (::tyo/toimenpidekoodi-id tyorivi))
+                                                                 (:toimenpidekoodi-id tyorivi))
                  yksikko (:yksikko toimenpidekoodi)
                  yksikkohinta (:yksikkohinta toimenpidekoodi)
                  voidaan-laskea? (and yksikko yksikkohinta)]
@@ -274,7 +274,7 @@
                 " (× "
                 (fmt/euro yksikkohinta)
                 " = "
-                (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta))
+                (fmt/euro (* (:maara tyorivi) yksikkohinta))
                 ")"]))]]
          [:td.tyot-osio]
          [:td.tyot-osio
