@@ -198,13 +198,14 @@
                (assoc! nahdyt avain true)
                rivit)))))
 
-(defn indeksitiedot [{:keys [perusluku kyseessa-kk-vali?
-                             alkupvm kkn-indeksiarvo]}]
-  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))
-                (when kyseessa-kk-vali?
-                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
-                       " " (:nimi kkn-indeksiarvo)
-                       " indeksiarvo"
-                       (if kkn-indeksiarvo
-                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
-                         " puuttuu."))))])
+(defn urakan-indlask-perusluku [{:keys [perusluku]}]
+  [:teksti (str "Urakan indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))])
+
+(defn kkn-indeksiarvo [{:keys [kyseessa-kk-vali? alkupvm kkn-indeksiarvo]}]
+  [:teksti (when kyseessa-kk-vali?
+             (str "Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                  " " (:nimi kkn-indeksiarvo)
+                  " indeksiarvo"
+                  (if kkn-indeksiarvo
+                    (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
+                    " puuttuu.")))])
