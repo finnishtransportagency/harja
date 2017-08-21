@@ -224,7 +224,9 @@
       "Yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
-  (let [suunnitellut-tyot (:suunnitellut-tyot app*)
+  (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       valittu-aikavali)
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
