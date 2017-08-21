@@ -139,7 +139,7 @@
 
       (testing "Lisättyjen töiden päivittäminen"
         (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
-              tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+              tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
               update-params {::toi/urakka-id urakka-id
                              ::toi/id toimenpide-id
                              ::h/tallennettavat-tyot
@@ -153,7 +153,7 @@
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                              update-params)
-              tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo"))
+              tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
               hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
