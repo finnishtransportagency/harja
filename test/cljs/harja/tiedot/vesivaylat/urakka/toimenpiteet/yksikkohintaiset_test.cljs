@@ -66,10 +66,13 @@
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
                                                                    ::hinta/maara 4
-                                                                   ::hinta/yleiskustannuslisa 12}]
-                                                      ::h/tyot {::tyo/id 1
-                                                                ::tyo/toimenpidekoodi-id 1
-                                                                ::tyo/maara 60}}
+                                                                   ::hinta/yleiskustannuslisa 12}
+                                                                  {::hinta/id 5
+                                                                   ::hinta/otsikko "Päivän hinta"
+                                                                   ::hinta/maara 30}]
+                                                      ::h/tyot [{::tyo/id 1
+                                                                 ::tyo/toimenpidekoodi-id 1
+                                                                 ::tyo/maara 60}]}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -189,8 +192,8 @@
     #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
 
     (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-     (is (= [{:id 1}] (:toimenpiteet tulos))))))
+      (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
+      (is (= [{:id 1}] (:toimenpiteet tulos))))))
 
 (deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
@@ -384,9 +387,12 @@
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
                 ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot {::tyo/id 1
-                        ::tyo/toimenpidekoodi-id 1
-                        ::tyo/maara 60}})))))
+              ::h/tyot [{:toimenpidekoodi-id 1
+                         :hinta-nimi nil
+                         :maara 60}
+                        {:toimenpidekoodi-id nil
+                         :hinta-nimi "Päivän hinta"
+                         :maara 30}]})))))
 
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
@@ -440,7 +446,13 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa 12}]}))))
+                ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot [{:toimenpidekoodi-id 1
+                         :hinta-nimi nil
+                         :maara 60}
+                        {:toimenpidekoodi-id nil
+                         :hinta-nimi "Päivän hinta"
+                         :maara 30}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
@@ -466,7 +478,13 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa 12}]})))))
+                ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot [{:toimenpidekoodi-id 1
+                         :hinta-nimi nil
+                         :maara 60}
+                        {:toimenpidekoodi-id nil
+                         :hinta-nimi "Päivän hinta"
+                         :maara 30}]})))))
 
 (deftest hintaryhman-kentan-hinnoittelu
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
@@ -626,11 +644,11 @@
 (deftest hintaryhman-korostaminen
   (testing "Hintaryhmän korostus"
     (let [tulos (e! (tiedot/->KorostaHintaryhmaKartalla {::h/id 1})
-              {:turvalaitteet [{::tu/turvalaitenro 1
-                                ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
-               :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
-                              {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
-                              {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]
+                    {:turvalaitteet [{::tu/turvalaitenro 1
+                                      ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+                     :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
+                                    {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
+                                    {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]
       (is (= 1 (:korostettu-hintaryhma tulos)))
       (is (= #{1 2} (:korostetut-turvalaitteet tulos)))
       (is (not-empty (:turvalaitteet-kartalla tulos)))))
