@@ -63,10 +63,12 @@
                   urakka-id hallintayksikko-id
                   jarjestelmanlisaama] :as siirtyma}
           (<! (hae-toteuman-siirtymatiedot toteuma-id))
+          [alku loppu] (pvm/paivan-aikavali alkanut)
           {:keys [toimenpidekoodi toimenpideinstanssi]} (first tehtavat)]
 
       (log "SIIRTYMÄ: " (pr-str siirtyma))
 
+      (nav/esta-url-paivitys!)
 
       ;; Valitse oikea toimenpideinstanssi
       (urakka/valitse-toimenpideinstanssi-koodilla! toimenpideinstanssi)
@@ -80,8 +82,10 @@
       ;; Valitse toteuman urakka ja sen hallintayksikkö
       (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
 
+      (nav/salli-url-paivitys!)
+
       ;; Valitse aikaväliksi sama kuin tienäkymän valinnoissa
-      (urakka/valitse-aikavali! (:alku aikavali) (:loppu aikavali))
+      (kokonaishintaiset-tyot/valitse-aikavali! alku loppu)
 
 
       (let [pvm (pvm/paivan-alussa alkanut)

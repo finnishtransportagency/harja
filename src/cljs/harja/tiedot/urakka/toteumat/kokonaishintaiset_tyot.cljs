@@ -16,6 +16,10 @@
 
 
 (defonce
+  ^{:doc "Valittu aikaväli kokonaishintaisten töiden tarkastelulle"}
+  valittu-aikavali (atom nil))
+
+(defonce
   ^{:doc "Päiväkohtaiset tehtävät, jotka on avattu (vetolaatikot).
 Arvot ovat [urakka-id pvm tpk jarjestelma?] vektoreita."}
   avatut-toteumat (atom #{}))
@@ -70,11 +74,11 @@ tehtävän avain (ks. avatut-toteumat)."}
   (k/post! :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
            hakuparametrit))
 
-(defn kasaa-hakuparametrit
+(defn hakuparametrit
   ([]
-   (kasaa-hakuparametrit (:id @nav/valittu-urakka)
+   (hakuparametrit (:id @nav/valittu-urakka)
                          (first @urakka/valittu-sopimusnumero)
-                         (or @urakka/valittu-aikavali @urakka/valittu-hoitokausi)
+                         @valittu-aikavali
                          (:tpi_id @urakka/valittu-toimenpideinstanssi)
                          (:id @urakka/valittu-kokonaishintainen-tehtava)))
   ([urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
@@ -96,14 +100,14 @@ tehtävän avain (ks. avatut-toteumat)."}
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                sopimus-id (first @urakka/valittu-sopimusnumero)
                hoitokausi @urakka/valittu-hoitokausi
-               aikavali @urakka/valittu-aikavali
+               aikavali @valittu-aikavali
                toimenpide (:tpi_id @urakka/valittu-toimenpideinstanssi)
                tehtava (:id @urakka/valittu-kokonaishintainen-tehtava)
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
                 (hae-toteumatehtavien-paivakohtaiset-summat
-                  (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
+                 (hakuparametrit urakka-id sopimus-id aikavali toimenpide tehtava)))))
 
 
 (defonce hae-avattujen-toteumien-paivakohtaiset-tiedot
@@ -194,7 +198,7 @@ tehtävän avain (ks. avatut-toteumat)."}
   (reset! valitun-toteuman-paiva-ja-id nil)
   (reset! valittu-kokonaishintainen-toteuma nil))
 
-(defn kasaa-toteuman-tiedot-tallennusta-varten [t]
+(defn toteuman-tiedot-tallennusta-varten [t]
   {:suorittajan-nimi (get-in t [:suorittaja :nimi])
    :suorittajan-ytunnus (get-in t [:suorittaja :ytunnus])
    :urakka-id (:id @nav/valittu-urakka)
@@ -214,8 +218,8 @@ tehtävän avain (ks. avatut-toteumat)."}
 (defn tallenna-kokonaishintainen-toteuma! [toteuma]
   (k/post! :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
            (assoc {}
-             :toteuma (kasaa-toteuman-tiedot-tallennusta-varten toteuma)
-             :hakuparametrit (kasaa-hakuparametrit))))
+             :toteuma (toteuman-tiedot-tallennusta-varten toteuma)
+             :hakuparametrit (hakuparametrit))))
 
 (defn toteuman-tallennus-onnistui [tulos]
   (reset! haetut-toteumat tulos))
@@ -225,3 +229,6 @@ tehtävän avain (ks. avatut-toteumat)."}
 
 (defn sulje-toteuma! [pvm tpk jarjestelmanlisaama?]
   (swap! avatut-toteumat disj [pvm tpk jarjestelmanlisaama?]))
+
+(defn valitse-aikavali! [alku loppu]
+  (reset! valittu-aikavali [alku loppu]))
