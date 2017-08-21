@@ -34,3 +34,50 @@
                                 {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
                                                                      :harja.palvelin.integraatiot/nimi nimi}
                                  ::integraatiotapahtuma/onnistunut true })))))
+
+
+(defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana muutosaika] :as hakuparametrit} konteksti]
+  ;; {:pre [(assert (and db pohja-url kayttajatunnus salasana muutosaika) [db pohja-url kayttajatunnus salasana muutosaika])]}
+  (println "kkkk" (and db pohja-url kayttajatunnus salasana muutosaika))
+  (let [otsikot {"Content-Type" "text/xml"
+                 "SOAPAction" (:soap-action hakuparametrit)}
+        http-asetukset {:metodi :POST
+                        :url pohja-url
+                        :otsikot otsikot
+                        :kayttajatunnus kayttajatunnus
+                        :salasana salasana
+                        :muutosaika muutosaika}
+        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) muutosaika))]
+    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " alken: " muutosaika))
+    ((:vastaus-fn hakuparametrit) db body)))
+
+(defn kutsu-reimari-integraatiota
+  [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
+  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
+    (if-not muutosaika
+      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
+      (lukko/yrita-ajaa-lukon-kanssa
+       db (str "reimari-" haun-nimi)
+       (fn []
+         (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "reimari" haun-nimi
+          (fn [konteksti]
+            (println "fff" hakuparametrit)
+            (kutsu-reimari-integraatiota* (assoc hakuparametrit :muutosaika muutosaika) konteksti))))))))
+
+
+
+;; käyttö:
+;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00")
+;; tai
+;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00")
+(defn kutsu-interaktiivisesti [fn j alkuaika]
+  (let [[db il rk] (as-> j x
+                     (select-keys x [:db :integraatioloki :reimari])
+                     (map second x))
+        [kt ss pu] (as-> rk x
+                     (select-keys x [:kayttajatunnus :salasana :pohja-url])
+                     (map second x))]
+    (log/debug "tunnus" kt "url" pu)
+    (with-redefs [edellisen-integraatiotapahtuman-alkuaika (constantly alkuaika)]
+      (fn db il pu kt ss))))
