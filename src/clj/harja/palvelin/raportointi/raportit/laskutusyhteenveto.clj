@@ -304,22 +304,7 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :urakka)
-        ;; Konteksti ja urakkatiedot
-        {alueen-nimi :nimi indeksi :indeksi} (first
-                                               (if (= konteksti :hallintayksikko)
-                                                 (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
-                                                 (urakat-q/hae-urakka db urakka-id)))
-        urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
-                 db {:alkupvm alkupvm :loppupvm loppupvm
-                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id})
-        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
-                                                      :urakka-nimi (:nimi %)
-                                                      :indeksi (:indeksi %)) urakat)
-
-        ;; Aikavälit ja otsikkotekstit
+  (let [;; Aikavälit ja otsikkotekstit
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
@@ -332,6 +317,19 @@
                                    (str "Vuonna " (pvm/vuosi (l/to-local-date-time alkupvm)) " yhteensä" " \u20AC")
                                    (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) " yhteensä"))))
 
+        ;; Konteksti ja urakkatiedot
+        konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :urakka)
+        {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
+                                     (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
+                                     (urakat-q/hae-urakka db urakka-id)))
+        urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
+                 db {:alkupvm alkupvm :loppupvm loppupvm
+                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id})
+        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
+                                                      :urakka-nimi (:nimi %)
+                                                      :indeksi (:indeksi %)) urakat)
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
@@ -340,18 +338,22 @@
                                           (hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
 
-        ;; Lähtötiedot, josta tutkitaan mahdolliset laskentaa sotkevat puutteet. Mahdollisia puutteita:
-        ;; lämpötilatietoja puuttuu (suolasakon laskenta), indeksitietoja puuttuu (perusluku tai raportin aikaisia pistelukuja)
         urakoiden-lahtotiedot (urakoiden-lahtotiedot laskutusyhteenvedot)
-        perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
-        ainakin-yhdessa-urakassa-suolasakko-kaytossa? (some #(:suolasakko_kaytossa (val %)) urakoiden-lahtotiedot)
+
+        ;; Indeksitiedot
         ainakin-yhdessa-urakassa-indeksit-kaytossa? (some #(:indeksi (val %)) urakoiden-lahtotiedot)
+        perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
+        kkn-indeksiarvo (when kyseessa-kk-vali?
+                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
         urakat-joissa-indeksilaskennan-perusluku-puuttuu (urakat-joissa-indeksilaskennan-perusluku-puuttuu urakoiden-lahtotiedot)
-        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu urakoiden-lahtotiedot)
         urakoittain-kentat-joiden-laskennan-indeksipuute-sotki (urakoittain-kentat-joiden-laskennan-indeksipuute-sotki laskutusyhteenvedot)
         urakat-joiden-laskennan-indeksipuute-sotki (into #{} (keep #(when (not-empty (val %))
                                                                       (key %)) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
         kentat-joiden-laskennan-indeksipuute-sotki (apply clojure.set/union (map #(val %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
+
+        ;; Suolasakko- ja lämpötilatiedot
+        ainakin-yhdessa-urakassa-suolasakko-kaytossa? (some #(:suolasakko_kaytossa (val %)) urakoiden-lahtotiedot)
+        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu urakoiden-lahtotiedot)
 
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
@@ -365,9 +367,6 @@
                                              kaikki-tuotteittain)
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
-        kkn-indeksiarvo (when kyseessa-kk-vali?
-                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
-
 
         ;; Varoitustekstit raportille
         varoitus-indeksilaskennan-perusluku-puuttuu (varoitus-indeksilaskennan-perusluku-puuttuu urakat-joissa-indeksilaskennan-perusluku-puuttuu)
