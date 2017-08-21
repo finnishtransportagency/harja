@@ -425,11 +425,7 @@
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 1
+              [{::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
@@ -455,11 +451,7 @@
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 1
+              [{::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
@@ -518,10 +510,7 @@
                      :hinnoittele-toimenpide
                      {::to/id hinnoiteltava-toimenpide-id
                       ::h/hinnat
-                      [{::hinta/otsikko "Työ"
-                        ::hinta/maara 10
-                        ::hinta/yleiskustannuslisa 0}
-                       {::hinta/otsikko "Komponentit"
+                      [{::hinta/otsikko "Komponentit"
                         ::hinta/maara 20
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Yleiset materiaalit"
@@ -535,10 +524,7 @@
                         ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
                         {::h/hinnat
-                         [{::hinta/otsikko "Työ"
-                           ::hinta/maara 10
-                           ::hinta/yleiskustannuslisa 0}
-                          {::hinta/otsikko "Komponentit"
+                         [{::hinta/otsikko "Komponentit"
                            ::hinta/maara 20
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Yleiset materiaalit"
@@ -566,10 +552,7 @@
     ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
     (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
            {::h/hinnat
-            [{::hinta/otsikko "Työ"
-              ::hinta/maara 10
-              ::hinta/yleiskustannuslisa 0}
-             {::hinta/otsikko "Komponentit"
+            [{::hinta/otsikko "Komponentit"
               ::hinta/maara 20
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Yleiset materiaalit"
