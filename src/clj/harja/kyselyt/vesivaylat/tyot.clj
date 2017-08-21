@@ -15,7 +15,6 @@
 (defn hae-hinnoittelujen-tyot [db hinnoittelu-idt]
   (specql/fetch db
                 ::tyo/tyo
-                (set/union tyo/perustiedot
-                           tyo/viittaus-idt)
+                (set/union tyo/perustiedot tyo/viittaus-idt)
                 {::tyo/hinnoittelu-id (op/in hinnoittelu-idt)
                  ::m/poistettu? false}))

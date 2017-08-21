@@ -28,6 +28,11 @@
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
    ::h/hinnat nil
+   ;; Työt-taulukossa on sekä tehtyjä töitä (vesivaylat.tyo domain) sekä hinnoitteluja, kuten
+   ;; päivän hinta ja omakustannushinta (vesivaylat.hinta domain). Tästä syystä nämä käsiteltävät
+   ;; työrivit eivät ole namespacetettuja, koska tyyppiä voidaan vaihdella UI:lla.
+   ;; Kannasta nostettu data unnamespacetetaan työriveiksi, ja
+   ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa.
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
@@ -130,8 +135,6 @@
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
-(defrecord HinnoitteleTyo [tiedot])
-(defrecord AsetaHinnoiteltavalleTyolleTiedot [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -144,6 +147,7 @@
 (defrecord HintaryhmatEiPoistettu [])
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+(defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 
@@ -166,6 +170,37 @@
 
 (defn- hintaryhman-hintakentat [hinnat]
   [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
+
+(defn- drop-index [col idx]
+  (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
+
+(defn- tyorivit-kannasta->taulukkomuotoon [tyot]
+  (mapv (fn [rivi]
+          (cond
+            ;; Työrivi
+            (::tyo/toimenpidekoodi-id rivi)
+            {:toimenpidekoodi-id (::tyo/toimenpidekoodi-id rivi)
+             :hinta-nimi nil
+             :maara (::tyo/maara rivi)}
+            ;; Hintarivi
+            (::hinta/nimi rivi)
+            {:toimenpidekoodi-id nil
+             :hinta-nimi (::hinta/nimi rivi)
+             :maara (::hinta/maara rivi)}))
+        tyot))
+
+(defn- tyorivit-taulukosta->tallennusmuotoon [tyot]
+  (mapv (fn [rivi]
+          (cond
+            ;; Työrivi
+            (:toimenpidekoodi-id rivi)
+            {::tyo/toimenpidekoodi-id (:toimenpidekoodi-id rivi)
+             ::tyo/maara (:maara rivi)}
+            ;; Hintarivi
+            (:hinta-nimi rivi)
+            {::hinta/nimi (:hinta-nimi rivi)
+             ::hinta/maara (:maara rivi)}))
+        tyot))
 
 (extend-protocol tuck/Event
 
@@ -327,11 +362,12 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
-          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)]
+          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
+          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
-                  ::h/tyot (get-in hinnoiteltava-toimenpide [::to/oma-hinnoittelu ::h/tyot])})))
+                  ::h/tyot (tyorivit-kannasta->taulukkomuotoon tyot)})))
 
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]
@@ -353,18 +389,6 @@
               (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-hintaryhma
                                                                               ::h/hinnat]) tiedot)))
 
-  HinnoitteleTyo
-  (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-              (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
-                                                                    ::h/tyot]) tiedot)))
-
-  AsetaHinnoiteltavalleTyolleTiedot
-  (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI
-    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-              (tyo/paivita-tyojoukon-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
-                                                                    ::h/tyot]) tiedot)))
   HinnoitteleToimenpide
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
@@ -381,7 +405,8 @@
                                               ::hinta/maara (::hinta/maara hinta)
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
-             ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
+             ::h/tallennettavat-tyot (tyorivit-taulukosta->tallennusmuotoon
+                                       (get-in app [:hinnoittele-toimenpide ::h/tyot]))}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
@@ -482,27 +507,29 @@
       (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
           (assoc :korostettu-hintaryhma (::h/id hintaryhma)))))
 
+  AsetaTyorivilleTiedot
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO TESTI
+    (let [nykyiset-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+          tyorivi-index (:index tiedot)
+          paivitettava-rivi (get nykyiset-tyot tyorivi-index)
+          paivitetyt-tyot (assoc nykyiset-tyot tyorivi-index (merge paivitettava-rivi
+                                                                    (dissoc tiedot :index)))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          seuraava-vapaa-neg-id (dec (apply min (concat [-1] (keep ::tyo/id tyot))))
-          paivitetyt-tyot (conj tyot {::tyo/id seuraava-vapaa-neg-id
-                                      ::tyo/maara 0})]
+          paivitetyt-tyot (conj tyot {:maara 0})]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]
     ;; TODO TESTI
-    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          poistettava-rivi (first (filter #(= (::tyo/id %) (::tyo/id tiedot)) tyot))
-          poistettava-rivi-uusi? (neg? (::tyo/id poistettava-rivi))]
+    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-                (if poistettava-rivi-uusi?
-                  ;; Jos kyseessä on uusi poistettu rivi, se filtteröidään kokonaan pois
-                  (filter #(not= (::tyo/id %) (::tyo/id tiedot)) tyot)
-                  ;; Jos taas kyseessä kantaan tallennettu rivi, jolla id, merkitään se poistetuksi.
-                  (tyo/paivita-tyojoukon-tyon-tiedot-idlla tyot {::tyo/poistettu? true})))))
+                (drop-index tyot (:index tiedot)))))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

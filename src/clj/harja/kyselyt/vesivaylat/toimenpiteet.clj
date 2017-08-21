@@ -103,12 +103,15 @@
 (defn- toimenpiteet-tyotiedoilla
   "Liittää toimenpiteiden omiin hinnoittelutietoihin mukaan työt."
   [db toimenpiteet]
+  ;; TODO Hae myös hintana tallennetut. Pitää varmaan hakea hinnat raakana stringinä 'Päivän hinta' ja
+  ;; 'Omakustannushinta' ja liittää ne tähän taulukkoon, namespacetettuna hinta-domainilla?
   (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
         tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
     (map
       (fn [toimenpide]
         (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
-              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
+              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id)
+                                        tyot)]
           (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
       toimenpiteet)))
 

@@ -202,7 +202,7 @@
 
       (::h/id hinnoittelu))))
 
-(defn tallenna-toimenpiteelle-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
+(defn tallenna-hinnoittelun-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
   (doseq [hinta hinnat]
     (if (id-olemassa? (::hinta/id hinta))
       (specql/update! db
@@ -225,26 +225,27 @@
                          ::m/luoja-id (:id user)
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
 
-(defn tallenna-toimenpiteelle-tyo! [{:keys [db user hinnoittelu-id tyot]}]
-  (doseq [tyo tyot]
-    (if (id-olemassa? (::tyo/id tyo))
-      (specql/update! db
-                      ::tyo/tyo
-                      (merge
-                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
-                         ::tyo/maara (::tyo/maara tyo)}
-                        (if (::tyo/poistettu? tyo)
-                          {::m/poistettu? true
-                           ::m/poistaja-id (:id user)}
-                          {::m/muokattu (pvm/nyt)
-                           ::m/muokkaaja-id (:id user)}))
-                      {::tyo/id (::tyo/id tyo)})
+(defn poista-hinnoittelun-tyot! [db user hinnoittelu-id]
+  ;; TODO Poista myös hintana tallennetut vv_hinta taulusta, raaka string haku?
+  (specql/update! db
+                  ::tyo/tyo
+                  {::m/poistettu? true
+                   ::m/poistaja-id (:id user)}
+                  {::tyo/hinnoittelu-id hinnoittelu-id}))
 
+(defn luo-hinnoittelun-tyot! [{:keys [db user hinnoittelu-id tyot]}]
+  (doseq [tyo tyot]
+    (cond
+      ;; Työrivi
+      (::tyo/toimenpidekoodi-id tyo)
       (specql/insert! db
                       ::tyo/tyo
-                      (merge
-                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
-                         ::tyo/hinnoittelu-id hinnoittelu-id
-                         ::tyo/maara (::tyo/maara tyo)
-                         ::m/luotu (pvm/nyt)
-                         ::m/luoja-id (:id user)})))))
+                      {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
+                       ::tyo/hinnoittelu-id hinnoittelu-id
+                       ::tyo/maara (::tyo/maara tyo)
+                       ::m/luotu (pvm/nyt)
+                       ::m/luoja-id (:id user)})
+      ;; Hintarivi
+      (::hinta/nimi tyo)
+      nil ;; TODO Luo myös hintana tallennettavat vv_hinta tauluun
+      )))

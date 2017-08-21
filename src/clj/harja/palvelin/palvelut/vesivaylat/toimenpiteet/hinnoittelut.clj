@@ -86,13 +86,19 @@
         ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
         (q/vaadi-tyot-kuuluvat-toimenpiteeseen db tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
-        (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user (::to/id tiedot) urakka-id)]
-          (q/tallenna-toimenpiteelle-hinta!
+        (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
+          ;; Hinnat-taulukossa on könttähinnat, jotka voidaan luoda uutena tai päivittää
+          (q/tallenna-hinnoittelun-hinta!
             {:db db
              :user user
              :hinnoittelu-id hinnoittelu-id
              :hinnat (::h/tallennettavat-hinnat tiedot)})
-          (q/tallenna-toimenpiteelle-tyo!
+          ;; Töiden osalta oletetaan, että saatu payload on uusi totuus, toisin sanoen poistetaan nykyiset työt
+          ;; ja luodaan payloadin perusteella uudet. Näin siksi, että työt-taulukossa voi olla sekä töitä että hintoja,
+          ;; ja frontissa niiden tyyppejä on saatettu myös vaihdella, joten päivittämiseen vaadittava päättelyketju olisi
+          ;; turhan monimutkainen.
+          (q/poista-hinnoittelun-tyot! db user hinnoittelu-id)
+          (q/luo-hinnoittelun-tyot!
             {:db db
              :user user
              :hinnoittelu-id hinnoittelu-id
