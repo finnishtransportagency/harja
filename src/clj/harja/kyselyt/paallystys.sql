@@ -60,7 +60,6 @@ SELECT
   asiatarkastus_lisatiedot     AS "asiatarkastus_lisatiedot",
   ypko.id                      AS kohdeosa_id,
   ypko.nimi                    AS kohdeosa_nimi,
-  ypko.tunnus                  AS kohdeosa_tunnus,
   ypko.tr_numero               AS "kohdeosa_tr-numero",
   ypko.tr_alkuosa              AS "kohdeosa_tr-alkuosa",
   ypko.tr_alkuetaisyys         AS "kohdeosa_tr-alkuetaisyys",

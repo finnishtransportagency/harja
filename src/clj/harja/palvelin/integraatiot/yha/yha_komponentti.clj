@@ -15,7 +15,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [org.httpkit.fake :refer [with-fake-http]])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -146,31 +147,33 @@
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
-  (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
-    (let [url (str url (format "haeUrakanKohteet" yha-id))
-          vuosi (pvm/vuosi (pvm/nyt))]
-      (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "yha" "kohteiden-haku"
-        (fn [konteksti]
-          (let [parametrit (-> {}
-                               (lisaa-http-parametri "yha-id" yha-id)
-                               (lisaa-http-parametri "vuosi" vuosi)
-                               (lisaa-http-parametri "kayttaja" kayttajatunnus))
-                http-asetukset {:metodi :GET
-                                :url url
-                                :parametrit parametrit
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana}
-                {body :body headers :headers}
-                (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-            (kasittele-urakan-kohdehakuvastaus body headers)))))
-    (do
-      (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
-        (log/error virhe)
-        (throw+
-          {:type +virhe-urakan-kohdehaussa+
-           :virheet {:virhe virhe}})))))
+  (with-fake-http [(str url (format "haeUrakanKohteet" (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id}))) (slurp "/Users/mikkoro/Desktop/yha-kohteet.xml") ]
+
+    (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
+      (let [url (str url (format "haeUrakanKohteet" yha-id))
+            vuosi (pvm/vuosi (pvm/nyt))]
+        (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+        (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "yha" "kohteiden-haku"
+          (fn [konteksti]
+            (let [parametrit (-> {}
+                                 (lisaa-http-parametri "yha-id" yha-id)
+                                 (lisaa-http-parametri "vuosi" vuosi)
+                                 (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                  http-asetukset {:metodi :GET
+                                  :url url
+                                  :parametrit parametrit
+                                  :kayttajatunnus kayttajatunnus
+                                  :salasana salasana}
+                  {body :body headers :headers}
+                  (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+              (kasittele-urakan-kohdehakuvastaus body headers)))))
+      (do
+        (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
+          (log/error virhe)
+          (throw+
+            {:type +virhe-urakan-kohdehaussa+
+             :virheet {:virhe virhe}}))))))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet YHA:an. Mikäli kohteiden lähetys epäonnistuu, niiden päällystysilmoituksen

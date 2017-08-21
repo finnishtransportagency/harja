@@ -46,6 +46,7 @@
 ;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
 (def id-leveys 6)
+(def tunnus-leveys 6)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 7)
@@ -100,8 +101,6 @@
                        :leveys (+ perusleveys 5)
                        :pituus-max 30
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
-           (when tunnus {:otsikko "Tunnus" :nimi (:nimi tunnus) :tyyppi :string :pituus-max 1
-                         :leveys 4 :muokattava? (or (:muokattava? tunnus) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]]
@@ -329,7 +328,6 @@
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
                                [{:nimi :nimi :pituus-max 30}
-                                {:nimi :tunnus}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
@@ -623,6 +621,8 @@
                   [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
                     :tyyppi :string :leveys id-leveys}
+                   {:otsikko "Tunnus" :nimi :tunnus
+                    :tyyppi :string :leveys tunnus-leveys :pituus-max 1}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys :pituus-max 30}]
                   (tierekisteriosoite-sarakkeet
@@ -722,6 +722,7 @@
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
+      {:otsikko "" :nimi :tunnus :tyyppi :string :leveys tunnus-leveys}
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :tr-numero :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-ajorata :tyyppi :string :leveys tr-leveys}
