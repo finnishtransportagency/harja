@@ -210,7 +210,6 @@
 
   TyhjennaSuunnitellutTyot
   (process-event [_ app]
-    ;; TODO TESTI
     (assoc app :suunnitellut-tyot nil))
 
   PaivitaValinnat

@@ -683,3 +683,7 @@
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {})))
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma false})))
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma true}))))
+
+(deftest suunniteltujen-toiden-tyhjennys
+  (is (nil? (e! (tiedot/->TyhjennaSuunnitellutTyot)
+                {:suunnitellut-tyot [1 2 3]}))))
