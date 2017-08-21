@@ -217,6 +217,91 @@
                     (kustannuslajin-kaikki-kentat "suolasakot")))
       kustannusten-kentat)))
 
+(defn- urakoiden-lahtotiedot
+  [laskutusyhteenvedot]
+  (into
+    (sorted-map)
+    (mapv (fn [urakan-laskutusyhteenveto]
+            (let [talvihoidon-rivi (first (filter #(= "Talvihoito" (:nimi %)) urakan-laskutusyhteenveto))]
+              {(:urakka-id talvihoidon-rivi)
+               (select-keys talvihoidon-rivi
+                            [:urakka-id :urakka-nimi
+                             :indeksi :perusluku
+                             :suolasakko_kaytossa :lampotila_puuttuu
+                             :suolasakot_laskutetaan :suolasakot_laskutettu])}))
+          laskutusyhteenvedot)))
+
+(defn- urakat-joissa-indeksilaskennan-perusluku-puuttuu
+  [urakoiden-lahtotiedot]
+  (into #{}
+        (keep (fn [urakan-lahtotiedot]
+                (let [tiedot (second urakan-lahtotiedot)]
+                  (when (and (:indeksi tiedot)
+                             (nil? (:perusluku tiedot)))
+                    (:urakka-nimi (second urakan-lahtotiedot)))))
+              urakoiden-lahtotiedot)))
+
+(defn- urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu
+  [urakoiden-lahtotiedot]
+  (into #{}
+        (keep (fn [urakan-lahtotiedot]
+                (let [tiedot (second urakan-lahtotiedot)]
+                  (when (and (:suolasakko_kaytossa tiedot)
+                             (:lampotila_puuttuu tiedot)
+                             (or (nil? (:suolasakot_laskutettu tiedot))
+                                 (nil? (:suolasakot_laskutetaan tiedot))))
+                    (:urakka-nimi (second urakan-lahtotiedot)))))
+              urakoiden-lahtotiedot)))
+
+(defn- urakoittain-kentat-joiden-laskennan-indeksipuute-sotki
+  [laskutusyhteenvedot]
+  (apply merge
+         (mapv (fn [laskutusyhteenveto]
+                 {(:urakka-nimi (first laskutusyhteenveto))
+                  (into #{}
+                        (apply concat
+                               (keep
+                                 #(keep (fn [rivin-map-entry]
+                                          (when (nil? (val rivin-map-entry))
+                                            (key rivin-map-entry)))
+                                        (apply dissoc % (kustannuslajin-kaikki-kentat "suolasakot")))
+                                 laskutusyhteenveto)))})
+               laskutusyhteenvedot)))
+
+(defn- varoitus-indeksilaskennan-perusluku-puuttuu
+  [urakat-joissa-indeksilaskennan-perusluku-puuttuu]
+  (when-not (empty? urakat-joissa-indeksilaskennan-perusluku-puuttuu)
+    (if (= 1 (count urakat-joissa-indeksilaskennan-perusluku-puuttuu))
+      "Urakan indeksilaskennan perusluku puuttuu."
+      (str "Seuraavissa urakoissa indeksilaskennan perusluku puuttuu: "
+           (str/join ", "
+                     (for [u urakat-joissa-indeksilaskennan-perusluku-puuttuu]
+                       u))))))
+
+(defn- varoitus-lampotila-puuttuu
+  [urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
+  (when-not (empty? urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu)
+    (str "Seuraavissa urakoissa talvisuolasakko on käytössä mutta lämpötilatieto puuttuu: "
+         (str/join ", "
+                   (for [u urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
+                     u)))))
+
+(defn- varoitus-indeksitietojen-puuttumisesta
+  [varoitus-indeksilaskennan-perusluku-puuttuu
+   urakat-joiden-laskennan-indeksipuute-sotki]
+  (if varoitus-indeksilaskennan-perusluku-puuttuu
+    varoitus-indeksilaskennan-perusluku-puuttuu
+    (when-not (empty? urakat-joiden-laskennan-indeksipuute-sotki)
+      (str "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: "
+           (str/join ", "
+                     (for [u urakat-joiden-laskennan-indeksipuute-sotki]
+                       u))))))
+
+(def kentat-kaikki-paitsi-kht
+  #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
+    "vahinkojen_korjaukset" "bonukset" "erilliskustannukset"})
+(def kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht"))
+
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [konteksti (cond urakka-id :urakka
@@ -254,56 +339,20 @@
                                                     :indeksi (:indeksi urakan-parametrit))
                                           (hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                                   urakoiden-parametrit)
-        ;; Talteen lähtötiedot, josta tutkitaan mahdolliset laskentaa sotkevat puutteet. Mahdollisia puutteita:
+
+        ;; Lähtötiedot, josta tutkitaan mahdolliset laskentaa sotkevat puutteet. Mahdollisia puutteita:
         ;; lämpötilatietoja puuttuu (suolasakon laskenta), indeksitietoja puuttuu (perusluku tai raportin aikaisia pistelukuja)
-        urakoiden-lahtotiedot (into
-                                (sorted-map)
-                                (mapv (fn [urakan-laskutusyhteenveto]
-                                        (let [talvihoidon-rivi (first (filter #(= "Talvihoito" (:nimi %)) urakan-laskutusyhteenveto))]
-                                          {(:urakka-id talvihoidon-rivi)
-                                           (select-keys talvihoidon-rivi
-                                                        [:urakka-id :urakka-nimi
-                                                         :indeksi :perusluku
-                                                         :suolasakko_kaytossa :lampotila_puuttuu
-                                                         :suolasakot_laskutetaan :suolasakot_laskutettu])}))
-                                      laskutusyhteenvedot))
-        perusluku (when (= 1 (count urakat))
-                    (:perusluku (val (first urakoiden-lahtotiedot))))
+        urakoiden-lahtotiedot (urakoiden-lahtotiedot laskutusyhteenvedot)
+        perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
         ainakin-yhdessa-urakassa-suolasakko-kaytossa? (some #(:suolasakko_kaytossa (val %)) urakoiden-lahtotiedot)
         ainakin-yhdessa-urakassa-indeksit-kaytossa? (some #(:indeksi (val %)) urakoiden-lahtotiedot)
-        urakat-joissa-indeksilaskennan-perusluku-puuttuu (into #{}
-                                                               (keep (fn [urakan-lahtotiedot]
-                                                                       (let [tiedot (second urakan-lahtotiedot)]
-                                                                         (when (and (:indeksi tiedot)
-                                                                                    (nil? (:perusluku tiedot)))
-                                                                           (:urakka-nimi (second urakan-lahtotiedot)))))
-                                                                     urakoiden-lahtotiedot))
-        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (into #{}
-                                                                                 (keep (fn [urakan-lahtotiedot]
-                                                                                         (let [tiedot (second urakan-lahtotiedot)]
-                                                                                           (when (and (:suolasakko_kaytossa tiedot)
-                                                                                                      (:lampotila_puuttuu tiedot)
-                                                                                                      (or (nil? (:suolasakot_laskutettu tiedot))
-                                                                                                          (nil? (:suolasakot_laskutetaan tiedot))))
-                                                                                             (:urakka-nimi (second urakan-lahtotiedot)))))
-                                                                                       urakoiden-lahtotiedot))
-
-        suolasakko-kentat (kustannuslajin-kaikki-kentat "suolasakot")
-        urakoittain-kentat-joiden-laskennan-indeksipuute-sotki (apply merge
-                                                                      (mapv (fn [laskutusyhteenveto]
-                                                                              {(:urakka-nimi (first laskutusyhteenveto))
-                                                                               (into #{}
-                                                                                     (apply concat
-                                                                                            (keep
-                                                                                              #(keep (fn [rivin-map-entry]
-                                                                                                       (when (nil? (val rivin-map-entry))
-                                                                                                         (key rivin-map-entry)))
-                                                                                                     (apply dissoc % suolasakko-kentat))
-                                                                                              laskutusyhteenveto)))})
-                                                                            laskutusyhteenvedot))
+        urakat-joissa-indeksilaskennan-perusluku-puuttuu (urakat-joissa-indeksilaskennan-perusluku-puuttuu urakoiden-lahtotiedot)
+        urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu (urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu urakoiden-lahtotiedot)
+        urakoittain-kentat-joiden-laskennan-indeksipuute-sotki (urakoittain-kentat-joiden-laskennan-indeksipuute-sotki laskutusyhteenvedot)
         urakat-joiden-laskennan-indeksipuute-sotki (into #{} (keep #(when (not-empty (val %))
                                                                       (key %)) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
         kentat-joiden-laskennan-indeksipuute-sotki (apply clojure.set/union (map #(val %) urakoittain-kentat-joiden-laskennan-indeksipuute-sotki))
+
         ;; Datan tuotteittain ryhmittely
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
@@ -321,36 +370,14 @@
 
 
         ;; Varoitustekstit raportille
-        varoitus-indeksilaskennan-perusluku-puuttuu (when-not (empty? urakat-joissa-indeksilaskennan-perusluku-puuttuu)
-                                                      (if (= 1 (count urakat-joissa-indeksilaskennan-perusluku-puuttuu))
-                                                        "Urakan indeksilaskennan perusluku puuttuu."
-                                                        (str "Seuraavissa urakoissa indeksilaskennan perusluku puuttuu: "
-                                                             (str/join ", "
-                                                               (for [u urakat-joissa-indeksilaskennan-perusluku-puuttuu]
-                                                                 u)))))
-
-        varoitus-lampotila-puuttuu (when-not (empty? urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu)
-                                     (str "Seuraavissa urakoissa talvisuolasakko on käytössä mutta lämpötilatieto puuttuu: "
-                                          (str/join ", "
-                                                    (for [u urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
-                                                      u))))
-
+        varoitus-indeksilaskennan-perusluku-puuttuu (varoitus-indeksilaskennan-perusluku-puuttuu urakat-joissa-indeksilaskennan-perusluku-puuttuu)
+        varoitus-lampotila-puuttuu (varoitus-lampotila-puuttuu urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu)
         varoitus-indeksitietojen-puuttumisesta
         (when ainakin-yhdessa-urakassa-indeksit-kaytossa?
-          ;; perusluvun puute on fataalein - silloin kaikki muu indeksilaskenta feilaa, eli näytetään vain se tieto.
-          ;; Muuten edetään aikaperustaiseen tarkasteluun
-          (if varoitus-indeksilaskennan-perusluku-puuttuu
-            varoitus-indeksilaskennan-perusluku-puuttuu
-            (when-not (empty? urakat-joiden-laskennan-indeksipuute-sotki)
-              (str "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: "
-                   (str/join ", "
-                             (for [u urakat-joiden-laskennan-indeksipuute-sotki]
-                               u))))))
-        vain-jvh-voi-muokata-tietoja-viesti "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan."
+          (varoitus-indeksitietojen-puuttumisesta varoitus-indeksilaskennan-perusluku-puuttuu
+                                                  urakat-joiden-laskennan-indeksipuute-sotki))
+        varoitus-vain-jvh-voi-muokata-tietoja "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan."
 
-        kentat-kaikki-paitsi-kht #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
-                                   "vahinkojen_korjaukset" "bonukset" "erilliskustannukset"}
-        kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht")
         taulukot
         (aseta-sheet-nimi
           (concat
@@ -445,9 +472,8 @@
 
                 [:varoitusteksti varoitus-indeksitietojen-puuttumisesta]
                 [:varoitusteksti varoitus-lampotila-puuttuu]
-                (when (or varoitus-indeksitietojen-puuttumisesta
-                          varoitus-lampotila-puuttuu)
-                  [:varoitusteksti vain-jvh-voi-muokata-tietoja-viesti])
+                (when (or varoitus-indeksitietojen-puuttumisesta varoitus-lampotila-puuttuu)
+                  [:varoitusteksti varoitus-vain-jvh-voi-muokata-tietoja])
 
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
