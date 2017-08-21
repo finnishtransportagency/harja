@@ -105,15 +105,12 @@
   "Liittää toimenpiteiden omiin hinnoittelutietoihin mukaan työt."
   [db toimenpiteet]
   (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
-        tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)
-        tyo-hinnat (tyot-q/hae-hinnoittelujen-tyohinnat db hinnoittelu-idt)]
+        tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
     (map
       (fn [toimenpide]
         (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
-              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)
-              hinnoittelun-tyohinnat (filter #(= (::vv-hinta/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyo-hinnat)]
-          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot]
-                    (concat hinnoittelun-tyot hinnoittelun-tyohinnat))))
+              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
+          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
       toimenpiteet)))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]

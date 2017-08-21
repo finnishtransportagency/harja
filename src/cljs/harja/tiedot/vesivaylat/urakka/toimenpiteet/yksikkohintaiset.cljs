@@ -173,7 +173,7 @@
 (defn- drop-index [col idx]
   (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
 
-(defn- tyorivit-kannasta->taulukkomuotoon [tyot]
+(defn- tyo->taulukkomuotoon [tyot]
   (mapv (fn [rivi]
           (cond
             ;; Työrivi
@@ -362,11 +362,14 @@
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
-          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)]
+          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)
+          tyo-hinnat (filter #(or (= (::hinta/otsikko %) "Päivän hinta")
+                                  (= (::hinta/otsikko %) "Omakustannushinta"))
+                             hinnat)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
-                  ::h/tyot (tyorivit-kannasta->taulukkomuotoon tyot)})))
+                  ::h/tyot (tyo->taulukkomuotoon (concat tyot tyo-hinnat))})))
 
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]
