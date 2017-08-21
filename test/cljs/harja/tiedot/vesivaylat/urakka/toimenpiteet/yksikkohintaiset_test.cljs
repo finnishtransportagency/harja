@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.vayla :as va]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.urakka :as u]
             [cljs-time.core :as t]
@@ -50,11 +51,7 @@
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
-                                ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 0
-                                                                   ::hinta/otsikko "Työ"
-                                                                   ::hinta/maara 0
-                                                                   ::hinta/yleiskustannuslisa 0}
-                                                                  {::hinta/id 1
+                                ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 1
                                                                    ::hinta/otsikko "Komponentit"
                                                                    ::hinta/maara 1
                                                                    ::hinta/yleiskustannuslisa 0}
@@ -69,7 +66,10 @@
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
                                                                    ::hinta/maara 4
-                                                                   ::hinta/yleiskustannuslisa 12}]}
+                                                                   ::hinta/yleiskustannuslisa 12}]
+                                                      ::h/tyot {::tyo/id 1
+                                                                ::tyo/toimenpidekoodi-id 1
+                                                                ::tyo/maara 60}}
                                 :valittu? true}
                                {::to/id 2
                                 ::to/tyolaji :viitat
@@ -342,10 +342,6 @@
              {::to/id 0
               ::h/hinnat
               [{::hinta/id nil
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 0
                 ::hinta/yleiskustannuslisa 0}
@@ -361,7 +357,8 @@
                {::hinta/id nil
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}]}))))
+                ::hinta/yleiskustannuslisa 0}]
+              ::h/tyot []}))))
 
   (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
@@ -371,11 +368,7 @@
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 0
-                ::hinta/otsikko "Työ"
-                ::hinta/maara 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 1
+              [{::hinta/id 1
                 ::hinta/otsikko "Komponentit"
                 ::hinta/maara 1
                 ::hinta/yleiskustannuslisa 0}
@@ -390,7 +383,10 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/maara 4
-                ::hinta/yleiskustannuslisa 12}]})))))
+                ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot {::tyo/id 1
+                        ::tyo/toimenpidekoodi-id 1
+                        ::tyo/maara 60}})))))
 
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
