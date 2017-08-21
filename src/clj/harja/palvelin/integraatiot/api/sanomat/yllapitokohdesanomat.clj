@@ -26,6 +26,7 @@
            :sopimus {:id (:sopimus kohde)}
            :kohdenumero (:kohdenumero kohde)
            :nimi (:nimi kohde)
+           :tunnus (:tunnus kohde)
            :tyotyyppi (:yllapitokohdetyotyyppi kohde)
            :sijainti (rakenna-sijainti kohde karttapvm)
            :yllapitoluokka (:yllapitoluokka kohde)
