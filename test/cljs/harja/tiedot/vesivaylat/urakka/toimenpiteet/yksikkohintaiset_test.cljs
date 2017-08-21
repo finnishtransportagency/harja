@@ -686,7 +686,7 @@
 
 (deftest suunniteltujen-toiden-tyhjennys
   (is (= (e! (tiedot/->TyhjennaSuunnitellutTyot)
-                {:suunnitellut-tyot [1 2 3]})
+             {:suunnitellut-tyot [1 2 3]})
          {:suunnitellut-tyot nil})))
 
 (deftest suunniteltujen-toiden-haku
@@ -694,13 +694,15 @@
     (vaadi-async-kutsut
       #{tiedot/->SuunnitellutTyotHaettu tiedot/->SuunnitellutTyotEiHaettu}
 
-      (is (true? (:suunniteltujen-toiden-haku-kaynnissa? (e! (tiedot/->HaeSuunnitellutTyot)))))))
+      (is (true? (:suunniteltujen-toiden-haku-kaynnissa? (e! (tiedot/->HaeSuunnitellutTyot)
+                                                             {:valinnat {:urakka-id 1}}))))))
 
   (testing "Uusi haku kun haku on jo käynnissä"
     (vaadi-async-kutsut
       ;; Ei saa aloittaa uusia hakuja
       #{}
 
-      (let [tila {:foo :bar :id 1 :suunniteltujen-toiden-haku-kaynnissa? true}]
+      (let [tila {:suunniteltujen-toiden-haku-kaynnissa? true
+                  :valinnat {:urakka-id 1}}]
         (is (= tila
                (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
