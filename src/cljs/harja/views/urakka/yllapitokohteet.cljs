@@ -623,7 +623,7 @@
                     :tyyppi :string :leveys id-leveys}
                    {:otsikko "Tunnus" :nimi :tunnus
                     :tyyppi :string :leveys tunnus-leveys :pituus-max 1}
-                   {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
+                   {:otsikko "Nimi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys :pituus-max 30}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
