@@ -35,6 +35,7 @@
                                         :kokonaishintainen))
       (dissoc ::toimenpide/lisatyo?)))
 
+
 (defn sopimustiedot-ok? [toimenpide-tiedot]
   (let [sop (-> toimenpide-tiedot ::toimenpide/reimari-sopimus)
         sisaltaa-tekstia #(-> sop % str not-empty)]
@@ -47,6 +48,7 @@
                            :let [toimenpide-tiedot (rename-keys toimenpide-tiedot-raaka avainmuunnokset)]
                            :when (sopimustiedot-ok? toimenpide-tiedot)]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide #{::toimenpide/reimari-id} toimenpide-tiedot))]
+
     (vec kanta-tiedot)))
 
 (defn toimenpiteet-kysely-sanoma [muutosaika]
