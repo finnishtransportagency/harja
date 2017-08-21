@@ -195,6 +195,14 @@
     (assoc data :yhteyskatkokset ryhmietty-yhteyskatkos)))
 
 ;;;;;;;;;;;;;;;;;;;; Parsitun datan muokkaamisen toiseen muotoon liittyvät funktiot ;;;;;;;;;;;;;
+(defn sort-by-vec
+  [paa-vektori & vektorit]
+  (let [jarjestelty-vektori (sort paa-vektori)
+        jarjestely-indeksit (map #(.indexOf paa-vektori %) jarjestelty-vektori)]
+    (map (fn [vektori]
+          (sort-by #()))  
+         vektorit)))
+
 (defn avain-monikko->yksikko
   [avain]
   (let [avain-mappaukset {:pvm :pvm
@@ -205,8 +213,26 @@
                           :ensimmaiset-katkokset :ensimmainen-katkos
                           :viimeiset-katkokset :viimeinen-katkos}]
     (avain avain-mappaukset)))
-(defn jarjestele-yhteyskatkos-data-visualisointia-varten
-  [yhteyskatkos-data ryhma-avain jarjestys-avain]
+(defmulti jarjestele-yhteyskatkos-data-visualisointia-varten
+  (fn [tyyppi yhteyskatkos-data ryhma-avain jarjestys-avain]
+    tyyppi))
+
+(defmethod jarjestele-yhteyskatkos-data-visualisointia-varten :line-plot
+  [_ yhteyskatkos-data ryhma-avain jarjestys-avain]
+  (reduce (fn [jarjestelty-data uusi-map]
+            (let [uusi-map-loytyi? (some #(= (:label %) (ryhma-avain uusi-map)) jarjestelty-data)]
+              (if uusi-map-loytyi?
+                (map (fn [kaytava-map]
+                      (if (= (:label kaytava-map) (ryhma-avain uusi-map))
+                        (let [x-updated (update kaytava-map :x #(conj % (jarjestys-avain uusi-map)))]
+                          (update x-updated :y #(conj % (:katkokset uusi-map))))
+                        kaytava-map))
+                     jarjestelty-data)
+                (conj jarjestelty-data {:x (jarjestys-avain uusi-map) :y (:katkokset uusi-map) :label (ryhma-avain uusi-map)}))))
+          [] yhteyskatkos-data))
+
+(defmethod jarjestele-yhteyskatkos-data-visualisointia-varten :bars
+  [_ yhteyskatkos-data ryhma-avain jarjestys-avain]
   (let [ryhma-avain (avain-monikko->yksikko ryhma-avain)
         jarjestys-avain (avain-monikko->yksikko jarjestys-avain)
         ryhmat-avattuna (map (fn [ryhma-jarjestys-map]

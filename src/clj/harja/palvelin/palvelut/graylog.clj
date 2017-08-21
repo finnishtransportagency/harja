@@ -95,7 +95,8 @@
         yhteyskatkokset (apply muunnokset/yhdista-avaimet-kun + :katkokset [(muunnokset/avain-monikko->yksikko ryhma-avain) (muunnokset/avain-monikko->yksikko jarjestys-avain)] yhteyskatkokset)
         asetukset-kayttoon (keep #(muunnokset/asetukset-kayttoon :diagrammi % hakuasetukset)
                                  yhteyskatkokset)
-        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten asetukset-kayttoon ryhma-avain jarjestys-avain)]
+        jarjestelty-data (muunnokset/jarjestele-yhteyskatkos-data-visualisointia-varten asetukset-kayttoon ryhma-avain jarjestys-avain)
+        _ (println jarjestelty-data)]
     jarjestelty-data))
 
 (defn haettavat-tiedot-analyyseja-varten
