@@ -16,12 +16,8 @@
             [ol]
             [ol.Map]
             [ol.Attribution]
-            [ol.layer.Tile]
-            [ol.source.WMTS]
-            [ol.tilegrid.WMTS]
+
             [ol.View]
-            [ol.extent :as ol-extent]
-            [ol.proj :as ol-proj]
 
             [ol.source.Vector]
             [ol.layer.Vector]
@@ -33,7 +29,12 @@
             [ol.Overlay]                                    ;; popup
             [harja.virhekasittely :as vk]
             [harja.asiakas.tapahtumat :as t]
-            [harja.ui.openlayers.kuvataso :as kuvataso])
+            [harja.ui.openlayers.kuvataso :as kuvataso]
+            [harja.ui.ikonit :as ikonit]
+            [taoensso.timbre :as log]
+            [harja.ui.openlayers.tasovalinta :as tasovalinta]
+            [harja.ui.openlayers.projektiot :refer [projektio suomen-extent]]
+            [harja.ui.openlayers.taustakartta :as taustakartta])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]
@@ -147,12 +148,8 @@
 
 (defonce openlayers-kartan-leveys (atom nil))
 
-(def suomen-extent
-  "Suomalaisissa kartoissa olevan projektion raja-arvot."
-  [-548576.000000, 6291456.000000, 1548576.000000, 8388608.000000])
 
-(def projektio (ol-proj/Projection. #js {:code   "EPSG:3067"
-                                         :extent (clj->js suomen-extent)}))
+
 
 (defn luo-kuvataso
   "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
@@ -172,36 +169,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (let [[x1 y1 x2 y2] (.getExtent geometria)]
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
-
-(defn luo-tilegrid []
-  (let [koko (/ (ol-extent/getWidth (.getExtent projektio)) 256)]
-    (loop [resoluutiot []
-           matrix-idt []
-           i 0]
-      (if (= i 16)
-        (let [optiot (clj->js
-                      {:origin (ol-extent/getTopLeft (.getExtent projektio))
-                       :resolutions (clj->js resoluutiot)
-                       :matrixIds   (clj->js matrix-idt)})]
-          (ol.tilegrid.WMTS. optiot))
-        (recur (conj resoluutiot (/ koko (Math/pow 2 i)))
-               (conj matrix-idt i)
-               (inc i))))))
-
-
-(defn- mml-wmts-layer [url layer]
-  (ol.layer.Tile.
-   #js {:source
-        (ol.source.WMTS. #js {:attributions [(ol.Attribution.
-                                              #js {:html "MML"})]
-                              :url          url
-                              :layer        layer
-                              :matrixSet    "ETRS-TM35FIN"
-                              :format       "image/png"
-                              :projection   projektio
-                              :tileGrid     (luo-tilegrid)
-                              :style        "default"
-                              :wrapX        true})}))
 
 (defn feature-geometria [feature]
   (.get feature "harja-geometria"))
@@ -360,22 +327,26 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn aseta-zoom [zoom]
   (some-> @the-kartta (.getView) (.setZoom zoom)))
 
+
+
 (defn- ol3-did-mount [this]
   "Initialize OpenLayers map for a newly mounted map component."
-  (let [mapspec (:mapspec (reagent/state this))
-        [mml-spec & _] (:layers mapspec)
-        mml (mml-wmts-layer (:url mml-spec) (:layer mml-spec))
+  (let [{layers :layers :as mapspec} (:mapspec (reagent/state this))
         interaktiot (let [oletukset (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
                                           :dragPan        false})]
                       ;; ei kinetic-ominaisuutta!
                       (.push oletukset (ol-interaction/DragPan. #js {}))
                       oletukset)
-        map-optiot (clj->js {:layers       [mml]
+        kontrollit (ol-control/defaults #js {})
+
+        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
                              :target       (:id mapspec)
-                             :controls     (ol-control/defaults #js {})
+                             :controls     kontrollit
                              :interactions interaktiot})
         ol3 (ol/Map. map-optiot)
+
+        _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers))
 
         _ (reset!
             openlayers-kartan-leveys
