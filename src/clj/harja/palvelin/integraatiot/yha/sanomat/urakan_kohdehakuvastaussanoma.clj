@@ -59,6 +59,7 @@
                     :yllapitokohdetyyppi (kasittele-kohdetyyppi (z/xml1-> kohde :kohdetyyppi z/text keyword))
                     :yllapitokohdetyotyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
                     :nimi (z/xml1-> kohde :nimi z/text)
+                    :tunnus (z/xml1-> kohde :tunnus z/text)
                     :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
                     :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
                     :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)
