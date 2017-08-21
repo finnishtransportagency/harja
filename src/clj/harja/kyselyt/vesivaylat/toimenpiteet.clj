@@ -107,7 +107,6 @@
   (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
         tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)
         tyo-hinnat (tyot-q/hae-hinnoittelujen-tyohinnat db hinnoittelu-idt)]
-    (println "TYÖHINNAT: " tyo-hinnat)
     (map
       (fn [toimenpide]
         (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
