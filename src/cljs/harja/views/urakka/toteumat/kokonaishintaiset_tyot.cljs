@@ -100,8 +100,7 @@
   (let [urakka @nav/valittu-urakka]
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
-     (urakka-valinnat/urakan-hoitokausi urakka)
-     (urakka-valinnat/aikavali)
+     [urakka-valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
      (urakka-valinnat/urakan-toimenpide+kaikki)
      (urakka-valinnat/urakan-kokonaishintainen-tehtava+kaikki)]))
 

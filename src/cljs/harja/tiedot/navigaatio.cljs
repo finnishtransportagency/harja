@@ -4,27 +4,28 @@
   ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
 
   (:require
-    ;; Reititykset
-    [goog.events :as events]
-    [goog.Uri :as Uri]
-    [goog.history.EventType :as EventType]
-    [reagent.core :refer [atom wrap]]
-    [cljs.core.async :refer [<! >! chan close!]]
+   ;; Reititykset
+   [goog.events :as events]
+   [goog.Uri :as Uri]
+   [goog.history.EventType :as EventType]
+   [reagent.core :refer [atom wrap]]
+   [cljs.core.async :refer [<! >! chan close!]]
 
-    [harja.loki :refer [log tarkkaile!]]
-    [harja.asiakas.tapahtumat :as t]
-    [harja.tiedot.urakoitsijat :as urk]
-    [harja.tiedot.hallintayksikot :as hy]
-    [harja.tiedot.istunto :as istunto]
-    [harja.tiedot.urakat :as ur]
-    [harja.tiedot.raportit :as raportit]
-    [harja.tiedot.navigaatio.reitit :as reitit]
-    [harja.atom :refer-macros [reaction<! reaction-writable]]
-    [harja.pvm :as pvm]
-    [clojure.string :as str]
-    [harja.geo :as geo]
-    [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.urakka :as urakka-domain])
+   [harja.loki :refer [log tarkkaile!]]
+   [harja.asiakas.tapahtumat :as t]
+   [harja.tiedot.urakoitsijat :as urk]
+   [harja.tiedot.hallintayksikot :as hy]
+   [harja.tiedot.istunto :as istunto]
+   [harja.tiedot.urakat :as ur]
+   [harja.tiedot.raportit :as raportit]
+   [harja.tiedot.navigaatio.reitit :as reitit]
+   [harja.atom :refer-macros [reaction<! reaction-writable]]
+   [harja.pvm :as pvm]
+   [clojure.string :as str]
+   [harja.geo :as geo]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.domain.urakka :as urakka-domain]
+   [taoensso.timbre :as log])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -263,6 +264,7 @@
       (valitse-urakka! ur)))
 
 (defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
+  (log/info "ASETA HY: " hy-id ", UR: " ur-id)
   (reset! valittu-hallintayksikko-id hy-id)
   (reset! valittu-urakka-id ur-id))
 
@@ -321,15 +323,32 @@
 (defn nykyinen-url []
   (str (reitit/muodosta-polku @reitit/url-navigaatio)
        "?"
-       (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
-       (when-let [u @valittu-urakka] (str "&u=" (:id u)))))
+       (when-let [hy @valittu-hallintayksikko-id] (str "&hy=" hy))
+       (when-let [u @valittu-urakka-id] (str "&u=" u))))
+
+(defonce ^{:doc "Tämä lippu voi estää URL tokenin päivittämisen, käytetään siirtymissä, joissa
+ halutaan tehdä useita muutoksia ilman että välissä pävitetään URLia keskeneräisenä."}
+  esta-url-paivitys? (cljs.core/atom false))
+
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
 (defn paivita-url []
-  (let [url (nykyinen-url)]
-    (when (not= url (.-token historia))
-      (log "URL != token :: " url " != " (.getToken historia))
-      (.setToken historia url))))
+  (when-not @esta-url-paivitys?
+    (let [url (nykyinen-url)]
+      (when (not= url (.-token historia))
+        (log "URL != token :: " url " != " (.getToken historia))
+        (.setToken historia url)))))
+
+(defn esta-url-paivitys!
+  "Estä URL päivitykset kunnes salli-url-paivitys! kutsutaan."
+  []
+  (reset! esta-url-paivitys? true))
+
+(defn salli-url-paivitys!
+  "Salli URL päivitys ja tee päivitys nyt"
+  []
+  (reset! esta-url-paivitys? false)
+  (paivita-url))
 
 (defn vaihda-sivu!
   "Vaihda nykyinen sivu haluttuun."
