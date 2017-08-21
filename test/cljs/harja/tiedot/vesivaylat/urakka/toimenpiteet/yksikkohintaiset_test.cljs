@@ -706,3 +706,14 @@
                   :valinnat {:urakka-id 1}}]
         (is (= tila
                (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
+
+(deftest suunniteltujen-toiden-hakemisen-valmistuminen
+  (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1}])
+           {:suunniteltujen-toiden-haku-kaynnissa? true})
+         {:suunniteltujen-toiden-haku-kaynnissa? false
+          :suunnitellut-tyot [{:id 1}]})))
+
+(deftest suunniteltujen-toiden-hakemisen-epaonnistuminen
+  (is (= (e! (tiedot/->SuunnitellutTyotEiHaettu)
+             {:suunniteltujen-toiden-haku-kaynnissa? true})
+         {:suunniteltujen-toiden-haku-kaynnissa? false})))

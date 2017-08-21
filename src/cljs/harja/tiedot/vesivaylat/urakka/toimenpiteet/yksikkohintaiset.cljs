@@ -114,7 +114,7 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord HaeSuunnitellutTyot [])
 (defrecord SuunnitellutTyotHaettu [vastaus])
-(defrecord SuunnitellutTyotEiHaettu [virhe])
+(defrecord SuunnitellutTyotEiHaettu [])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
 (defrecord UudenHintaryhmanLisays? [lisays-auki?])
@@ -262,13 +262,11 @@
 
   SuunnitellutTyotHaettu
   (process-event [{vastaus :vastaus} app]
-    ;; TODO TESTI
     (assoc app :suunnitellut-tyot vastaus
                :suunniteltujen-toiden-haku-kaynnissa? false))
 
   SuunnitellutTyotEiHaettu
   (process-event [_ app]
-    ;; TODO TESTI
     (viesti/nayta! "Suunniteltujen töiden haku epäonnistui!" :danger)
     (assoc app :suunniteltujen-toiden-haku-kaynnissa? false))
 
