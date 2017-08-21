@@ -226,12 +226,17 @@
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
 
 (defn poista-hinnoittelun-tyot! [db user hinnoittelu-id]
-  ;; TODO Poista myös hintana tallennetut vv_hinta taulusta, raaka string haku?
   (specql/update! db
                   ::tyo/tyo
                   {::m/poistettu? true
                    ::m/poistaja-id (:id user)}
-                  {::tyo/hinnoittelu-id hinnoittelu-id}))
+                  {::tyo/hinnoittelu-id hinnoittelu-id})
+  (specql/update! db
+                  ::hinta/hinta
+                  {::m/poistettu? true
+                   ::m/poistaja-id (:id user)}
+                  (op/or {::hinta/otsikko "Päivän hinta"}
+                         {::hinta/otsikko "Omakustannushinta"})))
 
 (defn luo-hinnoittelun-tyot! [{:keys [db user hinnoittelu-id tyot]}]
   (doseq [tyo tyot]
@@ -246,6 +251,11 @@
                        ::m/luotu (pvm/nyt)
                        ::m/luoja-id (:id user)})
       ;; Hintarivi
-      (::hinta/nimi tyo)
-      nil ;; TODO Luo myös hintana tallennettavat vv_hinta tauluun
-      )))
+      (::hinta/otsikko tyo)
+      (specql/insert! db
+                      ::hinta/hinta
+                      {::hinta/otsikko (::hinta/otsikko tyo)
+                       ::hinta/hinnoittelu-id hinnoittelu-id
+                       ::hinta/maara (::hinta/maara tyo)
+                       ::m/luotu (pvm/nyt)
+                       ::m/luoja-id (:id user)}))))

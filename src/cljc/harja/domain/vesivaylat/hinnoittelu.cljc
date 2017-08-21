@@ -118,7 +118,7 @@
   (s/coll-of ::tallennettava-hinta))
 
 (s/def ::tallennettava-tyo (s/keys :opt [::tyo/toimenpidekoodi-id ::tyo/maara
-                                         ::hinta/nimi ::hinta/maara]))
+                                         ::hinta/otsikko ::hinta/maara]))
 
 (s/def ::tallennettavat-tyot (s/coll-of ::tallennettava-tyo))
 

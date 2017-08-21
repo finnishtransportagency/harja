@@ -183,9 +183,9 @@
              :hinta-nimi nil
              :maara (::tyo/maara rivi)}
             ;; Hintarivi
-            (::hinta/nimi rivi)
+            (::hinta/otsikko rivi)
             {:toimenpidekoodi-id nil
-             :hinta-nimi (::hinta/nimi rivi)
+             :hinta-nimi (::hinta/otsikko rivi)
              :maara (::hinta/maara rivi)}))
         tyot))
 
@@ -198,7 +198,7 @@
              ::tyo/maara (:maara rivi)}
             ;; Hintarivi
             (:hinta-nimi rivi)
-            {::hinta/nimi (:hinta-nimi rivi)
+            {::hinta/otsikko (:hinta-nimi rivi)
              ::hinta/maara (:maara rivi)}))
         tyot))
 
