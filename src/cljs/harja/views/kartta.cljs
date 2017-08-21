@@ -780,6 +780,7 @@
       [infopaneeli/infopaneeli @asiat-pisteessa #(do (reset! tiedot/nayta-infopaneeli? false)
                                                      (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
        tiedot/infopaneelin-linkkifunktiot]])
-   [kartan-ikonien-selitykset]
+   (when-not @tiedot/infopaneeli-nakyvissa? ;; Peittää selitelaatikon, otetaan pois
+     [kartan-ikonien-selitykset])
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])
