@@ -717,3 +717,15 @@
   (is (= (e! (tiedot/->SuunnitellutTyotEiHaettu)
              {:suunniteltujen-toiden-haku-kaynnissa? true})
          {:suunniteltujen-toiden-haku-kaynnissa? false})))
+
+(deftest lisaa-hinnoiteltava-tyorivi
+  (is (= (e! (tiedot/->LisaaHinnoiteltavaTyorivi))
+         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}]}})))
+
+(deftest poista-hinnoiteltava-tyorivi
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index 1})
+             {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
+                                                 {:maara 1}
+                                                 {:maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
+                                             {:maara 2}]}})))

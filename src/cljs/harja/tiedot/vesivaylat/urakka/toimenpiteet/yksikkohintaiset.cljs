@@ -517,14 +517,12 @@
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
-    ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           paivitetyt-tyot (conj tyot {:maara 0})]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
                 (drop-index tyot (:index tiedot)))))
