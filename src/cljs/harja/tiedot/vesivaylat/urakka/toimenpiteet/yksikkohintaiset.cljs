@@ -507,7 +507,6 @@
 
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI
     (let [nykyiset-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           tyorivi-index (:index tiedot)
           paivitettava-rivi (get nykyiset-tyot tyorivi-index)

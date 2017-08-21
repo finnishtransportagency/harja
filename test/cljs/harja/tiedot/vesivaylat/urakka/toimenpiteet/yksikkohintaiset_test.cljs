@@ -709,7 +709,7 @@
 
 (deftest suunniteltujen-toiden-hakemisen-valmistuminen
   (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1}])
-           {:suunniteltujen-toiden-haku-kaynnissa? true})
+             {:suunniteltujen-toiden-haku-kaynnissa? true})
          {:suunniteltujen-toiden-haku-kaynnissa? false
           :suunnitellut-tyot [{:id 1}]})))
 
@@ -728,4 +728,16 @@
                                                  {:maara 1}
                                                  {:maara 2}]}})
          {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
+                                             {:maara 2}]}})))
+
+(deftest aseta-tyoriville-tiedot
+  (is (= (e! (tiedot/->AsetaTyorivilleTiedot {:index 1
+                                              :maara 666
+                                              :toimenpidekoodi-id 1})
+             {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
+                                                 {:maara 1}
+                                                 {:maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
+                                             {:maara 666
+                                              :toimenpidekoodi-id 1}
                                              {:maara 2}]}})))
