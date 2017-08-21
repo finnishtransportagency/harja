@@ -290,16 +290,17 @@
              [:span " "]
              (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla suunnitellut-tyot
                                                                    (:toimenpidekoodi-id tyorivi))
+                   hinta-nimi (:hinta-nimi tyorivi)
                    yksikko (:yksikko toimenpidekoodi)
                    yksikkohinta (:yksikkohinta toimenpidekoodi)
-                   voidaan-laskea? (and yksikko yksikkohinta)]
-               (when voidaan-laskea?
-                 [:span yksikko
-                  " (× "
-                  (fmt/euro yksikkohinta)
-                  " = "
-                  (fmt/euro (* (:maara tyorivi) yksikkohinta))
-                  ")"]))]]
+                   tyon-hinta-voidaan-laskea? (and yksikko yksikkohinta)]
+               (cond tyon-hinta-voidaan-laskea?
+                     [:span
+                      yksikko
+                      " (× " (fmt/euro yksikkohinta) " = " (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
+
+                     hinta-nimi "€"
+                     :default nil))]]
            [:td.tyot-osio]
            [:td.tyot-osio
             [:span.klikattava
