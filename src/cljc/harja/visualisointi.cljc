@@ -315,20 +315,17 @@
            x-tick-value y-tick-value y-label-orientation width height]}
    {:keys [origin-x origin-y axis-width axis-height]}
    {:keys [x-txt-padding x-axis-font-size y-txt-padding y-axis-font-size]}]
-  (let [x-tick (or x-tick 10)
-        y-tick (or y-tick 10)
+  (let [x-tick (or x-tick (if (> (count x-tick-value) 10)
+                            10 (count x-tick-value)))
+        y-tick (or y-tick (if (> (count y-tick-value) 10)
+                            10 (count y-tick-value)))
         x-tick-values (or x-tick-value (mapv #(-> x-max (/ x-tick) (* %) (round-to-decimal 2))
                                              (range 1 (inc x-tick))))
         y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 2))
-                                             (range 1 (inc y-tick))))]
-        ; _ (println "origin-x: " origin-x)
-        ; _ (println "origin-y: " origin-y)
-        ; _ (println "axis-width: " axis-width)
-        ; _ (println "axis-height: " axis-height)
-        ; _ (println "x-txt-padding: " x-txt-padding)
-        ; _ (println "x-axis-font-size: " x-axis-font-size)
-        ; _ (println "y-txt-padding: " y-txt-padding)
-        ; _ (println "y-axis-font-size: " y-axis-font-size)]
+                                             (range 1 (inc y-tick))))
+        x-tick-all (if x-tick-value
+                    (count x-tick-value) x-tick)
+        _ (println "ASF" x-tick-values)]
     ;määrritellään ne muuttujat svg:ssä, jotka on pakko
     (seq
      [
@@ -346,9 +343,10 @@
         [:line {:x1 origin-x :y1 origin-y
                 :x2 origin-x :y2 (- origin-y axis-height) :markerEnd "url(#markerArrow)"}]
         ;x-ticks
-        (mapcat #(let [x-tick-space (/ axis-width x-tick)
-                       x-position (-> x-tick-space (* %) (+ origin-x x-tick-space))
-                       x-tick-value (get x-tick-values %)]
+        (mapcat #(let [x-tick-space (/ axis-width x-tick-all)
+                       space-timer (Math/round (* % (/ x-tick-all x-tick)))
+                       x-position (-> x-tick-space (* space-timer) (+ origin-x x-tick-space))
+                       x-tick-value (get x-tick-values space-timer)]
                   [^{:key (str % "-tick")}
                    [:line {:x1 x-position :y1 origin-y
                            :x2 x-position :y2 (- origin-y 4)}]
@@ -540,7 +538,19 @@
 
 (defmethod plot :line-plot
   [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
-  (let [vals (atom (if (vec-of-maps? values) values [values]))]
+  (let [vals (if (vec-of-maps? values) values [values])
+        x-number? (-> vals first :x first number?)
+        y-number? (-> vals first :y first number?)
+        x-vals (vec (sort (into #{} (mapcat :x values))))
+        x-tick-value (or (:x-tick-value plot-params)
+                         (if x-number?
+                           nil x-vals))
+        vals (atom (mapv #(let [x-vec (:x %)
+                                y-vec (:y %)]
+                            (cond-> %
+                              (not x-number?) (assoc :x (range (count x-vec)))
+                              (not y-number?) (assoc :y (range (count y-vec)))))
+                         vals))]
     (fn [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
       [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
         (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {}) @vals width height)
@@ -565,7 +575,7 @@
                               (fn [event] (action-fn hovered index false)))]
 
           [:g
-            (draw-axis-and-legend vals clicked-fn mouse-enter-fn mouse-leave-fn plot-params)
+            (draw-axis-and-legend vals clicked-fn mouse-enter-fn mouse-leave-fn (assoc plot-params :x-tick-value x-tick-value))
             ;draw lines
             (doall
               (map-indexed #(identity

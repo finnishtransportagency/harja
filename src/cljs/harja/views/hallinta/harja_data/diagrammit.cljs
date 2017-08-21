@@ -18,40 +18,16 @@
                             (fn []
                               (apply str "#" (repeatedly 6 #(rand-int 10)))))))
 
-(defn yhteyskatkokset-bars
+(defn yhteyskatkokset-plot
   [e! yhteyskatkokset-jarjestys-data yhteyskatkokset-data-avain]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
-        str-pred (fn [txt] (fn [arvo] (= txt arvo)))
-        yhteyskatkosten-lkm-max (apply max (map #(apply max (map :value
-                                                                 (:yhteyskatkokset %)))
-                                                yhteyskatkokset-jarjestys-data))
-        tikit (if yhteyskatkosten-lkm-max
-                [0
-                 (js/Math.round (* .25 yhteyskatkosten-lkm-max))
-                 (js/Math.round (* .5 yhteyskatkosten-lkm-max))
-                 (js/Math.round (* .75 yhteyskatkosten-lkm-max))
-                 yhteyskatkosten-lkm-max]
-                nil)
-        legend (apply hash-set (mapcat #(map (fn [x] (:category x))
-                                             (:yhteyskatkokset %))
-                                       yhteyskatkokset-jarjestys-data))
         colors (zipmap (mapv keyword legend) (take (count legend) colors))]
     (if (empty? yhteyskatkokset-jarjestys-data)
       [:p "Annetuilla hakuasetuksilla ei löytynyt yhteyskatkoksia."]
-      [vis/bars {:width w
-                 :height (max 1000 h)
-                 :value-fn :yhteyskatkokset
-                 :label-fn :jarjestys-avain
-                 :colors colors
-                 :bar-padding 1
-                 :format-amount str
-                 :ticks tikit
-                 :legend legend}
-                ; TODO on-legend-click ei tällä hetkellä toimi.
-                ;  :on-legend-click (fn [nakyma]
-                ;                     (e! (tiedot/->PaivitaArvo (dissoc yhteyskatkokset-jarjestys-data nakyma) yhteyskatkokset-data-avain)))}
-                yhteyskatkokset-jarjestys-data])))
+      [vis/plot {:plot-type :line-plot :values yhteyskatkokset-jarjestys-data
+                 :width w :height h
+                 :clicked :delete :hovered {:stroke-width 4} :scroll-bars? true}])))
 
 (defn hae-kaikki-yhteyskatkosdatat
   [e!]
@@ -119,27 +95,27 @@
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
             ^{:key "line-plot"}
-            [vis/plot {:plot-type :line-plot :values [{:x [1 2 3 4 5] :y [4 9 16 25 36] :style {:stroke "red" :fill "red"} :label "bigger"}
-                                                      {:x [1 3 5 7] :y [7 9 15 30] :label "smaller"}
-                                                      {:x [1 3 5 9] :y [1 3 4 9] :label "ad"}
-                                                      {:x [1 3 5 14] :y [4 20 30 70] :label "foo"}
-                                                      {:x [1 3 5 11] :y [4 25 32 50] :label "foo" :style {:stroke "green" :fill "green"}}]
-                       :x-tick 4 :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))
-                       :clicked :delete :hovered {:stroke-width 4} :scroll-bars? false}]
+            ; [vis/plot {:plot-type :line-plot :values [{:x [1 2 3 4 5] :y [4 9 16 25 36] :style {:stroke "red" :fill "red"} :label "bigger"}
+            ;                                           {:x [1 3 5 7] :y [7 9 15 30] :label "smaller"}
+            ;                                           {:x [1 3 5 9] :y [1 3 4 9] :label "ad"}
+            ;                                           {:x [1 3 5 14] :y [4 20 30 70] :label "foo"}
+            ;                                           {:x [1 3 5 11] :y [4 25 32 50] :label "foo" :style {:stroke "green" :fill "green"}}]
+            ;            :x-tick 4 :width (int (* 0.85 @dom/leveys)) :height (int (/ (* 0.85 @dom/leveys) 3))
+            ;            :clicked :delete :hovered {:stroke-width 4} :scroll-bars? false}]
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "pvm"))
               ^{:key "jarjestys-pvm-mukaan"}
               [:div
                 [:h3 "Järjestys päivämäärän mukaan"]
                 (case valittu-yhteyskatkokset-arvo
-                  "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-bars e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
-                  "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-bars e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data])])
+                  "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-plot e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-plot e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data])])
             (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "palvelut"))
               ^{:key "jarjestys-palvelukutsujen-mukaan"}
               [:div
                 [:h3 "Järjestys palvelukutsujen mukaan"]
                 (case valittu-yhteyskatkokset-arvo
-                  "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-bars e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
-                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-bars e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])))]]
+                  "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-plot e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-plot e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])))]]
       [y/ajax-loader])))
 
 (defn diagrammit* [e! app]
