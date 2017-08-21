@@ -32,10 +32,8 @@
                         :vv-toimenpiteet (component/using
                                            (vv-toimenpiteet/->Toimenpiteet)
                                            [:db :http-palvelin])))))
-
   (testit)
   (alter-var-root #'jarjestelma component/stop))
-
 
 (use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
@@ -71,7 +69,6 @@
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
-
 
 (deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
