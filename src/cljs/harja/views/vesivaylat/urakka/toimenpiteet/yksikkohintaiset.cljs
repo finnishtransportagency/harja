@@ -245,7 +245,7 @@
               :nayta-ryhmat [:hinta :tyo]
               :ryhmittely #(cond (instance? HintaValinta %) :hinta
                                  (instance? TyoValinta %) :tyo)
-              :ryhman-otsikko #(case :hinta "Hinta" :tyo "Sopimushinnat")
+              :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
               :class "livi-alasveto-250"
               :valinta (first (filter #(cond (instance? TyoValinta %)
                                              (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
