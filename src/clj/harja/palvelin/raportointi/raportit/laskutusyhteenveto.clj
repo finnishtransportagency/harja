@@ -360,11 +360,12 @@
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
         ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
         ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
-        kaikki-tuotteittain-summattuna (fmap #(apply merge-with (fnil + 0 0)
-                                                     (map (fn [rivi]
-                                                            (select-keys rivi (laskettavat-kentat rivi)))
-                                                          %))
-                                             kaikki-tuotteittain)
+        kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
+                                         (fmap #(apply merge-with (fnil + 0 0)
+                                                       (map (fn [rivi]
+                                                              (select-keys rivi (laskettavat-kentat rivi)))
+                                                            %))
+                                               kaikki-tuotteittain))
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
 
@@ -477,6 +478,9 @@
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
                   taulukot)
+
+                (when (and hallintayksikko-id (= 0 (count urakat)))
+                  [:teksti " Hallintayksikössä ei aktiivisia urakoita valitulla aikavälillä"])
 
                 (when (and hallintayksikko-id (< 0 (count urakat)))
                   [:otsikko "Raportti sisältää seuraavien urakoiden tiedot: "])
