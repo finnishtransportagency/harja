@@ -16,3 +16,7 @@ CREATE TABLE vv_tyo
 
 ALTER TABLE vv_hinta ADD CONSTRAINT maara_positiivinen CHECK(maara >= 0);
 ALTER TABLE vv_tyo ADD CONSTRAINT maara_positiivinen CHECK(maara >= 0);
+
+-- Työt tallennettiin ennen könttäsummana vv_hinta tauluun nimellä 'Työ'.
+-- Migratoidaan nämä könttäsummat päivän hinnoiksi.
+UPDATE vv_hinta set otsikko = 'Päivän hinta' WHERE otsikko = 'Työ';
