@@ -10,7 +10,8 @@
             [taoensso.timbre :as log]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [specql.op :as op]))
+            [specql.op :as op]
+            [harja.domain.vesivaylat.hinta :as hinta]))
 
 (defn hae-hinnoittelujen-tyot [db hinnoittelu-idt]
   (specql/fetch db
@@ -18,3 +19,12 @@
                 (set/union tyo/perustiedot tyo/viittaus-idt)
                 {::tyo/hinnoittelu-id (op/in hinnoittelu-idt)
                  ::m/poistettu? false}))
+
+(defn hae-hinnoittelujen-tyohinnat [db hinnoittelu-idt]
+  (specql/fetch db
+                ::hinta/hinta
+                (set/union hinta/perustiedot hinta/viittaus-idt)
+                (op/and {::hinta/hinnoittelu-id (op/in hinnoittelu-idt)
+                         ::m/poistettu? false}
+                        (op/or {::hinta/otsikko "Päivän hinta"}
+                               {::hinta/otsikko "Omakustannushinta"}))))

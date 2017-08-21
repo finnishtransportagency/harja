@@ -132,7 +132,9 @@
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/urakka-id
           :harja.domain.vesivaylat.toimenpide/id
+          ;; Könttähinnat
           ::tallennettavat-hinnat
+          ;; Yksittäiset työt sekä työhinnat
           ::tallennettavat-tyot]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
