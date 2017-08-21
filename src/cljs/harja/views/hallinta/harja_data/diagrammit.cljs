@@ -21,14 +21,15 @@
 (defn yhteyskatkokset-plot
   [e! yhteyskatkokset-jarjestys-data yhteyskatkokset-data-avain]
   (let [w (int (* 0.85 @dom/leveys))
-        h (int (/ w 3))
+        h (int (* w 1.5))
+        max-legend-height (* h 0.7)
         yhteyskatkokset-jarjestys-data (mapv #(assoc %1 :style {:stroke %2 :fill %2}) yhteyskatkokset-jarjestys-data colors)
         _ (when (= :yhteyskatkokset-pvm-data yhteyskatkokset-data-avain)
             (println (pr-str yhteyskatkokset-jarjestys-data)))]
     (if (empty? yhteyskatkokset-jarjestys-data)
       [:p "Annetuilla hakuasetuksilla ei löytynyt yhteyskatkoksia."]
       [vis/plot {:plot-type :line-plot :values yhteyskatkokset-jarjestys-data
-                 :width w :height h
+                 :width w :height h :n-of-legend-columns 3 :max-legend-height max-legend-height
                  :clicked :delete :hovered {:stroke-width 4} :scroll-bars? false}])))
 
 (defn hae-kaikki-yhteyskatkosdatat

@@ -542,6 +542,11 @@
  #?(:clj (.indexOf vektori elementti)
     :cljs (.indexOf (to-array vektori) elementti)))
 
+(defn str->float
+  [txt]
+  #?(:clj (Float. txt)
+     :cljs (js/parseFloat txt)))
+
 (defn lisaa-suorille-nollat
   [vals x-vals]
   (map (fn [mappi]
@@ -577,21 +582,23 @@
                            nil x-vals))
         vals (lisaa-suorille-nollat vals x-vals)
         vals (atom (mapv #(let [x-vec (:x %)
+                                x-aloitus-indeksi (index-of x-vals (first x-vec))
+                                _ (println "al-ind: " x-aloitus-indeksi " f-x: " (first x-vec) (:label %))
                                 y-vec (:y %)]
                             (cond-> %
-                              (not x-number?) (assoc :x (range (count x-vec)))
-                              (not y-number?) (assoc :y (range (count y-vec)))))
+                              (not x-number?) (assoc :x (vec (range x-aloitus-indeksi (+ x-aloitus-indeksi (count x-vec)))))
+                              (not y-number?) (assoc :y (vec (range (count y-vec))))))
                          vals))]
     (fn [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
       [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
         (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {}) @vals width height)
               x-max (or x-max (apply-vec-maps max :x @vals))
               y-max (or y-max (apply-vec-maps max :y @vals))
-              x-ratios (map #(/ axis-width x-max) @vals)
-              y-ratios (map #(/ axis-height y-max) @vals)
-              points (mapv #(axis-points (:x %1) (:y %1) %2 %3 origin-x origin-y)
-                           @vals x-ratios y-ratios)
-              _ (println (pr-str points))
+              x-ratio (/ axis-width x-max)
+              y-ratio (/ axis-height y-max)
+              points (mapv #(axis-points (:x %) (:y %) x-ratio y-ratio origin-x origin-y)
+                           @vals)
+              _ (println "VALS: " (pr-str @vals))
               action-fn (fn [style-map index add?]
                           (if (= style-map :delete)
                             (reset! vals (vector-disj @vals index))
@@ -618,10 +625,11 @@
                                    :on-mouse-enter (mouse-enter-fn %1)
                                    :on-mouse-leave (mouse-leave-fn %1)}
                                 (if (= 1 (count (:x %2)))
-                                  (do (str (re-find #"(.+)," (get points %1)) " " (re-find #",(.+)" (get points %1)))
-                                      [:circle {:cx (second (re-find #"(.+)," (get points %1)))
-                                                :cy (second (re-find #",(.+)" (get points %1)))
-                                                :r 2}])
+                                  (do (println (str "Circöle: "(re-find #"(.+)," (get points %1)) " j " (re-find #",(.+)" (get points %1))))
+                                      [:circle {:cx (str->float (second (re-find #"(.+)," (get points %1))))
+                                                :cy (str->float (second (re-find #",(.+)" (get points %1))))
+                                                :r 2
+                                                :fill (get-in %2 [:style :fill])}])
                                   [:polyline (merge {:points (get points %1)
                                                      :fill "none"}
                                                     (style-map (:style %2)))])])
