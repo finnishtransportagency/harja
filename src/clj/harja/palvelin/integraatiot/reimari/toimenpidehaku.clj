@@ -3,6 +3,7 @@
             [harja.palvelin.integraatiot.reimari.apurit :as r-apurit]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-toimenpiteet :as toimenpiteet-sanoma]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
+            [harja.domain.vesivaylat.toimenpide :as sopimus]
             [harja.pvm :as pvm]
             [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
@@ -34,12 +35,16 @@
                                         :kokonaishintainen))
       (dissoc ::toimenpide/lisatyo?)))
 
+(defn sopimustiedot-ok? [toimenpide-tiedot]
+  (-> toimenpide-tiedot ::toimenpide/reimari-sopimus #(and (-> % ::sopimus/r-nro not-empty)
+                                                           (-> % ::sopimus/r-nimi not-empty))))
+
 (defn kasittele-toimenpiteet-vastaus [db vastaus-xml]
   (let [sanoman-tiedot (toimenpiteet-sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
-        kanta-tiedot (for [toimenpide-tiedot sanoman-tiedot]
-                       (specql/upsert! db ::toimenpide/reimari-toimenpide
-                                       #{::toimenpide/reimari-id}
-                                       (rename-keys toimenpide-tiedot avainmuunnokset)))]
+        kanta-tiedot (for [toimenpide-tiedot-raaka sanoman-tiedot
+                           :let [toimenpide-tiedot (rename-keys toimenpide-tiedot avainmuunnokset)]
+                           :when (sopimustiedot-ok? toimenpide-tiedot)]
+                       (specql/upsert! db ::toimenpide/reimari-toimenpide #{::toimenpide/reimari-id} toimenpide-tiedot))]
     (vec kanta-tiedot)))
 
 (defn toimenpiteet-kysely-sanoma [muutosaika]
