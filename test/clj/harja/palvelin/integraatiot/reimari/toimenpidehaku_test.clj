@@ -11,10 +11,13 @@
   (ht/laajenna-integraatiojarjestelmafixturea
    "yit"
    :reimari (component/using
-           (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil)
-           [:db :integraatioloki])))
+             (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil nil)
+             [:db :integraatioloki])))
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
+
+
+
 
 (def referenssi-toimenpide-tietue
   {::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
@@ -68,7 +71,7 @@
   (let [db (:db ht/jarjestelma)
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
-                       (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
+                       (first (tohaku/kasittele-toimenpiteet-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
     (tarkista-fn)
     (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
              (::toimenpide/urakka-id (first (specql/fetch db
