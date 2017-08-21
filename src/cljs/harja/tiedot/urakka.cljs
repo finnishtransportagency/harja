@@ -118,7 +118,7 @@
 
 (defonce valitun-urakan-hoitokaudet
   (reaction (when-let [ur @nav/valittu-urakka]
-              (log "MUODOSTA VALITUN URAKAN SOPPARIKAUDET " (pr-str ur))
+              (log "MUODOSTA VALITUN URAKAN SOPPARIKAUDET " (:nimi ur))
               (hoito-tai-sopimuskaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]

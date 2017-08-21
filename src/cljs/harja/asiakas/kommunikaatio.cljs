@@ -220,8 +220,11 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (str (polku) "excel?_=" (name tyyppi) "&"
        (yhdista-parametrit parametrit)))
 
-(defn wmts-polku []
+(defn wmts-polku-mml []
   (str +polku+ "wmts/"))
+
+(defn wmts-polku-livi []
+  (str +polku+ "wmtslivi/"))
 
 (defn karttakuva-url [& parametrit]
   (str (polku) "karttakuva?" (yhdista-parametrit parametrit)))
