@@ -522,9 +522,10 @@
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]
-    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
+    (let [index (:index tiedot)
+          tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-                (drop-index tyot (:index tiedot)))))
+                (drop-index tyot index))))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]
