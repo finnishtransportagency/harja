@@ -24,8 +24,7 @@ SELECT
                        AND poistettu IS NOT TRUE)
                 AND poistettu IS NOT TRUE)
          AND poistettu IS NOT TRUE)
-  -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki työt, eli
-  -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
+  -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki työt. Summaa kaikki yhteen.
   +
   (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
    FROM vv_tyo tyo
