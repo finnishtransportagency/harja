@@ -508,9 +508,9 @@
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
     (let [nykyiset-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          tyorivi-index (:index tiedot)
-          paivitettava-rivi (get nykyiset-tyot tyorivi-index)
-          paivitetyt-tyot (assoc nykyiset-tyot tyorivi-index (merge paivitettava-rivi
+          index (:index tiedot)
+          paivitettava-rivi (get nykyiset-tyot index)
+          paivitetyt-tyot (assoc nykyiset-tyot index (merge paivitettava-rivi
                                                                     (dissoc tiedot :index)))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
