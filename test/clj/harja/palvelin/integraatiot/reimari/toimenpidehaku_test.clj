@@ -102,4 +102,10 @@
                (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
                                {::toimenpide/reimari-lisatyo? false}
                                {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
-      (tarkista-fn))))
+      (tarkista-fn))
+
+    (t/testing "Puutteellisilla sopimustiedoilla ei tallenneta sopimusta mutta ei tule myöskään poikkeusta"
+      (let [nimeton-sopimus-xml (-> "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"
+                                    slurp
+                                    (clojure.string/replace "nimi=\"Hoitosopimus\"" ""))]
+        (t/is (empty? (tohaku/kasittele-toimenpiteet-vastaus db nimeton-sopimus-xml)))))))

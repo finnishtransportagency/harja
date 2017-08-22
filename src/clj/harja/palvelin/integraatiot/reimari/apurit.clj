@@ -57,12 +57,11 @@
     (if-not muutosaika
       (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
       (lukko/yrita-ajaa-lukon-kanssa
-       db (str "reimari-" haun-nimi)
+       db (str haun-nimi)
        (fn []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
           (fn [konteksti]
-            (println "fff" hakuparametrit)
             (kutsu-reimari-integraatiota* (assoc hakuparametrit :muutosaika muutosaika) konteksti))))))))
 
 
