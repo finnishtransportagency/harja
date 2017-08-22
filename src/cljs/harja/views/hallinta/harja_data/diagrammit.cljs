@@ -14,7 +14,7 @@
             [harja.ui.dom :as dom]
             [harja.ui.debug :as debug]))
 
-(def colors (vec (repeatedly 60
+(def colors (vec (repeatedly 130
                             (fn []
                               (apply str "#" (repeatedly 6 #(rand-int 10)))))))
 
@@ -23,14 +23,12 @@
   (let [w (int (* 0.85 @dom/leveys))
         h (int (* w 1.5))
         max-legend-height (* h 0.7)
-        yhteyskatkokset-jarjestys-data (mapv #(assoc %1 :style {:stroke %2 :fill %2}) yhteyskatkokset-jarjestys-data colors)
-        _ (when (= :yhteyskatkokset-pvm-data yhteyskatkokset-data-avain)
-            (println (pr-str yhteyskatkokset-jarjestys-data)))]
+        yhteyskatkokset-jarjestys-data (mapv #(assoc %1 :style {:stroke %2 :fill %2}) yhteyskatkokset-jarjestys-data colors)]
     (if (empty? yhteyskatkokset-jarjestys-data)
       [:p "Annetuilla hakuasetuksilla ei löytynyt yhteyskatkoksia."]
       [vis/plot {:plot-type :line-plot :values yhteyskatkokset-jarjestys-data
                  :width w :height h :n-of-legend-columns 3 :max-legend-height max-legend-height
-                 :clicked :delete :hovered {:stroke-width 4} :scroll-bars? false}])))
+                 :clicked :delete :hovered {:stroke-width 4 :legend-hover-fill "black"} :scroll-bars? false}])))
 
 (defn hae-kaikki-yhteyskatkosdatat
   [e!]
@@ -97,7 +95,7 @@
 
         (when (or (nil? valittu-analyysi) (= valittu-analyysi "yhteyskatkokset"))
           (list
-            ^{:key "line-plot"}
+          ;  ^{:key "line-plot"}
             ; [vis/plot {:plot-type :line-plot :values [{:x [1 2 3 4 5] :y [4 9 16 25 36] :style {:stroke "red" :fill "red"} :label "bigger"}
             ;                                           {:x [1 3 5 7] :y [7 9 15 30] :label "smaller"}
             ;                                           {:x [1 3 5 9] :y [1 3 4 9] :label "ad"}

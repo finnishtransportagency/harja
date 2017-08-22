@@ -329,7 +329,7 @@
         y-tick (dec y-tick)
         x-tick-values (or x-tick-value (mapv #(-> x-max (/ x-tick) (* %) (round-to-decimal 2))
                                              (range (inc x-tick))))
-        y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 2))
+        y-tick-values (or y-tick-value (mapv #(-> y-max (/ y-tick) (* %) (round-to-decimal 0))
                                              (range (inc y-tick))))
         x-tick-all (if x-tick-value
                     (dec (count x-tick-value)) x-tick)]
@@ -492,7 +492,9 @@
                                                             :y rect-y-val
                                                             :height legendbox-thickness
                                                             :width  legendbox-thickness
-                                                            :fill   (get-in val [:style :fill])}]
+                                                            :fill   (if-let [hover-fill (get-in val [:style :legend-hover-fill])]
+                                                                      hover-fill
+                                                                      (get-in val [:style :fill]))}]
                                                     [:text {:x         (+ legend-label-x rect-x-val)
                                                             :y         (+ legend-label-y rect-y-val)
                                                             :font-size 6}
@@ -520,12 +522,12 @@
    {:keys [x-min x-max y-min y-max title x-label y-label x-tick y-tick
            x-tick-value y-tick-value clicked hovered width height
            max-legend-height n-of-legend-columns scroll-bars?]}]
-  (let [x-max (or x-max (apply-vec-maps max :x @vals))
-        y-max (or y-max (apply-vec-maps max :y @vals))
-        x-min (or x-min (apply-vec-maps min :x @vals))
-        y-min (or y-min (apply-vec-maps min :y @vals))
-        sizes (sizes {})
-        diagram-points (diagram-points sizes @vals width height)
+  (let [x-max (or x-max (apply-vec-maps max :x vals))
+        y-max (or y-max (apply-vec-maps max :y vals))
+        x-min (or x-min (apply-vec-maps min :x vals))
+        y-min (or y-min (apply-vec-maps min :y vals))
+        sizes (sizes {:max-legend-height max-legend-height})
+        diagram-points (diagram-points sizes vals width height)
         axis-params {:x-min x-min :x-max x-max :y-min y-min :y-max y-max :title title
                      :x-label x-label :y-label y-label :x-tick x-tick :y-tick y-tick
                      :x-tick-value x-tick-value :y-tick-value y-tick-value
@@ -535,7 +537,7 @@
                        :scroll-bars? scroll-bars? :width width :height height}]
     [:g
       (draw-axis axis-params diagram-points sizes)
-      (draw-legend @vals sizes diagram-points legend-params)]))
+      (draw-legend vals sizes diagram-points legend-params)]))
 
 (defn index-of
  [vektori elementti]
@@ -572,7 +574,7 @@
     (identity plot-type)))
 
 (defmethod plot :line-plot
-  [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
+  [{:keys [values width height clicked hovered x-max y-max max-legend-height] :as plot-params}]
   (let [vals (if (vec-of-maps? values) values [values])
         x-number? (-> vals first :x first number?)
         y-number? (-> vals first :y first number?)
@@ -583,22 +585,20 @@
         vals (lisaa-suorille-nollat vals x-vals)
         vals (atom (mapv #(let [x-vec (:x %)
                                 x-aloitus-indeksi (index-of x-vals (first x-vec))
-                                _ (println "al-ind: " x-aloitus-indeksi " f-x: " (first x-vec) (:label %))
                                 y-vec (:y %)]
                             (cond-> %
                               (not x-number?) (assoc :x (vec (range x-aloitus-indeksi (+ x-aloitus-indeksi (count x-vec)))))
                               (not y-number?) (assoc :y (vec (range (count y-vec))))))
                          vals))]
-    (fn [{:keys [values width height clicked hovered x-max y-max] :as plot-params}]
+    (fn [{:keys [values width height clicked hovered x-max y-max max-legend-height] :as plot-params}]
       [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
-        (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {}) @vals width height)
+        (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {:max-legend-height max-legend-height}) @vals width height)
               x-max (or x-max (apply-vec-maps max :x @vals))
               y-max (or y-max (apply-vec-maps max :y @vals))
               x-ratio (/ axis-width x-max)
               y-ratio (/ axis-height y-max)
               points (mapv #(axis-points (:x %) (:y %) x-ratio y-ratio origin-x origin-y)
                            @vals)
-              _ (println "VALS: " (pr-str @vals))
               action-fn (fn [style-map index add?]
                           (if (= style-map :delete)
                             (reset! vals (vector-disj @vals index))
@@ -613,7 +613,7 @@
                               (fn [event] (action-fn hovered index false)))]
 
           [:g
-            (draw-axis-and-legend vals clicked-fn mouse-enter-fn mouse-leave-fn (assoc plot-params :x-tick-value x-tick-value))
+            (draw-axis-and-legend @vals clicked-fn mouse-enter-fn mouse-leave-fn (assoc plot-params :x-tick-value x-tick-value))
             ;draw lines
             (doall
               (map-indexed #(identity
@@ -625,7 +625,7 @@
                                    :on-mouse-enter (mouse-enter-fn %1)
                                    :on-mouse-leave (mouse-leave-fn %1)}
                                 (if (= 1 (count (:x %2)))
-                                  (do (println (str "Circöle: "(re-find #"(.+)," (get points %1)) " j " (re-find #",(.+)" (get points %1))))
+                                  (do
                                       [:circle {:cx (str->float (second (re-find #"(.+)," (get points %1))))
                                                 :cy (str->float (second (re-find #",(.+)" (get points %1))))
                                                 :r 2
