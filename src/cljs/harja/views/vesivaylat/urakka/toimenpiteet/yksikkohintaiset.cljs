@@ -264,7 +264,8 @@
                                           :toimenpidekoodi-id (:toimenpidekoodi-id %)
                                           :hinta-nimi nil})))
                 :format-fn #(cond (instance? HintaValinta %) (:nimi %)
-                                  (instance? TyoValinta %) (str (:nimi %) " (" (fmt/euro (:yksikkohinta %)) " / " (:yksikko %) ")")
+                                  (instance? TyoValinta %) (str (:nimi %) " (" (fmt/euro (:yksikkohinta %))
+                                                                " / " (:yksikko %) ")")
                                   :default "Valitse työ")
                 :nayta-ryhmat [:hinta :tyo]
                 :ryhmittely #(cond (instance? HintaValinta %) :hinta
