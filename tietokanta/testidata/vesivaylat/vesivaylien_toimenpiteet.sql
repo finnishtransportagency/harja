@@ -875,13 +875,13 @@ VALUES
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Hietasaaren poijujen korjausta Vantaalla', FALSE,
+  ('Hietasaaren poijujen korjausta otos 2', FALSE,
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'),
    (SELECT id
     FROM urakka
-    WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
 
 INSERT INTO vv_hinta
@@ -969,7 +969,7 @@ INSERT INTO vv_hinta
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Hietasaaren poijujen korjausta Vantaalla'),
+    WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
    'Yleiset materiaalit', 70, (SELECT id
                                FROM kayttaja
                                WHERE kayttajanimi = 'tero'));
@@ -1008,7 +1008,7 @@ VALUES
     WHERE lisatieto = 'Poijujen korjausta kuten on sovittu otos 2'),
    (SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Hietasaaren poijujen korjausta Vantaalla'),
+    WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));
