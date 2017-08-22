@@ -6,11 +6,11 @@
 SELECT
   hintaryhma.id,
   hintaryhma.nimi                   AS "hinnoittelu",
+  -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
+  -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
-         -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
-         -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
          (SELECT "hinnoittelu-id"
           FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
