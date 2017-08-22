@@ -138,7 +138,8 @@
       (is (= 1 (count (hae-testi-ilmoitukset)))
           "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
 
-      (let [{:keys [status body]} @ilmoitushaku]
+      (let [{:keys [status body] :as vastaus} @ilmoitushaku]
+        (println "ilmoitushaku: " vastaus)
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
         (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
