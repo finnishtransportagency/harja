@@ -636,8 +636,10 @@
      :format-fn :nimi}
     nav/+urakkatyypit+]])
 
-(defn ei-raportteja-saatavilla-viesti [urakkatyyppi]
-  (if (and (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)) (nil? @nav/valittu-urakka))
+(defn ei-raportteja-saatavilla-viesti [urakkatyyppi valittu-urakka]
+  (if (and (nil? valittu-urakka)
+           (or (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?))
+               (= urakkatyyppi "vesiväylät")))              ;Vesiväylissä raportteja toistaiseksi vain urakkatasolla
     (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
@@ -692,7 +694,7 @@
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
                           (empty? @mahdolliset-raporttityypit)
-                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))]
+                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
