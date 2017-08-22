@@ -231,8 +231,8 @@
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
       [:tr
-       [:th {:style {:width "50%"}}]
-       [:th {:style {:width "35%"}} "Hinta / määrä"]
+       [:th {:style {:width "55%"}}]
+       [:th {:style {:width "30%"}} "Hinta / määrä"]
        [:th {:style {:width "10%"}} "YK-lisä"]
        [:th {:style {:width "5%"}} ""]]]
      [:tbody
