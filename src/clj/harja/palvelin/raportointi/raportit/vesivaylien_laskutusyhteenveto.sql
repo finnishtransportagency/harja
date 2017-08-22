@@ -11,6 +11,7 @@ SELECT
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
+         -- Hinta kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
          (SELECT "hinnoittelu-id"
           FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
@@ -34,6 +35,7 @@ SELECT
                                       AND yht.alkupvm <= :alkupvm
                                       AND yht.loppupvm >= :loppupvm
    WHERE "hinnoittelu-id" IN
+         -- Työ kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
          (SELECT "hinnoittelu-id"
           FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
