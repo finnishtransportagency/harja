@@ -54,7 +54,7 @@ WHERE "urakka-id" = :urakkaid
 
 -- name: hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa
 -- Hakee toimenpiteiden omat hinnoittelut ja laskee niiden hintojen summan.
--- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään;
+-- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään
 -- tällaiset tapaukset summataan jo hintaryhmien hintaan (ks. kysely: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat)
 SELECT
   oma_hinnoittelu.nimi                              AS "hinnoittelu",
