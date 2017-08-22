@@ -1,7 +1,7 @@
 -- name: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat
 -- Hakee kaikki hinnoittelut, jotka ovat hintaryhmiä, ja muodostaa summan hintaryhmän hinnoista sekä
 -- hintaryhmään kuuluvien toimenpiteiden omista hinnoitteluista.
--- HUOM! Ei sisällä hintoja, joiden toimenpiteet eivät kuulu mihinkään hintaryhmään
+-- HUOM! Ei sisällä hintoja, joiden toimenpiteet eivät kuulu mihinkään hintaryhmään.
 -- Tällaiset haetaan eri kyselyssä, ks. hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa.
 SELECT
   hintaryhma.id,
@@ -56,7 +56,7 @@ WHERE "urakka-id" = :urakkaid
 
 -- name: hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa
 -- Hakee toimenpiteiden omat hinnoittelut ja laskee niiden hintojen summan.
--- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään
+-- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään, sillä
 -- tällaiset tapaukset summataan jo hintaryhmien hintaan (ks. kysely: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat)
 SELECT
   oma_hinnoittelu.nimi                              AS "hinnoittelu",
