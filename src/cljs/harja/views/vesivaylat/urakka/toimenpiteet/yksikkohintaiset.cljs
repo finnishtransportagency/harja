@@ -264,7 +264,7 @@
                                           :toimenpidekoodi-id (:toimenpidekoodi-id %)
                                           :hinta-nimi nil})))
                 :format-fn #(cond (instance? HintaValinta %) (:nimi %)
-                                  (instance? TyoValinta %) (:nimi %)
+                                  (instance? TyoValinta %) (str (:nimi %) " (" (fmt/euro (:yksikkohinta %)) " / " (:yksikko %) ")")
                                   :default "Valitse työ")
                 :nayta-ryhmat [:hinta :tyo]
                 :ryhmittely #(cond (instance? HintaValinta %) :hinta
@@ -297,7 +297,7 @@
                (cond tyon-hinta-voidaan-laskea?
                      [:span
                       yksikko
-                      " (× " (fmt/euro yksikkohinta) " = " (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
+                      " (" (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
 
                      hinta-nimi "€"
                      :default nil))]]
