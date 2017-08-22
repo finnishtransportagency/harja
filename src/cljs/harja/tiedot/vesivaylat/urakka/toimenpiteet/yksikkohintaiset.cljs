@@ -525,7 +525,7 @@
     (let [index (:index tiedot)
           tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-                (drop-index tyot index))))
+                (vec (drop-index tyot index)))))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]
