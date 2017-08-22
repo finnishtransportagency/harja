@@ -76,7 +76,7 @@ FROM vv_hinnoittelu oma_hinnoittelu
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
       AND hintaryhma IS FALSE
-      -- Tarkista, ettei hinnoittelun toimenpide ei kuulu mihinkään hintaryhmään
+      -- Tarkista, ettei hinnoittelun toimenpide kuulu mihinkään hintaryhmään
       AND (SELECT id
            FROM vv_hinnoittelu
            WHERE id IN
