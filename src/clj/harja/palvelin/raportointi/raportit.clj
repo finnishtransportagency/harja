@@ -289,8 +289,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
-    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit}
-   ])
+    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-raporttinakyma}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
