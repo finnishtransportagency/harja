@@ -153,7 +153,13 @@
                     ::hinta/hinta
                     {::m/poistettu? true
                      ::m/poistaja-id (:id user)}
-                    {::hinta/hinnoittelu-id (op/in oma-hinnoittelu-idt)})))
+                    {::hinta/hinnoittelu-id (op/in oma-hinnoittelu-idt)})
+
+    (specql/update! db
+                    ::tyo/tyo
+                    {::m/poistettu? true
+                     ::m/poistaja-id (:id user)}
+                    {::tyo/hinnoittelu-id (op/in oma-hinnoittelu-idt)})))
 
 (defn liita-toimenpiteet-hinnoitteluun! [db user toimenpide-idt hinnoittelu]
   (doall
