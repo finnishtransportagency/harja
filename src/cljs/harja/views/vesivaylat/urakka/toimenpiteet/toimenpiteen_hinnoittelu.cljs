@@ -81,6 +81,12 @@
                 (:tehtava suunniteltu-tyo)
                 (:yksikkohinta suunniteltu-tyo)))
 
+(defn- valiotsikkorivi [otsikko]
+  [:tr.otsikkorivi
+   [:td.tyot-osio [:b otsikko]]
+   [:td.tyot-osio]
+   [:td.tyot-osio]
+   [:td.tyot-osio]])
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
@@ -115,11 +121,7 @@
        [:th {:style {:width "10%"}} "YK-lisä"]
        [:th {:style {:width "5%"}} ""]]]
      [:tbody
-      [:tr.otsikkorivi
-       [:td.tyot-osio [:b "Sopimushintaiset työt"]]
-       [:td.tyot-osio]
-       [:td.tyot-osio]
-       [:td.tyot-osio]]
+      [valiotsikkorivi "Sopimushintaiset työt"]
       (map-indexed
         (fn [index tyorivi]
           ^{:key index}
@@ -192,11 +194,7 @@
        [:td.tyot-osio]
        [:td.tyot-osio]
        [:td.tyot-osio]]
-      [:tr.otsikkorivi
-       [:td [:b "Muut"]]
-       [:td]
-       [:td]
-       [:td]]
+      [valiotsikkorivi "Muut"]
       ;; TODO Aiemmin oli könttäsumma komponenteille, nyt annetaan hinta tarkemmin
       ;; Tätä ei oikein voi helposti migratoida mitenkään?
       #_[toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
