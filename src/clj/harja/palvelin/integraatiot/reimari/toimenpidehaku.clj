@@ -30,10 +30,9 @@
 
 (defn lisatyo->hintatyyppi [tiedot]
   (-> tiedot
-      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
+      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/reimari-lisatyo? tiedot)
                                         :yksikkohintainen
-                                        :kokonaishintainen))
-      (dissoc ::toimenpide/lisatyo?)))
+                                        :kokonaishintainen))))
 
 
 (defn sopimustiedot-ok? [toimenpide-tiedot]
@@ -45,7 +44,9 @@
 (defn kasittele-toimenpiteet-vastaus [db vastaus-xml]
   (let [sanoman-tiedot (toimenpiteet-sanoma/lue-hae-toimenpiteet-vastaus vastaus-xml)
         kanta-tiedot (for [toimenpide-tiedot-raaka sanoman-tiedot
-                           :let [toimenpide-tiedot (rename-keys toimenpide-tiedot-raaka avainmuunnokset)]
+                           :let [toimenpide-tiedot (-> toimenpide-tiedot-raaka
+                                                       (rename-keys avainmuunnokset)
+                                                       lisatyo->hintatyyppi)]
                            :when (sopimustiedot-ok? toimenpide-tiedot)]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide #{::toimenpide/reimari-id} toimenpide-tiedot))]
 
