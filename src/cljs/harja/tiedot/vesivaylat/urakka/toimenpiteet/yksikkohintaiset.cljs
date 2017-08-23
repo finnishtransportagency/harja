@@ -399,6 +399,7 @@
                                                {::hinta/id id})
                                              {::hinta/otsikko (::hinta/otsikko hinta)
                                               ::hinta/maara (::hinta/maara hinta)
+                                              ::hinta/ryhma "muu"
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
              ::h/tallennettavat-tyot (tyorivit-taulukosta->tallennusmuotoon

@@ -208,7 +208,7 @@
 
       (::h/id hinnoittelu))))
 
-(defn tallenna-hinnoittelun-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
+(defn tallenna-toimenpiteen-oma-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
   (doseq [hinta hinnat]
     (if (id-olemassa? (::hinta/id hinta))
       (specql/update! db

@@ -88,7 +88,7 @@
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
           ;; Hinnat-taulukossa on könttähinnat, jotka voidaan luoda uutena tai päivittää
-          (q/tallenna-hinnoittelun-hinta!
+          (q/tallenna-toimenpiteen-oma-hinta!
             {:db db
              :user user
              :hinnoittelu-id hinnoittelu-id
