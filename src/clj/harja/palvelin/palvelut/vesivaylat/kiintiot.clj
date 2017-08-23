@@ -35,7 +35,7 @@
                                            urakka-id)
       (jdbc/with-db-transaction [db db]
         (q/tallenna-kiintiot! db user tiedot)
-        (q/hae-kiintiot db tiedot)))))
+        (hae-kiintiot db user (assoc tiedot :toimenpiteet? true))))))
 
 (defn- liita-toimenpiteet-kiintioon [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
