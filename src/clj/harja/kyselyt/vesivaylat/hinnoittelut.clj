@@ -241,7 +241,8 @@
                   ::hinta/hinta
                   {::m/poistettu? true
                    ::m/poistaja-id (:id user)}
-                  {::hinta/otsikko (op/in tyo/tyo-hinnat)}))
+                  {::hinta/otsikko (op/in tyo/tyo-hinnat)
+                   ::hinta/ryhma "tyo"}))
 
 (defn luo-hinnoittelun-tyot! [{:keys [db user hinnoittelu-id tyot]}]
   (doseq [tyo tyot]
