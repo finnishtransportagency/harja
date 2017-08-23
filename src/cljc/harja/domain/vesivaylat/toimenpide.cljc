@@ -397,7 +397,8 @@ reimari-tilat
   (filter (comp not poistettavat-idt ::id) toimenpiteet))
 
 (defn toimenpiteella-oma-hinnoittelu? [toimenpide]
-  (boolean (::oma-hinnoittelu toimenpide)))
+  (boolean (or (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/hinnat])))
+               (not (empty? (get-in toimenpide [::oma-hinnoittelu ::h/tyot]))))))
 
 (defn toimenpiteilla-kiintioita? [toimenpiteet]
   (not (empty? (keep ::kiintio toimenpiteet))))
@@ -421,20 +422,20 @@ reimari-tilat
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
 (s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
-  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+  (s/coll-of (s/keys :req [::id ::tyolaji
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
                            ::reimari-sopimus ::turvalaitekomponentit]
-                     :opt [::vikakorjauksia?
+                     :opt [::vikakorjauksia? ::vayla
                            ::suoritettu ::hintatyyppi ::lisatieto
                            ::oma-hinnoittelu ::hintaryhma-id])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
-  (s/coll-of (s/keys :req [::id ::tyolaji ::vayla
+  (s/coll-of (s/keys :req [::id ::tyolaji
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
                            ::reimari-sopimus ::turvalaitekomponentit]
-                     :opt [::vikakorjauksia?
+                     :opt [::vikakorjauksia?  ::vayla
                            ::suoritettu ::hintatyyppi ::lisatieto])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely

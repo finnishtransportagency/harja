@@ -48,10 +48,10 @@
         (let [summat (urakoiden-summat urakkaid)]
           (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos maksuera-numero summat))
         (catch Exception e
-          (log/error e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
+          (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
 
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
       (try
         (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma))
         (catch Exception e
-          (log/error e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e)))))))
+          (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e)))))))

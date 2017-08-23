@@ -11,13 +11,14 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
 
-(defn hae-hinnoittelut [db user urakka-id]
+(defn hae-hintaryhmat [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
     (assert urakka-id "Urakka-id puuttuu!")
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
-    (q/hae-hinnoittelut db urakka-id)))
+    (q/hae-hintaryhmat db urakka-id)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -62,30 +63,47 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                       user urakka-id)
       (q/vaadi-hinnoittelut-kuuluvat-urakkaan db #{(::h/id tiedot)} urakka-id)
-      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/hintaelementit tiedot)))
+      (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/tallennettavat-hinnat tiedot)))
                                              (::h/id tiedot))
       (jdbc/with-db-transaction [db db]
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
-                                         (::h/hintaelementit tiedot))
-        (hae-hinnoittelut db user urakka-id)))))
+                                         (::h/tallennettavat-hinnat tiedot))
+        (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::to/urakka-id tiedot)]
+    (let [urakka-id (::to/urakka-id tiedot)
+          toimenpide-id (::to/id tiedot)]
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
-      ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
-      (let [hinta-idt (set (keep ::hinta/id (::h/hintaelementit tiedot)))]
+      (let [hinta-idt (set (keep ::hinta/id (::h/tallennettavat-hinnat tiedot)))
+            tyo-idt (set (keep ::tyo/id (::h/tallennettavat-tyot tiedot)))]
+        ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
         (when-not (empty? hinta-idt)
-          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt (::to/id tiedot))))
+          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt toimenpide-id))
+        ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
+        (q/vaadi-tyot-kuuluvat-toimenpiteeseen db tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
-        (q/tallenna-toimenpiteelle-hinta! db user
-                                          (::to/id tiedot)
-                                          (::h/hintaelementit tiedot)
-                                          urakka-id)
-        (q/hae-toimenpiteen-oma-hinnoittelu db (::to/id tiedot))))))
+        (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
+          ;; Hinnat-taulukossa on könttähinnat, jotka voidaan luoda uutena tai päivittää
+          (q/tallenna-hinnoittelun-hinta!
+            {:db db
+             :user user
+             :hinnoittelu-id hinnoittelu-id
+             :hinnat (::h/tallennettavat-hinnat tiedot)})
+          ;; Töiden osalta oletetaan, että saatu payload on uusi totuus, toisin sanoen poistetaan nykyiset työt
+          ;; ja luodaan payloadin perusteella uudet. Näin siksi, että työt-taulukossa voi olla sekä töitä että hintoja,
+          ;; ja frontissa niiden tyyppejä on saatettu myös vaihdella, joten päivittämiseen vaadittava päättelyketju olisi
+          ;; turhan monimutkainen.
+          (q/poista-hinnoittelun-tyot! db user hinnoittelu-id)
+          (q/luo-hinnoittelun-tyot!
+            {:db db
+             :user user
+             :hinnoittelu-id hinnoittelu-id
+             :tyot (::h/tallennettavat-tyot tiedot)})
+          (q/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
@@ -93,12 +111,12 @@
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-hinnoittelut
+      :hae-hintaryhmat
       (fn [user tiedot]
         (let [urakka-id (::ur/id tiedot)]
-          (hae-hinnoittelut db user urakka-id)))
-      {:kysely-spec ::h/hae-hinnoittelut-kysely
-       :vastaus-spec ::h/hae-hinnoittelut-vastaus})
+          (hae-hintaryhmat db user urakka-id)))
+      {:kysely-spec ::h/hae-hintaryhmat-kysely
+       :vastaus-spec ::h/hae-hintaryhmat-vastaus})
 
     (julkaise-palvelu
       http
@@ -144,7 +162,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-hinnoittelut
+      :hae-hintaryhmat
       :luo-hinnoittelu
       :poista-tyhjat-hinnoittelut
       :liita-toimenpiteet-hinnoitteluun

@@ -11,10 +11,13 @@
   (ht/laajenna-integraatiojarjestelmafixturea
    "yit"
    :reimari (component/using
-           (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil)
-           [:db :integraatioloki])))
+             (reimari/->Reimari "https://www.example.com/reimari/" "reimarikayttaja" "reimarisalasana" nil nil nil nil)
+             [:db :integraatioloki])))
 
 (t/use-fixtures :each (t/compose-fixtures ht/tietokanta-fixture jarjestelma-fixture))
+
+
+
 
 (def referenssi-toimenpide-tietue
   {::toimenpide/suoritettu #inst "2017-04-24T09:42:04.123-00:00",
@@ -68,7 +71,7 @@
   (let [db (:db ht/jarjestelma)
         tarkista-fn  #(ht/tarkista-map-arvot
                        referenssi-toimenpide-tietue
-                       (first (tohaku/kasittele-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
+                       (first (tohaku/kasittele-toimenpiteet-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
     (tarkista-fn)
     (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
              (::toimenpide/urakka-id (first (specql/fetch db
@@ -99,4 +102,10 @@
                (specql/update! (:db ht/jarjestelma) ::toimenpide/reimari-toimenpide
                                {::toimenpide/reimari-lisatyo? false}
                                {::toimenpide/reimari-id (::toimenpide/reimari-id referenssi-toimenpide-tietue)})))
-      (tarkista-fn))))
+      (tarkista-fn))
+
+    (t/testing "Puutteellisilla sopimustiedoilla ei tallenneta sopimusta mutta ei tule myöskään poikkeusta"
+      (let [nimeton-sopimus-xml (-> "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"
+                                    slurp
+                                    (clojure.string/replace "nimi=\"Hoitosopimus\"" ""))]
+        (t/is (empty? (tohaku/kasittele-toimenpiteet-vastaus db nimeton-sopimus-xml)))))))
