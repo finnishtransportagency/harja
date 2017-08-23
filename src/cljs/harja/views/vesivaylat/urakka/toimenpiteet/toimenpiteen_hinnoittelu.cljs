@@ -18,6 +18,8 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
+            [harja.domain.vesivaylat.komponenttityyppi :as tktyyppi]
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
@@ -59,14 +61,14 @@
 
 (defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* otsikko]
   [:tr.muu-hinnoittelu-rivi
-   [:td.tyon-otsikko (str otsikko ":")]
-   [:td [muu-tyo-kentta e! app* otsikko]]
-   [:td [yleiskustannuslisa-kentta e! app* otsikko]]
-   [:td]])
+   [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
+   [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
+   [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
+   [:td.muu-hinnoittelu-osio]])
 
 (defn toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
-   [:td.tyon-otsikko (str otsikko ":")]
+   [:td.hinnoittelun-otsikko (str otsikko ":")]
    [:td arvo]
    [:td]
    [:td]])
@@ -81,12 +83,13 @@
                 (:tehtava suunniteltu-tyo)
                 (:yksikkohinta suunniteltu-tyo)))
 
-(defn- valiotsikkorivi [otsikko]
+(defn- valiotsikkorivi [otsikko osio-luokka]
   [:tr.otsikkorivi
-   [:td.tyot-osio [:b otsikko]]
-   [:td.tyot-osio]
-   [:td.tyot-osio]
-   [:td.tyot-osio]])
+   [:td {:class osio-luokka}
+    [:b otsikko]]
+   [:td {:class osio-luokka}]
+   [:td {:class osio-luokka}]
+   [:td {:class osio-luokka}]])
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
@@ -112,7 +115,16 @@
   (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
-        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
+        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
+                      ::tkomp/sarjanumero "123"
+                      ::tkomp/turvalaitenro "8881"}
+                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
+                      ::tkomp/sarjanumero "124"
+                      ::tkomp/turvalaitenro "8882"}
+                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
+                      ::tkomp/sarjanumero "125"
+                      ::tkomp/turvalaitenro "8883"}]]
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
       [:tr
@@ -121,7 +133,7 @@
        [:th {:style {:width "10%"}} "YK-lisä"]
        [:th {:style {:width "5%"}} ""]]]
      [:tbody
-      [valiotsikkorivi "Sopimushintaiset työt"]
+      [valiotsikkorivi "Sopimushintaiset työt" :tyot-osio]
       (map-indexed
         (fn [index tyorivi]
           ^{:key index}
@@ -189,22 +201,50 @@
              (ikonit/livicon-trash)]]])
         tyot)
       [:tr.tyon-hinnoittelu-rivi
-       [:td.tyot-osio.lisaa-tyorivi-solu
+       [:td.tyot-osio.lisaa-rivi-solu
         [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
        [:td.tyot-osio]
        [:td.tyot-osio]
        [:td.tyot-osio]]
-      [valiotsikkorivi "Muut"]
+
+      [valiotsikkorivi "Komponentit" :komponentit-osio]
+      (map-indexed
+        (fn [index komponentti]
+          ^{:key index}
+          [:tr.komponentin-hinnoittelu-rivi
+           [:td.hinnoittelun-otsikko.komponentit-osio
+            (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
+                 " (" (::tkomp/sarjanumero komponentti) "):")]
+           [:td.komponentit-osio
+            [:span
+             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+              (r/wrap 0
+                      (fn [uusi]
+                        (log "TODO")))]
+             "€"]]
+           [:td.komponentit-osio
+            [yleiskustannuslisa-kentta e! app* ""]] ;; TODO Otsikko-hommeli ei nyt oikein toimi tässä
+           [:td.komponentit-osio]])
+        komponentit)
+
+      [valiotsikkorivi "Muut" :muu-hinnoittelu-osio]
       ;; TODO Aiemmin oli könttäsumma komponenteille, nyt annetaan hinta tarkemmin
       ;; Tätä ei oikein voi helposti migratoida mitenkään?
       #_[toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-       e! app* "Komponentit"]
+         e! app* "Komponentit"]
       [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
        e! app* "Yleiset materiaalit"]
       [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
        e! app* "Matkakulut"]
       [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-       e! app* "Muut kulut"]]
+       e! app* "Muut kulut"]
+      [:tr.muu-hinnoittelu-rivi
+       [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
+        [napit/uusi "Lisää kulurivi" #(log "TODO")]]
+       [:td.muu-hinnoittelu-osio]
+       [:td.muu-hinnoittelu-osio]
+       [:td.muu-hinnoittelu-osio]]]
+     [valiotsikkorivi ""]
      [hinnoittelun-yhteenveto app*]]))
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]

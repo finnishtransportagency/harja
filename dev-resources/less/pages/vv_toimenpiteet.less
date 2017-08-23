@@ -28,13 +28,21 @@
       padding: 0;
     }
 
+    // Syöttökentät
+
     .tyon-hinnoittelu-rivi input {
       width: 30% !important;
+    }
+
+    .komponentin-hinnoittelu-rivi input {
+      width: 60% !important;
     }
 
     .muu-hinnoittelu-rivi input {
       width: 60% !important;
     }
+
+    // Rivit
 
     .hinnoittelun-yhteenveto-rivi td:first-child {
       font-weight: bold;
@@ -43,19 +51,22 @@
     .otsikkorivi > td {
       text-transform: uppercase;
       padding-top: 0.5em;
+      padding-left: 5px;
       padding-bottom: 0.5em;
     }
 
-    .tyot-osio {
+    // Osiot
+
+    .tyot-osio, .muu-hinnoittelu-osio {
       background-color: @harmaa12;
     }
 
-    .tyon-otsikko {
+    .hinnoittelun-otsikko {
       text-align: right;
       padding-right: 10px;
     }
 
-    .lisaa-tyorivi-solu {
+    .lisaa-rivi-solu {
       padding-top: 5px;
       padding-bottom: 5px;
     }
