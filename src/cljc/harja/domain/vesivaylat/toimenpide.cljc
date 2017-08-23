@@ -374,6 +374,7 @@ reimari-tilat
 (def perustiedot
   #{::id
     ::lisatieto
+    ::reimari-lisatyo?
     ::suoritettu
     ::hintatyyppi
     ::reimari-henkilo-lkm})
