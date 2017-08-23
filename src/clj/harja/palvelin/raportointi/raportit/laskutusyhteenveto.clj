@@ -14,7 +14,7 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.toimenpidekoodit :as toimenpidekoodit]))
+            [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
 
 (defn hae-laskutusyhteenvedon-tiedot

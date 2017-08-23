@@ -1,14 +1,17 @@
 -- name: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat
 -- Hakee kaikki hinnoittelut, jotka ovat hintaryhmiä, ja muodostaa summan hintaryhmän hinnoista sekä
 -- hintaryhmään kuuluvien toimenpiteiden omista hinnoitteluista.
+-- HUOM! Ei sisällä hintoja, joiden toimenpiteet eivät kuulu mihinkään hintaryhmään.
+-- Tällaiset haetaan eri kyselyssä, ks. hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa.
 SELECT
   hintaryhma.id,
   hintaryhma.nimi                   AS "hinnoittelu",
+  -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
+  -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
-         -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
-         -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
+         -- Hinta kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
          (SELECT "hinnoittelu-id"
           FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
@@ -21,7 +24,32 @@ SELECT
                                     AND poistettu IS NOT TRUE)
                        AND poistettu IS NOT TRUE)
                 AND poistettu IS NOT TRUE)
-         AND poistettu IS NOT TRUE) AS "summa",
+         AND poistettu IS NOT TRUE)
+  -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki työt. Summaa kaikki yhteen.
+  +
+  (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
+   FROM vv_tyo tyo
+     JOIN toimenpidekoodi tpk ON tyo."toimenpidekoodi-id" = tpk.id
+     JOIN yksikkohintainen_tyo yht ON tpk.id = yht.tehtava
+                                      -- Suunnitteluaika osuu annetun aikavälin sisälle
+                                      AND yht.alkupvm <= :alkupvm
+                                      AND yht.loppupvm >= :loppupvm
+   WHERE "hinnoittelu-id" IN
+         -- Työ kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
+         (SELECT "hinnoittelu-id"
+          FROM vv_hinnoittelu_toimenpide
+          WHERE "toimenpide-id" IN
+                -- Hae hintaryhmän kaikki ei-poistetut toimenpiteet
+                (SELECT id
+                 FROM reimari_toimenpide
+                 WHERE id IN (SELECT "toimenpide-id"
+                              FROM vv_hinnoittelu_toimenpide
+                              WHERE "hinnoittelu-id" = hintaryhma.id
+                                    AND poistettu IS NOT TRUE)
+                       AND poistettu IS NOT TRUE)
+                AND poistettu IS NOT TRUE)
+         AND tyo.poistettu IS NOT TRUE)
+    AS "summa",
   -- Hinnoitteluryhmät sisältävät useita reimari-toimenpiteitä
   -- jotka voivat potentiaalisesti liittyä eri väyliin / väylätyyppeihin
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
@@ -54,14 +82,25 @@ WHERE "urakka-id" = :urakkaid
 
 -- name: hae-yksikkohintaisten-toimenpiteiden-omat-hinnoittelut-ilman-hintaryhmaa
 -- Hakee toimenpiteiden omat hinnoittelut ja laskee niiden hintojen summan.
--- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään;
+-- Palauttaa vain ne hinnoittelut, joihin kuuluva toimenpide ei kuulu mihinkään hintaryhmään, sillä
 -- tällaiset tapaukset summataan jo hintaryhmien hintaan (ks. kysely: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat)
 SELECT
   oma_hinnoittelu.nimi                              AS "hinnoittelu",
   (SELECT COALESCE(SUM(maara), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = oma_hinnoittelu.id
-         AND poistettu IS NOT TRUE)                 AS "summa",
+         AND poistettu IS NOT TRUE)
+    +
+  (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
+   FROM vv_tyo tyo
+     JOIN toimenpidekoodi tpk ON tyo."toimenpidekoodi-id" = tpk.id
+     JOIN yksikkohintainen_tyo yht ON tpk.id = yht.tehtava
+                                      -- Suunnitteluaika osuu annetun aikavälin sisälle
+                                      AND yht.alkupvm <= :alkupvm
+                                      AND yht.loppupvm >= :loppupvm
+   WHERE "hinnoittelu-id" = oma_hinnoittelu.id
+         AND tyo.poistettu IS NOT TRUE)
+    AS "summa",
   (SELECT tyyppi
    FROM vv_vayla
    WHERE id =
@@ -76,7 +115,7 @@ FROM vv_hinnoittelu oma_hinnoittelu
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
       AND hintaryhma IS FALSE
-      -- Tarkista, ettei hinnoittelun toimenpide ei kuulu mihinkään hintaryhmään
+      -- Tarkista, ettei hinnoittelun toimenpide kuulu mihinkään hintaryhmään
       AND (SELECT id
            FROM vv_hinnoittelu
            WHERE id IN

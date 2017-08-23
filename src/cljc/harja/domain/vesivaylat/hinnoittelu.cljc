@@ -6,6 +6,7 @@
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
+    [harja.domain.vesivaylat.tyo :as tyo]
     [clojure.set :as set]
     [specql.rel :as rel]
 
@@ -41,7 +42,11 @@
     ::hinnat (specql.rel/has-many
                ::id
                ::hinta/hinta
-               ::hinta/hinnoittelu-id)}])
+               ::hinta/hinnoittelu-id)
+    ::tyot (specql.rel/has-many
+             ::id
+             ::tyo/tyo
+             ::tyo/hinnoittelu-id)}])
 
 (def perustiedot
   #{::nimi
@@ -56,18 +61,14 @@
 (def hinnat
   #{[::hinnat (set/union hinta/perustiedot hinta/metatiedot)]})
 
+(def tyot
+  #{[::tyot (set/union tyo/perustiedot tyo/viittaus-idt tyo/metatiedot)]})
+
 (def hinnoittelutiedot
   (set/union perustiedot metatiedot hinnat))
 
 (def toimenpiteen-hinnoittelut
   #{[::hinnoittelut hinnoittelutiedot]})
-
-(def hinnoittelun-toimenpiteet
-  #{[::toimenpide-linkit
-     #{[::toimenpiteet
-        #{:harja.domain.vesivaylat.toimenpide/id
-          :harja.domain.vesivaylat.toimenpide/urakka-id
-          :harja.domain.vesivaylat.toimenpide/hintatyyppi}]}]})
 
 (s/def ::idt (s/coll-of ::id))
 (s/def ::tyhja? boolean?) ;; ;; Ei sisällä lainkaan toimenpiteitä kannassa
@@ -88,11 +89,11 @@
 
 ;; Palvelut
 
-(s/def ::hae-hinnoittelut-kysely
+(s/def ::hae-hintaryhmat-kysely
   (s/keys
     :req [::ur/id]))
 
-(s/def ::hae-hinnoittelut-vastaus
+(s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
     (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
 
@@ -110,24 +111,31 @@
           ::id
           ::ur/id]))
 
-(s/def ::hintaelementit
-  (s/coll-of
-    (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
-            :opt [::id])))
+(s/def ::tallennettava-hinta (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
+                                     :opt [::id]))
+
+(s/def ::tallennettavat-hinnat
+  (s/coll-of ::tallennettava-hinta))
+
+(s/def ::tallennettava-tyo (s/keys :opt [::tyo/toimenpidekoodi-id ::tyo/maara
+                                         ::hinta/otsikko ::hinta/maara]))
+
+(s/def ::tallennettavat-tyot (s/coll-of ::tallennettava-tyo))
 
 (s/def ::tallenna-hintaryhmalle-hinta-kysely
   (s/keys
-    :req [::ur/id
-          ::id
-          ::hintaelementit]))
+    :req [::ur/id ::id ::tallennettavat-hinnat]))
 
-(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hinnoittelut-vastaus)
+(s/def ::tallenna-hintaryhmalle-hinta-vastaus ::hae-hintaryhmat-vastaus)
 
 (s/def ::tallenna-toimenpiteelle-hinta-kysely
   (s/keys
     :req [:harja.domain.vesivaylat.toimenpide/urakka-id
           :harja.domain.vesivaylat.toimenpide/id
-          ::hintaelementit]))
+          ;; Könttähinnat
+          ::tallennettavat-hinnat
+          ;; Yksittäiset työt sekä työhinnat
+          ::tallennettavat-tyot]))
 
 (s/def ::tallenna-toimenpiteelle-hinta-vastaus ::hinnoittelu)
 
