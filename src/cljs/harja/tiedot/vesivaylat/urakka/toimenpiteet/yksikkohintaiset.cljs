@@ -152,6 +152,7 @@
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 
 (defn- hintakentta [otsikko hinta]
+  ;; Olemassa olevaa hintaa ei välttämättä ole olemassa, mutta se ei haittaa
   {::hinta/id (::hinta/id hinta)
    ::hinta/otsikko otsikko
    ::hinta/maara (or (::hinta/maara hinta) 0)
@@ -160,8 +161,7 @@
                                 0)})
 
 (defn- toimenpiteen-hintakentat [hinnat]
-  [(hintakentta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
-   (hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
+  [(hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
    (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
 
