@@ -247,8 +247,7 @@
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio
             ;; TODO Tehdäänkö combobox?
-            (let [hintavalinnat [(->HintaValinta "Päivän hinta")
-                                 (->HintaValinta "Omakustannushinta")]
+            (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
               [yleiset/livi-pudotusvalikko

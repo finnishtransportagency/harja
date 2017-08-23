@@ -28,6 +28,8 @@
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
 
+(def tyo-hinnat #{"Päivän hinta" "Omakustannushinta"})
+
 (def perustiedot
   #{::id
     ::maara})

@@ -359,9 +359,7 @@
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
           tyot (::h/tyot toimenpiteen-oma-hinnoittelu)
-          tyo-hinnat (filter #(or (= (::hinta/otsikko %) "Päivän hinta")
-                                  (= (::hinta/otsikko %) "Omakustannushinta"))
-                             hinnat)]
+          tyo-hinnat (filter #(tyo/tyo-hinnat (::hinta/otsikko %)) hinnat)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
