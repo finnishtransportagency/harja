@@ -138,7 +138,7 @@
         (fn [index tyorivi]
           ^{:key index}
           [:tr.tyon-hinnoittelu-rivi
-           [:td.tyot-osio
+           [:td.tyot-osio.hinnoittelun-otsikko
             ;; TODO Tehdäänkö combobox?
             (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
@@ -163,7 +163,7 @@
                 :ryhmittely #(cond (instance? HintaValinta %) :hinta
                                    (instance? TyoValinta %) :tyo)
                 :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
-                :class "livi-alasveto-250"
+                :class "livi-alasveto-250 inline-block"
                 :valinta (first (filter #(cond (instance? TyoValinta %)
                                                (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
 
@@ -201,7 +201,7 @@
              (ikonit/livicon-trash)]]])
         tyot)
       [:tr.tyon-hinnoittelu-rivi
-       [:td.tyot-osio.lisaa-rivi-solu
+       [:td.tyot-osio.hinnoittelun-otsikko.lisaa-rivi-solu
         [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
        [:td.tyot-osio]
        [:td.tyot-osio]
@@ -220,8 +220,9 @@
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
                       (fn [uusi]
-                        (log "TODO")))]
-             "€"]]
+                        (log "TODO")))]]
+            [:span " "]
+            [:span "€"]]
            [:td.komponentit-osio
             [yleiskustannuslisa-kentta e! app* ""]] ;; TODO Otsikko-hommeli ei nyt oikein toimi tässä
            [:td.komponentit-osio]])
@@ -239,7 +240,7 @@
       [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
        e! app* "Muut kulut"]
       [:tr.muu-hinnoittelu-rivi
-       [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
+       [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
         [napit/uusi "Lisää kulurivi" #(log "TODO")]]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
