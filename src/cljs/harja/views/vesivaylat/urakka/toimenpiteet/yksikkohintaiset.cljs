@@ -318,7 +318,9 @@
        [:td]
        [:td]
        [:td]]
-      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+      ;; TODO Aiemmin oli könttäsumma komponenteille, nyt annetaan hinta tarkemmin
+      ;; Tätä ei oikein voi helposti migratoida mitenkään?
+      #_[toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
        e! app* "Komponentit"]
       [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
        e! app* "Yleiset materiaalit"]
