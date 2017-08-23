@@ -104,6 +104,7 @@
         yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus
                                      (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))]
     [:tbody
+     [valiotsikkorivi ""]
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
       "Perushinta" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
@@ -247,7 +248,6 @@
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]]]
-     [valiotsikkorivi ""]
      [hinnoittelun-yhteenveto app*]]))
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
