@@ -241,6 +241,8 @@
        e! app* "Muut kulut"]
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
+        ;; TODO Tärkeää varmistaa ettei voi olla kahta hinnoittelua samalla nimellä per toimenpide
+        ;; TODO Myöskään noita ylempänä olevaa kolmea hardkoodattua nimeä ei saa käyttää.
         [napit/uusi "Lisää kulurivi" #(log "TODO")]]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
