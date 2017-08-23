@@ -431,31 +431,32 @@
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
-        (if (empty? hinnat)
-          [napit/yleinen-ensisijainen
-           "Määrittele yksi hinta koko tilaukselle"
-           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-          [:div
-           [:div.inline-block {:style {:margin-right "10px"}}
-            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
-              [:span
-               [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
-              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
-              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
-              [yleiset/tietoja {:tietokentan-leveys "180px"}
-               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-               "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
-               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
-           [:div.inline-block {:style {:vertical-align :top}}
-            [napit/yleinen-toissijainen
-             (ikonit/muokkaa)
+        (when-not (tiedot/valiaikainen-hintaryhma? hintaryhma)
+          (if (empty? hinnat)
+            [napit/yleinen-ensisijainen
+             "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-             {:ikoninappi? true
-              :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
-                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                      (:id @nav/valittu-urakka)))}]]]))]]))
+             {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+            [:div
+             [:div.inline-block {:style {:margin-right "10px"}}
+              (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+                [:span
+                 [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+                ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+                ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+                ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+                [yleiset/tietoja {:tietokentan-leveys "180px"}
+                 "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+                 "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+                 "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+             [:div.inline-block {:style {:vertical-align :top}}
+              [napit/yleinen-toissijainen
+               (ikonit/muokkaa)
+               #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+               {:ikoninappi? true
+                :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (:id @nav/valittu-urakka)))}]]])))]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
