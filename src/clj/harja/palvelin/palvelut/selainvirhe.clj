@@ -27,19 +27,24 @@
    :sarake (dec sarake)
    :tiedostopolku tiedostopolku})
 
+(defn lue-tiedosto
+  [tiedostonimi]
+  (try (slurp (io/resource tiedostonimi))
+       (catch java.io.FileNotFoundException e
+         (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
+
 (defn tiedosto-rivi-ja-sarake
   [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
   (let [paikat (atom {})
         source-map (when (re-find #"harja" tiedostopolku)
                     (-> (str tiedostopolku ".map") (io/resource) slurp (SourceMapImpl.)))]
-    (log/debug "TIEDOSTOPOLKU: " (io/resource tiedostopolku))
-    (log/debug "LÄHDETIEDOSTO: " tiedostopolku)
     (when-let [mapping (.getMapping source-map rivi sarake)]
       (let [lahde-rivi (.getSourceLine mapping)
             lahde-sarake (.getSourceColumn mapping)
             generoitu-rivi (.getGeneratedLine mapping)
             generoitu-sarake (.getGeneratedColumn mapping)
             rivin-tiedot (get @paikat generoitu-rivi)
+            _ (slurp (io/resource "public/js/harja/views/tierekisteri.cljs"))
             lahdetiedosto (if kehitysmoodi
                             (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
                               (some (fn [tiedostopaate]
@@ -51,17 +56,16 @@
                               (str "public/js/" (.getSourceFileName mapping))))
             muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
                                                             (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
-                                        (try (as-> lahdetiedosto $
-                                                   (slurp $)
-                                                   (st/split $ #"\n")
-                                                   (numeroi-rivit $)
-                                                   (drop (if (> lahde-rivi 2)
-                                                           (- lahde-rivi 2)
-                                                           0)
-                                                         $)
-                                                   (take 5 $))
-                                             (catch java.io.FileNotFoundException e
-                                               (str "Lähdetiedostoa " lahdetiedosto " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))]
+                                        (as-> lahdetiedosto $
+                                              (lue-tiedosto $)
+                                              (st/split $ #"\n")
+                                              (numeroi-rivit $)
+                                              (drop (if (> lahde-rivi 2)
+                                                      (- lahde-rivi 2)
+                                                      0)
+                                                    $)
+                                              (take 5 $)))]
+
           (swap! paikat
                  assoc
                  generoitu-rivi
