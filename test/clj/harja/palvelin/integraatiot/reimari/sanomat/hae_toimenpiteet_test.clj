@@ -54,6 +54,5 @@
             slurp
             hae-toimenpiteet/lue-hae-toimenpiteet-vastaus
             first)]
-    (clojure.pprint/pprint luettu-toimenpide)
     (is (nil? (s/explain-data ::toimenpide/reimari-toimenpide luettu-toimenpide)))
     (testi/tarkista-map-arvot toimenpide luettu-toimenpide)))

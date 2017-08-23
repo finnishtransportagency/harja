@@ -129,9 +129,11 @@
                    varoitus-puuttuvista-indekseista
                    (if (and urakka-id (not indeksi-kaytossa?))
                      [:varoitusteksti "Urakassa ei käytetä indeksitarkistuksia."]
-                     (when (and urakka-id indeksi-kaytossa? perusluku)
-                      (yleinen/indeksitiedot {:perusluku perusluku :kyseessa-kk-vali? kyseessa-kk-vali?
-                                              :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo})))]
+                     (when (and indeksi-kaytossa? urakka-id)
+                       (yleinen/kkn-indeksiarvo {:kyseessa-kk-vali? kyseessa-kk-vali?
+                                                         :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo})))
+                     (when (and indeksi-kaytossa? urakka-id perusluku)
+                       (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))]
                   [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
                   (for [tuote tuotteet]
                     (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))

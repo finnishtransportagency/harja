@@ -117,6 +117,9 @@ BEGIN
       RAISE NOTICE 'bonustellaan, %', sakko_tai_bonus_maara;
       suolasakko := sakko_tai_bonus_maara * (suolankaytto - (0.95 * ss.talvisuolaraja));
     END IF;
+  ELSIF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR vertailu IS NULL) THEN
+    RAISE NOTICE 'Lämpötiloja ei käytössä, joten palautetaan sakkoon null';
+    suolasakko := NULL;
   ELSE
     RAISE NOTICE 'Ei sakkoa eikä bonusta, suolankaytto %, sallittu_suolankaytto %, maara %', suolankaytto, sallittu_suolankaytto, sakko_tai_bonus_maara;
     suolasakko := 0.0;
