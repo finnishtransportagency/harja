@@ -374,7 +374,7 @@
 
 (defn hae-vanhtaan-vesivaylaurakan-hinta []
   (ffirst (q (str "SELECT id FROM vv_hinta
-                   WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vanhaan urakan testihinnoittelu')
+                   WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))
 
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
