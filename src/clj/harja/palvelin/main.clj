@@ -471,11 +471,13 @@
                  (let [{:keys [url kayttajatunnus salasana
                                paivittainen-toimenpidehaku
                                paivittainen-komponenttityyppihaku
-                               paivittainen-turvalaitekomponenttihaku]} (:reimari asetukset)]
+                               paivittainen-turvalaitekomponenttihaku
+                               paivittainen-vikahaku]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
                                       paivittainen-toimenpidehaku
                                       paivittainen-komponenttityyppihaku
-                                      paivittainen-turvalaitekomponenttihaku))
+                                      paivittainen-turvalaitekomponenttihaku
+                                      paivittainen-vikahaku))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :vkm (component/using

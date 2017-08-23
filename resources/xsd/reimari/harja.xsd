@@ -63,9 +63,9 @@
 
   <xs:complexType name="SopimusType">
     <xs:attribute type="xs:integer" name="nro" use="required"/> <!-- CONTRACT_ID -->
-    <xs:attribute type="xs:token" name="tyyppi" use="required"/>
+    <xs:attribute type="xs:token" name="tyyppi" use="optional"/>
     <xs:attribute type="xs:token" name="diaarinro" use="optional"/>
-    <xs:attribute type="xs:string" name="nimi" use="required"/>
+    <xs:attribute type="xs:string" name="nimi" use="optional"/>
   </xs:complexType>
 
   <xs:complexType name="AlusType">
@@ -74,7 +74,7 @@
   </xs:complexType>
 
   <xs:complexType name="VaylaType">
-    <xs:attribute type="xs:token" name="nro" use="required"/>
+    <xs:attribute type="xs:token" name="nro" use="optional"/>
     <xs:attribute type="xs:string" name="nimi" use="optional"/>
   </xs:complexType>
 
