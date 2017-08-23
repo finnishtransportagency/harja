@@ -21,7 +21,7 @@
 (defn yhteyskatkokset-plot
   [e! yhteyskatkokset-jarjestys-data yhteyskatkokset-data-avain]
   (let [w (int (* 0.85 @dom/leveys))
-        h (int (* w 1.5))
+        h (int (* w 1.2))
         max-legend-height (* h 0.7)
         yhteyskatkokset-jarjestys-data (mapv #(assoc %1 :style {:stroke %2 :fill %2}) yhteyskatkokset-jarjestys-data colors)]
     (if (empty? yhteyskatkokset-jarjestys-data)
@@ -32,9 +32,7 @@
 
 (defn hae-kaikki-yhteyskatkosdatat
   [e!]
-  (e! (tiedot/->HaeYhteyskatkosData :pvm :palvelut))
   (e! (tiedot/->HaeYhteyskatkosData :palvelut :pvm))
-  (e! (tiedot/->HaeYhteyskatkosryhmaData :pvm :palvelut))
   (e! (tiedot/->HaeYhteyskatkosryhmaData :palvelut :pvm)))
 (defn hakuasetukset-leijuke
   [e! hakuasetukset]
@@ -109,14 +107,7 @@
                 [:h3 "Järjestys päivämäärän mukaan"]
                 (case valittu-yhteyskatkokset-arvo
                   "katkokset" ^{:key "yhteyskatkokset-pvm"}[yhteyskatkokset-plot e! yhteyskatkokset-pvm-data :yhteyskatkokset-pvm-data]
-                  "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-plot e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data])])
-            (when (or (nil? valittu-yhteyskatkokset-jarjestys) (= valittu-yhteyskatkokset-jarjestys "palvelut"))
-              ^{:key "jarjestys-palvelukutsujen-mukaan"}
-              [:div
-                [:h3 "Järjestys palvelukutsujen mukaan"]
-                (case valittu-yhteyskatkokset-arvo
-                  "katkokset" ^{:key "yhteyskatkokset-palvelut"}[yhteyskatkokset-plot e! yhteyskatkokset-palvelut-data :yhteyskatkokset-palvelut-data]
-                  "katkosryhmät" ^{:key "yhteyskatkosryhma-palvelut"}[yhteyskatkokset-plot e! yhteyskatkosryhma-palvelut-data :yhteyskatkosryhma-palvelut-data])])))]]
+                  "katkosryhmät" ^{:key "yhteyskatkosryhma-pvm"}[yhteyskatkokset-plot e! yhteyskatkosryhma-pvm-data :yhteyskatkosryhma-pvm-data])])))]]
       [y/ajax-loader])))
 
 (defn diagrammit* [e! app]

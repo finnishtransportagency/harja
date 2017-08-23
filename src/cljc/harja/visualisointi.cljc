@@ -411,14 +411,14 @@
            x-txt-padding y-txt-padding x-label-space y-label-space
            legendbox-thickness legendbox-padding legend-label-x legend-label-y
            max-legend-height n-of-legend-columns]}]
-  (let [x-axis-font-size (or x-axis-font-size 6)
-        y-axis-font-size (or y-axis-font-size 6)
-        legend-font-size (or legend-font-size 6)
+  (let [x-axis-font-size (or x-axis-font-size 10)
+        y-axis-font-size (or y-axis-font-size 10)
+        legend-font-size (or legend-font-size 10)
         marker-width (or marker-width 20)
-        x-txt-padding (or x-txt-padding 2)
-        y-txt-padding (or y-txt-padding 2)
-        x-label-space (or x-label-space 10)
-        y-label-space (or y-label-space 10)
+        x-txt-padding (or x-txt-padding 4)
+        y-txt-padding (or y-txt-padding 10)
+        x-label-space (or x-label-space 20)
+        y-label-space (or y-label-space 30)
         legendbox-thickness (or legendbox-thickness 15)
         legendbox-padding (or legendbox-padding 10)
         legend-label-x (or legend-label-x 20)
@@ -469,7 +469,7 @@
 (defn draw-legend
   [vals
    {:keys [legend-label-x legend-label-y legendbox-thickness legendbox-padding
-           max-legend-height]}
+           max-legend-height legend-font-size]}
    {:keys [legend-area-top-y legend-area-top-x legend-area-height
            legend-area-true-height]}
    {:keys [clicked-fn mouse-enter-fn mouse-leave-fn n-of-legend-columns scroll-bars?
@@ -497,7 +497,7 @@
                                                                       (get-in val [:style :fill]))}]
                                                     [:text {:x         (+ legend-label-x rect-x-val)
                                                             :y         (+ legend-label-y rect-y-val)
-                                                            :font-size 6}
+                                                            :font-size legend-font-size}
                                                       (if-let [label (:label val)]
                                                         label "line")]]))
                                               %2)
@@ -579,6 +579,7 @@
         x-number? (-> vals first :x first number?)
         y-number? (-> vals first :y first number?)
         x-vals (vec (sort (into #{} (mapcat :x values))))
+        _ (println (pr-str x-vals))
         x-tick-value (or (:x-tick-value plot-params)
                          (if x-number?
                            nil x-vals))
@@ -589,9 +590,10 @@
                             (cond-> %
                               (not x-number?) (assoc :x (vec (range x-aloitus-indeksi (+ x-aloitus-indeksi (count x-vec)))))
                               (not y-number?) (assoc :y (vec (range (count y-vec))))))
-                         vals))]
+                         vals))
+        info-map (atom nil)]
     (fn [{:keys [values width height clicked hovered x-max y-max max-legend-height] :as plot-params}]
-      [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
+      [:svg#container-svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
         (let [{:keys [axis-width axis-height origin-x origin-y]} (diagram-points (sizes {:max-legend-height max-legend-height}) @vals width height)
               x-max (or x-max (apply-vec-maps max :x @vals))
               y-max (or y-max (apply-vec-maps max :y @vals))
@@ -614,6 +616,11 @@
 
           [:g
             (draw-axis-and-legend @vals clicked-fn mouse-enter-fn mouse-leave-fn (assoc plot-params :x-tick-value x-tick-value))
+            [:g
+              [:text {:x (+ origin-x 15)
+                      :y (- origin-y axis-height)
+                      :font-size 7}
+                (str (:x @info-map) " " (:y @info-map) " " (:label @info-map))]]
             ;draw lines
             (doall
               (map-indexed #(identity
@@ -621,6 +628,20 @@
                               [:g.klikattava
                                   {:stroke "black" :stroke-width 1
                                    :pointer-events "painted"
+                                   :on-mouse-over #?(:cljs (fn [evt] ;;TODO Tämä funktion vois tehdä tehokkaamminkin. Pointsit on järjestyksessä.
+                                                            (let [svg-left (.-left (.getBoundingClientRect  (.getElementById js/document "container-svg")))
+                                                                  m-pos-x (- (.-pageX evt) svg-left)
+                                                                  the-points (st/split (get points %1) #" ")
+                                                                  point-of-interest (first (filter (fn [xy-point]
+                                                                                                    (let [x-point (second (re-find #"(.+)," xy-point))
+                                                                                                          x-point-float (str->float x-point)]
+                                                                                                      (> x-point-float m-pos-x)))
+                                                                                                   the-points))
+                                                                  point-index (index-of the-points point-of-interest)]
+                                                              (swap! info-map assoc :x (get x-tick-value point-index)
+                                                                                    :y (get (:y %2) point-index)
+                                                                                    :label (:label %2))))
+                                                       :clj nil)
                                    :on-click (clicked-fn %1)
                                    :on-mouse-enter (mouse-enter-fn %1)
                                    :on-mouse-leave (mouse-leave-fn %1)}

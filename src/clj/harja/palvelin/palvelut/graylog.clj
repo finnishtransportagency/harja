@@ -90,7 +90,7 @@
                                 (= jarjestys-avain :pvm))
                            ;; Jos halutaan näyttää dataa päivämäärän mukaan, niin oletettavasti tarkoitetaan
                            ;; vain päivämäärää eikä millisekunnin tarkkaa aikaa. Sen takia tehdään tämä muunnos.
-                           (map #(assoc % :pvm (->> (:pvm %) pvm/aika-iso8601 (take 10) (apply str))) ryhma-jarjestys-map)
+                           (map #(assoc % :pvm (->> (:pvm %) pvm/aika-iso8601 (re-find #"[\d-]+"))) ryhma-jarjestys-map)
                            ryhma-jarjestys-map)
         yhteyskatkokset (apply muunnokset/yhdista-avaimet-kun + :katkokset [(muunnokset/avain-monikko->yksikko ryhma-avain) (muunnokset/avain-monikko->yksikko jarjestys-avain)] yhteyskatkokset)
         asetukset-kayttoon (keep #(muunnokset/asetukset-kayttoon :diagrammi % hakuasetukset)
@@ -136,15 +136,8 @@
                                       graylogista-haetut-lokitukset)
         asetukset-kayttoon (keep #(asetuksien-kytkenta % (assoc hakuasetukset :ping-erikseen? (:ping-erikseen? analysointi-asetukset)) :analyysi)
                                  yhteyskatkokset-mappina)
-        analyysit (analyysit/analyysit-yhteyskatkoksista asetukset-kayttoon analyysihaku analysointi-asetukset)
-        pingin-poisto-fn #(into {} (map (fn [[analyysi tulos]]
-                                          [analyysi (cond
-                                                      (map? tulos) (dissoc tulos "ping")
-                                                      :else tulos)])
-                                        %))]
-      (if (:ping-erikseen? analysointi-asetukset)
-        (pingin-poisto-fn analyysit)
-        analyysit)))
+        analyysit (analyysit/analyysit-yhteyskatkoksista asetukset-kayttoon analyysihaku analysointi-asetukset)]
+      analyysit))
 
 
 (defrecord Graylog [data-csvna]
