@@ -62,7 +62,7 @@
                     (u/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot ur sopimusnumero muuttuneet))
+            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
             res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi hoitokaudet %) res)]
         (reset! tyot res-jossa-hoitokausitieto)
         (reset! tuleville? false)
