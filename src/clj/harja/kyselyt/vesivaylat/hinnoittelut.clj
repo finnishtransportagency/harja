@@ -263,5 +263,6 @@
                       {::hinta/otsikko (::hinta/otsikko tyo)
                        ::hinta/hinnoittelu-id hinnoittelu-id
                        ::hinta/maara (::hinta/maara tyo)
+                       ::hinta/ryhma "tyo"
                        ::m/luotu (pvm/nyt)
                        ::m/luoja-id (:id user)}))))
