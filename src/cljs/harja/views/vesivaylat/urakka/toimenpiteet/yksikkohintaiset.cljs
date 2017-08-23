@@ -476,7 +476,8 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          (tiedot/kokonaishintaisista-siirretyt-hintaryhma)
+                          [tiedot/kokonaishintaisista-siirretyt-hintaryhma]
+                          [tiedot/reimarin-lisatyot-hintaryhma]
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
@@ -495,8 +496,8 @@
                        nayta-hintaryhma?
                        (boolean
                          (or
-                           ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
-                           (and (tiedot/kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
+                           ;; Kok. hint. siirretyt tai reimarin lisätyöt -ryhmä, jos ei tyhjä
+                           (and (tiedot/valiaikainen-hintaryhma? hintaryhma)
                                 (not (empty? hintaryhman-toimenpiteet)))
                            hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
                            (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
