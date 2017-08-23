@@ -44,12 +44,11 @@
             generoitu-rivi (.getGeneratedLine mapping)
             generoitu-sarake (.getGeneratedColumn mapping)
             rivin-tiedot (get @paikat generoitu-rivi)
-            _ (slurp (io/resource "public/js/harja/views/tierekisteri.cljs"))
             lahdetiedosto (if kehitysmoodi
                             (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
                               (some (fn [tiedostopaate]
                                       (when (.exists (io/as-file (str "dev-resources/" tiedostopolku-ilman-paatetta tiedostopaate)))
-                                        (str "dev-resources/" tiedostopolku-ilman-paatetta tiedostopaate)))
+                                        (str tiedostopolku-ilman-paatetta tiedostopaate)))
                                     [".cljs" ".cljc"]))
                             (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))] ;; lähdetiedoston perässä saattaa olla timestamp. Otetaan se pois, jos on.
                               (str "public/js/" (second lahdetiedosto))
@@ -77,7 +76,7 @@
                                               :lahdetiedosto lahdetiedosto
                                               :muutama-rivi-koodia (if (string? muutama-rivi-lahdekoodia)
                                                                       muutama-rivi-lahdekoodia
-                                                                      (apply str (map #(str % "(slack-n)") muutama-rivi-lahdekoodia)))})))))
+                                                                      (apply str (map #(str % "|||") muutama-rivi-lahdekoodia)))})))))
       @paikat)))
 
 (defn stack-trace-lahdekoodille
@@ -91,14 +90,14 @@
                                                                generoitu-sarake (-> (vals %) first keys first)
                                                                lahde-tiedot (-> (vals %) first vals ffirst)]
                                                             (if (empty? %)
-                                                              "*Generoitua .js tiedostoa ei saatu mapattua .cljs tiedostoon joltain stack tracen riviltä.*(slack-n)"
+                                                              "*Generoitua .js tiedostoa ei saatu mapattua .cljs tiedostoon joltain stack tracen riviltä.*|||"
                                                               (str "at " (:lahdetiedosto lahde-tiedot) ":"
                                                                          (:rivi lahde-tiedot) ":"
-                                                                         (:sarake lahde-tiedot) "(slack-n)"
-                                                                         (if (re-find #"\(slack-n\)" (:muutama-rivi-koodia lahde-tiedot))
+                                                                         (:sarake lahde-tiedot) "|||"
+                                                                         (if (re-find #"\|\|\|" (:muutama-rivi-koodia lahde-tiedot))
                                                                            (str "```" (:muutama-rivi-koodia lahde-tiedot) "```")
                                                                            (:muutama-rivi-koodia lahde-tiedot))
-                                                                         "(slack-n)")))
+                                                                         "|||")))
                                                         stack-rivit-lahde))]
                         stack-lahde)
                       (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)))]
@@ -119,13 +118,13 @@
     {:text (str "Käyttäjä " kayttajanimi " (" id ")" " raportoi yhteyskatkoksista palveluissa:")
      :fields (mapv (fn [palvelu]
                      {:title (str palvelu)
-                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl(slack-n)"
+                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl|||"
                                    "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
                                                         (sort t/after?)
                                                         (last))
-                                   "(slack-n)viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
-                                                               (sort t/after?)
-                                                               (first)))})
+                                   "|||viimeinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
+                                                         (sort t/after?)
+                                                         (first)))})
                   (keys palvelulla-ryhmiteltyna))}))
 
 (defn raportoi-selainvirhe
