@@ -678,7 +678,7 @@
                   (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
                   :else nil)
                 toiminto (name toiminto)
-                tunniste (if (= toiminto "lisatty")
+                tunniste (if (and (= toiminto "lisatty") (not (:tunniste arvot)))
                            (livitunnisteet/hae-seuraava-livitunniste db)
                            (:tunniste arvot))
                 arvot (functor/fmap str (assoc arvot :tunniste tunniste))
