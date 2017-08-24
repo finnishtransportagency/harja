@@ -59,6 +59,7 @@
     :vv-materiaalit
     :reimari
     :vkm
+    :graylog
     :vv-turvalaitteet
     :hairioilmoitukset})
 

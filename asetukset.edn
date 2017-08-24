@@ -174,4 +174,6 @@
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
+
+ :harja-datan-data {:polku #=(slurp "../.harja/polku-dataan")}
  }

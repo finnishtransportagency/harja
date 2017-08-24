@@ -16,14 +16,15 @@
                                     {:title %2 :value (get values %1)})
                                 titles))}))
 
-(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset]}]
+(defn formatoi-yhteyskatkos [{:keys [id kayttajanimi]} {:keys [yhteyskatkokset user-agent] :as katkostiedot}]
   (let [yhteyskatkokset (map #(assoc % :aika (c/from-date (:aika %)))
                              yhteyskatkokset)
         palvelulla-ryhmiteltyna (group-by :palvelu yhteyskatkokset)]
     {:text (str "Käyttäjä " kayttajanimi " (" id ")" " raportoi yhteyskatkoksista palveluissa:")
      :fields (mapv (fn [palvelu]
                      {:title (str palvelu)
-                      :value (str  "Katkoksia " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl(slack-n)"
+                      :value (str  "Selain: " user-agent
+                                   "(slack-n)Katkoksia: " (count (get palvelulla-ryhmiteltyna palvelu)) " kpl(slack-n)"
                                    "ensimmäinen: " (->> (map :aika (get palvelulla-ryhmiteltyna palvelu))
                                                         (sort t/after?)
                                                         (last))

@@ -377,7 +377,7 @@
         [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] "Tyhjennä kaikki"]])
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
-        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
+        [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Valitse kaikki"]])
      (let [checkboxit (doall
                         (for [v vaihtoehdot
                               :let [valittu? (valitut v)]]
