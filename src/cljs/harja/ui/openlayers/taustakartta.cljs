@@ -4,6 +4,8 @@
   (:require [ol.source.WMTS]
             [ol.tilegrid.WMTS]
             [ol.layer.Tile]
+            [ol.source.ImageWMS]
+            [ol.layer.Image]
             [ol.extent :as ol-extent]
             [harja.ui.openlayers.projektiot :as p]
             [taoensso.timbre :as log]))
@@ -39,3 +41,10 @@
 (defmethod luo-taustakartta :livi [{:keys [url layer]}]
   (log/info "Luodaan livi karttataso: layer")
   (wmts-layer "EPSG:3067_PTP_JHS180" "Liikennevirasto" url layer))
+
+(defmethod luo-taustakartta :wms [{:keys [url layer style] :as params}]
+  (log/info "Luodaan WMS karttataso: " params)
+  (ol.layer.Image.
+   #js {:source (ol.source.ImageWMS.
+                 #js {:url url
+                      :params #js {:LAYERS layer :STYLE style :FORMAT "image/png"}})}))
