@@ -81,7 +81,7 @@
                          "Oulu Talvihoito TP 2014-2019"
                          "As.tyyt.­bonus"
                          1000M
-                         4.06958187041174593000M]
+                         4.39016602809706226000M]
                         ["01.08.2015"
                          "2H16339/01"
                          "Oulu Talvihoito TP 2014-2019"
@@ -111,7 +111,7 @@
                           ""
                           ""
                           4000M
-                          28.97379642979870953000M))]]))))
+                          29.29438058748402586000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

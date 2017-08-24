@@ -90,6 +90,27 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11,
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
 
 
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 1, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 2, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 3, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 4, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 5, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 6, 104.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 7, 105.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 8, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 9, 106.2);
+
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 1, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 2, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 3, 104.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 4, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 5, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 6, 104.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 7, 105.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 8, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 kp-osaindeksi', 2017, 9, 106.2);
+
+
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
   ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'bitumi');

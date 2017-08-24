@@ -1,14 +1,16 @@
 -- Indeksilaskennan perusluvut
 
-CREATE OR REPLACE FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER)
+CREATE OR REPLACE FUNCTION indeksilaskennan_perusluku(urakka_id INTEGER)
   RETURNS NUMERIC AS $$
 DECLARE
   kilpailutusta_edeltava_vuosi INTEGER;
   kilpailutusvuosi             INTEGER;
   tulosrivi                    RECORD;
   indeksinimi TEXT;
+  urakkatyyppi TEXT;
 BEGIN
   SELECT indeksi FROM urakka WHERE id = urakka_id INTO indeksinimi;
+  SELECT tyyppi FROM urakka WHERE id = urakka_id INTO urakkatyyppi;
   IF indeksinimi IS NULL THEN
     RAISE NOTICE 'Indeksit eivät ole käytössä urakassa %', urakka_id;
     RETURN NULL;

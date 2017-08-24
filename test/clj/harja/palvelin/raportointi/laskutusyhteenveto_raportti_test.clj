@@ -97,14 +97,14 @@
       (is (= indeksitarkistukset-muutos-ja-lisatyot "63,22"))
       (is (= indeksitarkistukset-akilliset "31,61"))
       (is (= indeksitarkistukset-vahinkojen-korjaukset "17,24"))
-      (is (= indeksitarkistukset-bonukset "4,07"))
+      (is (= indeksitarkistukset-bonukset "4,39"))
       (is (= indeksitarkistukset-erilliskustannukset "24,90"))
-      (is (= indeksitarkistukset-muut-kuin-kokhint "43,13"))
-      (is (= indeksitarkistukset-kaikki "1 000,20"))
-      (is (= kaikki-paitsi-kokhint-yhteensa "-6 759,80"))
+      (is (= indeksitarkistukset-muut-kuin-kokhint "43,45"))
+      (is (= indeksitarkistukset-kaikki "1 000,52"))
+      (is (= kaikki-paitsi-kokhint-yhteensa "-6 759,48"))
 
 
-      (is (= kaikki-yhteensa nurkkasumma "155 250,20")))))
+      (is (= kaikki-yhteensa nurkkasumma "155 250,52")))))
 
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -208,13 +208,13 @@
       (is (= indeksitarkistukset-muutos-ja-lisatyot "126,44"))
       (is (= indeksitarkistukset-akilliset "63,22"))
       (is (= indeksitarkistukset-vahinkojen-korjaukset "34,48"))
-      (is (= indeksitarkistukset-bonukset "8,14"))
+      (is (= indeksitarkistukset-bonukset "8,78"))
       (is (= indeksitarkistukset-erilliskustannukset "49,81"))
-      (is (= indeksitarkistukset-muut-kuin-kokhint "86,26"))
+      (is (= indeksitarkistukset-muut-kuin-kokhint "86,90"))
       (is (= indeksitarkistukset-kaikki "247,13"))
-      (is (= kaikki-paitsi-kokhint-yhteensa "-15 433,74"))
+      (is (= kaikki-paitsi-kokhint-yhteensa "-15 433,10"))
 
-      (is (= kaikki-yhteensa nurkkasumma "308 586,26")))))
+      (is (= kaikki-yhteensa nurkkasumma "308 586,90")))))
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
