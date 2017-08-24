@@ -92,13 +92,36 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                                  AS tekija,
+  -- Talvihoito- ja soratiemittauksesta riittää tieto, onko niitä tarkastuksella
+  CASE WHEN
+      thm.lumimaara IS NULL AND
+      thm.tasaisuus IS NULL AND
+      thm.kitka IS NULL AND
+      thm.lampotila_ilma IS NULL AND
+      thm.lampotila_tie IS NULL
+    THEN NULL
+    ELSE 'Talvihoitomittaus'
+  END AS talvihoitomittaus,
+  CASE WHEN
+      stm.tasaisuus IS NULL AND
+      stm.kiinteys IS NULL AND
+      stm.polyavyys IS NULL AND
+      stm.sivukaltevuus IS NULL
+    THEN NULL
+    ELSE 'Soratiemittaus'
+  END AS soratiemittaus,
+  -- Vakiohavainnot otetaan merkkijonona, koska tyyliin vaikuttaa tietyt avainsanat (esim. "Luminen")
   (SELECT array_agg(nimi)
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
-   WHERE tarkastus = t.id)             AS vakiohavainnot
+   WHERE tarkastus = t.id)             AS vakiohavainnot,
+  t.havainnot AS havainnot
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  -- Talvi- ja soratiemittaukset
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND t.sijainti IS NOT NULL
       AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -137,11 +160,24 @@ SELECT
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
    WHERE tarkastus = t.id)                                   AS vakiohavainnot,
-  yrita_tierekisteriosoite_pisteille2
-  (alkupiste(t.sijainti), loppupiste(t.sijainti), 1) :: TEXT AS tierekisteriosoite
+  thm.talvihoitoluokka     AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara            AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus            AS talvihoitomittaus_tasaisuus,
+  thm.kitka                AS talvihoitomittaus_kitka,
+  thm.lampotila_tie        AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma       AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka          AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus            AS soratiemittaus_tasaisuus,
+  stm.kiinteys             AS soratiemittaus_kiinteys,
+  stm.polyavyys            AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
+  yrita_tierekisteriosoite_pisteille2(
+      alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND t.sijainti IS NOT NULL
       AND ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
@@ -153,6 +189,12 @@ WHERE t.urakka = :urakka
            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
                OR EXISTS(SELECT tarkastus
                          FROM tarkastus_vakiohavainto
+                         WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus
+                         FROM talvihoitomittaus
+                         WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus
+                         FROM soratiemittaus
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
       AND t.poistettu IS NOT TRUE;
