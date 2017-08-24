@@ -905,6 +905,17 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   'Käyttäjän itse kirjaama juttu', 1,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'), 'muu');
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, maara, luoja, ryhma)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
    'Omakustannushinta', 150,
    (SELECT id
     FROM kayttaja

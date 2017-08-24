@@ -160,11 +160,15 @@
                                 yleiskustannuslisa
                                 0)})
 
-(defn- toimenpiteen-vakiohintakentat [hinnat]
-  ;; Nämä kentät on tarkoitus näyttää aina riippumatta siitä onko niille annettu hintaa
-  [(hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
-   (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
-   (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
+(defn- toimenpiteen-hintakentat [hinnat]
+  (let [vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"]]
+    (concat
+      ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+      (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
+      ;; Loput kentät ovat käyttäjän itse lisäämiä
+      ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
+      (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
+           (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
@@ -363,7 +367,7 @@
           tyo-hinnat (filter #(tyo/tyo-hinnat (::hinta/otsikko %)) hinnat)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
-                  ::h/hinnat (toimenpiteen-vakiohintakentat hinnat)
+                  ::h/hinnat (toimenpiteen-hintakentat hinnat)
                   ::h/tyot (tyo->taulukkomuotoon (concat tyot tyo-hinnat))})))
 
   AloitaHintaryhmanHinnoittelu
@@ -511,7 +515,7 @@
           index (:index tiedot)
           paivitettava-rivi (get nykyiset-tyot index)
           paivitetyt-tyot (assoc nykyiset-tyot index (merge paivitettava-rivi
-                                                                    (dissoc tiedot :index)))]
+                                                            (dissoc tiedot :index)))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   LisaaHinnoiteltavaTyorivi
