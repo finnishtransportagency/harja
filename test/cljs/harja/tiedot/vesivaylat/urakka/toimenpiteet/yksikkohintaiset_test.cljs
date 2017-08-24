@@ -199,20 +199,20 @@
     #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
     (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1 ::to/reimari-lisatyo? true}]) {:toimenpiteet []})]
       (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-      (is (= [{:id 1 ::to/hintaryhma-id -2}] (:toimenpiteet tulos)))))
+      (is (= [{::to/reimari-lisatyo? true :id 1 ::to/hintaryhma-id -2}] (:toimenpiteet tulos)))))
 
   (vaadi-async-kutsut
     #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
     (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1 ::to/reimari-lisatyo? false}]) {:toimenpiteet []})]
       (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-      (is (= [{:id 1 ::to/hintaryhma-id -1}] (:toimenpiteet tulos)))))
+      (is (= [{::to/reimari-lisatyo? false :id 1 ::to/hintaryhma-id -1}] (:toimenpiteet tulos)))))
 
   (vaadi-async-kutsut
     #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
     (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1 ::to/reimari-lisatyo? true
                                                    ::to/hintaryhma-id 3}]) {:toimenpiteet []})]
       (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-      (is (= [{:id 1 ::to/hintaryhma-id 3}] (:toimenpiteet tulos))))))
+      (is (= [{::to/reimari-lisatyo? true :id 1 ::to/hintaryhma-id 3}] (:toimenpiteet tulos))))))
 
 (deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
