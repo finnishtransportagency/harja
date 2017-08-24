@@ -21,8 +21,8 @@
   (when taso-paalla?
     (openlayers/luo-kuvataso
      :tarkastusreitit (if (not (u-domain/vesivaylaurakkatyyppi? urakkatyyppi))
-                        (set/union esitettavat-asiat/tarkastus-selitteet esitettavat-asiat/tarkastus-selitteet-tie)
-                        esitettavat-asiat/tarkastus-selitteet)
+                        esitettavat-asiat/tarkastus-selitteet-reiteille
+                        esitettavat-asiat/tarkastus-selitteet-ikoneille)
      "tr" (k/url-parametri (assoc parametrit
                              :valittu {:id (:id @tarkastukset/valittu-tarkastus)})))))
 
