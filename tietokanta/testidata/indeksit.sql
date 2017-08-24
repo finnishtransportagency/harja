@@ -90,6 +90,10 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11,
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
 
 
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2016, 1, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2016, 2, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2016, 3, 106.2);
+
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 1, 103.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 2, 105.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kp-osaindeksi', 2017, 3, 106.2);

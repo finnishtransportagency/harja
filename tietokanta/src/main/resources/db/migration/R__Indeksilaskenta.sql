@@ -19,17 +19,24 @@ BEGIN
                                                             FROM urakka
                                                             WHERE id = urakka_id)));
     kilpailutusta_edeltava_vuosi := kilpailutusvuosi - 1;
-    -- Perusluku on urakan kilpailuttamisvuotta ed. joulukuun ja kilp.vuoden tammi- ja helmikuun pistelukujen keskiarvo
+
+    -- Tien hoidossa perusluku on urakan kilpailuttamisvuotta ed. joulukuun ja kilp.vuoden tammi- ja helmikuun pistelukujen keskiarvo
+    -- Vesiväyläurakoissa taas kilpailutusvuoden tammi-, helmi- ja maaliskuun pistelukujen keskiarvo
     SELECT INTO tulosrivi
       AVG(arvo) AS perusluku,
       count(*)  AS indeksilukujen_lkm
     FROM indeksi
     WHERE nimi = indeksinimi
-          AND ((vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 12) OR
+          AND (CASE
+               WHEN urakkatyyppi = 'hoito'
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 12)
+                      WHEN urakkatyyppi = 'vesivayla-hoito'
+                        THEN (vuosi = kilpailutusvuosi AND kuukausi = 3) END
+                      OR
                (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                (vuosi = kilpailutusvuosi AND kuukausi = 2)
           );
-    RAISE NOTICE 'Laskettiin hoitourakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %', urakka_id, tulosrivi.perusluku, indeksinimi;
+    RAISE NOTICE 'Laskettiin urakan id:llä % indeksilaskennan perusluvuksi:  %, käytetty indeksi: %, urakkatyyppi: %', urakka_id, tulosrivi.perusluku, indeksinimi, urakkatyyppi;
     -- Jos kaikkia kolmea indeksilukua ei ole, palautetaan NULL
     IF (tulosrivi.indeksilukujen_lkm = 3)
     THEN

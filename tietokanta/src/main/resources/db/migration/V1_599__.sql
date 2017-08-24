@@ -4,6 +4,12 @@ VALUES
   ('vesivayla-hoito'::urakkatyyppi, 'MAKU 2005 kp-osaindeksi', NULL, NULL),
   ('vesivayla-hoito'::urakkatyyppi, 'MAKU 2010 kp-osaindeksi', NULL, NULL);
 
+UPDATE urakka
+   SET indeksi = CASE
+              WHEN alkupvm < '2017-8-1' THEN 'MAKU 2005 kp-osaindeksi'
+              ELSE 'MAKU 2010 kp-osaindeksi' END
+ WHERE tyyppi = 'vesivayla-hoito' and indeksi IS NULL;
+
 
 -- indeksilaskennan sprocista tehdään useaa urakkatyyppiä tukeva, uudelleennimetään funktio
 -- tiedostossa R__Indeksilaskenta.sql ja pudotetaan vanha tässä migraatiossa
