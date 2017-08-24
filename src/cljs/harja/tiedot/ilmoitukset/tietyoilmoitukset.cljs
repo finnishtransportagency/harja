@@ -62,7 +62,6 @@
                             %)
         putsattu-ilmoitus (when valittu-ilmoitus
                             (into {} (keep ok-namespacessa? valittu-ilmoitus)))]
-    (log "tti tvt: avainten lkmt" (count valittu-ilmoitus) (count putsattu-ilmoitus))
 
     (merge tietyoilmoitus-app-sapluuna
            {:valittu-ilmoitus putsattu-ilmoitus
@@ -294,7 +293,6 @@
   IlmoitusTallennettu
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
-    (log "avaa pdf tallennuksen jälkeen? " avaa-pdf?)
     (when avaa-pdf?
       (set! (.-location js/window) (k/pdf-url :tietyoilmoitus "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
     (assoc app

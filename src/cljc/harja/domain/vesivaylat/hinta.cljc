@@ -14,16 +14,11 @@
 
 (define-tables
   ["vv_hinta" ::hinta
-   {"muokattu" ::m/muokattu
-    "muokkaaja" ::m/muokkaaja-id
-    "luotu" ::m/luotu
-    "luoja" ::m/luoja-id
-    "poistettu" ::m/poistettu?
-    "poistaja" ::m/poistaja-id
-    #?@(:clj [::hinnoittelu (rel/has-one
-                              ::hinnoittelu-id
-                              :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
-                              :harja.domain.vesivaylat.hinnoittelu/id)])}])
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
+   {::hinnoittelu (specql.rel/has-one
+                    ::hinnoittelu-id
+                    :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
+                    :harja.domain.vesivaylat.hinnoittelu/id)}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
@@ -60,17 +55,17 @@
   [hinnat]
   (reduce + 0 (map ::maara hinnat)))
 
-(defn hinnan-ominaisuus [hinnat otsikko ominaisuus]
+(defn hinnan-ominaisuus-otsikolla [hinnat otsikko ominaisuus]
   (->> hinnat
        (filter #(= (::otsikko %) otsikko))
        (first)
        ominaisuus))
 
-(defn hinnan-maara [hinnat otsikko]
-  (hinnan-ominaisuus hinnat otsikko ::maara))
+(defn hinnan-maara-otsikolla [hinnat otsikko]
+  (hinnan-ominaisuus-otsikolla hinnat otsikko ::maara))
 
 (defn hinnan-yleiskustannuslisa [hinnat otsikko]
-  (hinnan-ominaisuus hinnat otsikko ::yleiskustannuslisa))
+  (hinnan-ominaisuus-otsikolla hinnat otsikko ::yleiskustannuslisa))
 
 (defn kokonaishinta-yleiskustannuslisineen [hinnat]
   (+ (perushinta hinnat)
@@ -78,3 +73,12 @@
 
 (defn hinta-otsikolla [otsikko hinnat]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))
+
+(defn- paivita-hintajoukon-hinnan-tiedot-otsikolla
+  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."
+  [hinnat tiedot]
+  (mapv (fn [hinta]
+          (if (= (::otsikko hinta) (::otsikko tiedot))
+            (merge hinta tiedot)
+            hinta))
+        hinnat))
