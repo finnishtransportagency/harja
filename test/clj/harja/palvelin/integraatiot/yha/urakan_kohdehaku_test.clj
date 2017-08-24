@@ -42,7 +42,6 @@
                                                                   :let 3
                                                                   :losa 3
                                                                   :tienumero 3}
-                                         :tunnus "A"
                                          :yha-id 3}
                                         {:paallystystoimenpide {:kokonaismassamaara 124.0
                                                                 :kuulamylly 4
@@ -58,7 +57,6 @@
                                                                   :let 3
                                                                   :losa 3
                                                                   :tienumero 3}
-                                         :tunnus "B"
                                          :yha-id 4}]
                            :keskimaarainen-vuorokausiliikenne 1000
                            :nimi "string"
