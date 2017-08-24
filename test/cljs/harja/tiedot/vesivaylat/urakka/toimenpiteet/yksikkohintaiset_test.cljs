@@ -676,8 +676,30 @@
   (is (false? (tiedot/hintaryhma-korostettu? {::h/id false} {:korostettu-hintaryhma false}))))
 
 (deftest tunnista-kok-hint-siirretty-ryhma
-  (is (true? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id nil})))
-  (is (false? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id 1}))))
+  (is (true? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id -1})))
+  (is (false? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id 1})))
+  (is (false? (tiedot/kokonaishintaisista-siirretyt-hintaryhma? {::h/id nil}))))
+
+(deftest tunnista-reimarin-lisatyot-ryhma
+  (is (true? (tiedot/reimarin-lisatyot-hintaryhma? {::h/id -2})))
+  (is (false? (tiedot/reimarin-lisatyot-hintaryhma? {::h/id 2})))
+  (is (false? (tiedot/reimarin-lisatyot-hintaryhma? {::h/id nil}))))
+
+(deftest tunnista-valiaikainen-ryhma
+  (is (true? (tiedot/valiaikainen-hintaryhma? {::h/id -2})))
+  (is (true? (tiedot/valiaikainen-hintaryhma? {::h/id -1})))
+  (is (false? (tiedot/valiaikainen-hintaryhma? {::h/id nil})))
+  (is (false? (tiedot/valiaikainen-hintaryhma? {::h/id 2})))
+  (is (false? (tiedot/valiaikainen-hintaryhma? nil))))
+
+(deftest toimenpiteet-valiaikaisiin-ryhmiin
+  (is (= [1 -1 -2 -1]
+         (mapv ::to/hintaryhma-id
+              (tiedot/hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
+            [{::to/hintaryhma-id 1}
+             {::to/hintaryhma-id nil}
+             {::to/hintaryhma-id nil ::to/reimari-lisatyo? true}
+             {::to/hintaryhma-id nil ::to/reimari-lisatyo? false}])))))
 
 (deftest poista-ryhman-korostus
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {})))
