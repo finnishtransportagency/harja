@@ -126,6 +126,7 @@
                      {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
                       ::tkomp/sarjanumero "125"
                       ::tkomp/turvalaitenro "8883"}]]
+    ;; TODO Korkeus alkaa olla jo aikamoinen haaste, piirrä rivin alapuolelle document flowiin?
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
       [:tr
@@ -230,20 +231,16 @@
         komponentit)
 
       [valiotsikkorivi "Muut" :muu-hinnoittelu-osio]
-      ;; TODO Aiemmin oli könttäsumma komponenteille, nyt annetaan hinta tarkemmin
-      ;; Tätä ei oikein voi helposti migratoida mitenkään?
-      #_[toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-         e! app* "Komponentit"]
-      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-       e! app* "Yleiset materiaalit"]
-      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-       e! app* "Matkakulut"]
-      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-       e! app* "Muut kulut"]
+      (map-indexed
+        (fn [index hinta]
+          ^{:key index}
+          [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+           e! app* (::hinta/otsikko hinta)])
+        ;; TODO Käy läpi vain ryhmä "muut"
+        (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
         ;; TODO Tärkeää varmistaa ettei voi olla kahta hinnoittelua samalla nimellä per toimenpide
-        ;; TODO Myöskään noita ylempänä olevaa kolmea hardkoodattua nimeä ei saa käyttää.
         [napit/uusi "Lisää kulurivi" #(log "TODO")]]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
