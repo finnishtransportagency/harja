@@ -767,7 +767,14 @@
                                :nimi "tienumerot"
                                :icon (ikonit/road)
                                :url   (str (k/wmts-polku-livi) "wmts")
-                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"}]}]))))
+                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"}
+                              {:type :wms
+                               :id :enc-merikartta
+                               :nimi "ENC merikartta"
+                               :icon (ikonit/map-marker)
+                               :url "http://kartta.liikennevirasto.fi/meriliikenne/dgds/wms_ip/merikartta"
+                               :layer "cells"
+                               :style "style-id-203"}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
