@@ -55,7 +55,7 @@
 
    {:nimi :laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti #{"urakka"}
+    :konteksti #{"hallintayksikko" "urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.laskutusyhteenveto/suorita
     :urakkatyyppi #{:hoito}}
@@ -289,8 +289,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
-    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit}
-   ])
+    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-raporttinakyma}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

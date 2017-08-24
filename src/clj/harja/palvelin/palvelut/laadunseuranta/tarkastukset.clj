@@ -11,7 +11,7 @@
 
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.tarkastus :as laadunseuranta]
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -170,7 +170,9 @@
             (map #(konv/array->set % :vakiohavainnot))
             (map #(assoc % :tyyppi-kartalla :tarkastus))
             (map #(konv/string->keyword % :tyyppi))
-            (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+            (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+            (map konv/alaviiva->rakenne))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
             db
             (assoc parametrit

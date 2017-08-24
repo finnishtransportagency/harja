@@ -3,11 +3,25 @@
 -- ***********************************************
 
 INSERT INTO vv_vikailmoitus
-("reimari-id", kuvaus, pvm, "turvalaite-id")
+("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
+"reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
+"reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja", "reimari-turvalaitenro")
 VALUES
-  ('1234', 'Akonniemen kyltti on lähtenyt irti myrskyn takia', '2017-04-02', (SELECT id
-                                                                              FROM vv_turvalaite
-                                                                              WHERE nimi = 'Akonniemen kyltti'));
+  ('1234', 'Akonniemen kyltti on lähtenyt irti myrskyn takia',
+  (SELECT id FROM vv_turvalaite WHERE nimi = 'Akonniemen kyltti'),
+   'ilmari vikailmoittaja', -- reimari-ilmoittaja
+   'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
+   TRUE, -- reimari-epakunnossa?
+   '8478478', -- tyyppikoodi
+   '8884848', -- tilakoodi
+   '2017-05-01T12:12:12', -- havaittu
+   '2017-05-01T13:13:13', -- kirjattu
+   '2017-05-01T13:13:13', -- muokattu
+   '2017-05-01T13:13:13', -- luontiaika
+   'lauri luoja', -- luoja
+   'mikko muokkaaja', -- muokkaaja
+   '123' -- turvalaitenro
+   );
 
 -- ***********************************************
 -- KOKONAISHINTAINEN TOIMENPIDE KIINTIÖSSÄ
@@ -309,9 +323,9 @@ VALUES
     '1022541903',
     '(123,Akonniemen väylät,55)',
     30,
-    (SELECT id
-     FROM vv_vayla
-     WHERE nimi = 'Akonniemen väylät'));
+   (SELECT id
+    FROM vv_vayla
+    WHERE nimi = 'Akonniemen väylät'));
 
 -- ***********************************************
 -- KOKONAISHINTAISET TOIMENPITEET VIALLA
@@ -400,14 +414,28 @@ INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id", poistettu) VA
                                                                                       TRUE);
 
 INSERT INTO vv_vikailmoitus
-("reimari-id", kuvaus, pvm, "turvalaite-id", "toimenpide-id")
+("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
+"reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
+"reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja",
+"toimenpide-id", "reimari-turvalaitenro")
 VALUES
-  ('123', 'Hietasaaren viitta on kaatunut', '2017-04-02', (SELECT id
-                                                           FROM vv_turvalaite
-                                                           WHERE nimi = 'Hietasaaren viitta'),
-   (SELECT id
-    FROM reimari_toimenpide
-    WHERE lisatieto = 'TESTITOIMENPIDE 2'));
+('123', 'Hietasaaren viitta on kaatunut',
+(SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
+'ilmari vikailmoittaja', -- reimari-ilmoittaja
+'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
+TRUE, -- reimari-epakunnossa?
+'8478478', -- tyyppikoodi
+'8884848', -- tilakoodi
+'2017-04-02T12:12:12', -- havaittu
+'2017-04-02T13:13:13', -- kirjattu
+'2017-04-02T13:13:13', -- muokattu
+'2017-04-02T13:13:13', -- luontiaika
+'lauri luoja', -- luoja
+'mikko muokkaaja', -- muokkaaja
+(SELECT id
+FROM reimari_toimenpide
+WHERE lisatieto = 'TESTITOIMENPIDE 2'),
+'578'); -- turvalaitenro
 
 -- ***********************************************
 -- KOKONAISHINTAISIIN SIIRRETYT, REIMARISTA YKSIKKÖHINTAISENA RAPORTOIDUT TYÖT
@@ -836,7 +864,7 @@ VALUES
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Vanhaan urakan testihinnoittelu', TRUE,
+  ('Vantaan urakan testihinnoittelu', TRUE,
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'),
@@ -853,7 +881,7 @@ VALUES
     WHERE kayttajanimi = 'tero'),
    (SELECT id
     FROM urakka
-    WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
 
 INSERT INTO vv_hinta
@@ -862,9 +890,9 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
-   'Työ', 600, (SELECT id
-                FROM kayttaja
-                WHERE kayttajanimi = 'tero'));
+   'Yleiset materiaalit', 600, (SELECT id
+                                FROM kayttaja
+                                WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja, poistettu)
@@ -898,15 +926,43 @@ VALUES
                                                                                                           'tero'),
    TRUE);
 
+INSERT INTO vv_tyo
+("hinnoittelu-id", maara, luoja, "toimenpidekoodi-id")
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   30,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+    WHERE nimi = 'Henkilöstö: Ammattimies'));
+
+INSERT INTO vv_tyo
+("hinnoittelu-id", maara, luoja, "toimenpidekoodi-id")
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   15,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+    WHERE nimi = 'Henkilöstö: Työnjohto'));
+
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Vanhaan urakan testihinnoittelu'),
-   'Työ', 5, (SELECT id
-              FROM kayttaja
-              WHERE kayttajanimi = 'tero'));
+    WHERE nimi = 'Vantaan urakan testihinnoittelu'),
+   'Yleiset materiaalit', 5, (SELECT id
+                              FROM kayttaja
+                              WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -914,9 +970,9 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
-   'Työ', 70, (SELECT id
-               FROM kayttaja
-               WHERE kayttajanimi = 'tero'));
+   'Yleiset materiaalit', 70, (SELECT id
+                               FROM kayttaja
+                               WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)

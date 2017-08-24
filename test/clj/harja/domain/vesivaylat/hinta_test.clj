@@ -8,12 +8,12 @@
 
 (deftest hinnan-ominaisuudet
   (is (= :baz
-         (hinta/hinnan-ominaisuus [{::hinta/otsikko :foobar :barbar :baz}]
-                                  :foobar
-                                  :barbar)))
+         (hinta/hinnan-ominaisuus-otsikolla [{::hinta/otsikko :foobar :barbar :baz}]
+                                            :foobar
+                                            :barbar)))
   (is (= :baz
-         (hinta/hinnan-maara [{::hinta/otsikko :foobar ::hinta/maara :baz}]
-                             :foobar)))
+         (hinta/hinnan-maara-otsikolla [{::hinta/otsikko :foobar ::hinta/maara :baz}]
+                                       :foobar)))
   (is (= :baz
          (hinta/hinnan-yleiskustannuslisa [{::hinta/otsikko :foobar ::hinta/yleiskustannuslisa :baz}]
                                           :foobar))))
@@ -29,15 +29,15 @@
          111)))
 
 (deftest hinnan-ominaisuus
-  (is (= (hinta/hinnan-ominaisuus [{::hinta/maara 1 ::hinta/otsikko "A"}
+  (is (= (hinta/hinnan-ominaisuus-otsikolla [{::hinta/maara 1 ::hinta/otsikko "A"}
                                    {::hinta/maara 2 ::hinta/otsikko "B"}
                                    {::hinta/maara 3 ::hinta/otsikko "C"}]
-                                  "B" ::hinta/maara)
+                                            "B" ::hinta/maara)
          2))
-  (is (= (hinta/hinnan-maara [{::hinta/maara 1 ::hinta/otsikko "A"}
+  (is (= (hinta/hinnan-maara-otsikolla [{::hinta/maara 1 ::hinta/otsikko "A"}
                               {::hinta/maara 2 ::hinta/otsikko "B"}
                               {::hinta/maara 3 ::hinta/otsikko "C"}]
-                             "C")
+                                       "C")
          3))
   (is (= (hinta/hinnan-yleiskustannuslisa [{::hinta/maara 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
                                            {::hinta/maara 2 ::hinta/otsikko "B"}
