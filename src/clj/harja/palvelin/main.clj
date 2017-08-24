@@ -620,7 +620,6 @@
 
 (defn -main [& argumentit]
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
-  (println "ffff" (count (slurp (clojure.java.io/resource "public/js/harja/tiedot/navigaatio.cljs"))))
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []

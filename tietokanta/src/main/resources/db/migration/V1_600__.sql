@@ -1,0 +1,3 @@
+CREATE INDEX CONCURRENTLY integraatiotapahtuma_alkanut_idx ON integraatiotapahtuma (alkanut);
+CREATE INDEX CONCURRENTLY integraatioviesti_integraatiotapahtuma_idx ON integraatioviesti (integraatiotapahtuma);
+CREATE INDEX CONCURRENTLY index_integraatioviesti_on_sisalto_trigram ON integraatioviesti USING gin (sisalto gin_trgm_ops);
