@@ -144,7 +144,7 @@
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
-  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
+  (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
@@ -154,12 +154,12 @@
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (log/warn (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-ei-hakutuloksia-virhevastaus virheet))
 
 (defn kasittele-puutteelliset-parametrit [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
+  (log/warn (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 

@@ -5,7 +5,7 @@
             [harja.kyselyt.hoitoluokat :as hoitoluokat-q]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.tarkastus :as laadunseuranta]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [specql.core :refer [upsert! delete!]]

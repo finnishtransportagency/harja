@@ -100,22 +100,24 @@
 (defrecord Integraatioloki []
   component/Lifecycle
   (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-jarjestelmien-integraatiot
-                      (fn [kayttaja _]
-                        (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtumat
-                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen hakuehdot]}]
-                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen hakuehdot)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtumien-maarat
-                      (fn [kayttaja {:keys [jarjestelma integraatio]}]
-                        (hae-integraatiotapahtumien-maarat (:db this) kayttaja jarjestelma integraatio)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-integraatiotapahtuman-viestit
-                      (fn [kayttaja tapahtuma-id]
-                        (hae-integraatiotapahtuman-viestit (:db this) kayttaja tapahtuma-id)))
+    (let [db (:db-replica this)
+          http-palvelin (:http-palvelin this)]
+      (julkaise-palvelu http-palvelin
+                        :hae-jarjestelmien-integraatiot
+                        (fn [kayttaja _]
+                          (hae-jarjestelmien-integraatiot db kayttaja)))
+      (julkaise-palvelu http-palvelin
+                        :hae-integraatiotapahtumat
+                        (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen hakuehdot]}]
+                          (hae-integraatiotapahtumat db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot)))
+      (julkaise-palvelu http-palvelin
+                        :hae-integraatiotapahtumien-maarat
+                        (fn [kayttaja {:keys [jarjestelma integraatio]}]
+                          (hae-integraatiotapahtumien-maarat db kayttaja jarjestelma integraatio)))
+      (julkaise-palvelu http-palvelin
+                        :hae-integraatiotapahtuman-viestit
+                        (fn [kayttaja tapahtuma-id]
+                          (hae-integraatiotapahtuman-viestit db kayttaja tapahtuma-id))))
     this)
 
   (stop [this]
