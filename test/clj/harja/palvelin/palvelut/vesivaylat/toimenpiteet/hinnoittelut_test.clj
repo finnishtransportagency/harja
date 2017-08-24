@@ -8,6 +8,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as toi]
+            [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
@@ -55,12 +56,13 @@
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
           insert-params {::toi/urakka-id urakka-id
                          ::toi/id toimenpide-id
-                         ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
-                                              ::hinta/yleiskustannuslisa 0
-                                              ::hinta/maara 666}
-                                             {::hinta/otsikko "Testihinta 2"
-                                              ::hinta/yleiskustannuslisa 12
-                                              ::hinta/maara 123}]}
+                         ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
+                                                     ::hinta/yleiskustannuslisa 0
+                                                     ::hinta/maara 666}
+                                                    {::hinta/otsikko "Testihinta 2"
+                                                     ::hinta/yleiskustannuslisa 12
+                                                     ::hinta/maara 123}]
+                         ::h/tallennettavat-tyot []}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -73,7 +75,7 @@
       (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
       (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
-      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelut")
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
       (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
 
       (testing "Lisättyjen hintojen päivittäminen"
@@ -81,12 +83,13 @@
               hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
               update-params {::toi/urakka-id urakka-id
                              ::toi/id toimenpide-id
-                             ::h/hintaelementit (mapv (fn [hinta]
-                                                        (assoc hinta ::hinta/maara
-                                                                     (case (::hinta/maara hinta)
-                                                                       666M 555
-                                                                       123M 321)))
-                                                      (::h/hinnat insert-vastaus))}
+                             ::h/tallennettavat-hinnat (mapv (fn [hinta]
+                                                               (assoc hinta ::hinta/maara
+                                                                            (case (::hinta/maara hinta)
+                                                                              666M 555
+                                                                              123M 321)))
+                                                             (::h/hinnat insert-vastaus))
+                             ::h/tallennettavat-tyot []}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                              update-params)
@@ -102,12 +105,107 @@
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= hinnat-ennen hinnat-jalkeen)))))))
 
+(deftest tallenna-toimenpiteelle-tyot
+  (testing "Uusien töiden lisäys"
+    (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
+          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          toimenpidekoodi-id (ffirst (q "SELECT id
+                                        FROM toimenpidekoodi
+                                        WHERE nimi = 'Henkilöstö: Ammattimies'"))
+          hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+          tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
+          hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
+          insert-params {::toi/urakka-id urakka-id
+                         ::toi/id toimenpide-id
+                         ::h/tallennettavat-hinnat []
+                         ::h/tallennettavat-tyot
+                         [{::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           ::tyo/maara 666}
+                          {::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                           ::tyo/maara 123}
+                          {::hinta/otsikko "Päivän hinta" ::hinta/maara 30}
+                          {::hinta/otsikko "Omakustannushinta" ::hinta/maara 123}]}
+          insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                         insert-params)
+          tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
+          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
+          hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
+
+      (is (= (count (::h/tyot insert-vastaus)) 2))
+      (is (= (count (::h/hinnat insert-vastaus)) 2))
+      (is (some #(== (::tyo/maara %) 666) (::h/tyot insert-vastaus)))
+      (is (some #(== (::tyo/maara %) 123) (::h/tyot insert-vastaus)))
+      (is (some #(and (= (::hinta/otsikko %) "Päivän hinta")
+                      (== (::hinta/maara %) 30))
+                (::h/hinnat insert-vastaus)))
+      (is (some #(and (= (::hinta/otsikko %) "Omakustannushinta")
+                      (== (::hinta/maara %) 123))
+                (::h/hinnat insert-vastaus)))
+      (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
+      (is (= (+ tyot-ennen 2) tyot-jalkeen) "Molemmat työt lisättiin")
+      (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Päivän hinta tallennettiin hinta-tauluun")
+
+      (testing "Lisättyjen töiden päivittäminen"
+        (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
+              tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
+              update-params {::toi/urakka-id urakka-id
+                             ::toi/id toimenpide-id
+                             ::h/tallennettavat-tyot
+                             (mapv (fn [hinta]
+                                     (assoc hinta ::tyo/maara
+                                                  (case (::tyo/maara hinta)
+                                                    666M 555
+                                                    123M 321)))
+                                   (::h/tyot insert-vastaus))
+                             ::h/tallennettavat-hinnat []}
+              update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                             update-params)
+              tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
+              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
+              hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
+
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
+          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
+
+          (is (= hinnat-ennen hinnat-jalkeen) "Päivän hinta ja omakustannushinta poistettiin")
+          (is (= (count (::h/tyot update-vastaus)) 2))
+          (is (some #(== (::tyo/maara %) 555) (::h/tyot update-vastaus)))
+          (is (some #(== (::tyo/maara %) 321) (::h/tyot update-vastaus)))
+          (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
+          (is (= tyot-ennen tyot-jalkeen)))))))
+
+(deftest tallenna-tyot-eri-urakan-toimenpiteelle
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        toimenpidekoodi-id (ffirst (q "SELECT id
+                                        FROM toimenpidekoodi
+                                        WHERE nimi = 'Henkilöstö: Ammattimies'"))
+        insert-params {::toi/urakka-id urakka-id
+                       ::toi/id toimenpide-id
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot
+                       [{::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                         ::tyo/maara 666
+                         ::tyo/id 1}
+                        {::tyo/toimenpidekoodi-id toimenpidekoodi-id
+                         ::tyo/maara 123
+                         ::tyo/id 2}]}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   insert-params)))))
+
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/hintaelementit []}]
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-toimenpiteelle-hinta +kayttaja-tero+
@@ -118,7 +216,8 @@
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/hintaelementit []}]
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
@@ -129,10 +228,11 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/hintaelementit [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
-                                            ::hinta/otsikko "Testihinta 1"
-                                            ::hinta/yleiskustannuslisa 0
-                                            ::hinta/maara 666}]}]
+                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
+                                                   ::hinta/otsikko "Testihinta 1"
+                                                   ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/maara 666}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
@@ -167,12 +267,12 @@
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
           insert-params {::u/id urakka-id
                          ::h/id hinnoittelu-id
-                         ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
-                                              ::hinta/yleiskustannuslisa 0
-                                              ::hinta/maara 666}
-                                             {::hinta/otsikko "Testihinta 2"
-                                              ::hinta/yleiskustannuslisa 12
-                                              ::hinta/maara 123}]}
+                         ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
+                                                     ::hinta/yleiskustannuslisa 0
+                                                     ::hinta/maara 666}
+                                                    {::hinta/otsikko "Testihinta 2"
+                                                     ::hinta/yleiskustannuslisa 12
+                                                     ::hinta/maara 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -186,8 +286,8 @@
       (is (map? paivitetty-hinnoittelu))
       (is (= (count (::h/hinnat paivitetty-hinnoittelu)) 2))
       (is (some #(== (::hinta/maara %) 666) (::h/hinnat paivitetty-hinnoittelu)))
-      (is (some #(== (::hinta/maara %) 123) (::h/hinnat paivitetty-hinnoittelu)))
-      (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
+      (is (some #(== (::hinta/maara %) 123) (::h/hinnat paivitetty-hinnoittelu))
+          (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin"))
       (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut")
 
       (testing "Lisättyjen hintojen päivittäminen"
@@ -195,12 +295,12 @@
               hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
               update-params {::u/id urakka-id
                              ::h/id hinnoittelu-id
-                             ::h/hintaelementit (mapv (fn [hinta]
-                                                        (assoc hinta ::hinta/maara
-                                                                     (case (::hinta/maara hinta)
-                                                                       666M 555
-                                                                       123M 321)))
-                                                      (::h/hinnat paivitetty-hinnoittelu))}
+                             ::h/tallennettavat-hinnat (mapv (fn [hinta]
+                                                               (assoc hinta ::hinta/maara
+                                                                            (case (::hinta/maara hinta)
+                                                                              666M 555
+                                                                              123M 321)))
+                                                             (::h/hinnat paivitetty-hinnoittelu))}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                              update-params)
@@ -223,12 +323,13 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
-                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
-                                            ::hinta/yleiskustannuslisa 0
-                                            ::hinta/maara 666}
-                                           {::hinta/otsikko "Testihinta 2"
-                                            ::hinta/yleiskustannuslisa 12
-                                            ::hinta/maara 123}]}]
+                       ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
+                                                   ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/maara 666}
+                                                  {::hinta/otsikko "Testihinta 2"
+                                                   ::hinta/yleiskustannuslisa 12
+                                                   ::hinta/maara 123}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
@@ -239,10 +340,11 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
-                       ::h/hintaelementit [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
-                                            ::hinta/otsikko "Testihinta 1"
-                                            ::hinta/yleiskustannuslisa 0
-                                            ::hinta/maara 666}]}]
+                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
+                                                   ::hinta/otsikko "Testihinta 1"
+                                                   ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/maara 666}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
@@ -253,12 +355,13 @@
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
-                       ::h/hintaelementit [{::hinta/otsikko "Testihinta 1"
-                                            ::hinta/yleiskustannuslisa 0
-                                            ::hinta/maara 666}
-                                           {::hinta/otsikko "Testihinta 2"
-                                            ::hinta/yleiskustannuslisa 12
-                                            ::hinta/maara 123}]}]
+                       ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
+                                                   ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/maara 666}
+                                                  {::hinta/otsikko "Testihinta 2"
+                                                   ::hinta/yleiskustannuslisa 12
+                                                   ::hinta/maara 123}]
+                       ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hintaryhmalle-hinta +kayttaja-tero+
@@ -268,11 +371,11 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-hinnoittelut +kayttaja-jvh+
+                                :hae-hintaryhmat +kayttaja-jvh+
                                 kysely-params)]
 
-    (is (s/valid? ::h/hae-hinnoittelut-kysely kysely-params))
-    (is (s/valid? ::h/hae-hinnoittelut-vastaus vastaus))
+    (is (s/valid? ::h/hae-hintaryhmat-kysely kysely-params))
+    (is (s/valid? ::h/hae-hintaryhmat-vastaus vastaus))
 
     (is (>= (count vastaus) 1))
     (is (>= (count (mapcat ::h/hinnat vastaus)) 1))
@@ -283,7 +386,7 @@
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-hinnoittelut +kayttaja-tero+
+                                           :hae-hintaryhmat +kayttaja-tero+
                                            kysely-params)))))
 
 (deftest luo-hinnoittelu
@@ -311,7 +414,7 @@
 
     ;; Yritetään luoda samalla nimellä uusi hintaryhmä
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-hinnoittelut +kayttaja-tero+
+                                           :hae-hintaryhmat +kayttaja-tero+
                                            kysely-params))
         "Hintaryhmän nimi on jo olemassa urakassa, pitäisi tulla poikkeus")))
 

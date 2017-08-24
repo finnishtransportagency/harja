@@ -43,7 +43,7 @@
   (let [omat-hinnoittelut-kauppamerenkulku (filter #((:vaylatyyppi %) "kauppamerenkulku") omat-hinnoittelut)
         omat-hinnoittelut-muu-vesi (filter #((:vaylatyyppi %) "muu") omat-hinnoittelut)
         vaylatyypin-omat-hinnoittelut-summattuna (fn [hinnoittelut]
-                                                   {:hinnoittelu "Yksittäiset toimenpiteet ilman hintaryhmää"
+                                                   {:hinnoittelu "Yksittäiset toimenpiteet ilman tilausta"
                                                     :summa (->> hinnoittelut
                                                                 (map :summa)
                                                                 (reduce + 0))
