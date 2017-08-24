@@ -64,13 +64,16 @@
 (defn valitse-toteuman-idlla! [toteumaid]
   (swap! varusteet assoc :valittu-toteumaid toteumaid))
 
-(defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
+(def ^:const ilmoitushaun-viive-ms 500)
+(def ^:const taustahaun-viive-ms 60000)
+
+(defn- hae [timeout {toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
     (.clearTimeout js/window toteumahaku-id))
   (assoc app
     :toteumahaku-id (.setTimeout js/window
                                  (t/send-async! v/->HaeVarusteToteumat)
-                                 500)
+                                 timeout)
     :toteumat nil))
 
 (defn- tooltip [{:keys [toimenpide tietolaji alkupvm]}]
@@ -206,7 +209,7 @@
 (extend-protocol t/Event
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
-    (hae (update app :valinnat merge valinnat)))
+    (hae ilmoitushaun-viive-ms (update app :valinnat merge valinnat)))
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
@@ -228,14 +231,17 @@
                   {valittu-toimenpide :valittu-toimenpide
                    valittu-toteumaid :valittu-toteumaid
                    :as app}]
-    (kartalle
-      (assoc app
-        :toteumat toteumat
-        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
-        :varustetoteuma (when valittu-toteumaid
-                          (some #(when (= (:toteumaid %) valittu-toteumaid) %)
-                                toteumat))
-        :valittu-toteumaid nil)))
+
+    (hae
+      taustahaun-viive-ms
+      (kartalle
+        (assoc app
+         :toteumat toteumat
+         :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+         :varustetoteuma (when valittu-toteumaid
+                           (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                 toteumat))
+         :valittu-toteumaid nil))))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
