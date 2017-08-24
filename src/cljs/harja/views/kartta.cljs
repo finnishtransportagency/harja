@@ -773,10 +773,10 @@
                               {:type :wms
                                :id :enc-merikartta
                                :nimi "ENC merikartta"
-                               :icon (ikonit/map-marker)
+                               :icon  (ikonit/kartta-24 16 16)
                                :url "http://kartta.liikennevirasto.fi/meriliikenne/dgds/wms_ip/merikartta"
                                :layer "cells"
-                               :style "style-id-203"
+                               :style "style-id-202"
                                :default false}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
