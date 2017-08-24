@@ -391,7 +391,7 @@
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
-                                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                                 [:http-palvelin :db-replica :pois-kytketyt-ominaisuudet])
       :raportit (component/using
                   (raportit/->Raportit)
                   [:http-palvelin :db :pois-kytketyt-ominaisuudet :raportointi :pdf-vienti])
