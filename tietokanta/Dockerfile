@@ -2,7 +2,7 @@ FROM ubuntu:xenial
 
 # Asennetaan riippuvuudet
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends postgresql-9.5 postgresql-9.5-postgis-2.2 maven postgresql-contrib-9.5
+RUN apt-get install -y --no-install-recommends postgresql-9.5 postgresql-9.5-postgis-2.2 postgresql-contrib-9.5 maven
 
 # Konffataan pg kuuntelemaan verkkoa
 RUN sed -i "s/#listen_addresses.*/listen_addresses = '*'/g" /etc/postgresql/9.5/main/postgresql.conf
