@@ -160,7 +160,8 @@
                                 yleiskustannuslisa
                                 0)})
 
-(defn- toimenpiteen-hintakentat [hinnat]
+(defn- toimenpiteen-vakiohintakentat [hinnat]
+  ;; Nämä kentät on tarkoitus näyttää aina riippumatta siitä onko niille annettu hintaa
   [(hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
    (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
    (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
@@ -362,7 +363,7 @@
           tyo-hinnat (filter #(tyo/tyo-hinnat (::hinta/otsikko %)) hinnat)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
-                  ::h/hinnat (toimenpiteen-hintakentat hinnat)
+                  ::h/hinnat (toimenpiteen-vakiohintakentat hinnat)
                   ::h/tyot (tyo->taulukkomuotoon (concat tyot tyo-hinnat))})))
 
   AloitaHintaryhmanHinnoittelu
