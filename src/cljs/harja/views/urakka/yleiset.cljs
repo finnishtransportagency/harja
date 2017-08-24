@@ -35,7 +35,8 @@
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.views.urakka.yleiset.paivystajat :as paivystajat])
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat]
+            [harja.domain.urakka :as u-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -200,7 +201,8 @@
               "Ei asetettu")])]))))
 
 (defn- yllapitourakan-sopimustyyppi [ur]
-  (when-not (= :hoito (:tyyppi ur))
+  (when (and (not= :hoito (:tyyppi ur))
+             (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]
       [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"

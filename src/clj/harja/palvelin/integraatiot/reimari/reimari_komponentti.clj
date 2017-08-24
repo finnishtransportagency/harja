@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.reimari.toimenpidehaku :as toimenpidehaku]
             [harja.palvelin.integraatiot.reimari.komponenttihaku :as komponenttihaku]
+            [harja.palvelin.integraatiot.reimari.vikahaku :as vikahaku]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -18,7 +19,10 @@
 (defprotocol HaeTurvalaiteKomponentit
   (hae-turvalaitekomponentit [this]))
 
-(defrecord Reimari [pohja-url kayttajatunnus salasana paivittainen-tphakuaika paivittainen-kthakuaika paivittainen-tlkhakuaika]
+(defprotocol HaeViat
+  (hae-viat [this]))
+
+(defrecord Reimari [pohja-url kayttajatunnus salasana paivittainen-tphakuaika paivittainen-kthakuaika paivittainen-tlkhakuaika paivittainen-vikahakuaika]
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
@@ -31,7 +35,10 @@
                                     (fn [& args] (hae-komponenttityypit this)))
            :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
                                      paivittainen-tlkhakuaika
-                                     (fn [& args] (hae-turvalaitekomponentit this)))))
+                                     (fn [& args] (hae-turvalaitekomponentit this)))
+           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
+                                      paivittainen-vikahakuaika
+                                      (fn [& args] (hae-viat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
     (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn]]
@@ -52,4 +59,9 @@
   HaeTurvalaiteKomponentit
   (hae-turvalaitekomponentit [this]
     (log/debug "Reimari HaeTurvalaiteKomponentit kutsuttu")
-    (komponenttihaku/hae-turvalaitekomponentit (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana)))
+    (komponenttihaku/hae-turvalaitekomponentit (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana))
+
+  HaeViat
+  (hae-viat [this]
+    (log/debug "Reimari HaeViat kutsuttu")
+    (vikahaku/hae-viat (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana)))

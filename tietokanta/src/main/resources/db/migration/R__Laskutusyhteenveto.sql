@@ -344,12 +344,18 @@ BEGIN
                                              hoitokauden_laskettu_suolasakon_maara, ur)
       INTO hoitokauden_laskettu_suolasakko_rivi;
 
-      -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
-      IF (hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER)
-          AND (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) < 10)
+      -- Jos suolasakko ei ole käytössä, ei edetä
+      IF (hoitokauden_suolasakko_rivi.hoitokauden_alkuvuosi IS NULL AND
+          hoitokauden_suolasakko_rivi.indeksi IS NULL AND
+          hoitokauden_suolasakko_rivi.maksukuukausi IS NULL)
       THEN
-        RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
-        suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
+        RAISE NOTICE 'Suolasakko ei käytössä annetulla aikavälillä urakassa %, aikavali_alkupvm: %, hoitokauden_suolasakko_rivi: %', ur, aikavali_alkupvm, hoitokauden_suolasakko_rivi;
+      -- Suolasakko voi olla laskutettu jo hoitokaudella vain kk:ina 6-9 koska mahdolliset laskutus-kk:t ovat 5-9
+      ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi < (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER)
+             AND (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) < 10)
+        THEN
+          RAISE NOTICE 'Suolasakko on laskutettu aiemmin hoitokaudella kuukautena %', hoitokauden_suolasakko_rivi.maksukuukausi;
+          suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
         suolasakot_laskutettu_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
         -- Jos valittu yksittäinen kuukausi on maksukuukausi TAI jos kyseessä koko hoitokauden raportti (poikkeustapaus)
@@ -716,17 +722,33 @@ CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_ind() RETURNS trigger AS
 DECLARE
   alku DATE;
   loppu DATE;
+  rivi RECORD;
 BEGIN
-  IF NEW.kuukausi >= 10 THEN
+  IF TG_OP != 'DELETE' THEN
+    rivi := NEW;
+  ELSE
+    rivi := OLD;
+  END IF;
+
+  -- Indeksilaskennan perusluvun muutoksesta johtuvat puhdistukset
+  -- Jos delete, voi urakan indeksilaskennan perusluku muuttua / nullautua. Tällöin poistetaan cachesta ne urakat, joiden peruslukuun vaikutus kohdistuu.
+  -- esim 1.10.2014 alkaneen hoitourakan peruslukuun vaikuttaa 12/2013, 1/2014 ja 2/2014.
+  IF (rivi.kuukausi = 12) THEN
+    DELETE FROM laskutusyhteenveto_cache WHERE urakka in (SELECT id FROM urakka WHERE alkupvm = make_date(rivi.vuosi+1, 10, 1));
+  ELSIF rivi.kuukausi IN (1,2) THEN
+    DELETE FROM laskutusyhteenveto_cache WHERE urakka in (SELECT id FROM urakka WHERE alkupvm = make_date(rivi.vuosi, 10, 1));
+  END IF;
+
+  IF rivi.kuukausi >= 10 THEN
     -- Jos kuukausi on: loka - joulu, poista tästä seuraavan vuoden
     -- syyskuuhun asti (nykyisen hoitokauden loppuun)
-    alku := make_date(NEW.vuosi, 10, 1);
-    loppu := make_date(NEW.vuosi+1, 9, 30);
+    alku := make_date(rivi.vuosi, 10, 1);
+    loppu := make_date(rivi.vuosi+1, 9, 30);
   ELSE
     -- Jos kuukausi on: tammi - syys, poista edellisen vuoden
     -- lokakuusta tämän vuoden syyskuuhun asti
-    alku := make_date(NEW.vuosi-1, 10, 1);
-    loppu := make_date(NEW.vuosi, 9, 30);
+    alku := make_date(rivi.vuosi-1, 10, 1);
+    loppu := make_date(rivi.vuosi, 9, 30);
   END IF;
   RAISE NOTICE 'Poistetaan muistetut laskutusyhteenvedot % - %', alku, loppu;
   DELETE FROM laskutusyhteenveto_cache

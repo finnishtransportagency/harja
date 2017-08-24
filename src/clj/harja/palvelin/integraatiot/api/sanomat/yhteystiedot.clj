@@ -19,6 +19,7 @@
     "Kunnossapitopäällikkö"
     "Sillanvalvoja"
     "Kelikeskus"
+    "Sopimusvastaava"
     "Tieliikennekeskus"})
 
 (defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]

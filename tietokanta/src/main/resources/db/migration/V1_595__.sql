@@ -1,5 +1,3 @@
-ALTER TABLE yllapitokohde
-  RENAME yhatunnus TO tunnus;
+-- Indeksoi toteuman alkamisaika
 
-ALTER TABLE yllapitokohdeosa
-  DROP COLUMN tunnus;
+CREATE INDEX toteuma_alkanut_idx ON toteuma (alkanut);

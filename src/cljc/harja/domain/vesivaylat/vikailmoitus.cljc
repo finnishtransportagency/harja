@@ -30,9 +30,9 @@
   #{::reimari-id})
 
 (def perustiedot
-  #{::id
-    ::kuvaus
-    ::pvm})
+  #{::reimari-id
+    ::reimari-lisatiedot
+    })
 
 (def kaikki-kentat
   (clojure.set/union perustiedot reimari-kentat viittaukset viittaus-idt))
