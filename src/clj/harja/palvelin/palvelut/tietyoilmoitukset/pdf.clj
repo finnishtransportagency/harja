@@ -80,14 +80,23 @@
            sisalto))])
 
 (defn- ilmoitus-koskee [ilm]
-  (tietotaulukko
-   [(checkbox-lista [["Ensimmäinen ilmoitus työstä" true]
-                     ["Työvaihetta koskeva ilmoitus" false]]
-                    #{(nil? (::t/paatietyoilmoitus ilm))})
-    (checkbox-lista [["Korjaus/muutos aiempaan tietoon" true]
-                     ["Työn päättymisilmoitus" false]]
-                    ;; FIXME: mistä tämä päätellään
-                    #{false})]))
+  (let [muokattu? (::m/muokattu ilm)
+        valinnat #{(if muokattu?
+                     :korjaus
+                     :ensimmainen)
+                   (if (::t/paatietyoilmoitus ilm)
+                     :tyovaihe
+                     :paailmoitus)
+                   (if (pvm/ennen? (pvm/nyt) (::t/loppu ilm))
+                     :menossa
+                     :paattyy)}]
+    (tietotaulukko
+     [(checkbox-lista [["Ensimmäinen ilmoitus työstä" :ensimmainen]
+                       ["Työvaihetta koskeva ilmoitus" :tyovaihe]]
+                      valinnat)
+      (checkbox-lista [["Korjaus/muutos aiempaan tietoon" :korjaus]
+                       ["Työn päättymisilmoitus" :paattyy]]
+                      valinnat)])))
 
 (def tyotyypit ["Tienrakennus"
                 "Päällystystyö"

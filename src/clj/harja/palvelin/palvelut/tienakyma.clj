@@ -76,6 +76,8 @@
 (defn- hae-tarkastukset [db parametrit]
   (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
                                              (map #(assoc % :tyyppi-kartalla :tarkastus))
+                                             (geo/muunna-pg-tulokset :sijainti)
+                                             (map #(konv/array->vec % :vakiohavainnot))
                                              (map #(konv/string->keyword % :tyyppi))))
                         db q/hae-tarkastukset parametrit))
 

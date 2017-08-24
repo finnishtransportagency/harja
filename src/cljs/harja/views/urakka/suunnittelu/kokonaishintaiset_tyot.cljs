@@ -370,7 +370,7 @@
                                      (fmap (fn [rivi]
                                              (paivita-kk-arvo-prosentin-mukaan rivi @vuosisumma)) rivit)))
                :muokkaa-footer (fn [g]
-                                 (when-not prosenttijako?
+                                 (when-not @prosenttijako?
                                    [:div.kok-hint-muokkaa-footer
                                     [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                                  :toiminto #(swap! tuleville? not)
