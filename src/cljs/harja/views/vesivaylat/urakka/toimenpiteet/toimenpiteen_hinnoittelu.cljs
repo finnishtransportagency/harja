@@ -14,6 +14,7 @@
             [harja.tiedot.urakka :as u]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.ui.kentat :as kentat]
+            [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -59,14 +60,17 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* otsikko]
-  [:tr.muu-hinnoittelu-rivi
-   ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi
-   [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
-   [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
-   [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
-   [:td.muu-hinnoittelu-osio ;; TODO Roskakori, mahdollisuus poistaa jos ei ole vakiohintarivi
-    ]])
+(defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* hinta]
+  (let [otsikko (::hinta/otsikko hinta)]
+    [:tr.muu-hinnoittelu-rivi
+     ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi.
+     ;; TODO Mit tapahtuu jos inputtiin kirjoittaa vakiohintakentän otsikon? Ongelmia?
+     [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
+     [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
+     [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
+     [:td.muu-hinnoittelu-osio
+      (when-not (tiedot/vakiohintakentta? otsikko)
+        [ikonit/klikattava-roskis #(e! (tiedot/->PoistaKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
 
 (defn toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
@@ -219,9 +223,7 @@
                      :default nil))]]
            [:td.tyot-osio]
            [:td.tyot-osio
-            [:span.klikattava
-             {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))}
-             (ikonit/livicon-trash)]]])
+            [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))]]])
         tyot)
       [:tr.tyon-hinnoittelu-rivi
        [:td.tyot-osio.hinnoittelun-otsikko.lisaa-rivi-solu
@@ -256,9 +258,9 @@
         (fn [index hinta]
           ^{:key index}
           [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-           e! app* (::hinta/otsikko hinta)])
+           e! app* hinta])
         (filter
-          #(= (::hinta/ryhma %) :muu)
+          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
@@ -280,8 +282,8 @@
         hinnoittelu-validi? (and
                               ;; Työrivit täytetty oikein
                               (every? #(or (:toimenpidekoodi-id %)
-                                          (:hinta-nimi %))
-                                     hinnoiteltavat-tyot)
+                                           (:hinta-nimi %))
+                                      hinnoiteltavat-tyot)
                               ;; Hintojen nimien pitää olla uniikkeja
                               ;; TODO Pitää testata toimiiko tämä näin
                               (= hinnoiteltavat-hinnat (distinct hinnoiteltavat-hinnat)))]

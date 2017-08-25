@@ -73,8 +73,11 @@
   (+ (perushinta hinnat)
      (yleiskustannuslisien-osuus hinnat)))
 
-(defn hinta-otsikolla [otsikko hinnat]
+(defn hinta-otsikolla [hinnat otsikko]
   (first (filter #(= (::otsikko %) otsikko) hinnat)))
+
+(defn hinta-idlla [hinnat id]
+  (first (filter #(= (::id %) id) hinnat)))
 
 (defn- paivita-hintajoukon-hinnan-tiedot-otsikolla
   "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu otsikko."

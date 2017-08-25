@@ -567,6 +567,11 @@
 (defn livicon-kommentti []
   [:span.livicon-comment])
 
+(defn klikattava-roskis [toiminto]
+  [:span.klikattava
+   {:on-click toiminto}
+   (livicon-trash)])
+
 ;; Ikoni + jotain muuta -tyyppiset apurit
 
 (defn ikoni-ja-teksti [ikoni teksti]

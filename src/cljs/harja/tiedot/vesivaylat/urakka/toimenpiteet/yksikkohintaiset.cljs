@@ -9,6 +9,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.muokkaustiedot :as m]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -27,12 +28,14 @@
 
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
+   ;; Hinnat sisältää komponenttien hinnat sekä muut hinnat
    ::h/hinnat nil
-   ;; Työt-taulukossa on sekä tehtyjä töitä (vesivaylat.tyo domain) sekä hinnoitteluja, kuten
+   ;; Työt-vector sisältää sekä tehtyjä töitä (vesivaylat.tyo domain) että töiden hinnoitteluja, kuten
    ;; päivän hinta ja omakustannushinta (vesivaylat.hinta domain). Tästä syystä nämä käsiteltävät
    ;; työrivit eivät ole namespacetettuja, koska tyyppiä voidaan vaihdella UI:lla.
    ;; Kannasta nostettu data unnamespacetetaan työriveiksi, ja
-   ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa.
+   ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa
+   ;; eli kumpaan tauluun tieto tallennetaan.
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
@@ -152,6 +155,7 @@
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 (defrecord LisaaKulurivi [])
+(defrecord PoistaKulurivi [tiedot])
 ;; Hintaryhmän hinnoittelu
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
@@ -171,22 +175,26 @@
                                  yleiskustannuslisa
                                  0)}))
 
-;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät.
+;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
+
+(defn vakiohintakentta? [otsikko]
+  (boolean ((set vakiohinnat) otsikko)))
 
 (defn- toimenpiteen-hintakentat [hinnat]
   (vec (concat
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-         (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
+         (map #(hintakentta % (hinta/hinta-otsikolla hinnat %)) vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
-         (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
+         (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla hinnat (::hinta/otsikko %)))
               (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
 (defn- hintaryhman-hintakentat [hinnat]
-  [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
+  [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hinnat
+                                                                       hintaryhman-hintakentta-otsikko))])
 
 (defn- drop-index [col idx]
   (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
@@ -541,7 +549,26 @@
   (process-event [_ app]
     ;; TODO TESTI
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          paivitetyt-hinnat (conj hinnat (hintakentta))]
+          hinta-idt (map ::hinta/id hinnat)
+          seuraava-vapaa-id (dec (apply min [hinta-idt 0]))
+          paivitetyt-hinnat (conj hinnat (hintakentta nil {::hinta/id seuraava-vapaa-id}))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+
+  PoistaKulurivi
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO Testi
+    (let [id (::hinta/id tiedot)
+          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          paivitetyt-hinnat
+          (if (neg? id)
+            ;; Uusi lisätty rivi poistetaan kokonaan hintojen joukosta
+            (filterv #(not= (::hinta/id %) id) hinnat)
+            ;; Kannassa oleva rivi merkitään poistetuksi
+            ;; TODO Vaatii kantaan tuen hintarivin poistolle, ei ole ollut tähän asti mahdollista
+            (mapv #(if (= (::hinta/id %) id)
+                     (assoc % ::m/poistettu? true)
+                     %)
+                  hinnat))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaHinnoiteltavaTyorivi
