@@ -168,7 +168,6 @@
      eniten-kutsutut]))
 
 (defn tapahtumien-paanakyma []
-  (log "--->>> " (pr-str @tiedot/haetut-tapahtumat))
   [:span
    [:div.container
     [:div.label-ja-alasveto

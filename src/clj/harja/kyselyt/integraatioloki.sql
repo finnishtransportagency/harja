@@ -110,7 +110,8 @@ WHERE (:jarjestelma :: VARCHAR IS NULL OR jarjestelma = :jarjestelma) AND
       (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
       (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
-      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%') AND
+      alkanut >= current_date
 ORDER BY it.id DESC, it.alkanut DESC
 LIMIT 50;
 
