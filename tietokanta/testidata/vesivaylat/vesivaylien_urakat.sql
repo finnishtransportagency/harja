@@ -19,7 +19,7 @@ VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-    'MAKU 2005 kp-osaindeksi',
+    'MAKU 2005 kunnossapidon osaindeksi',
     '2013-08-01', '2016-07-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
@@ -31,7 +31,7 @@ VALUES
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-    'MAKU 2005 kp-osaindeksi',
+    'MAKU 2005 kunnossapidon osaindeksi',
     '2016-08-01', '2019-07-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
@@ -43,7 +43,7 @@ VALUES
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
   ('Kotkan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-    'MAKU 2005 kp-osaindeksi',
+    'MAKU 2005 kunnossapidon osaindeksi',
    '2016-08-01', '2019-07-30',
    'vesivayla-hoito',
    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
@@ -51,7 +51,7 @@ VALUES
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
   ('Turun väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-    'MAKU 2010 kp-osaindeksi',
+    'MAKU 2010 ylläpidon kokonaisindeksi',
    '2019-08-01', '2024-07-30',
    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
