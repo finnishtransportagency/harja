@@ -19,11 +19,11 @@
                     ;; Näytetään viesti kenttänä, jonka otsikkona on taso
                     ;; ja arvona virheviesti
                     :fields (if (map? msg)
-                              ;; FIXME: "(slack-n)" erikoisuus pois
-                              (mapv #(assoc % :value (str/replace (:value %) #"\(slack-n\)" "\n"))
+                              (mapv #(assoc % :value (str/replace (:value %) #"\|\|\|" "\n"))
                                     (:fields msg))
                               [{:title (str/upper-case (name level))
-                                :value msg}])}]
+                                :value msg}])
+                    :mrkdwn_in ["fields"]}] ;; Slackin attachmentin kentat eli fieldsit ymmärtää slackin markdownia (*, ```, jne.) oikein, kun tämä asetetaan.
     (http/post
      webhook-url
      {:headers {"Content-Type" "application/json"}

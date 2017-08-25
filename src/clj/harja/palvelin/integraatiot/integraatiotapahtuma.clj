@@ -76,7 +76,7 @@
          vastaus)
 
        (catch Throwable t
-         (log/error t (format "Integraatiotapahtuman (järjestelmä: %s, integraatio: %s) suorituksessa tapahtui poikkeus"
+         (log/warn t (format "Integraatiotapahtuman (järjestelmä: %s, integraatio: %s) suorituksessa tapahtui poikkeus"
                               jarjestelma integraatio))
          (when virhekasittelija
            (virhekasittelija konteksti t))
