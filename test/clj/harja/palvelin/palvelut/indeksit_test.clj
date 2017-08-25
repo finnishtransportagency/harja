@@ -101,3 +101,9 @@
         perusluku (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");")))]
     ; (103.9+105.2+106.2) / 3 = 105.1M tammi, helmi- ja maaliskuun keskiarvo urakan alkuvuonna
     (is (= 105.1M perusluku))))
+
+(deftest laske-tampereen-2017-alkavan-hoitourakan-indeksilaskennan-perusluku
+  (let [ur (hae-tampereen-alueurakan-2017-2022-id)
+        perusluku (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");")))]
+    ; alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo urakan alkuvuonna
+    (is (= 115.4M perusluku))))
