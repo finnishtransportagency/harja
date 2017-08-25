@@ -86,7 +86,9 @@
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
-      (log/error (s/explain-str spec data)))))
+      (let [selitys (s/explain-str spec data)
+            rajattu (subs selitys 0 (min (count selitys) 10000))]
+        (log/error "spec" spec "ei salli vastausta" rajattu)))))
 
 (defn- transit-post-kasittelija
   "Luo transit-käsittelijän POST kutsuille annettuun palvelufunktioon."
