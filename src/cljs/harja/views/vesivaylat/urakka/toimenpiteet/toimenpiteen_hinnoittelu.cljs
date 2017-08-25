@@ -142,6 +142,7 @@
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio.hinnoittelun-otsikko
             ;; TODO Tehdäänkö combobox?
+            ;; TODO Käytä protokollaa tässä
             (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]

@@ -108,6 +108,7 @@
 (defn poista-hintaryhmien-korostus [app]
   (assoc app :korostettu-hintaryhma false))
 
+;; TODO Voisi väliotsikoida näitä, voisi helpottaa lukemista
 (defrecord Nakymassa? [nakymassa?])
 (defrecord TyhjennaSuunnitellutTyot [])
 (defrecord PaivitaValinnat [tiedot])
@@ -161,6 +162,7 @@
                                 0)})
 
 (defn- toimenpiteen-hintakentat [hinnat]
+  ;; TODO Siirrä domainiin tai päätasolle
   (let [vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"]]
     (concat
       ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
