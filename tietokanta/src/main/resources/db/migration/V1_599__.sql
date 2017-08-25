@@ -1,1 +1,2 @@
-CREATE EXTENSION pg_trgm;
+-- Flyway ei ole super user, joten ekstensioita ei voi asentaa migraatiolla
+-- CREATE EXTENSION pg_trgm;
