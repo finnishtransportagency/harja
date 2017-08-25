@@ -137,7 +137,10 @@
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
-                 [devcards "0.2.2" :exclusions [cljsjs/react]]]
+                 [devcards "0.2.2" :exclusions [cljsjs/react]]
+
+                  ;; Parsi sourcemapit
+                 [com.atlassian.sourcemap/sourcemap "1.7.5"]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
@@ -156,7 +159,8 @@
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
   :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
-                 ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
+                 ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
+                 ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
