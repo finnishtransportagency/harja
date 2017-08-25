@@ -388,6 +388,7 @@ UPDATE yllapitokohde
 SET
   kohdenumero                       = :kohdenumero,
   nimi                              = :nimi,
+  tunnus                            = :tunnus,
   tr_numero                         = :tr_numero,
   tr_alkuosa                        = :tr_alkuosa,
   tr_alkuetaisyys                   = :tr_alkuetaisyys,
