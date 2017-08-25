@@ -60,6 +60,7 @@
                                          :yha-id 4}]
                            :keskimaarainen-vuorokausiliikenne 1000
                            :nimi "string"
+                           :tunnus "A"
                            :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
                                                     :ajorata 0
