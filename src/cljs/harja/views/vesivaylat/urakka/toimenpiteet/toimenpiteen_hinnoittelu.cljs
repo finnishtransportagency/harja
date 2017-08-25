@@ -73,9 +73,37 @@
    [:td]
    [:td]])
 
-;; Toimenpiteen hinnoittelun pudotusvalikkoon:
-(defrecord HintaValinta [nimi])
-(defrecord TyoValinta [nimi yksikko toimenpidekoodi-id yksikkohinta])
+;; Toimenpiteen hinnoittelun pudotusvalikkoon protokolla ja eri tyypit.
+(defprotocol ValintaRivi
+  (valitse [this e! index])
+  (formatoi [this])
+  (ryhmittely [this]))
+
+(defrecord HintaValinta [nimi] ValintaRivi
+  (valitse [this e! index]
+    (e! (tiedot/->AsetaTyorivilleTiedot
+          {:index index
+           :toimenpidekoodi-id nil
+           :hinta-nimi (:nimi this)})))
+
+  (formatoi [this] (:nimi this))
+
+  (ryhmittely [_] :hinta))
+
+(defrecord TyoValinta [nimi yksikko toimenpidekoodi-id yksikkohinta]
+  ValintaRivi
+
+  (valitse [this e! index]
+    (e! (tiedot/->AsetaTyorivilleTiedot
+          {:index index
+           :toimenpidekoodi-id (:toimenpidekoodi-id this)
+           :hinta-nimi nil})))
+
+  (formatoi [this]
+    (str (:nimi this) " (" (fmt/euro (:yksikkohinta this))
+         " / " (:yksikko this) ")"))
+
+  (ryhmittely [_] :tyo))
 
 (defn- suunniteltu-tyo->Record [suunniteltu-tyo]
   (->TyoValinta (:tehtavan_nimi suunniteltu-tyo)
@@ -142,30 +170,19 @@
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio.hinnoittelun-otsikko
             ;; TODO Tehdäänkö combobox?
-            ;; TODO Käytä protokollaa tässä
             (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
               [yleiset/livi-pudotusvalikko
-               {:valitse-fn #(cond (instance? HintaValinta %)
-                                   (e! (tiedot/->AsetaTyorivilleTiedot
-                                         {:index index
-                                          :toimenpidekoodi-id nil
-                                          :hinta-nimi (:nimi %)}))
-
-                                   (instance? TyoValinta %)
-                                   (e! (tiedot/->AsetaTyorivilleTiedot
-                                         {:index index
-                                          :toimenpidekoodi-id (:toimenpidekoodi-id %)
-                                          :hinta-nimi nil})))
-                :format-fn #(cond (instance? HintaValinta %) (:nimi %)
-                                  (instance? TyoValinta %) (str (:nimi %) " (" (fmt/euro (:yksikkohinta %))
-                                                                " / " (:yksikko %) ")")
-                                  :default "Valitse työ")
+               {:valitse-fn #(valitse % e! index)
+                :format-fn #(if %
+                              (formatoi %)
+                              "Valitse työ")
                 :nayta-ryhmat [:hinta :tyo]
-                :ryhmittely #(cond (instance? HintaValinta %) :hinta
-                                   (instance? TyoValinta %) :tyo)
-                :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
+                :ryhmittely #(ryhmittely %)
+                :ryhman-otsikko #(case %
+                                   :hinta "Hinta"
+                                   :tyo "Sopimushinnat")
                 :class "livi-alasveto-250 inline-block"
                 :valinta (first (filter #(cond (instance? TyoValinta %)
                                                (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
