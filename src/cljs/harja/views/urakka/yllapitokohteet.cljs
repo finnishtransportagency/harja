@@ -93,7 +93,7 @@
     "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä"))
 
 (defn tierekisteriosoite-sarakkeet [perusleveys
-                                    [nimi tunnus tie ajorata kaista aosa aet losa let pituus]]
+                                    [nimi tie ajorata kaista aosa aet losa let pituus]]
   (into []
         (remove
           nil?
