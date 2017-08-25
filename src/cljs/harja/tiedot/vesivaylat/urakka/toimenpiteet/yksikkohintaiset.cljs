@@ -113,7 +113,6 @@
 (defrecord PaivitaValinnat [tiedot])
 ;; Siirto
 (defrecord SiirraValitutKokonaishintaisiin [])
-
 ;; Suunnitellut työt
 (defrecord HaeSuunnitellutTyot [])
 (defrecord TyhjennaSuunnitellutTyot [])
