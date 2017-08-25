@@ -151,6 +151,7 @@
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
+(defrecord LisaaKulurivi [])
 ;; Hintaryhmän hinnoittelu
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
@@ -158,27 +159,29 @@
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
 
-(defn- hintakentta [otsikko hinta]
-  ;; Olemassa olevaa hintaa ei välttämättä ole olemassa, mutta se ei haittaa
-  {::hinta/id (::hinta/id hinta)
-   ::hinta/otsikko otsikko
-   ::hinta/maara (or (::hinta/maara hinta) 0)
-   ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
-   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
-                                yleiskustannuslisa
-                                0)})
+(defn- hintakentta
+  ([] (hintakentta nil nil))
+  ([otsikko hinta]
+    ;; Olemassa olevaa hintaa ei välttämättä ole olemassa, mutta se ei haittaa
+   {::hinta/id (::hinta/id hinta)
+    ::hinta/otsikko otsikko
+    ::hinta/maara (or (::hinta/maara hinta) 0)
+    ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
+    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
+                                 yleiskustannuslisa
+                                 0)}))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät.
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
 
 (defn- toimenpiteen-hintakentat [hinnat]
-  (concat
-    ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-    (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
-    ;; Loput kentät ovat käyttäjän itse lisäämiä
-    ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
-    (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
-         (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat))))
+  (vec (concat
+         ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+         (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
+         ;; Loput kentät ovat käyttäjän itse lisäämiä
+         ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
+         (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
+              (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
@@ -533,6 +536,13 @@
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           paivitetyt-tyot (conj tyot {:maara 0})]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+
+  LisaaKulurivi
+  (process-event [_ app]
+    ;; TODO TESTI
+    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          paivitetyt-hinnat (conj hinnat (hintakentta))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]

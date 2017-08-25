@@ -61,10 +61,12 @@
 
 (defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* otsikko]
   [:tr.muu-hinnoittelu-rivi
+   ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi
    [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
    [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
    [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
-   [:td.muu-hinnoittelu-osio]])
+   [:td.muu-hinnoittelu-osio ;; TODO Roskakori, mahdollisuus poistaa jos ei ole vakiohintarivi
+    ]])
 
 (defn toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
@@ -260,7 +262,7 @@
           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
-        [napit/uusi "Lisää kulurivi" #(log "TODO")]]
+        [napit/uusi "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]]]
