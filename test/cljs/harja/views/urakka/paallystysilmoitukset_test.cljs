@@ -8,7 +8,8 @@
     [harja.domain.tierekisteri :as tierekisteri-domain]
     [harja.ui.tierekisteri :as tierekisteri]
     [harja.testutils.shared-testutils :refer [render paivita sel sel1 grid-solu click change
-                                              disabled? ilman-tavutusta komponentti-fixture]]
+                                              disabled? ilman-tavutusta komponentti-fixture]
+     :as u]
     [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                              jvh-fixture]]
     [harja.views.urakka.paallystysilmoitukset :as p]
@@ -136,7 +137,7 @@
 
       (change (grid-solu "yllapitokohdeosat" 1 8 "input") "123") ;; let
       (<! (paivita))
-
+      
       (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
