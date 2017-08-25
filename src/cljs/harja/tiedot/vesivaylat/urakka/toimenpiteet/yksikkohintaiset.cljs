@@ -108,19 +108,24 @@
 (defn poista-hintaryhmien-korostus [app]
   (assoc app :korostettu-hintaryhma false))
 
-;; TODO Voisi väliotsikoida näitä, voisi helpottaa lukemista
+;; Yleiset eventit
 (defrecord Nakymassa? [nakymassa?])
-(defrecord TyhjennaSuunnitellutTyot [])
 (defrecord PaivitaValinnat [tiedot])
-(defrecord HaeToimenpiteet [valinnat])
+;; Siirto
+(defrecord SiirraValitutKokonaishintaisiin [])
+
+;; Suunnitellut työt
 (defrecord HaeSuunnitellutTyot [])
+(defrecord TyhjennaSuunnitellutTyot [])
 (defrecord SuunnitellutTyotHaettu [vastaus])
 (defrecord SuunnitellutTyotEiHaettu [])
+;; Toimenpiteet
+(defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteetEiHaettu [virhe])
+;; Hintaryhmät
 (defrecord UudenHintaryhmanLisays? [lisays-auki?])
 (defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
-(defrecord SiirraValitutKokonaishintaisiin [])
 (defrecord LuoHintaryhma [nimi])
 (defrecord HintaryhmaLuotu [vastaus])
 (defrecord HintaryhmaEiLuotu [virhe])
@@ -131,26 +136,28 @@
 (defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
 (defrecord ValitutLiitettyHintaryhmaan [])
 (defrecord ValitutEiLiitettyHintaryhmaan [virhe])
+(defrecord PoistaHintaryhmat [hintaryhma-idt])
+(defrecord HintaryhmatPoistettu [vastaus])
+(defrecord HintaryhmatEiPoistettu [])
+;; Toimenpiteen hinnoittelu
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
+(defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
-(defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
-(defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
-(defrecord PeruToimenpiteenHinnoittelu [])
-(defrecord PeruHintaryhmanHinnoittelu [])
-(defrecord PoistaHintaryhmat [hintaryhma-idt])
-(defrecord HintaryhmatPoistettu [vastaus])
-(defrecord HintaryhmatEiPoistettu [])
-(defrecord KorostaHintaryhmaKartalla [hintaryhma])
-(defrecord PoistaHintaryhmanKorostus [])
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
+;; Hintaryhmän hinnoittelu
+(defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
+(defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
+(defrecord PeruHintaryhmanHinnoittelu [])
+(defrecord KorostaHintaryhmaKartalla [hintaryhma])
+(defrecord PoistaHintaryhmanKorostus [])
 
 (defn- hintakentta [otsikko hinta]
   ;; Olemassa olevaa hintaa ei välttämättä ole olemassa, mutta se ei haittaa
@@ -161,16 +168,17 @@
                                 yleiskustannuslisa
                                 0)})
 
+;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät.
+(def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
+
 (defn- toimenpiteen-hintakentat [hinnat]
-  ;; TODO Siirrä domainiin tai päätasolle
-  (let [vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"]]
-    (concat
-      ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-      (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
-      ;; Loput kentät ovat käyttäjän itse lisäämiä
-      ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
-      (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
-           (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
+  (concat
+    ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+    (map #(hintakentta % (hinta/hinta-otsikolla % hinnat)) vakiohinnat)
+    ;; Loput kentät ovat käyttäjän itse lisäämiä
+    ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
+    (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla (::hinta/otsikko %) hinnat))
+         (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat))))
 
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
