@@ -254,8 +254,9 @@
           ^{:key index}
           [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
            e! app* (::hinta/otsikko hinta)])
-        ;; TODO Käy läpi vain ryhmä "muut"
-        (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
+        (filter
+          #(= (::hinta/ryhma %) :muu)
+          (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
         ;; TODO Tärkeää varmistaa ettei voi olla kahta hinnoittelua samalla nimellä per toimenpide

@@ -163,6 +163,7 @@
   {::hinta/id (::hinta/id hinta)
    ::hinta/otsikko otsikko
    ::hinta/maara (or (::hinta/maara hinta) 0)
+   ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
                                 yleiskustannuslisa
                                 0)})

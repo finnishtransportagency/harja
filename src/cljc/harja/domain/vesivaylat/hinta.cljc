@@ -15,7 +15,8 @@
 (define-tables
   ["vv_hinta" ::hinta
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
-   {::hinnoittelu (specql.rel/has-one
+   {::ryhma (specql.transform/transform (specql.transform/to-keyword))
+    ::hinnoittelu (specql.rel/has-one
                     ::hinnoittelu-id
                     :harja.domain.vesivaylat.hinnoittelu/hinnoittelu
                     :harja.domain.vesivaylat.hinnoittelu/id)}])
@@ -28,6 +29,7 @@
   #{::otsikko
     ::maara
     ::yleiskustannuslisa
+    ::ryhma
     ::id})
 
 (def viittaus-idt
