@@ -259,7 +259,6 @@
           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
       [:tr.muu-hinnoittelu-rivi
        [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
-        ;; TODO Tärkeää varmistaa ettei voi olla kahta hinnoittelua samalla nimellä per toimenpide
         [napit/uusi "Lisää kulurivi" #(log "TODO")]]
        [:td.muu-hinnoittelu-osio]
        [:td.muu-hinnoittelu-osio]
@@ -270,13 +269,19 @@
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
-        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        hinnoiteltavat-tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        hinnoiteltavat-hinnat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
-        hinnoittelu-validi? (every? #(or (:toimenpidekoodi-id %)
-                                         (:hinta-nimi %))
-                                    tyot)]
+        hinnoittelu-validi? (and
+                              ;; Työrivit täytetty oikein
+                              (every? #(or (:toimenpidekoodi-id %)
+                                          (:hinta-nimi %))
+                                     hinnoiteltavat-tyot)
+                              ;; Hintojen nimien pitää olla uniikkeja
+                              ;; TODO Pitää testata toimiiko tämä näin
+                              (= hinnoiteltavat-hinnat (distinct hinnoiteltavat-hinnat)))]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
