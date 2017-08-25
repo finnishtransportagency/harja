@@ -349,7 +349,7 @@
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :selainvirhe (component/using
-                     (selainvirhe/->Selainvirhe)
+                     (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
