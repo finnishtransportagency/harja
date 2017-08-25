@@ -42,6 +42,7 @@
                                                                   :let 3
                                                                   :losa 3
                                                                   :tienumero 3}
+                                         :tunnus nil
                                          :yha-id 3}
                                         {:paallystystoimenpide {:kokonaismassamaara 124.0
                                                                 :kuulamylly 4
@@ -57,10 +58,10 @@
                                                                   :let 3
                                                                   :losa 3
                                                                   :tienumero 3}
+                                         :tunnus nil
                                          :yha-id 4}]
                            :keskimaarainen-vuorokausiliikenne 1000
                            :nimi "string"
-                           :tunnus "A"
                            :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
                                                     :ajorata 0
@@ -70,6 +71,7 @@
                                                     :let 3
                                                     :losa 3
                                                     :tienumero 3}
+                           :tunnus "A"
                            :yha-id 3
                            :yha-kohdenumero 666
                            :yllapitokohdetyotyyppi :paikkaus
