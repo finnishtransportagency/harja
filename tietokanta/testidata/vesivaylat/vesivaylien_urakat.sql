@@ -16,9 +16,10 @@ INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 
 -- URAKKA
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
+    'MAKU 2005 kp-osaindeksi',
     '2013-08-01', '2016-07-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
@@ -27,9 +28,10 @@ VALUES
     true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
     444);
 
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
+    'MAKU 2005 kp-osaindeksi',
     '2016-08-01', '2019-07-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
@@ -38,16 +40,18 @@ VALUES
     true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
     '555');
 
-INSERT INTO urakka (nimi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
   ('Kotkan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
+    'MAKU 2005 kp-osaindeksi',
    '2016-08-01', '2019-07-30',
    'vesivayla-hoito',
    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
 
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
 VALUES
   ('Turun väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
+    'MAKU 2010 kp-osaindeksi',
    '2019-08-01', '2024-07-30',
    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
