@@ -59,23 +59,15 @@
         tapahtumat
         (into []
               tapahtuma-xf
-              (if (and alkaen paattyen)
-                (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                      jarjestelma
-                                                                      integraatio
-                                                                      onnistuneet
-                                                                      (konversio/sql-date alkaen)
-                                                                      (konversio/sql-date paattyen)
-                                                                      otsikot
-                                                                      parametrit
-                                                                      viestin-sisalto)
-                (q/hae-uusimmat-integraatiotapahtumat db
-                                                      jarjestelma
-                                                      integraatio
-                                                      onnistuneet
-                                                      otsikot
-                                                      parametrit
-                                                      viestin-sisalto)))]
+              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
+                                                                    jarjestelma
+                                                                    integraatio
+                                                                    onnistuneet
+                                                                    (konversio/sql-date alkaen)
+                                                                    (konversio/sql-date paattyen)
+                                                                    otsikot
+                                                                    parametrit
+                                                                    viestin-sisalto))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
