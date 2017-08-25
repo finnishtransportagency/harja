@@ -240,7 +240,7 @@
 
          [jaettu/tulokset e! app
           [:div
-           (for [hintaryhma hintaryhmat
+           (for* [hintaryhma hintaryhmat
                  :let [hintaryhma-id (::h/id hintaryhma)
                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
