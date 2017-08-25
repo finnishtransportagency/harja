@@ -18,7 +18,12 @@
       (into [tag (or attrs {})]
             (map element-hiccup content)))))
 
-(defmacro maarittele-svg-spritet [width height tiedosto]
+(defmacro maarittele-svg-spritet 
+  "Ottaa tiedoston, joka sisältää yhden tai useamman svg-ikonin,
+  ja luo funktioita, joita kutsumalla ikonia voidaan käyttää. Funktiot
+  ottavat parametrina leveyden ja korkeuden, ja oletusparametrit
+  ovat tälle makrolle annettavat leveys ja korkeus."
+  [width height tiedosto]
   (let [doc (lataa-svg-sprite-tiedosto tiedosto)
         sprites
         (z/xml-> doc :symbol
