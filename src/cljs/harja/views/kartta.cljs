@@ -761,13 +761,23 @@
          :geometries         @tasot/geometriat-kartalle
          :layers             [{:type  :mml
                                :url   (str (k/wmts-polku-mml) "maasto/wmts")
-                               :layer "taustakartta"}
+                               :layer "taustakartta"
+                               :default true}
                               {:type  :livi
                                :id :tienumerot
                                :nimi "tienumerot"
                                :icon (ikonit/road)
                                :url   (str (k/wmts-polku-livi) "wmts")
-                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"}]}]))))
+                               :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"
+                               :default true}
+                              {:type :wms
+                               :id :enc-merikartta
+                               :nimi "ENC merikartta"
+                               :icon  (ikonit/kartta-24 16 16)
+                               :url "http://kartta.liikennevirasto.fi/meriliikenne/dgds/wms_ip/merikartta"
+                               :layer "cells"
+                               :style "style-id-202"
+                               :default false}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
