@@ -145,7 +145,7 @@
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        ;; TODO Hardkoodattu, listaa oikeat
+        ;; TODO Hardkoodattu, listaa oikeat komponentit tässä ja niiden hinta jos olemassa
         komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
                       ::tkomp/sarjanumero "123"
                       ::tkomp/turvalaitenro "8881"}
