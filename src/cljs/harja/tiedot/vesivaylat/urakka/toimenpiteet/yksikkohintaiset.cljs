@@ -189,6 +189,7 @@
   (vec (concat
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
          (map-indexed (fn [index hinta]
+                        ;; TODO Jos jo tallennettu, ei ota oikeaa id:tä
                         (hintakentta (or (::hinta/id hinta)
                                          ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
                                          ;; ilmaisemaan uutta lisättyä kenttää
