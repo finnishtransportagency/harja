@@ -36,6 +36,10 @@
    ;; Kannasta nostettu data unnamespacetetaan työriveiksi, ja
    ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa
    ;; eli kumpaan tauluun tieto tallennetaan.
+
+   ;; Riveillä ei myöskään ola id:tä, koska:
+   ;; - Olisi hankalaa erotella onko kyseessä tyo/id vai hinta/id, jos tyyppiä vaihdetaan
+   ;; - Payload korvaa kantaan tallennetut työt ja hinnat poistamalla vanhat ja luomalla uudet
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
