@@ -29,12 +29,10 @@
 
 (defn lue-tiedosto
   [tiedostonimi]
-  (let [tiedosto (try (io/resource tiedostonimi)
-                      (catch java.io.FileNotFoundException e
-                        (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))]
-    (if-not (string? tiedosto)
-      (slurp tiedosto)
-      tiedosto)))
+  (try (slurp (io/resource tiedostonimi))
+       (catch java.lang.IllegalArgumentException e
+          (when (= (.getMessage e) "Cannot open <nil> as a Reader.")
+            (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))))
 
 (defn lahdetiedosto
   [tiedostopolku mapping kehitysmoodi]

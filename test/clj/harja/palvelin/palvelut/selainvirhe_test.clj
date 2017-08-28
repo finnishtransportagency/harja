@@ -23,7 +23,9 @@
 (deftest raportoi-selainvirhe-testi
   (testing "generoitu-stack->lahde-stack"
     (is (= (generoitu-stack->lahde-stack {:rivi 1 :sarake 1 :tiedostopolku "foo/harja.js"} true)
-           nil))))
+           nil))
+    (is (= (lue-tiedosto "foo.bar")
+           "Lähdetiedostoa foo.bar ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
 
 (deftest raportoi-yhteyskatkos-testi
   (let [kayttaja +kayttaja-jvh+
