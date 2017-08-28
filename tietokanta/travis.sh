@@ -21,6 +21,7 @@ psql -c "CREATE DATABASE temp OWNER harjatest;" -U postgres
 psql -c "CREATE DATABASE harjatest_template OWNER harjatest;" -U postgres
 psql -c "CREATE EXTENSION postgis" -U postgres harjatest_template
 psql -c "CREATE EXTENSION postgis_topology" -U postgres harjatest_template
+psql -c "CREATE EXTENSION pg_trgm" -U postgres harjatest_template
 psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U postgres
 
 mvn compile -Ptravis flyway:migrate
