@@ -140,10 +140,14 @@
           ^{:key index}
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio.hinnoittelun-otsikko
-            ;; TODO Tehdäänkö combobox?
-            ;; TODO Päivän hinta ja omakustannushinta pois täältä, namespacetetaan mapit työksi, pidetään id:t
-            ;; tallessa ja kannassa normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti
-            ;; Jos niitä on aiemmin kirjattu, niin näytetään muiden töiden listalla (pitäisi toimia autom. näin)
+            ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
+            ;; TODO Kaukon muutosten pohjalta tehdään näin:
+            ;; - Päivän hinta ja omakustannushinta pois täältä. Jos niitä on aiemmin kirjattu, niin näytetään muiden töiden listalla (pitäisi toimia autom. näin)
+            ;; - namespacetetaan mapit työksi, pidetään id:t tallessa
+            ;; - Kannassa tehdään normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti, koska
+            ;; tyyppi on tästä lähtien aina työtä
+            ;; - Oma sarake: yksikkö, yksikköhinta, hinta yhteensä. Edelleen vain määrää voi muokata.
+            ;; Oma osio Muut työt, johon voi listata vapaasti hintarivejä
             (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
