@@ -214,6 +214,9 @@
                                         <xs:enumeration value="EPO ELY" />
                                         <xs:enumeration value="POP ELY" />
                                         <xs:enumeration value="LAP ELY" />
+                                        <xs:enumeration value="KAN ELY" />
+                                        <xs:enumeration value="SV ELY" />
+                                        <xs:enumeration value="MV ELY" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -782,6 +785,63 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
                                         <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="juurisyy1" type="juurisyyType" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeaman 1. juurisyy
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                            <xs:element name="juurisyy1selite" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Juurisyyn 1. juurisyyn selite.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="200" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="juurisyy2" type="juurisyyType" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeaman 2. juurisyy
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                            <xs:element name="juurisyy2selite" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Juurisyyn 2 selite.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="200" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="juurisyy3" type="juurisyyType" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeaman 3. juurisyy
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                            <xs:element name="juurisyy3selite" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Juurisyyn 3 selite.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="200" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -4433,6 +4493,51 @@
             <xs:enumeration value="14">
                 <xs:annotation>
                     <xs:documentation>Ei tietoa</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="juurisyyType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="0">
+                <xs:annotation>
+                    <xs:documentation>Puutteelliset henkilönsuojaimet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>Puutteelliset työvälineet tai -koneet</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>Puutteellinen järjestys tai siisteys</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>Puutteellinen pätevyys tai kelpoisuus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>Puutteellinen tai puuttuva ohjeistus tai perehdytys</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="5">
+                <xs:annotation>
+                    <xs:documentation>Ohjeiden vastainen toiminta tai riskinotto</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="6">
+                <xs:annotation>
+                    <xs:documentation>Työmaan ulkopuolinen tekijä tai olosuhde</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="7">
+                <xs:annotation>
+                    <xs:documentation>Muu (avoin kohta)</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
         </xs:restriction>
