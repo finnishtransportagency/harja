@@ -10,6 +10,7 @@
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
   ;; todo: read-stringing käyttö voi olla turvatonta. kysy tatulta parempi tapa.
+  (log/debug "muunna-merkkijono-kartaksi:" merkkijono)
   (if (and merkkijono (not (empty? merkkijono)))
     (let [kartta (binding [*read-eval* false] (read-string merkkijono))]
       kartta)

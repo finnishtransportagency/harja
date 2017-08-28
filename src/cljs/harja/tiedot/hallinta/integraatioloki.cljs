@@ -21,6 +21,7 @@
                                                :integraatio integraatio}))
 
 (defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali hakuehdot]
+  (log "hae-integraation-tapahtumat" jarjestelma integraatio (pr-str aikavali) (pr-str hakuehdot))
   (k/post! :hae-integraatiotapahtumat
            (merge {:jarjestelma (:jarjestelma jarjestelma)
                    :integraatio integraatio
@@ -43,16 +44,31 @@
 (defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom nil))
 (defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
+(defonce nayta-uusimmat-tilassa? (atom true))
 
-(defonce haetut-tapahtumat
-  (reaction<! [valittu-jarjestelma @valittu-jarjestelma
-               valittu-integraatio @valittu-integraatio
-               valittu-aikavali @valittu-aikavali
-               nakymassa? @nakymassa?
-               hakuehdot @hakuehdot]
-              {:odota 2000}
-              (when nakymassa?
-                (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))))
+(defn eilen-tanaan-aikavali []
+  [(pvm/aikana (time/yesterday) 0 0 0 0)
+   (pvm/aikana (time/today) 23 59 59 999)])
+
+
+(def haetut-tapahtumat (atom []))
+
+(defn hae-tapahtumat! []
+  (log "hae-tapahtumat! kutsuttu")
+  (let  [valittu-jarjestelma @valittu-jarjestelma
+         valittu-integraatio @valittu-integraatio
+         valittu-aikavali (if @nayta-uusimmat-tilassa?
+                            (eilen-tanaan-aikavali)
+                            @valittu-aikavali)
+         nakymassa? @nakymassa?
+         hakuehdot @hakuehdot]
+    (when nakymassa?
+      (do
+        (log "haetaan tapahtumat:" valittu-jarjestelma valittu-integraatio (pr-str valittu-aikavali) (pr-str  hakuehdot))
+        (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
+              (log "saatiin tapahtumat:" (pr-str tapahtumat))
+              (reset! haetut-tapahtumat tapahtumat)
+              tapahtumat))))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
@@ -69,15 +85,11 @@
                                     maarat)
                             maarat))))))
 
-
-
 (defn nayta-tapahtumat-eilisen-jalkeen []
-  (let [eilen (pvm/aikana (time/yesterday) 0 0 0 0)
-        tanaan (pvm/aikana (time/today) 23 59 59 999)]
-    (reset! valittu-aikavali [eilen tanaan])))
+  (reset! nayta-uusimmat-tilassa? false)
+  (reset! valittu-aikavali (eilen-tanaan-aikavali)))
 
-(defn nayta-uusimmat-tapahtumat []
-  (reset! valittu-aikavali nil))
-
-(defn paivita-tapahtumat! []
-  (paivita! haetut-tapahtumat))
+(defn nayta-uusimmat-tapahtumat! []
+  (reset! valittu-aikavali nil)
+  (reset! nayta-uusimmat-tilassa? true)
+  (hae-tapahtumat!))
