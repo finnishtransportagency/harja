@@ -34,15 +34,11 @@
 
 (defn- hintakentta
   [e! hinta]
-  [:span
-   [:span
-    [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
-     (r/wrap (::hinta/maara hinta)
-             (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/id (::hinta/id hinta)
-                                                          ::hinta/maara uusi}))))]]
-   [:span " "]
-   [:span "€"]])
+  [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
+   (r/wrap (::hinta/maara hinta)
+           (fn [uusi]
+             (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/id (::hinta/id hinta)
+                                                        ::hinta/maara uusi}))))])
 
 (defn- yleiskustannuslisakentta
   [e! hinta]
@@ -57,10 +53,10 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn hinnoittelurivi [e! hinta]
+(defn vapaa-hinnoittelurivi [e! hinta]
   (let [otsikko (::hinta/otsikko hinta)]
-    [:tr.muu-hinnoittelu-rivi
-     [:td.muu-hinnoittelu-osio
+    [:tr
+     [:td
       (if (tiedot/vakiohintakentta? otsikko)
         otsikko
         [tee-kentta {:tyyppi :string}
@@ -68,9 +64,10 @@
                  (fn [uusi]
                    (e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
                                                           ::hinta/otsikko uusi}))))])]
-     [:td.muu-hinnoittelu-osio [hintakentta e! hinta]]
-     [:td.muu-hinnoittelu-osio [yleiskustannuslisakentta e! hinta]]
-     [:td.muu-hinnoittelu-osio
+     [:td] ;; TODO Hintatyyppi
+     [:td.tasaa-oikealle [hintakentta e! hinta]]
+     [:td.keskita [yleiskustannuslisakentta e! hinta]]
+     [:td
       (when-not (tiedot/vakiohintakentta? otsikko)
         [ikonit/klikattava-roskis #(e! (tiedot/->PoistaKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
 
@@ -102,13 +99,13 @@
 (defn- muu-hinnoittelu-header
   ([] (muu-hinnoittelu-header true))
   ([otsikot?]
-  [:thead
-   [:tr
-    [:th {:style {:width "45%"}} (when otsikot? "Työ")]
-    [:th {:style {:width "20%"}} (when otsikot? "Hintatyyppi")]
-    [:th {:style {:width "20%"}} (when otsikot? "Hinta yhteensä")]
-    [:th {:style {:width "10%"}} (when otsikot? "YK-lisä")]
-    [:th {:style {:width "5%"}} ""]]]))
+   [:thead
+    [:tr
+     [:th {:style {:width "45%"}} (when otsikot? "Työ")]
+     [:th {:style {:width "20%"}} (when otsikot? "Hintatyyppi")]
+     [:th {:style {:width "20%"}} (when otsikot? "Hinta yhteensä")]
+     [:th {:style {:width "10%"}} (when otsikot? "YK-lisä")]
+     [:th {:style {:width "5%"}} ""]]]))
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
@@ -234,23 +231,19 @@
      [rivinlisays "Lisää komponenttirivi" #(log "TODO LISÄÄ KOMPONENTTIRIVI")]])) ; TODO
 
 (defn- muut-hinnat [e! app*]
-  [:table
-   [muu-hinnoittelu-header]
-   [:tbody
-    [valiotsikko "Muut" :muu-hinnoittelu-osio]
-    (map-indexed
-      (fn [index hinta]
-        ^{:key index}
-        [hinnoittelurivi e! hinta])
-      (filter
-        #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
-        (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
-    [:tr
-     [:td.muu-hinnoittelu-osio.lisaa-rivi-solu
-      [napit/uusi "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]
-     [:td.muu-hinnoittelu-osio]
-     [:td.muu-hinnoittelu-osio]
-     [:td.muu-hinnoittelu-osio]]]])
+  [:div.hinnoitteluosio.muut-osio
+   [valiotsikko "Muut"]
+   [:table
+    [muu-hinnoittelu-header]
+    [:tbody
+     (map-indexed
+       (fn [index hinta]
+         ^{:key index}
+         [vapaa-hinnoittelurivi e! hinta])
+       (filter
+         #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
+         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
+    [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]])
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   ;; TODO Korkeus alkaa olla jo aikamoinen haaste
@@ -258,7 +251,7 @@
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [komponentit e! app*]
-   #_[muut-hinnat e! app*]
+   [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
