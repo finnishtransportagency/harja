@@ -57,7 +57,7 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* hinta]
+(defn hinnoittelurivi [e! app* hinta]
   (let [otsikko (::hinta/otsikko hinta)]
     [:tr.muu-hinnoittelu-rivi
      [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
@@ -229,8 +229,7 @@
       (map-indexed
         (fn [index hinta]
           ^{:key index}
-          [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
-           e! app* hinta])
+          [hinnoittelurivi e! app* hinta])
         (filter
           #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
