@@ -184,67 +184,70 @@
     [:td.tyot-osio]
     [:td.tyot-osio]]])
 
-(defn- toimenpiteen-hinnoittelutaulukko [e! app*]
-  (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
-        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
-                                                                       valittu-aikavali)
-        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        ;; TODO Tällä hetkellä hardkoodattu, lista. Pitää tehdä näin:
+(defn- komponentit [e! app*]
+  (let [;; TODO Tällä hetkellä hardkoodattu, lista. Pitää tehdä näin:
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
         ;; - Hintatyyppi: Omakustannus / Päivän hinta
-        komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
-                      ::tkomp/sarjanumero "123"
-                      ::tkomp/turvalaitenro "8881"}
-                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, lisätty"}
-                      ::tkomp/sarjanumero "124"
-                      ::tkomp/turvalaitenro "8882"}]]
-    ;; TODO Korkeus alkaa olla jo aikamoinen haaste, piirrä rivin alapuolelle document flowiin?
-    [:table.vv-toimenpiteen-hinnoittelutiedot-grid
-     [:thead
-      [:tr
-       [:th {:style {:width "55%"}}]
-       [:th {:style {:width "30%"}} "Hinta / määrä"]
-       [:th {:style {:width "10%"}} "YK-lisä"]
-       [:th {:style {:width "5%"}} ""]]]
-     [sopimushintaiset-tyot e! app*]
-     [:tbody
-      [valiotsikkorivi "Komponentit" :komponentit-osio]
-      (map-indexed
-        (fn [index komponentti]
-          ^{:key index}
-          [:tr.komponentin-hinnoittelu-rivi
-           [:td.hinnoittelun-otsikko.komponentit-osio
-            (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
-                 " (" (::tkomp/sarjanumero komponentti) "):")]
-           [:td.komponentit-osio
-            [:span
-             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
-              (r/wrap 0
-                      (fn [uusi]
-                        (log "TODO")))]]
-            [:span " "]
-            [:span "€"]]
-           [:td.komponentit-osio
-            [yleiskustannuslisakentta e! app* ""]] ;; TODO Otsikko-hommeli ei nyt oikein toimi tässä
-           [:td.komponentit-osio]])
-        komponentit)
+        komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
+                                ::tkomp/sarjanumero "123"
+                                ::tkomp/turvalaitenro "8881"}
+                               {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, lisätty"}
+                                ::tkomp/sarjanumero "124"
+                                ::tkomp/turvalaitenro "8882"}]]
+    [:tbody
+     [valiotsikkorivi "Komponentit" :komponentit-osio]
+     (map-indexed
+       (fn [index komponentti]
+         ^{:key index}
+         [:tr.komponentin-hinnoittelu-rivi
+          [:td.hinnoittelun-otsikko.komponentit-osio
+           (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
+                " (" (::tkomp/sarjanumero komponentti) "):")]
+          [:td.komponentit-osio
+           [:span
+            [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+             (r/wrap 0
+                     (fn [uusi]
+                       (log "TODO")))]]
+           [:span " "]
+           [:span "€"]]
+          [:td.komponentit-osio
+           [yleiskustannuslisakentta e! app* ""]] ;; TODO Otsikkolla valinta ei nyt oikein toimi tässä
+          [:td.komponentit-osio]])
+       komponentit-testidata)]))
 
-      [valiotsikkorivi "Muut" :muu-hinnoittelu-osio]
-      (map-indexed
-        (fn [index hinta]
-          ^{:key index}
-          [hinnoittelurivi e! hinta])
-        (filter
-          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
-          (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
-      [:tr.muu-hinnoittelu-rivi
-       [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
-        [napit/uusi "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]
-       [:td.muu-hinnoittelu-osio]
-       [:td.muu-hinnoittelu-osio]
-       [:td.muu-hinnoittelu-osio]]]
-     [hinnoittelun-yhteenveto app*]]))
+(defn muut [e! app*]
+  [:tbody
+   [valiotsikkorivi "Muut" :muu-hinnoittelu-osio]
+   (map-indexed
+     (fn [index hinta]
+       ^{:key index}
+       [hinnoittelurivi e! hinta])
+     (filter
+       #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
+       (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
+   [:tr.muu-hinnoittelu-rivi
+    [:td.muu-hinnoittelu-osio.hinnoittelun-otsikko.lisaa-rivi-solu
+     [napit/uusi "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]
+    [:td.muu-hinnoittelu-osio]
+    [:td.muu-hinnoittelu-osio]
+    [:td.muu-hinnoittelu-osio]]])
+
+(defn- toimenpiteen-hinnoittelutaulukko [e! app*]
+  ;; TODO Korkeus alkaa olla jo aikamoinen haaste
+  ;; Voisi piirtää rivin alapuolelle, mutta vasta kun hinnoittelu muuten valmista
+  [:table.vv-toimenpiteen-hinnoittelutiedot-grid
+   [:thead
+    [:tr
+     [:th {:style {:width "55%"}}]
+     [:th {:style {:width "30%"}} "Hinta / määrä"]
+     [:th {:style {:width "10%"}} "YK-lisä"]
+     [:th {:style {:width "5%"}} ""]]]
+   [sopimushintaiset-tyot e! app*]
+   [komponentit e! app*]
+   [muut e! app*]
+   [hinnoittelun-yhteenveto app*]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
