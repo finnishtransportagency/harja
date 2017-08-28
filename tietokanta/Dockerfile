@@ -26,7 +26,8 @@ RUN service postgresql restart && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U postgres && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harja;" -U postgres  && \
     psql -c "CREATE EXTENSION postgis" -U postgres harja && \
-    psql -c "CREATE EXTENSION postgis_topology" -U postgres harja
+    psql -c "CREATE EXTENSION postgis_topology" -U postgres harja && \
+    psql -c "CREATE EXTENSION pg_trgm" -U postgres harja
 
 # Ajetaan migraatiot
 COPY pom.xml /tmp
