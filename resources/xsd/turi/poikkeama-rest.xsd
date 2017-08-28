@@ -788,7 +788,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="juurisyy1" type="juurisyyType" minOccurs="1" maxOccurs="1">
+                            <xs:element name="juurisyy1" type="juurisyyType" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Poikkeaman 1. juurisyy
