@@ -170,6 +170,8 @@
 (defrecord PoistaHintaryhmanKorostus [])
 
 (defn- hintakentta
+  "Generoi hintakentän annetulla id:llä ja otsikolla. Ottaa annetun hinnan tiedot (määrä, ryhmä, yk-lisä...)
+  käyttöön jos tiedot löytyvät."
   [id otsikko hinta]
   {::hinta/id id
    ::hinta/otsikko otsikko
