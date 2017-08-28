@@ -188,14 +188,14 @@
 (defn- toimenpiteen-hintakentat [hinnat]
   (vec (concat
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-         (map-indexed (fn [index hinta]
-                        ;; TODO Jos jo tallennettu, ei ota oikeaa id:tä
-                        (hintakentta (or (::hinta/id hinta)
-                                         ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
-                                         ;; ilmaisemaan uutta lisättyä kenttää
-                                         (dec (- index)))
-                                     hinta
-                                     (hinta/hinta-otsikolla hinnat hinta)))
+         (map-indexed (fn [index otsikko]
+                        (let [olemassa-oleva-hinta (hinta/hinta-otsikolla hinnat otsikko)]
+                          (hintakentta (or (::hinta/id olemassa-oleva-hinta)
+                                           ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
+                                           ;; ilmaisemaan uutta lisättyä kenttää
+                                           (dec (- index)))
+                                       otsikko
+                                       olemassa-oleva-hinta)))
                       vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          (map #(hintakentta (::hinta/id %)
