@@ -65,7 +65,17 @@
     [:tr.muu-hinnoittelu-rivi
      ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi.
      ;; TODO Mitä tapahtuu jos inputtiin kirjoittaa vakiohintakentän otsikon? Ongelmia?
-     [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
+     [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
+      (if (tiedot/vakiohintakentta? otsikko)
+        (str otsikko ":")
+        [tee-kentta {:tyyppi :string}
+         (r/wrap otsikko
+                 (fn [uusi]
+                   ;; TODO Tue otsikon muokkausta
+                   (log "ASETTELE")
+                   #_(e! (tiedot/->AsetaHintarivilleTiedot
+                         {:index index
+                          :maara uusi}))))])]
      [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
      [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
      [:td.muu-hinnoittelu-osio
