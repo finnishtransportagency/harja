@@ -1,6 +1,6 @@
 .vv-toimenpiteen-hinnoittelutiedot {
   cursor: auto;
-  min-width: 620px;
+  min-width: 666px;
   min-height: 100px;
 
   .vv-toimenpiteen-hinnoittelutiedot {
@@ -16,14 +16,14 @@
       border: none;
     }
 
-    th {
-      background-color: transparent;
-      border: none;
-      font-weight: 100;
-    }
-
     tr {
       border: none;
+
+      > th {
+        background-color: transparent;
+        border: none;
+        font-weight: bold;
+      }
     }
 
     td {
@@ -45,7 +45,7 @@
       padding: 2px;
     }
 
-    .sopimushintaiset-tyot-osio, .muu-hinnoittelu-osio {
+    .komponentit-osio {
       background-color: @harmaa12;
     }
 

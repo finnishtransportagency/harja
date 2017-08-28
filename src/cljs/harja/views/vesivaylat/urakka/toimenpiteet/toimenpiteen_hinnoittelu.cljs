@@ -62,7 +62,7 @@
     [:tr.muu-hinnoittelu-rivi
      [:td.muu-hinnoittelu-osio
       (if (tiedot/vakiohintakentta? otsikko)
-        (str otsikko ":")
+        otsikko
         [tee-kentta {:tyyppi :string}
          (r/wrap otsikko
                  (fn [uusi]
@@ -122,9 +122,9 @@
 (defn- muu-hinnoittelu-header []
   [:thead
    [:tr
-    [:th {:style {:width "60%"}} "Työ"]
-    [:th {:style {:width "15%"}} "Hintatyyppi"]
-    [:th {:style {:width "10%"}} "Hinta yhteensä"]
+    [:th {:style {:width "45%"}} "Työ"]
+    [:th {:style {:width "20%"}} "Hintatyyppi"]
+    [:th {:style {:width "20%"}} "Hinta yhteensä"]
     [:th {:style {:width "10%"}} "YK-lisä"]
     [:th {:style {:width "5%"}} ""]]])
 
@@ -203,29 +203,29 @@
                                {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, lisätty"}
                                 ::tkomp/sarjanumero "124"
                                 ::tkomp/turvalaitenro "8882"}]]
-    [:table
-     [muu-hinnoittelu-header]
-     [:tbody
-      [valiotsikko "Komponentit" :komponentit-osio]
-      (map-indexed
-        (fn [index komponentti]
-          ^{:key index}
-          [:tr
-           [:td.komponentit-osio
-            (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
-                 " (" (::tkomp/sarjanumero komponentti) "):")]
-           [:td.komponentit-osio
-            [:span
+    [:div.hinnoitteluosio.komponentit-osio
+     [valiotsikko "Komponentit"]
+     [:table
+      [muu-hinnoittelu-header]
+      [:tbody
+       (map-indexed
+         (fn [index komponentti]
+           ^{:key index}
+           [:tr
+            [:td
+             (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
+                  " (" (::tkomp/sarjanumero komponentti) ")")]
+            [:td]
+            [:td.tasaa-oikealle
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
                       (fn [uusi]
                         (log "TODO")))]]
-            [:span " "]
-            [:span "€"]]
-           [:td.komponentit-osio
-            [yleiskustannuslisakentta e! app* ""]] ;; TODO Otsikkolla valinta ei nyt oikein toimi tässä
-           [:td.komponentit-osio]])
-        komponentit-testidata)]]))
+            [:td] ; TODO YK-lisä
+            [:td.keskita
+             [ikonit/klikattava-roskis #(log "TODO POISTA KOMPONENTTI!")]]]) ; TODO
+         komponentit-testidata)]]
+     [rivinlisays "Lisää komponenttirivi" #(log "TODO LISÄÄ KOMPONENTTIRIVI")]])) ; TODO
 
 (defn- muut-hinnat [e! app*]
   [:table
@@ -251,7 +251,7 @@
   ;; Voisi piirtää rivin alapuolelle, mutta vasta kun hinnoittelu muuten valmista
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
-   #_[komponentit e! app*]
+   [komponentit e! app*]
    #_[muut-hinnat e! app*]
    #_[hinnoittelun-yhteenveto app*]])
 
