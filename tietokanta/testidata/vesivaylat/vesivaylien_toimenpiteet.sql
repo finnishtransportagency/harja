@@ -323,9 +323,9 @@ VALUES
     '1022541903',
     '(123,Akonniemen väylät,55)',
     30,
-    (SELECT id
-     FROM vv_vayla
-     WHERE nimi = 'Akonniemen väylät'));
+   (SELECT id
+    FROM vv_vayla
+    WHERE nimi = 'Akonniemen väylät'));
 
 -- ***********************************************
 -- KOKONAISHINTAISET TOIMENPITEET VIALLA
@@ -864,7 +864,7 @@ VALUES
 INSERT INTO vv_hinnoittelu
 (nimi, hintaryhma, luoja, "urakka-id")
 VALUES
-  ('Vanhaan urakan testihinnoittelu', TRUE,
+  ('Vantaan urakan testihinnoittelu', TRUE,
    (SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'tero'),
@@ -881,7 +881,7 @@ VALUES
     WHERE kayttajanimi = 'tero'),
    (SELECT id
     FROM urakka
-    WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
 
 
 INSERT INTO vv_hinta
@@ -890,9 +890,9 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
-   'Työ', 600, (SELECT id
-                FROM kayttaja
-                WHERE kayttajanimi = 'tero'));
+   'Yleiset materiaalit', 600, (SELECT id
+                                FROM kayttaja
+                                WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja, poistettu)
@@ -926,15 +926,43 @@ VALUES
                                                                                                           'tero'),
    TRUE);
 
+INSERT INTO vv_tyo
+("hinnoittelu-id", maara, luoja, "toimenpidekoodi-id")
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   30,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+    WHERE nimi = 'Henkilöstö: Ammattimies'));
+
+INSERT INTO vv_tyo
+("hinnoittelu-id", maara, luoja, "toimenpidekoodi-id")
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Toimenpiteen oma hinnoittelu'),
+   15,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM toimenpidekoodi
+    WHERE nimi = 'Henkilöstö: Työnjohto'));
+
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
 VALUES
   ((SELECT id
     FROM vv_hinnoittelu
-    WHERE nimi = 'Vanhaan urakan testihinnoittelu'),
-   'Työ', 5, (SELECT id
-              FROM kayttaja
-              WHERE kayttajanimi = 'tero'));
+    WHERE nimi = 'Vantaan urakan testihinnoittelu'),
+   'Yleiset materiaalit', 5, (SELECT id
+                              FROM kayttaja
+                              WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinta
 ("hinnoittelu-id", otsikko, maara, luoja)
@@ -942,9 +970,9 @@ VALUES
   ((SELECT id
     FROM vv_hinnoittelu
     WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
-   'Työ', 70, (SELECT id
-               FROM kayttaja
-               WHERE kayttajanimi = 'tero'));
+   'Yleiset materiaalit', 70, (SELECT id
+                               FROM kayttaja
+                               WHERE kayttajanimi = 'tero'));
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)

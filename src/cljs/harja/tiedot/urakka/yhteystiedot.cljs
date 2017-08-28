@@ -3,6 +3,7 @@
   (:require [reagent.core :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
+            [harja.domain.urakka :as urakka-domain]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -26,6 +27,9 @@
 (def yhteyshenkilotyypit-kaikille-urakoille
   (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"])))
 
+(def yhteyshenkilotyypit-vesivaylat
+  (into [] (sort ["Sopimusvastaava"])))
+
 (def yhteyshenkilotyypit-oletus
   (into [] (sort (concat yhteyshenkilotyypit-kaikille-urakoille
                          ["Sillanvalvoja" "Kelikeskus"]))))
@@ -41,10 +45,11 @@
                           "Turvallisuuskoordinaattori"]))))
 
 (defn urakkatyypin-mukaiset-yhteyshenkilotyypit [urakkatyyppi]
-  (case urakkatyyppi
-    :paallystys yhteyshenkilotyypit-paallystys
-    :tiemerkinta yhteyshenkilotyypit-tiemerkinta
-    yhteyshenkilotyypit-oletus))
+  (cond
+    (urakka-domain/vesivaylaurakkatyyppi? urakkatyyppi) yhteyshenkilotyypit-vesivaylat
+    (= :paallystys urakkatyyppi) yhteyshenkilotyypit-paallystys
+    (= :tiemerkinta urakkatyyppi) yhteyshenkilotyypit-tiemerkinta
+    :default yhteyshenkilotyypit-oletus))
 
 (defn tallenna-urakan-yhteyshenkilot
   "Tallentaa urakan yhteyshenkilöt, palauttaa kanavan, josta vastauksen voi lukea."

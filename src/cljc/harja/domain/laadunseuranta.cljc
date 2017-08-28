@@ -88,11 +88,6 @@
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
-(defn tarkastus-tiedolla-onko-ok
-  "Tämä kertoo onko laadunalitus"
-  [{laadunalitus :laadunalitus :as tarkastus}]
-  (assoc tarkastus :ok? (not laadunalitus)))
-
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))
 

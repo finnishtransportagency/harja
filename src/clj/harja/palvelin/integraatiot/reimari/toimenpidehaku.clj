@@ -35,6 +35,7 @@
                                         :kokonaishintainen))
       (dissoc ::toimenpide/lisatyo?)))
 
+
 (defn sopimustiedot-ok? [toimenpide-tiedot]
   ;; Sopimustiedot määriteltiin alunperin pakollisiksi rajapinnassa, mutta
   ;; onkin poikkeustapauksia jossa reimarin tietokantaan päätyy sopimuksettomia
@@ -50,6 +51,7 @@
                            :let [toimenpide-tiedot (rename-keys toimenpide-tiedot-raaka avainmuunnokset)]
                            :when (sopimustiedot-ok? toimenpide-tiedot)]
                        (specql/upsert! db ::toimenpide/reimari-toimenpide #{::toimenpide/reimari-id} toimenpide-tiedot))]
+
     (vec kanta-tiedot)))
 
 (defn toimenpiteet-kysely-sanoma [muutosaika]
