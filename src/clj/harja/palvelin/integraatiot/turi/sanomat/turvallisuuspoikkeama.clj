@@ -139,8 +139,7 @@
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
           [[:urakkatyyppi (:urakka-tyyppi data)]]
-          (when (and (:urakka-ely data)
-                     (not (= "Vesiväylä" (urakan-vaylamuoto (:vaylamuoto data)))))
+          (when (:urakka-ely data)
             [[:elyalue (str (:urakka-ely data) " ELY")]])
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
