@@ -73,7 +73,9 @@
 (defn generoitu-stack->lahde-stack
   [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
   (let [source-map (when (re-find #"harja" tiedostopolku)
-                    (-> (str tiedostopolku ".map") lue-tiedosto (SourceMapImpl.)))]
+                    (try (-> (str tiedostopolku ".map") lue-tiedosto (SourceMapImpl.))
+                         (catch Exception e ;; Jos lue-tiedosto palauttaa virhe-ilmoituksen, SourceMapImpl heittää exceptionin. Palautetaan nil.
+                            nil)))]
     (when-let [mapping (and source-map (.getMapping source-map rivi sarake))]
       (lahde-tiedot mapping kehitysmoodi tiedostopolku))))
 
