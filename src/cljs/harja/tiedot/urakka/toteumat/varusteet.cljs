@@ -65,7 +65,7 @@
   (swap! varusteet assoc :valittu-toteumaid toteumaid))
 
 (def ^:const ilmoitushaun-viive-ms 500)
-(def ^:const taustahaun-viive-ms 60000)
+(def ^:const taustahaun-viive-ms 20000)
 
 (defn- hae [timeout {toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
