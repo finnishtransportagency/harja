@@ -98,12 +98,29 @@
     (when-not (false? korostettu-hintaryhma)
       (= (::h/id hintaryhma) korostettu-hintaryhma))))
 
-(defn kokonaishintaisista-siirretyt-hintaryhma []
-  [{::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."
-    ::h/id nil}])
+(def kokonaishintaisista-siirretyt-hintaryhma
+  {::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."
+   ::h/id -1})
+
+(def reimarin-lisatyot-hintaryhma
+  {::h/nimi "Reimarissa lisätyöksi merkityt, valitse tilaus."
+   ::h/id -2})
 
 (defn kokonaishintaisista-siirretyt-hintaryhma? [hintaryhma]
-  (= (::h/id hintaryhma) (::h/id (kokonaishintaisista-siirretyt-hintaryhma))))
+  (= (::h/id hintaryhma) (::h/id kokonaishintaisista-siirretyt-hintaryhma)))
+
+(defn reimarin-lisatyot-hintaryhma? [hintaryhma]
+  (= (::h/id hintaryhma) (::h/id reimarin-lisatyot-hintaryhma)))
+
+(defn valiaikainen-hintaryhma? [hintaryhma]
+  (or (kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
+      (reimarin-lisatyot-hintaryhma? hintaryhma)))
+
+(defn hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin [toimenpiteet]
+  (for [to toimenpiteet]
+    (assoc to ::to/hintaryhma-id (or (::to/hintaryhma-id to)
+                                     (when (::to/reimari-lisatyo? to) (::h/id reimarin-lisatyot-hintaryhma))
+                                     (::h/id kokonaishintaisista-siirretyt-hintaryhma)))))
 
 (defn poista-hintaryhmien-korostus [app]
   (assoc app :korostettu-hintaryhma false))
@@ -241,7 +258,9 @@
   (process-event [{toimenpiteet :toimenpiteet} app]
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
-      (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+      (assoc app :toimenpiteet (-> toimenpiteet
+                                   hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
+                                   jaettu/toimenpiteet-aikajarjestyksessa)
                  :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
