@@ -277,7 +277,6 @@
       (<! (timeout 2000))
       (loop []
         (<! (timeout 10000))
-        (log "paivtys-loop" @paivita? @paivita? @tiedot/nayta-uusimmat-tilassa?)
         (when @paivita?
           (when @tiedot/nayta-uusimmat-tilassa?
             (tiedot/hae-tapahtumat!))

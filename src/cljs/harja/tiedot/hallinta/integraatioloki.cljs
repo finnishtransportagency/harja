@@ -21,7 +21,6 @@
                                                :integraatio integraatio}))
 
 (defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali hakuehdot]
-  (log "hae-integraation-tapahtumat" jarjestelma integraatio (pr-str aikavali) (pr-str hakuehdot))
   (k/post! :hae-integraatiotapahtumat
            (merge {:jarjestelma (:jarjestelma jarjestelma)
                    :integraatio integraatio
@@ -54,7 +53,6 @@
 (def haetut-tapahtumat (atom []))
 
 (defn hae-tapahtumat! []
-  (log "hae-tapahtumat! kutsuttu")
   (let  [valittu-jarjestelma @valittu-jarjestelma
          valittu-integraatio @valittu-integraatio
          valittu-aikavali (if @nayta-uusimmat-tilassa?
@@ -63,12 +61,9 @@
          nakymassa? @nakymassa?
          hakuehdot @hakuehdot]
     (when nakymassa?
-      (do
-        (log "haetaan tapahtumat:" valittu-jarjestelma valittu-integraatio (pr-str valittu-aikavali) (pr-str  hakuehdot))
-        (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
-              (log "saatiin tapahtumat:" (pr-str tapahtumat))
-              (reset! haetut-tapahtumat tapahtumat)
-              tapahtumat))))))
+      (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
+            (reset! haetut-tapahtumat tapahtumat)
+            tapahtumat)))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
