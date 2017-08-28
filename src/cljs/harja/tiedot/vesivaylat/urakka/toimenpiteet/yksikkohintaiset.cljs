@@ -207,6 +207,8 @@
 
 (defn- hintaryhman-hintakentat [hinnat]
   (let [ryhmahinta (hinta/hinta-otsikolla hinnat hintaryhman-hintakentta-otsikko)]
+    ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
+    ;; Jos ei ole aiempaa ryhmähintaa, luo uuden hintakentän ilman id:tä.
     [(hintakentta (::hinta/id ryhmahinta) hintaryhman-hintakentta-otsikko ryhmahinta)]))
 
 (defn- drop-index [col idx]
