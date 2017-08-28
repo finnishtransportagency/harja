@@ -217,7 +217,7 @@
           [:td.komponentit-osio]])
        komponentit-testidata)]))
 
-(defn muut [e! app*]
+(defn- muut-hinnat [e! app*]
   [:tbody
    [valiotsikkorivi "Muut" :muu-hinnoittelu-osio]
    (map-indexed
@@ -234,19 +234,22 @@
     [:td.muu-hinnoittelu-osio]
     [:td.muu-hinnoittelu-osio]]])
 
+(defn- hinnoittelu-header []
+  [:thead
+   [:tr
+    [:th {:style {:width "55%"}}]
+    [:th {:style {:width "30%"}} "Hinta / määrä"]
+    [:th {:style {:width "10%"}} "YK-lisä"]
+    [:th {:style {:width "5%"}} ""]]])
+
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   ;; TODO Korkeus alkaa olla jo aikamoinen haaste
   ;; Voisi piirtää rivin alapuolelle, mutta vasta kun hinnoittelu muuten valmista
   [:table.vv-toimenpiteen-hinnoittelutiedot-grid
-   [:thead
-    [:tr
-     [:th {:style {:width "55%"}}]
-     [:th {:style {:width "30%"}} "Hinta / määrä"]
-     [:th {:style {:width "10%"}} "YK-lisä"]
-     [:th {:style {:width "5%"}} ""]]]
+   [hinnoittelu-header]
    [sopimushintaiset-tyot e! app*]
    [komponentit e! app*]
-   [muut e! app*]
+   [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
