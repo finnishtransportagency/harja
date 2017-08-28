@@ -2,6 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.toimenpiteen-hinnoittelu :as ui-tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
@@ -89,44 +90,6 @@
    [:td]
    [:td]])
 
-;; Toimenpiteen hinnoittelun pudotusvalikkoon protokolla ja eri tyypit.
-(defprotocol ValintaRivi
-  (valitse [this e! index])
-  (formatoi [this])
-  (ryhmittely [this]))
-
-(defrecord HintaValinta [nimi] ValintaRivi
-  (valitse [this e! index]
-    (e! (tiedot/->AsetaTyorivilleTiedot
-          {:index index
-           :toimenpidekoodi-id nil
-           :hinta-nimi (:nimi this)})))
-
-  (formatoi [this] (:nimi this))
-
-  (ryhmittely [_] :hinta))
-
-(defrecord TyoValinta [nimi yksikko toimenpidekoodi-id yksikkohinta]
-  ValintaRivi
-
-  (valitse [this e! index]
-    (e! (tiedot/->AsetaTyorivilleTiedot
-          {:index index
-           :toimenpidekoodi-id (:toimenpidekoodi-id this)
-           :hinta-nimi nil})))
-
-  (formatoi [this]
-    (str (:nimi this) " (" (fmt/euro (:yksikkohinta this))
-         " / " (:yksikko this) ")"))
-
-  (ryhmittely [_] :tyo))
-
-(defn- suunniteltu-tyo->Record [suunniteltu-tyo]
-  (->TyoValinta (:tehtavan_nimi suunniteltu-tyo)
-                (:yksikko suunniteltu-tyo)
-                (:tehtava suunniteltu-tyo)
-                (:yksikkohinta suunniteltu-tyo)))
-
 (defn- valiotsikkorivi [otsikko osio-luokka]
   [:tr.otsikkorivi
    [:td {:class osio-luokka}
@@ -188,24 +151,24 @@
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio.hinnoittelun-otsikko
             ;; TODO Tehdäänkö combobox?
-            (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
-                  tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
+            (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
+                  tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
               [yleiset/livi-pudotusvalikko
-               {:valitse-fn #(valitse % e! index)
+               {:valitse-fn #(ui-tiedot/valitse % e! index)
                 :format-fn #(if %
-                              (formatoi %)
+                              (ui-tiedot/formatoi %)
                               "Valitse työ")
                 :nayta-ryhmat [:hinta :tyo]
-                :ryhmittely #(ryhmittely %)
+                :ryhmittely #(ui-tiedot/ryhmittely %)
                 :ryhman-otsikko #(case %
                                    :hinta "Hinta"
                                    :tyo "Sopimushinnat")
                 :class "livi-alasveto-250 inline-block"
-                :valinta (first (filter #(cond (instance? TyoValinta %)
+                :valinta (first (filter #(cond (instance? ui-tiedot/TyoValinta %)
                                                (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
 
-                                               (instance? HintaValinta %)
+                                               (instance? ui-tiedot/HintaValinta %)
                                                (= (:hinta-nimi tyorivi) (:nimi %)))
                                         kaikki-valinnat))
                 :disabled false}
