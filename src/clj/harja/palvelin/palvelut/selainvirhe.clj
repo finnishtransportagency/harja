@@ -29,9 +29,12 @@
 
 (defn lue-tiedosto
   [tiedostonimi]
-  (try (slurp (io/resource tiedostonimi))
-       (catch java.io.FileNotFoundException e
-         (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
+  (let [tiedosto (try (io/resource tiedostonimi)
+                      (catch java.io.FileNotFoundException e
+                        (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))]
+    (if-not (string? tiedosto)
+      (slurp tiedosto)
+      tiedosto)))
 
 (defn lahdetiedosto
   [tiedostopolku mapping kehitysmoodi]
@@ -49,8 +52,6 @@
   [mapping kehitysmoodi tiedostopolku]
   (let [lahde-rivi (.getSourceLine mapping)
         lahde-sarake (.getSourceColumn mapping)
-        generoitu-rivi (.getGeneratedLine mapping)
-        generoitu-sarake (.getGeneratedColumn mapping)
         lahdetiedosto (lahdetiedosto tiedostopolku mapping kehitysmoodi)
         muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
                                                         (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
@@ -81,15 +82,15 @@
 
 
 (defn lahdetiedoston-stack-trace
-  [lahdetiedoston-tiedot]
-  (if (empty? lahdetiedoston-tiedot)
+  [{:keys [rivi sarake lahdetiedosto muutama-rivi-koodia]}]
+  (if (or (nil? rivi) (nil? sarake))
     "*Generoitua .js tiedostoa ei saatu mapattua .cljs tiedostoon joltain stack tracen riviltä.*|||"
-    (str "at " (:lahdetiedosto lahdetiedoston-tiedot) ":"
-               (:rivi lahdetiedoston-tiedot) ":"
-               (:sarake lahdetiedoston-tiedot) "|||"
-               (if (re-find #"\|\|\|" (:muutama-rivi-koodia lahdetiedoston-tiedot))
-                 (str "```" (:muutama-rivi-koodia lahdetiedoston-tiedot) "```")
-                 (:muutama-rivi-koodia lahdetiedoston-tiedot))
+    (str "at " lahdetiedosto ":"
+               rivi ":"
+               sarake "|||"
+               (if (re-find #"\|\|\|" muutama-rivi-koodia)
+                 (str "```" muutama-rivi-koodia "```")
+                 muutama-rivi-koodia)
                "|||")))
 
 (defn stack-lahde
