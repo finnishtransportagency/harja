@@ -115,17 +115,16 @@
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        ;; TODO Hardkoodattu, listaa oikeat komponentit tässä ja niiden hinta jos olemassa
-        ;; Tarttee varmaan luoda joka tapauksessa riville vapaa negatiivinen hinta/id vaikkei hintaa olisikaan?
-        komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
+        ;; TODO Tällä hetkellä hardkoodattu, lista. Pitää tehdä näin:
+        ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
+        ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
+        ;; - Hintatyyppi: Omakustannus / Päivän hinta
+        komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                       ::tkomp/sarjanumero "123"
                       ::tkomp/turvalaitenro "8881"}
-                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
+                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, lisätty"}
                       ::tkomp/sarjanumero "124"
-                      ::tkomp/turvalaitenro "8882"}
-                     {::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
-                      ::tkomp/sarjanumero "125"
-                      ::tkomp/turvalaitenro "8883"}]]
+                      ::tkomp/turvalaitenro "8882"}]]
     ;; TODO Korkeus alkaa olla jo aikamoinen haaste, piirrä rivin alapuolelle document flowiin?
     [:table.vv-toimenpiteen-hinnoittelutiedot-grid
      [:thead
@@ -142,6 +141,9 @@
           [:tr.tyon-hinnoittelu-rivi
            [:td.tyot-osio.hinnoittelun-otsikko
             ;; TODO Tehdäänkö combobox?
+            ;; TODO Päivän hinta ja omakustannushinta pois täältä, namespacetetaan mapit työksi, pidetään id:t
+            ;; tallessa ja kannassa normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti
+            ;; Jos niitä on aiemmin kirjattu, niin näytetään muiden töiden listalla (pitäisi toimia autom. näin)
             (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
                   tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record suunnitellut-tyot)
                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
