@@ -66,9 +66,6 @@
 (defn hinnan-maara-otsikolla [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::maara))
 
-(defn hinnan-yleiskustannuslisa [hinnat otsikko]
-  (hinnan-ominaisuus-otsikolla hinnat otsikko ::yleiskustannuslisa))
-
 (defn kokonaishinta-yleiskustannuslisineen [hinnat]
   (+ (perushinta hinnat)
      (yleiskustannuslisien-osuus hinnat)))
@@ -84,6 +81,15 @@
   [hinnat tiedot]
   (mapv (fn [hinta]
           (if (= (::otsikko hinta) (::otsikko tiedot))
+            (merge hinta tiedot)
+            hinta))
+        hinnat))
+
+(defn- paivita-hintajoukon-hinnan-tiedot-idlla
+  "Päivittää hintojen joukosta yksittäisen hinnan, jolla annettu id."
+  [hinnat tiedot]
+  (mapv (fn [hinta]
+          (if (= (::id hinta) (::id tiedot))
             (merge hinta tiedot)
             hinta))
         hinnat))

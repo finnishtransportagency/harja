@@ -150,6 +150,7 @@
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
+(defrecord OtsikoiToimenpideKentta [tiedot])
 (defrecord HinnoitteleHintaryhmaKentta [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord HinnoitteleHintaryhma [tiedot])
@@ -169,16 +170,14 @@
 (defrecord PoistaHintaryhmanKorostus [])
 
 (defn- hintakentta
-  ([] (hintakentta nil nil))
-  ([otsikko hinta]
-    ;; Olemassa olevaa hintaa ei välttämättä ole olemassa, mutta se ei haittaa
-   {::hinta/id (::hinta/id hinta)
-    ::hinta/otsikko otsikko
-    ::hinta/maara (or (::hinta/maara hinta) 0)
-    ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
-    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
-                                 yleiskustannuslisa
-                                 0)}))
+  [id otsikko hinta]
+  {::hinta/id id
+   ::hinta/otsikko otsikko
+   ::hinta/maara (or (::hinta/maara hinta) 0)
+   ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
+   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
+                                yleiskustannuslisa
+                                0)})
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -189,17 +188,26 @@
 (defn- toimenpiteen-hintakentat [hinnat]
   (vec (concat
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-         (map #(hintakentta % (hinta/hinta-otsikolla hinnat %)) vakiohinnat)
+         (map-indexed (fn [index hinta]
+                        (hintakentta (or (::hinta/id hinta)
+                                         ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
+                                         ;; ilmaisemaan uutta lisättyä kenttää
+                                         (dec (- index)))
+                                     hinta
+                                     (hinta/hinta-otsikolla hinnat hinta)))
+                      vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
-         ;; TODO Palauta hinnalle ryhmä ja ota vain ne jotka kuuluu ryhmään "muut"
-         (map #(hintakentta (::hinta/otsikko %) (hinta/hinta-otsikolla hinnat (::hinta/otsikko %)))
+         (map #(hintakentta (::hinta/id %)
+                            (::hinta/otsikko %)
+                            (::hinta/maara %))
               (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
+;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
 (defn- hintaryhman-hintakentat [hinnat]
-  [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hinnat
-                                                                       hintaryhman-hintakentta-otsikko))])
+  (let [ryhmahinta (hinta/hinta-otsikolla hinnat hintaryhman-hintakentta-otsikko)]
+    [(hintakentta (::hinta/id ryhmahinta) hintaryhman-hintakentta-otsikko ryhmahinta)]))
 
 (defn- drop-index [col idx]
   (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
@@ -407,9 +415,17 @@
   HinnoitteleToimenpideKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
-                                                                              ::h/hinnat]) tiedot)))
+              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                          ::h/hinnat]) tiedot)))
 
+  ;; TODO Tee
+  ;;OtsikoiToimenpideKentta
+  ;;(process-event [{tiedot :tiedot} app]
+  ;;  (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
+  ;;            (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
+  ;;                                                                            ::h/hinnat]) tiedot)))
+
+  ;; TODO Tutki voisiko tämänkin päivittää nyt vaan id:llä eikä otsikolla.
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hinnat]
@@ -430,7 +446,7 @@
                                                {::hinta/id id})
                                              {::hinta/otsikko (::hinta/otsikko hinta)
                                               ::hinta/maara (::hinta/maara hinta)
-                                              ::hinta/ryhma "muu"
+                                              ::hinta/ryhma :muu ;; TODO Komponenttien hinnoilla :komponentti
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
              ::h/tallennettavat-tyot (tyorivit-taulukosta->tallennusmuotoon
@@ -556,7 +572,7 @@
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min [hinta-idt 0]))
-          paivitetyt-hinnat (conj hinnat (hintakentta nil {::hinta/id seuraava-vapaa-id}))]
+          paivitetyt-hinnat (conj hinnat (hintakentta seuraava-vapaa-id "" 0))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaKulurivi

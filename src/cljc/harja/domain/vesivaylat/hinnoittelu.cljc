@@ -111,9 +111,8 @@
           ::id
           ::ur/id]))
 
-(s/def ::tallennettava-hinta (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa
-                                           ::hinta/ryhma]
-                                     :opt [::id]))
+(s/def ::tallennettava-hinta (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
+                                     :opt [::id ::hinta/ryhma]))
 
 (s/def ::tallennettavat-hinnat
   (s/coll-of ::tallennettava-hinta))

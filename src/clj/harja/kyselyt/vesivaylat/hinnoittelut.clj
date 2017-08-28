@@ -32,7 +32,7 @@
     (throw (SecurityException. (str "Hinnoittelut " hinnoittelu-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn vaadi-hinnat-kuuluvat-toimenpiteeseen [db hinta-idt toimenpide-id]
-  (let [toimenpiteen-hinnat (->> (specql/fetch
+  (let [toimenpiteen-hinta-idt (->> (specql/fetch
                                    db
                                    ::to/reimari-toimenpide
                                    (set/union to/perustiedot to/hinnoittelu)
@@ -41,7 +41,7 @@
                                  (mapcat (comp ::h/hinnat ::h/hinnoittelut))
                                  (map ::hinta/id)
                                  (into #{}))]
-    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinnat)
+    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinta-idt)
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
 (defn vaadi-tyot-kuuluvat-toimenpiteeseen [db tyo-idt toimenpide-id]
@@ -242,7 +242,7 @@
                   {::m/poistettu? true
                    ::m/poistaja-id (:id user)}
                   {::hinta/otsikko (op/in tyo/tyo-hinnat)
-                   ::hinta/ryhma "tyo"}))
+                   ::hinta/ryhma :tyo}))
 
 (defn luo-hinnoittelun-tyot! [{:keys [db user hinnoittelu-id tyot]}]
   (doseq [tyo tyot]
@@ -263,6 +263,6 @@
                       {::hinta/otsikko (::hinta/otsikko tyo)
                        ::hinta/hinnoittelu-id hinnoittelu-id
                        ::hinta/maara (::hinta/maara tyo)
-                       ::hinta/ryhma "tyo"
+                       ::hinta/ryhma :tyo
                        ::m/luotu (pvm/nyt)
                        ::m/luoja-id (:id user)}))))

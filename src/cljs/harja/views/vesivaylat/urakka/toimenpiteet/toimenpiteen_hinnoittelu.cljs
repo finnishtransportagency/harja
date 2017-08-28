@@ -32,31 +32,27 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
-(defn- muu-tyo-kentta
-  [e! app* otsikko]
+(defn- hintakentta
+  [e! hinta]
   [:span
    [:span
     [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
-     (r/wrap (hinta/hinnan-maara-otsikolla
-               (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
-               otsikko)
+     (r/wrap (::hinta/maara hinta)
              (fn [uusi]
-               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/id (::hinta/id hinta)
                                                           ::hinta/maara uusi}))))]]
    [:span " "]
    [:span "€"]])
 
-(defn- yleiskustannuslisa-kentta
-  [e! app* otsikko]
+(defn- yleiskustannuslisakentta
+  [e! hinta]
   [tee-kentta {:tyyppi :checkbox}
-   (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
-                                         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
-                                         otsikko)]
+   (r/wrap (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
              (pos? yleiskustannuslisa)
              false)
            (fn [uusi]
              (e! (tiedot/->HinnoitteleToimenpideKentta
-                   {::hinta/otsikko otsikko
+                   {::hinta/id (::hinta/id hinta)
                     ::hinta/yleiskustannuslisa (if uusi
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
@@ -64,8 +60,6 @@
 (defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* hinta]
   (let [otsikko (::hinta/otsikko hinta)]
     [:tr.muu-hinnoittelu-rivi
-     ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi.
-     ;; TODO Mitä tapahtuu jos inputtiin kirjoittaa vakiohintakentän otsikon? Ongelmia?
      [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
       (if (tiedot/vakiohintakentta? otsikko)
         (str otsikko ":")
@@ -73,12 +67,10 @@
          (r/wrap otsikko
                  (fn [uusi]
                    ;; TODO Tue otsikon muokkausta
-                   (log "ASETTELE")
-                   #_(e! (tiedot/->AsetaHintarivilleTiedot
-                         {:index index
-                          :maara uusi}))))])]
-     [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
-     [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
+                   #_(e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
+                                                          ::hinta/otsikko uusi}))))])]
+     [:td.muu-hinnoittelu-osio [hintakentta e! hinta]]
+     [:td.muu-hinnoittelu-osio [yleiskustannuslisakentta e! hinta]]
      [:td.muu-hinnoittelu-osio
       (when-not (tiedot/vakiohintakentta? otsikko)
         [ikonit/klikattava-roskis #(e! (tiedot/->PoistaKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
@@ -223,7 +215,7 @@
             [:span " "]
             [:span "€"]]
            [:td.komponentit-osio
-            [yleiskustannuslisa-kentta e! app* ""]] ;; TODO Otsikko-hommeli ei nyt oikein toimi tässä
+            [yleiskustannuslisakentta e! app* ""]] ;; TODO Otsikko-hommeli ei nyt oikein toimi tässä
            [:td.komponentit-osio]])
         komponentit)
 

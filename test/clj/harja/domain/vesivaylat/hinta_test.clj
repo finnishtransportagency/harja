@@ -13,10 +13,7 @@
                                             :barbar)))
   (is (= :baz
          (hinta/hinnan-maara-otsikolla [{::hinta/otsikko :foobar ::hinta/maara :baz}]
-                                       :foobar)))
-  (is (= :baz
-         (hinta/hinnan-yleiskustannuslisa [{::hinta/otsikko :foobar ::hinta/yleiskustannuslisa :baz}]
-                                          :foobar))))
+                                       :foobar))))
 
 (deftest hintojen-lasku
   (is (= (hinta/perushinta [{::hinta/maara 1} {::hinta/maara 2} {::hinta/maara 3}])
