@@ -104,11 +104,11 @@
     [:tbody
      [valiotsikkorivi ""]
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Perushinta" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
+      "Hinnat yhteensä" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Yleiskustannuslisät (12%)" (fmt/euro-opt yleiskustannuslisien-osuus)]
+      "Yleiskustannuslisät (12%) yhteensä" (fmt/euro-opt yleiskustannuslisien-osuus)]
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
+      "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
