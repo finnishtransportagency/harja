@@ -214,7 +214,10 @@
       (specql/update! db
                       ::hinta/hinta
                       (merge
-                        hinta
+                        {::hinta/otsikko (::hinta/otsikko hinta)
+                         ::hinta/maara (::hinta/maara hinta)
+                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
+                         ::hinta/ryhma (::hinta/ryhma hinta)}
                         ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
                         (if ((some-fn nil? zero?) (::hinta/maara hinta))
                           {::m/poistettu? true
@@ -226,8 +229,11 @@
       (specql/insert! db
                       ::hinta/hinta
                       (merge
-                        hinta
-                        {::m/luotu (pvm/nyt)
+                        {::hinta/otsikko (::hinta/otsikko hinta)
+                         ::hinta/maara (::hinta/maara hinta)
+                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
+                         ::hinta/ryhma (::hinta/ryhma hinta)
+                         ::m/luotu (pvm/nyt)
                          ::m/luoja-id (:id user)
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
 
