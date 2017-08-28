@@ -162,6 +162,7 @@
                                                                        valittu-aikavali)
         tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         ;; TODO Hardkoodattu, listaa oikeat komponentit tässä ja niiden hinta jos olemassa
+        ;; Tarttee varmaan luoda joka tapauksessa riville vapaa negatiivinen hinta/id vaikkei hintaa olisikaan?
         komponentit [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki"}
                       ::tkomp/sarjanumero "123"
                       ::tkomp/turvalaitenro "8881"}
