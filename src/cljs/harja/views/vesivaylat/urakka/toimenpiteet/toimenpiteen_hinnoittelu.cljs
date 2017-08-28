@@ -64,7 +64,7 @@
   (let [otsikko (::hinta/otsikko hinta)]
     [:tr.muu-hinnoittelu-rivi
      ;; TODO Otsikko input-kenttänä jos ei ole vakiohintarivi.
-     ;; TODO Mit tapahtuu jos inputtiin kirjoittaa vakiohintakentän otsikon? Ongelmia?
+     ;; TODO Mitä tapahtuu jos inputtiin kirjoittaa vakiohintakentän otsikon? Ongelmia?
      [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio (str otsikko ":")]
      [:td.muu-hinnoittelu-osio [muu-tyo-kentta e! app* otsikko]]
      [:td.muu-hinnoittelu-osio [yleiskustannuslisa-kentta e! app* otsikko]]
