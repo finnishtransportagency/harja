@@ -28,14 +28,6 @@
                       ::toimenpide/komponentit ::toimenpide/reimari-komponentit
                       ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?})
 
-(defn lisatyo->hintatyyppi [tiedot]
-  (-> tiedot
-      (assoc ::toimenpide/hintatyyppi (if (::toimenpide/lisatyo? tiedot)
-                                        :yksikkohintainen
-                                        :kokonaishintainen))
-      (dissoc ::toimenpide/lisatyo?)))
-
-
 (defn sopimustiedot-ok? [toimenpide-tiedot]
   (let [sop (-> toimenpide-tiedot ::toimenpide/reimari-sopimus)
         sisaltaa-tekstia #(-> sop % str not-empty)]
@@ -47,6 +39,7 @@
         kanta-tiedot (for [toimenpide-tiedot-raaka sanoman-tiedot
                            :let [toimenpide-tiedot (rename-keys toimenpide-tiedot-raaka avainmuunnokset)]
                            :when (sopimustiedot-ok? toimenpide-tiedot)]
+                       ;; Hintatyypin asettaminen tehdään triggerissä
                        (specql/upsert! db ::toimenpide/reimari-toimenpide #{::toimenpide/reimari-id} toimenpide-tiedot))]
 
     (vec kanta-tiedot)))
