@@ -72,8 +72,7 @@
 
 (defn generoitu-stack->lahde-stack
   [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
-  (let [paikat (atom {})
-        source-map (when (re-find #"harja" tiedostopolku)
+  (let [source-map (when (re-find #"harja" tiedostopolku)
                     (-> (str tiedostopolku ".map") lue-tiedosto (SourceMapImpl.)))]
     (when-let [mapping (and source-map (.getMapping source-map rivi sarake))]
       (lahde-tiedot mapping kehitysmoodi tiedostopolku))))
