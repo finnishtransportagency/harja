@@ -57,7 +57,7 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn hinnoittelurivi [e! app* hinta]
+(defn hinnoittelurivi [e! hinta]
   (let [otsikko (::hinta/otsikko hinta)]
     [:tr.muu-hinnoittelu-rivi
      [:td.hinnoittelun-otsikko.muu-hinnoittelu-osio
@@ -110,6 +110,80 @@
      [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
       "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
 
+(defn- sopimushintaiset-tyot [e! app*]
+  [:tbody
+   [valiotsikkorivi "Sopimushintaiset työt" :tyot-osio]
+
+   (map-indexed
+     (fn [index tyorivi]
+       ^{:key index}
+       [:tr.tyon-hinnoittelu-rivi
+        [:td.tyot-osio.hinnoittelun-otsikko
+         ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
+         ;; TODO Kaukon muutosten pohjalta tehdään näin:
+         ;; - Päivän hinta ja omakustannushinta pois täältä.
+         ;;  Jos niitä on aiemmin kirjattu, niin näytetään muut -otsikon alla (pitäisi toimia autom. näin)
+         ;; - namespacetetaan mapit työksi, pidetään id:t tallessa
+         ;; - Kannassa tehdään normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti, koska
+         ;; tyyppi on tästä lähtien aina työtä
+         ;; - Oma sarake: yksikkö, yksikköhinta, hinta yhteensä. Edelleen vain määrää voi muokata.
+         ;; - Oma osio Muut työt, johon voi listata vapaasti hintarivejä omalla tekstillä
+         (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
+               tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record (:suunnitellut-tyot app*))
+               kaikki-valinnat (concat hintavalinnat tyovalinnat)]
+           [yleiset/livi-pudotusvalikko
+            {:valitse-fn #(ui-tiedot/valitse % e! index)
+             :format-fn #(if %
+                           (ui-tiedot/formatoi %)
+                           "Valitse työ")
+             :nayta-ryhmat [:hinta :tyo]
+             :ryhmittely #(ui-tiedot/ryhmittely %)
+             :ryhman-otsikko #(case %
+                                :hinta "Hinta"
+                                :tyo "Sopimushinnat")
+             :class "livi-alasveto-250 inline-block"
+             :valinta (first (filter #(cond (instance? ui-tiedot/TyoValinta %)
+                                            (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
+
+                                            (instance? ui-tiedot/HintaValinta %)
+                                            (= (:hinta-nimi tyorivi) (:nimi %)))
+                                     kaikki-valinnat))
+             :disabled false}
+            kaikki-valinnat])]
+        [:td.tyot-osio
+         [:span
+          [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+           (r/wrap (:maara tyorivi)
+                   (fn [uusi]
+                     (e! (tiedot/->AsetaTyorivilleTiedot
+                           {:index index
+                            :maara uusi}))))]
+          [:span " "]
+          (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
+                                                                (:toimenpidekoodi-id tyorivi))
+                hinta-nimi (:hinta-nimi tyorivi)
+                yksikko (:yksikko toimenpidekoodi)
+                yksikkohinta (:yksikkohinta toimenpidekoodi)
+                tyon-hinta-voidaan-laskea? (and yksikko yksikkohinta)]
+            (cond tyon-hinta-voidaan-laskea?
+                  [:span
+                   yksikko
+                   " (" (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
+
+                  hinta-nimi "€"
+                  :default nil))]]
+        [:td.tyot-osio]
+        [:td.tyot-osio
+         [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))]]])
+     (get-in app* [:hinnoittele-toimenpide ::h/tyot]))
+
+   [:tr.tyon-hinnoittelu-rivi
+    [:td.tyot-osio.hinnoittelun-otsikko.lisaa-rivi-solu
+     [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
+    [:td.tyot-osio]
+    [:td.tyot-osio]
+    [:td.tyot-osio]]])
+
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
@@ -133,77 +207,8 @@
        [:th {:style {:width "30%"}} "Hinta / määrä"]
        [:th {:style {:width "10%"}} "YK-lisä"]
        [:th {:style {:width "5%"}} ""]]]
+     [sopimushintaiset-tyot e! app*]
      [:tbody
-      [valiotsikkorivi "Sopimushintaiset työt" :tyot-osio]
-      (map-indexed
-        (fn [index tyorivi]
-          ^{:key index}
-          [:tr.tyon-hinnoittelu-rivi
-           [:td.tyot-osio.hinnoittelun-otsikko
-            ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
-            ;; TODO Kaukon muutosten pohjalta tehdään näin:
-            ;; - Päivän hinta ja omakustannushinta pois täältä.
-            ;;  Jos niitä on aiemmin kirjattu, niin näytetään muut -otsikon alla (pitäisi toimia autom. näin)
-            ;; - namespacetetaan mapit työksi, pidetään id:t tallessa
-            ;; - Kannassa tehdään normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti, koska
-            ;; tyyppi on tästä lähtien aina työtä
-            ;; - Oma sarake: yksikkö, yksikköhinta, hinta yhteensä. Edelleen vain määrää voi muokata.
-            ;; - Oma osio Muut työt, johon voi listata vapaasti hintarivejä omalla tekstillä
-            (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
-                  tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record suunnitellut-tyot)
-                  kaikki-valinnat (concat hintavalinnat tyovalinnat)]
-              [yleiset/livi-pudotusvalikko
-               {:valitse-fn #(ui-tiedot/valitse % e! index)
-                :format-fn #(if %
-                              (ui-tiedot/formatoi %)
-                              "Valitse työ")
-                :nayta-ryhmat [:hinta :tyo]
-                :ryhmittely #(ui-tiedot/ryhmittely %)
-                :ryhman-otsikko #(case %
-                                   :hinta "Hinta"
-                                   :tyo "Sopimushinnat")
-                :class "livi-alasveto-250 inline-block"
-                :valinta (first (filter #(cond (instance? ui-tiedot/TyoValinta %)
-                                               (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
-
-                                               (instance? ui-tiedot/HintaValinta %)
-                                               (= (:hinta-nimi tyorivi) (:nimi %)))
-                                        kaikki-valinnat))
-                :disabled false}
-               kaikki-valinnat])]
-           [:td.tyot-osio
-            [:span
-             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
-              (r/wrap (:maara tyorivi)
-                      (fn [uusi]
-                        (e! (tiedot/->AsetaTyorivilleTiedot
-                              {:index index
-                               :maara uusi}))))]
-             [:span " "]
-             (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla suunnitellut-tyot
-                                                                   (:toimenpidekoodi-id tyorivi))
-                   hinta-nimi (:hinta-nimi tyorivi)
-                   yksikko (:yksikko toimenpidekoodi)
-                   yksikkohinta (:yksikkohinta toimenpidekoodi)
-                   tyon-hinta-voidaan-laskea? (and yksikko yksikkohinta)]
-               (cond tyon-hinta-voidaan-laskea?
-                     [:span
-                      yksikko
-                      " (" (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
-
-                     hinta-nimi "€"
-                     :default nil))]]
-           [:td.tyot-osio]
-           [:td.tyot-osio
-            [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))]]])
-        tyot)
-      [:tr.tyon-hinnoittelu-rivi
-       [:td.tyot-osio.hinnoittelun-otsikko.lisaa-rivi-solu
-        [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
-       [:td.tyot-osio]
-       [:td.tyot-osio]
-       [:td.tyot-osio]]
-
       [valiotsikkorivi "Komponentit" :komponentit-osio]
       (map-indexed
         (fn [index komponentti]
@@ -229,7 +234,7 @@
       (map-indexed
         (fn [index hinta]
           ^{:key index}
-          [hinnoittelurivi e! app* hinta])
+          [hinnoittelurivi e! hinta])
         (filter
           #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
           (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))
