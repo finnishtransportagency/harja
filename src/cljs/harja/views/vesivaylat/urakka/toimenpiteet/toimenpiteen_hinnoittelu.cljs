@@ -76,8 +76,9 @@
 
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
-   [:td (str otsikko ":")]
-   [:td arvo]
+   [:td otsikko]
+   [:td]
+   [:td.tasaa-oikealle arvo]
    [:td]
    [:td]])
 
@@ -87,6 +88,27 @@
 (defn- rivinlisays [otsikko toiminto]
   [:div.rivinlisays
    [napit/uusi otsikko toiminto]])
+
+(defn- sopimushintaiset-tyot-header []
+  [:thead
+   [:tr
+    [:th {:style {:width "40%"}} "Työ"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+    [:th {:style {:width "10%"}} "Yks."]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Yhteensä"]
+    [:th {:style {:width "5%"}} ""]]])
+
+(defn- muu-hinnoittelu-header
+  ([] (muu-hinnoittelu-header true))
+  ([otsikot?]
+  [:thead
+   [:tr
+    [:th {:style {:width "45%"}} (when otsikot? "Työ")]
+    [:th {:style {:width "20%"}} (when otsikot? "Hintatyyppi")]
+    [:th {:style {:width "20%"}} (when otsikot? "Hinta yhteensä")]
+    [:th {:style {:width "10%"}} (when otsikot? "YK-lisä")]
+    [:th {:style {:width "5%"}} ""]]]))
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
@@ -100,33 +122,17 @@
         tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
         yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus
                                      (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))]
-    [:tbody
+    [:div
      [valiotsikko ""]
-     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Hinnat yhteensä" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
-     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Yleiskustannuslisät (12%) yhteensä" (fmt/euro-opt yleiskustannuslisien-osuus)]
-     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-      "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
-
-(defn- sopimushintaiset-tyot-header []
-  [:thead
-   [:tr
-    [:th {:style {:width "40%"}} "Työ"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-    [:th {:style {:width "10%"}} "Yks."]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Yhteensä"]
-    [:th {:style {:width "5%"}} ""]]])
-
-(defn- muu-hinnoittelu-header []
-  [:thead
-   [:tr
-    [:th {:style {:width "45%"}} "Työ"]
-    [:th {:style {:width "20%"}} "Hintatyyppi"]
-    [:th {:style {:width "20%"}} "Hinta yhteensä"]
-    [:th {:style {:width "10%"}} "YK-lisä"]
-    [:th {:style {:width "5%"}} ""]]])
+     [:table
+      [muu-hinnoittelu-header false]
+      [:tbody
+       [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+        "Hinnat yhteensä" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
+       [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+        "Yleiskustannuslisät (12%) yhteensä" (fmt/euro-opt yleiskustannuslisien-osuus)]
+       [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+        "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]]]))
 
 (defn- sopimushintaiset-tyot [e! app*]
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
@@ -215,7 +221,7 @@
             [:td
              (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
                   " (" (::tkomp/sarjanumero komponentti) ")")]
-            [:td]
+            [:td] ;; TODO Hintatyyppi
             [:td.tasaa-oikealle
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
@@ -253,7 +259,7 @@
    [sopimushintaiset-tyot e! app*]
    [komponentit e! app*]
    #_[muut-hinnat e! app*]
-   #_[hinnoittelun-yhteenveto app*]])
+   [hinnoittelun-yhteenveto app*]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
