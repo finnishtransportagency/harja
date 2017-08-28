@@ -428,7 +428,6 @@
   ;;            (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
   ;;                                                                            ::h/hinnat]) tiedot)))
 
-  ;; TODO Tutki voisiko tämänkin päivittää nyt vaan id:llä eikä otsikolla.
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hinnat]
