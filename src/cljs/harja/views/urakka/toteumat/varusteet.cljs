@@ -185,8 +185,6 @@
   (let [tunniste (or (:tunniste varustetoteuma)
                      (get-in varustetoteuma [:arvot :tunniste]))
         tietolaji (:tietolaji varustetoteuma)]
-    (log "--->>> valikohtainen" (pr-str (tierekisteri-varusteet/valikohtainen-tietolaji tietolaji)) )
-    (log "--->>> pistemäinen " (pr-str (tierekisteri-varusteet/pistemainen-tietolaji? tietolaji)))
     (lomake/ryhma
       "Varusteen tunnistetiedot"
       (when tunniste
