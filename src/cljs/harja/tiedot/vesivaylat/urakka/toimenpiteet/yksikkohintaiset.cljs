@@ -40,6 +40,7 @@
    ;; Riveillä ei myöskään ola id:tä, koska:
    ;; - Olisi hankalaa erotella onko kyseessä tyo/id vai hinta/id, jos tyyppiä vaihdetaan
    ;; - Payload korvaa kantaan tallennetut työt ja hinnat poistamalla vanhat ja luomalla uudet
+   ;; Rivien muokkausta hallitaan täten indekseillä
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
