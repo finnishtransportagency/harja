@@ -66,8 +66,7 @@
         [tee-kentta {:tyyppi :string}
          (r/wrap otsikko
                  (fn [uusi]
-                   ;; TODO Tue otsikon muokkausta
-                   #_(e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
+                   (e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
                                                           ::hinta/otsikko uusi}))))])]
      [:td.muu-hinnoittelu-osio [hintakentta e! hinta]]
      [:td.muu-hinnoittelu-osio [yleiskustannuslisakentta e! hinta]]

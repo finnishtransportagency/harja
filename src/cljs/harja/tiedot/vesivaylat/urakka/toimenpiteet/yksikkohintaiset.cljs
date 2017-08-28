@@ -423,12 +423,12 @@
               (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                           ::h/hinnat]) tiedot)))
 
-  ;; TODO Tee
-  ;;OtsikoiToimenpideKentta
-  ;;(process-event [{tiedot :tiedot} app]
-  ;;  (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
-  ;;            (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
-  ;;                                                                            ::h/hinnat]) tiedot)))
+  OtsikoiToimenpideKentta
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO TESTI!
+    (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
+              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                          ::h/hinnat]) tiedot)))
 
   HinnoitteleHintaryhmaKentta
   (process-event [{tiedot :tiedot} app]
