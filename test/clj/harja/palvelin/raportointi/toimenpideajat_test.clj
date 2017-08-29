@@ -122,12 +122,6 @@
       {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei}
       {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei}
       {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea}
-      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen}
-      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei}
-      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei}
-      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei}
-      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei}
-      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea}
       {:otsikko "Yht.", :tasaa :oikea, :leveys 5})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -212,12 +206,6 @@
       {:otsikko "14 - 18" :reunus :ei :tasaa :keskita}
       {:otsikko "18 - 22" :reunus :ei :tasaa :keskita}
       {:otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
-      {:otsikko "< 6" :reunus :vasen :tasaa :keskita}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :keskita}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :keskita}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :keskita}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :keskita}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
       {:otsikko "Yht." :tasaa :oikea})))
 
 (deftest raportin-suoritus-koko-maalle-toimii
@@ -253,12 +241,6 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Teh­tä­vä"}
-      {:otsikko "< 6" :reunus :vasen :tasaa :keskita}
-      {:otsikko "6 - 10" :reunus :ei :tasaa :keskita}
-      {:otsikko "10 - 14" :reunus :ei :tasaa :keskita}
-      {:otsikko "14 - 18" :reunus :ei :tasaa :keskita}
-      {:otsikko "18 - 22" :reunus :ei :tasaa :keskita}
-      {:otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
       {:otsikko "< 6" :reunus :vasen :tasaa :keskita}
       {:otsikko "6 - 10" :reunus :ei :tasaa :keskita}
       {:otsikko "10 - 14" :reunus :ei :tasaa :keskita}
