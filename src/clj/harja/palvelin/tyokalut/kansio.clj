@@ -5,7 +5,10 @@
   (let [kansio (clojure.java.io/file polku)
         tiedostot (.listFiles kansio)]
     (doseq [tiedosto tiedostot]
-      (when-not (= ".gitkeep" (.getName tiedosto)) (io/delete-file tiedosto)))))
+      (when-not (or
+                 (= ".gitkeep" (.getName tiedosto))
+                 (.isDirectory tiedosto))
+        (io/delete-file tiedosto)))))
 
 (defn luo-jos-ei-olemassa [polku]
   (let [kansio (clojure.java.io/file polku)]
