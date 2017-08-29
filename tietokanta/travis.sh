@@ -5,7 +5,7 @@
 #sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main 9.5" >> /etc/apt/sources.list.d/postgresql.list'
 #sudo apt-get update
 #sudo apt-get install postgresql-9.5
-sudo apt-get install postgresql-9.5-postgis-2.2
+sudo apt-get install postgresql-9.5-postgis-2.2 postgresql-contrib-9.5
 
 sudo /etc/init.d/postgresql restart
 
@@ -21,6 +21,7 @@ psql -c "CREATE DATABASE temp OWNER harjatest;" -U postgres
 psql -c "CREATE DATABASE harjatest_template OWNER harjatest;" -U postgres
 psql -c "CREATE EXTENSION postgis" -U postgres harjatest_template
 psql -c "CREATE EXTENSION postgis_topology" -U postgres harjatest_template
+psql -c "CREATE EXTENSION pg_trgm" -U postgres harjatest_template
 psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U postgres
 
 mvn compile -Ptravis flyway:migrate

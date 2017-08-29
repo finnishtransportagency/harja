@@ -64,6 +64,7 @@
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (to/reimari-tyoluokka-fmt (::to/tyoluokka toimenpide))
     "Toimenpide" (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
+    "Lisätyö?" (to/reimari-lisatyo-fmt (::to/reimari-lisatyo? toimenpide))
     "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
     "Henkilömäärä" (::to/reimari-henkilo-lkm toimenpide)
