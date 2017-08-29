@@ -32,7 +32,11 @@
   (try (slurp (io/resource tiedostonimi))
        (catch java.lang.IllegalArgumentException e
           (when (= (.getMessage e) "Cannot open <nil> as a Reader.")
-            (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))))
+            (log/warn (str "Tiedosto " tiedostonimi " yritettiin lukea, mutta sitä ei löytynyt"))
+            (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))
+       (catch Exception e
+         (log/warn "Tiedoston lukeminen ei onnistunut: " (.getMessage e))
+         nil)))
 
 (defn lahdetiedosto
   [tiedostopolku mapping kehitysmoodi]
@@ -73,10 +77,14 @@
   [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
   (let [source-map (when (re-find #"harja" tiedostopolku)
                     (try (-> (str tiedostopolku ".map") lue-tiedosto (SourceMapImpl.))
-                         (catch Exception e ;; Jos lue-tiedosto palauttaa virhe-ilmoituksen, SourceMapImpl heittää exceptionin. Palautetaan nil.
+                         (catch Exception e ;; Jos lue-tiedosto palauttaa virheilmoituksen, SourceMapImpl heittää exceptionin. Palautetaan nil.
+                            (log/warn "SourceMapImpl sai arvoksi nil: " (.getMessage e))
                             nil)))]
     (when-let [mapping (and source-map (.getMapping source-map rivi sarake))]
-      (lahde-tiedot mapping kehitysmoodi tiedostopolku))))
+      (try (lahde-tiedot mapping kehitysmoodi tiedostopolku)
+           (catch Exception e
+             (log/warn "Source mapin käsittely aiheutti exceptionin: " (.getMessage e))
+             nil)))))
 
 
 (defn lahdetiedoston-stack-trace
