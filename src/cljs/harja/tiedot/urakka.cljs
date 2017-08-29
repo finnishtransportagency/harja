@@ -21,18 +21,28 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn urakan-oletussopimus [urakka]
+  (let [{:keys [sopimukset paasopimus]} urakka]
+    (if paasopimus
+      [paasopimus (get sopimukset paasopimus)]
+      (first sopimukset))))
+
 (defonce valittu-sopimusnumero
   (reaction-writable
-    (let [{:keys [sopimukset paasopimus]} @nav/valittu-urakka]
-      (if paasopimus
-        [paasopimus (get sopimukset paasopimus)]
-        (first sopimukset)))))
+    (urakan-oletussopimus @nav/valittu-urakka)))
 
 (defonce urakan-yks-hint-tyot (atom nil))
 (defonce urakan-kok-hint-tyot (atom nil))
 
 (defn valitse-sopimusnumero! [sn]
   (reset! valittu-sopimusnumero sn))
+
+(defn valitse-oletussopimus-jos-valittuna-kaikki! []
+  (when (nil? (first @valittu-sopimusnumero))
+    (reset! valittu-sopimusnumero (urakan-oletussopimus @nav/valittu-urakka))))
+
+(defn valitse-sopimusnumero-kaikki! []
+  (reset! valittu-sopimusnumero [nil "Kaikki"]))
 
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)]
@@ -45,10 +55,10 @@
 
 (defonce valittu-toimenpideinstanssi
   (reaction-writable
-   (let [koodi @valitun-toimenpideinstanssin-koodi
-         toimenpideinstanssit @urakan-toimenpideinstanssit]
-     (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
-         (first toimenpideinstanssit)))))
+    (let [koodi @valitun-toimenpideinstanssin-koodi
+          toimenpideinstanssit @urakan-toimenpideinstanssit]
+      (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
+          (first toimenpideinstanssit)))))
 
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
@@ -66,23 +76,31 @@
     (reset! valittu-toimenpideinstanssi tpi)
     (valitse-toimenpideinstanssi-koodilla! koodi)))
 
+(defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
+  (mapv (fn [vuosi]
+          [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
+           (pvm/vesivaylien-hoitokauden-loppupvm (inc vuosi))])
+        (range ensimmainen-vuosi viimeinen-vuosi)))
 
-
-(defn hoitokaudet
+(defn hoito-tai-sopimuskaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
   urakan sopimuskaudet. Sopimuskaudet ovat sopimuksen kesto jaettuna sopimusvuosille (ensimmäinen
   ja viimeinen voivat olla vajaat)."
-  [ur]
-  (let [alkupvm (:alkupvm ur)
-        loppupvm (:loppupvm ur)
-        ensimmainen-vuosi (pvm/vuosi alkupvm)
+  [{:keys [alkupvm loppupvm tyyppi] :as ur}]
+  (let [ensimmainen-vuosi (pvm/vuosi alkupvm)
         viimeinen-vuosi (pvm/vuosi loppupvm)]
-    (if (= :hoito (:tyyppi ur))
+    (cond
+      (= :hoito tyyppi)
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
                (pvm/hoitokauden-loppupvm (inc vuosi))])
             (range ensimmainen-vuosi viimeinen-vuosi))
+
+      (= :vesivayla-hoito tyyppi)
+      (vesivaylien-sopimuskaudet ensimmainen-vuosi viimeinen-vuosi)
+
+      :default
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
@@ -100,14 +118,15 @@
 
 (defonce valitun-urakan-hoitokaudet
   (reaction (when-let [ur @nav/valittu-urakka]
-              (hoitokaudet ur))))
+              (log "MUODOSTA VALITUN URAKAN SOPPARIKAUDET " (:nimi ur))
+              (hoito-tai-sopimuskaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]
   (pvm/valissa? (pvm/nyt) alku loppu))
 
 (defn urakka-kaynnissa? [urakka]
   (->> urakka
-       hoitokaudet
+       hoito-tai-sopimuskaudet
        (some hoitokausi-kaynnissa?)))
 
 (defonce valittu-urakka-kaynnissa?
@@ -204,11 +223,11 @@
 
           ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
           (pvm/ennen? (pvm/nyt) (first hk))
-          (first (pvm/hoitokauden-kuukausivalit hk))
+          (first (pvm/aikavalin-kuukausivalit hk))
 
           ;; fallback on hoitokauden viimeinen kuukausi
           :default
-          (last (pvm/hoitokauden-kuukausivalit hk)))))))
+          (last (pvm/aikavalin-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
@@ -224,7 +243,7 @@
 
 (defn tulevat-hoitokaudet [ur hoitokausi]
   (drop-while #(not (pvm/sama-pvm? (second %) (second hoitokausi)))
-              (hoitokaudet ur)))
+              (hoito-tai-sopimuskaudet ur)))
 
 (defn rivit-tulevillekin-kausille [ur rivit hoitokausi]
   (into []
@@ -361,22 +380,21 @@
                               (= :muut-tyot toteuman-sivu)))
                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
-(defonce muut-tyot-hoitokaudella
+(defonce toteutuneet-muut-tyot-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                sopimus-id (first @valittu-sopimusnumero)
                aikavali @valittu-hoitokausi
                sivu (nav/valittu-valilehti :toteumat)]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-                (toteumat/hae-urakan-muut-tyot ur sopimus-id aikavali))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+      (toteumat/hae-urakan-toteutuneet-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
                aikavali @valittu-hoitokausi
-               sivu (nav/valittu-valilehti :toteumat)
-               _ @toteumat/erilliskustannukset-nakymassa?]
+               nakymassa? @toteumat/erilliskustannukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and ur aikavali (= :erilliskustannukset sivu))
+              (when (and ur aikavali nakymassa?)
                 (toteumat/hae-urakan-erilliskustannukset ur aikavali))))
 
 (defn vaihda-urakkatyyppi
@@ -421,12 +439,13 @@
 
 (def urakkatyypin-sanktiolajit
   (reaction<! [urakka @nav/valittu-urakka
-               sivu (nav/valittu-valilehti :laadunseuranta)]
-              (when (and urakka (or (= :laatupoikkeamat sivu)
-                                    (= :sanktiot sivu)))
-                (go
-                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
-                                                               :urakkatyyppi (:tyyppi urakka)}))))))
+               ls-sivu (nav/valittu-valilehti :laadunseuranta)
+               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
+              (when (and urakka (or (= :laatupoikkeamat ls-sivu)
+                                    (= :sanktiot ls-sivu)
+                                    (= :vesivayla-sanktiot vv-ls-sivu)))
+                (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
+                                                         :urakkatyyppi (:tyyppi urakka)}))))
 
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
@@ -442,3 +461,6 @@
                   (= :valaistus urakkatyyppi)))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
+
+(defn ensimmainen-hoitokausi? [urakka hoitokausi]
+  (= hoitokausi (first (hoito-tai-sopimuskaudet urakka))))

@@ -23,6 +23,7 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :tallenna-urakan-sopimustyyppi (component/using
                                                          (->Urakat)
                                                          [:http-palvelin :db])))))
@@ -30,7 +31,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -55,9 +56,7 @@
         [toka-sopimuksen-id toka-sopimuksen-sampoid] (second sopimukset)]
     (is (= (:id haettu-urakka) @oulun-alueurakan-2005-2010-id) "haetun urakan id")
     (is (= (count sopimukset) 2) "haetun urakan sopimusten määrä")
-    (is (= eka-sopimuksen-id 1) "haetun urakan sopimustesti")
     (is (= eka-sopimuksen-sampoid "8H05228/01") "haetun urakan sopimustesti")
-    (is (= toka-sopimuksen-id 3) "haetun urakan sopimustesti")
     (is (= toka-sopimuksen-sampoid "THII-12-28555") "haetun urakan sopimustesti")
     (is (= (:alkupvm haettu-urakka) (java.sql.Date. 105 9 1)) "haetun urakan alkupvm")
     (is (= (:loppupvm haettu-urakka) (pvm/aikana (pvm/->pvm "30.9.2012") 23 59 59 999)) "haetun urakan loppupvm")))
@@ -94,7 +93,7 @@
 
     ;; Luo uusi urakka
     (let [urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :tallenna-urakka +kayttaja-jvh+
+                                          :tallenna-vesivaylaurakka +kayttaja-jvh+
                                           urakka)
           urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
           eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) urakan-sopimukset-kannassa))
@@ -131,7 +130,7 @@
                                                  ::sop/paasopimus-id toka-sopimus-id
                                                  :poistettu true}])
             paivitetty-urakka-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                       :tallenna-urakka +kayttaja-jvh+
+                                                       :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                        paivitetty-urakka)
             paivitetyt-urakan-sopimukset-kannassa (q-map "SELECT * FROM sopimus WHERE urakka = " (::u/id urakka-kannassa) ";")
             paivitetty-eka-sopimus-kannassa (first (filter #(= (:id %) eka-sopimus-id) paivitetyt-urakan-sopimukset-kannassa))
@@ -168,7 +167,7 @@
     (is (s/valid? ::u/tallenna-urakka-kysely urakka) "Lähtevä kysely on validi")
 
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :tallenna-urakka +kayttaja-jvh+
+                                                :tallenna-vesivaylaurakka +kayttaja-jvh+
                                                 urakka))
         "Ei voi tallentaa urakalle kahta pääsopimusta")))
 

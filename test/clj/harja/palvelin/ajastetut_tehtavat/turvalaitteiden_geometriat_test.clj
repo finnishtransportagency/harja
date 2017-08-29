@@ -112,9 +112,9 @@
 (deftest turvalaitteiden-haku
   (with-fake-http [+testiurl+ +testivastaus+]
     (let [hae-turvalaitteet #(q "SELECT id FROM vv_turvalaite;")]
-      (is (= 5 (count (hae-turvalaitteet))) "Aluksi on vain testidatan turvalaitteet")
+      (is (= 11 (count (hae-turvalaitteet))) "Aluksi on vain testidatan turvalaitteet")
       (tg/paivita-turvalaitteet (:integraatioloki jarjestelma) (:db jarjestelma) +testiurl+)
-      (is (= 7 (count (hae-turvalaitteet))) "Päivityksen jälkeen löytyy +2 turvalaitetta")
+      (is (= 13 (count (hae-turvalaitteet))) "Päivityksen jälkeen löytyy +2 turvalaitetta")
       (is (not
             (nil?
               (ffirst (q "SELECT viimeisin_paivitys FROM geometriapaivitys WHERE nimi = 'turvalaitteet';"))))

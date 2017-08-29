@@ -1,22 +1,23 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-   [clojure.test :refer :all]
-   [taoensso.timbre :as log]
-   [harja.kyselyt.urakat :as urk-q]
-   [harja.palvelin.komponentit.todennus :as todennus]
-   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-   [harja.palvelin.komponentit.http-palvelin :as http]
-   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-   [harja.palvelin.komponentit.tietokanta :as tietokanta]
-   [harja.palvelin.komponentit.liitteet :as liitteet]
-   [com.stuartsierra.component :as component]
-   [clj-time.core :as t]
-   [clj-time.coerce :as tc]
-   [clojure.core.async :as async]
-   [clojure.spec.alpha :as s]
-   [clojure.string :as str]
-   [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]
+    [clojure.core.async :as async]
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -35,16 +36,19 @@
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
-(log/set-config! [:appenders :standard-out :min-level]
-                 (cond
-                   (or (ollaanko-jenkinsissa?)
-                       (travis?)
-                       (circleci?)
-                       (= "true" (System/getenv "NOLOG")))
-                   :fatal
+(log/merge-config!
+  {:appenders
+   {:println
+    {:min-level
+     (cond
+       (or (ollaanko-jenkinsissa?)
+           (travis?)
+           (circleci?)
+           (= "true" (System/getenv "NOLOG")))
+       :fatal
 
-                   :default
-                   :debug))
+       :default
+       :debug)}}})
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
@@ -89,7 +93,7 @@
   (tietokanta/luo-tietokanta temppitietokanta))
 
 (defn luo-liitteidenhallinta []
-  (liitteet/->Liitteet))
+  (liitteet/->Liitteet nil))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -300,6 +304,79 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
+  (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                   WHERE
+                   \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   AND id NOT IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide) LIMIT 1;"))))
+
+(defn hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla
+  ([]
+   (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla {}))
+  ([{:keys [limit] :as optiot}]
+   (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                    WHERE
+                    \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                    AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
+                    (when limit
+                      (str " LIMIT " limit))
+                    ";")))))
+
+(defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
+  ([]
+   (hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla {}))
+  ([{:keys [hintaryhma?] :as optiot}]
+   (ffirst (q (str "SELECT id FROM reimari_toimenpide
+                    WHERE
+                    \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                    AND id IN (SELECT \"toimenpide-id\"
+                               FROM vv_hinnoittelu_toimenpide AS ht
+                               INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
+                               WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
+                               AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
+                               (when (some? hintaryhma?)
+                                (str " AND hintaryhma = " hintaryhma?))
+                               ") LIMIT 1;")))))
+
+(defn hae-kiintio-id-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   vv_kiintio
+                   WHERE  nimi = '" nimi "'"))))
+
+(defn hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja
+  ([]
+   (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja {}))
+  ([{:keys [hintaryhma?] :as optiot}]
+   (ffirst (q (str "SELECT vv_hinnoittelu.id FROM vv_hinnoittelu
+                    LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
+                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                    AND vv_hinta.\"hinnoittelu-id\" IS NULL"
+                    (when (some? hintaryhma?)
+                      (str " AND hintaryhma = " hintaryhma?))
+                    " LIMIT 1")))))
+
+(defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
+  (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
+                        WHERE EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
+                                      WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
+
+(defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita []
+  (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
+                        WHERE NOT EXISTS (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide
+                                          WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
+                              AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
+
+(defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
+  (ffirst (q (str "SELECT id FROM vv_hinnoittelu
+                   WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
+                   LIMIT 1;"))))
+
+(defn hae-vanhtaan-vesivaylaurakan-hinta []
+  (ffirst (q (str "SELECT id FROM vv_hinta
+                   WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
+                   LIMIT 1;"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
@@ -353,6 +430,22 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Vantaan alueurakka 2009-2019'"))))
+
+(defn hae-reimari-toimenpide-poiujen-korjaus []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Poijujen korjausta kuten on sovittu';"))))
+
+(defn hae-kiintioon-kuuluva-reimari-toimenpide []
+  (ffirst (q (str "SELECT id
+                   FROM   reimari_toimenpide
+                   WHERE  lisatieto = 'Kiintiöön kuuluva jutska'
+                          AND \"kiintio-id\" IS NOT NULL;"))))
+
+(defn hae-kiintio-siirtyneiden-poijujen-korjaus []
+  (ffirst (q (str "SELECT id
+                   FROM   vv_kiintio
+                   WHERE  nimi = 'Siirtyneiden poijujen siirto';"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
@@ -705,6 +798,10 @@
 (def portti nil)
 (def urakka nil)
 
+(def testi-pois-kytketyt-ominaisuudet (component/using
+                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                        [:http-palvelin]))
+
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
   löytyy valmiina. Body menee suoraan system-mapin jatkoksi"
@@ -733,8 +830,11 @@
                                               [:db])
 
                            :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet)
+                                                  (liitteet/->Liitteet nil)
                                                   [:db])
+                           :pois-kytketyt-ominaisuudet (component/using
+                                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
+                                                         [:http-palvelin])
 
                            ~@omat))))
 

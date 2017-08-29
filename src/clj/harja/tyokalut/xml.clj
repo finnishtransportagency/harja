@@ -15,8 +15,9 @@
            (org.w3c.dom.ls LSResourceResolver LSInput)
            (org.xml.sax SAXParseException ErrorHandler)
            (java.text SimpleDateFormat ParseException)
-           (java.util Date)
-           (hiccup.compiler HtmlRenderer)))
+           (java.util Date TimeZone)
+           (hiccup.compiler HtmlRenderer)
+           (java.time.format DateTimeFormatter)))
 
 (defn validoi-xml
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
@@ -160,6 +161,11 @@
       (.withOffsetParsed)
       (.parseDateTime teksti)))
 
+(defn parsi-xsd-datetime-ms-aikaleimalla [teksti]
+  (-> (org.joda.time.format.ISODateTimeFormat/dateTime)
+      (.withOffsetParsed)
+      (.parseDateTime teksti)))
+
 (defn json-date-time->joda-time
   "Muuntaa JSONin date-time -formaatissa olevan stringin (esim. 2016-01-30T12:00:00.000)
   org.joda.time.DateTime -muotoon."
@@ -208,3 +214,19 @@
                    (lue-fn (z/attr xml-zipper avain))))
           {}
           attr-map))
+
+(defn datetime->gmt-0-pvm [date]
+  (when date
+    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
+      (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
+      (.format dateformat date))))
+
+(defn datetime->gmt-0-aika [date]
+  (when date
+    (let [dateformat (DateTimeFormatter/ofPattern "HH:mm:ss'Z'")]
+      (.format dateformat date))))
+
+(defn timestamp->xml-xs-date [timestamp]
+  (when timestamp
+    (let [format (SimpleDateFormat. "yyyy-MM-dd") ]
+      (.format format timestamp))))

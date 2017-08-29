@@ -17,6 +17,34 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(def hoitourakan-kokonaishintaiset
+  #{"Auraus ja sohjonpoisto"
+    "Liikennemerkkien puhdistus"
+    "Linjahiekoitus"
+    "Lumivallien madaltaminen"
+    "Pinnan tasaus"
+    "Pistehiekoitus"
+    "Sulamisveden haittojen torjunta"
+    "Suolaus"
+    "L- ja p-alueiden puhdistus"
+    "Koneellinen niitto"
+    "Koneellinen vesakonraivaus"
+    "Päällysteiden paikkaus"
+    "Sorateiden muokkaushöyläys"
+    "Sorateiden pölynsidonta"
+    "Harjaus"
+    "Sorastus"
+    "Aurausviitoitus ja kinostimet"
+    "Lumen siirto"
+    "Paannejään poisto"
+    "Puiden ja pensaiden hoito"
+    "Nurmetuksen hoito / niitto"
+    "Maastopalvelu"
+    "Muu liikenneympäristön hoito"
+    "Siltojen ja laitureiden puhdistus"
+    "Sorateiden pinnan hoito"
+    "Ei yksilöity"})
+
 (deftest urakan-haku-idlla-toimii
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
@@ -31,7 +59,8 @@
 
     (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
-      (is (= 225 (count kokonaishintaiset)))
+      (is (= hoitourakan-kokonaishintaiset
+             (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
       (is (= 55 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 

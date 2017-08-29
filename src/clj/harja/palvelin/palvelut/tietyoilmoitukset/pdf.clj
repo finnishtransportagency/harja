@@ -80,14 +80,23 @@
            sisalto))])
 
 (defn- ilmoitus-koskee [ilm]
-  (tietotaulukko
-   [(checkbox-lista [["Ensimmäinen ilmoitus työstä" true]
-                     ["Työvaihetta koskeva ilmoitus" false]]
-                    #{(nil? (::t/paatietyoilmoitus ilm))})
-    (checkbox-lista [["Korjaus/muutos aiempaan tietoon" true]
-                     ["Työn päättymisilmoitus" false]]
-                    ;; FIXME: mistä tämä päätellään
-                    #{false})]))
+  (let [muokattu? (::m/muokattu ilm)
+        valinnat #{(if muokattu?
+                     :korjaus
+                     :ensimmainen)
+                   (if (::t/paatietyoilmoitus ilm)
+                     :tyovaihe
+                     :paailmoitus)
+                   (if (pvm/ennen? (pvm/nyt) (::t/loppu ilm))
+                     :menossa
+                     :paattyy)}]
+    (tietotaulukko
+     [(checkbox-lista [["Ensimmäinen ilmoitus työstä" :ensimmainen]
+                       ["Työvaihetta koskeva ilmoitus" :tyovaihe]]
+                      valinnat)
+      (checkbox-lista [["Korjaus/muutos aiempaan tietoon" :korjaus]
+                       ["Työn päättymisilmoitus" :paattyy]]
+                      valinnat)])))
 
 (def tyotyypit ["Tienrakennus"
                 "Päällystystyö"
@@ -173,10 +182,14 @@
       (tieto "Työvaiheen pituus"
              (pituus ilm))])))
 
+(def viikonpaivan-jarjestys
+  {"maanantai" 1 "tiistai" 2 "keskiviikko" 3 "torstai" 4 "perjantai" 5
+   "lauantai" 6 "sunnuntai" 7})
+
 (defn- tyoaika [{tyoajat ::t/tyoajat}]
   [:fo:block
    (for [ta tyoajat]
-     [:fo:block (str/join ", " (::t/paivat ta)) ": "
+     [:fo:block (str/join ", " (sort-by viikonpaivan-jarjestys (::t/paivat ta))) ": "
       (str (::t/alkuaika ta)) " \u2013 " (str (::t/loppuaika ta))])])
 
 

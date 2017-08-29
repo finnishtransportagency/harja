@@ -12,7 +12,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.integraatiot.api.kasittely.tieosoitteet :as tieosoitteet]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
@@ -65,10 +67,30 @@
                                       (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus valmis-kasiteltavaksi ilmoitustiedot-json))]
     (:id muokattu-paallystysilmoitus)))
 
-(defn pura-paallystysilmoitus [data]
-  (-> (:paallystysilmoitus data)
-      (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
-      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))))
+(defn pura-paallystysilmoitus [vkm db kohteen-tienumero data]
+  (let [paallystysilmoitus (:paallystysilmoitus data)
+        alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero] kohteen-tienumero)
+                                 (:alustatoimenpiteet paallystysilmoitus))
+        alikohteet (mapv #(assoc-in (:alikohde %) [:sijainti :numero] kohteen-tienumero)
+                         (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
+        muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
+                              (assoc-in [:sijainti :numero] kohteen-tienumero)
+                              (assoc :alikohteet alikohteet))
+        karttapvm (some-> (get-in muunnettava-kohde [:sijainti :karttapvm])
+                          (parametrit/pvm-aika))
+        muunnettu-kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet
+                          vkm
+                          db
+                          kohteen-tienumero
+                          karttapvm muunnettava-kohde)
+        muunnetut-alustatoimenpiteet (tieosoitteet/muunna-alustatoimenpiteiden-tieosoitteet
+                                       vkm
+                                       db
+                                       kohteen-tienumero
+                                       karttapvm
+                                       alustatoimenpiteet)]
+    (assoc paallystysilmoitus :yllapitokohde muunnettu-kohde
+                              :alustatoimenpiteet muunnetut-alustatoimenpiteet)))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
@@ -79,22 +101,20 @@
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
-  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-        alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero) (:alikohteet paallystysilmoitus))]
-    (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
-    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
-          ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
-          paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))
+  (jdbc/with-db-transaction [db db]
+    (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
+         alikohteet (get-in paallystysilmoitus [:yllapitokohde :alikohteet])]
+     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
+     (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
+           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
+           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
+       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi)))))
 
-(defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
-  (jdbc/with-db-transaction
-    [db db]
-    (let [purettu-paallystysilmoitus (pura-paallystysilmoitus data)
-          valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
-          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde
-                                          purettu-paallystysilmoitus valmis-kasiteltavaksi)]
-      id)))
+(defn kirjaa-paallystysilmoitus [vkm db kayttaja urakka-id kohde-id data]
+  (let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
+        kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
+        purettu-paallystysilmoitus (pura-paallystysilmoitus vkm db kohteen-tienumero data)
+        valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
+        _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
+        id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde purettu-paallystysilmoitus valmis-kasiteltavaksi)]
+    id))

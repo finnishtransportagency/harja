@@ -13,6 +13,7 @@ SELECT
   urk.ytunnus              AS urakoitsija_ytunnus,
   s.nimi                   AS sopimus_nimi,
   s.id                     AS sopimus_id,
+  s.paasopimus             AS "sopimus_paasopimus-id",
   h.nimi                   AS hanke_nimi,
   h.id                     AS hanke_id,
   sl.lahetetty AS sahkelahetys_lahetetty,
@@ -26,6 +27,14 @@ FROM urakka u
   LEFT JOIN sahkelahetys sl ON sl.urakka = u.id
 WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
+
+-- name: luo-vesivaylaurakan-toimenpideinstanssi<!
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+    VALUES (:urakka_id, :nimi, (SELECT id FROM toimenpidekoodi WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
+
+-- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
+INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
+VALUES (:toimenpideinstanssi_id, :vaylatyyppi::vv_vaylatyyppi);
 
 -- name: hae-lahimmat-urakat-aikavalilta
 SELECT
@@ -162,6 +171,21 @@ WHERE hallintayksikko = :hallintayksikko
                 'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
                OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = urk.id)));
+
+-- name: hae-urakkatiedot-laskutusyhteenvetoon
+-- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat
+SELECT id,
+       nimi,
+       indeksi
+  FROM urakka u
+ WHERE :urakkaid::INTEGER IS NULL AND
+       u.hallintayksikko = :hallintayksikkoid AND
+       u.tyyppi = 'hoito' AND
+       (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
+        u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
+       u.urakkanro IS NOT NULL
+       OR
+       u.id = :urakkaid::INTEGER;
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
@@ -344,9 +368,9 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 -- name: luo-urakka<!
 -- Luo uuden urakan.
 INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko,
-                    sopimustyyppi, urakkanro)
+                    sopimustyyppi, urakkanro, urakoitsija)
 VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
-        :sopimustyyppi :: sopimustyyppi, :urakkanumero);
+        :sopimustyyppi :: sopimustyyppi, :urakkanumero, :urakoitsijaid );
 
 -- name: luo-harjassa-luotu-urakka<!
 INSERT INTO urakka (nimi, urakkanro, alkupvm, loppupvm, alue, hallintayksikko, urakoitsija, hanke, tyyppi,
@@ -366,7 +390,9 @@ SET nimi          = :nimi,
   hallintayksikko = :hallintayksikko,
 
   sopimustyyppi   = :sopimustyyppi :: SOPIMUSTYYPPI,
-  urakkanro       = :urakkanro
+  urakkanro       = :urakkanro,
+  urakoitsija     = :urakoitsija
+
 WHERE id = :id;
 
 -- name: paivita-harjassa-luotu-urakka<!
@@ -813,3 +839,8 @@ WHERE
 -- name: urakan-paasopimus-id
 -- single?: true
 SELECT id FROM sopimus WHERE urakka = :urakka AND paasopimus IS NULL
+
+-- name: paivita-alue-urakalle!
+UPDATE urakka
+SET alue = ST_GeomFromText(:alue) :: GEOMETRY
+WHERE urakka.urakkanro = :urakkanro;

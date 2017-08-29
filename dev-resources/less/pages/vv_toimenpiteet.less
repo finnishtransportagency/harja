@@ -1,0 +1,104 @@
+.vv-toimenpiteen-hinnoittelutiedot {
+  cursor: auto;
+  min-width: 620px;
+  min-height: 100px;
+
+  .vv-toimenpiteen-hinnoittelutiedot-grid {
+    table {
+      border: none;
+    }
+
+    thead {
+      background-color: transparent;
+      border: none;
+    }
+
+    th {
+      background-color: transparent;
+      border: none;
+      font-weight: 100;
+    }
+
+    tr {
+      border: none;
+    }
+
+    td {
+      border: none;
+      padding: 0;
+    }
+
+    .tyon-hinnoittelu-rivi input {
+      width: 30% !important;
+    }
+
+    .muu-hinnoittelu-rivi input {
+      width: 60% !important;
+    }
+
+    .hinnoittelun-yhteenveto-rivi td:first-child {
+      font-weight: bold;
+    }
+
+    .otsikkorivi > td {
+      text-transform: uppercase;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+
+    .tyot-osio {
+      background-color: @harmaa12;
+    }
+
+    .tyon-otsikko {
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    .lisaa-tyorivi-solu {
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+  }
+
+  .vv-toimenpiteen-hinnoittelu-footer {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+  }
+}
+
+.toimenpiteet-listaus-footer {
+  margin-top: 5px;
+  padding: 5px;
+
+  .vv-hintaryhman-hinnoittelu-wrapper {
+    text-align: right;
+
+    .vv-hintaryhman-hinnoittelu {
+      display: inline-block;
+      position: relative;
+      right: 10%;
+
+      > * {
+        text-align: left;
+      }
+    }
+  }
+}
+
+.vv-toimenpideryhma {
+  margin-bottom: 2.5em;
+}
+
+.vv-toimenpideryhma-sisalto {
+  border: 1px solid @harmaa7;
+}
+
+.vv-hintaryhma-korostus-nappi {
+  margin-bottom: 6px;
+}
+
+.vv-hintaryhman-otsikko {
+  display: inline;
+}

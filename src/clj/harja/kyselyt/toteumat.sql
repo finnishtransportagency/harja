@@ -41,6 +41,8 @@ SELECT
   t.suorittajan_ytunnus AS suorittaja_ytunnus,
   t.lisatieto,
   t.luoja               AS luojaid,
+  ST_Length(t.reitti)   AS pituus,
+
   o.nimi                AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma         AS jarjestelmanlisaama,
@@ -54,13 +56,19 @@ SELECT
   tt.id                 AS "tehtava_tehtava-id",
   tpk.id                AS "tehtava_tpk-id",
   tpk.nimi              AS tehtava_nimi,
-  tt.maara              AS tehtava_maara
+  tpk.yksikko           AS tehtava_yksikko,
+  tt.maara              AS tehtava_maara,
+  tpi.id                AS tehtava_toimenpideinstanssi_id,
+  tpi.nimi              AS tehtava_toimenpideinstanssi_nimi
 
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
   JOIN toteuma_tehtava tt ON (tt.toteuma = t.id AND tt.poistettu IS NOT TRUE)
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN toimenpidekoodi emo ON tpk.emo = emo.id
+  LEFT JOIN toimenpideinstanssi tpi ON emo.id = tpi.toimenpide
+                                       AND tpi.urakka = t.urakka
 WHERE
   t.urakka = :urakka
   AND t.id = :toteuma
@@ -201,6 +209,7 @@ FROM toteuma_tehtava tt
 -- name: listaa-urakan-hoitokauden-toteumat-muut-tyot
 -- Hakee urakan muutos-, lisä- ja äkilliset hoitotyötoteumat
 SELECT
+  tt.id, -- Jotta "sarakkeet vektoriin" toimii oikein
   tt.id              AS tehtava_id,
   tt.toteuma         AS toteuma_id,
   tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
@@ -219,8 +228,11 @@ SELECT
   tr_loppuetaisyys,
   tr_loppuosa,
   reitti,
-
-
+  l.id   as liite_id,
+  l.nimi as liite_nimi,
+  l.tyyppi as liite_tyyppi,
+  l.koko as liite_koko,
+  l.liite_oid as liite_oid,
   tpk.emo            AS tehtava_emo,
   tpk.nimi           AS tehtava_nimi,
   o.nimi             AS organisaatio,
@@ -240,6 +252,8 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN toteuma_liite tl ON tl.toteuma = t.id
+  LEFT JOIN liite l ON l.id = tl.liite
   LEFT JOIN organisaatio o ON o.id = k.organisaatio;
 
 -- name: hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
@@ -279,7 +293,7 @@ FROM toteuma_tehtava tt
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
--- name: paivita-toteuma!
+-- name: paivita-toteuma<!
 UPDATE toteuma
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
@@ -546,6 +560,32 @@ VALUES (:tunniste,
   :tr_ajorata,
   :sijainti);
 
+
+-- name: paivita-varustetoteuma!
+-- Päivittää annetun varustetoteuman
+UPDATE varustetoteuma
+SET
+  tunniste                = :tunniste,
+  toteuma                 = :toteuma,
+  toimenpide              = :toimenpide :: VARUSTETOTEUMA_TYYPPI,
+  tietolaji               = :tietolaji,
+  arvot                   = :arvot,
+  karttapvm               = :karttapvm,
+  alkupvm                 = :alkupvm,
+  loppupvm                = :loppupvm,
+  piiri                   = :piiri,
+  kuntoluokka             = :kuntoluokka,
+  tierekisteriurakkakoodi = :tierekisteriurakkakoodi,
+  tr_numero               = :tr_numero,
+  tr_alkuosa              = :tr_alkuosa,
+  tr_alkuetaisyys         = :tr_alkuetaisyys,
+  tr_loppuosa             = :tr_loppuosa,
+  tr_loppuetaisyys        = :tr_loppuetaisyys,
+  tr_puoli                = :tr_puoli,
+  tr_ajorata              = :tr_ajorata,
+  sijainti                = :sijainti
+WHERE id = :id;
+
 -- name: poista-toteuman-varustetiedot!
 DELETE FROM varustetoteuma
 WHERE toteuma = :id;
@@ -780,11 +820,15 @@ SELECT
   alkupvm,
   loppupvm,
   lahetetty,
-  tila
+  lahetysvirhe,
+  tila,
+  k.etunimi           AS "luojan-etunimi",
+  k.sukunimi          AS "luojan-sukunimi"
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  left join kayttaja k on vt.luoja = k.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND alkanut >= :alkupvm
@@ -929,7 +973,7 @@ SELECT id,
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
-SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila, lahetysvirhe = :lahetysvirhe
 WHERE id = :id;
 
 -- name: hae-epaonnistuneet-varustetoteuman-lahetykset
@@ -943,20 +987,36 @@ SELECT
 FROM
   (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
 
--- name: siirry-kokonaishintainen-toteuma
--- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
+-- name: siirry-toteuma
+-- Palauttaa tiedot, joita tarvitaan frontilla toteumaan siirtymiseen ja
 -- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu
 SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko-id",
+       t.tyyppi,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
        tpk3.koodi AS tehtava_toimenpideinstanssi,
        hk.alkupvm AS aikavali_alku,
        hk.loppupvm AS aikavali_loppu
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
-       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       LEFT JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
  WHERE t.id = :toteuma-id
    AND (:tarkista-urakka? = FALSE
-        OR u.urakoitsija = :urakoitsija-id)
+        OR u.urakoitsija = :urakoitsija-id);
+
+-- name: tallenna-liite-toteumalle<!
+INSERT INTO toteuma_liite (toteuma, liite) VALUES (:toteuma, :liite);
+
+-- name: hae-toteuman-liitteet
+SELECT
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
+FROM liite l
+  JOIN toteuma_liite tl ON l.id = tl.liite
+WHERE tl.toteuma = :toteumaid
+ORDER BY l.luotu ASC;

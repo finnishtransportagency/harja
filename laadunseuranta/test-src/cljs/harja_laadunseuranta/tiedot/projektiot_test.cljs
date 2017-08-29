@@ -1,12 +1,13 @@
 (ns ^:figwheel-load harja-laadunseuranta.tiedot.projektiot-test
   (:require [cljs.test :as t :refer-macros [deftest is testing run-tests]]
+            [harja.geo :as geo]
             [harja-laadunseuranta.tiedot.projektiot :as p]))
 
 (enable-console-print!)
 
 (deftest test-coordinate-conversion
   (testing "koordinaattien järjestys ja mittakaava oikein"
-    (is (= [405698.9876087785 7209946.446847636] (js->clj (p/wgs84->etrsfin [25 65]))))))
+    (is (= [405698.9876087785 7209946.446847636] (js->clj (geo/wgs84->etrsfin [25 65]))))))
 
 (deftest testaa-tilegridin-luonti
   (testing "tilegrid luodaan oikein"

@@ -4,21 +4,35 @@
             [harja.id :as id]))
 
 (def ^{:doc "Perus muokkaustiedot, jotka ovat yleiset kaikille käyttäville tauluille"}
-  muokkaustiedot
+muokkaustiedot
   {"luoja" ::luoja-id
    "luotu" ::luotu
    "muokkaaja" ::muokkaaja-id
    "muokattu" ::muokattu})
 
 (def ^{:doc "poistettu boolean flag sarake"}
-  poistettu?-sarake
+poistettu?-sarake
   {"poistettu" ::poistettu?})
 
 (def ^{:doc "poistajan tunniste (käyttäjä id)"}
-  poistaja-sarake
+poistaja-sarake
   {"poistaja" ::poistaja-id})
 
+(def muokkaus-ja-poistotiedot
+  {"luoja" ::luoja-id
+   "luotu" ::luotu
+   "muokkaaja" ::muokkaaja-id
+   "muokattu" ::muokattu
+   "poistettu" ::poistettu?
+   "poistaja" ::poistaja-id})
 
+(def muokkauskentat
+  #{::muokattu
+    ::muokkaaja-id
+    ::luotu
+    ::luoja-id
+    ::poistettu?
+    ::poistaja-id})
 
 (defn lisaa-muokkaustiedot [x id-kentta user]
   (if-not (id/id-olemassa? (get x id-kentta))
@@ -33,3 +47,7 @@
         (assoc ::muokkaaja-id (:id user)
                ::muokattu (pvm/nyt))
         (dissoc ::luoja-id ::luotu))))
+
+(defn poistotiedot [user]
+  {::poistettu? true
+   ::poistaja-id (:id user)})

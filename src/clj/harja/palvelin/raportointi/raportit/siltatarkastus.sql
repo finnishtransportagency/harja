@@ -186,7 +186,7 @@ SELECT
 FROM urakka u
   WHERE u.hallintayksikko = :hallintayksikko AND u.tyyppi = 'hoito'
   AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
-ORDER BY u.nimi
+ORDER BY u.nimi;
 
 -- name: hae-koko-maan-siltatarkastukset
 -- Hakee koko maan siltatarkastukset ELYittäin valitulta vuodelta
@@ -246,4 +246,25 @@ SELECT
                                       AND st.poistettu = FALSE)) AS "d"
 FROM organisaatio h
   WHERE tyyppi = 'hallintayksikko'
+  AND elynumero IS NOT NULL
 ORDER BY h.elynumero;
+
+-- name: hae-urakan-tarkastettujen-siltojen-lkm
+SELECT
+  (SELECT COUNT(*)
+   FROM silta s
+   WHERE s.id IN (SELECT silta
+                  FROM sillat_alueurakoittain
+                  WHERE urakka = :urakka)) AS "sillat-lkm",
+
+  (SELECT COUNT(*)
+   FROM silta s
+   WHERE s.id IN (SELECT silta
+                  FROM sillat_alueurakoittain
+                  WHERE urakka = :urakka)
+         AND EXISTS(SELECT tarkastusaika
+                    FROM siltatarkastus st
+                    WHERE st.silta = s.id
+                          AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                          AND st.poistettu = FALSE
+                    LIMIT 1))              AS "tarkastukset-lkm"

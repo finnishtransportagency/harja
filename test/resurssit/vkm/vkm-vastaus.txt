@@ -1,0 +1,1 @@
+{"tieosoitteet": [{"ajorata": 1,"palautusarvo": 1,"osa": 1,"etaisyys": 1,"tie": 20,"tunniste": "[KOHDEID]-alku"},{"ajorata": 1,"palautusarvo": 1,"osa": 4,"etaisyys": 100,"tie": 20,"tunniste": "[KOHDEID]-loppu"}]}

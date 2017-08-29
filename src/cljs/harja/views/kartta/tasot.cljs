@@ -22,14 +22,16 @@
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka.paikkaus :as paikkaus]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.tierekisteri :as tierekisteri]
+            [harja.tiedot.sijaintivalitsin :as sijaintivalitsin]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -46,16 +48,20 @@
     :yks-hint-toteumat
     :kok-hint-toteumat
     :varusteet
+    :varustetoteumat
     :muut-tyot
     :paallystyskohteet
     :paikkauskohteet
     :tr-valitsin
+    :sijaintivalitsin
     :nakyman-geometriat
     :infopaneelin-merkki
     :tilannekuva
     :tilannekuva-organisaatiot
     :tienakyma-valitut
-    :tienakyma-muut})
+    :tienakyma-muut
+    :kokonaishintaisten-turvalaitteet
+    :yksikkohintaisten-turvalaitteet})
 
 (def
   ^{:doc
@@ -65,7 +71,8 @@
   #{:organisaatio
     :nakyman-geometriat
     :infopaneelin-merkki
-    :tr-valitsin})
+    :tr-valitsin
+    :sijaintivalitsin})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -74,7 +81,10 @@
     :pohjavesialueet 2
     :sillat 3
     :tienakyma-muut 3
-    4))
+    :tilannekuva-paallystys 3
+    :tilannekuva-paikkaus 3
+    :tilannekuva-tietyomaat 4
+    5))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
   piirretään pienemmällä zindexillä." :const true}
@@ -102,6 +112,11 @@
                                :pohjavesialueet (kartan-asioiden-z-indeksit :pohjavesialueet)
                                :sillat (kartan-asioiden-z-indeksit :sillat)
                                oletus-zindex))))))
+
+(def urakkarajan-selite
+  {:teksti "Urakkaraja",
+   :vari ["rgb(0, 0, 0)" "rgb(255, 255, 255)" "rgb(255, 255, 255)"]})
+
 
 (defn- urakat-ja-organisaatiot-kartalla*
   [hals v-hal v-ur sivu valilehti urakat-kartalla]
@@ -148,15 +163,23 @@
 
 (def urakat-ja-organisaatiot-kartalla
   (reaction
-   (into []
-         (keep organisaation-geometria)
-         (urakat-ja-organisaatiot-kartalla*
-           @hal/hallintayksikot
-           @nav/valittu-hallintayksikko
-           @nav/valittu-urakka
-           @nav/valittu-sivu
-           (nav/valittu-valilehti @nav/valittu-sivu)
-           @nav/urakat-kartalla))))
+    (with-meta
+      (into []
+           (keep organisaation-geometria)
+           (urakat-ja-organisaatiot-kartalla*
+             @hal/vaylamuodon-hallintayksikot
+             @nav/valittu-hallintayksikko
+             @nav/valittu-urakka
+             @nav/valittu-sivu
+             (nav/valittu-valilehti @nav/valittu-sivu)
+             @nav/urakat-kartalla))
+      ;; koska HAR-5117 Tilannekuva: Selite mustille urakkarajoille
+      {:selitteet
+       (if (and
+             (= :tilannekuva @nav/valittu-sivu)
+             @nav/tilannekuvassa-alueita-valittu?)
+         #{urakkarajan-selite}
+         #{})})))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
@@ -193,12 +216,15 @@
    :paallystyskohteet paallystys/paallystyskohteet-kartalla
    :paikkauskohteet paikkaus/paikkauskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
+   :sijaintivalitsin sijaintivalitsin/sijainti-kartalla
    :nakyman-geometriat nakyman-geometriat
    :infopaneelin-merkki infopaneelin-merkki
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
    :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
-   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla})
+   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
+   :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
+   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -253,8 +279,11 @@
        :paallystyskohteet (taso :paallystyskohteet)
        :paikkauskohteet (taso :paikkauskohteet)
        :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+       :sijaintivalitsin (taso :sijaintivalitsin (inc oletus-zindex))
        :tienakyma-valitut (taso :tienakyma-valitut)
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
+       :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
+       :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -265,7 +294,7 @@
      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
-                     {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
+                     {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
                    @(geometrioiden-atomit :tilannekuva)))))))
 
 (def ^{:private true} tasojen-nakyvyys-atomit
@@ -284,10 +313,13 @@
    :paallystyskohteet paallystys/karttataso-paallystyskohteet
    :paikkauskohteet paikkaus/karttataso-paikkauskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
+   :sijaintivalitsin sijaintivalitsin/karttataso-sijainti
    :tilannekuva tilannekuva/karttataso-tilannekuva
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
    :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
+   :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
+   :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

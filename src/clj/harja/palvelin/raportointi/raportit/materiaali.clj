@@ -9,7 +9,8 @@
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.tyokalut.merkkijono :as merkkijono]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -33,7 +34,7 @@
                                (assoc materiaalitoteuma :kokonaismaara 0)
                                materiaalitoteuma))
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
-    lopullinen-tulos))
+    (sort-by :elynumero lopullinen-tulos)))
 
 (defn muodosta-materiaaliraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
   (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
@@ -105,15 +106,19 @@
         toteumat-urakan-mukaan (when (not= konteksti :koko-maa)
                                  (group-by :urakka-nimi toteumat))
         toteumat-elyn-mukaan (when (= konteksti :koko-maa)
-                               (group-by :hallintayksikko-nimi toteumat))]
-
+                               (map
+                                 (fn [ely]
+                                   (let [elyn-toteumat (filter #(= ely (:elynumero %)) toteumat)]
+                                     (vector (:hallintayksikko-nimi (first elyn-toteumat))
+                                             elyn-toteumat)))
+                                 (sort (distinct (map :elynumero toteumat)))))]
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi raportin-nimi}
       (into []
             (concat
-              [{:otsikko "Urakka"}]
+              [{:otsikko (if (= konteksti :koko-maa) "Hallintayksikkö" "Urakka")}]
               (map (fn [mat]
                      {:otsikko mat :fmt :numero})
                    materiaaliotsikot)))

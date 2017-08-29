@@ -14,8 +14,8 @@
 
 (def +tarkastustyyppi->nimi+ tarkastukset/+tarkastustyyppi->nimi+)
 
-(defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
-(defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+(defonce tienumero (atom nil)) ;; tienumero, tai kaikki
+(defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
 
 (def +naytettevat-tarkastukset-valinnat+
   [[nil "Kaikki"]
@@ -35,19 +35,27 @@
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy laatupoikkeamat sekä niiden reklamaatiot."
   [urakka-id tarkastus-id]
-  (k/post! :hae-tarkastus {:urakka-id    urakka-id
+  (k/post! :hae-tarkastus {:urakka-id urakka-id
                            :tarkastus-id tarkastus-id}))
 
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."
   [urakka-id tarkastus nakyma]
   (k/post! :tallenna-tarkastus {:urakka-id urakka-id
-                                :tarkastus (as-> tarkastus t
-                                                 (if-not (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
-                                                   (dissoc t :yllapitokohde)
-                                                   (if (integer? (:yllapitokohde t))
-                                                     t
-                                                     (assoc t :yllapitokohde (get-in t [:yllapitokohde :id])))))}))
+                                :tarkastus (let
+                                             [yllapitourakka? (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])]
+                                             (cond-> tarkastus
+                                                     ;; jos ei ole ylläpidon urakka, poistetaan ylläpitokohteen viitatus
+                                                     (not yllapitourakka?)
+                                                     (dissoc :yllapitokohde)
+
+                                                     ;; jos kyseessä on ylläpidon urakka, lisätään ylläpitokohde ja
+                                                     ;; katselmuksille aina oikeus urakoitsijalle nähdä ne
+                                                     yllapitourakka?
+                                                     (assoc :yllapitokohde (or (:yllapitokohde tarkastus)
+                                                                               (get-in tarkastus [:yllapitokohde :id]))
+                                                            :nayta-urakoitsijalle (or (= (:tyyppi tarkastus) :katselmus)
+                                                                                      (:nayta-urakoitsijalle tarkastus)))))}))
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
@@ -63,10 +71,10 @@
                              havaintoja-sisaltavat? vain-laadunalitukset?]
   (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
     {:urakka-id urakka-id
-     :alkupvm   alkupvm
-     :loppupvm  loppupvm
+     :alkupvm alkupvm
+     :loppupvm loppupvm
      :tienumero tienumero
-     :tyyppi    tyyppi
+     :tyyppi tyyppi
      :havaintoja-sisaltavat? havaintoja-sisaltavat?
      :vain-laadunalitukset? vain-laadunalitukset?}))
 
@@ -125,6 +133,6 @@
     (if (nil? (:laatupoikkeamaid tarkastus))
       (assoc tarkastus
         :laatupoikkeamaid (<! (k/post! :lisaa-tarkastukselle-laatupoikkeama
-                                        {:urakka-id (:id @nav/valittu-urakka)
-                                         :tarkastus-id (:id tarkastus)})))
+                                       {:urakka-id (:id @nav/valittu-urakka)
+                                        :tarkastus-id (:id tarkastus)})))
       tarkastus)))

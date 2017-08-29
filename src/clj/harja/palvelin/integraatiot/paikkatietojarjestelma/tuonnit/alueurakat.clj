@@ -1,8 +1,6 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.alueurakat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.periodic :refer [periodic-seq]]
-            [chime :refer [chime-at]]
             [harja.kyselyt.urakat :as u]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
@@ -12,7 +10,8 @@
         piirinumero (int (:piirinro urakka))]
     (if (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))
       (u/paivita-alueurakka! db geometria piirinumero urakkanumero)
-      (u/luo-alueurakka<! db urakkanumero geometria piirinumero))))
+      (u/luo-alueurakka<! db urakkanumero geometria piirinumero))
+    (u/paivita-alue-urakalle! db geometria urakkanumero)))
 
 (defn vie-urakka-entry [db urakka]
   (if (:the_geom urakka)

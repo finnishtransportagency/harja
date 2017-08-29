@@ -19,7 +19,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -60,9 +61,10 @@
 
       "Erilliskustannukset" :erilliskustannukset
       (when (oikeudet/urakat-toteumat-erilliskustannukset id)
-        [erilliskustannukset/erilliskustannusten-toteumat])
+        [erilliskustannukset/erilliskustannusten-toteumat ur])
 
       "Varusteet" :varusteet
-      (when (and (oikeudet/urakat-toteumat-varusteet id)
+      (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+                 (oikeudet/urakat-toteumat-varusteet id)
                  (= :hoito (:tyyppi ur)))
         [varusteet/varusteet])])))

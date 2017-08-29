@@ -82,11 +82,13 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn- validoi-vastaus [spec data]
+(defn- validoi-vastaus! [spec data]
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
-      (log/error (s/explain-str spec data)))))
+      (let [selitys (s/explain-str spec data)
+            rajattu (subs selitys 0 (min (count selitys) 10000))]
+        (log/error "spec" spec "ei salli vastausta" rajattu)))))
 
 (defn- transit-post-kasittelija
   "Luo transit-käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -123,11 +125,11 @@
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                       (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
+                       (validoi-vastaus! (:vastaus-spec optiot) (:vastaus vastaus))
                        (http/send! channel vastaus)
                        (http/close channel))))
                  (do
-                   (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
+                   (validoi-vastaus! (:vastaus-spec optiot) palvelu-vastaus)
                    (transit-vastaus palvelu-vastaus))))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
@@ -156,6 +158,7 @@
                    (not (.after last-modified if-modified-since)))
             {:status 304}
             (let [vastaus (palvelu-fn (:kayttaja req))]
+              (validoi-vastaus! (:vastaus-spec optiot) vastaus)
               {:status  200
                :headers (merge {"Content-Type" "application/transit+json"}
                                (if last-modified
@@ -341,6 +344,7 @@
           (when-let [liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
             (log/fatal "Palvelufunktiolla on oltava 1 parametri (GET: user) tai 2 parametria (POST: user payload), oli: "
                        liikaa-parametreja
+                       ", nimi: " nimi
                        ", palvelufunktio: " palvelu-fn))
           (when (ar 2)
             ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla

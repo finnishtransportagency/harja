@@ -44,16 +44,23 @@
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
-    :turvalaitteiden-geometriahaku :mobiili-laadunseuranta
+    :turvalaitteiden-geometriahaku
+    :vaylien-geometriahaku
+    :mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
     :urakan-tyotuntimuistutukset
     :hankkeet
     :urakan-tyotunnit
-    :vv-yksikkohintaiset
-    :vv-kokonaishintaiset
+    :vv-toimenpiteet
     :vv-vaylat
-    :reimari})
+    :vv-kiintiot
+    :vv-hinnoittelut
+    :vv-materiaalit
+    :reimari
+    :vkm
+    :vv-turvalaitteet
+    :hairioilmoitukset})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
@@ -62,3 +69,6 @@
       (is (komponentit k) (str "Haluttu komponentti avaimella " k " puuttuu!")))
     (doseq [k komponentit]
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
+
+#_(deftest restart-toimii
+  (is (= :ok (sut/dev-restart))))

@@ -135,7 +135,7 @@
                            [nil]
                            (cond
                              hk
-                             (pvm/hoitokauden-kuukausivalit hk)
+                             (pvm/aikavalin-kuukausivalit hk)
 
                              vuosi
                              (pvm/vuoden-kuukausivalit vuosi)
@@ -235,7 +235,7 @@
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
-           (u/hoitokaudet ur)
+           (u/hoito-tai-sopimuskaudet ur)
            (u/edelliset-hoitokaudet 5 true))
          valittu-hoitokausi
          #(do
@@ -322,7 +322,7 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset (:id urakka))]
                                  (when (and urakka nakymassa? oikeus?)
                                   (k/post! :hae-urakan-sillat
                                            {:urakka-id (:id urakka)
@@ -341,8 +341,8 @@
                                                  :kaikki
                                                  (:id %))}))
       :format-fn #(case %
-                   :kaikki "Kaikki"
-                   (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
+                    :kaikki (if (empty? @urakan-sillat) "Ei siltoja" "Kaikki")
+                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
      (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
 
@@ -627,7 +627,7 @@
     (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
               [nil]
               [])
-            @hy/hallintayksikot)]
+            @hy/vaylamuodon-hallintayksikot)]
    " "
    [yleiset/livi-pudotusvalikko
     {:valitse-fn nav/vaihda-urakkatyyppi!
@@ -636,8 +636,10 @@
      :format-fn :nimi}
     nav/+urakkatyypit+]])
 
-(defn ei-raportteja-saatavilla-viesti [urakkatyyppi]
-  (if (and (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)) (nil? @nav/valittu-urakka))
+(defn ei-raportteja-saatavilla-viesti [urakkatyyppi valittu-urakka]
+  (if (and (nil? valittu-urakka)
+           (or (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?))
+               (= urakkatyyppi "vesiväylät")))              ;Vesiväylissä raportteja toistaiseksi vain urakkatasolla
     (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
@@ -692,7 +694,7 @@
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
                           (empty? @mahdolliset-raporttityypit)
-                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))]
+                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi

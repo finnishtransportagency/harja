@@ -3,9 +3,7 @@
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
-    #?(:cljs [harja.loki :refer [log]]
-       :clj
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
             [clojure.string :as str]))
 
 (def Kasittelytapa (s/enum :tyomaakokous :puhelin :kommentit :muu))
@@ -90,17 +88,12 @@
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
-(defn tarkastus-tiedolla-onko-ok
-  "Tämä kertoo onko laadunalitus"
-  [{laadunalitus :laadunalitus :as tarkastus}]
-  (assoc tarkastus :ok? (not laadunalitus)))
-
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))
 
 (defn validi-laatupoikkeama? [data]
   (let [virheet (validoi-laatupoikkeama data)]
-    #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
+    (log/debug "laatupoikkeama virheet: " (pr-str virheet))
     (nil? virheet)))
 
 (def talvihoitomittauksen-lomakekentat

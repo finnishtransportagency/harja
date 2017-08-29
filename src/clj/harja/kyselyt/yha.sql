@@ -119,12 +119,13 @@ VALUES (
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))),
+  (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+   FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                          CAST(:tr_alkuosa AS INTEGER),
+                                          CAST(:tr_alkuetaisyys AS INTEGER),
+                                          CAST(:tr_loppuosa AS INTEGER),
+                                          CAST(:tr_loppuetaisyys AS INTEGER),
+					  CAST(:tr_ajorata AS INTEGER))),
   :yhaid);
 
 -- name: hae-urakan-yha-id

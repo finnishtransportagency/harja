@@ -45,7 +45,7 @@
                                             [:sonja :db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
                         :yllapitokohteet (component/using
-                                           (yllapitokohteet/->Yllapitokohteet)
+                                           (yllapitokohteet/->Yllapitokohteet {})
                                            [:http-palvelin :db :fim :sonja-sahkoposti])))))
 
   (testit)
@@ -415,8 +415,8 @@
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-ennen-testia))
-             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?) kohteet-testin-jalkeen)))))))
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
@@ -445,7 +445,6 @@
                                                                :sopimus-id sopimus-id
                                                                :yllapitokohde-id yllapitokohde-id})
             urakan-geometria-muutoksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
-        (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (every? :sijainti kohdeosat-kannassa) "Geometria muodostettiin")
         (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
@@ -640,9 +639,9 @@
                                :sopimus-id sopimus-id
                                :vuosi vuosi
                                :kohteet kohteet})]
-        ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
+        ;; Maili lähtee, koska kopio itselle
         (<!! (timeout 5000))
-        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+        (is (true? @sahkoposti-valitetty) "Maili lähtee, koska kopio itselle")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -820,6 +819,67 @@
         (is (some? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-testin-jalkeen)))
         (is (some? (:valmis-tiemerkintaan oulaisten-ohitusramppi-testin-jalkeen)))))))
 
+(deftest tiemerkintavalmiuden-peruminen-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
+        vuosi 2017]
+
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+
+      ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
+      (let [tiemerkintapvm nil                              ; Tämä tarkoittaa että valmius perutaan
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-yllapitokohteiden-aikataulu
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :sopimus-id sopimus-id
+                               :vuosi vuosi
+                               :kohteet [{:id leppajarven-ramppi-id
+                                          :nimi "Leppäjärven ramppi"
+                                          :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
+                                          :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                                          :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
+            ;; Merkitään kohde valmiiksi tiemerkintään
+            aikataulu-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                                   {:urakka-id urakka-id
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi})
+            leppajarven-ramppi-ennen-testia (kohde-nimella aikataulu-ennen-testia "Leppäjärven ramppi")
+            muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu-ennen-testia))
+            vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
+                                                           {:tiemerkintapvm tiemerkintapvm
+                                                            :kohde-id leppajarven-ramppi-id
+                                                            :urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :vuosi vuosi})
+            leppajarven-ramppi-testin-jalkeen (kohde-nimella vastaus-kun-merkittu-valmiiksi "Leppäjärven ramppi")
+            muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Leppäjärven ramppi") vastaus-kun-merkittu-valmiiksi))]
+
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+
+        ;; Valmiiksi merkitsemisen jälkeen tilanne on sama kuin ennen merkintää, sillä erotuksella, että
+        ;; valittu kohde merkittiin valmiiksi tiemerkintään
+        (is (= muut-kohteet-ennen-testia muut-kohteet-testin-jalkeen))
+        (is (= (dissoc leppajarven-ramppi-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)
+               (dissoc leppajarven-ramppi-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)))
+        (is (some? (:valmis-tiemerkintaan leppajarven-ramppi-ennen-testia)))
+        (is (nil? (:aikataulu-tiemerkinta-takaraja leppajarven-ramppi-testin-jalkeen)))
+        (is (nil? (:valmis-tiemerkintaan leppajarven-ramppi-testin-jalkeen)))))))
+
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
@@ -899,3 +959,82 @@
           sakot-ja-bonukset-maara (reduce + 0 (keep :sakot-ja-bonukset kohteet-kannassa))]
       (is (not (nil? kohteet-kannassa)))
       (is (= -1000M sakot-ja-bonukset-maara)))))
+
+
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :yllapitokohteen-urakan-yhteyshenkilot
+                                    +kayttaja-jvh+
+                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+
+        (is (= vastaus
+               {:fim-kayttajat [{:kayttajatunnus "A000001"
+                                 :sahkoposti "erkki.esimerkki@example.com"
+                                 :puhelin ""
+                                 :sukunimi "Esimerkki"
+                                 :roolit ["ELY urakanvalvoja"]
+                                 :roolinimet ["ELY_Urakanvalvoja"]
+                                 :poistettu false
+                                 :etunimi "Erkki"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}
+                                {:kayttajatunnus "A000002"
+                                 :sahkoposti "eero.esimerkki@example.com"
+                                 :puhelin "0400123456789"
+                                 :sukunimi "Esimerkki"
+                                 :roolit ["Urakan vastuuhenkilö"]
+                                 :roolinimet ["vastuuhenkilo"]
+                                 :poistettu false
+                                 :etunimi "Eero"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}
+                                {:kayttajatunnus "A000003"
+                                 :sahkoposti "eetvartti.esimerkki@example.com"
+                                 :puhelin "0400123456788"
+                                 :sukunimi "Esimerkki"
+                                 :roolit []
+                                 :roolinimet []
+                                 :poistettu false
+                                 :etunimi "Eetvartti"
+                                 :tunniste nil
+                                 :organisaatio "ELY"}]
+                :yhteyshenkilot [{:kayttajatunnus "Blad1936"
+                                  :sahkoposti "VihtoriOllila@einrot.com"
+                                  :sukunimi "Ollila"
+                                  :rooli "Kunnossapitopäällikkö"
+                                  :id 89
+                                  :matkapuhelin "042 220 6892"
+                                  :etunimi "Vihtori"
+                                  :organisaatio {:tyyppi :urakoitsija
+                                                 :id 14
+                                                 :nimi "YIT Rakennus Oy"
+                                                 :lyhenne nil}
+                                  :tyopuhelin nil
+                                  :organisaatio_nimi "YIT Rakennus Oy"}
+                                 {:kayttajatunnus "Clorge69"
+                                  :sahkoposti "ReijoVanska@gustr.com"
+                                  :sukunimi "Vänskä"
+                                  :rooli "Tieliikennekeskus"
+                                  :id 90
+                                  :matkapuhelin "042 805 1911"
+                                  :etunimi "Reijo"
+                                  :organisaatio {:tyyppi :urakoitsija
+                                                 :id 14
+                                                 :nimi "YIT Rakennus Oy"
+                                                 :lyhenne nil}
+                                  :tyopuhelin nil
+                                  :organisaatio_nimi "YIT Rakennus Oy"}]}))))))
+
+(deftest yllapitokohteen-urakan-yhteyshenkiloiden-haku-ilman-oikeuksia
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :yllapitokohteen-urakan-yhteyshenkilot
+                                               +kayttaja-ulle+
+                                               {:yllapitokohde-id leppajarven-ramppi-id})))))))

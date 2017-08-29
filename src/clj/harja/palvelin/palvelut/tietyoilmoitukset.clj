@@ -20,10 +20,13 @@
             [harja.pvm :as pvm]
             [specql.op :as op]
             [harja.domain.tierekisteri :as tr]
-            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.domain.roolit :as roolit]
-            [slingshot.slingshot :refer [throw+]]))
+            [slingshot.slingshot :refer [throw+]]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [clojure.core.async :as async]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -44,7 +47,7 @@
                                              kaynnissa-loppuaika
                                              kaynnissa-vakioaikavali
                                              sijainti
-                                             urakka
+                                             urakka-id
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
@@ -61,10 +64,10 @@
                           :luotu-loppu luotu-loppu
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
-                          :urakat (if urakka
-                                    #{(:id urakka)}
+                          :urakat (if urakka-id
+                                    #{urakka-id}
                                     kayttajan-urakat)
-                          :urakattomat? (nil? urakka)
+                          :urakattomat? (nil? urakka-id)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara
@@ -74,12 +77,14 @@
 
 (defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
   ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
+  (oikeudet/ei-oikeustarkistusta!)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
-(defn tallenna-tietyoilmoitus [db user ilmoitus]
+(defn tallenna-tietyoilmoitus [tloik db user ilmoitus]
   (let [kayttajan-urakat (urakat db user oikeudet/voi-kirjoittaa?)]
-    (when (::t/urakka-id ilmoitus)
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus)))
+    (if (::t/urakka-id ilmoitus)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
+      (oikeudet/ei-oikeustarkistusta!))
 
     ;; jos käyttäjä on urakoitsija, tarkistetaan että urakka on tyhjä tai oman organisaation urakoima
     (when (not (t/voi-tallentaa? user kayttajan-urakat ilmoitus))
@@ -89,16 +94,19 @@
           ilmoitus (-> ilmoitus
                        (m/lisaa-muokkaustiedot ::t/id user)
                        (update-in [::t/osoite ::tr/geometria]
-                                  #(when % (geo/geometry (geo/clj->pg %)))))]
+                                  #(when % (geo/geometry (geo/clj->pg %)))))
 
-      (upsert! db ::t/ilmoitus
-               ilmoitus
-               (op/or
-                 {::m/luoja-id (:id user)}
-                 {::t/urakoitsija-id org}
-                 {::t/tilaaja-id org}
-                 {::t/urakka-id (op/in kayttajan-urakat)})))))
-
+          tallennettu (upsert! db ::t/ilmoitus
+                               ilmoitus
+                               (op/or
+                                 {::m/luoja-id (:id user)}
+                                 {::t/urakoitsija-id org}
+                                 {::t/tilaaja-id org}
+                                 {::t/urakka-id (op/in kayttajan-urakat)}))]
+      (when (and tloik (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+        (async/thread
+          (tloik/laheta-tietyilmoitus tloik (::t/id tallennettu))))
+      tallennettu)))
 
 (defn tietyoilmoitus-pdf [db user params]
   (pdf/tietyoilmoitus-pdf
@@ -132,6 +140,7 @@
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   (log/debug "Haetaan ylläpitokohteen " yllapitokohde-id " tiedot tietyöilmoitukselle")
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (oikeudet/ei-oikeustarkistusta!)
   (let [{:keys [urakka-id
                 urakka-sampo-id
                 tr-numero
@@ -158,7 +167,7 @@
       yllapitokohde)))
 
 (defn hae-urakan-tiedot-tietyoilmoitukselle [db fim user urakka-id]
-  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (oikeudet/ei-oikeustarkistusta!)
   (let [{:keys [urakka-sampo-id] :as urakka}
         (or (first (q-tietyoilmoitukset/hae-urakan-tiedot-tietyoilmoitukselle db {:urakkaid urakka-id})) {})
         urakka (if urakka-sampo-id
@@ -176,7 +185,8 @@
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
-  (start [{db :db
+  (start [{tloik :tloik
+           db :db
            http :http-palvelin
            pdf :pdf-vienti
            fim :fim
@@ -191,7 +201,7 @@
                       {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user ilmoitus]
-                        (tallenna-tietyoilmoitus db user ilmoitus))
+                        (tallenna-tietyoilmoitus tloik db user ilmoitus))
                       {:kysely-spec ::t/ilmoitus
                        :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle

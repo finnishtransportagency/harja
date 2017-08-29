@@ -6,9 +6,12 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [org.httpkit.client :as http]
             [compojure.core :refer [GET]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
-(def +wmts-url+ "https://karttakuva.maanmittauslaitos.fi")
+(def +wmts-mml-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmts")
+(def +wmts-livi-url+ "https://harja-test.solitaservices.fi/harja/integraatiotesti/wmtslivi")
+
 
 (def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
 
@@ -30,10 +33,19 @@
           {}
           +kopioitavat-headerit+))
 
+(defn- wmts-osoite [uri]
+  (let [osoite (str (if (str/includes? uri "/wmts/")
+                      +wmts-mml-url+
+                      +wmts-livi-url+)
+                    (-> uri
+                        (str/replace #"/wmts/" "/")
+                        (str/replace #"/wmtslivi/" "/")))]
+    (log/info "Haetaan WMTS URL: " osoite)
+    osoite))
+
 (defn- hae-karttakuva [{:keys [uri query-params] :as req}]
   (let [{:keys [status body headers] :as res}
-        @(http/get (str +wmts-url+
-                        (str/replace uri #"/wmts/" "/"))
+        @(http/get (wmts-osoite uri)
                    {:query-params query-params
                     :headers {"Authorization" (str "Basic " @basic-auth-header)}})]
     (reset! debug-last-wmts-response res)
@@ -45,13 +57,13 @@
   component/Lifecycle
   (start [{http :http-palvelin :as this}]
     (http-palvelin/julkaise-reitti
-     http :wmts
-     (GET "/wmts/*" req
-          (hae-karttakuva req)))
+     http :wmts-mml (GET "/wmts/*" req (hae-karttakuva req)))
+    (http-palvelin/julkaise-reitti
+     http :wmts-livi (GET "/wmtslivi/*" req (hae-karttakuva req)))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (http-palvelin/poista-palvelu http :wmts)
+    (http-palvelin/poista-palvelut http :wmts-mml :wmts-livi)
     this))
 
 (defrecord Tuotantomoodi []

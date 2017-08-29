@@ -54,3 +54,4 @@ resources/public/laadunseuranta/css/
 /test_envs/upcloud/*.retry
 .deploy3
 .deploy3_known_hosts
+testi.pdf

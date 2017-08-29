@@ -13,7 +13,8 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [harja.palvelin.palvelut.sopimukset :as sopimukset]))
+            [harja.palvelin.palvelut.sopimukset :as sopimukset]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -22,9 +23,12 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :pois-kytketyt-ominaisuudet (component/using
+                                                      (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet nil)
+                                                      [:http-palvelin])
                         :sopimukset (component/using
                                       (sopimukset/->Sopimukset)
-                                      [:db :http-palvelin])))))
+                                      [:db :pois-kytketyt-ominaisuudet :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -52,10 +56,11 @@
                                              :tallenna-sopimus +kayttaja-jvh+
                                              sopimus)]
         ;; Uusi sopimus löytyy vastauksesesta
-        (is (= (::sopimus/nimi sopimus-kannassa (::sopimus/nimi sopimus))))
+        (is (= (::sopimus/nimi sopimus-kannassa) (::sopimus/nimi sopimus)))
 
-        ;; Päivitetään sopimus
+        ;; Päivitetään sopimus (myös reimari-diaarinro, sillä se tallennetaan eri taulukkoon, kuin muu data)
         (let [paivitetty-sopimus (assoc sopimus ::sopimus/nimi (str (::sopimus/nimi sopimus) " päivitetty")
+                                                ::sopimus/reimari-diaarinro (str (::sopimus/reimari-diaarinro sopimus) " 5/5")
                                                 ::sopimus/id (::sopimus/id sopimus-kannassa))
               paivitetty-sopimus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                           :tallenna-sopimus +kayttaja-jvh+
@@ -63,4 +68,6 @@
 
           ;; Sopimus päivittyi
           (is (= (::sopimus/nimi paivitetty-sopimus-kannassa)
-                 (::sopimus/nimi paivitetty-sopimus))))))))
+                 (::sopimus/nimi paivitetty-sopimus)))
+          (is (= (::sopimus/reimari-diaarinro paivitetty-sopimus-kannassa)
+                 (::sopimus/reimari-diaarinro paivitetty-sopimus))))))))

@@ -84,7 +84,7 @@
         integraatioloki
         (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))
     (do
-      (log/error "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" response)
+      (log/warn "Kutsu resurssiin:" resurssi "epäonnistui. Palautetaan vastaus:" response)
       (integraatioloki/kirjaa-epaonnistunut-integraatio
         integraatioloki
         (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))))
@@ -144,22 +144,22 @@
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
-  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
+  (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
-  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
+  (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (log/warn (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-ei-hakutuloksia-virhevastaus virheet))
 
 (defn kasittele-puutteelliset-parametrit [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
+  (log/warn (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 

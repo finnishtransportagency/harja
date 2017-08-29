@@ -138,7 +138,7 @@
               (concat
                 (apply concat
                        ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
-                       (for [[hy ilmoitukset] ilmoitukset-hyn-mukaan]
+                       (for [[hy ilmoitukset] (sort-by #(:elynumero (first %)) ilmoitukset-hyn-mukaan)]
                          (concat
                            (when (or urakoittain? (= :urakka konteksti))
                              [{:otsikko (or (when (:nimi hy) (str (:elynumero hy) " " (:nimi hy)))

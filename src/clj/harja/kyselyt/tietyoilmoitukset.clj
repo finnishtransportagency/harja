@@ -9,7 +9,8 @@
             [clojure.spec.alpha :as s]
             [harja.kyselyt.specql :as specql]
             [harja.domain.muokkaustiedot :as m]
-            [clojure.future :refer :all]))
+            [clojure.future :refer :all]
+            [clojure.set :as set]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -62,57 +63,63 @@
 (s/def ::t/max-pituus number?)
 (s/def ::t/max-leveys number?)
 
+(def tloik-integraatio-kentat
+  #{::t/lahetetty ::t/tila})
+
 (def kaikki-ilmoituksen-kentat
-  #{::t/id
-    ::t/tloik-id
-    ::t/paatietyoilmoitus
-    ::t/tloik-paatietyoilmoitus-id
-    ::m/luotu
-    ::m/luoja-id
-    ::m/muokattu
-    ::m/muokkaaja-id
-    ::m/poistettu
-    ::m/poistaja-id
-    ::t/ilmoittaja-id
-    ::t/ilmoittaja
-    ::t/urakka-id
-    ::t/urakan-nimi
-    ::t/urakkatyyppi
-    ::t/urakoitsijan-nimi
-    ::t/urakoitsijayhteyshenkilo-id
-    ::t/urakoitsijayhteyshenkilo
-    ::t/tilaaja-id
-    ::t/tilaajan-nimi
-    ::t/tilaajayhteyshenkilo-id
-    ::t/tilaajayhteyshenkilo
-    ::t/tyotyypit
-    ::t/luvan-diaarinumero
-    ::t/osoite
-    ::t/tien-nimi
-    ::t/kunnat
-    ::t/alkusijainnin-kuvaus
-    ::t/loppusijainnin-kuvaus
-    ::t/alku
-    ::t/loppu
-    ::t/tyoajat
-    ::t/vaikutussuunta
-    ::t/kaistajarjestelyt
-    ::t/nopeusrajoitukset
-    ::t/tienpinnat
-    ::t/kiertotien-pituus
-    ::t/kiertotien-mutkaisuus
-    ::t/kiertotienpinnat
-    ::t/liikenteenohjaus
-    ::t/liikenteenohjaaja
-    ::t/viivastys-normaali-liikenteessa
-    ::t/viivastys-ruuhka-aikana
-    ::t/ajoneuvorajoitukset
-    ::t/huomautukset
-    ::t/ajoittaiset-pysaytykset
-    ::t/ajoittain-suljettu-tie
-    ::t/pysaytysten-alku
-    ::t/pysaytysten-loppu
-    ::t/lisatietoja})
+  (into
+   tloik-integraatio-kentat
+   #{::t/id
+     ::t/tloik-id
+     ::t/paatietyoilmoitus
+     ::t/tloik-paatietyoilmoitus-id
+     ::m/luotu
+     ::m/luoja-id
+     ::m/muokattu
+     ::m/muokkaaja-id
+     ::m/poistettu
+     ::m/poistaja-id
+     ::t/ilmoittaja-id
+     ::t/ilmoittaja
+     ::t/urakka-id
+     ::t/urakan-nimi
+     ::t/urakkatyyppi
+     ::t/urakoitsijan-nimi
+     ::t/urakoitsijan-ytunnus
+     ::t/urakoitsijayhteyshenkilo-id
+     ::t/urakoitsijayhteyshenkilo
+     ::t/tilaaja-id
+     ::t/tilaajan-nimi
+     ::t/tilaajayhteyshenkilo-id
+     ::t/tilaajayhteyshenkilo
+     ::t/tyotyypit
+     ::t/luvan-diaarinumero
+     ::t/osoite
+     ::t/tien-nimi
+     ::t/kunnat
+     ::t/alkusijainnin-kuvaus
+     ::t/loppusijainnin-kuvaus
+     ::t/alku
+     ::t/loppu
+     ::t/tyoajat
+     ::t/vaikutussuunta
+     ::t/kaistajarjestelyt
+     ::t/nopeusrajoitukset
+     ::t/tienpinnat
+     ::t/kiertotien-pituus
+     ::t/kiertotien-mutkaisuus
+     ::t/kiertotienpinnat
+     ::t/liikenteenohjaus
+     ::t/liikenteenohjaaja
+     ::t/viivastys-normaali-liikenteessa
+     ::t/viivastys-ruuhka-aikana
+     ::t/ajoneuvorajoitukset
+     ::t/huomautukset
+     ::t/ajoittaiset-pysaytykset
+     ::t/ajoittain-suljettu-tie
+     ::t/pysaytysten-alku
+     ::t/pysaytysten-loppu
+     ::t/lisatietoja}))
 
 ;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
@@ -120,9 +127,10 @@
         [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
 
 (def ilmoitus-pdf-kentat
-  (conj kaikki-ilmoituksen-kentat
-        ::t/pituus
-        [::t/paailmoitus (conj kaikki-ilmoituksen-kentat ::t/pituus)]))
+  (let [pdf-kentat (set/difference kaikki-ilmoituksen-kentat tloik-integraatio-kentat)]
+    (conj pdf-kentat
+          ::t/pituus
+          [::t/paailmoitus (conj pdf-kentat ::t/pituus)])))
 
 (def ilmoituslomakkeen-kentat
   #{[::t/paailmoitus #{::t/urakan-nimi ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo
@@ -246,3 +254,6 @@
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
                 {::t/id tietyoilmoitus-id})))
+
+(defn lahetetty? [db id]
+  (:lahetetty? (first (lahetetty db {:id id}))))

@@ -55,7 +55,7 @@
                       [:div
                        [:button.nappi-toissijainen.nappi-grid
                         {:on-click #(tiedot/valitse-paivan-toteuma-id! avain (:id rivi))}
-                        (ikonit/eye-open) " Toteuma"]])}]
+                        (ikonit/ikoni-ja-teksti (ikonit/eye-open) "Toteuma")]])}]
      tiedot]))
 
 (defn taulukko []
@@ -100,8 +100,7 @@
   (let [urakka @nav/valittu-urakka]
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
-     (urakka-valinnat/urakan-hoitokausi urakka)
-     (urakka-valinnat/aikavali)
+     [urakka-valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
      (urakka-valinnat/urakan-toimenpide+kaikki)
      (urakka-valinnat/urakan-kokonaishintainen-tehtava+kaikki)]))
 
@@ -157,8 +156,11 @@
                              :ikoni        (ikonit/tallenna)
                              :kun-onnistuu #(do
                                              (tiedot/toteuman-tallennus-onnistui %)
-                                             (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                                             (tiedot/poista-toteuman-valinta!)
+                                             ;; Päiväkohtaiset tiedot vanhentui -> tyhjennä
+                                             (reset! tiedot/toteumien-paivakohtaiset-tiedot {}))
                              :disabled     (or (not (lomake/voi-tallentaa? tiedot))
+                                               (not (lomake/muokattu? tiedot))
                                                jarjestelman-lisaama-toteuma?
                                                (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
@@ -243,10 +245,10 @@
                :valinnat      @tehtavat
                :valinta-arvo  :id
                :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-               :hae           (comp :id :toimenpidekoodi :tehtava)
+               :hae           (comp :tpk-id :tehtava)
                :aseta         (fn [rivi arvo]
                                 (-> rivi
-                                    (assoc-in [:tehtava :toimenpidekoodi :id] arvo)
+                                    (assoc-in [:tehtava :tpk-id] arvo)
                                     (assoc-in [:tehtava :yksikko] (:yksikko
                                                                     (urakan-toimenpiteet/tehtava-idlla
                                                                      arvo nelostason-tehtavat)))))

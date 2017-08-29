@@ -62,7 +62,6 @@
                             %)
         putsattu-ilmoitus (when valittu-ilmoitus
                             (into {} (keep ok-namespacessa? valittu-ilmoitus)))]
-    (log "tti tvt: avainten lkmt" (count valittu-ilmoitus) (count putsattu-ilmoitus))
 
     (merge tietyoilmoitus-app-sapluuna
            {:valittu-ilmoitus putsattu-ilmoitus
@@ -109,6 +108,8 @@
   {::t/yllapitokohde yllapitokohde-id
    ::t/alku alku
    ::t/loppu loppu
+   ::t/kohteen-aikataulu {:kohteen-alku (:alku data)
+                          :paallystys-valmis (:loppu data)}
    ::t/osoite {::tr/geometria geometria
                ::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
@@ -119,7 +120,9 @@
 (defn esitayta-tietyoilmoitus [{:keys [yllapitokohde-id
                                        urakka-id
                                        urakka-nimi
+                                       urakkatyyppi
                                        urakoitsija-nimi
+                                       urakoitsija-ytunnus
                                        urakoitsijan-yhteyshenkilo
                                        tilaaja-nimi
                                        tilaajan-yhteyshenkilo
@@ -128,8 +131,9 @@
   (let [kayttaja @istunto/kayttaja
         tietyoilmoitus {::t/urakka-id urakka-id
                         ::t/urakan-nimi urakka-nimi
-
+                        ::t/urakkatyyppi urakkatyyppi
                         ::t/urakoitsijan-nimi urakoitsija-nimi
+                        ::t/urakoitsijan-ytunnus urakoitsija-ytunnus
                         ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
                                                       ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
@@ -199,7 +203,7 @@
                                                   :kaynnissa-loppuaika
                                                   :kaynnissa-vakioaikavali
                                                   :sijainti
-                                                  :urakka
+                                                  :urakka-id
                                                   :vain-kayttajan-luomat])]
             {:tietyoilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
     (assoc app :tietyoilmoitukset nil))
@@ -232,9 +236,9 @@
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
     (let [urakat (sort-by :nimi (mapcat :urakat urakat))
-          urakka (when @nav/valittu-urakka (:id @nav/valittu-urakka))]
+          urakka @nav/valittu-urakka-id]
       (assoc app :kayttajan-urakat urakat
-                 :valinnat (assoc (:valinnat app) :urakka urakka))))
+                 :valinnat (assoc (:valinnat app) :urakka-id urakka))))
 
   PaivitaSijainti
   (process-event [{sijainti :sijainti} app]
@@ -264,10 +268,17 @@
           fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
         (try
-          (let [vastaus-kanava (k/post! :tallenna-tietyoilmoitus
-                                 (-> ilmoitus
-                                     (dissoc ::t/tyovaiheet :urakan-kohteet
-                                             :komponentissa-virheita?)))
+          (let [ilmoitus (-> ilmoitus
+                             (dissoc ::t/tyovaiheet
+                                     ::t/kohteen-aikataulu
+                                     :urakan-kohteet
+                                     :komponentissa-virheita?
+                                     :aihe
+                                     :type
+                                     :alue)
+                             (update ::t/tyoajat
+                                     (partial remove :poistettu)))
+                vastaus-kanava (k/post! :tallenna-tietyoilmoitus ilmoitus)
                 vastaus (when vastaus-kanava
                           (<! vastaus-kanava))]
             (if (k/virhe? vastaus)
@@ -282,7 +293,6 @@
   IlmoitusTallennettu
   (process-event [{ilmoitus :ilmoitus sulje-ilmoitus :sulje-ilmoitus avaa-pdf? :avaa-pdf?} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
-    (log "avaa pdf tallennuksen jälkeen? " avaa-pdf?)
     (when avaa-pdf?
       (set! (.-location js/window) (k/pdf-url :tietyoilmoitus "parametrit" (transit/clj->transit {:id (::t/id ilmoitus)}))))
     (assoc app

@@ -1,6 +1,7 @@
 (ns harja.ui.debug
   "UI komponentti datan inspectointiin"
   (:require [harja.ui.yleiset :as yleiset]
+            [harja.loki :refer [log]]
             [reagent.core :as r]))
 
 (defn voi-avata? [item]

@@ -29,29 +29,47 @@
     ::loppupvm
     ::sampoid})
 
-(defn paasopimus? [sopimukset sopimus]
-  (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
-                                sopimukset)]
-    (and
-      (id-olemassa? (::id sopimus))
-      (not (:poistettu sopimus))
-      (nil? (::paasopimus-id sopimus))
-      (every? #(= (::paasopimus-id %) (::id sopimus))
-              muut-sopimukset))))
+(defn- voi-olla-paasopimus?* [sopimus]
+  (and
+    (id-olemassa? (::id sopimus))
+    (not (:poistettu sopimus))
+    (nil? (::paasopimus-id sopimus))))
 
-(defn paasopimus [sopimukset]
-  (first (filter #(paasopimus? sopimukset %) sopimukset)))
+(defn paasopimus-jollekin? [sopimukset sopimus]
+  (boolean
+    (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
+                                 sopimukset)]
+     (and
+       (voi-olla-paasopimus?* sopimus)
+       (some #(= (::paasopimus-id %) (::id sopimus))
+             muut-sopimukset)))))
 
+(defn paasopimus-jokaiselle? [sopimukset sopimus]
+  (boolean
+    (let [muut-sopimukset (filter #(not= (::id %) (::id sopimus))
+                                 sopimukset)]
+     (and
+       (voi-olla-paasopimus?* sopimus)
+       (every? #(= (::paasopimus-id %) (::id sopimus))
+               muut-sopimukset)))))
 
+(defn ainoa-paasopimus [sopimukset]
+  (first (filter #(paasopimus-jokaiselle? sopimukset %) sopimukset)))
+
+(defn sopimuksen-paasopimus [sopimukset sopimus]
+  (first (filter #(= (::paasopimus-id sopimus) (::id %))
+                 sopimukset)))
+
+(s/def ::reimari-diaarinro (s/nilable string?))
 ;; Haut
 
 (s/def ::hae-harjassa-luodut-sopimukset-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id])))
+  (s/coll-of (s/keys :req [::id ::nimi ::reimari-diaarinro ::alkupvm ::loppupvm ::paasopimus-id])))
 
 ;; Tallennukset
 
 (s/def ::tallenna-sopimus-kysely (s/keys
                                    :req [::nimi ::alkupvm ::loppupvm]
-                                   :opt [::id ::paasopimus-id]))
+                                   :opt [::id ::reimari-diaarinro ::paasopimus-id]))
 
-(s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::alkupvm ::loppupvm ::paasopimus-id]))
+(s/def ::tallenna-sopimus-vastaus (s/keys :req [::id ::nimi ::reimari-diaarinro ::alkupvm ::loppupvm ::paasopimus-id]))

@@ -17,15 +17,17 @@
   (-> data (z/xml1-> :tietolajitunniste z/text)))
 
 (defn parsi-voimassaolo [data]
-  {:alkupvm (xml/parsi-paivamaara (z/xml1-> data :alkupvm z/text))
-   :loppupvm (xml/parsi-paivamaara (z/xml1-> data :loppupvm z/text))})
+  (when data
+    {:alkupvm (xml/parsi-paivamaara (z/xml1-> data :alkupvm z/text))
+     :loppupvm (xml/parsi-paivamaara (z/xml1-> data :loppupvm z/text))}))
 
 (defn parsi-koodisto [data]
   {:koodiryhma (z/xml1-> data :koodiryhma z/text)
    :koodi (xml/parsi-kokonaisluku (z/xml1-> data :koodi z/text))
    :lyhenne (z/xml1-> data :lyhenne z/text)
    :selite (z/xml1-> data :selite z/text)
-   :muutospvm (xml/parsi-paivamaara (z/xml1-> data :muutospvm z/text))})
+   :muutospvm (xml/parsi-paivamaara (z/xml1-> data :muutospvm z/text))
+   :voimassaolo (parsi-voimassaolo (z/xml1-> data :voimassaolo))})
 
 (defn parsi-ominaisuus [data]
   {:kenttatunniste (z/xml1-> data :kenttatunniste z/text)
@@ -37,6 +39,7 @@
    :desimaalit (xml/parsi-kokonaisluku (z/xml1-> data :desimaalit z/text))
    :alaraja (xml/parsi-kokonaisluku (z/xml1-> data :alaraja z/text))
    :ylaraja (xml/parsi-kokonaisluku (z/xml1-> data :ylaraja z/text))
+   :muutospvm (xml/parsi-paivamaara (z/xml1-> data :muutospvm z/text))
    :voimassaolo (parsi-voimassaolo (z/xml1-> data :voimassaolo))
    :koodisto (when-let [koodisto (z/xml-> data :koodisto :koodi parsi-koodisto)]
                (when (not (empty? koodisto)) koodisto))})

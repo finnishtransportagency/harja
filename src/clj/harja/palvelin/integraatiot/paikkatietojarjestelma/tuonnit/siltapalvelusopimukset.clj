@@ -1,8 +1,6 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.periodic :refer [periodic-seq]]
-            [chime :refer [chime-at]]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [harja.kyselyt.urakat :as urakat]))
 

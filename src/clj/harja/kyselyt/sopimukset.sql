@@ -61,10 +61,9 @@ UPDATE sopimus s SET urakka=:urakka
 WHERE id IN (:sopimukset)
 AND s.harjassa_luotu IS TRUE;
 
--- name: poista-sopimukset-urakasta!
+-- name: poista-kaikki-sopimukset-urakasta!
 UPDATE sopimus s SET urakka=NULL, paasopimus=NULL
-WHERE id IN (:sopimukset)
-AND urakka=:urakka
+WHERE urakka=:urakka
 AND s.harjassa_luotu IS TRUE;
 
 -- name: aseta-sopimus-paasopimukseksi!
@@ -93,3 +92,25 @@ SET nimi              = :nimi,
   muokattu = NOW()
 WHERE id = :id
 AND s.harjassa_luotu IS TRUE;
+
+-- name: hae-sopimusten-reimari-diaarinumerot
+-- Hakee diaarinumerot
+SELECT "harja-sopimus-id", "reimari-diaarinro"
+FROM reimari_sopimuslinkki;
+
+-- name: hae-sopimuksen-reimari-diaarinumero
+-- Hakee diaarinumeron
+SELECT "reimari-diaarinro"
+FROM reimari_sopimuslinkki
+WHERE "harja-sopimus-id" = :harja-sopimus-id
+
+-- name: luo-reimari-diaarinumero-linkki<!
+-- Luo uuden diaarinumeron sopimukselle
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-diaarinro")
+VALUES (:harja-sopimus-id, :reimari-diaarinro);
+
+-- name: paivita-reimari-diaarinumero-linkki<!
+-- Paivittaa diaarinumeron sopimukselle
+UPDATE reimari_sopimuslinkki
+SET "reimari-diaarinro" = :reimari-diaarinro
+WHERE "harja-sopimus-id" = :harja-sopimus-id;

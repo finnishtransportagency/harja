@@ -151,7 +151,7 @@
   (muunna rivi kentat double))
 
 (defn seq->array
-  "Muuntaa yksittäisen arvon Clojure-kokoelmasta JDBC arrayksi.
+  "Muuntaa arvot Clojure-kokoelmasta JDBC arrayksi.
    Itemien tulisi olla joko tekstiä, numeroita tai keywordeja, sillä
    ne muunnetaan aina tekstiksi."
   [collection]

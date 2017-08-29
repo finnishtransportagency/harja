@@ -113,7 +113,19 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :alueet oletusalueet}))
+     :alueet oletusalueet
+     :varustetoteumat {tk/varustetoteumat false}}))
+
+(defn alueita-valittu?
+  [suodattimet]
+  (let [elyt (vals (:alueet suodattimet))
+        urakat (mapcat vals elyt)
+        valitut (mapcat vals urakat)]
+    (some? (some true? valitut))))
+
+(defonce paivita-aluevalinta
+  (run! (let [valittuja? (alueita-valittu? @suodattimet)]
+          (reset! nav/tilannekuvassa-alueita-valittu? valittuja?))))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
@@ -344,10 +356,8 @@ hakutiheys-historiakuva 1200000)
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
 (defn- kasittele-tilannekuvan-hakutulos [tulos]
-  (let [paallystykset (yllapitokohteet/yllapitokohteet-kartalle (:paallystys tulos))
-        paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
-  (assoc tulos :paallystys paallystykset
-               :paikkaus paikkaukset)))
+  (let [paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
+  (assoc tulos :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))

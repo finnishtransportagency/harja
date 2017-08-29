@@ -6,6 +6,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
+            [harja.domain.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.tiedot.urakka.yhteystiedot :as yht]
@@ -34,7 +35,8 @@
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.views.urakka.yleiset.paivystajat :as paivystajat])
+            [harja.views.urakka.yleiset.paivystajat :as paivystajat]
+            [harja.domain.urakka :as u-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -129,8 +131,8 @@
 (defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
    [grid/grid
-    {:otsikko "Työtunnit"
-     :tyhja "Ei työtunteja."
+    {:otsikko "TURI-työtunnit"
+     :tyhja "Ei TURI-työtunteja."
      :tallenna tallenna!
      :voi-lisata? false
      :voi-poistaa? (constantly false)
@@ -199,7 +201,8 @@
               "Ei asetettu")])]))))
 
 (defn- yllapitourakan-sopimustyyppi [ur]
-  (when-not (= :hoito (:tyyppi ur))
+  (when (and (not= :hoito (:tyyppi ur))
+             (not (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
           sopimustyyppi (:sopimustyyppi ur)]
       [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
@@ -368,10 +371,10 @@
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                        {:otsikko (str "Urakan ensisijainen "
-                                                       (case rooli
-                                                         "ELY_Urakanvalvoja" "urakanvalvoja"
-                                                         "vastuuhenkilo" "vastuuhenkilö"))}
+                                       {:otsikko (str "Urakan ensisijainen "
+                                                      (case rooli
+                                                        ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
+                                                        "vastuuhenkilo" "vastuuhenkilö"))}
                                         [aseta-vastuuhenkilo
                                          paivita-vastuuhenkilot!
                                          urakka-id kayttaja kayttajat
@@ -407,7 +410,10 @@
                          [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
+                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
+                         (if (u/vesivaylaurakka? ur)
+                           "Tilaajan_Urakanvalvoja"
+                           "ELY_Urakanvalvoja")]
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!

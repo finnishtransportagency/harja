@@ -7,7 +7,6 @@
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
@@ -24,7 +23,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.transit :as transit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn vie-pdf
   "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
@@ -51,7 +51,7 @@
         {:valokioaikavali :luotu-vakioaikavali
          :alkuaika :luotu-alkuaika
          :loppuaika :luotu-loppuaika}
-         true)
+        true)
       (valinnat/aikavalivalitsin
         "Käynnissä välillä"
         tiedot/kaynnissa-aikavalit
@@ -59,8 +59,8 @@
         {:valokioaikavali :kaynnissa-vakioaikavali
          :alkuaika :kaynnissa-alkuaika
          :loppuaika :kaynnissa-loppuaika}
-         true)
-      {:nimi :urakka
+        true)
+      {:nimi :urakka-id
        :otsikko "Urakka"
        :tyyppi :valinta
        :pakollinen? true
@@ -158,6 +158,9 @@
      {:otsikko "Urakoitsija"
       :nimi ::t/urakoitsijan-nimi
       :muokattava? (constantly false)}
+     {:otsikko "Urakoitsijan y-tunnus"
+      :nimi ::t/urakoitsijan-ytunnus
+      :muokattava? (constantly false)}
      {:otsikko "Urakoitsijan yhteyshenkilo"
       :nimi :urakoitsijan_yhteyshenkilo
       :hae t/urakoitsijayhteyshenkilo->str
@@ -228,7 +231,16 @@
           [{:otsikko "Vaiheita"
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
-            :leveys 1}])
+            :leveys 1}
+           {:otsikko "Lähetys Tieliikennekeskukseen"
+            :nimi :lahetys
+            :tyyppi :komponentti
+            :komponentti #(case (::t/tila %)
+                            "odottaa_vastausta" [:span.tila-odottaa-vastausta "Odottaa vastausta" [yleiset/ajax-loader-pisteet]]
+                            "lahetetty" [:span.tila-lahetetty "Lähetetty " (ikonit/thumbs-up)]
+                            "virhe" [:span.tila-virhe "Epäonnistunut " (ikonit/thumbs-down)]
+                            [:span "Ei lähetetty"])
+            :leveys 3}])
     haetut-ilmoitukset]])
 
 (defn hakulomake

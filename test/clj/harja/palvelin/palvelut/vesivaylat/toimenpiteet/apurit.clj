@@ -8,22 +8,42 @@
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [clojure.string :as str]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.yksikkohintaiset :as yks]))
+            [clojure.string :as str]))
 
 (defn hae-kokonaishintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE \"toteuma-id\" IN
-                    (SELECT id FROM toteuma WHERE tyyppi = 'vv-kokonaishintainen')"))))
+                    WHERE hintatyyppi = 'kokonaishintainen'"))))
+
+(defn hae-toimenpiteiden-kiintio-idt [toimenpide-idt]
+  (set (keep :kiintio-id (q-map (str "SELECT \"kiintio-id\" FROM reimari_toimenpide
+                    WHERE id IN (" (str/join ", " toimenpide-idt) ")")))))
+
+(defn hae-toimenpiteiden-hintaryhma-idt [toimenpide-idt]
+  (set (keep :hinnoittelu-id (q-map (str "SELECT \"hinnoittelu-id\" FROM vv_hinnoittelu_toimenpide
+                                          WHERE \"toimenpide-id\" IN ( " (str/join ", " toimenpide-idt) ")"
+                                         " AND \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS TRUE AND poistettu IS NOT TRUE)
+                                           AND poistettu IS NOT TRUE")))))
+
+(defn hae-toimenpiteiden-omien-hinnoittelujen-idt [toimenpide-idt]
+  (set (keep :hinnoittelu-id (q-map (str "SELECT \"hinnoittelu-id\" FROM vv_hinnoittelu_toimenpide
+                                          WHERE \"toimenpide-id\" IN ( " (str/join ", " toimenpide-idt) ")"
+                                         " AND \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS FALSE AND poistettu IS NOT TRUE)
+                                           AND poistettu IS NOT TRUE")))))
+
+(defn hae-hinnoittelujen-poistotiedot [hinnoittelu-idt]
+  (set (map :poistettu (q-map (str "SELECT poistettu FROM vv_hinnoittelu WHERE id IN (" (str/join ", " hinnoittelu-idt) ")")))))
+
+(defn hae-hintojen-poistotiedot [hinnoittelu-idt]
+  (set (map :poistettu (q-map (str "SELECT poistettu FROM vv_hinta WHERE \"hinnoittelu-id\" IN (" (str/join ", " hinnoittelu-idt) ")")))))
+
 
 (defn hae-yksikkohintaiset-toimenpide-idt []
   (set (map :id
             (q-map "SELECT id FROM reimari_toimenpide
-                    WHERE \"toteuma-id\" IN
-                    (SELECT id FROM toteuma WHERE tyyppi = 'vv-yksikkohintainen')"))))
+                    WHERE hintatyyppi = 'yksikkohintainen'"))))
 
 (defn hae-toimenpiteiden-tyyppi [idt]
-  (set (map :tyyppi
-            (q-map "SELECT tyyppi FROM toteuma
-                    WHERE id IN (SELECT \"toteuma-id\" FROM reimari_toimenpide WHERE id IN (" (str/join ", " idt) "));"))))
+  (set (map :hintatyyppi
+            (q-map "SELECT hintatyyppi FROM reimari_toimenpide
+                    WHERE id IN (" (str/join ", " idt) ");"))))

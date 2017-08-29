@@ -10,6 +10,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]))
 
@@ -48,11 +49,13 @@
                          :tallennus-kaynnissa? tallennus-kaynnissa?}])}
          [{:otsikko "Nimi" :nimi ::o/nimi :tyyppi :string :pakollinen? true}
           {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pakollinen? true :pituus-max 9
-           :validoi [(fn [tunnus] (when-let [urakoitsija (haetut-ytunnukset tunnus)]
-                                    (str "Tunnus " tunnus " on käytössa urakoitsijalla " urakoitsija)))
+           :validoi [(fn [tunnus]
+                       (when-let [nimi (tiedot/urakoitsijan-nimi-ytunnuksella tunnus valittu-urakoitsija haetut-ytunnukset)]
+                         (str "Tunnus " tunnus " on käytössa urakoitsijalla " nimi)))
                      [:ytunnus]]}
           {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
           {:otsikko "Postinumero" :nimi ::o/postinumero :tyyppi :string :pituus-max 5}
+          {:otsikko "Postitoimipaikka" :nimi ::o/postitoimipaikka :tyyppi :string :pituus-max 64}
           (when (some not-empty (vals urakat))
             (lomake/ryhma
               {:otsikko "Urakat"}
@@ -98,6 +101,7 @@
          {:otsikko "Y-tunnus" :nimi ::o/ytunnus :tyyppi :string :pituus-max 9}
          {:otsikko "Katuosoite" :nimi ::o/katuosoite :tyyppi :string}
          {:otsikko "Postinumero" :nimi ::o/postinumero :pituus-max 5 :tyyppi :string}
+         {:otsikko "Postitoimipaikka" :nimi ::o/postitoimipaikka :pituus-max 5 :tyyppi :string}
          {:otsikko "Urakoita (Alk. / Käyn. / Päät. )" :nimi :urakoita :tyyppi :string
           :hae tiedot/urakoitsijan-urakoiden-lukumaarat-str}
          {:otsikko "Luotu Harjassa?" :nimi ::o/harjassa-luotu? :fmt fmt/totuus}]
@@ -109,9 +113,10 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {valittu-urakoitsija :valittu-urakoitsija :as app}]
-      (if valittu-urakoitsija
-        [luontilomake e! app]
-        [urakoitsijagrid e! app]))))
+      [:div
+       (if valittu-urakoitsija
+         [luontilomake e! app]
+         [urakoitsijagrid e! app])])))
 
 (defn vesivaylaurakoitsijoiden-luonti []
   [tuck tiedot/tila vesivaylaurakoitsijoiden-luonti*])
