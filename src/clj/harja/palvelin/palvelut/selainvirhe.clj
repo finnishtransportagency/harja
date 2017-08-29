@@ -81,10 +81,7 @@
                             (log/warn "SourceMapImpl sai arvoksi nil: " (.getMessage e))
                             nil)))]
     (when-let [mapping (and source-map (.getMapping source-map rivi sarake))]
-      (try (lahde-tiedot mapping kehitysmoodi tiedostopolku)
-           (catch Exception e
-             (log/warn "Source mapin käsittely aiheutti exceptionin: " (.getMessage e))
-             nil)))))
+      (lahde-tiedot mapping kehitysmoodi tiedostopolku))))
 
 
 (defn lahdetiedoston-stack-trace
@@ -110,10 +107,13 @@
 
 (defn stack-trace-lahdekoodille
   [stack kehitysmoodi]
-  (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)]
-    (if (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)
-      (stack-lahde rivit-sarakkeet-ja-tiedostopolku kehitysmoodi)
-      (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)))))
+  (try (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)]
+        (if (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)
+          (stack-lahde rivit-sarakkeet-ja-tiedostopolku kehitysmoodi)
+          (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku))))
+       (catch Exception e
+         (log/warn "Source mapin käsittely aiheutti exceptionin: " (.getMessage e))
+         "Source mapin käsittely aiheutti exceptionin.")))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]} kehitysmoodi]
   (let [titles ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack") (when stack "Stack lähde")]
