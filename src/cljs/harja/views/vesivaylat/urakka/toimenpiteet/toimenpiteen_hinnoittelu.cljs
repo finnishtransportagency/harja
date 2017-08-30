@@ -190,9 +190,11 @@
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
    [:table
-    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
-    ;; Ei voi suoraan tallentaa työ eikä hinta tauluun, vaatii tietomallimuutosta
-    ;; Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
+    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä
+    ;; - Tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
+    ;; - Tallennetaan vv_hinta tauluun: otsikko, määrä, yksikkö, yksikköhinta. Ryhmäksi tallennetaan :tyo.
+    ;; - Tässä näytetään vain :työ ryhmään kuuluvat vv_hinnat, ei muuta
+    ;; - Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
     [sopimushintaiset-tyot-header]
     [:tbody
      (map-indexed
@@ -200,10 +202,10 @@
 
          ^{:key index}
          [:tr
-          [:td] ;; TODO Komponentille tehty toimenpide tähän (lisätty, vaihdettu, ei poistettuja)
+          [:td] ;; TODO Työn otsikko
           [:td.tasaa-oikealle] ;; TODO Yksikköhinta
-          [:td.tasaa-oikealle] ;; TODO Yksikkö
-          [:td]
+          [:td.tasaa-oikealle] ;; TODO Määrä
+          [:td] ;; TODO Yksikkö
           [:td] ;; TODO Yhteensä
           [:td.keskita [yleiskustannuslisakentta e! nil]] ;; TODO YK-lisä
           [:td.keskita
@@ -216,7 +218,9 @@
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
         ;; - Alla hardkoodattu esimerkki, ei välttämättä vastaa läheskään lopullista tietomallia, oli vain #nopee #tosinopee #upee demo
-        ;; - Epäselvää tässäkin, millä tietomallilla tallennetaan, kun on yks. hinta ja määrä?
+        ;; - Tallennetaan vv_hinta tauluun: määrä, yksikköhinta (ja yksikkö?). Vaatii myös linkin. Otsikkoa ei kai tarvita?
+        ;; - Vaatii tietomallipäivityksen, jossa tämä linkittyy komponenttille tehtyyn toimenpiteeseen
+        ;; - Tallennetaan vv_hinta.ryhma arvoksi :komponentti
         komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                                 ::tkomp/sarjanumero "123"
                                 ::tkomp/turvalaitenro "8881"}
@@ -262,7 +266,8 @@
      (map-indexed
        (fn [index hinta]
          ^{:key index}
-         ;; TODO Tänne ei saa kirjoittaa to/vakiohinnat sisältöä
+         ;; TODO Tänne ei saa kirjoittaa to/vakiohinnat sisältöä, muuten tapahtuu ikäviä
+         ;; TODO Täällä tulisi listata vain hinnat joissa vv_hinta.ryhma = :muu
          [vapaa-hinnoittelurivi e! hinta])
        (filter
          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
@@ -272,8 +277,8 @@
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
-   [muut-tyot e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
-   [komponentit e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
+   [muut-tyot e! app*]
+   [komponentit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
