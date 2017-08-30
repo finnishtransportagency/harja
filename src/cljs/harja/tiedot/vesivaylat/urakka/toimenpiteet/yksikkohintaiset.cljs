@@ -426,7 +426,7 @@
                                               ::hinta/maara (::hinta/maara hinta)
                                               ::hinta/ryhma :muu ;; TODO Muut työt = :tyo, Komponentit = :komponentti
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
-                                              ::m/poistettu? (::m/poistettu? hinta)}))
+                                              ::m/poistettu? (boolean (::m/poistettu? hinta))}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
              ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
