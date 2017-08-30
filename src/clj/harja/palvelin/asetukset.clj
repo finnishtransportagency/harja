@@ -148,7 +148,8 @@
                                              :salasana                s/Str
                                              (s/optional-key :paivittainen-toimenpidehaku)  [s/Num]
                                              (s/optional-key :paivittainen-komponenttityyppihaku)  [s/Num]
-                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]}
+                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]
+                                             (s/optional-key :paivittainen-vikahaku)  [s/Num]}
 
    (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    })

@@ -19,9 +19,8 @@
    :muu 16})
 
 (defn poikkeamatyypit->numerot [tyypit]
-  (mapv
-    (fn [tyyppi] [:tyyppi (poikkeamatyyppi->numero tyyppi)])
-    tyypit))
+  (for [tyyppi tyypit]
+    [:tyyppi (poikkeamatyyppi->numero tyyppi)]))
 
 (def ammatti->numero
   {:aluksen_paallikko 1
@@ -71,15 +70,11 @@
    :muut 13
    :ei_tietoa 14})
 
-(defn vammat->numerot [vammat]
-  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+(defn- vammat->numerot [vammat]
+  ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
-  (let [vamma (first vammat)]
-    [(when vamma
-       [:vammanlaatu (vamma->numero vamma)])])
-  #_(mapv
-      (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
-      vammat))
+  (for [vamma (take 1 vammat)] ;; pudota take 1 pois, jos halutaan kaikki
+    [:vammanlaatu (vamma->numero vamma)]))
 
 (def vahingoittunut-ruumiinosa->numero
   {:paan_alue 1
@@ -96,15 +91,11 @@
    :koko_keho 12
    :ei_tietoa 13})
 
-(defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
-  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+(defn- vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
+  ;; TODO: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
-  (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
-    [(when vahingoittunut-ruumiinosa
-       [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)])])
-  #_(mapv
-      (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
-      vahingoittuneet-ruumiinosat))
+  (for [vahingoittunut-ruumiinosa (take 1 vahingoittuneet-ruumiinosat)]
+    [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)]))
 
 (def korjaava-toimenpide-tila->numero
   {:avoin 0
@@ -118,101 +109,107 @@
    :taydennetty "Täydennetty"
    :suljettu "Suljettu"})
 
-(defn rakenna-lahde [data]
+(defn- lahde [data]
   [:lahde
    [:lahdejarjestelma "Harja"]
    [:lahdeid (:id data)]])
 
-(defn rakenna-tapahtumatiedot [data]
-  (into [:tapahtumantiedot]
-        (concat
-          (when-let [turi-id (:turi-id data)]
-            [[:id turi-id]])
-          [[:sampohankenimi (:hanke-nimi data)]]
-          [[:sampohankeid (:hanke-sampoid data)]]
-          [[:tilaajanvastuuhenkilokayttajatunnus (:tilaajanvastuuhenkilo-kayttajatunnus data)]]
-          [[:tilaajanvastuuhenkiloetunimi (:tilaajanvastuuhenkilo-etunimi data)]]
-          [[:tilaajanvastuuhenkilosukunimi (:tilaajanvastuuhenkilo-sukunimi data)]]
-          [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
-          [[:sampourakkanimi (:urakka-nimi data)]]
-          [[:sampourakkaid (:urakka-sampoid data)]]
-          [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
-          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
-          [[:urakkatyyppi (:urakka-tyyppi data)]]
-          (when (and (:urakka-ely data)
-                     (not (= "Vesiväylä" (urakan-vaylamuoto (:vaylamuoto data)))))
-            [[:elyalue (str (:urakka-ely data) " ELY")]])
-          [[:alueurakkanro (:alueurakkanro data)]]
-          (poikkeamatyypit->numerot (:tyyppi data))
-          [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
-           [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
-           [:kuvaus (:kuvaus data)]])))
+(defn- tapahtumatiedot [{:keys [turi-id hanke-nimi hanke-sampoid tilaajanvastuuhenkilo-kayttajatunnus
+                               tilaajanvastuuhenkilo-etunimi tilaajanvastuuhenkilo-sukunimi
+                               tilaajanvastuuhenkilo-sposti urakka-nimi urakka-sampoid
+                               urakka-loppupvm vaylamuoto urakka-tyyppi urakka-ely alueurakkanro
+                               tyyppi tapahtunut kuvaus]}]
+  [:tapahtumantiedot
+   (when-let [turi-id turi-id]
+     [:id turi-id])
+   [:sampohankenimi hanke-nimi]
+   [:sampohankeid hanke-sampoid]
+   [:tilaajanvastuuhenkilokayttajatunnus tilaajanvastuuhenkilo-kayttajatunnus]
+   [:tilaajanvastuuhenkiloetunimi tilaajanvastuuhenkilo-etunimi]
+   [:tilaajanvastuuhenkilosukunimi tilaajanvastuuhenkilo-sukunimi]
+   [:tilaajanvastuuhenkilosposti tilaajanvastuuhenkilo-sposti]
+   [:sampourakkanimi urakka-nimi]
+   [:sampourakkaid urakka-sampoid]
+   [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
+   [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
+   [:urakkatyyppi urakka-tyyppi]
+   (when (and urakka-ely
+              (not (= "Vesiväylä" (urakan-vaylamuoto vaylamuoto))))
+     [:elyalue (str urakka-ely " ELY")])
+   [:alueurakkanro alueurakkanro]
+   (poikkeamatyypit->numerot tyyppi)
+   [:tapahtumapvm (xml/formatoi-paivamaara tapahtunut)]
+   [:tapahtumaaika (xml/formatoi-kellonaika tapahtunut)]
+   [:kuvaus kuvaus]])
 
-(defn rakenna-tapahtumapaikka [data]
-  (let [[x y] (first (geo/pisteet (:sijainti data)))
-        tieosoite (:tr data)]
+(defn- tapahtumapaikka [{sijainti :sijainti
+                        tieosoite :tr
+                        paikan-kuvaus :paikan-kuvaus}]
+  (let [[x y] (some-> sijainti geo/pisteet first)]
     [:tapahtumapaikka
-     [:paikka (:paikan-kuvaus data)]
-     [:eureffinn y]
-     [:eureffine x]
+     [:paikka paikan-kuvaus]
+     (when y [:eureffinn y])
+     (when x [:eureffine x])
      (when (:numero tieosoite) [:tienumero (:numero tieosoite)])
      (when (:alkuosa tieosoite) [:tieaosa (:alkuosa tieosoite)])
      (when (:loppuosa tieosoite) [:tielosa (:loppuosa tieosoite)])
      (when (:alkuetaisyys tieosoite) [:tieaet (:alkuetaisyys tieosoite)])
      (when (:loppuetaisyys tieosoite) [:tielet (:loppuetaisyys tieosoite)])]))
 
-(defn rakenna-syyt-ja-seuraukset [data]
-  (into [:syytjaseuraukset]
-        (concat
-          [[:seuraukset (:seuraukset data)]
-           (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
-           (when-let [ammatti-muu (:tyontekijanammattimuu data)]
-             [:ammattimuutarkenne ammatti-muu])]
-          (vammat->numerot (:vammat data))
-          (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
-          [[:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
-           [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
-           [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]])))
+(defn- syyt-ja-seuraukset [data]
+  [:syytjaseuraukset
+   [:seuraukset (:seuraukset data)]
+   (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
+   (when-let [ammatti-muu (:tyontekijanammattimuu data)]
+     [:ammattimuutarkenne ammatti-muu])
+   (vammat->numerot (:vammat data))
+   (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
+   [:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
+   [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
+   [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]])
 
-(defn rakenna-tapahtumakasittely [data]
+(defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely
-   [:otsikko (:tapahtuman-otsikko data)]
-   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]
-   [:tila (turvallisuuspoikkeaman-tila (:tila data))]])
+   [:otsikko tapahtuman-otsikko]
+   [:luontipvm (xml/formatoi-paivamaara luotu)]
+   [:tila (turvallisuuspoikkeaman-tila tila)]])
 
-(defn rakenna-poikkeamatoimenpide [data]
-  (mapv (fn [toimenpide]
-          [:poikkeamatoimenpide
-           [:otsikko (:otsikko toimenpide)]
-           [:kuvaus (:kuvaus toimenpide)]
-           [:vastuuhenkilokayttajatunnus (:vastuuhenkilokayttajatunnus toimenpide)]
-           [:vastuuhenkiloetunimi (:vastuuhenkiloetunimi toimenpide)]
-           [:vastuuhenkilosukunimi (:vastuuhenkilosukunimi toimenpide)]
-           [:vastuuhenkilosposti (:vastuuhenkilosposti toimenpide)]
-           [:toteuttaja (:toteuttaja toimenpide)]
-           [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
-        (:korjaavattoimenpiteet data)))
+(defn- poikkeamatoimenpide [{korjaavat-toimenpiteet :korjaavattoimenpiteet}]
+  (for [{:keys [otsikko kuvaus
+                vastuuhenkilokayttajatunnus vastuuhenkiloetunimi
+                vastuuhenkilosukunimi vastuuhenkilosposti
+                toteuttaja tila]} korjaavat-toimenpiteet]
+    [:poikkeamatoimenpide
+     [:otsikko otsikko]
+     [:kuvaus kuvaus]
+     [:vastuuhenkilokayttajatunnus vastuuhenkilokayttajatunnus]
+     [:vastuuhenkiloetunimi vastuuhenkiloetunimi]
+     [:vastuuhenkilosukunimi vastuuhenkilosukunimi]
+     [:vastuuhenkilosposti vastuuhenkilosposti]
+     [:toteuttaja toteuttaja]
+     [:tila (korjaava-toimenpide-tila->numero tila)]]))
 
-(defn rakenna-poikkeamaliite [data]
-  (mapv (fn [liite]
-          [:poikkeamaliite
-           [:tiedostonimi (:nimi liite)]
-           [:tiedosto (String. (liitteet/enkoodaa-base64 (:data liite)))]])
-        (:liitteet data)))
+(defn- poikkeamaliite [{:keys [liitteet]}]
+  (for [{:keys [nimi data]} liitteet]
+    [:poikkeamaliite
+     [:tiedostonimi nimi]
+     [:tiedosto (String. (liitteet/enkoodaa-base64 data))]]))
 
-(defn muodosta-viesti [data]
-  (into [:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}]
-        (concat
-          [(rakenna-lahde data)
-           (rakenna-tapahtumatiedot data)
-           (rakenna-tapahtumapaikka data)
-           (rakenna-syyt-ja-seuraukset data)
-           (rakenna-tapahtumakasittely data)]
-          (rakenna-poikkeamatoimenpide data)
-          (rakenna-poikkeamaliite data))))
+(defn- turvallisuuspoikkeamaviesti [turvallisuuspoikkeama]
+  [:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}
+   (lahde turvallisuuspoikkeama)
+   (tapahtumatiedot turvallisuuspoikkeama)
+   (tapahtumapaikka turvallisuuspoikkeama)
+   (syyt-ja-seuraukset turvallisuuspoikkeama)
+   (tapahtumakasittely turvallisuuspoikkeama)
+   (poikkeamatoimenpide turvallisuuspoikkeama)
+   (poikkeamaliite turvallisuuspoikkeama)])
 
-(defn muodosta [data]
-  (let [sisalto (muodosta-viesti data)
+(defn muodosta
+  "Muodostaa annetusta turvallisuuspoikkeamasta XML-viestin ja validoi, että se on skeeman mukainen.
+  Palauttaa XML-viestin merkkijonona."
+  [turvallisuuspoikkeama]
+  (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
       (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n

@@ -48,7 +48,10 @@ WITH
     poistettavat_tapahtumaidt AS (
       SELECT id
       FROM integraatiotapahtuma
-      WHERE alkanut < :paivamaara),
+      WHERE alkanut < :paivamaara AND integraatio IN
+                                      (SELECT id
+                                       FROM integraatio
+                                       WHERE :jarjestelma IS NULL OR jarjestelma = :jarjestelma)),
     viestien_poisto AS (
     DELETE FROM integraatioviesti
     WHERE integraatiotapahtuma IN (

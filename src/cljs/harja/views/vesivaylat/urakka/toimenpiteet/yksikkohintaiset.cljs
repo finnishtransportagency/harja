@@ -431,31 +431,32 @@
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
-        (if (empty? hinnat)
-          [napit/yleinen-ensisijainen
-           "Määrittele yksi hinta koko tilaukselle"
-           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-          [:div
-           [:div.inline-block {:style {:margin-right "10px"}}
-            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
-              [:span
-               [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
-              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
-              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
-              [yleiset/tietoja {:tietokentan-leveys "180px"}
-               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-               "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
-               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
-           [:div.inline-block {:style {:vertical-align :top}}
-            [napit/yleinen-toissijainen
-             (ikonit/muokkaa)
+        (when-not (tiedot/valiaikainen-hintaryhma? hintaryhma)
+          (if (empty? hinnat)
+            [napit/yleinen-ensisijainen
+             "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-             {:ikoninappi? true
-              :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
-                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                      (:id @nav/valittu-urakka)))}]]]))]]))
+             {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+            [:div
+             [:div.inline-block {:style {:margin-right "10px"}}
+              (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+                [:span
+                 [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+                ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+                ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+                ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+                [yleiset/tietoja {:tietokentan-leveys "180px"}
+                 "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+                 "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+                 "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+             [:div.inline-block {:style {:vertical-align :top}}
+              [napit/yleinen-toissijainen
+               (ikonit/muokkaa)
+               #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+               {:ikoninappi? true
+                :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (:id @nav/valittu-urakka)))}]]])))]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
@@ -476,7 +477,8 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          (tiedot/kokonaishintaisista-siirretyt-hintaryhma)
+                          [tiedot/kokonaishintaisista-siirretyt-hintaryhma]
+                          [tiedot/reimarin-lisatyot-hintaryhma]
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
@@ -486,6 +488,7 @@
 
          [jaettu/tulokset e! app
           [:div
+
            (doall
              (for [hintaryhma hintaryhmat
                   :let [hintaryhma-id (::h/id hintaryhma)
@@ -496,8 +499,8 @@
                         nayta-hintaryhma?
                         (boolean
                           (or
-                            ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
-                            (and (tiedot/kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
+                            ;; Kok. hint. siirretyt tai reimarin lisätyöt -ryhmä, jos ei tyhjä
+                            (and (tiedot/valiaikainen-hintaryhma? hintaryhma)
                                  (not (empty? hintaryhman-toimenpiteet)))
                             hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
                             (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
@@ -540,6 +543,7 @@
                       jaettu/sarake-toimenpide
                       jaettu/sarake-pvm
                       jaettu/sarake-turvalaite
+                      jaettu/sarake-turvalaitenumero
                       jaettu/sarake-vikakorjaus
                       (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
                                                         "lisää-liite"
