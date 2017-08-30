@@ -286,8 +286,6 @@
    [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]])
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
-  ;; TODO Korkeus alkaa olla jo aikamoinen haaste
-  ;; Voisi piirtää rivin alapuolelle, mutta vasta kun hinnoittelu muuten valmista
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [muut-tyot e! app*]
