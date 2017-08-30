@@ -64,7 +64,6 @@
                  (fn [uusi]
                    (e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
                                                           ::hinta/otsikko uusi}))))])]
-     [:td] ;; TODO Hintatyyppi
      [:td.tasaa-oikealle [hintakentta e! hinta]]
      [:td.keskita [yleiskustannuslisakentta e! hinta]]
      [:td
@@ -102,7 +101,6 @@
    [:thead
     [:tr
      [:th {:style {:width "45%"}} (when otsikot? "Työ")]
-     [:th {:style {:width "20%"}} (when otsikot? "Hintatyyppi")]
      [:th {:style {:width "20%"}} (when otsikot? "Hinta yhteensä")]
      [:th {:style {:width "10%"}} (when otsikot? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
@@ -218,7 +216,6 @@
             [:td
              (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
                   " (" (::tkomp/sarjanumero komponentti) ")")]
-            [:td] ;; TODO Hintatyyppi
             [:td.tasaa-oikealle
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
