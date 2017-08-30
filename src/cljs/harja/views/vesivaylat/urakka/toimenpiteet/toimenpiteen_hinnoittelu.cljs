@@ -203,6 +203,34 @@
        (get-in app* [:hinnoittele-toimenpide ::h/tyot]))]]
    [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]])
 
+(defn- muut-tyot [e! app*]
+  [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
+   [valiotsikko "Muut työt (ei indeksilaskentaa)"]
+   [:table
+    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä (millä tietomallilla tallennetaan!?)
+    [sopimushintaiset-tyot-header]
+    [:tbody
+     (map-indexed
+       (fn [index tyorivi]
+         (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
+                                                               (:toimenpidekoodi-id tyorivi))
+               yksikko (:yksikko toimenpidekoodi)
+               yksikkohinta (:yksikkohinta toimenpidekoodi)
+               tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+           ^{:key index}
+           [:tr
+            [:td]
+            [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
+            [:td.tasaa-oikealle]
+            [:td yksikko]
+            [:td.tasaa-oikealle
+             (when tyon-hinta-voidaan-laskea? (fmt/euro (* (:maara tyorivi) yksikkohinta)))]
+            [:td]
+            [:td.keskita
+             [ikonit/klikattava-roskis #(log "TODO")]]]))
+       [])]]
+   [rivinlisays "Lisää työrivi" #(log "TODO")]])
+
 (defn- komponentit [e! app*]
   (let [;; TODO Tällä hetkellä hardkoodattu, lista. Pitää tehdä näin:
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
@@ -264,6 +292,7 @@
   ;; Voisi piirtää rivin alapuolelle, mutta vasta kun hinnoittelu muuten valmista
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
+   [muut-tyot e! app*]
    [komponentit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
