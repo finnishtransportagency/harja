@@ -262,7 +262,6 @@
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} app]
-    (log "--->>> ValitseToteuma")
     (peru-taustahaku app)
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (varustetoteuma-muokattava? toteuma))))]
       (kartalle (tulos!))))
