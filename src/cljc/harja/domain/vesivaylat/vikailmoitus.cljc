@@ -36,3 +36,10 @@
 
 (def kaikki-kentat
   (clojure.set/union perustiedot reimari-kentat viittaukset viittaus-idt))
+
+(def vikakoodi->kuvaus
+  {"1022541101" "Kirjattu"
+   "1022541102" "Avoin"
+   "1022541103" "Korjattu"
+   "1022541104" "Aiheeton"
+   "1022541105" "Peruttu"})

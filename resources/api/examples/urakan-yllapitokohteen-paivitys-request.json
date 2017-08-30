@@ -27,7 +27,6 @@
           "tunniste": {
             "id": 1
           },
-          "tunnus": "A",
           "nimi": "1. Testialikohde",
           "sijainti": {
             "aosa": 1,
@@ -49,7 +48,6 @@
           "tunniste": {
             "id": 2
           },
-          "tunnus": "B",
           "nimi": "2. Testialikohde",
           "sijainti": {
             "aosa": 3,
