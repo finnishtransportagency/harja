@@ -185,8 +185,11 @@
           :nimi :tyyppi
           :vihje (when (= :vaara-urakka (:tyyppi data))
                    "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+         (when (= tyyppi :lopetus)
+           {:otsikko "Aiheutti toimenpiteitä"
+            :tyyppi :checkbox
+            :nimi :aiheutti-toimenpiteita})
          vakiofraasi-kentta
-
          {:otsikko "Vapaateksti"
           :tyyppi :text
           :koko [80 :auto]
