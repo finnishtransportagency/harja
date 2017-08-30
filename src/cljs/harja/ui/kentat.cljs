@@ -832,7 +832,8 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
+(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe
+                                 piste? vaadi-vali?]
   [:table
    [:thead
     [:tr
@@ -845,15 +846,23 @@
      [:th
       [:span "aet"]
       (when pakollinen? [:span.required-tahti " *"])]
-     [:th "losa"]
-     [:th "let"]]]
+     (when (not piste?)
+       [:th
+        [:span "losa"]
+        (when vaadi-vali? [:span.required-tahti " *"])])
+     (when (not piste?)
+       [:th
+        [:span "let"]
+        (when vaadi-vali? [:span.required-tahti " *"])])]]
    [:tbody
     [:tr
      [:td tie]
      [:td aosa]
      [:td aet]
-     [:td losa]
-     [:td loppuet]
+     (when (not piste?)
+       [:td losa])
+     (when (not piste?)
+       [:td loppuet])
      (when sijainnin-tyhjennys
        [:td.sijannin-tyhjennys
         sijainnin-tyhjennys])
@@ -900,7 +909,7 @@
 (def ^:const tr-osoite-raaka-avaimet [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen? tyhjennys-sallittu?
+                                                   sijainti pakollinen? tyhjennys-sallittu? piste? vaadi-vali?
                                                    avaimet]} data]
   (let [osoite-alussa @data
 
@@ -982,7 +991,7 @@
                     (tasot/poista-geometria! :tr-valittu-osoite)
                     (kartta/zoomaa-geometrioihin)))
 
-      (fn [{:keys [tyyli lomake? sijainti]} data]
+      (fn [{:keys [tyyli lomake? sijainti piste? vaadi-vali?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
                         (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
@@ -1059,7 +1068,9 @@
 
             (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
-                [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
+                [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
+            piste?
+            vaadi-vali?]])))))
 
 (defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.

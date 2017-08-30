@@ -131,7 +131,7 @@
         #(if % (to/reimari-toimenpidetyyppi-fmt %) "Kaikki")]
 
        [kentat/tee-kentta {:tyyppi :checkbox
-                           :teksti "Näytä vain vikailmoituksista tulleet toimenpiteet"}
+                           :teksti "Näytä vain vikoihin liittyvät toimenpiteet"}
         (r/wrap (get-in app [:valinnat :vain-vikailmoitukset?])
                 (fn [uusi]
                   (e! (PaivitaValinnatKonstruktori {:vain-vikailmoitukset? uusi}))))]]
@@ -172,6 +172,7 @@
 (def sarake-toimenpide {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
 (def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
 (def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
+(def sarake-turvalaitenumero {:otsikko "Turvalaitenumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
 (def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
 (defn sarake-liitteet [e! app oikeus-fn]
   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10

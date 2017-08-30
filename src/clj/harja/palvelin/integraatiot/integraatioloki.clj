@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.integraatioloki :as integraatioloki]
-            [clj-time.core :refer [months ago]]
+            [clj-time.core :refer [weeks months ago]]
             [harja.kyselyt.konversio :as konversio]
             [com.stuartsierra.component :as component]
             [harja.fmt :as fmt])
@@ -26,9 +26,13 @@
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-puhdistusaika
         (fn [_]
-          (let [aikarajaus (konversio/sql-timestamp (.toDate (-> 1 months ago)))]
-            (log/debug "Poistetaan kaikki integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus)
-            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus)))))
+          (let [aikarajaus-api (konversio/sql-timestamp (.toDate (-> 2 weeks ago)))
+                aikarajaus-muut (konversio/sql-timestamp (.toDate (-> 3 months ago)))]
+            (log/debug "Poistetaan API:n integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-api)
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
+
+            (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut)))))
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko jono]
