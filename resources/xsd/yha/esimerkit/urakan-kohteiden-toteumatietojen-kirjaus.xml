@@ -14,6 +14,7 @@
                 <kohdetyyppi>1</kohdetyyppi>
                 <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
                 <nimi>string</nimi>
+                <tunnus>A</tunnus>
                 <!--Optional:-->
                 <toiden-aloituspaivamaara>2007-10-26</toiden-aloituspaivamaara>
                 <!--Optional:-->
@@ -69,7 +70,6 @@
                             <kaista>22</kaista>
                         </tierekisteriosoitevali>
                         <!--Optional:-->
-                        <tunnus>A</tunnus>
                         <!--Optional:-->
                         <paallystystoimenpide>
                             <uusi-paallyste>1</uusi-paallyste>

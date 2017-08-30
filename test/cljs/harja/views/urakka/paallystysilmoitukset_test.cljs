@@ -8,7 +8,8 @@
     [harja.domain.tierekisteri :as tierekisteri-domain]
     [harja.ui.tierekisteri :as tierekisteri]
     [harja.testutils.shared-testutils :refer [render paivita sel sel1 grid-solu click change
-                                              disabled? ilman-tavutusta komponentti-fixture]]
+                                              disabled? ilman-tavutusta komponentti-fixture]
+     :as u]
     [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                              jvh-fixture]]
     [harja.views.urakka.paallystysilmoitukset :as p]
@@ -74,7 +75,7 @@
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0
-                                 :tunnus "p" :nimi "piru 1"
+                                 :nimi "piru 1"
                                  :toimenpide "eka?"
                                  ;; Päällystetoimenpiteen tiedot
                                  :toimenpide-tyomenetelma 12}
@@ -85,7 +86,7 @@
                                  :kohdeosa-id 32 :tr-kaista nil
                                  :tr-ajorata nil
                                  :toimenpide "toka!"
-                                 :tunnus "y" :nimi "piru 1.5"
+                                 :nimi "piru 1.5"
                                  ;; Päällystetoimenpiteen tiedot
                                  :toimenpide-tyomenetelma 12
                                  ; Kiviaines- ja sideainetiedot
@@ -97,7 +98,6 @@
                                  :tr-alkuosa 3 :tr-alkuetaisyys 123 :tr-numero 20
                                  :tr-loppuosa 5 :tr-loppuetaisyys 100
                                  :kohdeosa-id 31 :tr-kaista 26 :tr-ajorata 2
-                                 :tunnus "k"
                                  :nimi "piru 2"
                                  :raekoko 6
                                  :paallystetyyppi 1
@@ -131,13 +131,13 @@
     (let [tila @lomake]
 
       ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
-      ;; rivin loppukohda yli. Tämän pitäisi tehdä virhe viimeiselle riville.
-      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "5") ;; losa
+      ;; rivin loppukohdan yli. Tämän pitäisi tehdä virhe viimeiselle riville.
+      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "5") ;; losa
       (<! (paivita))
 
-      (change (grid-solu "yllapitokohdeosat" 1 9 "input") "123") ;; let
+      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "123") ;; let
       (<! (paivita))
-
+      
       (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 

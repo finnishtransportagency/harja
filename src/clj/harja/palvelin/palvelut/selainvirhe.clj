@@ -9,7 +9,7 @@
             [clj-time.coerce :as c]
             [clojure.java.io :as io]
             [harja.pvm :as pvm])
-  (:import (com.atlassian.sourcemap SourceMapImpl SourceMap SourceMap$EachMappingCallback)))
+  (:import (com.atlassian.sourcemap SourceMapImpl SourceMap)))
 
 (defn stack-tracen-rivit-sarakkeet-ja-tiedostopolku
   [stack-trace kehitysmoodi]
@@ -30,82 +30,94 @@
 (defn lue-tiedosto
   [tiedostonimi]
   (try (slurp (io/resource tiedostonimi))
-       (catch java.io.FileNotFoundException e
-         (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
+       (catch java.lang.IllegalArgumentException e
+          (when (= (.getMessage e) "Cannot open <nil> as a Reader.")
+            (log/warn (str "Tiedosto " tiedostonimi " yritettiin lukea, mutta sitä ei löytynyt"))
+            (str "Lähdetiedostoa " tiedostonimi " ei löytynyt, joten muutamaa riviä koodia ei voida näyttää.")))
+       (catch Exception e
+         (log/warn "Tiedoston lukeminen ei onnistunut: " (.getMessage e))
+         nil)))
 
-(defn tiedosto-rivi-ja-sarake
+(defn lahdetiedosto
+  [tiedostopolku mapping kehitysmoodi]
+  (if kehitysmoodi
+    (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
+      (some (fn [tiedostopaate]
+              (when (.exists (io/as-file (str "dev-resources/" tiedostopolku-ilman-paatetta tiedostopaate)))
+                (str tiedostopolku-ilman-paatetta tiedostopaate)))
+            [".cljs" ".cljc"]))
+    (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))] ;; lähdetiedoston perässä saattaa olla timestamp. Otetaan se pois, jos on.
+      (str "public/js/" (second lahdetiedosto))
+      (str "public/js/" (.getSourceFileName mapping)))))
+
+(defn lahde-tiedot
+  [mapping kehitysmoodi tiedostopolku]
+  (let [lahde-rivi (.getSourceLine mapping)
+        lahde-sarake (.getSourceColumn mapping)
+        lahdetiedosto (lahdetiedosto tiedostopolku mapping kehitysmoodi)
+        muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
+                                                        (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
+                                    (as-> lahdetiedosto $
+                                          (lue-tiedosto $)
+                                          (st/split $ #"\n")
+                                          (numeroi-rivit $)
+                                          (drop (if (> lahde-rivi 2)
+                                                  (- lahde-rivi 2)
+                                                  0)
+                                                $)
+                                          (take 5 $)))]
+    {:rivi (inc lahde-rivi)
+     :sarake (inc lahde-sarake)
+     :lahdetiedosto lahdetiedosto
+     :muutama-rivi-koodia (if (string? muutama-rivi-lahdekoodia)
+                            muutama-rivi-lahdekoodia
+                            (apply str (map #(str % "|||") muutama-rivi-lahdekoodia)))}))
+
+(defn generoitu-stack->lahde-stack
   [{:keys [rivi sarake tiedostopolku]} kehitysmoodi]
-  (let [paikat (atom {})
-        source-map (when (re-find #"harja" tiedostopolku)
-                    (-> (str tiedostopolku ".map") (io/resource) slurp (SourceMapImpl.)))]
-    (when-let [mapping (.getMapping source-map rivi sarake)]
-      (let [lahde-rivi (.getSourceLine mapping)
-            lahde-sarake (.getSourceColumn mapping)
-            generoitu-rivi (.getGeneratedLine mapping)
-            generoitu-sarake (.getGeneratedColumn mapping)
-            rivin-tiedot (get @paikat generoitu-rivi)
-            lahdetiedosto (if kehitysmoodi
-                            (let [tiedostopolku-ilman-paatetta  (apply str (take (- (count tiedostopolku) 3) tiedostopolku))] ;Otetaan '.js' pois
-                              (some (fn [tiedostopaate]
-                                      (when (.exists (io/as-file (str "dev-resources/" tiedostopolku-ilman-paatetta tiedostopaate)))
-                                        (str tiedostopolku-ilman-paatetta tiedostopaate)))
-                                    [".cljs" ".cljc"]))
-                            (if-let [lahdetiedosto (re-find #"([\w\/_]+\.\w+)\?" (.getSourceFileName mapping))] ;; lähdetiedoston perässä saattaa olla timestamp. Otetaan se pois, jos on.
-                              (str "public/js/" (second lahdetiedosto))
-                              (str "public/js/" (.getSourceFileName mapping))))
-            muutama-rivi-lahdekoodia (let [numeroi-rivit (fn [rivit]
-                                                            (map-indexed (fn [index rivi] (str (inc index) ": " rivi)) rivit))]
-                                        (as-> lahdetiedosto $
-                                              (lue-tiedosto $)
-                                              (st/split $ #"\n")
-                                              (numeroi-rivit $)
-                                              (drop (if (> lahde-rivi 2)
-                                                      (- lahde-rivi 2)
-                                                      0)
-                                                    $)
-                                              (take 5 $)))]
+  (let [source-map (when (re-find #"harja" tiedostopolku)
+                    (try (-> (str tiedostopolku ".map") lue-tiedosto (SourceMapImpl.))
+                         (catch Exception e ;; Jos lue-tiedosto palauttaa virheilmoituksen, SourceMapImpl heittää exceptionin. Palautetaan nil.
+                            (log/warn "SourceMapImpl sai arvoksi nil: " (.getMessage e))
+                            nil)))]
+    (when-let [mapping (and source-map (.getMapping source-map rivi sarake))]
+      (lahde-tiedot mapping kehitysmoodi tiedostopolku))))
 
-          (swap! paikat
-                 assoc
-                 generoitu-rivi
-                 (update rivin-tiedot
-                         generoitu-sarake
-                         (fn [lahde-tiedot]
-                          (conj lahde-tiedot {:rivi (inc lahde-rivi)
-                                              :sarake (inc lahde-sarake)
-                                              :lahdetiedosto lahdetiedosto
-                                              :muutama-rivi-koodia (if (string? muutama-rivi-lahdekoodia)
-                                                                      muutama-rivi-lahdekoodia
-                                                                      (apply str (map #(str % "|||") muutama-rivi-lahdekoodia)))})))))
-      @paikat)))
+
+(defn lahdetiedoston-stack-trace
+  [{:keys [rivi sarake lahdetiedosto muutama-rivi-koodia]}]
+  (if (or (nil? rivi) (nil? sarake))
+    "*Generoitua .js tiedostoa ei saatu mapattua .cljs tiedostoon joltain stack tracen riviltä.*|||"
+    (str "at " lahdetiedosto ":"
+               rivi ":"
+               sarake "|||"
+               (if (re-find #"\|\|\|" muutama-rivi-koodia)
+                 (str "```" muutama-rivi-koodia "```")
+                 muutama-rivi-koodia)
+               "|||")))
+
+(defn stack-lahde
+  [rivit-sarakkeet-ja-tiedostopolku kehitysmoodi]
+  (let [rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet %) rivit-sarakkeet-ja-tiedostopolku)
+        lahdetiedoston-tiedot (vec (keep #(generoitu-stack->lahde-stack % kehitysmoodi)
+                                         rivit-ja-sarakkeet-oikaistu))
+        stack-lahde (apply str (map #(lahdetiedoston-stack-trace %)
+                                    lahdetiedoston-tiedot))]
+    stack-lahde))
 
 (defn stack-trace-lahdekoodille
-  [stack user-agent kehitysmoodi]
-  (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)
-        stack-lahde (if (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku (io/resource))
-                      (let [rivit-ja-sarakkeet-oikaistu (mapv #(oikaise-virheen-rivit-ja-sarakkeet %) rivit-sarakkeet-ja-tiedostopolku)
-                            stack-rivit-lahde (vec (keep #(tiedosto-rivi-ja-sarake % kehitysmoodi)
-                                                         rivit-ja-sarakkeet-oikaistu))
-                            stack-lahde (apply str (map #(let [generoitu-rivi (first (keys %))
-                                                               generoitu-sarake (-> (vals %) first keys first)
-                                                               lahde-tiedot (-> (vals %) first vals ffirst)]
-                                                            (if (empty? %)
-                                                              "*Generoitua .js tiedostoa ei saatu mapattua .cljs tiedostoon joltain stack tracen riviltä.*|||"
-                                                              (str "at " (:lahdetiedosto lahde-tiedot) ":"
-                                                                         (:rivi lahde-tiedot) ":"
-                                                                         (:sarake lahde-tiedot) "|||"
-                                                                         (if (re-find #"\|\|\|" (:muutama-rivi-koodia lahde-tiedot))
-                                                                           (str "```" (:muutama-rivi-koodia lahde-tiedot) "```")
-                                                                           (:muutama-rivi-koodia lahde-tiedot))
-                                                                         "|||")))
-                                                        stack-rivit-lahde))]
-                        stack-lahde)
-                      (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)))]
-      stack-lahde))
+  [stack kehitysmoodi]
+  (try (let [rivit-sarakkeet-ja-tiedostopolku (stack-tracen-rivit-sarakkeet-ja-tiedostopolku stack kehitysmoodi)]
+        (if (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku)
+          (stack-lahde rivit-sarakkeet-ja-tiedostopolku kehitysmoodi)
+          (str "Generoitua javascript tiedostoa ei löytynyt polusta " (-> rivit-sarakkeet-ja-tiedostopolku first :tiedostopolku))))
+       (catch Exception e
+         (log/warn "Source mapin käsittely aiheutti exceptionin: " (.getMessage e))
+         "Source mapin käsittely aiheutti exceptionin.")))
 
 (defn formatoi-selainvirhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]} kehitysmoodi]
   (let [titles ["Selainvirhe" "Sijainti Harjassa" "URL" "Selain" "Rivi" "Sarake" "Käyttäjä" (when stack "Stack") (when stack "Stack lähde")]
-        stack-lahde (when stack (stack-trace-lahdekoodille stack selain kehitysmoodi))
+        stack-lahde (when stack (stack-trace-lahdekoodille stack kehitysmoodi))
         values [viesti sijainti url selain rivi sarake (str kayttajanimi " (" id ")") stack stack-lahde]]
     {:fields (vec (keep-indexed #(when (not (nil? %2))
                                     {:title %2 :value (get values %1)})

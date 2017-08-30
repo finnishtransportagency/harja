@@ -10,12 +10,6 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
-    "tunnus": {
-      "id": "urn:harja/yllapitokohde/tunnus",
-      "required": false,
-      "type": "string",
-      "maxLength": 1
-    },
     "nimi": {
       "id": "urn:harja/yllapitokohde/nimi",
       "required": false,

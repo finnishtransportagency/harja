@@ -4,7 +4,28 @@
             [harja.testi :refer :all]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [com.stuartsierra.component :as component]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :http-palvelin (testi-http-palvelin)
+                        :selainvirhe (component/using
+                                       (->Selainvirhe true)
+                                       [:http-palvelin])))))
+
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(deftest raportoi-selainvirhe-testi
+  (testing "generoitu-stack->lahde-stack"
+    (is (= (generoitu-stack->lahde-stack {:rivi 1 :sarake 1 :tiedostopolku "foo/harja.js"} true)
+           nil))
+    (is (= (lue-tiedosto "foo.bar")
+           "Lähdetiedostoa foo.bar ei löytynyt, joten muutamaa riviä koodia ei voida näyttää."))))
 
 (deftest raportoi-yhteyskatkos-testi
   (let [kayttaja +kayttaja-jvh+
