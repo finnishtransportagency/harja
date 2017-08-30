@@ -59,7 +59,7 @@
                                            :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
    (s/optional-key :turi)                 {:turvallisuuspoikkeamat-url s/Str
-                                           :urakan-tyotunnit-url s/Str
+                                           (s/optional-key :urakan-tyotunnit-url) s/Str
                                            :kayttajatunnus s/Str
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
