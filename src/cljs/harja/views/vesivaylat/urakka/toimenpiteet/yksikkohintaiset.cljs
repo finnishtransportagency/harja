@@ -306,7 +306,7 @@
                                                        (:id @nav/valittu-urakka)))
                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                       :komponentti (fn [rivi]
-                                     [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                                     [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
                      (jaettu/sarake-checkbox e! app)]
                     :listaus-tunniste listaus-tunniste
                     :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
