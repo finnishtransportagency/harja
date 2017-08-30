@@ -207,35 +207,32 @@
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
    [:table
-    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä (millä tietomallilla tallennetaan!?)
+    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä.
+    ;; Tämä on tällä hetkellä täysin kesken, jopa niin kesken ettei ole tietoa millä tietomallilla tallennetaan.
     [sopimushintaiset-tyot-header]
     [:tbody
      (map-indexed
        (fn [index tyorivi]
-         (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
-                                                               (:toimenpidekoodi-id tyorivi))
-               yksikko (:yksikko toimenpidekoodi)
-               yksikkohinta (:yksikkohinta toimenpidekoodi)
-               tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
-           ^{:key index}
-           [:tr
-            [:td]
-            [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
-            [:td.tasaa-oikealle]
-            [:td yksikko]
-            [:td.tasaa-oikealle
-             (when tyon-hinta-voidaan-laskea? (fmt/euro (* (:maara tyorivi) yksikkohinta)))]
-            [:td]
-            [:td.keskita
-             [ikonit/klikattava-roskis #(log "TODO")]]]))
+
+         ^{:key index}
+         [:tr
+          [:td] ;; TODO Komponentille tehty toimenpide tähän (lisätty, vaihdettu, ei poistettuja)
+          [:td.tasaa-oikealle] ;; TODO Yksikköhinta
+          [:td.tasaa-oikealle] ;; TODO Yksikkö
+          [:td]
+          [:td] ;; TODO Yhteensä
+          [:td]
+          [:td.keskita
+           [ikonit/klikattava-roskis #(log "TODO")]]])
        [])]]
    [rivinlisays "Lisää työrivi" #(log "TODO")]])
 
 (defn- komponentit [e! app*]
-  (let [;; TODO Tällä hetkellä hardkoodattu, lista. Pitää tehdä näin:
+  (let [;; TODO Komponenttien hinnoittelu. Pitää tehdä näin:
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
         ;; - Hintatyyppi: Omakustannus / Päivän hinta
+        ;; - Alla hardkoodattu esimerkki, ei välttämättä vastaa läheskään lopullista tietomallia, oli vain #nopee #tosinopee #upee demo
         ;; - Millä tietomallilla tallennetaan, kun on yks. hinta ja määrä?
         komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                                 ::tkomp/sarjanumero "123"
