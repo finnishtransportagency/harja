@@ -104,3 +104,22 @@ BEGIN
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION kuukauden_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER)
+  RETURNS NUMERIC(10,2) AS $$
+DECLARE
+  vertailuluku NUMERIC;
+  perusluku NUMERIC;
+BEGIN
+  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
+  perusluku := indeksilaskennan_perusluku(urakka_id);
+  SELECT arvo
+  FROM indeksi
+  WHERE nimi = indeksinimi
+        AND vuosi = (SELECT EXTRACT(YEAR FROM pvm)) AND kuukausi = (SELECT EXTRACT(MONTH FROM pvm))
+  INTO vertailuluku;
+  -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
+  -- tämä lasku palauttaa NULL.
+  RETURN (vertailuluku / perusluku) * summa;
+END;
+$$ LANGUAGE plpgsql;
