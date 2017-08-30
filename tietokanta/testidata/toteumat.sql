@@ -337,13 +337,13 @@ INSERT INTO toteuman_reittipisteet (toteuma, reittipisteet) VALUES (
   (SELECT id FROM toteuma WHERE lisatieto = 'Reitillinen yksikköhintainen toteuma 1'),
   ARRAY[
     ROW('2005-10-10 10:00.00', st_makepoint(498919, 7247099) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499271, 7248395) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499399, 7249019) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499820, 7249885) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(498519, 7247299) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499371, 7248595) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499499, 7249319) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
-    ROW('2005-10-10 10:00.00',st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata
+    ROW('2005-10-10 10:01.00',st_makepoint(499271, 7248395) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:02.00',st_makepoint(499399, 7249019) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:03.00',st_makepoint(499820, 7249885) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:04.00',st_makepoint(498519, 7247299) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:05.00',st_makepoint(499371, 7248595) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:06.00',st_makepoint(499499, 7249319) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata,
+    ROW('2005-10-10 10:07.00',st_makepoint(499520, 7249685) ::POINT, 3, NULL, ARRAY[]::reittipiste_tehtava[], ARRAY[]::reittipiste_materiaali[])::reittipistedata
   ]::reittipistedata[]);
 
 
