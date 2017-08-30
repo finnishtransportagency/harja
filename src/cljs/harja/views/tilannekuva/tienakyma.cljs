@@ -23,9 +23,23 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.views.kartta.tasot :as tasot]))
+            [harja.views.kartta.tasot :as tasot]
+            [harja.ui.modal :as modal])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
+
+(defn nayta-kuittausten-tiedot
+  [kuittaukset]
+  (modal/nayta! {:otsikko "Kuittaukset"}
+                (for* [kuittaus kuittaukset]
+                  (let [etunimi (get-in kuittaus [:kasittelija :etunimi])
+                        sukunimi (get-in kuittaus [:kasittelija :sukunimi])]
+                    [:div
+                      [:span (:id kuittaus)]
+                      (yleiset/tietoja {}
+                                       ["Etunimi" etunimi]
+                                       ["Sukunimi" sukunimi])]))))
 
 (defn- valinnat
   "Valintalomake tienäkymälle."
@@ -77,7 +91,10 @@
    [{:teksti "Toteumanäkymään"
      :tooltip "Siirry urakan varustetoteumiin"
      :ikoni [ikonit/livicon-eye]
-     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]})
+     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]
+   :ilmoitus
+    {:toiminto #(nayta-kuittausten-tiedot (:kuittaukset %))
+     :teksti "Näytä kuittaukset"}})
 
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
   ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
