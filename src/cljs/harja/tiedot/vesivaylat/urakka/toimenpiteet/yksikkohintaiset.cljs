@@ -154,8 +154,7 @@
 ;; Toimenpiteen hinnoittelu
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
-(defrecord HinnoitteleToimenpideKentta [tiedot])
-(defrecord OtsikoiToimenpideKentta [tiedot])
+(defrecord AsetaHintakentalleTiedot [tiedot])
 (defrecord AsetaHintaryhmakentalleTiedot [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
 (defrecord TallennaHintaryhmanHinnoittelu [tiedot])
@@ -399,15 +398,8 @@
                  {::h/id hintaryhma-id
                   ::h/hinnat (hintaryhman-hintakentat hinnat)})))
 
-  HinnoitteleToimenpideKentta
+  AsetaHintakentalleTiedot
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
-                                                                          ::h/hinnat]) tiedot)))
-
-  OtsikoiToimenpideKentta
-  (process-event [{tiedot :tiedot} app]
-    ;; TODO TESTI!
     (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
               (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                           ::h/hinnat]) tiedot)))

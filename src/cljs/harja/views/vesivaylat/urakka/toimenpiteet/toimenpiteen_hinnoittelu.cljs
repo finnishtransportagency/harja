@@ -36,8 +36,8 @@
   [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
    (r/wrap (::hinta/maara hinta)
            (fn [uusi]
-             (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/id (::hinta/id hinta)
-                                                        ::hinta/maara uusi}))))])
+             (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
+                                                     ::hinta/maara uusi}))))])
 
 (defn- yleiskustannuslisakentta
   [e! hinta]
@@ -46,7 +46,7 @@
              (pos? yleiskustannuslisa)
              false)
            (fn [uusi]
-             (e! (tiedot/->HinnoitteleToimenpideKentta
+             (e! (tiedot/->AsetaHintakentalleTiedot
                    {::hinta/id (::hinta/id hinta)
                     ::hinta/yleiskustannuslisa (if uusi
                                                  hinta/yleinen-yleiskustannuslisa
@@ -61,8 +61,8 @@
         [tee-kentta {:tyyppi :string}
          (r/wrap otsikko
                  (fn [uusi]
-                   (e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
-                                                          ::hinta/otsikko uusi}))))])]
+                   (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
+                                                           ::hinta/otsikko uusi}))))])]
      [:td]
      [:td]
      [:td]
@@ -137,52 +137,52 @@
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         ei-poistetut-tyot (filterv (comp not ::m/poistettu?) tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-    [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
-    [:table
-     ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
-     [sopimushintaiset-tyot-header]
-     [:tbody
-      (map-indexed
-        (fn [index tyorivi]
-          (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
-                                                                (::tyo/toimenpidekoodi-id tyorivi))
-                yksikko (:yksikko toimenpidekoodi)
-                yksikkohinta (:yksikkohinta toimenpidekoodi)
-                tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
-            ^{:key index}
-            [:tr
-             [:td
-              (let [tyovalinnat (:suunnitellut-tyot app*)]
-                [yleiset/livi-pudotusvalikko
-                 {:valitse-fn #(do
-                                 (e! (tiedot/->AsetaTyorivilleTiedot
-                                       {::tyo/id (::tyo/id tyorivi)
-                                        ::tyo/toimenpidekoodi-id (:tehtava %)})))
-                  :format-fn #(if %
-                                (:tehtavan_nimi %)
-                                "Valitse työ")
-                  :class "livi-alasveto-250 inline-block"
-                  :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
-                                              (:tehtava %))
-                                          tyovalinnat))
-                  :disabled false}
-                 tyovalinnat])]
-             [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
-             [:td.tasaa-oikealle
-              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
-               (r/wrap (::tyo/maara tyorivi)
-                       (fn [uusi]
-                         (e! (tiedot/->AsetaTyorivilleTiedot
-                               {::tyo/id (::tyo/id tyorivi)
-                                ::tyo/maara uusi}))))]]
-             [:td yksikko]
-             [:td.tasaa-oikealle
-              (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
-             [:td]
-             [:td.keskita
-              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))]]]))
-        ei-poistetut-tyot)]]
-    [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
+     [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
+     [:table
+      ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
+      [sopimushintaiset-tyot-header]
+      [:tbody
+       (map-indexed
+         (fn [index tyorivi]
+           (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
+                                                                 (::tyo/toimenpidekoodi-id tyorivi))
+                 yksikko (:yksikko toimenpidekoodi)
+                 yksikkohinta (:yksikkohinta toimenpidekoodi)
+                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+             ^{:key index}
+             [:tr
+              [:td
+               (let [tyovalinnat (:suunnitellut-tyot app*)]
+                 [yleiset/livi-pudotusvalikko
+                  {:valitse-fn #(do
+                                  (e! (tiedot/->AsetaTyorivilleTiedot
+                                        {::tyo/id (::tyo/id tyorivi)
+                                         ::tyo/toimenpidekoodi-id (:tehtava %)})))
+                   :format-fn #(if %
+                                 (:tehtavan_nimi %)
+                                 "Valitse työ")
+                   :class "livi-alasveto-250 inline-block"
+                   :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
+                                               (:tehtava %))
+                                           tyovalinnat))
+                   :disabled false}
+                  tyovalinnat])]
+              [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
+              [:td.tasaa-oikealle
+               [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+                (r/wrap (::tyo/maara tyorivi)
+                        (fn [uusi]
+                          (e! (tiedot/->AsetaTyorivilleTiedot
+                                {::tyo/id (::tyo/id tyorivi)
+                                 ::tyo/maara uusi}))))]]
+              [:td yksikko]
+              [:td.tasaa-oikealle
+               (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
+              [:td]
+              [:td.keskita
+               [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))]]]))
+         ei-poistetut-tyot)]]
+     [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
 (defn- muut-tyot [e! app*]
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
