@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Lisää vv_hinnoittelu taululle ryhmittelytieto.
 
 -- Tämä on tarkoitettu pääasiassa frontille, jotta hinnat voidaan näyttää oikeiden otsikoiden alla
@@ -28,7 +27,3 @@ CREATE TABLE vv_hinta_turvalaitekomponentti
   poistettu  BOOLEAN                          NOT NULL DEFAULT FALSE,
   poistaja   INTEGER REFERENCES kayttaja (id)
 );
-=======
--- Laskutusyhteenvedon toteumaindeksi
-CREATE INDEX CONCURRENTLY toteuma_ty_ur_alk_idx ON toteuma (tyyppi, urakka, alkanut);
->>>>>>> develop
