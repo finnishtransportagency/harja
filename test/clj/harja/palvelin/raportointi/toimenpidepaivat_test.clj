@@ -94,9 +94,6 @@
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
