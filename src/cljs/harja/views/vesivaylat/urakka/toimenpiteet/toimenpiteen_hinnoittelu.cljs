@@ -133,7 +133,7 @@
 
 (defn- sopimushintaiset-tyot [e! app*]
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-   [valiotsikko "Sopimushintaiset tyot"]
+   [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
    [:table
     ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
     ;; TODO Kaukon muutosten pohjalta tehdään näin:
