@@ -628,7 +628,6 @@
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
-                     nil
                      {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}
