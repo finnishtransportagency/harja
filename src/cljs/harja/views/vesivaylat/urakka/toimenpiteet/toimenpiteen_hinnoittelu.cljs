@@ -89,20 +89,22 @@
   [:div.rivinlisays
    [napit/uusi otsikko toiminto]])
 
-(defn- sopimushintaiset-tyot-header []
-  [:thead
-   [:tr
-    [:th {:style {:width "40%"}} "Työ"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-    [:th {:style {:width "5%"}} "Yks."]
-    [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
-    [:th.tasaa-oikealle {:style {:width "10%"}} "YK-lisä"]
-    [:th {:style {:width "5%"}} ""]]])
+(defn- sopimushintaiset-tyot-header
+  ([] (sopimushintaiset-tyot-header {:yk-lisa? true}))
+  ([{:keys [yk-lisa?] :as optiot}]
+   [:thead
+    [:tr
+     [:th {:style {:width "40%"}} "Työ"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+     [:th {:style {:width "5%"}} "Yks."]
+     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
+     [:th {:style {:width "5%"}} ""]]]))
 
 (defn- muu-hinnoittelu-header
-  ([] (muu-hinnoittelu-header true))
-  ([otsikot?]
+  ([] (muu-hinnoittelu-header {:otsikot? false}))
+  ([{:keys [otsikot?] :as optiot}]
    [:thead
     [:tr
      [:th {:style {:width "40%"}} (when otsikot? "Työ")]
@@ -123,7 +125,7 @@
     [:div
      [valiotsikko ""]
      [:table
-      [muu-hinnoittelu-header false]
+      [muu-hinnoittelu-header {:otsikot? false}]
       [:tbody
        [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
         "Hinnat yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa))]
@@ -139,8 +141,8 @@
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
-      [sopimushintaiset-tyot-header]
+      ;; TODO Tehdäänkö combobox? --> ehkä, mutta ei ainakaan ennen kuin varsinainen hintojen anto toimii
+      [sopimushintaiset-tyot-header {:yk-lisa? false}]
       [:tbody
        (map-indexed
          (fn [index tyorivi]
