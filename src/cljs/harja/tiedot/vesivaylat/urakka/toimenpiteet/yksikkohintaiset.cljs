@@ -156,9 +156,9 @@
 (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
 (defrecord HinnoitteleToimenpideKentta [tiedot])
 (defrecord OtsikoiToimenpideKentta [tiedot])
-(defrecord HinnoitteleHintaryhmaKentta [tiedot])
+(defrecord AsetaHintaryhmakentalleTiedot [tiedot])
 (defrecord HinnoitteleToimenpide [tiedot])
-(defrecord HinnoitteleHintaryhma [tiedot])
+(defrecord TallennaHintaryhmanHinnoittelu [tiedot])
 (defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -412,7 +412,7 @@
               (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                           ::h/hinnat]) tiedot)))
 
-  HinnoitteleHintaryhmaKentta
+  AsetaHintaryhmakentalleTiedot
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-hintaryhma ::h/hinnat]
               (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-hintaryhma
@@ -441,7 +441,7 @@
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
-  HinnoitteleHintaryhma
+  TallennaHintaryhmanHinnoittelu
   (process-event [{tiedot :tiedot} app]
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta

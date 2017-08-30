@@ -509,7 +509,7 @@
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
-                         (e! (tiedot/->HinnoitteleHintaryhmaKentta {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                         (e! (tiedot/->AsetaHintaryhmakentalleTiedot {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                                                                     ::hinta/maara 123})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-hintaryhma uusi-tila)
@@ -535,7 +535,7 @@
       tiedot/->HintaryhmanHinnoitteluEiTallennettu}
 
     (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}
-           (e! (tiedot/->HinnoitteleHintaryhma 1)
+           (e! (tiedot/->TallennaHintaryhmanHinnoittelu 1)
                {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false})))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu

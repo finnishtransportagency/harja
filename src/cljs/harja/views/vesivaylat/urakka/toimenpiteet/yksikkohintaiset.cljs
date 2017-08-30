@@ -173,14 +173,14 @@
            (r/wrap (hinta/hinnan-maara-otsikolla
                      (get-in app* [:hinnoittele-hintaryhma ::h/hinnat])
                      tiedot/hintaryhman-hintakentta-otsikko)
-                   #(e! (tiedot/->HinnoitteleHintaryhmaKentta
+                   #(e! (tiedot/->AsetaHintaryhmakentalleTiedot
                           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                            ::hinta/maara %})))]
           [:span " "]
           [:span "€"]]
          [napit/tallenna
           "Valmis"
-          #(e! (tiedot/->HinnoitteleHintaryhma (:hinnoittele-hintaryhma app*)))
+          #(e! (tiedot/->TallennaHintaryhmanHinnoittelu (:hinnoittele-hintaryhma app*)))
           {:disabled (or (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
