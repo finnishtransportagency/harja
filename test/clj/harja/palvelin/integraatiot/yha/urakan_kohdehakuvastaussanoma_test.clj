@@ -42,5 +42,4 @@
     (is (= 1 (count (:kohteet vastaus))))
     (is (= 3 (:yha-id (first (:kohteet vastaus)))))
     (is (= 2 (count (:alikohteet (first (:kohteet vastaus))))))
-    (is (= "A" (:tunnus (first (:alikohteet (first (:kohteet vastaus)))))))
-    (is (= "B" (:tunnus (second (:alikohteet (first (:kohteet vastaus)))))))))
+    (is (= "A" (:tunnus (first (:kohteet vastaus)))))))
