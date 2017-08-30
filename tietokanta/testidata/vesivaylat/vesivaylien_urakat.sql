@@ -16,7 +16,7 @@ INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 
 -- URAKKA
-INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro, sampoid)
 VALUES
   ('Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
     'MAKU 2005 kunnossapidon osaindeksi',
@@ -26,9 +26,10 @@ VALUES
     (SELECT id FROM hanke WHERE nimi = 'Saimaan kartoitus'),
     'vesivayla-hoito',
     true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-    444);
+    444, 'vv-HAR-123');
 
-INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro)
+
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro, sampoid)
 VALUES
   ('Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
     'MAKU 2005 kunnossapidon osaindeksi',
@@ -38,17 +39,18 @@ VALUES
     (SELECT id FROM hanke WHERE nimi = 'Saimaan korjaushanke'),
     'vesivayla-hoito',
     true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
-    '555');
+    '555', 'vv-HAR-124');
 
-INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja)
+
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, tyyppi,  harjassa_luotu, luotu, luoja, sampoid)
 VALUES
   ('Kotkan väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
     'MAKU 2005 kunnossapidon osaindeksi',
    '2016-08-01', '2019-07-30',
    'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), 'vv-HAR-125');
 
-INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja)
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, sampoid)
 VALUES
   ('Turun väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
     'MAKU 2010 ylläpidon kokonaisindeksi',
@@ -57,7 +59,7 @@ VALUES
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
    (SELECT id FROM hanke WHERE nimi = 'Pohjanmeren hoitohanke'),
    'vesivayla-hoito',
-   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
+   true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), 'vv-HAR-126');
 
 -- SOPIMUS
 INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)

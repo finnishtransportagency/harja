@@ -29,6 +29,9 @@
                       ::toimenpide/lisatyo? ::toimenpide/reimari-lisatyo?})
 
 (defn sopimustiedot-ok? [toimenpide-tiedot]
+  ;; Sopimustiedot määriteltiin alunperin pakollisiksi rajapinnassa, mutta
+  ;; onkin poikkeustapauksia jossa reimarin tietokantaan päätyy sopimuksettomia
+  ;; toimenpiteitä. Näitä emme osaa käsitellä joten ne jätetään tuomatta Harjaan.
   (let [sop (-> toimenpide-tiedot ::toimenpide/reimari-sopimus)
         sisaltaa-tekstia #(-> sop % str not-empty)]
     (and (sisaltaa-tekstia ::sopimus/r-nro)
