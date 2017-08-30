@@ -4,7 +4,6 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
-            [harja.views.vesivaylat.urakka.toimenpiteet.toimenpiteen-hinnoittelu :as hinnoittelu-ui]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
@@ -31,6 +30,9 @@
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
+
+;;;;;;;
+;; Urakkatoiminnot: Hintaryhmän valitseminen
 
 (defn- hinnoitteluvaihtoehdot [e! {:keys [valittu-hintaryhma toimenpiteet hintaryhmat] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
@@ -142,6 +144,250 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
+;;;;;;;;;;;;
+;; Hinnan antamisen leijuke
+
+;; HOX Hinnan antamisessa otsikko on sekä UI:lla näkyvä otsikko että hinnan nimi kannassa.
+;; Jos otsikkoa muutetaan, joudutaan myös hintojen nimet kannassa migratoimaan.
+
+(defn- muu-tyo-kentta
+  [e! app* otsikko]
+  [:span
+   [:span
+    [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
+     (r/wrap (hinta/hinnan-maara-otsikolla
+               (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
+               otsikko)
+             (fn [uusi]
+               (e! (tiedot/->HinnoitteleToimenpideKentta {::hinta/otsikko otsikko
+                                                          ::hinta/maara uusi}))))]]
+   [:span " "]
+   [:span "€"]])
+
+(defn- yleiskustannuslisa-kentta
+  [e! app* otsikko]
+  [tee-kentta {:tyyppi :checkbox}
+   (r/wrap (if-let [yleiskustannuslisa (hinta/hinnan-yleiskustannuslisa
+                                         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
+                                         otsikko)]
+             (pos? yleiskustannuslisa)
+             false)
+           (fn [uusi]
+             (e! (tiedot/->HinnoitteleToimenpideKentta
+                   {::hinta/otsikko otsikko
+                    ::hinta/yleiskustannuslisa (if uusi
+                                                 hinta/yleinen-yleiskustannuslisa
+                                                 0)}))))])
+
+(defn toimenpiteen-hinnoittelutaulukko-hinnoittelurivi [e! app* otsikko]
+  [:tr.muu-hinnoittelu-rivi
+   [:td.tyon-otsikko (str otsikko ":")]
+   [:td [muu-tyo-kentta e! app* otsikko]]
+   [:td [yleiskustannuslisa-kentta e! app* otsikko]]
+   [:td]])
+
+(defn toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
+  [:tr.hinnoittelun-yhteenveto-rivi
+   [:td.tyon-otsikko (str otsikko ":")]
+   [:td arvo]
+   [:td]
+   [:td]])
+
+;; Toimenpiteen hinnoittelun pudotusvalikkoon:
+(defrecord HintaValinta [nimi])
+(defrecord TyoValinta [nimi yksikko toimenpidekoodi-id yksikkohinta])
+
+(defn- suunniteltu-tyo->Record [suunniteltu-tyo]
+  (->TyoValinta (:tehtavan_nimi suunniteltu-tyo)
+                (:yksikko suunniteltu-tyo)
+                (:tehtava suunniteltu-tyo)
+                (:yksikkohinta suunniteltu-tyo)))
+
+(defn- hinnoittelun-yhteenveto [app*]
+  (let [suunnitellut-tyot (:suunnitellut-tyot app*)
+        tyorivit (tiedot/tyorivit-taulukosta->tallennusmuotoon
+                   (get-in app* [:hinnoittele-toimenpide ::h/tyot]))
+        hinnat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
+        perushinnat-yhteensa (hinta/perushinta
+                               (concat hinnat tyorivit))
+        hinnat-yleiskustannuslisineen-yhteensa (hinta/kokonaishinta-yleiskustannuslisineen
+                                                 (concat hinnat tyorivit))
+        tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
+        yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus
+                                     (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))]
+    [:tbody
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Perushinta" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Yleiskustannuslisät (12%)" (fmt/euro-opt yleiskustannuslisien-osuus)]
+     [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
+      "Yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]))
+
+(defn- toimenpiteen-hinnoittelutaulukko [e! app*]
+  (let [valittu-aikavali (get-in app* [:valinnat :aikavali])
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       valittu-aikavali)
+        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])]
+    [:table.vv-toimenpiteen-hinnoittelutiedot-grid
+     [:thead
+      [:tr
+       [:th {:style {:width "55%"}}]
+       [:th {:style {:width "30%"}} "Hinta / määrä"]
+       [:th {:style {:width "10%"}} "YK-lisä"]
+       [:th {:style {:width "5%"}} ""]]]
+     [:tbody
+      [:tr.otsikkorivi
+       [:td.tyot-osio [:b "Sopimushintaiset työt"]]
+       [:td.tyot-osio]
+       [:td.tyot-osio]
+       [:td.tyot-osio]]
+      (map-indexed
+        (fn [index tyorivi]
+          ^{:key index}
+          [:tr.tyon-hinnoittelu-rivi
+           [:td.tyot-osio
+            ;; TODO Tehdäänkö combobox?
+            (let [hintavalinnat (map #(->HintaValinta %) tyo/tyo-hinnat)
+                  tyovalinnat (map suunniteltu-tyo->Record suunnitellut-tyot)
+                  kaikki-valinnat (concat hintavalinnat tyovalinnat)]
+              [yleiset/livi-pudotusvalikko
+               {:valitse-fn #(cond (instance? HintaValinta %)
+                                   (e! (tiedot/->AsetaTyorivilleTiedot
+                                         {:index index
+                                          :toimenpidekoodi-id nil
+                                          :hinta-nimi (:nimi %)}))
+
+                                   (instance? TyoValinta %)
+                                   (e! (tiedot/->AsetaTyorivilleTiedot
+                                         {:index index
+                                          :toimenpidekoodi-id (:toimenpidekoodi-id %)
+                                          :hinta-nimi nil})))
+                :format-fn #(cond (instance? HintaValinta %) (:nimi %)
+                                  (instance? TyoValinta %) (str (:nimi %) " (" (fmt/euro (:yksikkohinta %))
+                                                                " / " (:yksikko %) ")")
+                                  :default "Valitse työ")
+                :nayta-ryhmat [:hinta :tyo]
+                :ryhmittely #(cond (instance? HintaValinta %) :hinta
+                                   (instance? TyoValinta %) :tyo)
+                :ryhman-otsikko #(case % :hinta "Hinta" :tyo "Sopimushinnat")
+                :class "livi-alasveto-250"
+                :valinta (first (filter #(cond (instance? TyoValinta %)
+                                               (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
+
+                                               (instance? HintaValinta %)
+                                               (= (:hinta-nimi tyorivi) (:nimi %)))
+                                        kaikki-valinnat))
+                :disabled false}
+               kaikki-valinnat])]
+           [:td.tyot-osio
+            [:span
+             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+              (r/wrap (:maara tyorivi)
+                      (fn [uusi]
+                        (e! (tiedot/->AsetaTyorivilleTiedot
+                              {:index index
+                               :maara uusi}))))]
+             [:span " "]
+             (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla suunnitellut-tyot
+                                                                   (:toimenpidekoodi-id tyorivi))
+                   hinta-nimi (:hinta-nimi tyorivi)
+                   yksikko (:yksikko toimenpidekoodi)
+                   yksikkohinta (:yksikkohinta toimenpidekoodi)
+                   tyon-hinta-voidaan-laskea? (and yksikko yksikkohinta)]
+               (cond tyon-hinta-voidaan-laskea?
+                     [:span
+                      yksikko
+                      " (" (fmt/euro (* (:maara tyorivi) yksikkohinta)) ")"]
+
+                     hinta-nimi "€"
+                     :default nil))]]
+           [:td.tyot-osio]
+           [:td.tyot-osio
+            [:span.klikattava
+             {:on-click #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))}
+             (ikonit/livicon-trash)]]])
+        tyot)
+      [:tr.tyon-hinnoittelu-rivi
+       [:td.tyot-osio.lisaa-tyorivi-solu
+        [napit/uusi "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]
+       [:td.tyot-osio]
+       [:td.tyot-osio]
+       [:td.tyot-osio]]
+      [:tr.otsikkorivi
+       [:td [:b "Muut"]]
+       [:td]
+       [:td]
+       [:td]]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Komponentit"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Yleiset materiaalit"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Matkakulut"]
+      [toimenpiteen-hinnoittelutaulukko-hinnoittelurivi
+       e! app* "Muut kulut"]]
+     [hinnoittelun-yhteenveto app*]]))
+
+(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
+  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
+        toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
+        toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
+        tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        valittu-aikavali (get-in app* [:valinnat :aikavali])
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       valittu-aikavali)
+        hinnoittelu-validi? (every? #(or (:toimenpidekoodi-id %)
+                                         (:hinta-nimi %))
+                                    tyot)]
+    [:div
+     (if (and hinnoittele-toimenpide-id
+              (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
+       ;; Piirrä leijuke
+       [:div
+        [leijuke {:otsikko "Hinnoittele toimenpide"
+                  :sulje! #(e! (tiedot/->PeruToimenpiteenHinnoittelu))}
+         [:div.vv-toimenpiteen-hinnoittelutiedot
+          {:on-click #(.stopPropagation %)}
+          (if (or (nil? (:suunnitellut-tyot app*)) (true? (:suunniteltujen-toiden-haku-kaynnissa? app*)))
+            [ajax-loader "Ladataan..."]
+            [toimenpiteen-hinnoittelutaulukko e! app*])
+          [:footer.vv-toimenpiteen-hinnoittelu-footer
+           [napit/peruuta
+            "Peruuta"
+            #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
+           [napit/tallenna
+            "Valmis"
+            #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
+            {:disabled (or
+                         (not hinnoittelu-validi?)
+                         (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                         (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                       (:id @nav/valittu-urakka))))}]]]]]
+
+       ;; Solun sisältö
+       (grid/arvo-ja-nappi
+         {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (get-in app* [:valinnat :urakka-id])))
+                         :pelkka-arvo
+
+                         (not (to/toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
+                         :pelkka-nappi
+
+                         :default
+                         :arvo-ja-nappi)
+          :pelkka-nappi-teksti "Hinnoittele"
+          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
+          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
+          :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
+                                       (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                     (:id @nav/valittu-urakka))))}
+          :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
+                                 (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
+                                                           suunnitellut-tyot)))
+          :ikoninappi? true}))]))
+
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
         hintaryhman-toimenpiteet (:toimenpiteet app*)
@@ -185,31 +431,32 @@
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
-        (if (empty? hinnat)
-          [napit/yleinen-ensisijainen
-           "Määrittele yksi hinta koko tilaukselle"
-           #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-           {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-          [:div
-           [:div.inline-block {:style {:margin-right "10px"}}
-            (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
-              [:span
-               [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
-              ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
-              ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
-              ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
-              [yleiset/tietoja {:tietokentan-leveys "180px"}
-               "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
-               "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
-               "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
-           [:div.inline-block {:style {:vertical-align :top}}
-            [napit/yleinen-toissijainen
-             (ikonit/muokkaa)
+        (when-not (tiedot/valiaikainen-hintaryhma? hintaryhma)
+          (if (empty? hinnat)
+            [napit/yleinen-ensisijainen
+             "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-             {:ikoninappi? true
-              :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
-                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                      (:id @nav/valittu-urakka)))}]]]))]]))
+             {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+            [:div
+             [:div.inline-block {:style {:margin-right "10px"}}
+              (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
+                [:span
+                 [:b "Tilauksen hinta: "] [:span (fmt/euro-opt (hinta/kokonaishinta-yleiskustannuslisineen hinnat))]]
+                ;; Yleensä hintaryhmän toimenpiteillä on vain yksi könttähinta.
+                ;; On kuitenkin mahdollista määrittää myös toimenpiteille omia hintoja hintaryhmän sisällä
+                ;; Näytetään tällöin ryhmän hinta, toimenpiteiden kok. hinta ja yhteissumma
+                [yleiset/tietoja {:tietokentan-leveys "180px"}
+                 "Toimenpiteet:" (fmt/euro-opt hintaryhman-toimenpiteiden-yhteishinta)
+                 "Tilauksen hinta:" (fmt/euro-opt hintaryhman-kokonaishinta)
+                 "Yhteensä:" (fmt/euro-opt (+ hintaryhman-toimenpiteiden-yhteishinta hintaryhman-kokonaishinta))])]
+             [:div.inline-block {:style {:vertical-align :top}}
+              [napit/yleinen-toissijainen
+               (ikonit/muokkaa)
+               #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
+               {:ikoninappi? true
+                :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (:id @nav/valittu-urakka)))}]]])))]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
@@ -230,7 +477,8 @@
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [hintaryhmat (concat
-                          (tiedot/kokonaishintaisista-siirretyt-hintaryhma)
+                          [tiedot/kokonaishintaisista-siirretyt-hintaryhma]
+                          [tiedot/reimarin-lisatyot-hintaryhma]
                           (h/jarjesta-hintaryhmat hintaryhmat))]
         [:div
          [kartta/kartan-paikka]
@@ -240,76 +488,78 @@
 
          [jaettu/tulokset e! app
           [:div
-           (for* [hintaryhma hintaryhmat
-                 :let [hintaryhma-id (::h/id hintaryhma)
-                       hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
-                       app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
-                       listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
-                       hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
-                       nayta-hintaryhma?
-                       (boolean
-                         (or
-                           ;; Kok. hint. siirretyt -ryhmä, jos ei tyhjä
-                           (and (tiedot/kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
-                                (not (empty? hintaryhman-toimenpiteet)))
-                           hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
-                           (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
-                       nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
-                                                                   (not (empty? hintaryhman-toimenpiteet))))]]
 
-             (when nayta-hintaryhma?
-               ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
-               [:div.vv-toimenpideryhma
-                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                [:span [napit/nappi
-                        (ikonit/map-marker)
-                        #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                           (e! (tiedot/->PoistaHintaryhmanKorostus))
+           (doall
+             (for [hintaryhma hintaryhmat
+                  :let [hintaryhma-id (::h/id hintaryhma)
+                        hintaryhman-toimenpiteet (to/toimenpiteet-hintaryhmalla toimenpiteet hintaryhma-id)
+                        app* (assoc app :toimenpiteet hintaryhman-toimenpiteet)
+                        listaus-tunniste (keyword (str "listaus-" hintaryhma-id))
+                        hintaryhma-tyhja? (::h/tyhja? hintaryhma) ;; Ei sisällä toimenpiteitä kannassa
+                        nayta-hintaryhma?
+                        (boolean
+                          (or
+                            ;; Kok. hint. siirretyt tai reimarin lisätyöt -ryhmä, jos ei tyhjä
+                            (and (tiedot/valiaikainen-hintaryhma? hintaryhma)
+                                 (not (empty? hintaryhman-toimenpiteet)))
+                            hintaryhma-tyhja? ;; Kannassa täysin tyhjä hintaryhmä; piirretään aina, jotta voi poistaa
+                            (not (empty? hintaryhman-toimenpiteet)))) ;; Sis. toimenpiteitä käytetyillä suodattimilla
+                        nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
+                                                                    (not (empty? hintaryhman-toimenpiteet))))]]
 
-                           (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
-                        {:ikoninappi? true
-                         :disabled hintaryhma-tyhja?
-                         :luokka (str "vv-hintaryhma-korostus-nappi "
-                                      (if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                                        "nappi-ensisijainen"
-                                        "nappi-toissijainen"))}]
-                 [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
+              (when nayta-hintaryhma?
+                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
+                [:div.vv-toimenpideryhma
+                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
+                 [:span [napit/nappi
+                         (ikonit/map-marker)
+                         #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                            (e! (tiedot/->PoistaHintaryhmanKorostus))
 
-                (if hintaryhma-tyhja?
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
-                  [:div
-                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
-                   [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
-                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
-                   [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
-                    {:disabled (or (:hintaryhmien-poisto-kaynnissa? app)
-                                   (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
-                                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                 (:id @nav/valittu-urakka))))}]]
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
-                  [jaettu/listaus e! app*
-                   {:sarakkeet
-                    [jaettu/sarake-tyoluokka
-                     jaettu/sarake-toimenpide
-                     jaettu/sarake-pvm
-                     jaettu/sarake-turvalaite
-                     jaettu/sarake-vikakorjaus
-                     (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                       "lisää-liite"
-                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                       (:id @nav/valittu-urakka)))
-                     {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                      :komponentti (fn [rivi]
-                                     [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
-                     (jaettu/sarake-checkbox e! app)]
-                    :listaus-tunniste listaus-tunniste
-                    :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
-                    :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
-                    :footer (when nayta-hintaryhman-yhteenveto?
-                              [hintaryhman-hinnoittelu e! app* hintaryhma])
-                    :otsikko (h/hintaryhman-nimi hintaryhma)
-                    :paneelin-checkbox-sijainti "95.5%"
-                    :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
+                            (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
+                         {:ikoninappi? true
+                          :disabled hintaryhma-tyhja?
+                          :luokka (str "vv-hintaryhma-korostus-nappi "
+                                       (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                         "nappi-ensisijainen"
+                                         "nappi-toissijainen"))}]
+                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
+
+                 (if hintaryhma-tyhja?
+                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
+                   [:div
+                    ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
+                    [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                    ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
+                    [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
+                     {:disabled (or (:hintaryhmien-poisto-kaynnissa? app)
+                                    (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
+                                                                  oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                  (:id @nav/valittu-urakka))))}]]
+                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                   [jaettu/listaus e! app*
+                    {:sarakkeet
+                     [jaettu/sarake-tyoluokka
+                      jaettu/sarake-toimenpide
+                      jaettu/sarake-pvm
+                      jaettu/sarake-turvalaite
+                      jaettu/sarake-vikakorjaus
+                      (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
+                                                        "lisää-liite"
+                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                        (:id @nav/valittu-urakka)))
+                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                       :komponentti (fn [rivi]
+                                      [hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                      (jaettu/sarake-checkbox e! app)]
+                     :listaus-tunniste listaus-tunniste
+                     :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
+                     :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
+                     :footer (when nayta-hintaryhman-yhteenveto?
+                               [hintaryhman-hinnoittelu e! app* hintaryhma])
+                     :otsikko (h/hintaryhman-nimi hintaryhma)
+                     :paneelin-checkbox-sijainti "95.5%"
+                     :vaylan-checkbox-sijainti "95.5%"}])])))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

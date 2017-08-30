@@ -154,7 +154,7 @@
 
 (defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
-        (filter #(not (empty? (::vv-toimenpide/vikailmoitukset %))) toimenpiteet)
+        (filter #(not (empty? (::vv-toimenpide/reimari-viat %))) toimenpiteet)
         :default toimenpiteet))
 
 (defn- toimenpiteet-hintatiedoilla [db toimenpiteet]

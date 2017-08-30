@@ -188,6 +188,9 @@ reimari-toimenpidetyypit
   (set (filter #(= (get reimari-toimenpidetyypit %) avain)
                (keys reimari-toimenpidetyypit))))
 
+(defn reimari-lisatyo-fmt [lisatyo?]
+  (when lisatyo? "Kyllä"))
+
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide
     :alukset-ja-veneet "Alukset ja veneet"
@@ -374,6 +377,7 @@ reimari-tilat
 (def perustiedot
   #{::id
     ::lisatieto
+    ::reimari-lisatyo?
     ::suoritettu
     ::hintatyyppi
     ::reimari-henkilo-lkm})
