@@ -64,6 +64,9 @@
                  (fn [uusi]
                    (e! (tiedot/->OtsikoiToimenpideKentta {::hinta/id (::hinta/id hinta)
                                                           ::hinta/otsikko uusi}))))])]
+     [:td]
+     [:td]
+     [:td]
      [:td.tasaa-oikealle [hintakentta e! hinta]]
      [:td.keskita [yleiskustannuslisakentta e! hinta]]
      [:td
@@ -73,6 +76,8 @@
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
    [:td otsikko]
+   [:td]
+   [:td]
    [:td]
    [:td.tasaa-oikealle arvo]
    [:td]
@@ -91,8 +96,9 @@
     [:th {:style {:width "40%"}} "Työ"]
     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-    [:th {:style {:width "10%"}} "Yks."]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Yhteensä"]
+    [:th {:style {:width "5%"}} "Yks."]
+    [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+    [:th.tasaa-oikealle {:style {:width "10%"}} ""]
     [:th {:style {:width "5%"}} ""]]])
 
 (defn- muu-hinnoittelu-header
@@ -100,9 +106,12 @@
   ([otsikot?]
    [:thead
     [:tr
-     [:th {:style {:width "45%"}} (when otsikot? "Työ")]
-     [:th {:style {:width "20%"}} (when otsikot? "Hinta yhteensä")]
-     [:th {:style {:width "10%"}} (when otsikot? "YK-lisä")]
+     [:th {:style {:width "40%"}} (when otsikot? "Työ")]
+     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
+     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
+     [:th {:style {:width "5%"}} ""]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "Yhteensä")]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
 (defn- hinnoittelun-yhteenveto [app*]
@@ -146,13 +155,13 @@
     [:tbody
      (map-indexed
        (fn [index tyorivi]
-         ^{:key index}
          (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
                                                                (:toimenpidekoodi-id tyorivi))
                hinta-nimi (:hinta-nimi tyorivi)
                yksikko (:yksikko toimenpidekoodi)
                yksikkohinta (:yksikkohinta toimenpidekoodi)
                tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+           ^{:key index}
            [:tr
             [:td
              (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
@@ -188,6 +197,7 @@
             [:td yksikko]
             [:td.tasaa-oikealle
              (when tyon-hinta-voidaan-laskea? (fmt/euro (* (:maara tyorivi) yksikkohinta)))]
+            [:td]
             [:td.keskita
              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))]]]))
        (get-in app* [:hinnoittele-toimenpide ::h/tyot]))]]
@@ -207,7 +217,7 @@
     [:div.hinnoitteluosio.komponentit-osio
      [valiotsikko "Komponentit"]
      [:table
-      [muu-hinnoittelu-header]
+      [sopimushintaiset-tyot-header]
       [:tbody
        (map-indexed
          (fn [index komponentti]
@@ -221,6 +231,13 @@
               (r/wrap 0
                       (fn [uusi]
                         (log "TODO")))]]
+            [:td.tasaa-oikealle
+             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+              (r/wrap 0
+                      (fn [uusi]
+                        (log "TODO")))]]
+            [:td]
+            [:td] ; TODO Yhteensä
             [:td] ; TODO YK-lisä
             [:td.keskita
              [ikonit/klikattava-roskis #(log "TODO POISTA KOMPONENTTI!")]]]) ; TODO
