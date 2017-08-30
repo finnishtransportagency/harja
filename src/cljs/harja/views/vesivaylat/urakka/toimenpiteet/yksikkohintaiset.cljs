@@ -4,6 +4,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
+            [harja.views.vesivaylat.urakka.toimenpiteet.toimenpiteen-hinnoittelu :as hinnoittelu-ui]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
