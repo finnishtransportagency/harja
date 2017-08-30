@@ -64,13 +64,19 @@
 (defn valitse-toteuman-idlla! [toteumaid]
   (swap! varusteet assoc :valittu-toteumaid toteumaid))
 
-(defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
+(def ^:const ilmoitushaun-viive-ms 500)
+(def ^:const taustahaun-viive-ms 20000)
+
+(defn peru-taustahaku [{toteumahaku-id :toteumahaku-id}]
   (when toteumahaku-id
-    (.clearTimeout js/window toteumahaku-id))
+    (.clearTimeout js/window toteumahaku-id)))
+
+(defn- hae [timeout {toteumahaku-id :toteumahaku-id :as app}]
+  (peru-taustahaku app)
   (assoc app
     :toteumahaku-id (.setTimeout js/window
                                  (t/send-async! v/->HaeVarusteToteumat)
-                                 500)
+                                 timeout)
     :toteumat nil))
 
 (defn- tooltip [{:keys [toimenpide tietolaji alkupvm]}]
@@ -79,6 +85,15 @@
     (varusteet-domain/varuste-toimenpide->string toimenpide)
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
+
+(defn valittu-varustetoteuma-kartalla [varustetoteuma-kartalla valittu-varustetoteuma]
+  (and valittu-varustetoteuma
+       (or (and (:id varustetoteuma-kartalla)
+                (= (:id valittu-varustetoteuma)
+                   (:id varustetoteuma-kartalla)))
+           (and (get-in valittu-varustetoteuma [:arvot :tunniste])
+                (= (get-in valittu-varustetoteuma [:arvot :tunniste])
+                   (get-in varustetoteuma-kartalla [:varuste :tunniste]))))))
 
 (defn varustetoteumat-karttataso [toteumat tierekisterin-varusteet valittu-varustetoteuma]
   (kartalla-esitettavaan-muotoon
@@ -91,13 +106,7 @@
                                    :coordinates sijainti})))
                   toteumat)
             (map #(assoc % :tyyppi-kartalla :varuste) tierekisterin-varusteet))
-    #(and valittu-varustetoteuma
-          (or (and (:id %)
-                   (= (:id valittu-varustetoteuma)
-                      (:id %)))
-              (and (get-in valittu-varustetoteuma [:arvot :tunniste])
-                   (= (get-in valittu-varustetoteuma [:arvot :tunniste])
-                      (get-in % [:varuste :tunniste])))))))
+    #(valittu-varustetoteuma-kartalla % valittu-varustetoteuma)))
 
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
@@ -193,7 +202,7 @@
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (defn kartalle [app]
-  (assoc app :karttataso (varustetoteumat-karttataso (:toteumat app)
+  (assoc app :karttataso (varustetoteumat-karttataso (:naytettavat-toteumat app)
                                                      (get-in app [:tierekisterin-varusteet :varusteet])
                                                      (:varustetoteuma app))))
 
@@ -203,14 +212,16 @@
                       :y (.-latitude coords)}]
     (k/post! :hae-tr-gps-koordinaateilla koordinaatit)))
 
+(defn varustetoteuma-muokattava? [toteuma]
+  (= "virhe" (:tila toteuma)))
+
 (extend-protocol t/Event
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
-    (hae (update app :valinnat merge valinnat)))
+    (hae ilmoitushaun-viive-ms (update app :valinnat merge valinnat)))
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-
     (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
       (-> app
           (tuck-tyokalut/palvelukutsu :urakan-varustetoteumat
@@ -228,14 +239,17 @@
                   {valittu-toimenpide :valittu-toimenpide
                    valittu-toteumaid :valittu-toteumaid
                    :as app}]
-    (kartalle
-      (assoc app
-        :toteumat toteumat
-        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
-        :varustetoteuma (when valittu-toteumaid
-                          (some #(when (= (:toteumaid %) valittu-toteumaid) %)
-                                toteumat))
-        :valittu-toteumaid nil)))
+
+    (hae
+      taustahaun-viive-ms
+      (kartalle
+        (assoc app
+          :toteumat toteumat
+          :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
+          :varustetoteuma (when valittu-toteumaid
+                            (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                  toteumat))
+          :valittu-toteumaid nil))))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
@@ -247,8 +261,9 @@
           :naytettavat-toteumat naytettavat-toteumat))))
 
   v/ValitseToteuma
-  (process-event [{toteuma :toteuma} _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (= "virhe" (:tila toteuma)))))]
+  (process-event [{toteuma :toteuma} app]
+    (peru-taustahaku app)
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? (varustetoteuma-muokattava? toteuma))))]
       (kartalle (tulos!))))
 
   v/TyhjennaValittuToteuma
@@ -287,7 +302,8 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil :naytettava-varuste nil)))
+      (kartalle
+        (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil :naytettava-varuste nil))))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
