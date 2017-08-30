@@ -28,19 +28,7 @@
 
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
-   ;; Hinnat sisältää komponenttien hinnat sekä muut hinnat
    ::h/hinnat nil
-   ;; Työt-vector sisältää sekä tehtyjä töitä (vesivaylat.tyo domain) että töiden hinnoitteluja, kuten
-   ;; päivän hinta ja omakustannushinta (vesivaylat.hinta domain). Tästä syystä nämä käsiteltävät
-   ;; työrivit eivät ole namespacetettuja, koska tyyppiä voidaan vaihdella UI:lla.
-   ;; Kannasta nostettu data unnamespacetetaan työriveiksi, ja
-   ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa
-   ;; eli kumpaan tauluun tieto tallennetaan.
-
-   ;; Riveillä ei myöskään ola id:tä, koska:
-   ;; - Olisi hankalaa erotella onko kyseessä tyo/id vai hinta/id, jos tyyppiä vaihdetaan
-   ;; - Payload korvaa kantaan tallennetut työt ja hinnat poistamalla vanhat ja luomalla uudet
-   ;; Rivien muokkausta hallitaan täten indekseillä
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
@@ -198,6 +186,13 @@
                                 yleiskustannuslisa
                                 0)})
 
+(defn- tyokentta
+  "Generoi työkentän annetulla id:llä ja otsikolla. Ottaa annetun työn tiedot (toimenpidekoodi-id & määrä)
+  käyttöön jos tiedot löytyvät."
+  [id tyo]
+  {::tyo/id id
+   ::tyo/maara (or (::tyo/maara tyo) 0)})
+
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
 
@@ -230,37 +225,6 @@
     ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
     ;; Jos ei ole aiempaa ryhmähintaa, luo uuden hintakentän ilman id:tä.
     [(hintakentta (::hinta/id ryhmahinta) hintaryhman-hintakentta-otsikko ryhmahinta)]))
-
-(defn- drop-index [col idx]
-  (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
-
-(defn- tyo->taulukkomuotoon [tyot]
-  (mapv (fn [rivi]
-          (cond
-            ;; Työrivi
-            (::tyo/toimenpidekoodi-id rivi)
-            {:toimenpidekoodi-id (::tyo/toimenpidekoodi-id rivi)
-             :hinta-nimi nil
-             :maara (::tyo/maara rivi)}
-            ;; Hintarivi
-            (::hinta/otsikko rivi)
-            {:toimenpidekoodi-id nil
-             :hinta-nimi (::hinta/otsikko rivi)
-             :maara (::hinta/maara rivi)}))
-        tyot))
-
-(defn- tyorivit-taulukosta->tallennusmuotoon [tyot]
-  (mapv (fn [rivi]
-          (cond
-            ;; Työrivi
-            (:toimenpidekoodi-id rivi)
-            {::tyo/toimenpidekoodi-id (:toimenpidekoodi-id rivi)
-             ::tyo/maara (:maara rivi)}
-            ;; Hintarivi
-            (:hinta-nimi rivi)
-            {::hinta/otsikko (:hinta-nimi rivi)
-             ::hinta/maara (:maara rivi)}))
-        tyot))
 
 (extend-protocol tuck/Event
 
@@ -421,12 +385,11 @@
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
-          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)
-          tyo-hinnat (filter #(tyo/tyo-hinnat (::hinta/otsikko %)) hinnat)]
+          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
-                  ::h/tyot (tyo->taulukkomuotoon (concat tyot tyo-hinnat))})))
+                  ::h/tyot tyot})))
 
   AloitaHintaryhmanHinnoittelu
   (process-event [{hintaryhma-id :hintaryhma-id} app]
@@ -469,11 +432,10 @@
                                                {::hinta/id id})
                                              {::hinta/otsikko (::hinta/otsikko hinta)
                                               ::hinta/maara (::hinta/maara hinta)
-                                              ::hinta/ryhma :muu ;; TODO Komponenttien hinnoilla :komponentti
+                                              ::hinta/ryhma :muu ;; TODO Muut työt = :tyo, Komponentit = :komponentti
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
-             ::h/tallennettavat-tyot (tyorivit-taulukosta->tallennusmuotoon
-                                       (get-in app [:hinnoittele-toimenpide ::h/tyot]))}
+             ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
@@ -576,17 +538,16 @@
 
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
-    (let [nykyiset-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          index (:index tiedot)
-          paivitettava-rivi (get nykyiset-tyot index)
-          paivitetyt-tyot (assoc nykyiset-tyot index (merge paivitettava-rivi
-                                                            (dissoc tiedot :index)))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                          ::h/tyot]) tiedot)))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          paivitetyt-tyot (conj tyot {:maara 0})]
+          tyo-idt (map ::tyo/id tyot)
+          seuraava-vapaa-id (dec (apply min (conj tyo-idt 0)))
+          paivitetyt-tyot (conj tyot (tyokentta seuraava-vapaa-id nil))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   LisaaKulurivi
@@ -594,8 +555,8 @@
     ;; TODO TESTI
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           hinta-idt (map ::hinta/id hinnat)
-          seuraava-vapaa-id (dec (apply min [hinta-idt 0]))
-          paivitetyt-hinnat (conj hinnat (hintakentta seuraava-vapaa-id "" 0))]
+          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
+          paivitetyt-hinnat (conj hinnat (hintakentta seuraava-vapaa-id "" nil))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaKulurivi
@@ -605,10 +566,9 @@
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
           (if (neg? id)
-            ;; Uusi lisätty rivi poistetaan kokonaan hintojen joukosta
+            ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::hinta/id %) id) hinnat)
             ;; Kannassa oleva rivi merkitään poistetuksi
-            ;; TODO Vaatii kantaan tuen hintarivin poistolle, ei ole ollut tähän asti mahdollista
             (mapv #(if (= (::hinta/id %) id)
                      (assoc % ::m/poistettu? true)
                      %)
@@ -617,10 +577,19 @@
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tiedot :tiedot} app]
-    (let [index (:index tiedot)
-          tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-                (vec (drop-index tyot index)))))
+    (let [id (::tyo/id tiedot)
+          tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+          ;; TODO Vaikuttaa pitkälti samalta kuin hintarivin poisto. Tee yhteinen funkkari?
+          paivitetyt-tyot
+          (if (neg? id)
+            ;; Uusi lisätty rivi poistetaan kokonaan
+            (filterv #(not= (::tyo/id %) id) tyot)
+            ;; Kannassa oleva rivi merkitään poistetuksi
+            (mapv #(if (= (::tyo/id %) id)
+                     (assoc % ::m/poistettu? true)
+                     %)
+                  tyot))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

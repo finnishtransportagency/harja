@@ -2,7 +2,6 @@
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.toimenpiteen-hinnoittelu :as ui-tiedot]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
@@ -116,99 +115,83 @@
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
-        tyorivit (tiedot/tyorivit-taulukosta->tallennusmuotoon
-                   (get-in app* [:hinnoittele-toimenpide ::h/tyot]))
+        tyorivit (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         hinnat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
-        perushinnat-yhteensa (hinta/perushinta
-                               (concat hinnat tyorivit))
-        hinnat-yleiskustannuslisineen-yhteensa (hinta/kokonaishinta-yleiskustannuslisineen
-                                                 (concat hinnat tyorivit))
+        hinnat-yhteensa (hinta/perushinta hinnat)
         tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
-        yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus
-                                     (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))]
+        yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus hinnat)]
     [:div
      [valiotsikko ""]
      [:table
       [muu-hinnoittelu-header false]
       [:tbody
        [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-        "Hinnat yhteensä" (fmt/euro-opt (+ perushinnat-yhteensa tyot-yhteensa))]
+        "Hinnat yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa))]
        [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
         "Yleiskustannuslisät (12%) yhteensä" (fmt/euro-opt yleiskustannuslisien-osuus)]
        [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
-        "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yleiskustannuslisineen-yhteensa tyot-yhteensa))]]]]))
+        "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa
+                                           yleiskustannuslisien-osuus))]]]]))
 
 (defn- sopimushintaiset-tyot [e! app*]
-  [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-   [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
-   [:table
-    ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
-    ;; TODO Kaukon muutosten pohjalta tehdään näin:
-    ;; - Päivän hinta ja omakustannushinta pois täältä.
-    ;;  Jos niitä on aiemmin kirjattu, niin näytetään muut -otsikon alla (pitäisi toimia autom. näin)
-    ;; - namespacetetaan mapit työksi, pidetään id:t tallessa
-    ;; - Kannassa tehdään normaali insert / update, ei siis enää poisteta aiempiä töitä kuten tähän asti, koska
-    ;; tyyppi on tästä lähtien aina työtä
-    ;; - Oma sarake: yksikkö, yksikköhinta, hinta yhteensä. Edelleen vain määrää voi muokata.
-    ;; - Oma osio Muut työt, johon voi listata vapaasti hintarivejä omalla tekstillä
-    [sopimushintaiset-tyot-header]
-    [:tbody
-     (map-indexed
-       (fn [index tyorivi]
-         (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
-                                                               (:toimenpidekoodi-id tyorivi))
-               hinta-nimi (:hinta-nimi tyorivi)
-               yksikko (:yksikko toimenpidekoodi)
-               yksikkohinta (:yksikkohinta toimenpidekoodi)
-               tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
-           ^{:key index}
-           [:tr
-            [:td
-             (let [hintavalinnat (map #(ui-tiedot/->HintaValinta %) tyo/tyo-hinnat)
-                   tyovalinnat (map ui-tiedot/suunniteltu-tyo->Record (:suunnitellut-tyot app*))
-                   kaikki-valinnat (concat hintavalinnat tyovalinnat)]
-               [yleiset/livi-pudotusvalikko
-                {:valitse-fn #(ui-tiedot/valitse % e! index)
-                 :format-fn #(if %
-                               (ui-tiedot/formatoi %)
-                               "Valitse työ")
-                 :nayta-ryhmat [:hinta :tyo]
-                 :ryhmittely #(ui-tiedot/ryhmittely %)
-                 :ryhman-otsikko #(case %
-                                    :hinta "Hinta"
-                                    :tyo "Sopimushinnat")
-                 :class "livi-alasveto-250 inline-block"
-                 :valinta (first (filter #(cond (instance? ui-tiedot/TyoValinta %)
-                                                (= (:toimenpidekoodi-id tyorivi) (:toimenpidekoodi-id %))
-
-                                                (instance? ui-tiedot/HintaValinta %)
-                                                (= (:hinta-nimi tyorivi) (:nimi %)))
-                                         kaikki-valinnat))
-                 :disabled false}
-                kaikki-valinnat])]
-            [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
-            [:td.tasaa-oikealle
-             [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
-              (r/wrap (:maara tyorivi)
-                      (fn [uusi]
-                        (e! (tiedot/->AsetaTyorivilleTiedot
-                              {:index index
-                               :maara uusi}))))]]
-            [:td yksikko]
-            [:td.tasaa-oikealle
-             (when tyon-hinta-voidaan-laskea? (fmt/euro (* (:maara tyorivi) yksikkohinta)))]
-            [:td]
-            [:td.keskita
-             [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index index}))]]]))
-       (get-in app* [:hinnoittele-toimenpide ::h/tyot]))]]
-   [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]])
+  (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        ei-poistetut-tyot (filterv (comp not ::m/poistettu?) tyot)]
+    [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
+    [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
+    [:table
+     ;; TODO Tehdäänkö combobox? --> Ehkä, mutta ei ainakaan ennen Kaukon muutosten valmistumista.
+     [sopimushintaiset-tyot-header]
+     [:tbody
+      (map-indexed
+        (fn [index tyorivi]
+          (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
+                                                                (::tyo/toimenpidekoodi-id tyorivi))
+                yksikko (:yksikko toimenpidekoodi)
+                yksikkohinta (:yksikkohinta toimenpidekoodi)
+                tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+            ^{:key index}
+            [:tr
+             [:td
+              (let [tyovalinnat (:suunnitellut-tyot app*)]
+                [yleiset/livi-pudotusvalikko
+                 {:valitse-fn #(do
+                                 (e! (tiedot/->AsetaTyorivilleTiedot
+                                       {::tyo/id (::tyo/id tyorivi)
+                                        ::tyo/toimenpidekoodi-id (:tehtava %)})))
+                  :format-fn #(if %
+                                (:tehtavan_nimi %)
+                                "Valitse työ")
+                  :class "livi-alasveto-250 inline-block"
+                  :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
+                                              (:tehtava %))
+                                          tyovalinnat))
+                  :disabled false}
+                 tyovalinnat])]
+             [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
+             [:td.tasaa-oikealle
+              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
+               (r/wrap (::tyo/maara tyorivi)
+                       (fn [uusi]
+                         (e! (tiedot/->AsetaTyorivilleTiedot
+                               {::tyo/id (::tyo/id tyorivi)
+                                ::tyo/maara uusi}))))]]
+             [:td yksikko]
+             [:td.tasaa-oikealle
+              (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
+             [:td]
+             [:td.keskita
+              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id (::tyo/id tyorivi)}))]]]))
+        ei-poistetut-tyot)]]
+    [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
 (defn- muut-tyot [e! app*]
   [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
    [:table
-    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä.
+    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
     ;; Tämä on tällä hetkellä täysin kesken, jopa niin kesken ettei ole tietoa millä tietomallilla tallennetaan.
+    ;; Onko esim. todella tarpeen antaa yksikkö ja yksikköhinta? Eikö voisi kerralla antaa euromäärän.
+    ;; Parhaassa tapauksessa tämä on lähes samanlainen kuin muut työt -komponentti
     [sopimushintaiset-tyot-header]
     [:tbody
      (map-indexed
@@ -231,9 +214,8 @@
   (let [;; TODO Komponenttien hinnoittelu. Pitää tehdä näin:
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
-        ;; - Hintatyyppi: Omakustannus / Päivän hinta
         ;; - Alla hardkoodattu esimerkki, ei välttämättä vastaa läheskään lopullista tietomallia, oli vain #nopee #tosinopee #upee demo
-        ;; - Millä tietomallilla tallennetaan, kun on yks. hinta ja määrä?
+        ;; - Epäselvää, millä tietomallilla tallennetaan, kun on yks. hinta ja määrä? Eikö voisi vaan antaa euromäärän?
         komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                                 ::tkomp/sarjanumero "123"
                                 ::tkomp/turvalaitenro "8881"}
@@ -304,9 +286,7 @@
                                                                        valittu-aikavali)
         hinnoittelu-validi? (and
                               ;; Työrivit täytetty oikein
-                              (every? #(or (:toimenpidekoodi-id %)
-                                           (:hinta-nimi %))
-                                      hinnoiteltavat-tyot)
+                              (every? ::tyo/toimenpidekoodi-id hinnoiteltavat-tyot)
                               ;; Hintojen nimien pitää olla uniikkeja
                               ;; TODO Pitää testata toimiiko tämä näin
                               (= hinnoiteltavat-hinnat (distinct hinnoiteltavat-hinnat)))]
