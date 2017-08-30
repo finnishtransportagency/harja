@@ -261,7 +261,7 @@
      (map-indexed
        (fn [index hinta]
          ^{:key index}
-         ;; TODO TÄnne ei saa kirjoittaa to/vakiohinnat sisältöä
+         ;; TODO Tänne ei saa kirjoittaa to/vakiohinnat sisältöä
          [vapaa-hinnoittelurivi e! hinta])
        (filter
          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
