@@ -247,7 +247,7 @@
          {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % ::u/sopimukset))}
          {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
-         {:otsikko "SÄHKE-lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
+         {:otsikko "FIM lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
           :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
         haetut-urakat]])))
 
