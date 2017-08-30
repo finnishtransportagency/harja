@@ -32,6 +32,16 @@
       padding: 0;
       padding-left: 2px;
       padding-right: 2px;
+
+      // Ylikirjoita boolean-kentän tyylejä, defaulttityylit ei oikein nyt toimi tässä
+      .boolean {
+        height: 1em;
+        max-height: 1em;
+
+        > .checkbox {
+          top: -7px;
+        }
+      }
     }
 
     // Rivit
