@@ -82,6 +82,7 @@
 
 (defn nayta-tapahtumat-eilisen-jalkeen []
   (reset! nayta-uusimmat-tilassa? false)
+  (reset! haetut-tapahtumat [])
   (reset! valittu-aikavali (eilen-tanaan-aikavali)))
 
 (defn nayta-uusimmat-tapahtumat! []
