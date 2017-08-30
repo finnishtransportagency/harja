@@ -236,6 +236,7 @@
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
         ;; - Hintatyyppi: Omakustannus / Päivän hinta
+        ;; - Millä tietomallilla tallennetaan, kun on yks. hinta ja määrä?
         komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                                 ::tkomp/sarjanumero "123"
                                 ::tkomp/turvalaitenro "8881"}
