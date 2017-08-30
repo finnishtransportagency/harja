@@ -16,17 +16,12 @@ UPDATE vv_hinta SET ryhma = 'tyo'
 WHERE "hinnoittelu-id" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS NOT TRUE)
 AND otsikko = 'Päivän hinta' OR otsikko = 'Omakustannushinta';
 
--- TODO Meneekö linkkaus sittenkään tämän kautta?
-CREATE TABLE vv_hinta_turvalaitekomponentti
-(
-  "hinta-id"  INTEGER REFERENCES vv_hinta (id),
-  "turvalaitekomponentti-id" TEXT REFERENCES reimari_turvalaitekomponentti (id),
-  UNIQUE ("hinta-id", "turvalaitekomponentti-id"),
+SELECT * FROM reimari_toimenpide;
 
-  muokkaaja  INTEGER REFERENCES kayttaja (id),
-  muokattu   TIMESTAMP,
-  luoja      INTEGER REFERENCES kayttaja (id) NOT NULL,
-  luotu      TIMESTAMP                        NOT NULL DEFAULT NOW(),
-  poistettu  BOOLEAN                          NOT NULL DEFAULT FALSE,
-  poistaja   INTEGER REFERENCES kayttaja (id)
-);
+SELECT * FROM reimari_turvalaitekomponentti;
+SELECT * FROM reimari_komponenttityyppi;
+
+SELECT * FROM vv_hinta;
+SELECT * FROM vv_tyo;
+
+-- TODO Tietomallimuutos: vv_hinta linkkaus reimari-toimenpiteessä tehtyyn komponentin toimenpiteeseen
