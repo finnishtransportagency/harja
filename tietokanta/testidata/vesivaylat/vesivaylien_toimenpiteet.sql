@@ -413,6 +413,7 @@ INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id", poistettu) VA
                                                                                              'POISTETTU LIITE EI SAA NÄKYÄ'),
                                                                                       TRUE);
 
+
 INSERT INTO vv_vikailmoitus
 ("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
 "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
@@ -436,6 +437,8 @@ TRUE, -- reimari-epakunnossa?
 FROM reimari_toimenpide
 WHERE lisatieto = 'TESTITOIMENPIDE 2'),
 '578'); -- turvalaitenro
+update reimari_toimenpide set "reimari-viat" = '{"(123,8884848)"}'
+       WHERE id = (SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2');
 
 -- ***********************************************
 -- KOKONAISHINTAISIIN SIIRRETYT, REIMARISTA YKSIKKÖHINTAISENA RAPORTOIDUT TYÖT
@@ -443,6 +446,7 @@ WHERE lisatieto = 'TESTITOIMENPIDE 2'),
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
+  "reimari-lisatyo",
  "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
@@ -466,6 +470,7 @@ INSERT INTO reimari_toimenpide
 
 VALUES
   ('kokonaishintainen',
+    TRUE,
     (SELECT id
      FROM urakka
      WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
@@ -566,11 +571,12 @@ VALUES
 
 
 -- ***********************************************
--- TODO: REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU TYÖ
+-- REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU TYÖ
 -- ***********************************************
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
+ "reimari-lisatyo",
  "urakka-id",
  "reimari-id",
  "reimari-urakoitsija",
@@ -593,6 +599,7 @@ INSERT INTO reimari_toimenpide
  "vayla-id")
 VALUES
   ('yksikkohintainen',
+    TRUE,
     (SELECT id
      FROM urakka
      WHERE nimi ILIKE 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),

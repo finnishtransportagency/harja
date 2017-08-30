@@ -49,36 +49,28 @@
             [clojure.set :refer [union]]
             [com.stuartsierra.component :as component]
             [harja
-             [geo :as geo]
-             [pvm :as pvm]
-             [transit :as transit]]
+             [geo :as geo]]
             [harja.domain
-             [tieliikenneilmoitukset :as ilmoitukset-domain]
-             [laadunseuranta :as laadunseuranta]
              [oikeudet :as oikeudet]
              [roolit :as roolit]
              [tilannekuva :as tk]]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.kyselyt
-             [hallintayksikot :as hal-q]
              [konversio :as konv]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-             [urakat :as urakat-q]
-             [toteumat :as toteumat-q]
              [tietyoilmoitukset :as tietyoilmoitukset-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut
              [karttakuvat :as karttakuvat]
-             [urakat :as urakat]
              [interpolointi :as interpolointi]]
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon-xf]]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
-            [harja.transit :as transit]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.core.async :as async]
@@ -573,7 +565,7 @@
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
-                          (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                          (comp (map tarkastus-domain/tarkastus-tiedolla-onko-ok)
                                 (map #(konv/string->keyword % :tyyppi :tekija))
                                 (map #(assoc %
                                         :tyyppi-kartalla :tarkastus
@@ -584,9 +576,13 @@
   "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
   [db user {x :x y :y :as parametrit}]
   (into []
-        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-              (map #(konv/string->keyword % :tyyppi))
-              (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+        (comp
+          (map #(konv/array->set % :vakiohavainnot))
+          (map #(assoc % :tyyppi-kartalla :tarkastus))
+          (map #(konv/string->keyword % :tyyppi))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+          (map tarkastus-domain/tarkastus-tiedolla-onko-ok)
+          (map konv/alaviiva->rakenne))
         (q/hae-tarkastusten-asiat db
                                   (as-> parametrit p
                                         (suodattimet-parametreista p)

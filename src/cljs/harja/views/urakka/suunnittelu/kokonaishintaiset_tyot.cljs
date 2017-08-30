@@ -62,7 +62,7 @@
                     (u/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot ur sopimusnumero muuttuneet))
+            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
             res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi hoitokaudet %) res)]
         (reset! tyot res-jossa-hoitokausitieto)
         (reset! tuleville? false)
@@ -370,7 +370,7 @@
                                      (fmap (fn [rivi]
                                              (paivita-kk-arvo-prosentin-mukaan rivi @vuosisumma)) rivit)))
                :muokkaa-footer (fn [g]
-                                 (when-not prosenttijako?
+                                 (when-not @prosenttijako?
                                    [:div.kok-hint-muokkaa-footer
                                     [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                                  :toiminto #(swap! tuleville? not)

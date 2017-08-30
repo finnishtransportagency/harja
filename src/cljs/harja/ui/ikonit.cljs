@@ -1,6 +1,7 @@
 (ns harja.ui.ikonit
   "Kaikki bootstrap ja muut ikonit."
-  (:refer-clojure :exclude [remove repeat print list filter sort]))
+  (:refer-clojure :exclude [remove repeat print list filter sort])
+  (:require-macros [harja.ui.svg-sprite :refer [maarittele-svg-spritet]]))
 
 ;; Bootstrap ikonit
 
@@ -584,3 +585,5 @@
   [:span
    [:span (str teksti " ")]
    ikoni])
+
+(maarittele-svg-spritet 24 24 "livicons-24.svg")

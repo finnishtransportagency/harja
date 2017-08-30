@@ -251,21 +251,25 @@
       :alue (maarittele-feature laatupoikkeama valittu?
                                 ikoni viiva))))
 
-(def tarkastus-selitteet-tie
-  #{{:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Lumista" nil))}})
+(def tarkastus-selitteet-reiteille
+  #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true}))}
+    {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true :tekija :urakoitsija}))}
+    {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true :havainnot "Vesakko raivaamatta"}))}
+    {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true
+                                                                                                                 :vakiohavainnot #{"Lumista"}}))}
+    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false}))}
+    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false :tekija :urakoitsija}))}})
 
-(def tarkastus-selitteet
-  #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil nil))}
-    {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil :urakoitsija))}
-    {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Vesakko raivaamatta" nil))}
-    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil nil))}
-    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil :urakoitsija))}})
+(def tarkastus-selitteet-ikoneille
+  #{{:teksti "Tarkastus OK" :img (ulkoasu/tarkastuksen-ikoni {:ok? true :tekija :tilaaja} false)}
+    {:teksti "Tarkastus OK, urakoitsija " :img (ulkoasu/tarkastuksen-ikoni {:ok? true :tekija :urakoitsija} false)}
+    {:teksti "Tarkastus havainnolla" :img (ulkoasu/tarkastuksen-ikoni {:ok? true :havainnot "Vesakko raivaamatta"} false)}
+    {:teksti "Laadun\u00ADalitus" :img (ulkoasu/tarkastuksen-ikoni {:ok? false} false)}
+    {:teksti "Laadun\u00ADalitus, urakoitsija" :img (ulkoasu/tarkastuksen-ikoni {:ok? false :tekija :urakoitsija} false)}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
-  (let [ikoni (ulkoasu/tarkastuksen-ikoni
-               valittu? (:ok? tarkastus) (:vakiohavainnot tarkastus) (reitillinen-asia? tarkastus)
-               (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:vakiohavainnot tarkastus) (:tekija tarkastus))
+  (let [ikoni (ulkoasu/tarkastuksen-ikoni tarkastus (reitillinen-asia? tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti tarkastus)
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)
@@ -374,7 +378,7 @@
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
-    (log/warn tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (log/debug tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
