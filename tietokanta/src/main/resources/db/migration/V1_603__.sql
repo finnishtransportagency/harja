@@ -5,15 +5,18 @@
 CREATE TYPE vv_hinta_ryhma AS ENUM ('tyo', 'komponentti', 'muu');
 ALTER TABLE vv_hinta ADD COLUMN ryhma vv_hinta_ryhma;
 
--- Lisää olemassa olevat hinnat ryhmiin, mutta vain jos kyseessä toimenpiteen oma hinnoittelu
+-- Lisää olemassa olevat hinnat ryhmiin, mutta vain jos kyseessä toimenpiteen oma hinnoittelu.
 UPDATE vv_hinta SET ryhma = 'muu'
 WHERE "hinnoittelu-id" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS NOT TRUE)
 AND otsikko != 'Päivän hinta' AND otsikko != 'Omakustannushinta';
 
+-- Päivän hinta ja Omakustannushinta oli aiemmit työt-ryhmän alla. Jos näitä on annettu,
+-- migratoidaan ne työ-ryhmän alle
 UPDATE vv_hinta SET ryhma = 'tyo'
 WHERE "hinnoittelu-id" IN (SELECT id FROM vv_hinnoittelu WHERE hintaryhma IS NOT TRUE)
-AND otsikko = 'Päivän hinta'OR otsikko = 'Omakustannushinta';
+AND otsikko = 'Päivän hinta' OR otsikko = 'Omakustannushinta';
 
+-- TODO Meneekö linkkaus sittenkään tämän kautta?
 CREATE TABLE vv_hinta_turvalaitekomponentti
 (
   "hinta-id"  INTEGER REFERENCES vv_hinta (id),
