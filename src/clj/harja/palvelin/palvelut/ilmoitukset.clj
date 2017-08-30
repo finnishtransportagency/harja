@@ -197,8 +197,8 @@
          ilmoitukset (case aloituskuittauksen-ajankohta
                        :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
                        :myohemmin (filter #(and
-                                            (sisaltaa-aloituskuittauksen? %)
-                                            (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
+                                             (sisaltaa-aloituskuittauksen? %)
+                                             (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
                                           ilmoitukset)
                        ilmoitukset)]
      (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
@@ -339,7 +339,7 @@
                                 kuittaus)]]
 
     (when (= tyyppi :lopetus)
-      (q/ilmoitus-aiheutti-toimenpiteita! db ilmoituksen-id (true? aiheutti-toimenpiteita)))
+      (q/ilmoitus-aiheutti-toimenpiteita! db (true? aiheutti-toimenpiteita) ilmoituksen-id))
     (vec (remove nil? ilmoitustoimenpiteet))))
 
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
@@ -399,7 +399,7 @@
                       (fn [user ilmoitustoimenpiteet]
                         (tarkista-oikeudet db user ilmoitustoimenpiteet)
                         (async
-                         (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
+                          (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
                         (hae-ilmoituksia-idlla db user tiedot)))

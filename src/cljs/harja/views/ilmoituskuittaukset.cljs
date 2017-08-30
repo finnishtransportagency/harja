@@ -38,8 +38,6 @@
       (nil? (:tyyppi kuittaus))))
 
 (defn uusi-kuittaus [e! kuittaus]
-
-  (log "--->>> " (pr-str (:tyyppi kuittaus)))
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
@@ -221,7 +219,13 @@
                                   [napit/tallenna "Kuittaa"
                                    #(e! (v/->TallennaPikakuittaus))
                                    {:disabled tallennus-kaynnissa?}])}
-      [{:tyyppi :string
+      [(when (= tyyppi :lopetus)
+         {:nimi :aiheutti-toimenpiteita
+          :otsikko "Aiheutti toimenpiteita"
+          :tyyppi :checkbox
+          :palstoja 2
+          ::lomake/col-luokka ""})
+       {:tyyppi :string
         :nimi :vapaateksti
         :otsikko "Vapaateksti" :palstoja 2
         ::lomake/col-luokka ""}

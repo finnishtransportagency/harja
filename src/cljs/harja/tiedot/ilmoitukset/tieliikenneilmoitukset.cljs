@@ -303,7 +303,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
       (go
         (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset!
                      [(:ilmoitus pikakuittaus)]
-                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi})))))
+                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi :aiheutti-toimenpiteita})))))
       (assoc-in app [:pikakuittaus :tallennus-kaynnissa?] true)))
 
   v/PeruutaPikakuittaus
