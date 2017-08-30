@@ -240,7 +240,7 @@
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
-                (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
+                (str "#" (:kohdenumero lomakedata-nyt) " " (:tunnus lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
          :muokattava? (constantly false)
          :palstoja 1}
         {:otsikko "Tierekisteriosoite"
@@ -529,6 +529,7 @@
     :voi-poistaa? (constantly false)
     :voi-muokata? true}
    [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+    {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
