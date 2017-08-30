@@ -308,7 +308,7 @@
             #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
            [napit/tallenna
             "Valmis"
-            #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
+            #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
             {:disabled (or
                          (not hinnoittelu-validi?)
                          (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)

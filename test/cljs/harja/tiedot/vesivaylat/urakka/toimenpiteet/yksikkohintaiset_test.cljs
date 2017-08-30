@@ -526,7 +526,7 @@
       tiedot/->ToimenpiteenHinnoitteluEiTallennettu}
 
     (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
-           (e! (tiedot/->HinnoitteleToimenpide 1)
+           (e! (tiedot/->TallennaToimenpiteenHinnoittelu 1)
                {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false})))))
 
 (deftest hintaryhman-hinnoittelun-tallennus
