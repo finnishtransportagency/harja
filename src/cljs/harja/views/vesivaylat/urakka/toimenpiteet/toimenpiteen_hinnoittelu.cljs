@@ -288,8 +288,8 @@
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
-   [muut-tyot e! app*]
-   [komponentit e! app*]
+   #_[muut-tyot e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
+   #_[komponentit e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
