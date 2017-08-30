@@ -516,3 +516,8 @@ WHERE id = :id;
 
 -- name: hae-ilmoituskuittausten-urakat
 SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
+
+-- name: ilmoitus-aiheutti-toimenpiteita!
+UPDATE ilmoitus
+SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
+WHERE id = :id;

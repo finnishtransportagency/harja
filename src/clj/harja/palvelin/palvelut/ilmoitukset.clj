@@ -253,6 +253,7 @@
                                            tyyppi
                                            vapaateksti
                                            vakiofraasi
+                                           aiheutti-toimenpiteita
                                            ilmoittaja-etunimi
                                            ilmoittaja-sukunimi
                                            ilmoittaja-matkapuhelin
@@ -337,6 +338,8 @@
                                   (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus)))
                                 kuittaus)]]
 
+    (when (= tyyppi :lopetus)
+      (q/ilmoitus-aiheutti-toimenpiteita! db ilmoituksen-id (true? aiheutti-toimenpiteita)))
     (vec (remove nil? ilmoitustoimenpiteet))))
 
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]

@@ -1,2 +1,2 @@
 ALTER TABLE ilmoitus
-  ADD COLUMN aiheutti_toimenpiteita BOOLEAN;
+  ADD COLUMN "aiheutti-toimenpiteita" BOOLEAN;

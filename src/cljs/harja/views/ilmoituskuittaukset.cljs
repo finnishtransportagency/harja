@@ -38,6 +38,8 @@
       (nil? (:tyyppi kuittaus))))
 
 (defn uusi-kuittaus [e! kuittaus]
+
+  (log "--->>> " (pr-str (:tyyppi kuittaus)))
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
@@ -67,6 +69,11 @@
                                       "- Valitse kuittaustyyppi -")
                     :vihje (when (= :vaara-urakka (:tyyppi kuittaus))
                              "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+                   (when (:tyyppi kuittaus)
+                     {:nimi :aiheutti-toimenpiteita
+                      :otsikko "Aiheutti toimenpiteita"
+                      :tyyppi :checkbox
+                      :vihje "Ilmoituksen myötä jouduttiin tekemään toimenpiteitä."})
                    {:nimi :vakiofraasi
                     :otsikko "Vakiofraasi"
                     :tyyppi :haku
