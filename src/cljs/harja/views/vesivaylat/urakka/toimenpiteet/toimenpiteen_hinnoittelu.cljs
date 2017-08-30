@@ -98,7 +98,7 @@
     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
     [:th {:style {:width "5%"}} "Yks."]
     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
-    [:th.tasaa-oikealle {:style {:width "10%"}} ""]
+    [:th.tasaa-oikealle {:style {:width "10%"}} "YK-lisä"]
     [:th {:style {:width "5%"}} ""]]])
 
 (defn- muu-hinnoittelu-header
@@ -221,7 +221,7 @@
           [:td.tasaa-oikealle] ;; TODO Yksikkö
           [:td]
           [:td] ;; TODO Yhteensä
-          [:td]
+          [:td.keskita [yleiskustannuslisakentta e! nil]] ;; TODO YK-lisä
           [:td.keskita
            [ikonit/klikattava-roskis #(log "TODO")]]])
        [])]]
@@ -264,7 +264,7 @@
                         (log "TODO")))]]
             [:td]
             [:td] ; TODO Yhteensä
-            [:td] ; TODO YK-lisä
+            [:td.keskita [yleiskustannuslisakentta e! nil]] ;; TODO YK-lisä
             [:td.keskita
              [ikonit/klikattava-roskis #(log "TODO POISTA KOMPONENTTI!")]]]) ; TODO
          komponentit-testidata)]]
