@@ -74,8 +74,10 @@
               :viimeinen-rivi-yhteenveto? true}
    (rivi
      {:otsikko otsikko :leveys 36}
-     (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
-     (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
+     (when kyseessa-kk-vali?
+       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
+     (when kyseessa-kk-vali?
+       {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
      {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})
 
    (into []
@@ -84,12 +86,17 @@
                       {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}]]
                   (rivi
                     nimi
-                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
-                                                                 :tyyli (when laskutettu-ind-puuttui? :virhe)}])
-                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
-                                                                 :tyyli (when laskutetaan-ind-puuttui? :virhe)}])
+                    (when kyseessa-kk-vali?
+                      [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                                           :fmt (when laskutettu :raha)
+                                           :tyyli (when laskutettu-ind-puuttui? :virhe)}])
+                    (when kyseessa-kk-vali?
+                      [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                                           :fmt (when laskutetaan :raha)
+                                           :tyyli (when laskutetaan-ind-puuttui? :virhe)}])
                     (if (and laskutettu laskutetaan)
-                      [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
+                      [:varillinen-teksti {:arvo (+ laskutettu laskutetaan)
+                                           :fmt :raha
                                            :tyyli (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
                                                     :virhe)}]
                       [:varillinen-teksti {:arvo (summa-fmt nil)
@@ -116,31 +123,37 @@
    laskutettu-teksti laskutetaan-teksti
    yhteenveto-teksti kyseessa-kk-vali?
    tiedot summa-fmt lisaa-kht-ind-korotus?]
-  (let [taulukon-rivit (for [rivi tiedot
-                             :let [nimi (:nimi rivi)
-                                   laskutetut-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutettu"))
-                                                         avaimet)
+  (let [taulukon-rivit
+        (for [rivi tiedot
+              :let [nimi (:nimi rivi)
+                    laskutetut-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutettu"))
+                                          avaimet)
 
-                                   laskutettu (summaa-korotetut (if lisaa-kht-ind-korotus?
-                                                                  (conj laskutetut-arvot (indeksi-puuttuu-jos-nil (:kht_laskutettu_ind_korotus rivi)))
-                                                                  laskutetut-arvot))
-                                   laskutetaan-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutetaan"))
-                                                          avaimet)
-                                   laskutetaan (summaa-korotetut (if lisaa-kht-ind-korotus?
-                                                                   (conj laskutetaan-arvot (indeksi-puuttuu-jos-nil (:kht_laskutetaan_ind_korotus rivi)))
-                                                                   laskutetaan-arvot))
-                                   summa (summaa-korotetut [laskutettu laskutetaan])]]
-                         [nimi laskutettu laskutetaan summa])
+                    laskutettu (summaa-korotetut (if lisaa-kht-ind-korotus?
+                                                   (conj laskutetut-arvot (indeksi-puuttuu-jos-nil (:kht_laskutettu_ind_korotus rivi)))
+                                                   laskutetut-arvot))
+                    laskutetaan-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutetaan"))
+                                           avaimet)
+                    laskutetaan (summaa-korotetut (if lisaa-kht-ind-korotus?
+                                                    (conj laskutetaan-arvot (indeksi-puuttuu-jos-nil (:kht_laskutetaan_ind_korotus rivi)))
+                                                    laskutetaan-arvot))
+                    summa (summaa-korotetut [laskutettu laskutetaan])]]
+          [nimi laskutettu laskutetaan summa])
         laskutettu-yht (summaa-korotetut (map second taulukon-rivit))
         laskutetaan-yht (summaa-korotetut (map #(nth % 2) taulukon-rivit))
         yhteensa (summaa-korotetut [laskutettu-yht laskutetaan-yht])
         yhteenveto (rivi "Toimenpiteet yhteensä"
-                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutettu-yht))
-                                                                     :tyyli (when (:indeksi-puuttui? laskutettu-yht) :virhe)}])
-                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutetaan-yht))
-                                                                     :tyyli (when (:indeksi-puuttui? laskutetaan-yht) :virhe)}])
+                         (when kyseessa-kk-vali?
+                           [:varillinen-teksti {:arvo (:tulos laskutettu-yht)
+                                                :fmt :raha
+                                                :tyyli (when (:indeksi-puuttui? laskutettu-yht) :virhe)}])
+                         (when kyseessa-kk-vali?
+                           [:varillinen-teksti {:arvo (:tulos laskutetaan-yht)
+                                                :fmt :raha
+                                                :tyyli (when (:indeksi-puuttui? laskutetaan-yht) :virhe)}])
 
-                         [:varillinen-teksti {:arvo (summa-fmt (:tulos yhteensa))
+                         [:varillinen-teksti {:arvo (:tulos yhteensa)
+                                              :fmt :raha
                                               :tyyli (when (:indeksi-puuttui? yhteensa) :virhe)}])]
     (when-not (empty? taulukon-rivit)
       (taulukko-elementti otsikko taulukon-rivit kyseessa-kk-vali?
@@ -160,12 +173,17 @@
         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
         yhteenveto (rivi "Toimenpiteet yhteensä"
-                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu-yht)
-                                                                      :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta) :virhe)}])
-                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan-yht)
-                                                                      :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta) :virhe)}])
+                         (when kyseessa-kk-vali?
+                           [:varillinen-teksti {:arvo laskutettu-yht
+                                                :fmt :raha
+                                                :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta) :virhe)}])
+                         (when kyseessa-kk-vali?
+                           [:varillinen-teksti {:arvo laskutetaan-yht
+                                                :fmt :raha
+                                                :tyyli (when (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta) :virhe)}])
                          (if (and laskutettu-yht laskutetaan-yht)
-                           [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu-yht laskutetaan-yht))
+                           [:varillinen-teksti {:arvo (+ laskutettu-yht laskutetaan-yht)
+                                                :fmt :raha
                                                 :tyyli (when (or (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)
                                                                  (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)) :virhe)}]
                            nil))
