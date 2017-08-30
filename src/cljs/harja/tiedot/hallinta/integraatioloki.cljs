@@ -59,7 +59,10 @@
                             (eilen-tanaan-aikavali)
                             @valittu-aikavali)
          nakymassa? @nakymassa?
-         hakuehdot @hakuehdot]
+         hakuehdot (assoc @hakuehdot
+                          :max-tulokset (if @nayta-uusimmat-tilassa?
+                                          50
+                                          200))]
     (when nakymassa?
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
             (reset! haetut-tapahtumat tapahtumat)

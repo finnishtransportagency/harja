@@ -91,7 +91,7 @@ WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
       (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
       (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
-ORDER BY it.id DESC, it.alkanut DESC;
+ORDER BY it.id DESC, it.alkanut DESC LIMIT :limit;
 
 
 -- name: hae-integraatiotapahtuman-viestit
