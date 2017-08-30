@@ -213,7 +213,7 @@
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          (map #(hintakentta (::hinta/id %)
                             (::hinta/otsikko %)
-                            (::hinta/maara %))
+                            %)
               (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 ;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä

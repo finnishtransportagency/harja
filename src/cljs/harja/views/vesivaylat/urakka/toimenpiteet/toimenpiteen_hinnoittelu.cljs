@@ -261,6 +261,7 @@
      (map-indexed
        (fn [index hinta]
          ^{:key index}
+         ;; TODO TÄnne ei saa kirjoittaa to/vakiohinnat sisältöä
          [vapaa-hinnoittelurivi e! hinta])
        (filter
          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
@@ -308,7 +309,7 @@
             #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
            [napit/tallenna
             "Valmis"
-            #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
+            #(e! (tiedot/->HinnoitteleToimenpide (:hinnoittele-toimenpide app*)))
             {:disabled (or
                          (not hinnoittelu-validi?)
                          (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
