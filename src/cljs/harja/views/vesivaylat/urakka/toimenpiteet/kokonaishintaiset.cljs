@@ -110,6 +110,7 @@
                        :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
                       jaettu/sarake-pvm
                       jaettu/sarake-turvalaite
+                      jaettu/sarake-turvalaitenumero
                       jaettu/sarake-vikakorjaus
                       (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
                                                         "lisää-liite"
