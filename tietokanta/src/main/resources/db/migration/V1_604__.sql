@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Lisää vv_hinnoittelu taululle ryhmittelytieto.
 
 -- Tämä on tarkoitettu pääasiassa frontille, jotta hinnat voidaan näyttää oikeiden otsikoiden alla
@@ -31,9 +30,3 @@ CREATE TABLE vv_hinta_turvalaitekomponentti
   poistettu  BOOLEAN                          NOT NULL DEFAULT FALSE,
   poistaja   INTEGER REFERENCES kayttaja (id)
 );
-=======
-ALTER TABLE yllapitokohde
-  RENAME yhatunnus TO tunnus;
-
-ALTER TABLE yllapitokohdeosa DROP COLUMN tunnus;
->>>>>>> develop
