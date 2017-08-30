@@ -49,7 +49,6 @@
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :nimi "Tie 666"
-                                 :tunnus "T"
                                  :tr-numero 666
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -81,7 +80,6 @@
                                 {;; Alikohteen tiedot
                                  :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
                                  :nimi "Tie 555"
-                                 :tunnus nil
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -164,7 +162,6 @@
                                  (assoc :ilmoitustiedot
                                         {:osoitteet [{;; Alikohteen tiedot
                                                       :nimi "Tie 666"
-                                                      :tunnus "T"
                                                       :tr-numero 666
                                                       :tr-alkuosa 2
                                                       :tr-alkuetaisyys 3
@@ -290,7 +287,6 @@
            [{;; Alikohteen tiedot
              :kohdeosa-id 666
              :nimi "Leppäjärven kohdeosa"
-             :tunnus nil
              :tr-ajorata 1
              :tr-alkuetaisyys 0
              :tr-alkuosa 1
@@ -361,7 +357,6 @@
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
                              :kohdeosa-id 14
-                             :tunnus "T"
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -450,7 +445,6 @@
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :tunnus "T"
                              :kohdeosa-id 14
                              :tr-numero 666
                              :tr-alkuosa 2
@@ -516,7 +510,6 @@
             paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
                                           conj {;; Alikohteen tiedot
                                                 :nimi "Tie 123"
-                                                :tunnus "T"
                                                 :tr-numero 666
                                                 :tr-alkuosa 2
                                                 :tr-alkuetaisyys 3
