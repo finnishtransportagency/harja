@@ -189,9 +189,8 @@
    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
    [:table
     ;; TODO Tähän kirjataan vapaasti tehtyjä töitä niin että tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
-    ;; Tämä on tällä hetkellä täysin kesken, jopa niin kesken ettei ole tietoa millä tietomallilla tallennetaan.
-    ;; Onko esim. todella tarpeen antaa yksikkö ja yksikköhinta? Eikö voisi kerralla antaa euromäärän.
-    ;; Parhaassa tapauksessa tämä on lähes samanlainen kuin muut työt -komponentti
+    ;; Ei voi suoraan tallentaa työ eikä hinta tauluun, vaatii tietomallimuutosta
+    ;; Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
     [sopimushintaiset-tyot-header]
     [:tbody
      (map-indexed
@@ -215,7 +214,7 @@
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
         ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
         ;; - Alla hardkoodattu esimerkki, ei välttämättä vastaa läheskään lopullista tietomallia, oli vain #nopee #tosinopee #upee demo
-        ;; - Epäselvää, millä tietomallilla tallennetaan, kun on yks. hinta ja määrä? Eikö voisi vaan antaa euromäärän?
+        ;; - Epäselvää tässäkin, millä tietomallilla tallennetaan, kun on yks. hinta ja määrä?
         komponentit-testidata [{::tkomp/komponenttityyppi {::tktyyppi/nimi "Lateraalimerkki, vaihdettu"}
                                 ::tkomp/sarjanumero "123"
                                 ::tkomp/turvalaitenro "8881"}
@@ -271,8 +270,8 @@
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
-   #_[muut-tyot e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
-   #_[komponentit e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
+   [muut-tyot e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
+   [komponentit e! app*] ; TODO Kommentoitu kokonaan, koska täysin kesken
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
