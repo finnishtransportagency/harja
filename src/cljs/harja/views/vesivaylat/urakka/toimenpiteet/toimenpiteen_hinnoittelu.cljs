@@ -242,8 +242,8 @@
          [vapaa-hinnoittelurivi e! hinta])
        (filter
          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
-         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]
-    [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]]])
+         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]]
+   [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]])
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   ;; TODO Korkeus alkaa olla jo aikamoinen haaste
