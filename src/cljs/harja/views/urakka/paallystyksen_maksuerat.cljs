@@ -61,7 +61,8 @@
 
           [{:otsikko "Kohde\u00ADnumero" :leveys 5 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
-           {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi
+           {:otsikko "Tunnus" :leveys 10 :nimi :tunnus}
+           {:otsikko "Nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kokonais\u00ADhinta" :leveys 5 :nimi :kokonaishinta
             :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
