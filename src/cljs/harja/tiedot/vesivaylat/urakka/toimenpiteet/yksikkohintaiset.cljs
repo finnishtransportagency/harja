@@ -209,7 +209,7 @@
                                      ;; ilmaisemaan uutta lisättyä kenttää
                                      (dec (- index)))
                              :otsikko otsikko
-                             :summa olemassa-oleva-hinta
+                             :summa (::hinta/summa olemassa-oleva-hinta)
                              :ryhma :muu
                              :yleiskustannuslisa 0})))
                       vakiohinnat)
