@@ -53,7 +53,7 @@
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
                                                      vaylatyyppi vayla
                                                      tyolaji tyoluokka toimenpide
-                                                     vain-vikailmoitukset?] :as valinnat}]
+                                                     vain-vikailmoitukset? turvalaite] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
@@ -61,6 +61,7 @@
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
                                    ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
+                                   ::tu/id turvalaite
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))

@@ -84,10 +84,10 @@
            [:td (::tkomp/sarjanumero turvalaitekomponentti)]
            [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]])]])]])
 
-(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
+(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
-   [valinnat/valintaryhmat-3
+   [valinnat/valintaryhmat-4
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
      urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
 
@@ -106,6 +106,19 @@
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
                                                          (fn [uusi]
                                                            (e! (PaivitaValinnatKonstruktori {:vayla (::va/id uusi)}))))}]]
+
+    [:div
+     [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
+                                      :kentta-params {:tyyppi :haku
+                                                      :nayta ::tu/nimi
+                                                      #_(fn [turvalaite]
+                                                               (str (::tu/turvalaitenro turvalaite)
+                                                                    (when-let [nimi (::tu/nimi turvalaite)]
+                                                                      (str "(" nimi ")"))))
+                                                      :lahde turvalaitehaku}
+                                      :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
+                                                         (fn [uusi]
+                                                           (e! (PaivitaValinnatKonstruktori {:turvalaite (::tu/id uusi)}))))}]]
 
     (into
       [:div
@@ -145,9 +158,9 @@
        urakkatoiminto-napit))])
 
 (defn suodattimet
-  [e! PaivitaValinnatKonstruktori app urakka vaylahaku {:keys [lisasuodattimet urakkatoiminnot]}]
+  [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku {:keys [lisasuodattimet urakkatoiminnot]}]
   [:div
-   [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku
+   [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku
     (or lisasuodattimet [])
     (or urakkatoiminnot [])]])
 
