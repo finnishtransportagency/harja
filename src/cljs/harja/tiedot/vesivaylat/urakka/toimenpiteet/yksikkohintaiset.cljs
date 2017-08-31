@@ -211,7 +211,7 @@
                              :otsikko otsikko
                              :summa (::hinta/summa olemassa-oleva-hinta)
                              :ryhma :muu
-                             :yleiskustannuslisa 0})))
+                             :yleiskustannuslisa (::hinta/yleiskustannuslisa olemassa-oleva-hinta)})))
                       vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          (map #(hintakentta
