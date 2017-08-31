@@ -64,3 +64,11 @@
                           (when (not-empty vaylanumerot)
                             {::tu/vaylat (&& (vec vaylanumerot))}))))))
 
+(defn hae-turvalaitteet-tekstilla [db {:keys [hakuteksti]}]
+  (vec (specql/fetch db ::tu/turvalaite
+                     #{::tu/id
+                       ::tu/nimi
+                       ::tu/turvalaitenro}
+                     (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
+                            {::tu/turvalaitenro (op/ilike (str hakuteksti "%"))}))))
+
