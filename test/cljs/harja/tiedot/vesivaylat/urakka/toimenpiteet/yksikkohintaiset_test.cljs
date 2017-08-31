@@ -772,13 +772,12 @@
                                              {:maara 2}]}})))
 
 (deftest aseta-tyoriville-tiedot
-  (is (= (e! (tiedot/->AsetaTyorivilleTiedot {:index 1
-                                              :maara 666
-                                              :toimenpidekoodi-id 1})
-             {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
-                                                 {:maara 1}
-                                                 {:maara 2}]}})
-         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
-                                             {:maara 666
-                                              :toimenpidekoodi-id 1}
-                                             {:maara 2}]}})))
+  (is (= (e! (tiedot/->AsetaTyorivilleTiedot {::tyo/id 2
+                                              ::tyo/maara 666
+                                              ::tyo/toimenpidekoodi-id 1})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
+                                             {::tyo/id 2 ::tyo/maara 666 ::tyo/toimenpidekoodi-id 1}
+                                             {::tyo/id 3 ::tyo/maara 2}]}})))
