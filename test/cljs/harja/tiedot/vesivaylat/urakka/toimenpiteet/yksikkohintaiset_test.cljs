@@ -386,15 +386,21 @@
               [{::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/summa 2
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
                 ::hinta/summa 3
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
-                ::hinta/yleiskustannuslisa 12}]})))))
+                ::hinta/ryhma :muu
+                ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot [{::tyo/id 1
+                         ::tyo/toimenpidekoodi-id 1
+                         ::tyo/maara 60}]})))))
 
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
