@@ -761,7 +761,7 @@
 
 (deftest lisaa-hinnoiteltava-tyorivi
   (is (= (e! (tiedot/->LisaaHinnoiteltavaTyorivi))
-         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}]}})))
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}]}})))
 
 (deftest poista-hinnoiteltava-tyorivi
   (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index 1})
