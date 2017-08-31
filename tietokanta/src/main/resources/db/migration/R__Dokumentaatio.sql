@@ -157,7 +157,7 @@ E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun
   Hinnoittelu voi kuvata myös toimenpiteen omaa hintaa. Eli jos halutaan määritellä yhdelle toimenpiteelle hinta, niin sille luodaan hinnoittelu, joka ei ole hintaryhmä, sekä hinnoitteluun kuuluvat hinnat.';
 
 COMMENT ON TABLE vv_hinta IS
-E'Hinta liittyy aina hinnoitteluun';
+E'Hinta liittyy aina hinnoitteluun. Hinta annetaan joko summana TAI syötetään määrä, yksikkö ja yksikköhinta';
 COMMENT ON COLUMN vv_hinta.ryhma IS 'Tämä on tarkoitettu pääasiassa frontille, jotta hinnat voidaan näyttää oikeiden otsikoiden alla.';
 
 
