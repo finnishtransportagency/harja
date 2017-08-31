@@ -170,12 +170,12 @@
           [tee-kentta {:tyyppi :numero
                        :placeholder "Syötä hinta"
                        :kokonaisosan-maara 7}
-           (r/wrap (hinta/hinnan-maara-otsikolla
+           (r/wrap (hinta/hinnan-summa-otsikolla
                      (get-in app* [:hinnoittele-hintaryhma ::h/hinnat])
                      tiedot/hintaryhman-hintakentta-otsikko)
                    #(e! (tiedot/->AsetaHintaryhmakentalleTiedot
                           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                           ::hinta/maara %})))]
+                           ::hinta/summa %})))]
           [:span " "]
           [:span "€"]]
          [napit/tallenna

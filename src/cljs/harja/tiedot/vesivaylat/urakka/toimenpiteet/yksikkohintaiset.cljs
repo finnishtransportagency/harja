@@ -179,7 +179,7 @@
   [id otsikko hinta]
   {::hinta/id id
    ::hinta/otsikko otsikko
-   ::hinta/maara (or (::hinta/maara hinta) 0)
+   ::hinta/summa (or (::hinta/summa hinta) 0)
    ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
                                 yleiskustannuslisa
@@ -423,7 +423,7 @@
                                              (when-let [id (::hinta/id hinta)]
                                                {::hinta/id id})
                                              {::hinta/otsikko (::hinta/otsikko hinta)
-                                              ::hinta/maara (::hinta/maara hinta)
+                                              ::hinta/summa (::hinta/summa hinta)
                                               ::hinta/ryhma :muu ;; TODO Muut työt = :tyo, Komponentit = :komponentti
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
                                               ::m/poistettu? (boolean (::m/poistettu? hinta))}))
@@ -446,7 +446,7 @@
                                                                        (when-let [id (::hinta/id hinta)]
                                                                          {::hinta/id id})
                                                                        {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                        ::hinta/maara (::hinta/maara hinta)
+                                                                        ::hinta/summa (::hinta/summa hinta)
                                                                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                                    (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
                                       {:onnistui ->HintaryhmanHinnoitteluTallennettu

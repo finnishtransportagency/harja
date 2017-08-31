@@ -58,10 +58,10 @@
                          ::toi/id toimenpide-id
                          ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                      ::hinta/yleiskustannuslisa 0
-                                                     ::hinta/maara 666}
+                                                     ::hinta/summa 666}
                                                     {::hinta/otsikko "Testihinta 2"
                                                      ::hinta/yleiskustannuslisa 12
-                                                     ::hinta/maara 123}]
+                                                     ::hinta/summa 123}]
                          ::h/tallennettavat-tyot []}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
@@ -73,8 +73,8 @@
       (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
 
       (is (= (count (::h/hinnat insert-vastaus)) 2))
-      (is (some #(== (::hinta/maara %) 666) (::h/hinnat insert-vastaus)))
-      (is (some #(== (::hinta/maara %) 123) (::h/hinnat insert-vastaus)))
+      (is (some #(== (::hinta/summa %) 666) (::h/hinnat insert-vastaus)))
+      (is (some #(== (::hinta/summa %) 123) (::h/hinnat insert-vastaus)))
       (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
       (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin")
 
@@ -84,8 +84,8 @@
               update-params {::toi/urakka-id urakka-id
                              ::toi/id toimenpide-id
                              ::h/tallennettavat-hinnat (mapv (fn [hinta]
-                                                               (assoc hinta ::hinta/maara
-                                                                            (case (::hinta/maara hinta)
+                                                               (assoc hinta ::hinta/summa
+                                                                            (case (::hinta/summa hinta)
                                                                               666M 555
                                                                               123M 321)))
                                                              (::h/hinnat insert-vastaus))
@@ -100,8 +100,8 @@
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
 
           (is (= (count (::h/hinnat update-vastaus)) 2))
-          (is (some #(== (::hinta/maara %) 555) (::h/hinnat update-vastaus)))
-          (is (some #(== (::hinta/maara %) 321) (::h/hinnat update-vastaus)))
+          (is (some #(== (::hinta/summa %) 555) (::h/hinnat update-vastaus)))
+          (is (some #(== (::hinta/summa %) 321) (::h/hinnat update-vastaus)))
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= hinnat-ennen hinnat-jalkeen)))))))
 
@@ -123,8 +123,8 @@
                            ::tyo/maara 666}
                           {::tyo/toimenpidekoodi-id toimenpidekoodi-id
                            ::tyo/maara 123}
-                          {::hinta/otsikko "Päivän hinta" ::hinta/maara 30}
-                          {::hinta/otsikko "Omakustannushinta" ::hinta/maara 123}]}
+                          {::hinta/otsikko "Päivän hinta" ::hinta/summa 30}
+                          {::hinta/otsikko "Omakustannushinta" ::hinta/summa 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -140,10 +140,10 @@
       (is (some #(== (::tyo/maara %) 666) (::h/tyot insert-vastaus)))
       (is (some #(== (::tyo/maara %) 123) (::h/tyot insert-vastaus)))
       (is (some #(and (= (::hinta/otsikko %) "Päivän hinta")
-                      (== (::hinta/maara %) 30))
+                      (== (::hinta/summa %) 30))
                 (::h/hinnat insert-vastaus)))
       (is (some #(and (= (::hinta/otsikko %) "Omakustannushinta")
-                      (== (::hinta/maara %) 123))
+                      (== (::hinta/summa %) 123))
                 (::h/hinnat insert-vastaus)))
       (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
       (is (= (+ tyot-ennen 2) tyot-jalkeen) "Molemmat työt lisättiin")
@@ -231,7 +231,7 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}]
+                                                   ::hinta/summa 666}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -269,10 +269,10 @@
                          ::h/id hinnoittelu-id
                          ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                      ::hinta/yleiskustannuslisa 0
-                                                     ::hinta/maara 666}
+                                                     ::hinta/summa 666}
                                                     {::hinta/otsikko "Testihinta 2"
                                                      ::hinta/yleiskustannuslisa 12
-                                                     ::hinta/maara 123}]}
+                                                     ::hinta/summa 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-hintaryhmalle-hinta +kayttaja-jvh+
                                          insert-params)
@@ -285,8 +285,8 @@
 
       (is (map? paivitetty-hinnoittelu))
       (is (= (count (::h/hinnat paivitetty-hinnoittelu)) 2))
-      (is (some #(== (::hinta/maara %) 666) (::h/hinnat paivitetty-hinnoittelu)))
-      (is (some #(== (::hinta/maara %) 123) (::h/hinnat paivitetty-hinnoittelu))
+      (is (some #(== (::hinta/summa %) 666) (::h/hinnat paivitetty-hinnoittelu)))
+      (is (some #(== (::hinta/summa %) 123) (::h/hinnat paivitetty-hinnoittelu))
           (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Molemmat testihinnat lisättiin"))
       (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut")
 
@@ -296,8 +296,8 @@
               update-params {::u/id urakka-id
                              ::h/id hinnoittelu-id
                              ::h/tallennettavat-hinnat (mapv (fn [hinta]
-                                                               (assoc hinta ::hinta/maara
-                                                                            (case (::hinta/maara hinta)
+                                                               (assoc hinta ::hinta/summa
+                                                                            (case (::hinta/summa hinta)
                                                                               666M 555
                                                                               123M 321)))
                                                              (::h/hinnat paivitetty-hinnoittelu))}
@@ -313,8 +313,8 @@
 
           (is (map? paivitetty-hinnoittelu))
           (is (= (count (::h/hinnat paivitetty-hinnoittelu)) 2))
-          (is (some #(== (::hinta/maara %) 555) (::h/hinnat paivitetty-hinnoittelu)))
-          (is (some #(== (::hinta/maara %) 321) (::h/hinnat paivitetty-hinnoittelu)))
+          (is (some #(== (::hinta/summa %) 555) (::h/hinnat paivitetty-hinnoittelu)))
+          (is (some #(== (::hinta/summa %) 321) (::h/hinnat paivitetty-hinnoittelu)))
           (is (= hinnat-ennen hinnat-jalkeen) "Hintojen määrä pystyi samana päivityksessä")
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut edelleenkään"))))))
 
@@ -325,10 +325,10 @@
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}
+                                                   ::hinta/summa 666}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/maara 123}]
+                                                   ::hinta/summa 123}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -343,7 +343,7 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}]
+                                                   ::hinta/summa 666}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -357,10 +357,10 @@
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/maara 666}
+                                                   ::hinta/summa 666}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/maara 123}]
+                                                   ::hinta/summa 123}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)

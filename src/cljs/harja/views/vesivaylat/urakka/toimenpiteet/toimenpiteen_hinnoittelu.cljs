@@ -34,10 +34,10 @@
 (defn- hintakentta
   [e! hinta]
   [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
-   (r/wrap (::hinta/maara hinta)
+   (r/wrap (::hinta/summa hinta)
            (fn [uusi]
              (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
-                                                     ::hinta/maara uusi}))))])
+                                                     ::hinta/summa uusi}))))])
 
 (defn- yleiskustannuslisakentta
   [e! hinta]
@@ -119,9 +119,9 @@
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
         tyorivit (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         hinnat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
-        hinnat-yhteensa (hinta/perushinta hinnat)
+        hinnat-yhteensa (hinta/hintojen-summa-ilman-yklisaa hinnat)
         tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
-        yleiskustannuslisien-osuus (hinta/yleiskustannuslisien-osuus hinnat)]
+        yleiskustannuslisien-osuus (hinta/yklisien-osuus hinnat)]
     [:div
      [valiotsikko ""]
      [:table

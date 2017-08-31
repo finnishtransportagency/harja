@@ -12,37 +12,37 @@
                                             :foobar
                                             :barbar)))
   (is (= :baz
-         (hinta/hinnan-maara-otsikolla [{::hinta/otsikko :foobar ::hinta/maara :baz}]
+         (hinta/hinnan-summa-otsikolla [{::hinta/otsikko :foobar ::hinta/summa :baz}]
                                        :foobar))))
 
 (deftest hintojen-lasku
-  (is (= (hinta/perushinta [{::hinta/maara 1} {::hinta/maara 2} {::hinta/maara 3}])
+  (is (= (hinta/hintojen-summa-ilman-yklisaa [{::hinta/summa 1} {::hinta/summa 2} {::hinta/summa 3}])
          6))
-  (is (= (hinta/yleiskustannuslisien-osuus [{::hinta/maara 1}
-                                            {::hinta/maara 100 ::hinta/yleiskustannuslisa 10}])
+  (is (= (hinta/yklisien-osuus [{::hinta/summa 1}
+                                            {::hinta/summa 100 ::hinta/yleiskustannuslisa 10}])
          10))
-  (is (= (hinta/kokonaishinta-yleiskustannuslisineen [{::hinta/maara 1}
-                                                      {::hinta/maara 100 ::hinta/yleiskustannuslisa 10}])
+  (is (= (hinta/kokonaishinta-yleiskustannuslisineen [{::hinta/summa 1}
+                                                      {::hinta/summa 100 ::hinta/yleiskustannuslisa 10}])
          111)))
 
 (deftest hinnan-ominaisuus
-  (is (= (hinta/hinnan-ominaisuus-otsikolla [{::hinta/maara 1 ::hinta/otsikko "A"}
-                                   {::hinta/maara 2 ::hinta/otsikko "B"}
-                                   {::hinta/maara 3 ::hinta/otsikko "C"}]
-                                            "B" ::hinta/maara)
+  (is (= (hinta/hinnan-ominaisuus-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
+                                   {::hinta/summa 2 ::hinta/otsikko "B"}
+                                   {::hinta/summa 3 ::hinta/otsikko "C"}]
+                                            "B" ::hinta/summa)
          2))
-  (is (= (hinta/hinnan-maara-otsikolla [{::hinta/maara 1 ::hinta/otsikko "A"}
-                              {::hinta/maara 2 ::hinta/otsikko "B"}
-                              {::hinta/maara 3 ::hinta/otsikko "C"}]
+  (is (= (hinta/hinnan-summa-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
+                              {::hinta/summa 2 ::hinta/otsikko "B"}
+                              {::hinta/summa 3 ::hinta/otsikko "C"}]
                                        "C")
          3))
-  (is (= (hinta/hinnan-yleiskustannuslisa [{::hinta/maara 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
-                                           {::hinta/maara 2 ::hinta/otsikko "B"}
-                                           {::hinta/maara 3 ::hinta/otsikko "C"}]
+  (is (= (hinta/hinnan-yleiskustannuslisa [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+                                           {::hinta/summa 2 ::hinta/otsikko "B"}
+                                           {::hinta/summa 3 ::hinta/otsikko "C"}]
                                           "A")
          666))
   (is (= (hinta/hinta-otsikolla "A"
-                                [{::hinta/maara 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
-                                 {::hinta/maara 2 ::hinta/otsikko "B"}
-                                 {::hinta/maara 3 ::hinta/otsikko "C"}])
-         {::hinta/maara 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))
+                                [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+                                 {::hinta/summa 2 ::hinta/otsikko "B"}
+                                 {::hinta/summa 3 ::hinta/otsikko "C"}])
+         {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))

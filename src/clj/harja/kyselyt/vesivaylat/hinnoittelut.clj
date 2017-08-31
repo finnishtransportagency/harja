@@ -215,7 +215,7 @@
                       ::hinta/hinta
                       (merge
                         {::hinta/otsikko (::hinta/otsikko hinta)
-                         ::hinta/maara (::hinta/maara hinta)
+                         ::hinta/summa (::hinta/summa hinta)
                          ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
                          ::hinta/ryhma (::hinta/ryhma hinta)}
                         (if (::m/poistettu? hinta)
@@ -229,7 +229,7 @@
                       ::hinta/hinta
                       (merge
                         {::hinta/otsikko (::hinta/otsikko hinta)
-                         ::hinta/maara (::hinta/maara hinta)
+                         ::hinta/summa (::hinta/summa hinta)
                          ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
                          ::hinta/ryhma (::hinta/ryhma hinta)
                          ::m/luotu (pvm/nyt)
