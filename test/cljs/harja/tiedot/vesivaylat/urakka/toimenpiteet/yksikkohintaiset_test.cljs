@@ -52,11 +52,7 @@
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
-                                ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 1
-                                                                   ::hinta/otsikko "Komponentit"
-                                                                   ::hinta/summa 1
-                                                                   ::hinta/yleiskustannuslisa 0}
-                                                                  {::hinta/id 2
+                                ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 2
                                                                    ::hinta/otsikko "Yleiset materiaalit"
                                                                    ::hinta/summa 2
                                                                    ::hinta/yleiskustannuslisa 0}
@@ -390,11 +386,7 @@
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 2
+              [{::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/summa 2
                 ::hinta/yleiskustannuslisa 0}
@@ -440,53 +432,51 @@
   (testing "Hinnoittele kentän rahamäärä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/otsikko "Yleiset materiaalit"
+                         (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id 2
                                                                  ::hinta/summa 666})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 2
+              [{::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/summa 666
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
                 ::hinta/summa 3
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
-                         (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/otsikko "Yleiset materiaalit"
+                         (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id 2
                                                                  ::hinta/yleiskustannuslisa 12})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
               ::h/hinnat
-              [{::hinta/id 1
-                ::hinta/otsikko "Komponentit"
-                ::hinta/summa 1
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 2
+              [{::hinta/id 2
                 ::hinta/otsikko "Yleiset materiaalit"
                 ::hinta/summa 2
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 12}
                {::hinta/id 3
                 ::hinta/otsikko "Matkakulut"
                 ::hinta/summa 3
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-kentan-hinnoittelu
@@ -532,10 +522,7 @@
                      :hinnoittele-toimenpide
                      {::to/id hinnoiteltava-toimenpide-id
                       ::h/hinnat
-                      [{::hinta/otsikko "Komponentit"
-                        ::hinta/summa 20
-                        ::hinta/yleiskustannuslisa 0}
-                       {::hinta/otsikko "Yleiset materiaalit"
+                      [{::hinta/otsikko "Yleiset materiaalit"
                         ::hinta/summa 30
                         ::hinta/yleiskustannuslisa 0}
                        {::hinta/otsikko "Matkakulut"
@@ -546,10 +533,7 @@
                         ::hinta/yleiskustannuslisa 0}]})
         uusi-tila (e! (tiedot/->ToimenpiteenHinnoitteluTallennettu
                         {::h/hinnat
-                         [{::hinta/otsikko "Komponentit"
-                           ::hinta/summa 20
-                           ::hinta/yleiskustannuslisa 0}
-                          {::hinta/otsikko "Yleiset materiaalit"
+                         [{::hinta/otsikko "Yleiset materiaalit"
                            ::hinta/summa 30
                            ::hinta/yleiskustannuslisa 0}
                           {::hinta/otsikko "Matkakulut"
@@ -574,10 +558,7 @@
     ;; Toimenpiteeseen päivittyi uudet hinnoitteutiedot
     (is (= (::to/oma-hinnoittelu paivitettu-toimenpide)
            {::h/hinnat
-            [{::hinta/otsikko "Komponentit"
-              ::hinta/summa 20
-              ::hinta/yleiskustannuslisa 0}
-             {::hinta/otsikko "Yleiset materiaalit"
+            [{::hinta/otsikko "Yleiset materiaalit"
               ::hinta/summa 30
               ::hinta/yleiskustannuslisa 0}
              {::hinta/otsikko "Matkakulut"
