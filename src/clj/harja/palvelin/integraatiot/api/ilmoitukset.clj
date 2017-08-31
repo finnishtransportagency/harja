@@ -30,7 +30,11 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}))
 
 (defn luo-ilmoitustoimenpide
-  [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi vapaateksti suunta kanava]
+  [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi aiheutti-toimenpiteita vapaateksti suunta kanava]
+
+  (when aiheutti-toimenpiteita
+    (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true id))
+
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
          {:ilmoitus                         id
@@ -58,7 +62,12 @@
           :kasittelija_organisaatio_ytunnus (get-in kasittelija [:organisaatio :ytunnus])})))
 
 (defn kirjaa-ilmoitustoimenpide [db tloik parametrit
-                                 {{:keys [tyyppi vapaateksti ilmoittaja kasittelija] :as ilmoitustoimenpide}
+                                 {{:keys [tyyppi
+                                          vapaateksti
+                                          ilmoittaja
+                                          kasittelija
+                                          aiheutti-toimenpiteita]
+                                   :as ilmoitustoimenpide}
                                   :ilmoitustoimenpide}]
   (let [ilmoitusid (Integer/parseInt (:id parametrit))
         id (hae-ilmoituksen-id db ilmoitusid)
@@ -66,11 +75,12 @@
 
     (when (and (= tyyppi "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
       (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
-                                                        "vastaanotto" "Vastaanotettu" "sisaan" "ulkoinen_jarjestelma")]
+                                                        "vastaanotto" false "Vastaanotettu" "sisaan"
+                                                        "ulkoinen_jarjestelma")]
         (tloik/laheta-ilmoitustoimenpide tloik aloitus-kuittaus-id)))
 
     (let [kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija tyyppi
-                                              vapaateksti "sisaan" "ulkoinen_jarjestelma")]
+                                              aiheutti-toimenpiteita vapaateksti "sisaan" "ulkoinen_jarjestelma")]
       (tloik/laheta-ilmoitustoimenpide tloik kuittaus-id))
 
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
