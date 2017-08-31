@@ -172,3 +172,15 @@
                   maara3 (-> rivit3 first last)]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")
               (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
+
+
+(deftest lahetys-tuntemattomalle-urakalle-ei-toimi []
+  (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
+        vastaus (api-tyokalut/post-kutsu
+                  ["/api/urakat/" 666 "/toteumat/reitti"] kayttaja portti
+                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                      slurp
+                      (.replace "__ID__" (str ulkoinen-id))
+                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (is (= 400 (:status vastaus)) "Statuksena viallinen kutsu")
+    (is (.contains (:body vastaus ) "Urakkaa id:llä 666 ei löydy"))))

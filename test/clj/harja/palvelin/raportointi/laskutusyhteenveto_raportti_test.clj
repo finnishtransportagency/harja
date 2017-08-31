@@ -80,6 +80,7 @@
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
+
       (is (=marginaalissa? kok-hint 162010.00M))
       (is (=marginaalissa? yks-hint 6000.00M))
       (is (=marginaalissa? sanktiot -4000.00M))
@@ -97,12 +98,11 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 63.22M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 31.61M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 17.24M))
-      (is (=marginaalissa? indeksitarkistukset-bonukset 4.07M))
+      (is (=marginaalissa? indeksitarkistukset-bonukset 4.39M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 24.90M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 43.13M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 1000.20M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -6759.80M))
-
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 43.45M))
+      (is (=marginaalissa? indeksitarkistukset-kaikki 1000.52M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -6759.47M))
 
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 155250.20M)))))
 
@@ -139,10 +139,10 @@
       (is (=marginaalissa? yks-hint 7882.50M))
       (is (=marginaalissa? sanktiot -1900.67M))
       (is (=marginaalissa? indeksitarkistukset-yks-hint 0.00M))
-      (is (=marginaalissa? indeksitarkistukset-sanktiot 0.00M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 0.00M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 0.00M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5981.83M))
+      (is (=marginaalissa? indeksitarkistukset-sanktiot -191.15M))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint -167.62))
+      (is (=marginaalissa? indeksitarkistukset-kaikki -167.62M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5790.67M))
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 5981.83M)))))
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015-kun-092015-indeksiarvo-puuttuu
@@ -208,11 +208,11 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 126.44M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 63.22M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 34.48M))
-      (is (=marginaalissa? indeksitarkistukset-bonukset 8.14M))
+      (is (=marginaalissa? indeksitarkistukset-bonukset 8.78M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 49.81M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 86.26M))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 86.9M))
       (is (=marginaalissa? indeksitarkistukset-kaikki 247.13M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -15433.74M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -15433.097M))
 
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 308586.26M)))))
 
@@ -234,12 +234,20 @@
           yks-hint (arvo-raportin-nnesta-elementista vastaus 0)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 1)
 
-          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 2)
-          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 3)
+          sanktioiden-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 2)
+          muiden-kuin-kokhint-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 3)
+          kaikki-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 4)
+          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 5)
+          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 6)
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
+
       (is (=marginaalissa? yks-hint 7882.50M))
       (is (=marginaalissa? sanktiot -1900.67M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5981.83M))
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 5981.83M)))))
+      (is (=marginaalissa? sanktioiden-indeksitarkistukset -191.159M))
+      (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset -167.62M))
+      (is (=marginaalissa? kaikki-indeksitarkistukset -167.62M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5790.67M))
+
+      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 5790.67M)))))
