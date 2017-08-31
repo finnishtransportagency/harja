@@ -24,9 +24,7 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.views.kartta.tasot :as tasot]
-            [harja.ui.modal :as modal])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.views.kartta.tasot :as tasot]))
 
 (def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
 
