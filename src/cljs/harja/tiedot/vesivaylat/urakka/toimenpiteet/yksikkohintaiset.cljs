@@ -164,8 +164,8 @@
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
-(defrecord LisaaKulurivi [])
-(defrecord PoistaKulurivi [tiedot])
+(defrecord LisaaMuuKulurivi [])
+(defrecord PoistaMuuKulurivi [tiedot])
 ;; Hintaryhmän hinnoittelu
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
@@ -176,12 +176,12 @@
 (defn- hintakentta
   "Generoi hintakentän annetulla id:llä ja otsikolla. Ottaa annetun hinnan tiedot (määrä, ryhmä, yk-lisä...)
   käyttöön jos tiedot löytyvät."
-  [id otsikko hinta]
+  [{:keys [id otsikko summa ryhma yleiskustannuslisa]}]
   {::hinta/id id
    ::hinta/otsikko otsikko
-   ::hinta/summa (or (::hinta/summa hinta) 0)
-   ::hinta/ryhma (or (::hinta/ryhma hinta) :muu)
-   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
+   ::hinta/summa (or summa 0)
+   ::hinta/ryhma ryhma
+   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa yleiskustannuslisa]
                                 yleiskustannuslisa
                                 0)})
 
@@ -203,17 +203,23 @@
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
          (map-indexed (fn [index otsikko]
                         (let [olemassa-oleva-hinta (hinta/hinta-otsikolla hinnat otsikko)]
-                          (hintakentta (or (::hinta/id olemassa-oleva-hinta)
-                                           ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
-                                           ;; ilmaisemaan uutta lisättyä kenttää
-                                           (dec (- index)))
-                                       otsikko
-                                       olemassa-oleva-hinta)))
+                          (hintakentta
+                            {:id (or (::hinta/id olemassa-oleva-hinta)
+                                     ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
+                                     ;; ilmaisemaan uutta lisättyä kenttää
+                                     (dec (- index)))
+                             :otsikko otsikko
+                             :summa olemassa-oleva-hinta
+                             :ryhma :muu
+                             :yleiskustannuslisa 0})))
                       vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
-         (map #(hintakentta (::hinta/id %)
-                            (::hinta/otsikko %)
-                            %)
+         (map #(hintakentta
+                 {:id (::hinta/id %)
+                  :otsikko (::hinta/otsikko %)
+                  :summa (::hinta/summa %)
+                  :ryhma :muu
+                  :yleiskustannuslisa (::hinta/yleiskustannuslisa %)})
               (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 ;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
@@ -223,7 +229,10 @@
   (let [ryhmahinta (hinta/hinta-otsikolla hinnat hintaryhman-hintakentta-otsikko)]
     ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
     ;; Jos ei ole aiempaa ryhmähintaa, luo uuden hintakentän ilman id:tä.
-    [(hintakentta (::hinta/id ryhmahinta) hintaryhman-hintakentta-otsikko ryhmahinta)]))
+    [(hintakentta
+       {:id (::hinta/id ryhmahinta)
+        :otsikko hintaryhman-hintakentta-otsikko
+        :summa (::hinta/summa ryhmahinta)})]))
 
 (extend-protocol tuck/Event
 
@@ -543,16 +552,20 @@
           paivitetyt-tyot (conj tyot (tyokentta seuraava-vapaa-id nil))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
-  LisaaKulurivi
+  LisaaMuuKulurivi
   (process-event [_ app]
     ;; TODO TESTI
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
-          paivitetyt-hinnat (conj hinnat (hintakentta seuraava-vapaa-id "" nil))]
+          paivitetyt-hinnat (conj hinnat (hintakentta
+                                           {:id seuraava-vapaa-id
+                                            :otsikko ""
+                                            :summa 0
+                                            :ryhma :muu}))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
-  PoistaKulurivi
+  PoistaMuuKulurivi
   (process-event [{tiedot :tiedot} app]
     ;; TODO Testi
     (let [id (::hinta/id tiedot)

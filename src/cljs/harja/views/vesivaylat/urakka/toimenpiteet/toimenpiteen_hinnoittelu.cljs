@@ -70,7 +70,7 @@
      [:td.keskita [yleiskustannuslisakentta e! hinta]]
      [:td
       (when-not (tiedot/vakiohintakentta? otsikko)
-        [ikonit/klikattava-roskis #(e! (tiedot/->PoistaKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
+        [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
 
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
@@ -272,7 +272,7 @@
        (filter
          #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
          (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]]
-   [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaKulurivi))]])
+   [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaMuuKulurivi))]])
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
