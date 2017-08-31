@@ -185,6 +185,11 @@
      (Point. (first c) (second c))))
 
 #?(:clj
+   (defmethod clj->pg :multipoint [{c :coordinates :as mp}]
+     (MultiPoint. (into-array Point
+                              (map clj->pg c)))))
+
+#?(:clj
    (defn geometry-collection [geometriat]
      (GeometryCollection. (into-array Geometry geometriat))))
 
@@ -513,4 +518,3 @@ pisteen [px py]."
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/atan2 dy dx)))
-

@@ -114,7 +114,7 @@
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
                  :tr_ajorata (:ajorata tierekisteriosoitevali)
                  :tr_kaista (:kaista tierekisteriosoitevali)
-                 :yhatunnus tunnus
+                 :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
                  :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)

@@ -7,6 +7,7 @@
             <kohdetyyppi>1</kohdetyyppi>
             <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
             <nimi>string</nimi>
+            <tunnus>A</tunnus>
             <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>
             <!--Optional:-->
@@ -37,7 +38,6 @@
                         <ajorata>0</ajorata>
                         <kaista>11</kaista>
                     </tierekisteriosoitevali>
-                    <tunnus>A</tunnus>
                     <!--Optional:-->
                     <paallystystoimenpide>
                         <uusi-paallyste>11</uusi-paallyste>

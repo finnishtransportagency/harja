@@ -289,7 +289,7 @@
           _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})])))
 
 (defn- paivita-yllapitokohde [db user urakka-id
-                              {:keys [id kohdenumero nimi
+                              {:keys [id kohdenumero nimi tunnus
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                       yllapitoluokka sopimuksen-mukaiset-tyot
@@ -305,6 +305,7 @@
         (q/paivita-yllapitokohde! db
                                   {:kohdenumero kohdenumero
                                    :nimi nimi
+                                   :tunnus tunnus
                                    :tr_numero tr-numero
                                    :tr_alkuosa tr-alkuosa
                                    :tr_alkuetaisyys tr-alkuetaisyys
@@ -376,7 +377,6 @@
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
                                 {:nimi nimi
-                                 :tunnus tunnus
                                  :tr_numero tr-numero
                                  :tr_alkuosa tr-alkuosa
                                  :tr_alkuetaisyys tr-alkuetaisyys

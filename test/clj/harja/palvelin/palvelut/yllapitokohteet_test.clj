@@ -453,7 +453,6 @@
                     :sijainti _
                     :tr-ajorata nil
                     :tr-loppuosa 2
-                    :tunnus nil
                     :tr-alkuosa 1
                     :tr-loppuetaisyys 2
                     :nimi "Testiosa123456"
