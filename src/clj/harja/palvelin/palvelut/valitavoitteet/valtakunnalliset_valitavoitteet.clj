@@ -34,7 +34,7 @@
                                                 (t/now)
                                                 (c/from-date (:alkupvm urakka))
                                                 (c/from-date (:loppupvm urakka)))
-                                              (pvm/jalkeen? (:alkupvm urakka) (t/now))))
+                                              (pvm/jalkeen? (c/from-date (:alkupvm urakka)) (t/now))))
           poistettavat-linkitetyt (filter
                                     (fn [valitavoite]
                                       (and (urakka-kaynnissa-tai-tulossa? (:urakka valitavoite))

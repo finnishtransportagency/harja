@@ -43,10 +43,11 @@
 
 (defmulti muodosta-solu
   "Raporttisolujen tyylittely täytyy Apache POI kirjaston takia tehdä niin,
-  että metodit palauttavat solun datan JA tyyliobjektin, jota ne ovat
-  mahdollisesti täydentäneet. Moottorissa on olmessa oletustyyli soluille,
-  jonka solut ottavat vastaan, ja muokkaavat. Solu voi esimerkiksi sisältää
-  virheen, jolloin Tyyliobjektiin asetetaan tieto, että fontin pitää olla punainen."
+  että metodit palauttavat solun datan, tyyliobjektin, jota ne ovat
+  mahdollisesti täydentäneet, sekä optionaalisen formaatin.
+  Moottorissa on olemassa oletustyyli soluille, jonka solut ottavat vastaan, ja muokkaavat.
+  Solu voi esimerkiksi sisältää virheen, jolloin Tyyliobjektiin asetetaan tieto,
+  että fontin pitää olla punainen."
   (fn [elementti tyyli]
     (if (raportti-domain/raporttielementti? elementti)
       (first elementti)
@@ -85,8 +86,10 @@
 (defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko]}] solun-tyyli]
   [arvo solun-tyyli])
 
-(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
-  [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
+  [arvo
+   (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
+   fmt])
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
@@ -97,6 +100,21 @@
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
 
+
+(defn tyyli-format-mukaan [fmt tyyli]
+  ;; Jos halutaan tukea erityyppisiä sarakkeita,
+  ;; pitää tänne lisätä formatter.
+  (case fmt
+    ;; .setDataFormat hakee indeksillä tyylejä.
+    ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
+    ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
+    ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+    :raha (.setDataFormat tyyli 8)
+    :prosentti (.setDataFormat tyyli 10)
+    :numero (.setDataFormat tyyli 2)
+    :pvm (.setDataFormat tyyli 14)
+    :pvm-aika (.setDataFormat tyyli 22)
+    nil))
 
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
@@ -159,25 +177,26 @@
                        korosta? (:korosta? optiot)
                        arvo-datassa (nth data sarake-nro)
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
-                       formaatti-fn (fn [tyyli]
-                                      ;; Jos halutaan tukea erityyppisiä sarakkeita,
-                                      ;; pitää tänne lisätä formatter.
-                                      (when formatoi-solu?
-                                        (case (:fmt sarake)
-                                         ;; .setDataFormat hakee indeksillä tyylejä.
-                                         ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
-                                         ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
-                                         ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
-                                         :raha (.setDataFormat tyyli 8)
-                                         :prosentti (.setDataFormat tyyli 10)
-                                         :numero (.setDataFormat tyyli 2)
-                                         :pvm (.setDataFormat tyyli 14)
-                                         :pvm-aika (.setDataFormat tyyli 22)
-                                         nil)))
+
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta?)
-                       [naytettava-arvo solun-tyyli] (if (raportti-domain/raporttielementti? arvo-datassa)
-                                         (muodosta-solu arvo-datassa oletustyyli)
-                                         [arvo-datassa oletustyyli])
+                       [naytettava-arvo solun-tyyli formaatti]
+                       (if (raportti-domain/raporttielementti? arvo-datassa)
+                         (muodosta-solu arvo-datassa oletustyyli)
+                         [arvo-datassa oletustyyli])
+
+                       ;; Jos solun muodostus on antanut formaatin, käytä sitä.
+                       ;; Jos sarakkeelle on annettu formaatti, käytä sitä.
+                       ;; Muuten käytetään oletusformaattia arvon mukaan.
+                       formaatti-fn (cond
+                                      formaatti
+                                      (partial tyyli-format-mukaan formaatti)
+
+                                      formatoi-solu?
+                                      (partial tyyli-format-mukaan (:fmt sarake))
+
+                                      :default
+                                      (constantly nil))
+
                        naytettava-arvo (if (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
                                          ;; Jos excelissä formatoidaan luku prosentiksi,
                                          ;; excel olettaa, että kyseessä on sadasosia.

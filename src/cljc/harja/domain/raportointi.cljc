@@ -72,14 +72,22 @@
 
 (defn raporttielementti-formatterilla
   "Liittää raporttielementtiin mukaan formatterin. Olettaa, että raporttielementin
-  toinen arvo on mäppi, johon formatointifunktion voi liittää."
-  [solu fmt]
+  toinen arvo on mäppi, johon formatointifunktion voi liittää.
+  Ei ylikirjoita formatteria, jos raporttielementille on määritelty oma :fmt avain."
+  [solu fmt->fn fmt]
   (if (raporttielementti? solu)
-    (when (and fmt (map? (second solu)))
-      (assoc-in solu [1 :fmt] fmt))
+    (if (map? (second solu))
+      (assoc-in solu [1 :fmt]
+                (let [fmt (or (get-in solu [1 :fmt]))]
+                  (if fmt
+                    (fmt->fn fmt)
+                    str)))
+      solu)
 
     ;; Jos annettu solu ei ole raporttielementti, voidaan sen arvo formatoida suoraan.
-    (when fmt (fmt solu))))
+    (if fmt
+      ((fmt->fn fmt) solu)
+      solu)))
 
 (defn formatoi-solu?
   [solu]
