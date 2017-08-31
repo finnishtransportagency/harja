@@ -446,7 +446,7 @@
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
                          (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/summa 666})))]
+                                                                 ::hinta/summa 666})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
@@ -478,7 +478,7 @@
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1) vanha-tila)
                          (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/otsikko "Yleiset materiaalit"
-                                                                    ::hinta/yleiskustannuslisa 12})))]
+                                                                 ::hinta/yleiskustannuslisa 12})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
@@ -511,7 +511,7 @@
     (let [vanha-tila testitila
           uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
                          (e! (tiedot/->AsetaHintaryhmakentalleTiedot {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                                                                    ::hinta/summa 123})))]
+                                                                      ::hinta/summa 123})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 666
@@ -519,6 +519,7 @@
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 123
+                ::hinta/ryhma nil
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
