@@ -58,4 +58,4 @@
 
 (deftest reittipistehaku
   (let [reittipisteet (kutsu :hae-reittipisteet-tienakymaan +kayttaja-jvh+ {:toteuma-id 1})]
-    (is (= 4 (count reittipisteet)))))
+    (is (= 8 (count reittipisteet)))))

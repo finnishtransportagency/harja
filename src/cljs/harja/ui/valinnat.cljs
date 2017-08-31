@@ -43,7 +43,7 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
-   [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
+   [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Urakkavuosi")]
    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
                          :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn}
@@ -164,7 +164,7 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot] :as optiot}]
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])
@@ -174,7 +174,7 @@
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom]} aikavali]
+   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
      [aikavali valittu-aikavali-atom])])
 
 (defn vuosi

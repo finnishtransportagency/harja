@@ -49,7 +49,7 @@
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 24209.90))
+    (is (=marginaalissa? nurkkasumma 26488.52))
     (let [otsikko "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -69,7 +69,7 @@
                                                       :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 67419.81))
+    (is (=marginaalissa? nurkkasumma 71977.05))
     (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko

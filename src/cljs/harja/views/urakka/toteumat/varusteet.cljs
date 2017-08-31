@@ -183,7 +183,8 @@
 
 (defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
   (let [tunniste (or (:tunniste varustetoteuma)
-                     (get-in varustetoteuma [:arvot :tunniste]))]
+                     (get-in varustetoteuma [:arvot :tunniste]))
+        tietolaji (:tietolaji varustetoteuma)]
     (lomake/ryhma
       "Varusteen tunnistetiedot"
       (when tunniste
@@ -203,6 +204,8 @@
          :otsikko "Tierekisteriosoite"
          :tyyppi :tierekisteriosoite
          :pakollinen? muokattava?
+         :vaadi-vali? (tierekisteri-varusteet/valikohtainen-tietolaji tietolaji)
+         :piste? (tierekisteri-varusteet/pistemainen-tietolaji? tietolaji)
          :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
          :validoi [[:validi-tr "Virheellinen tieosoite" [:sijainti]]]
          :muokattava? (constantly muokattava?)}
@@ -227,7 +230,7 @@
       {:nimi :puoli
        :otsikko "Tien puoli"
        :tyyppi :valinta
-       :valinnat (tierekisteri-varusteet/tien-puolet (:tietolaji varustetoteuma))
+       :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
        :pituus 1
        :pakollinen? muokattava?
        :muokattava? (constantly muokattava?)}
