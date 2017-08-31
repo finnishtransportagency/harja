@@ -153,10 +153,10 @@
  :reimari {:url "https://www.example.com/HarjaWebService"
            :kayttajatunnus "reimaritunnus"
            :salasana "reimarisalasana"
-           ;; :paivittainen-toimenpidehaku [16 18 00]
-           ;; :paivittainen-komponenttityyppihaku [06 18 00]
-           ;; :paivittainen-turvalaitekomponenttihaku [06 22 00]
-           ;; :paivittainen-vikahaku [06 25 00]
+           ;; :toimenpidehakuvali 60
+           ;; :komponenttityyppihakuvali 60
+           ;; :turvalaitekomponenttihakuvali 60
+           ;; :vikahakuvali 60
            }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
