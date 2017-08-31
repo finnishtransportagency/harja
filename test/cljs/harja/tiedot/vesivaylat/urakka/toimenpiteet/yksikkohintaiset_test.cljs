@@ -10,6 +10,7 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.urakka :as u]
             [cljs-time.core :as t]
@@ -764,12 +765,21 @@
          {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}]}})))
 
 (deftest poista-hinnoiteltava-tyorivi
-  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {:index 1})
-             {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
-                                                 {:maara 1}
-                                                 {:maara 2}]}})
-         {:hinnoittele-toimenpide {::h/tyot [{:maara 0}
-                                             {:maara 2}]}})))
+  ;; Uusi lisätty rivi katoaa kokonaan
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id -1})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 2 ::tyo/maara 1}
+                                             {::tyo/id 3 ::tyo/maara 2}]}}))
+  ;; Kannassa jo oleva rivi merkitään poistetuksi
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id 2})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                             {::tyo/id 2 ::tyo/maara 1 ::m/poistettu? true}
+                                             {::tyo/id 3 ::tyo/maara 2}]}})))
 
 (deftest aseta-tyoriville-tiedot
   (is (= (e! (tiedot/->AsetaTyorivilleTiedot {::tyo/id 2
