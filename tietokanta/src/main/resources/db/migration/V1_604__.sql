@@ -6,7 +6,7 @@ CREATE TYPE vv_hinta_ryhma AS ENUM ('tyo', 'komponentti', 'muu');
 ALTER TABLE vv_hinta ADD COLUMN ryhma vv_hinta_ryhma; -- Voi olla null esim. jos kyseessä Ryhmähinta.
 
 -- VV-hinta tauluun voidaan syöttää jatkossa JOKO euromääräinen hinta TAI yksikkö, yksikköhinta ja määrä
-ALTER TABLE vv_hinta RENAME COLUMN maara TO summa; -- TODO KOODISSA PITÄÄ KANSSA NIMETÄ hinta/maara -> hinta/summa
+ALTER TABLE vv_hinta RENAME COLUMN maara TO summa;
 ALTER TABLE vv_hinta ALTER COLUMN summa DROP NOT NULL; -- Ks. constraint alta
 ALTER TABLE vv_hinta ADD COLUMN maara NUMERIC(6, 2);
 ALTER TABLE vv_hinta ADD COLUMN yksikko VARCHAR(64);
