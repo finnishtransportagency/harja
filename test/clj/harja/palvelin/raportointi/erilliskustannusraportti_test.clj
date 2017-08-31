@@ -66,10 +66,10 @@
                          :otsikko "Tyyppi"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Summa €"}
+                         :otsikko "Summa"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Ind.korotus €"})
+                         :otsikko "Ind.korotus"})
                      '(["15.09.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
@@ -145,10 +145,10 @@
                          :otsikko "Tyyppi"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Summa €"}
+                         :otsikko "Summa"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Ind.korotus €"})
+                         :otsikko "Ind.korotus"})
                      '(["Kajaanin alueurakka 2014-2019"
                         "15.09.2015"
                         "7A26339/05"
@@ -273,10 +273,10 @@
                  :otsikko "Tyyppi"}
                 {:fmt     :raha
                  :leveys  6
-                 :otsikko "Summa €"}
+                 :otsikko "Summa"}
                 {:fmt     :raha
                  :leveys  6
-                 :otsikko "Ind.korotus €"})
+                 :otsikko "Ind.korotus"})
              '(["Espoon alueurakka 2014-2019"
                 "15.09.2015"
                 "7eS6339/05"
