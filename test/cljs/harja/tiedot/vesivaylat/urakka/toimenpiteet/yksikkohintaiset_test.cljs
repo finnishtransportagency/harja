@@ -406,13 +406,7 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
-                ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot [{:toimenpidekoodi-id 1
-                         :hinta-nimi nil
-                         :maara 60}
-                        {:toimenpidekoodi-id nil
-                         :hinta-nimi "Päivän hinta"
-                         :maara 30}]})))))
+                ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
@@ -466,13 +460,7 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
-                ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot [{:toimenpidekoodi-id 1
-                         :hinta-nimi nil
-                         :maara 60}
-                        {:toimenpidekoodi-id nil
-                         :hinta-nimi "Päivän hinta"
-                         :maara 30}]}))))
+                ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
@@ -498,13 +486,7 @@
                {::hinta/id 4
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 4
-                ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot [{:toimenpidekoodi-id 1
-                         :hinta-nimi nil
-                         :maara 60}
-                        {:toimenpidekoodi-id nil
-                         :hinta-nimi "Päivän hinta"
-                         :maara 30}]})))))
+                ::hinta/yleiskustannuslisa 12}]})))))
 
 (deftest hintaryhman-kentan-hinnoittelu
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
