@@ -35,7 +35,6 @@
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
    (tee-tierekisteriosoitevali alikohde)
-   [:tunnus tunnus]
    (when
      (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly tyomenetelma leveys pinta-ala)
      [:paallystystoimenpide
@@ -82,7 +81,7 @@
      [:tekninen-toimenpide tekninen-toimenpide])])
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
-                         karttapvm nimi] :as kohde}
+                         karttapvm nimi tunnus] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystysilmoitus}]
   [:kohde
@@ -92,6 +91,7 @@
    [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
    [:kohdetyotyyppi yllapitokohdetyotyyppi]
    (when nimi [:nimi nimi])
+   (when tunnus [:tunnus tunnus])
    (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])

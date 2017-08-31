@@ -44,11 +44,6 @@
                     "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
                     "required": true
                   },
-                  "tunnus": {
-                    "id": "urn:harja/yllapitokohde/kohdenumero",
-                    "required": false,
-                    "type": "string"
-                  },
                   "nimi": {
                     "id": "urn:harja/yllapitokohde/nimi",
                     "required": false,

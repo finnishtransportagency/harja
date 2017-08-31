@@ -299,6 +299,12 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
+
+(defn hae-tampereen-alueurakan-2017-2022-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
+
 (defn hae-helsingin-vesivaylaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
