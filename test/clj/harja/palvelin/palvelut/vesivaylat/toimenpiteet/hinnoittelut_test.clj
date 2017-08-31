@@ -114,7 +114,6 @@
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           tyot-ennen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
-          hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
           insert-params {::toi/urakka-id urakka-id
                          ::toi/id toimenpide-id
                          ::h/tallennettavat-hinnat []
@@ -122,32 +121,21 @@
                          [{::tyo/toimenpidekoodi-id toimenpidekoodi-id
                            ::tyo/maara 666}
                           {::tyo/toimenpidekoodi-id toimenpidekoodi-id
-                           ::tyo/maara 123}
-                          {::hinta/otsikko "Päivän hinta" ::hinta/summa 30}
-                          {::hinta/otsikko "Omakustannushinta" ::hinta/summa 123}]}
+                           ::tyo/maara 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                          insert-params)
           tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
-          hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
           hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
       (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
       (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
 
       (is (= (count (::h/tyot insert-vastaus)) 2))
-      (is (= (count (::h/hinnat insert-vastaus)) 2))
       (is (some #(== (::tyo/maara %) 666) (::h/tyot insert-vastaus)))
       (is (some #(== (::tyo/maara %) 123) (::h/tyot insert-vastaus)))
-      (is (some #(and (= (::hinta/otsikko %) "Päivän hinta")
-                      (== (::hinta/summa %) 30))
-                (::h/hinnat insert-vastaus)))
-      (is (some #(and (= (::hinta/otsikko %) "Omakustannushinta")
-                      (== (::hinta/summa %) 123))
-                (::h/hinnat insert-vastaus)))
       (is (= (+ hinnoittelut-ennen 1) hinnoittelut-jalkeen) "Toimenpiteelle luotiin hinnoittelu")
       (is (= (+ tyot-ennen 2) tyot-jalkeen) "Molemmat työt lisättiin")
-      (is (= (+ hinnat-ennen 2) hinnat-jalkeen) "Päivän hinta tallennettiin hinta-tauluun")
 
       (testing "Lisättyjen töiden päivittäminen"
         (let [hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
@@ -166,13 +154,11 @@
                                              :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
                                              update-params)
               tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
-              hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta WHERE poistettu IS NOT TRUE"))
               hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
           (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
 
-          (is (= hinnat-ennen hinnat-jalkeen) "Päivän hinta ja omakustannushinta poistettiin")
           (is (= (count (::h/tyot update-vastaus)) 2))
           (is (some #(== (::tyo/maara %) 555) (::h/tyot update-vastaus)))
           (is (some #(== (::tyo/maara %) 321) (::h/tyot update-vastaus)))
