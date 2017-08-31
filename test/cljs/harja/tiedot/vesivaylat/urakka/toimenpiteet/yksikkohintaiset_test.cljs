@@ -364,22 +364,21 @@
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 0
               ::h/hinnat
-              [{::hinta/id nil
-                ::hinta/otsikko "Komponentit"
-                ::hinta/summa 0
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
+              [{::hinta/id -1
                 ::hinta/otsikko
                 "Yleiset materiaalit"
                 ::hinta/summa 0
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
+               {::hinta/id -2
                 ::hinta/otsikko "Matkakulut"
                 ::hinta/summa 0
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}
-               {::hinta/id nil
+               {::hinta/id -3
                 ::hinta/otsikko "Muut kulut"
                 ::hinta/summa 0
+                ::hinta/ryhma :muu
                 ::hinta/yleiskustannuslisa 0}]
               ::h/tyot []}))))
 
@@ -420,6 +419,7 @@
               [{::hinta/id nil
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 0
+                ::hinta/ryhma nil
                 ::hinta/yleiskustannuslisa 0}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
@@ -433,6 +433,7 @@
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 600
+                ::hinta/ryhma nil
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu

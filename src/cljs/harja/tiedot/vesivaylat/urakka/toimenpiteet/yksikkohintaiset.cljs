@@ -392,8 +392,8 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
-          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
-          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)]
+          hinnat (or (::h/hinnat toimenpiteen-oma-hinnoittelu) [])
+          tyot (or (::h/tyot toimenpiteen-oma-hinnoittelu) [])]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
