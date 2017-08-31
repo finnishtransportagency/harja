@@ -23,20 +23,22 @@
 
 (deftest tarkista-tietyomaan-kasittely
   (let [lisays-kutsu (slurp "test/resurssit/api/tietyomaan-kirjaus.json")
-        poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")]
-    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
+        poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")
+        muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)]
+    (api-tyokalut/post-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")]
+                             kayttaja portti lisays-kutsu)
     (let [[id muokattu poistettu nopeusrajoitus] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy uusi tietyömaa")
       (is (nil? muokattu) "Muokkauspäivämäärä on tyhjä")
       (is (nil? poistettu) "Tietyomaata ei ole poistettu")
       (is (= 20 nopeusrajoitus) "Nopeusrajoitus on kirjattu oikein"))
 
-    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
+    (api-tyokalut/post-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")] kayttaja portti lisays-kutsu)
     (let [[id muokattu _ _] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? muokattu)) "Tieosuus on merkitty muuttuneeksi"))
 
-    (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti poisto-kutsu)
+    (api-tyokalut/delete-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")] kayttaja portti poisto-kutsu)
     (let [[id _ poistettu _] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? poistettu))) "Tieosuus on merkitty poistetuksi")))

@@ -36,10 +36,8 @@
 (deftest laske-hoitourakan-indeksilaskennan-perusluku
   (let [ur @oulun-alueurakan-2014-2019-id
 
-        perusluku-maku2005 (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2005');")))
-        perusluku-maku2010 (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", 'MAKU 2010');")))]
-    (is (= 104.4333333333333333M perusluku-maku2005))
-    (is (= 125.1000000000000000M perusluku-maku2010))))
+        perusluku-maku2005 (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");")))]
+    (is (= 104.4M perusluku-maku2005))))
 
 (deftest laske-hoitokauden-asiakastyytyvaisyysbonus
   (let [ur @oulun-alueurakan-2014-2019-id
@@ -66,8 +64,8 @@
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
       (is {:summa 1000M, :korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M} kyselyn-kautta)
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
-      (is (= 1005.5857006064475000M (second bonarit)) "bonari korotuksen kera")
-      (is (= 5.5857006064475000M (nth bonarit 2)) "bonarin korotus")
+      (is (=marginaalissa? 1005.907M (second bonarit)) "bonari korotuksen kera")
+      (is (=marginaalissa? 5.907M (nth bonarit 2)) "bonarin korotus")
       (is (= [1000M nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
 
@@ -95,16 +93,15 @@
                double-laskujen-tarkkuus 0.015]
 
            (prop/for-all [summa (gen/fmap #(BigDecimal. %) (gen/double* {:min 100 :max 500000 :NaN? false}))
-                          indeksinimi (gen/elements ["MAKU 2005" "MAKU 2010" nil])
                           maksupvm (gen/elements [(pvm/->pvm "01.12.2015") (pvm/->pvm "01.12.2014") (pvm/->pvm "01.7.2014")
                                                   (pvm/->pvm "01.12.2016") (pvm/->pvm "01.12.2017") (pvm/->pvm "01.12.2018")])]
-
-                         (let [bonus (laske-bonus ur
+                         (let [indeksinimi "MAKU 2005"
+                               bonus (laske-bonus ur
                                                   maksupvm
                                                   indeksinimi
                                                   summa)
                                perusluku (when indeksinimi
-                                           (ffirst (q (str "select * from hoitourakan_indeksilaskennan_perusluku(" ur ", '" indeksinimi "');"))))
+                                           (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");"))))
                                palvelun-kautta (laskutusyhteenveto/laske-asiakastyytyvaisyysbonus
                                                  (:db jarjestelma)
                                                  {:urakka-id   ur
