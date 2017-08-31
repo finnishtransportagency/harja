@@ -67,7 +67,9 @@
 (defn hae-turvalaitteet-tekstilla [db {:keys [hakuteksti]}]
   (let [hakuteksti-numerona (try
                               (Integer. hakuteksti)
-                              (catch Exception e))]
+                              (catch Exception e)
+                              ;; Ei onnistu, joten antaa olla
+                              )]
     (vec (specql/fetch db ::tu/turvalaite
                        #{::tu/id
                          ::tu/nimi
