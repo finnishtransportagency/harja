@@ -146,10 +146,10 @@
    (s/optional-key :reimari)                {:url                     s/Str
                                              :kayttajatunnus          s/Str
                                              :salasana                s/Str
-                                             (s/optional-key :paivittainen-toimenpidehaku)  [s/Num]
-                                             (s/optional-key :paivittainen-komponenttityyppihaku)  [s/Num]
-                                             (s/optional-key :paivittainen-turvalaitekomponenttihaku)  [s/Num]
-                                             (s/optional-key :paivittainen-vikahaku)  [s/Num]}
+                                             (s/optional-key :toimenpidehakuvali)  s/Int
+                                             (s/optional-key :komponenttityyppihakuvali)  s/Int
+                                             (s/optional-key :turvalaitekomponenttihakuvali)  s/Int
+                                             (s/optional-key :vikahakuvali)  s/Int}
 
    (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    })

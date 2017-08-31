@@ -1,9 +1,10 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-    #?@(:clj [[clj-time.core :as t]])
+    #?@(:clj [
+            [clj-time.core :as t]])
     #?@(:cljs [[cljs-time.core :as t]])
-    [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil "Kaikki"
                                  :lisatty "Lisätty"
@@ -61,13 +62,125 @@
     "tl524" [1 2 3 4 7 8 9]
     []))
 
+(defn pistemainen-tietolaji? [tietolaji]
+  (contains? #{"tl113",
+               "tl191",
+               "tl192",
+               "tl195",
+               "tl196",
+               "tl197",
+               "tl198",
+               "tl202",
+               "tl211",
+               "tl230",
+               "tl232",
+               "tl251",
+               "tl261",
+               "tl262",
+               "tl263",
+               "tl264",
+               "tl270",
+               "tl310",
+               "tl503",
+               "tl504",
+               "tl505",
+               "tl506",
+               "tl507",
+               "tl508",
+               "tl509",
+               "tl511",
+               "tl512",
+               "tl516",
+               "tl517",
+               "tl519",
+               "tl523",
+               "tl524",
+               "tl703"} tietolaji))
+
+(defn valikohtainen-tietolaji [tietolaji]
+  (contains? #{"tl109",
+               "tl111",
+               "tl112",
+               "tl128",
+               "tl130",
+               "tl131",
+               "tl132",
+               "tl133",
+               "tl134",
+               "tl135",
+               "tl136",
+               "tl137",
+               "tl138",
+               "tl139",
+               "tl141",
+               "tl144",
+               "tl145",
+               "tl146",
+               "tl149",
+               "tl150",
+               "tl151",
+               "tl152",
+               "tl153",
+               "tl157",
+               "tl158",
+               "tl159",
+               "tl161",
+               "tl162",
+               "tl164",
+               "tl165",
+               "tl166",
+               "tl167",
+               "tl168",
+               "tl169",
+               "tl170",
+               "tl171",
+               "tl173",
+               "tl174",
+               "tl180",
+               "tl181",
+               "tl194",
+               "tl201",
+               "tl210",
+               "tl231",
+               "tl233",
+               "tl250",
+               "tl271",
+               "tl303",
+               "tl305",
+               "tl309",
+               "tl312",
+               "tl314",
+               "tl317",
+               "tl322",
+               "tl323",
+               "tl326",
+               "tl327",
+               "tl328",
+               "tl330",
+               "tl331",
+               "tl332",
+               "tl340",
+               "tl341",
+               "tl501",
+               "tl510",
+               "tl513",
+               "tl514",
+               "tl515",
+               "tl518",
+               "tl522",
+               "tl704",
+               "tl705",
+               "tl714",
+               "tl750",
+               "tl751"} tietolaji))
+
 (defn tarkastaminen-sallittu? [tietolaji]
   (nil? (#{"tl524" "tl523"} tietolaji)))
 
 (defn muokkaaminen-sallittu? [tietolaji]
   (nil? (#{"tl523"} tietolaji)))
 
-(defn muokattavat-tietolajit[]
+(defn muokattavat-tietolajit []
   (filter #(muokkaaminen-sallittu? (first %)) tietolaji->selitys))
 
 (def oletus-ajoradat
