@@ -63,10 +63,7 @@
                                                                   {::hinta/id 4
                                                                    ::hinta/otsikko "Muut kulut"
                                                                    ::hinta/summa 4
-                                                                   ::hinta/yleiskustannuslisa 12}
-                                                                  {::hinta/id 5
-                                                                   ::hinta/otsikko "Päivän hinta"
-                                                                   ::hinta/summa 30}]
+                                                                   ::hinta/yleiskustannuslisa 12}]
                                                       ::h/tyot [{::tyo/id 1
                                                                  ::tyo/toimenpidekoodi-id 1
                                                                  ::tyo/maara 60}]}
@@ -437,22 +434,21 @@
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
-              ::h/hinnat
-              [{::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 666
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 12}]}))))
+              ::h/hinnat [{::hinta/id 2
+                           ::hinta/otsikko "Yleiset materiaalit"
+                           ::hinta/summa 666
+                           ::hinta/ryhma :muu
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/id 3
+                           ::hinta/otsikko "Matkakulut"
+                           ::hinta/summa 3
+                           ::hinta/ryhma :muu
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/id 4
+                           ::hinta/otsikko "Muut kulut"
+                           ::hinta/summa 4
+                           ::hinta/ryhma :muu
+                           ::hinta/yleiskustannuslisa 12}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
@@ -462,22 +458,21 @@
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
-              ::h/hinnat
-              [{::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 2
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 12}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 12}]})))))
+              ::h/hinnat [{::hinta/id 2
+                           ::hinta/otsikko "Yleiset materiaalit"
+                           ::hinta/summa 2
+                           ::hinta/yleiskustannuslisa 12}
+                          {::hinta/id 3
+                           ::hinta/otsikko "Matkakulut"
+                           ::hinta/summa 3
+                           ::hinta/yleiskustannuslisa 0}
+                          {::hinta/id 4
+                           ::hinta/otsikko "Muut kulut"
+                           ::hinta/summa 4
+                           ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot [{::tyo/id 1
+                         ::tyo/toimenpidekoodi-id 1
+                         ::tyo/maara 60}]})))))
 
 (deftest hintaryhman-kentan-hinnoittelu
   (testing "Hinnoittele hintaryhmän kentän rahamäärä"
