@@ -456,6 +456,7 @@
                                                                          {::hinta/id id})
                                                                        {::hinta/otsikko (::hinta/otsikko hinta)
                                                                         ::hinta/summa (::hinta/summa hinta)
+                                                                        ::hinta/ryhma :muu
                                                                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                                    (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
                                       {:onnistui ->HintaryhmanHinnoitteluTallennettu
