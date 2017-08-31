@@ -448,7 +448,10 @@
                            ::hinta/otsikko "Muut kulut"
                            ::hinta/summa 4
                            ::hinta/ryhma :muu
-                           ::hinta/yleiskustannuslisa 12}]}))))
+                           ::hinta/yleiskustannuslisa 12}]
+              ::h/tyot [{::tyo/id 1
+                         ::tyo/toimenpidekoodi-id 1
+                         ::tyo/maara 60}]}))))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
