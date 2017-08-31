@@ -93,6 +93,12 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
+(def turvalaitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [vastaus (<! (k/post! :hae-turvalaitteet-tekstilla {:hakuteksti teksti}))]
+            vastaus)))))
+
 (defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
   (boolean
     (when-not (false? korostettu-hintaryhma)
