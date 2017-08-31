@@ -216,7 +216,7 @@
 (defn- komponentit [e! app*]
   (let [;; TODO Komponenttien hinnoittelu. Pitää tehdä näin:
         ;; - Listataan tässä pudotusvalikossa kaikki toimenpiteeseen kuuluvat komponentit jotka on vaihdettu / lisätty
-        ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan
+        ;; - Lisätään nappi jolla voi lisätä oman rivin ja valita siihen komponentin ja antaa sille hinnan. Pakko ei ole lisätä yhtään riviä jos ei halua
         ;; - Alla hardkoodattu esimerkki, ei välttämättä vastaa läheskään lopullista tietomallia, oli vain #nopee #tosinopee #upee demo
         ;; - Tallennetaan vv_hinta tauluun: määrä, yksikköhinta (ja yksikkö?). Vaatii myös linkin. Otsikkoa ei kai tarvita?
         ;; - Vaatii tietomallipäivityksen, jossa tämä linkittyy komponenttille tehtyyn toimenpiteeseen
