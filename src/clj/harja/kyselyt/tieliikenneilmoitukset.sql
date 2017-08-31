@@ -20,6 +20,7 @@ SELECT
   i.tr_loppuosa,
   i.tr_alkuetaisyys,
   i.tr_loppuetaisyys,
+  i."aiheutti-toimenpiteita",
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,

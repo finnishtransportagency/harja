@@ -43,6 +43,9 @@
 (def ^{:const true}
 tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
+(def ^{:const true} vaikutukset-filtterit
+  [:myohassa :aiheutti-toimenpiteita])
+
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
