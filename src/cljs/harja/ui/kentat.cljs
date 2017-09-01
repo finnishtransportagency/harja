@@ -921,6 +921,8 @@
         alkuperainen-sijainti (atom (when sijainti @sijainti))
 
         osoite-ennen-karttavalintaa (atom nil)
+        sijainti-ennen-karttavalintaa (atom nil)
+
         karttavalinta-kaynnissa? (atom false)
 
         keskita-kartta! (fn [sijainti]
@@ -1053,18 +1055,23 @@
                (tr-valintanapin-teksti osoite-alussa osoite)
                #(do
                   (reset! osoite-ennen-karttavalintaa osoite)
+                  (when-let [sijainti @sijainti-atom]
+                    (reset! sijainti-ennen-karttavalintaa @sijainti))
                   (reset! data {})
                   (reset! karttavalinta-kaynnissa? true))
                {:ikoni (ikonit/map-marker)}]
-              [tr/karttavalitsin {:kun-peruttu #(do
-                                                  (reset! data @osoite-ennen-karttavalintaa)
-                                                  (reset! karttavalinta-kaynnissa? false))
-                                  :paivita #(swap! data merge (normalisoi %))
-                                  :kun-valmis #(do
-                                                 (reset! data (normalisoi %))
-                                                 (reset! karttavalinta-kaynnissa? false)
-                                                 (log "Saatiin tr-osoite! " (pr-str %))
-                                                 (go (>! tr-osoite-ch %)))}])
+              [tr/karttavalitsin
+               {:kun-peruttu #(do
+                                (reset! data @osoite-ennen-karttavalintaa)
+                                (when-let [sijainti @sijainti-atom]
+                                  (reset! sijainti @sijainti-ennen-karttavalintaa))
+                                (reset! karttavalinta-kaynnissa? false))
+                :paivita #(swap! data merge (normalisoi %))
+                :kun-valmis #(do
+                               (reset! data (normalisoi %))
+                               (reset! karttavalinta-kaynnissa? false)
+                               (log "Saatiin tr-osoite! " (pr-str %))
+                               (go (>! tr-osoite-ch %)))}])
 
             (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
@@ -1082,6 +1089,7 @@
         paikannus? (if (some? paikannus?) paikannus? true)
 
         paikannus-kaynnissa? (atom false)
+
         karttavalinta-kaynnissa? (atom false)
         lopeta-paikannus #(reset! paikannus-kaynnissa? false)
         aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
