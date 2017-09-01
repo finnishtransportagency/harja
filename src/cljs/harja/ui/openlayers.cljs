@@ -116,8 +116,7 @@
 (def ^:export the-kartta (atom nil))
 
 (defn set-map-size! [w h]
-  (when-let [k @the-kartta ]
-    (.setSize k (clj->js [w h]))))
+  (.setSize @the-kartta (clj->js [w h])))
 
 (defn keskita-kartta-pisteeseen! [keskipiste]
   (when-let [ol3 @the-kartta]
@@ -141,8 +140,7 @@
   (keskita-kartta-pisteeseen! [x y]))
 
 (defn ^:export invalidate-size []
-  (when-let [k @the-kartta]
-    (.invalidateSize k)))
+  (.invalidateSize @the-kartta))
 
 (defn kartan-extent []
   (let [k @the-kartta]
