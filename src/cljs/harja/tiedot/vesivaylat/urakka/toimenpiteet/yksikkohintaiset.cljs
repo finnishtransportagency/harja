@@ -45,7 +45,7 @@
                     :aikavali [nil nil]
                     :vaylatyyppi nil
                     :vayla-id nil
-                    :turvalaite-id
+                    :turvalaite-id nil
                     :tyolaji nil
                     :tyoluokka nil
                     :toimenpide nil
