@@ -419,7 +419,7 @@ reimari-tilat
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::urakka-id]
-    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id
+    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id ::turvalaite-id
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu
