@@ -22,8 +22,9 @@
                     :harja.domain.vesivaylat.hinnoittelu/id)}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
-(s/def ::summa number?)
-(s/def ::maara number?)
+(s/def ::summa (s/nilable number?))
+(s/def ::maara (s/nilable number?))
+(s/def ::yksikkohinta (s/nilable number?))
 (s/def ::yleiskustannuslisa number?)
 
 (def perustiedot
@@ -56,7 +57,13 @@
 (defn hintojen-summa-ilman-yklisaa
   "Palauttaa hintojen summan ilman yleiskustannuslisiä"
   [hinnat]
-  (reduce + 0 (map ::summa hinnat)))
+  (reduce + 0
+          (map
+            (fn [hinta]
+              (if (and (::yksikkohinta hinta) (::maara hinta))
+                (* (::yksikkohinta hinta) (::maara hinta))
+                (::summa hinta)))
+            hinnat)))
 
 (defn hinnan-ominaisuus-otsikolla [hinnat otsikko ominaisuus]
   (->> hinnat
