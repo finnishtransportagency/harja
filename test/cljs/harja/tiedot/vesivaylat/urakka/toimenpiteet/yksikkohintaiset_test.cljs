@@ -22,7 +22,8 @@
                            :sopimus-id nil
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
-                           :vayla nil
+                           :vayla-id nil
+                           :turvalaite-id nil
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}

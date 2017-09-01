@@ -105,7 +105,7 @@
                                                       :lahde vaylahaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
                                                          (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:vayla (::va/id uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:vayla-id (::va/id uusi)}))))}]]
 
     [:div
      [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
@@ -114,7 +114,7 @@
                                                       :lahde turvalaitehaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
                                                          (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:turvalaite (::tu/id uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:turvalaite-id (::tu/id uusi)}))))}]]
 
     (into
       [:div
