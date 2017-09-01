@@ -186,20 +186,6 @@
       (is (>= (count vastaus) 2))
       (is (every? #(= (get-in % [::toi/vayla ::va/id]) vayla-id) vastaus))))
 
-  (testing "Olematon väyläfiltteri ei palauta mitään"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          vayla-id 6666666
-          kysely-params {::toi/urakka-id urakka-id
-                         ::toi/sopimus-id sopimus-id
-                         ::toi/vayla-id vayla-id}
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
-                                  kysely-params)]
-
-      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
-      (is (>= (count vastaus) 0))))
-
   (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä,
             muuten ei palaudu mitään"
     ;; Käytännössä tällaista tilannetta ei pitäisi tulla, UI:lta voidaan valita vain
