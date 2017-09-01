@@ -163,15 +163,15 @@
   (remove
    nil?
    (list (when juurisyy1
-           [:juurisyy1 (turpodomain/juurisyyn-kuvaus juurisyy1)])
+           [:juurisyy1 (turpodomain/juurisyyn-koodi juurisyy1)])
          (when (and juurisyy1 juurisyy1-selite)
            [:juurisyy1selite juurisyy1-selite])
          (when juurisyy2
-           [:juurisyy2 (turpodomain/juurisyyn-kuvaus juurisyy2)])
+           [:juurisyy2 (turpodomain/juurisyyn-koodi juurisyy2)])
          (when (and juurisyy2 juurisyy2-selite)
            [:juurisyy2selite juurisyy2-selite])
          (when juurisyy3
-           [:juurisyy3 (turpodomain/juurisyyn-kuvaus juurisyy3)])
+           [:juurisyy3 (turpodomain/juurisyyn-koodi juurisyy3)])
          (when (and juurisyy3 juurisyy3-selite)
            [:juurisyy3selite juurisyy3-selite]))))
 

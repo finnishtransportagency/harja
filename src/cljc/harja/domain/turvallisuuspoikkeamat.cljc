@@ -126,3 +126,13 @@
    :ohjeiden_vastainen_toiminta_tai_riskinotto "Ohjeiden vastainen toiminta tai riskinotto"
    :tyomaan_ulkopuolinen_tekija_tai_olosuhde "Työmaan ulkopuolinen tekijä tai olosuhde"
    :muu "Muu (avoin kohta)"})
+
+(def juurisyyn-koodi
+  {:puutteelliset_henkilonsuojaimet 0
+   :puutteelliset_tyovalineet_tai_koneet 1
+   :puutteellinen_jarjestys_tai_siisteys 2
+   :puutteellinen_patevyys_tai_kelpoisuus 3
+   :puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys 4
+   :ohjeiden_vastainen_toiminta_tai_riskinotto 5
+   :tyomaan_ulkopuolinen_tekija_tai_olosuhde 6
+   :muu 7})
