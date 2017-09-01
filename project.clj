@@ -177,7 +177,7 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-                :figwheel true
+                :figwheel {:websocket-host "harja-dev2.lxd"}
                 :compiler {:optimizations :none
                            :source-map true
                            ;:parallel-build false Failaa randomisti
@@ -289,13 +289,18 @@
 
   ;; REPL kehitys
   :repl-options {:init-ns harja.palvelin.main
-                 :init (harja.palvelin.main/-main)
+
+                 :init (do
+                         (set! *print-length* 50)
+                         (harja.palvelin.main/-main))
                  :port 4005
                  :timeout 120000
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
+             :server-ip "0.0.0.0"
+             :nrepl-host "0.0.0.0"
              :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon

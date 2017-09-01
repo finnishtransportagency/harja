@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.reimari.toimenpidehaku-test
   (:require [harja.palvelin.integraatiot.reimari.toimenpidehaku :as tohaku]
             [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
             [com.stuartsierra.component :as component]
             [specql.core :as specql]
@@ -109,3 +110,7 @@
                                     slurp
                                     (clojure.string/replace "nimi=\"Hoitosopimus\"" ""))]
         (t/is (empty? (tohaku/kasittele-toimenpiteet-vastaus db nimeton-sopimus-xml)))))))
+
+#_(t/deftest ajastettu-tphaku
+  (with-redefs [ajastettu-tehtava/ajasta-minuutin-valein (fn [minuutit tehtava-fn] (println "kukkuu"))]
+    ()))

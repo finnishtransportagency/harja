@@ -50,7 +50,7 @@
    (pvm/aikana (time/today) 23 59 59 999)])
 
 
-(def haetut-tapahtumat (atom []))
+(def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
 
 (defn hae-tapahtumat! []
   (let  [valittu-jarjestelma @valittu-jarjestelma
@@ -64,6 +64,7 @@
                                           50
                                           200))]
     (when nakymassa?
+      (reset! haetut-tapahtumat nil)
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
             (reset! haetut-tapahtumat tapahtumat)
             tapahtumat)))))

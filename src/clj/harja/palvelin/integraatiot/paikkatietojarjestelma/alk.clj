@@ -32,7 +32,9 @@
 
 (defn aja-alk-paivitys [integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys]
   (log/debug (format "Päivitetään geometria-aineisto: %s" paivitystunnus))
-  (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
+  (try
+    (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
+    )
   (hae-tiedosto integraatioloki (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)

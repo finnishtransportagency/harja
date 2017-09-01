@@ -17,13 +17,31 @@
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
                       :salasana ""}
- :fim {:url
+
+  ;; :tietokanta {:palvelin "localhost"
+  ;;              :tietokanta "harja"
+  ;;              :portti 6542
+  ;;              :yhteyspoolin-koko 16
+  ;;              :kayttaja "harja"
+  ;;              :salasana "s_harja"
+  ;;              }
+  ;; :tietokanta-replica {:palvelin "localhost"
+  ;;                      :tietokanta "harja"
+  ;;                      :portti 6542
+  ;;                      :yhteyspoolin-koko 16
+  ;;                      :kayttaja "harja"
+  ;;                      :salasana "s_harja"
+  ;;                      }
+
+  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        ;; :slack {:taso :warn
        ;;         :webhook-url #=(slurp "../.harja/slack-webhook-url")}
+       ;;          ;; :webhook-url "https://hooks.slack.com/services/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"
+       ;;          }
        ;; :hipchat {:taso     :warn
        ;;           :huone-id 1396730
        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
@@ -150,14 +168,13 @@
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
- :reimari {:url "https://www.example.com/HarjaWebService"
-           :kayttajatunnus "reimaritunnus"
-           :salasana "reimarisalasana"
-           ;; :toimenpidehakuvali 60
-           ;; :komponenttityyppihakuvali 60
-           ;; :turvalaitekomponenttihakuvali 60
-           ;; :vikahakuvali 60
-           }
+ ;; :reimari {:url "https://www.example.com/HarjaWebService"
+ ;;           :kayttajatunnus "reimaritunnus"
+ ;;           :salasana "reimarisalasana"
+ ;;           ;; :paivittainen-toimenpidehaku [16 18 00]
+ ;;           ;; :paivittainen-komponenttityyppihaku [06 18 00]
+ ;;           ;; :paivittainen-turvalaitekomponenttihaku [06 22 00]
+ ;;           }
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
                  :paivittainen-tarkistusaika [12 22 00]
@@ -173,5 +190,9 @@
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
- :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
- }
+ :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [16 15 00]}
+ ;; :reimari {:url "https://testioag.liikennevirasto.fi/Reimari/HarjaWebservice"
+ ;;           :kayttajatunnus "harja"
+ ;;           :salasana ""
+ ;;           :paivittainen-toimenpidehaku [13 36 00]}
+}
