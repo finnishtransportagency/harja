@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/turi/")
@@ -156,6 +157,24 @@
      (when (:alkuetaisyys tieosoite) [:tieaet (:alkuetaisyys tieosoite)])
      (when (:loppuetaisyys tieosoite) [:tielet (:loppuetaisyys tieosoite)])]))
 
+(defn- juurisyyt [{:keys [juurisyy1 juurisyy1-selite
+                          juurisyy2 juurisyy2-selite
+                          juurisyy3 juurisyy3-selite]}]
+  (remove
+   nil?
+   (list (when juurisyy1
+           [:juurisyy1 (turpodomain/juurisyyn-kuvaus juurisyy1)])
+         (when (and juurisyy1 juurisyy1-selite)
+           [:juurisyy1selite juurisyy1-selite])
+         (when juurisyy2
+           [:juurisyy2 (turpodomain/juurisyyn-kuvaus juurisyy2)])
+         (when (and juurisyy2 juurisyy2-selite)
+           [:juurisyy2selite juurisyy2-selite])
+         (when juurisyy3
+           [:juurisyy3 (turpodomain/juurisyyn-kuvaus juurisyy3)])
+         (when (and juurisyy3 juurisyy3-selite)
+           [:juurisyy3selite juurisyy3-selite]))))
+
 (defn- syyt-ja-seuraukset [data]
   [:syytjaseuraukset
    [:seuraukset (:seuraukset data)]
@@ -166,7 +185,8 @@
    (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
    [:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
    [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
-   [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]])
+   [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]
+   (juurisyyt data)])
 
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely
