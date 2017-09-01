@@ -216,7 +216,8 @@
                  :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
                  :nimi avain}
                 (when (get turvallisuuspoikkeama avain)
-                  {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"})]))
+                  {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                   :pituus-max 200})]))
            (range 1 4)))))
 
 (defn turvallisuuspoikkeaman-tiedot [urakka]
