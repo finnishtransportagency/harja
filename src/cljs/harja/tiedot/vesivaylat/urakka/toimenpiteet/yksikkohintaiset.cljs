@@ -89,38 +89,6 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
-(defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
-  (boolean
-    (when-not (false? korostettu-hintaryhma)
-      (= (::h/id hintaryhma) korostettu-hintaryhma))))
-
-(def kokonaishintaisista-siirretyt-hintaryhma
-  {::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."
-   ::h/id -1})
-
-(def reimarin-lisatyot-hintaryhma
-  {::h/nimi "Reimarissa lisätyöksi merkityt, valitse tilaus."
-   ::h/id -2})
-
-(defn kokonaishintaisista-siirretyt-hintaryhma? [hintaryhma]
-  (= (::h/id hintaryhma) (::h/id kokonaishintaisista-siirretyt-hintaryhma)))
-
-(defn reimarin-lisatyot-hintaryhma? [hintaryhma]
-  (= (::h/id hintaryhma) (::h/id reimarin-lisatyot-hintaryhma)))
-
-(defn valiaikainen-hintaryhma? [hintaryhma]
-  (or (kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
-      (reimarin-lisatyot-hintaryhma? hintaryhma)))
-
-(defn hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin [toimenpiteet]
-  (for [to toimenpiteet]
-    (assoc to ::to/hintaryhma-id (or (::to/hintaryhma-id to)
-                                     (when (::to/reimari-lisatyo? to) (::h/id reimarin-lisatyot-hintaryhma))
-                                     (::h/id kokonaishintaisista-siirretyt-hintaryhma)))))
-
-(defn poista-hintaryhmien-korostus [app]
-  (assoc app :korostettu-hintaryhma false))
-
 ;; Yleiset eventit
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
@@ -172,6 +140,38 @@
 (defrecord PeruHintaryhmanHinnoittelu [])
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+
+(defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
+  (boolean
+    (when-not (false? korostettu-hintaryhma)
+      (= (::h/id hintaryhma) korostettu-hintaryhma))))
+
+(def kokonaishintaisista-siirretyt-hintaryhma
+  {::h/nimi "Kokonaishintaisista siirretyt, valitse tilaus."
+   ::h/id -1})
+
+(def reimarin-lisatyot-hintaryhma
+  {::h/nimi "Reimarissa lisätyöksi merkityt, valitse tilaus."
+   ::h/id -2})
+
+(defn kokonaishintaisista-siirretyt-hintaryhma? [hintaryhma]
+  (= (::h/id hintaryhma) (::h/id kokonaishintaisista-siirretyt-hintaryhma)))
+
+(defn reimarin-lisatyot-hintaryhma? [hintaryhma]
+  (= (::h/id hintaryhma) (::h/id reimarin-lisatyot-hintaryhma)))
+
+(defn valiaikainen-hintaryhma? [hintaryhma]
+  (or (kokonaishintaisista-siirretyt-hintaryhma? hintaryhma)
+      (reimarin-lisatyot-hintaryhma? hintaryhma)))
+
+(defn hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin [toimenpiteet]
+  (for [to toimenpiteet]
+    (assoc to ::to/hintaryhma-id (or (::to/hintaryhma-id to)
+                                     (when (::to/reimari-lisatyo? to) (::h/id reimarin-lisatyot-hintaryhma))
+                                     (::h/id kokonaishintaisista-siirretyt-hintaryhma)))))
+
+(defn poista-hintaryhmien-korostus [app]
+  (assoc app :korostettu-hintaryhma false))
 
 (defn- hintakentta
   "Generoi hintakentän annetulla id:llä ja otsikolla. Ottaa annetun hinnan tiedot (määrä, ryhmä, yk-lisä...)
