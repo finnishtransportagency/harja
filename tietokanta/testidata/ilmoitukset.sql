@@ -1058,3 +1058,14 @@ VALUES
   (point(431758.24, 7019066.96)::GEOMETRY, 1454666,
    (select id from urakka where nimi='Muhoksen päällystysurakka'), 50024666,
     '2017-06-01 00:08:56', null, false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'paallystys');
+
+-- Välitysviesti
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
+VALUES ((SELECT id
+         FROM ilmoitus
+         WHERE ilmoitusid = 50024792), 50024792, '2017-09-01 06:10:07', 'valitys' ,
+        'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
+        'Välittävä Urakoitsija', 'Y1242334', 'sisaan'::viestisuunta, 'sms'::viestikanava);
