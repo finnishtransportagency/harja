@@ -52,11 +52,11 @@
                                                  hinta/yleinen-yleiskustannuslisa
                                                  0)}))))])
 
-(defn vapaa-hinnoittelurivi [e! hinta]
+(defn vapaa-hinnoittelurivi [e! hinta ainoa-vakiokentta?]
   (let [otsikko (::hinta/otsikko hinta)]
     [:tr
      [:td
-      (if (tiedot/vakiohintakentta? otsikko)
+      (if ainoa-vakiokentta?
         otsikko
         [tee-kentta {:tyyppi :string}
          (r/wrap otsikko
@@ -69,7 +69,7 @@
      [:td.tasaa-oikealle [hintakentta e! hinta]]
      [:td.keskita [yleiskustannuslisakentta e! hinta]]
      [:td
-      (when-not (tiedot/vakiohintakentta? otsikko)
+      (when-not ainoa-vakiokentta?
         [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
 
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
@@ -258,21 +258,18 @@
      [rivinlisays "Lisää komponenttirivi" #(log "TODO LISÄÄ KOMPONENTTIRIVI")]])) ; TODO
 
 (defn- muut-hinnat [e! app*]
-  [:div.hinnoitteluosio.muut-osio
-   [valiotsikko "Muut"]
-   [:table
-    [muu-hinnoittelu-header]
-    [:tbody
-     (map-indexed
-       (fn [index hinta]
-         ^{:key index}
-         ;; TODO Tänne ei saa kirjoittaa to/vakiohinnat sisältöä, muuten tapahtuu ikäviä
-         ;; TODO Täällä tulisi listata vain hinnat joissa vv_hinta.ryhma = :muu
-         [vapaa-hinnoittelurivi e! hinta])
-       (filter
-         #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
-         (get-in app* [:hinnoittele-toimenpide ::h/hinnat])))]]
-   [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaMuuKulurivi))]])
+  (let [hinnat (tiedot/muut-hinnat app*)]
+    [:div.hinnoitteluosio.muut-osio
+     [valiotsikko "Muut"]
+     [:table
+      [muu-hinnoittelu-header]
+      [:tbody
+       (map-indexed
+         (fn [index hinta]
+           ^{:key index}
+           [vapaa-hinnoittelurivi e! hinta (tiedot/ainoa-otsikon-vakiokentta? hinnat (::hinta/otsikko hinta))])
+         hinnat)]]
+     [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaMuuKulurivi))]]))
 
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot

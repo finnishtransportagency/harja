@@ -225,6 +225,19 @@
 ;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
+(defn muut-hinnat [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
+  (and
+    (vakiohintakentta? otsikko)
+    (-> (group-by ::hinta/otsikko hinnat)
+       (get otsikko)
+       count
+       (= 1))))
+
 (defn- hintaryhman-hintakentat [hinnat]
   (let [ryhmahinta (hinta/hinta-otsikolla hinnat hintaryhman-hintakentta-otsikko)]
     ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
