@@ -29,7 +29,6 @@
           "tunniste": {
             "id": 1
           },
-          "tunnus": "A",
           "nimi": "1. Testialikohde",
           "sijainti": {
             "numero": 20,
@@ -49,7 +48,6 @@
           "tunniste": {
             "id": 2
           },
-          "tunnus": "B",
           "nimi": "2. Testialikohde",
           "sijainti": {
             "numero": 20,

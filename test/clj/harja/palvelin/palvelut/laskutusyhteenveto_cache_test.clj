@@ -297,13 +297,13 @@
       (is (= 39042.24137931034423443500M
              (:kaikki_laskutettu haetut-tiedot-oulu-talvihoito)
              (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
-      (is (= -23265.6239047196267293788000000M
+      (is (= -23265.3033205619414130488000000M
              (:kaikki_laskutetaan haetut-tiedot-oulu-talvihoito)
              (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
       (is (= 142.24137931034423443500M
              (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-talvihoito)
              (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
-      (is (= -5.6239047196267293788000000M
+      (is (= -5.3033205619414130488000000M
              (:kaikki_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito)
              (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")
       (let [erilliskustannus-lisatty
@@ -328,13 +328,13 @@
         (is (= 39042.24137931034423443500M
                (:kaikki_laskutettu toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu laskutusyhteenvedossa")
-        (is (= -22589.1583874782474373788000000M
+        (is (= -22588.8378033205621210488000000M
                (:kaikki_laskutetaan toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan laskutusyhteenvedossa")
         (is (= 142.24137931034423443500M
                (:kaikki_laskutettu_ind_korotus toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
-        (is (= 5.8416125217525626212000000M
+        (is (= 6.1621966794378789512000000M
                (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
 
