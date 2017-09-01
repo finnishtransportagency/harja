@@ -178,11 +178,14 @@
 (defn- hintakentta
   "Generoi hintakentän annetulla id:llä ja otsikolla. Ottaa annetun hinnan tiedot (määrä, ryhmä, yk-lisä...)
   käyttöön jos tiedot löytyvät."
-  [{:keys [id otsikko summa ryhma yleiskustannuslisa]}]
+  [{:keys [id otsikko summa ryhma yleiskustannuslisa maara yksikko yksikkohinta]}]
   {::hinta/id id
    ::hinta/otsikko otsikko
-   ::hinta/summa (or summa 0)
+   ::hinta/summa (or summa (if (= :tyo ryhma) nil 0))
    ::hinta/ryhma ryhma
+   ::hinta/maara maara
+   ::hinta/yksikko yksikko
+   ::hinta/yksikkohinta yksikkohinta
    ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa yleiskustannuslisa]
                                 yleiskustannuslisa
                                 0)})
@@ -220,7 +223,10 @@
                  {:id (::hinta/id %)
                   :otsikko (::hinta/otsikko %)
                   :summa (::hinta/summa %)
-                  :ryhma :muu
+                  :ryhma (::hinta/ryhma %)
+                  :yksikko (::hinta/yksikko %)
+                  :yksikkohinta (::hinta/yksikkohinta %)
+                  :maara (::hinta/maara %)
                   :yleiskustannuslisa (::hinta/yleiskustannuslisa %)})
               (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
