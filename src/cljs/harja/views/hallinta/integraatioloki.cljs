@@ -273,7 +273,8 @@
 
   (let [paivita? (atom true)]
     (go
-      (tiedot/hae-tapahtumat!)
+      (when @tiedot/nayta-uusimmat-tilassa?
+        (tiedot/hae-tapahtumat!))
       (<! (timeout 2000))
       (loop []
         (<! (timeout 20000))
