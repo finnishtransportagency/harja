@@ -111,10 +111,6 @@
      [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
                                       :kentta-params {:tyyppi :haku
                                                       :nayta ::tu/nimi
-                                                      #_(fn [turvalaite]
-                                                               (str (::tu/turvalaitenro turvalaite)
-                                                                    (when-let [nimi (::tu/nimi turvalaite)]
-                                                                      (str "(" nimi ")"))))
                                                       :lahde turvalaitehaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
                                                          (fn [uusi]
