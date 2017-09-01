@@ -92,4 +92,5 @@
 (defn nayta-uusimmat-tapahtumat! []
   (reset! valittu-aikavali nil)
   (reset! nayta-uusimmat-tilassa? true)
+  (reset! hakuehdot {:tapahtumien-tila :kaikki})
   (hae-tapahtumat!))
