@@ -31,13 +31,34 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(defn- kentta*
+  [e! asia arvo-kw kentan-optiot asetus-fn]
+  [tee-kentta kentan-optiot
+   (r/wrap (arvo-kw asia)
+           asetus-fn)])
+
+(defn- kentta-hinnalle
+  ([e! hinta arvo-kw kentan-optiot]
+   [kentta-hinnalle e! hinta arvo-kw kentan-optiot
+    (fn [uusi]
+      (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
+                                              arvo-kw uusi})))])
+  ([e! hinta arvo-kw kentan-optiot asetus-fn]
+   [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
+
+(defn- kentta-tyolle
+  ([e! tyo arvo-kw kentan-optiot]
+   [kentta-tyolle e! tyo arvo-kw kentan-optiot
+    (fn [uusi]
+      (e! (tiedot/->AsetaTyorivilleTiedot
+            {::tyo/id (::tyo/id tyo)
+             arvo-kw uusi})))])
+  ([e! tyo arvo-kw kentan-optiot asetus-fn]
+   [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
+
 (defn- hintakentta
   [e! hinta]
-  [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}
-   (r/wrap (::hinta/summa hinta)
-           (fn [uusi]
-             (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
-                                                     ::hinta/summa uusi}))))])
+  [kentta-hinnalle e! hinta ::hinta/summa {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}])
 
 (defn- yleiskustannuslisakentta
   [e! hinta]
@@ -53,24 +74,19 @@
                                                  0)}))))])
 
 (defn vapaa-hinnoittelurivi [e! hinta ainoa-vakiokentta?]
-  (let [otsikko (::hinta/otsikko hinta)]
-    [:tr
-     [:td
-      (if ainoa-vakiokentta?
-        otsikko
-        [tee-kentta {:tyyppi :string}
-         (r/wrap otsikko
-                 (fn [uusi]
-                   (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
-                                                           ::hinta/otsikko uusi}))))])]
-     [:td]
-     [:td]
-     [:td]
-     [:td.tasaa-oikealle [hintakentta e! hinta]]
-     [:td.keskita [yleiskustannuslisakentta e! hinta]]
-     [:td
-      (when-not ainoa-vakiokentta?
-        [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuKulurivi {::hinta/id (::hinta/id hinta)}))])]]))
+  [:tr
+   [:td
+    (if ainoa-vakiokentta?
+      (::hinta/otsikko hinta)
+      [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}])]
+   [:td]
+   [:td]
+   [:td]
+   [:td.tasaa-oikealle [hintakentta e! hinta]]
+   [:td.keskita [yleiskustannuslisakentta e! hinta]]
+   [:td
+    (when-not ainoa-vakiokentta?
+      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuKulurivi {::hinta/id (::hinta/id hinta)}))])]])
 
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
@@ -171,12 +187,7 @@
                   tyovalinnat])]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
-               [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
-                (r/wrap (::tyo/maara tyorivi)
-                        (fn [uusi]
-                          (e! (tiedot/->AsetaTyorivilleTiedot
-                                {::tyo/id (::tyo/id tyorivi)
-                                 ::tyo/maara uusi}))))]]
+               [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
               [:td yksikko]
               [:td.tasaa-oikealle
                (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
@@ -186,32 +197,33 @@
          ei-poistetut-tyot)]]
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
-(defn- muut-tyot [e! app*]
-  [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-   [valiotsikko "Muut työt (ei indeksilaskentaa)"]
-   [:table
-    ;; TODO Tähän kirjataan vapaasti tehtyjä töitä
-    ;; - Tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
-    ;; - Tallennetaan vv_hinta tauluun: otsikko, määrä, yksikkö, yksikköhinta. Ryhmäksi tallennetaan :tyo.
-    ;; - Tässä näytetään vain :työ ryhmään kuuluvat vv_hinnat, ei muuta
-    ;; - Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
-    [sopimushintaiset-tyot-header]
-    [:tbody
-     (map-indexed
-       (fn [index tyorivi]
+(defn muu-tyo-hinnoittelurivi [e! hinta]
+  [:tr
+   [:td (::hinta/otsikko hinta)] ;; TODO Työn otsikko
+   [:td.tasaa-oikealle (::hinta/yksikkohinta hinta)] ;; TODO Yksikköhinta
+   [:td.tasaa-oikealle (::hinta/maara hinta)] ;; TODO Määrä
+   [:td
+    [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td (* (::hinta/maara hinta) (::hinta/yksikkohinta hinta))]
+   [:td.keskita [yleiskustannuslisakentta e! hinta]] ;; TODO YK-lisä
+   [:td.keskita
+    [ikonit/klikattava-roskis #(log "TODO")]]])
 
-         ^{:key index}
-         [:tr
-          [:td] ;; TODO Työn otsikko
-          [:td.tasaa-oikealle] ;; TODO Yksikköhinta
-          [:td.tasaa-oikealle] ;; TODO Määrä
-          [:td] ;; TODO Yksikkö
-          [:td] ;; TODO Yhteensä
-          [:td.keskita [yleiskustannuslisakentta e! nil]] ;; TODO YK-lisä
-          [:td.keskita
-           [ikonit/klikattava-roskis #(log "TODO")]]])
-       [])]]
-   [rivinlisays "Lisää työrivi" #(log "TODO")]])
+(defn- muut-tyot [e! app*]
+  (let [muut-tyot (tiedot/muut-tyot app*)]
+    [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
+    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
+    [:table
+     ;; TODO Tähän kirjataan vapaasti tehtyjä töitä
+     ;; - Tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
+     ;; - Tallennetaan vv_hinta tauluun: otsikko, määrä, yksikkö, yksikköhinta. Ryhmäksi tallennetaan :tyo.
+     ;; - Tässä näytetään vain :työ ryhmään kuuluvat vv_hinnat, ei muuta
+     ;; - Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
+     [sopimushintaiset-tyot-header]
+     [:tbody
+      (for* [muu-tyo muut-tyot]
+            [muu-tyo-hinnoittelurivi e! muu-tyo])]]
+    [rivinlisays "Lisää työrivi" #(log "TODO")]]))
 
 (defn- komponentit [e! app*]
   (let [;; TODO Komponenttien hinnoittelu. Pitää tehdä näin:
@@ -240,11 +252,13 @@
              (str (get-in komponentti [::tkomp/komponenttityyppi ::tktyyppi/nimi])
                   " (" (::tkomp/sarjanumero komponentti) ")")]
             [:td.tasaa-oikealle
+             ;; TODO: lisää kentta-komponentille fn?
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
                       (fn [uusi]
                         (log "TODO")))]]
             [:td.tasaa-oikealle
+             ;; TODO: lisää kentta-komponentille fn?
              [tee-kentta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}
               (r/wrap 0
                       (fn [uusi]
