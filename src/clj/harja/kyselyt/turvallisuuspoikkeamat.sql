@@ -252,7 +252,11 @@ SELECT
   l.nimi                                AS liite_nimi,
   l.liite_oid                           AS liite_oid,
   l.pikkukuva                           AS liite_pikkukuva,
-  l.kuvaus                              AS liite_kuvaus
+  l.kuvaus                              AS liite_kuvaus,
+
+  juurisyy1, juurisyy1_selite AS "juurisyy1-selite",
+  juurisyy2, juurisyy2_selite AS "juurisyy2-selite",
+  juurisyy3, juurisyy3_selite AS "juurisyy3-selite"
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
