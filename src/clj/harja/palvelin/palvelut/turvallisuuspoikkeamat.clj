@@ -137,7 +137,6 @@
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
                    ilmoituksetlahetetty tila]
             :as turvallisuuspoikkeama}]
-  (println "TP: " (pr-str turvallisuuspoikkeama))
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
                                                        vaaralliset-aineet))
