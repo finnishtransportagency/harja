@@ -19,9 +19,7 @@
             [clojure.string :as str]
             [clojure.core.async :as async]
             [harja.domain.reittipiste :as rp])
-  (:use [slingshot.slingshot :only [throw+]])
-  (:import (org.postgresql.util PSQLException)
-           (org.postgis Point)))
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def ^{:const true} +yhdistamis-virhe+ :virhe-reitin-yhdistamisessa)
 
@@ -225,11 +223,8 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/reittitoteuman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
-                           (try
-                             (#'kirjaa-toteuma db db-replica
-                                               parametit data kayttaja)
-                             (catch Exception e
-                               (.printStackTrace e)))))))
+                           (#'kirjaa-toteuma db db-replica
+                             parametit data kayttaja)))))
 
     (julkaise-reitti
      http :lisaa-reittitoteuma
