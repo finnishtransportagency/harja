@@ -50,7 +50,6 @@
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
                                                       :liite :liitteet}))
                   turpo
-                (konv/string->keyword turpo :juurisyy1 :juurisyy2 :juurisyy3)
                 (kasittele-vain-yksi-vamma-ja-ruumiinosa turpo)
                 (assoc turpo :korjaavattoimenpiteet
                        (mapv #(assoc % :vastuuhenkilo
