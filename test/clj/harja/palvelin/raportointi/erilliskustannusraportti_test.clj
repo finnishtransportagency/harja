@@ -66,10 +66,10 @@
                          :otsikko "Tyyppi"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Summa €"}
+                         :otsikko "Summa"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Ind.korotus €"})
+                         :otsikko "Ind.korotus"})
                      '(["15.09.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
@@ -81,7 +81,7 @@
                          "Oulu Talvihoito TP 2014-2019"
                          "As.tyyt.­bonus"
                          1000M
-                         4.06958187041174593000M]
+                         4.39016602809706226000M]
                         ["01.08.2015"
                          "2H16339/01"
                          "Oulu Talvihoito TP 2014-2019"
@@ -111,7 +111,7 @@
                           ""
                           ""
                           4000M
-                          28.97379642979870953000M))]]))))
+                          29.29438058748402586000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -145,10 +145,10 @@
                          :otsikko "Tyyppi"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Summa €"}
+                         :otsikko "Summa"}
                         {:fmt     :raha
                          :leveys  6
-                         :otsikko "Ind.korotus €"})
+                         :otsikko "Ind.korotus"})
                      '(["Kajaanin alueurakka 2014-2019"
                         "15.09.2015"
                         "7A26339/05"
@@ -162,7 +162,7 @@
                          "Kajaani Talvihoito TP 2014-2019"
                          "As.tyyt.­bonus"
                          1000M
-                         4.06958187041174593000M]
+                         4.39016602809706226000M]
                         ["Kajaanin alueurakka 2014-2019"
                          "01.08.2015"
                          "7A26339/05"
@@ -204,7 +204,7 @@
                          "Oulu Talvihoito TP 2014-2019"
                          "As.tyyt.­bonus"
                          1000M
-                         4.06958187041174593000M]
+                         4.39016602809706226000M]
                         ["Oulun alueurakka 2014-2019"
                          "01.08.2015"
                          "2H16339/01"
@@ -239,7 +239,7 @@
                           ""
                           ""
                           8000M
-                          57.94759285959741906000M))]]))))
+                          58.58876117496805172000M))]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -273,10 +273,10 @@
                  :otsikko "Tyyppi"}
                 {:fmt     :raha
                  :leveys  6
-                 :otsikko "Summa €"}
+                 :otsikko "Summa"}
                 {:fmt     :raha
                  :leveys  6
-                 :otsikko "Ind.korotus €"})
+                 :otsikko "Ind.korotus"})
              '(["Espoon alueurakka 2014-2019"
                 "15.09.2015"
                 "7eS6339/05"
@@ -290,7 +290,7 @@
                  "Espoo Talvihoito TP 2014-2019"
                  "As.tyyt.­bonus"
                  1000M
-                 4.06958187041174593000M]
+                 4.39016602809706226000M]
                 ["Espoon alueurakka 2014-2019"
                  "01.08.2015"
                  "7eS6339/05"
@@ -374,7 +374,7 @@
                  "Kajaani Talvihoito TP 2014-2019"
                  "As.tyyt.­bonus"
                  1000M
-                 4.06958187041174593000M]
+                 4.39016602809706226000M]
                 ["Kajaanin alueurakka 2014-2019"
                  "01.08.2015"
                  "7A26339/05"
@@ -416,7 +416,7 @@
                  "Oulu Talvihoito TP 2014-2019"
                  "As.tyyt.­bonus"
                  1000M
-                 4.06958187041174593000M]
+                 4.39016602809706226000M]
                 ["Oulun alueurakka 2014-2019"
                  "01.08.2015"
                  "2H16339/01"
@@ -451,4 +451,4 @@
                   ""
                   ""
                   16000M
-                  -257.67698742484960357000M))]]))))
+                  -256.71523495179365458000M))]]))))
