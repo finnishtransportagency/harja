@@ -106,10 +106,11 @@
               {:otsikko "Kuittaukset" :nimi :kuittaukset :tyyppi :komponentti
                :komponentti
                (fn []
-                 (let [kuittauksien-maara (count (:kuittaukset ilmoitus))
+                 (let [kuittaukset (filterv #(not= :valitys (:kuittaustyyppi %)) (:kuittaukset ilmoitus))
+                       kuittauksien-maara (count kuittaukset)
                        kaikkia-ei-piirretty? (> kuittauksien-maara nayta-max-kuittausta)]
                    [:div
-                    (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta (:kuittaukset ilmoitus)))]
+                    (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta kuittaukset))]
                       ^{:key (:id ilmoitus)}
                       [:div (str (if (keyword? (:kuittaustyyppi ilmoitus))
                                     (name (:kuittaustyyppi ilmoitus))
