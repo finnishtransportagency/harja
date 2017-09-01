@@ -199,31 +199,28 @@
 
 (defn muu-tyo-hinnoittelurivi [e! hinta]
   [:tr
-   [:td (::hinta/otsikko hinta)] ;; TODO Työn otsikko
-   [:td.tasaa-oikealle (::hinta/yksikkohinta hinta)] ;; TODO Yksikköhinta
-   [:td.tasaa-oikealle (::hinta/maara hinta)] ;; TODO Määrä
+   [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/yksikkohinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/maara
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
    [:td
     [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
-   [:td (* (::hinta/maara hinta) (::hinta/yksikkohinta hinta))]
-   [:td.keskita [yleiskustannuslisakentta e! hinta]] ;; TODO YK-lisä
+   [:td (fmt/euro (* (::hinta/maara hinta) (::hinta/yksikkohinta hinta)))]
+   [:td.keskita [yleiskustannuslisakentta e! hinta]]
    [:td.keskita
-    [ikonit/klikattava-roskis #(log "TODO")]]])
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuTyorivi hinta))]]])
 
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
     [valiotsikko "Muut työt (ei indeksilaskentaa)"]
     [:table
-     ;; TODO Tähän kirjataan vapaasti tehtyjä töitä
-     ;; - Tehty työ onkin vapaata tekstiä eikä toimenpidekoodi-id
-     ;; - Tallennetaan vv_hinta tauluun: otsikko, määrä, yksikkö, yksikköhinta. Ryhmäksi tallennetaan :tyo.
-     ;; - Tässä näytetään vain :työ ryhmään kuuluvat vv_hinnat, ei muuta
-     ;; - Kaukon kanssa palaveerattu tämä ja edelleen on tärkeää, että syötetää määrä, yksikköhinta ja yksikkö
      [sopimushintaiset-tyot-header]
      [:tbody
       (for* [muu-tyo muut-tyot]
             [muu-tyo-hinnoittelurivi e! muu-tyo])]]
-    [rivinlisays "Lisää työrivi" #(log "TODO")]]))
+    [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 (defn- komponentit [e! app*]
   (let [;; TODO Komponenttien hinnoittelu. Pitää tehdä näin:

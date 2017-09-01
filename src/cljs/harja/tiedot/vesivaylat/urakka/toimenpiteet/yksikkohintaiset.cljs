@@ -134,6 +134,8 @@
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 (defrecord LisaaMuuKulurivi [])
 (defrecord PoistaMuuKulurivi [tiedot])
+(defrecord LisaaMuuTyorivi [])
+(defrecord PoistaMuuTyorivi [tiedot])
 ;; Hintaryhmän hinnoittelu
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
@@ -228,6 +230,11 @@
 (defn muut-hinnat [app]
   (filter
     #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn muut-tyot [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :tyo) (not (::m/poistettu? %)))
     (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
 
 (defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
@@ -446,8 +453,11 @@
                                                {::hinta/id id})
                                              {::hinta/otsikko (::hinta/otsikko hinta)
                                               ::hinta/summa (::hinta/summa hinta)
-                                              ::hinta/ryhma :muu ;; TODO Muut työt = :tyo, Komponentit = :komponentti
+                                              ::hinta/ryhma (::hinta/ryhma hinta)
                                               ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
+                                              ::hinta/maara (::hinta/maara hinta)
+                                              ::hinta/yksikkohinta (::hinta/yksikkohinta hinta)
+                                              ::hinta/yksikko (::hinta/yksikko hinta)
                                               ::m/poistettu? (boolean (::m/poistettu? hinta))}))
                                          (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
              ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
@@ -580,6 +590,35 @@
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaMuuKulurivi
+  (process-event [{tiedot :tiedot} app]
+    ;; TODO Testi
+    (let [id (::hinta/id tiedot)
+          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          paivitetyt-hinnat
+          (if (neg? id)
+            ;; Uusi lisätty rivi poistetaan kokonaan
+            (filterv #(not= (::hinta/id %) id) hinnat)
+            ;; Kannassa oleva rivi merkitään poistetuksi
+            (mapv #(if (= (::hinta/id %) id)
+                     (assoc % ::m/poistettu? true)
+                     %)
+                  hinnat))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+
+  LisaaMuuTyorivi
+  (process-event [_ app]
+    ;; TODO TESTI
+    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          hinta-idt (map ::hinta/id hinnat)
+          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
+          paivitetyt-hinnat (conj hinnat (hintakentta
+                                           {:id seuraava-vapaa-id
+                                            :otsikko ""
+                                            :summa nil
+                                            :ryhma :tyo}))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+
+  PoistaMuuTyorivi
   (process-event [{tiedot :tiedot} app]
     ;; TODO Testi
     (let [id (::hinta/id tiedot)
