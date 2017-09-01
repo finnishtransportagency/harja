@@ -80,8 +80,8 @@
                       {:leveys 7 :otsikko "Sop. nro"}
                       {:leveys 12 :otsikko "Toimenpide"}
                       {:leveys 7 :otsikko "Tyyppi"}
-                      {:leveys 6 :otsikko "Summa €" :fmt :raha}
-                      {:leveys 6 :otsikko "Ind.korotus €" :fmt :raha}])
+                      {:leveys 6 :otsikko "Summa" :fmt :raha}
+                      {:leveys 6 :otsikko "Ind.korotus" :fmt :raha}])
 
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))

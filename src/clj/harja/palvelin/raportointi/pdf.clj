@@ -69,7 +69,10 @@
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
-   [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "black")}
+   [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
+                           (raportti-domain/virhetyylit tyyli)
+                           "black")}
+
     (if fmt (fmt arvo) arvo)]])
 
 
@@ -110,6 +113,16 @@
     [:fo:block {:space-after "0.5em"}]
     [:fo:block (cdata otsikko)]]])
 
+(defn- formatoija-fmt-mukaan [fmt]
+  (case fmt
+    ;; Jos halutaan tukea erityyppisiä sarakkeita,
+    ;; pitää tänne lisätä formatter.
+    :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
+    :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
+    :raha #(raportti-domain/yrita fmt/euro-opt %)
+    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
+    str))
+
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
                                oikealle-tasattavat-kentat] :as optiot}]
@@ -138,35 +151,28 @@
            (for [i (range (count sarakkeet))
                  :let [arvo-datassa (nth rivi i)
                        sarake (nth sarakkeet i)
-                       fmt (case (:fmt sarake)
-                             ;; Jos halutaan tukea erityyppisiä sarakkeita,
-                             ;; pitää tänne lisätä formatter.
-                             :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
-                             :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
-                             :raha #(raportti-domain/yrita fmt/euro-opt %)
-                             :pvm #(raportti-domain/yrita fmt/pvm-opt %)
-                             str)
+                       fmt (formatoija-fmt-mukaan (:fmt sarake))
                        naytettava-arvo (or
-                                         (cond
-                                           (raportti-domain/raporttielementti? arvo-datassa)
-                                           (muodosta-pdf
-                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
-                                               (raportti-domain/raporttielementti-formatterilla
-                                                arvo-datassa fmt)
-                                               arvo-datassa))
+                                        (cond
+                                          (raportti-domain/raporttielementti? arvo-datassa)
+                                          (muodosta-pdf
+                                           (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                             (raportti-domain/raporttielementti-formatterilla
+                                              arvo-datassa formatoija-fmt-mukaan (:fmt sarake))
+                                             arvo-datassa))
 
-                                           :else (fmt arvo-datassa))
-                                         "")]]
+                                          :else (fmt arvo-datassa))
+                                        "")]]
              [:fo:table-cell (merge
-                               (border-tyyli sarake)
-                               {:padding "1mm"
-                                :font-weight "normal"
-                                :text-align (if (oikealle-tasattavat-kentat i)
-                                              "right"
-                                              (tasaus (:tasaa sarake)))}
-                               yhteenveto?
-                               korosta?
-                               lihavoi?)
+                              (border-tyyli sarake)
+                              {:padding "1mm"
+                               :font-weight "normal"
+                               :text-align (if (oikealle-tasattavat-kentat i)
+                                             "right"
+                                             (tasaus (:tasaa sarake)))}
+                              yhteenveto?
+                              korosta?
+                              lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
               [:fo:block (if (string? naytettava-arvo)

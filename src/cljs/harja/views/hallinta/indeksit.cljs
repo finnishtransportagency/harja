@@ -77,11 +77,15 @@
 (defn indeksit-elementti []
   (i/hae-indeksit)
   (let [urakkatyyppi @yhteiset/valittu-urakkatyyppi
-        indeksit (i/urakkatyypin-indeksit (:arvo urakkatyyppi))]
+        indeksit (i/urakkatyypin-indeksit (:arvo urakkatyyppi))
+        urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
+                              %
+                              {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
+                           nav/+urakkatyypit+)]
     [:span.indeksit
      [valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi
-      nav/+urakkatyypit+
+      urakkatyypit
       #(reset! yhteiset/valittu-urakkatyyppi %)]
 
      [indeksitaulukot urakkatyyppi indeksit]]))

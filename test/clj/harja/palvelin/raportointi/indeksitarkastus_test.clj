@@ -71,13 +71,13 @@
              (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 232.75M)
              (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 51.72M)
              (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 17.24M)
-             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.07)
+             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.39)
              (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 34.48M)
              (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 17.24M)
              (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 17.24M)
              (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -31.03M)
              (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -104.52M)
-             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 239.20M)
+             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 239.52M)
 
              (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
       (fn [[yht & _]]

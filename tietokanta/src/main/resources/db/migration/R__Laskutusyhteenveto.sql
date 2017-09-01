@@ -162,7 +162,7 @@ BEGIN
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
-  perusluku := hoitourakan_indeksilaskennan_perusluku(ur);
+  perusluku := indeksilaskennan_perusluku(ur);
   SELECT indeksi FROM urakka WHERE id = ur INTO ind;
 
   -- Loopataan urakan toimenpideinstanssien läpi
