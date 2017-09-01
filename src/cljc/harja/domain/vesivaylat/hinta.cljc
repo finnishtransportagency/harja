@@ -31,6 +31,9 @@
   #{::otsikko
     ::summa
     ::yleiskustannuslisa
+    ::maara
+    ::yksikkohinta
+    ::yksikko
     ::ryhma
     ::id})
 
