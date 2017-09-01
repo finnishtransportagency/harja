@@ -3,6 +3,8 @@
   (:require [figwheel.client :as fw]
             [harja.ui.viesti :as viesti]))
 
+(def raportoi-selainvirheet? false)
+
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, figwheel reload."
   [options]

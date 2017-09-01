@@ -39,7 +39,7 @@
         (q/hae-urakassa-kaytetyt-materiaalit db (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
 (defn hae-urakan-toteumat-materiaalille
-  [db user urakka-id materiaali-id hoitokausi sopimus]
+  [db user urakka-id materiaali-id [alku loppu] sopimus]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
@@ -47,8 +47,8 @@
         (let [tulos (q/hae-urakan-toteumat-materiaalille db
                                                          sopimus
                                                          materiaali-id
-                                                         (konv/sql-date (first hoitokausi))
-                                                         (konv/sql-date (second hoitokausi)))]
+                                                         (konv/sql-date alku)
+                                                         (konv/sql-date loppu))]
           (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE (" sopimus materiaali-id ")")
           tulos)))
 
