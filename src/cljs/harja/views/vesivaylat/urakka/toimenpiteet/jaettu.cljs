@@ -183,7 +183,7 @@
 
 (def sarake-tyoluokka {:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
 (def sarake-toimenpide {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
-(def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
+(def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
 (def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
 (def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
