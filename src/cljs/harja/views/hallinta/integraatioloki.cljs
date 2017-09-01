@@ -193,7 +193,7 @@
 
 
     (if @tiedot/nayta-uusimmat-tilassa?
-      [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä aikaväliltä"]
+      [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä/hae aikaväliltä"]
       [:span
        [valinnat/aikavali tiedot/valittu-aikavali]
        [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat!)} "Näytä uusimmat"]])
@@ -242,7 +242,7 @@
 
     [grid
      {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
-      :tyhja (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
+      :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
@@ -276,7 +276,7 @@
       (tiedot/hae-tapahtumat!)
       (<! (timeout 2000))
       (loop []
-        (<! (timeout 10000))
+        (<! (timeout 20000))
         (when @paivita?
           (when @tiedot/nayta-uusimmat-tilassa?
             (tiedot/hae-tapahtumat!))
