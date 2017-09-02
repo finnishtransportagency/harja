@@ -269,14 +269,16 @@ reimari-tilat
                  :harja.domain.liite/liite
                  :harja.domain.liite/id)}]
 
+  ["reimari_toimenpiteen_komponenttien_tilamuutokset" ::tpk-tilat]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
-    "luotu" ::m/luot
+    "luotu" ::m/luotu
     "luoja" ::m/luoja-id
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
     "reimari-lisatyo" ::reimari-lisatyo?
+    ::komponenttien-tilat (specql.rel/has-many ::id ::tpk-tilat ::toimenpide-id)
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
@@ -292,7 +294,6 @@ reimari-tilat
                      ::id
                      ::toimenpide<->liite
                      ::toimenpide-id)}])
-
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
 (s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))
