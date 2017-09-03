@@ -31,7 +31,7 @@ done;
 bash $DIR/devdb_migrate.sh
 
 echo ""
-echo "Harja käynnissä! Imagen tiedot:"
+echo "Harjan tietokanta käynnissä! Imagen tiedot:"
 echo ""
 
 docker images | head -n1
