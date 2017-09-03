@@ -176,15 +176,29 @@
                                            tkomp/komponenttityyppi)
                                 {::tkomp/turvalaitenro
                                  (op/in (set (map
-                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
-                                                           ::vv-turvalaite/r-nro])
-                                               toimenpiteet)))})
+                                              #(get-in % [::vv-toimenpide/reimari-turvalaite
+                                                          ::vv-turvalaite/r-nro])
+                                              toimenpiteet)))})
+        tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat #{::vv-toimenpide/toimenpide-id ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
+                         {::vv-toimenpide/toimenpide-id
+                          (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
+        _ (println "saatiin tpk-tilat-seq", tpk-tilat-seq)
+        tpk-tilat-map (zipmap (map ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
+                              tpk-tilat-seq)
+        _ (println "saatiin tpk-tilat-map", tpk-tilat-map)
         toimenpiteet-turvalaitekomponenteilla
         (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
                        (tkomp/turvalaitekomponentit-turvalaitenumerolla
                          turvalaitekomponentit
                          (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-             toimenpiteet)]
+             toimenpiteet)
+        ;; toimenpiteet-komponenttien-tiloilla
+        ;; (map #(assoc % ::vv-toimenpide/komponenttien-tilat
+        ;;              ((filter #(= (::id %) turvalaitenumero) turvalaitekomponentit)
+        ;;               turvalaitekomponentit
+        ;;               (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
+        ;;      toimenpiteet)
+        ]
     toimenpiteet-turvalaitekomponenteilla))
 
 (defn- toimenpiteiden-liite-idt
