@@ -11,4 +11,3 @@ done
 
 echo "Yhteys saatu!"
 mvn flyway:migrate
-
