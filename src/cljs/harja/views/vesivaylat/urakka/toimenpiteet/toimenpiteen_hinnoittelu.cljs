@@ -153,7 +153,7 @@
 
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        ei-poistetut-tyot (filterv (comp not ::m/poistettu?) tyot)]
+        ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
