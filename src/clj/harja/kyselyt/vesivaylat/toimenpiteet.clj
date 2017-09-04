@@ -175,7 +175,6 @@
 (defn- tpk-mapeiksi [kv-parit]
   (loop [parit kv-parit
          tulos-map nil]
-    (println tulos-map)
     (let [[id m] (first parit)]
       (if m
         (recur (rest parit)
@@ -192,8 +191,7 @@
         tpk-tilat-map (tpk-mapeiksi (zip2 (map ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
                                           tpk-tilat-seq))
         ;; _ (println "tpk-tilat-map:" tpk-tilat-map)
-        tilat-toimenpiteelle #(do (println "tilat-toimenpiteelle" (::vv-toimenpide/id %) "->" (get tpk-tilat-map (::vv-toimenpide/id %)))
-                                  (get tpk-tilat-map (::vv-toimenpide/id %)))]
+        tilat-toimenpiteelle #(get tpk-tilat-map (::vv-toimenpide/id %))]
     ;; (println "kk-tilat: palautetaan tilat (map )")
     (map #(assoc % ::vv-toimenpide/komponenttien-tilat (tilat-toimenpiteelle %)) toimenpiteet)))
 

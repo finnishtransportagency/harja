@@ -69,8 +69,6 @@
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
-    (println "vastausten tp id:t" (map ::toi/id vastaus))
-    (println "id 4 -> tilat" (::toi/komponenttien-tilat (get vastaus 4)))
     (is (some #(not-empty (get-in % [::toi/komponenttien-tilat])) vastaus))))
 
 (deftest yks-hint-toimenpiteiden-haku
