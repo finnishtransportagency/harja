@@ -403,10 +403,12 @@
   [urakka]
   (let [toteutuneet-muut-tyot (reaction
                                 (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
-                                      toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella]
+                                      toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella
+                                      _ (println "TOTEUTUNEET MUUT TYÖT HOITOKAUDELLA: " (pr-str toteutuneet-muut-tyot-hoitokaudella))]
                                   (when toteutuneet-muut-tyot-hoitokaudella
-                                    (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
-                                                                           (:id toimenpideinstanssi))
+                                    (reverse (sort-by :alkanut (filter #(or (= (get-in % [:tehtava :emo])
+                                                                               (:id toimenpideinstanssi))
+                                                                            (= (:tpi_nimi toimenpideinstanssi) "Kaikki"))
                                                                        toteutuneet-muut-tyot-hoitokaudella))))))
         oikeus (if (= (:tyyppi urakka) :tiemerkinta)
                  oikeudet/urakat-toteutus-muutkustannukset
@@ -414,7 +416,8 @@
         tyorivit
         (reaction
           (let [muutoshintaiset-tyot @u/muutoshintaiset-tyot
-                toteutuneet-muut-tyot @toteutuneet-muut-tyot]
+                toteutuneet-muut-tyot @toteutuneet-muut-tyot
+                _ (println "TOTEUTUNEET MUUT TYÖT: " (pr-str toteutuneet-muut-tyot))]
             (map (fn [muu-tyo]
                    (let [muutoshintainen-tyo
                          (first (filter (fn [muutoshinta]
@@ -434,7 +437,7 @@
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
               oikeus? (oikeudet/voi-kirjoittaa? oikeus (:id @nav/valittu-urakka))]
           [:div.muut-tyot-toteumat
-           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
            (yleiset/wrap-if
              (not oikeus?)
              [yleiset/tooltip {} :%
