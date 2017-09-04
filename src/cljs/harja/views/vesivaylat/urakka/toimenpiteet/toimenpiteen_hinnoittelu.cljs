@@ -294,17 +294,9 @@
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
-        hinnoiteltavat-tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
-        hinnoiteltavat-hinnat (get-in app* [:hinnoittele-toimenpide ::h/hinnat])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
-                                                                       valittu-aikavali)
-        hinnoittelu-validi? (and
-                              ;; Työrivit täytetty oikein
-                              (every? ::tyo/toimenpidekoodi-id hinnoiteltavat-tyot)
-                              ;; Hintojen nimien pitää olla uniikkeja
-                              ;; TODO Pitää testata toimiiko tämä näin
-                              (= hinnoiteltavat-hinnat (distinct hinnoiteltavat-hinnat)))]
+                                                                       valittu-aikavali)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
@@ -325,7 +317,7 @@
             "Valmis"
             #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
             {:disabled (or
-                         (not hinnoittelu-validi?)
+                         (not (tiedot/hinnoittelun-voi-tallentaa? app*))
                          (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset

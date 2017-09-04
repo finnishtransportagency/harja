@@ -242,6 +242,26 @@
          ryhmahinta
          {::hinta/otsikko hintaryhman-hintakentta-otsikko}))]))
 
+(defn- hinnoittelun-voi-tallentaa? [app]
+  (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+        hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+        muut-tyot (filter #(= :tyo (::hinta/ryhma %)) hinnat)
+        muut (filter #(= :muu (::hinta/ryhma %)) hinnat)
+        ;; TODO: Liitä otsikoihin toimenpidekoodien otsikot
+        hintojen-otsikot (map ::hinta/otsikko hinnat)]
+    (and (every? #(and (::tyo/toimenpidekoodi-id %)
+                       (::tyo/maara %))
+                 tyot)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/maara %)
+                       (::hinta/yksikkohinta %)
+                       (::hinta/yksikko %))
+                 muut-tyot)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/summa %))
+                 muut)
+         (apply distinct? hintojen-otsikot))))
+
 (extend-protocol tuck/Event
 
   Nakymassa?
