@@ -10,7 +10,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.pvm :as pvm]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -96,15 +97,6 @@
                      (if (and alku-muuttunut?
                               (= (:alku vanha) (:loppu vanha)))
                        (assoc v :loppu (:alku uusi))
-                       v)
-
-                     ;; Jos TR-osoite on muuttunut, nollaa sijainti
-                     (if tr-osoite-muuttunut?
-                       (do (log "TR osoite muuttui: "
-                                (pr-str (:tierekisteriosoite vanha))
-                                " => "
-                                (pr-str (:tierekisteriosoite uusi)))
-                           (assoc v :sijainti :ei-haettu))
                        v))]
       (as-> tienakyma tienakyma
         (assoc tienakyma
