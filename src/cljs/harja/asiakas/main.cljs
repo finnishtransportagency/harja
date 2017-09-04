@@ -41,19 +41,20 @@
             13 (t/julkaise! {:aihe :enter-painettu})
             nil)))
 
-  ;; Kaapataan raportoimattomat virheet ja lähetetään ne backin kautta logiin
-  (set! (.-onerror js/window)
-        (fn [errorMsg url lineNumber column errorObj]
-          (error errorObj)
-          (k/post! :raportoi-selainvirhe
-                   {:url    url
-                    :sijainti (-> js/window .-location .-href)
-                    :viesti errorMsg
-                    :rivi   lineNumber
-                    :sarake column
-                    :selain (.-userAgent (.-navigator js/window))
-                    :stack (when errorObj (aget errorObj "stack"))})
-          (v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
+  (when ymparisto/raportoi-selainvirheet?
+    ;; Kaapataan raportoimattomat virheet ja lähetetään ne backin kautta logiin
+    (set! (.-onerror js/window)
+          (fn [errorMsg url lineNumber column errorObj]
+            (error errorObj)
+            (k/post! :raportoi-selainvirhe
+                     {:url    url
+                      :sijainti (-> js/window .-location .-href)
+                      :viesti errorMsg
+                      :rivi   lineNumber
+                      :sarake column
+                      :selain (.-userAgent (.-navigator js/window))
+                      :stack (when errorObj (aget errorObj "stack"))})
+            (v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj))))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)

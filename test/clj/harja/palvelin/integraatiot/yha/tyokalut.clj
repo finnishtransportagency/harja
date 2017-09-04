@@ -82,6 +82,7 @@
         <kohdetyyppi>1</kohdetyyppi>
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
+        <tunnus>A</tunnus>
         <yllapitoluokka>1</yllapitoluokka>
         <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
         <nykyinen-paallyste>1</nykyinen-paallyste>
@@ -108,7 +109,6 @@
               <ajorata>0</ajorata>
               <kaista>11</kaista>
             </tierekisteriosoitevali>
-            <tunnus>A</tunnus>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>
@@ -130,7 +130,6 @@
               <ajorata>0</ajorata>
               <kaista>11</kaista>
             </tierekisteriosoitevali>
-            <tunnus>B</tunnus>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>

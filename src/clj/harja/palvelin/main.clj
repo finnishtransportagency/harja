@@ -469,15 +469,15 @@
 
       :reimari (component/using
                  (let [{:keys [url kayttajatunnus salasana
-                               paivittainen-toimenpidehaku
-                               paivittainen-komponenttityyppihaku
-                               paivittainen-turvalaitekomponenttihaku
-                               paivittainen-vikahaku]} (:reimari asetukset)]
+                               toimenpidehakuvali
+                               komponenttityyppihakuvali
+                               turvalaitekomponenttihakuvali
+                               vikahakuvali]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
-                                      paivittainen-toimenpidehaku
-                                      paivittainen-komponenttityyppihaku
-                                      paivittainen-turvalaitekomponenttihaku
-                                      paivittainen-vikahaku))
+                                      toimenpidehakuvali
+                                      komponenttityyppihakuvali
+                                      turvalaitekomponenttihakuvali
+                                      vikahakuvali))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :vkm (component/using

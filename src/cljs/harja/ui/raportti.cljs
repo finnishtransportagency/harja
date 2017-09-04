@@ -56,20 +56,21 @@
    [:span.arvo {:style {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")}}
     (if fmt (fmt arvo) arvo)]])
 
+(defn- formatoija-fmt-mukaan [fmt]
+  (case fmt
+    :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+    :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
+    :raha #(raportti-domain/yrita fmt/euro-opt % )
+    :pvm #(raportti-domain/yrita fmt/pvm-opt %)
+    str))
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
-  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
-        formatter (fn [{fmt :fmt}]
-                    (case fmt
-                      :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
-                      :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
-                      :raha #(raportti-domain/yrita fmt/euro-opt % )
-                      :pvm #(raportti-domain/yrita fmt/pvm-opt %)
-                      str))]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
                                                     (or (::rivin-indeksi rivi)
@@ -77,40 +78,44 @@
                 :rivi-ennen rivi-ennen
                 :piilota-toiminnot? true}
      (into []
-           (map-indexed (fn [i sarake]
-                          (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
-                                format-fn (formatter sarake)]
-                            (merge
-                             {:hae                #(get % i)
-                              :leveys             (:leveys sarake)
-                              :otsikko            (:otsikko sarake)
-                              :reunus             (:reunus sarake)
-                              :pakota-rivitys?    (:pakota-rivitys? sarake)
-                              :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                                       (case (:tasaa-otsikko sarake)
-                                                         :keskita " grid-header-keskita"
-                                                         :oikea " grid-header-oikea"
-                                                         ""))
-                              :nimi               (str "sarake" i)
-                              :fmt                format-fn
-                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                              :tyyppi             (if raporttielementteja?
-                                                    :komponentti
-                                                    :string)
-                              :tasaa              (if (oikealle-tasattavat-kentat i)
-                                                    :oikea
-                                                    (:tasaa sarake))}
-                             (when raporttielementteja?
-                               {:komponentti (fn [rivi]
-                                               (let [elementti (get rivi i)
-                                                     liite? (if (vector? elementti)
-                                                              (= :liitteet (first elementti))
-                                                              false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
-                                                 (muodosta-html
-                                                   (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
-                                                     (raportti-domain/raporttielementti-formatterilla elementti format-fn)
-                                                     elementti))))}))))
-                        sarakkeet))
+           (map-indexed
+            (fn [i sarake]
+              (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
+                    format-fn (formatoija-fmt-mukaan (:fmt sarake))]
+                (merge
+                 {:hae                #(get % i)
+                  :leveys             (:leveys sarake)
+                  :otsikko            (:otsikko sarake)
+                  :reunus             (:reunus sarake)
+                  :pakota-rivitys?    (:pakota-rivitys? sarake)
+                  :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
+                                           (case (:tasaa-otsikko sarake)
+                                             :keskita " grid-header-keskita"
+                                             :oikea " grid-header-oikea"
+                                             ""))
+                  :nimi               (str "sarake" i)
+                  :fmt                format-fn
+                  ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                  :tyyppi             (if raporttielementteja?
+                                        :komponentti
+                                        :string)
+                  :tasaa              (if (oikealle-tasattavat-kentat i)
+                                        :oikea
+                                        (:tasaa sarake))}
+                 (when raporttielementteja?
+                   {:komponentti
+                    (fn [rivi]
+                      (let [elementti (get rivi i)
+                            liite? (if (vector? elementti)
+                                     (= :liitteet (first elementti))
+                                     false)] ;; Normaalisti komponenteissa toinen elementti on mappi, mutta liitteissä vektori.
+                        (muodosta-html
+                         (if (and (raportti-domain/formatoi-solu? elementti) (not liite?))
+                           (raportti-domain/raporttielementti-formatterilla elementti
+                                                                            formatoija-fmt-mukaan
+                                                                            (:fmt sarake))
+                           elementti))))}))))
+            sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]

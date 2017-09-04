@@ -25,7 +25,7 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       hoitourakan_indeksilaskennan_perusluku(u.id)))    AS korotus,
+       indeksilaskennan_perusluku(u.id)))    AS korotus,
   u.id                                                   AS urakka_id,
   u.nimi                                                 AS urakka_nimi,
   hy.id                                                  AS hallintayksikko_id,
@@ -88,7 +88,7 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       hoitourakan_indeksilaskennan_perusluku(u.id))))   AS korotus,
+       indeksilaskennan_perusluku(u.id))))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
   lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
@@ -142,7 +142,7 @@ SELECT
              NULL
            END,
            COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-           hoitourakan_indeksilaskennan_perusluku(u.id))))   AS korotus,
+           indeksilaskennan_perusluku(u.id))))   AS korotus,
   u.id                                                  AS hallintayksikko_id, -- PARDON, kutsutaan hallintayksiköksi mutta on urakkaid ja nimi, koska raportti toimii sukkana mitään muuttamatta
   u.nimi                                                AS hallintayksikko_nimi
 FROM toteuma_tehtava tt

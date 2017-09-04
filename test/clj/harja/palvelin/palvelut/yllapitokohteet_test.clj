@@ -39,7 +39,6 @@
                         :sonja-sahkoposti (component/using
                                             (sahkoposti/luo-sahkoposti "foo@example.com"
                                                                        {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
                                                                         :sahkoposti-ulos-jono "harja-to-email"
                                                                         :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                                             [:sonja :db :integraatioloki])
@@ -453,7 +452,6 @@
                     :sijainti _
                     :tr-ajorata nil
                     :tr-loppuosa 2
-                    :tunnus nil
                     :tr-alkuosa 1
                     :tr-loppuetaisyys 2
                     :nimi "Testiosa123456"

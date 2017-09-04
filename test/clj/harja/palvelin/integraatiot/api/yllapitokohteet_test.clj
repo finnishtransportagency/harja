@@ -39,7 +39,6 @@
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
                                                    {:sahkoposti-sisaan-jono "email-to-harja"
-                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
                                                     :sahkoposti-ulos-jono "harja-to-email"
                                                     :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
@@ -86,7 +85,7 @@
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
         kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, tunnus, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
@@ -141,7 +140,6 @@
               :tr_alkuetaisyys 1
               :tr_loppuosa 5
               :tr_loppuetaisyys 16
-              :tunnus "A"
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
@@ -190,7 +188,7 @@
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
           kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-        tr_loppuosa, tr_loppuetaisyys, toimenpide, tunnus, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
@@ -235,7 +233,6 @@
               :tr_alkuetaisyys 1
               :tr_loppuosa 5
               :tr_loppuetaisyys 16
-              :tunnus "A"
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")

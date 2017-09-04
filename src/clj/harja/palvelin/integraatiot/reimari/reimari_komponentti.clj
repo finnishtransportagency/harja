@@ -22,22 +22,18 @@
 (defprotocol HaeViat
   (hae-viat [this]))
 
-(defrecord Reimari [pohja-url kayttajatunnus salasana paivittainen-tphakuaika paivittainen-kthakuaika paivittainen-tlkhakuaika paivittainen-vikahakuaika]
+(defrecord Reimari [pohja-url kayttajatunnus salasana tphakuvali kthakuvali tlkhakuvali vikahakuvali]
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
     (assoc this
-           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
-                                    paivittainen-tphakuaika
+           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tphakuvali
                                     (fn [& args] (hae-toimenpiteet this)))
-           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
-                                    paivittainen-kthakuaika
+           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein kthakuvali
                                     (fn [& args] (hae-komponenttityypit this)))
-           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
-                                     paivittainen-tlkhakuaika
+           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tlkhakuvali
                                      (fn [& args] (hae-turvalaitekomponentit this)))
-           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain
-                                      paivittainen-vikahakuaika
+           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein vikahakuvali
                                       (fn [& args] (hae-viat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")

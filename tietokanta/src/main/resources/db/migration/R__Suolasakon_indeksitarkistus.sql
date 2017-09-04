@@ -24,7 +24,7 @@ DECLARE
 BEGIN
   alkuv := talvikauden_alkuvuosi;
   loppuv := talvikauden_alkuvuosi + 1;
-  perusluku := hoitourakan_indeksilaskennan_perusluku(ur);
+  perusluku := indeksilaskennan_perusluku(ur);
 
   -- Indeksi ei käytössä palauta summa ja korotettuna samana
   IF indeksinimi IS NULL THEN

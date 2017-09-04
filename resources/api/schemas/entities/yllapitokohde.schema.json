@@ -29,6 +29,12 @@
       "type": "string",
       "maxLength": 128
     },
+    "tunnus": {
+      "id": "urn:harja/yllapitokohde/tunnus",
+      "required": false,
+      "type": "string",
+      "maxLength": 1
+    },
     "tyyppi": {
       "id": "urn:harja/yllapitokohde/tyyppi",
       "required": false,
