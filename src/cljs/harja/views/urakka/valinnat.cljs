@@ -176,30 +176,31 @@
                                              :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
                                              :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}}))
 
-(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide-pohja
+  [ur lisa]
+  (println "TOIMENPITEET: " (pr-str @u/urakan-toimenpideinstanssit))
   (valinnat/urakan-valinnat ur {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
                                           :valitse-sopimus-fn u/valitse-sopimusnumero!}
                                 :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
                                              :valittu-hoitokausi-atom u/valittu-hoitokausi
                                              :valitse-hoitokausi-fn u/valitse-hoitokausi!}
-                                :toimenpide {:urakan-toimenpideinstassit-atom u/urakan-toimenpideinstanssit
+                                :toimenpide {:urakan-toimenpideinstassit-atom (if (nil? lisa)
+                                                                                u/urakan-toimenpideinstanssit
+                                                                                (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                                                                                                     [lisa]))
+                                                                                      identity))
                                              :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
                                              :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}}))
 
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
+  (urakan-sopimus-ja-hoitokausi-ja-toimenpide-pohja ur nil))
+
+(defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki [ur]
+  (urakan-sopimus-ja-hoitokausi-ja-toimenpide-pohja ur {:tpi_nimi "Kaikki"}))
+
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
   (fn [ur]
-    (valinnat/urakan-valinnat
-      ur
-      {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
-                 :valitse-sopimus-fn u/valitse-sopimusnumero!}
-       :hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
-                    :valittu-hoitokausi-atom u/valittu-hoitokausi
-                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
-       :toimenpide {:urakan-toimenpideinstassit-atom (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
-                                                                          [{:tpi_nimi "Muut"}]))
-                                                             identity)
-                    :valittu-toimenpideinstanssi-atom u/valittu-toimenpideinstanssi
-                    :valitse-toimenpide-fn u/valitse-toimenpideinstanssi!}})))
+    (urakan-sopimus-ja-hoitokausi-ja-toimenpide-pohja ur {:tpi_nimi "Muut"})))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
   (fn [ur]
