@@ -214,13 +214,7 @@
       (specql/update! db
                       ::hinta/hinta
                       (merge
-                        {::hinta/otsikko (::hinta/otsikko hinta)
-                         ::hinta/summa (::hinta/summa hinta)
-                         ::hinta/maara (::hinta/maara hinta)
-                         ::hinta/yksikkohinta (::hinta/yksikkohinta hinta)
-                         ::hinta/yksikko (::hinta/yksikko hinta)
-                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
-                         ::hinta/ryhma (::hinta/ryhma hinta)}
+                        hinta
                         (if (::m/poistettu? hinta)
                           {::m/poistettu? true
                            ::m/poistaja-id (:id user)}
@@ -231,14 +225,8 @@
       (specql/insert! db
                       ::hinta/hinta
                       (merge
-                        {::hinta/otsikko (::hinta/otsikko hinta)
-                         ::hinta/summa (::hinta/summa hinta)
-                         ::hinta/maara (::hinta/maara hinta)
-                         ::hinta/yksikkohinta (::hinta/yksikkohinta hinta)
-                         ::hinta/yksikko (::hinta/yksikko hinta)
-                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
-                         ::hinta/ryhma (::hinta/ryhma hinta)
-                         ::m/luotu (pvm/nyt)
+                        hinta
+                        {::m/luotu (pvm/nyt)
                          ::m/luoja-id (:id user)
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
 

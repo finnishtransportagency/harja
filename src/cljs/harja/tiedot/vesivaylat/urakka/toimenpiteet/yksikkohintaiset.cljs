@@ -176,19 +176,11 @@
   (assoc app :korostettu-hintaryhma false))
 
 (defn- hintakentta
-  "Generoi hintakentän annetulla id:llä ja otsikolla. Ottaa annetun hinnan tiedot (määrä, ryhmä, yk-lisä...)
-  käyttöön jos tiedot löytyvät."
-  [{:keys [id otsikko summa ryhma yleiskustannuslisa maara yksikko yksikkohinta]}]
-  {::hinta/id id
-   ::hinta/otsikko otsikko
-   ::hinta/summa (or summa (if (= :tyo ryhma) nil 0))
-   ::hinta/ryhma ryhma
-   ::hinta/maara maara
-   ::hinta/yksikko yksikko
-   ::hinta/yksikkohinta yksikkohinta
-   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa yleiskustannuslisa]
-                                yleiskustannuslisa
-                                0)})
+  [hinta]
+  (merge
+    {::hinta/summa (if (= :tyo (::hinta/ryhma hinta)) nil 0)
+     ::hinta/yleiskustannuslisa 0}
+    hinta))
 
 (defn- tyokentta
   "Generoi työkentän annetulla id:llä ja otsikolla. Ottaa annetun työn tiedot (toimenpidekoodi-id & määrä)
@@ -209,26 +201,16 @@
          (map-indexed (fn [index otsikko]
                         (let [olemassa-oleva-hinta (hinta/hinta-otsikolla hinnat otsikko)]
                           (hintakentta
-                            {:id (or (::hinta/id olemassa-oleva-hinta)
-                                     ;; Hintaa ei ole olemassa, generoidaan negatiivinen id
-                                     ;; ilmaisemaan uutta lisättyä kenttää
-                                     (dec (- index)))
-                             :otsikko otsikko
-                             :summa (::hinta/summa olemassa-oleva-hinta)
-                             :ryhma :muu
-                             :yleiskustannuslisa (::hinta/yleiskustannuslisa olemassa-oleva-hinta)})))
+                            (merge
+                              {::hinta/id (dec (- index))
+                               ::hinta/otsikko otsikko
+                               ::hinta/ryhma :muu}
+                              olemassa-oleva-hinta))))
                       vakiohinnat)
          ;; Loput kentät ovat käyttäjän itse lisäämiä
-         (map #(hintakentta
-                 {:id (::hinta/id %)
-                  :otsikko (::hinta/otsikko %)
-                  :summa (::hinta/summa %)
-                  :ryhma (::hinta/ryhma %)
-                  :yksikko (::hinta/yksikko %)
-                  :yksikkohinta (::hinta/yksikkohinta %)
-                  :maara (::hinta/maara %)
-                  :yleiskustannuslisa (::hinta/yleiskustannuslisa %)})
-              (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
+         (map
+           hintakentta
+           (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
 
 ;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
@@ -256,9 +238,9 @@
     ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
     ;; Jos ei ole aiempaa ryhmähintaa, luo uuden hintakentän ilman id:tä.
     [(hintakentta
-       {:id (::hinta/id ryhmahinta)
-        :otsikko hintaryhman-hintakentta-otsikko
-        :summa (::hinta/summa ryhmahinta)})]))
+       (merge
+         ryhmahinta
+         {::hinta/otsikko hintaryhman-hintakentta-otsikko}))]))
 
 (extend-protocol tuck/Event
 
@@ -589,10 +571,10 @@
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
           paivitetyt-hinnat (conj hinnat (hintakentta
-                                           {:id seuraava-vapaa-id
-                                            :otsikko ""
-                                            :summa 0
-                                            :ryhma :muu}))]
+                                           {::hinta/id seuraava-vapaa-id
+                                            ::hinta/otsikko ""
+                                            ::hinta/summa 0
+                                            ::hinta/ryhma :muu}))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaMuuKulurivi
@@ -618,10 +600,10 @@
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
           paivitetyt-hinnat (conj hinnat (hintakentta
-                                           {:id seuraava-vapaa-id
-                                            :otsikko ""
-                                            :summa nil
-                                            :ryhma :tyo}))]
+                                           {::hinta/id seuraava-vapaa-id
+                                            ::hinta/otsikko ""
+                                            ::hinta/summa nil
+                                            ::hinta/ryhma :tyo}))]
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaMuuTyorivi
