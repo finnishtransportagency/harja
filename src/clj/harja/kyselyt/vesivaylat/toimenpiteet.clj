@@ -51,7 +51,8 @@
                           ::vv-toimenpide/lisatieto
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/turvalaitekomponentit
-                          ::vv-toimenpide/reimari-henkilo-lkm]))))
+                          ::vv-toimenpide/reimari-henkilo-lkm
+                          ::vv-toimenpide/komponenttien-tilat]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
@@ -168,6 +169,34 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
+(defn- zip2 [a b]
+  (map vector a b))
+
+(defn- tpk-mapeiksi [kv-parit]
+  (loop [parit kv-parit
+         tulos-map nil]
+    (println tulos-map)
+    (let [[id m] (first parit)]
+      (if m
+        (recur (rest parit)
+               (assoc tulos-map id (conj (get tulos-map id) m)))
+        tulos-map))))
+
+
+(defn- lisaa-komponenttikohtaiset-tilat [toimenpiteet db]
+  (let [tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat
+                             #{::vv-toimenpide/toimenpide-id
+                               ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
+                             {::vv-toimenpide/toimenpide-id
+                              (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
+        tpk-tilat-map (tpk-mapeiksi (zip2 (map ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
+                                          tpk-tilat-seq))
+        ;; _ (println "tpk-tilat-map:" tpk-tilat-map)
+        tilat-toimenpiteelle #(do (println "tilat-toimenpiteelle" (::vv-toimenpide/id %) "->" (get tpk-tilat-map (::vv-toimenpide/id %)))
+                                  (get tpk-tilat-map (::vv-toimenpide/id %)))]
+    ;; (println "kk-tilat: palautetaan tilat (map )")
+    (map #(assoc % ::vv-toimenpide/komponenttien-tilat (tilat-toimenpiteelle %)) toimenpiteet)))
+
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
   (let [turvalaitekomponentit (fetch
                                 db
@@ -179,27 +208,15 @@
                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
                                                           ::vv-turvalaite/r-nro])
                                               toimenpiteet)))})
-        tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat #{::vv-toimenpide/toimenpide-id ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
-                         {::vv-toimenpide/toimenpide-id
-                          (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
-        _ (println "saatiin tpk-tilat-seq", tpk-tilat-seq)
-        tpk-tilat-map (zipmap (map ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
-                              tpk-tilat-seq)
-        _ (println "saatiin tpk-tilat-map", tpk-tilat-map)
         toimenpiteet-turvalaitekomponenteilla
         (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
                        (tkomp/turvalaitekomponentit-turvalaitenumerolla
                          turvalaitekomponentit
                          (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-             toimenpiteet)
-        ;; toimenpiteet-komponenttien-tiloilla
-        ;; (map #(assoc % ::vv-toimenpide/komponenttien-tilat
-        ;;              ((filter #(= (::id %) turvalaitenumero) turvalaitekomponentit)
-        ;;               turvalaitekomponentit
-        ;;               (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-        ;;      toimenpiteet)
-        ]
+             toimenpiteet)]
     toimenpiteet-turvalaitekomponenteilla))
+
+
 
 (defn- toimenpiteiden-liite-idt
   "Hakee annetuille toimenpiteille liitteet, jotka eivät ole poistettuja.
@@ -287,6 +304,7 @@
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-turvalaitekomponentit db)
+                      (lisaa-komponenttikohtaiset-tilat db)
                       (lisaa-liitteet db))
         toimenpiteet (into [] toimenpiteet-xf fetchattu)]
     (cond
