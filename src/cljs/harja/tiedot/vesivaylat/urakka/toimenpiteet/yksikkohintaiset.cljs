@@ -573,8 +573,8 @@
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide
-                                                          ::h/tyot]) tiedot)))
+              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::h/tyot])
+                                             tiedot)))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
