@@ -94,9 +94,6 @@
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
@@ -155,9 +152,6 @@
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))
 
 (deftest raportin-suoritus-koko-maalle-toimii
@@ -217,7 +211,28 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "Ei tiedossa"
+       :otsikko "Is"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -244,7 +259,28 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "Ei tiedossa"
+       :otsikko "Is"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -271,7 +307,28 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "Ei tiedossa"
+       :otsikko "Is"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -298,9 +355,6 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "Ei tiedossa"
-       :tasaa   :oikea}
-      {:fmt     :numero
        :otsikko "Is"
        :tasaa   :oikea}
       {:fmt     :numero
@@ -325,9 +379,6 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "Ei tiedossa"
-       :tasaa   :oikea}
-      {:fmt     :numero
        :otsikko "Is"
        :tasaa   :oikea}
       {:fmt     :numero
@@ -350,88 +401,4 @@
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "K2"
-       :tasaa   :oikea}
-      {:fmt     :numero
-       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))

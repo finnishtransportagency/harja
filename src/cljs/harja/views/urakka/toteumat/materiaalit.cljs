@@ -25,17 +25,19 @@
 
 (defonce valittu-materiaalin-kaytto (atom nil))
 
+(defonce
+  ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
+  valittu-aikavali (atom nil))
+
 (defonce urakan-materiaalin-kaytot
   (reaction<! [nakymassa? @materiaali-tiedot/materiaalinakymassa?
                sopimusnumero (first @u/valittu-sopimusnumero)
-               [alku loppu] @u/valittu-hoitokausi
+               [alku loppu] @valittu-aikavali
                ur @nav/valittu-urakka]
               {:nil-kun-haku-kaynnissa? true}
               (when (and nakymassa? sopimusnumero alku loppu ur)
-                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit (:id ur)
-                                                                     alku
-                                                                     loppu
-                                                                     sopimusnumero))))
+                (materiaali-tiedot/hae-urakassa-kaytetyt-materiaalit
+                 (:id ur) alku loppu sopimusnumero))))
 
 (defn tallenna-toteuma-ja-toteumamateriaalit!
   [tm m]
@@ -238,13 +240,10 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
 (defn materiaalinkaytto-vetolaatikko
   [urakan-id mk]
-  (let [tiedot (reaction<! [hk @u/valittu-hoitokausi
+  (let [tiedot (reaction<! [aika @valittu-aikavali
                             sop @u/valittu-sopimusnumero]
                            (materiaali-tiedot/hae-toteumat-materiaalille
-                             urakan-id
-                             (:id (:materiaali mk))
-                             hk
-                             (first sop)))
+                            urakan-id (:id (:materiaali mk)) aika (first sop)))
         tallenna (reaction
                    (if (or (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
                                                           (:id @nav/valittu-urakka)))
@@ -303,7 +302,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 (defn materiaalit-paasivu
   [ur]
   [:div
-   [valinnat/urakan-sopimus-ja-hoitokausi ur]
+   [valinnat/urakan-sopimus ur]
+   [valinnat/aikavali-nykypvm-taakse ur valittu-aikavali]
+
    (let [oikeus? (oikeudet/voi-kirjoittaa?
                    oikeudet/urakat-toteumat-materiaalit
                    (:id @nav/valittu-urakka))]
