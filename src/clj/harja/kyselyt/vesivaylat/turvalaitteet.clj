@@ -74,8 +74,6 @@
                        #{::tu/id
                          ::tu/nimi
                          ::tu/turvalaitenro}
-                       (op/or (merge
-                                {::tu/nimi (op/ilike (str hakuteksti "%"))}
-                                (when hakuteksti-numerona
-                                  {::tu/turvalaitenro hakuteksti})))))))
-
+                       (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
+                              (when hakuteksti-numerona
+                                {::tu/turvalaitenro hakuteksti-numerona}))))))
