@@ -274,11 +274,12 @@
   (let [urakka @nav/valittu-urakka
         valitut-kustannukset
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
-                        toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
+                        toimenpideinstanssi @u/valittu-toimenpideinstanssi]
                     (when @u/erilliskustannukset-hoitokaudella
                       (reverse (sort-by :pvm (filter #(and
                                                         (= sopimus-id (:sopimus %))
-                                                        (= (:toimenpideinstanssi %) toimenpideinstanssi))
+                                                        (or (= (:toimenpideinstanssi %) (:tpi_id toimenpideinstanssi))
+                                                            (= (:tpi_nimi toimenpideinstanssi) "Kaikki")))
                                                      @u/erilliskustannukset-hoitokaudella))))))]
     (fn []
       (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
@@ -288,7 +289,7 @@
         [:div.erilliskustannusten-toteumat
          [ui-valinnat/urakkavalinnat {:urakka urakka}
           ^{:key "valinnat"}
-          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
           (yleiset/wrap-if
             (not oikeus?)
             [yleiset/tooltip {} :%
