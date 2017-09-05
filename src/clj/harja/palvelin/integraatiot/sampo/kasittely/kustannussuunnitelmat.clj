@@ -129,7 +129,7 @@
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+
-               :virheet [{:koodi :tuntematon-kustannussuunnitelma :viesti virheviesti}]}))))
+               :virheet [{:koodi :tuntematon-kustannussuunnitelma :viesti virheviesti}]})))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
