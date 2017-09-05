@@ -69,7 +69,7 @@
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
-    (is (some #(not-empty (get-in % [::toi/komponenttien-tilat])) vastaus))))
+    (is (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus))))
 
 (deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
