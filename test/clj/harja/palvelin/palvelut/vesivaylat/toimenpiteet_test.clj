@@ -39,6 +39,14 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(def tp-komponenttien-tilat-referenssidata
+  [{::toi/komponentti-id -2139967596,
+    ::toi/tilakoodi "1022540401",
+    ::toi/toimenpide-id 1}
+   {::toi/komponentti-id -567765567,
+    ::toi/tilakoodi "1022540402",
+    ::toi/toimenpide-id 1}])
+
 (deftest kok-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
@@ -66,10 +74,11 @@
     (is (some #(>= (count (::toi/liitteet %)) 2) vastaus))
     (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
-                  (mapcat ::toi/liitteet vastaus)))
+                  (mapcat :"toi/liitteet" vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
-    (is (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus))))
+    (is (= (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus)
+            tp-komponenttien-tilat-referenssidata))))
 
 (deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)

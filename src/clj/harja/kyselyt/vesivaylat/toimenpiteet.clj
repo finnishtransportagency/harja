@@ -169,31 +169,16 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
-(defn- zip2 [a b]
-  (map vector a b))
-
-(defn- tpk-mapeiksi [kv-parit]
-  (loop [parit kv-parit
-         tulos-map nil]
-    (let [[id m] (first parit)]
-      (if m
-        (recur (rest parit)
-               (assoc tulos-map id (conj (get tulos-map id) m)))
-        tulos-map))))
-
-
 (defn- lisaa-komponenttikohtaiset-tilat [toimenpiteet db]
   (let [tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat
                              #{::vv-toimenpide/toimenpide-id
                                ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
                              {::vv-toimenpide/toimenpide-id
                               (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
-        tpk-tilat-map (tpk-mapeiksi (zip2 (map ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
-                                          tpk-tilat-seq))
-        ;; _ (println "tpk-tilat-map:" tpk-tilat-map)
-        tilat-toimenpiteelle #(get tpk-tilat-map (::vv-toimenpide/id %))]
-    ;; (println "kk-tilat: palautetaan tilat (map )")
-    (map #(assoc % ::vv-toimenpide/komponenttien-tilat (tilat-toimenpiteelle %)) toimenpiteet)))
+        tilat-toimenpiteen-mukaan (group-by ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
+        tila-toimenpiteelle #(get tilat-toimenpiteen-mukaan (::vv-toimenpide/id %))]
+    (for [tp toimenpiteet]
+      (assoc tp ::vv-toimenpide/komponenttien-tilat (tila-toimenpiteelle tp)))))
 
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
   (let [turvalaitekomponentit (fetch
