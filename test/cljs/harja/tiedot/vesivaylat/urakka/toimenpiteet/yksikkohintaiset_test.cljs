@@ -134,7 +134,7 @@
                                                      :sopimus-id 777
                                                      :aikavali [(t/now) (t/now)]
                                                      :vaylatyyppi :muu
-                                                     :vayla 1
+                                                     :vayla-id 1
                                                      :tyolaji :poijut
                                                      :tyoluokka :asennus-ja-huolto
                                                      :toimenpide :autot-traktorit})
@@ -151,8 +151,8 @@
         (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
         (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-        (is (nil? (get-in vanha-tila [:valinnat :vayla])))
-        (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
+        (is (nil? (get-in vanha-tila [:valinnat :vayla-id])))
+        (is (= (get-in uusi-tila [:valinnat :vayla-id]) 1))
 
         (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
         (is (= (get-in uusi-tila [:valinnat :tyolaji]) :poijut))
