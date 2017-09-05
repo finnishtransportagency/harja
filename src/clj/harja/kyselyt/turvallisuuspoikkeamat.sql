@@ -137,7 +137,11 @@ SELECT
   l.pikkukuva                           AS liite_pikkukuva,
 
   ka.etunimi                            AS "laatija-etunimi",
-  ka.sukunimi                           AS "laatija-sukunimi"
+  ka.sukunimi                           AS "laatija-sukunimi",
+
+  juurisyy1, juurisyy1_selite AS "juurisyy1-selite",
+  juurisyy2, juurisyy2_selite AS "juurisyy2-selite",
+  juurisyy3, juurisyy3_selite AS "juurisyy3-selite"
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -248,7 +252,11 @@ SELECT
   l.nimi                                AS liite_nimi,
   l.liite_oid                           AS liite_oid,
   l.pikkukuva                           AS liite_pikkukuva,
-  l.kuvaus                              AS liite_kuvaus
+  l.kuvaus                              AS liite_kuvaus,
+
+  juurisyy1, juurisyy1_selite AS "juurisyy1-selite",
+  juurisyy2, juurisyy2_selite AS "juurisyy2-selite",
+  juurisyy3, juurisyy3_selite AS "juurisyy3-selite"
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
@@ -387,7 +395,13 @@ SET
   laatija                             = :laatija,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
-  ilmoitukset_lahetetty               = :ilmoitukset_lahetetty
+  ilmoitukset_lahetetty               = :ilmoitukset_lahetetty,
+  juurisyy1                           = :juurisyy1::turvallisuuspoikkeama_juurisyy,
+  juurisyy1_selite                    = :juurisyy1-selite,
+  juurisyy2                           = :juurisyy2::turvallisuuspoikkeama_juurisyy,
+  juurisyy2_selite                    = :juurisyy2-selite,
+  juurisyy3                           = :juurisyy3::turvallisuuspoikkeama_juurisyy,
+  juurisyy3_selite                    = :juurisyy3-selite
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -484,7 +498,10 @@ INSERT INTO turvallisuuspoikkeama
  vaarallisten_aineiden_kuljetus,
  vaarallisten_aineiden_vuoto,
  tila,
- lahde)
+ lahde,
+ juurisyy1, juurisyy1_selite,
+ juurisyy2, juurisyy2_selite,
+ juurisyy3, juurisyy3_selite)
 VALUES
   (:urakka,
     :tapahtunut,
@@ -524,7 +541,13 @@ VALUES
    :vaarallisten_aineiden_kuljetus,
    :vaarallisten_aineiden_vuoto,
    :tila :: turvallisuuspoikkeama_tila,
-   :lahde :: lahde);
+   :lahde :: lahde,
+   :juurisyy1::turvallisuuspoikkeama_juurisyy,
+   :juurisyy1-selite,
+   :juurisyy2::turvallisuuspoikkeama_juurisyy,
+   :juurisyy2-selite,
+   :juurisyy3::turvallisuuspoikkeama_juurisyy,
+   :juurisyy3-selite);
 
 --name: lokita-lahetys<!
 UPDATE turvallisuuspoikkeama

@@ -1,0 +1,12 @@
+{"type": "object",
+ "properties": {"juurisyy": {"enum": ["puutteelliset_henkilonsuojaimet",
+                                      "puutteelliset_tyovalineet_tai_koneet",
+                                      "puutteellinen_jarjestys_tai_siisteys",
+                                      "puutteellinen_patevyys_tai_kelpoisuus",
+                                      "puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys",
+                                      "ohjeiden_vastainen_toiminta_tai_riskinotto",
+                                      "tyomaan_ulkopuolinen_tekija_tai_olosuhde",
+                                      "muu"],
+                             "required": true},
+                "selite": {"type": "string",
+                           "maxLength": 200}}}

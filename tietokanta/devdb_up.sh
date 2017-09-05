@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 IMAGE=${1:-solita/harjadb}
 
@@ -26,10 +28,10 @@ while ! nc -z localhost 5432; do
     sleep 0.5;
 done;
 
-sh devdb_migrate.sh
+bash $DIR/devdb_migrate.sh
 
 echo ""
-echo "Harja käynnissä! Imagen tiedot:"
+echo "Harjan tietokanta käynnissä! Imagen tiedot:"
 echo ""
 
 docker images | head -n1
