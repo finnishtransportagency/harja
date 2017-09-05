@@ -47,7 +47,7 @@
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
-  (let [{:keys [otsikot parametrit viestin-sisalto tapahtumien-tila]} hakuehdot
+  (let [{:keys [otsikot parametrit viestin-sisalto tapahtumien-tila max-tulokset]} hakuehdot
         otsikot (if (str/blank? otsikot) nil otsikot)
         parametrit (if (str/blank? parametrit) nil parametrit)
         viestin-sisalto (if (str/blank? viestin-sisalto) nil viestin-sisalto)
@@ -55,27 +55,20 @@
                       :onnistuneet true
                       :epaonnistuneet false
                       nil)
-
+        limit (int (or (min max-tulokset 200) 50))
         tapahtumat
         (into []
               tapahtuma-xf
-              (if (and alkaen paattyen)
-                (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                      jarjestelma
-                                                                      integraatio
-                                                                      onnistuneet
-                                                                      (konversio/sql-date alkaen)
-                                                                      (konversio/sql-date paattyen)
-                                                                      otsikot
-                                                                      parametrit
-                                                                      viestin-sisalto)
-                (q/hae-uusimmat-integraatiotapahtumat db
-                                                      jarjestelma
-                                                      integraatio
-                                                      onnistuneet
-                                                      otsikot
-                                                      parametrit
-                                                      viestin-sisalto)))]
+              (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
+                                                                    jarjestelma
+                                                                    integraatio
+                                                                    onnistuneet
+                                                                    (konversio/sql-date alkaen)
+                                                                    (konversio/sql-date paattyen)
+                                                                    otsikot
+                                                                    parametrit
+                                                                    viestin-sisalto
+                                                                    limit))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
