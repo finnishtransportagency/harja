@@ -763,3 +763,86 @@
          {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
                                              {::tyo/id 2 ::tyo/maara 666 ::tyo/toimenpidekoodi-id 1}
                                              {::tyo/id 3 ::tyo/maara 2}]}})))
+
+(deftest lisaa-muu-kulurivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa 0
+                    ::hinta/ryhma :muu}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+              {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa 0
+                    ::hinta/ryhma :muu}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
+
+(deftest poista-muu-kulurivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}
+                {::hinta/id -2}]]
+    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id 1})
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1
+                                                  ::m/poistettu? true}
+                                                 {::hinta/id 2}
+                                                 {::hinta/id -1}
+                                                 {::hinta/id -2}]}}))
+
+    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id -1})
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
+                                                 {::hinta/id 2}
+                                                 {::hinta/id -2}]}}))))
+
+(deftest lisaa-muu-tyorivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :tyo}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :tyo}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
+
+(deftest poista-muu-tyorivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}
+                {::hinta/id -2}]]
+    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id 1})
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1
+                                                  ::m/poistettu? true}
+                                                 {::hinta/id 2}
+                                                 {::hinta/id -1}
+                                                 {::hinta/id -2}]}}))
+
+    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id -1})
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
+                                                 {::hinta/id 2}
+                                                 {::hinta/id -2}]}}))))
+

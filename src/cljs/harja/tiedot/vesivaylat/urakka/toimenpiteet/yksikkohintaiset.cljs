@@ -10,6 +10,7 @@
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
+            [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -133,7 +134,7 @@
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 (defrecord LisaaMuuKulurivi [])
-(defrecord PoistaMuuKulurivi [tiedot])
+(defrecord PoistaMuuKulurivi [rivi])
 (defrecord LisaaMuuTyorivi [])
 (defrecord PoistaMuuTyorivi [tiedot])
 ;; Hintaryhmän hinnoittelu
@@ -586,7 +587,6 @@
 
   LisaaMuuKulurivi
   (process-event [_ app]
-    ;; TODO TESTI
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
@@ -598,12 +598,11 @@
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaMuuKulurivi
-  (process-event [{tiedot :tiedot} app]
-    ;; TODO Testi
-    (let [id (::hinta/id tiedot)
+  (process-event [{rivi :rivi} app]
+    (let [id (::hinta/id rivi)
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
-          (if (neg? id)
+          (if-not (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::hinta/id %) id) hinnat)
             ;; Kannassa oleva rivi merkitään poistetuksi
@@ -615,7 +614,6 @@
 
   LisaaMuuTyorivi
   (process-event [_ app]
-    ;; TODO TESTI
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           hinta-idt (map ::hinta/id hinnat)
           seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
@@ -628,7 +626,6 @@
 
   PoistaMuuTyorivi
   (process-event [{tiedot :tiedot} app]
-    ;; TODO Testi
     (let [id (::hinta/id tiedot)
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
