@@ -30,3 +30,21 @@ sitten psql komento:
 > tail -f /var/log/postgresql/postgresql-9.5-main.log
 
 Jos osaat ja ehdit, voit tehdä yo. tehtäviin skriptejä esim Sedin avulla, esim. log-localdb.sh
+
+## Tietokantaskriptit ja niiden keskinäiset riippuvuudet
+
+Skriptit rakentavat ja tarvittaessa tuhoavat lokaalin kehitystietokannan.
+
+Kun haluat putsata tietokannan ja alkaa puhtaalta pöydältä, 
+aja juuressa tietokanta/devdb_restart.sh tai tietokanta-kansiossa ./devdb_restart.sh
+
+Skriptihierarkia ja -riippuvuudet alla.
+
+devdb_restart.sh
+    devdb_down.sh tuhoaa harjadb Docker-kontin ja tietokannan sen mukana
+    devdb_up.sh luo harjadb Docker-kontin 
+        devdb_migrate.sh ajaa skeemamigraation Docker-kontin tietokantaan
+        devdb_testidata.sh ajaa tietokantasisällön tietokantaan, ei toimi omana skriptinään
+            testidata.sql 
+
+devdb_migrateonly.sh ajaa migraation (tietokantaskeeman), vaatii olemassaolevan Docker-kontin

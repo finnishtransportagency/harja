@@ -106,3 +106,33 @@
 
 (def vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
   (henkilovahingon-checkboksien-avaimet-jarjestyksessa vahingoittunut-ruumiinosa))
+
+(def juurisyyt
+  [:puutteelliset_henkilonsuojaimet
+   :puutteelliset_tyovalineet_tai_koneet
+   :puutteellinen_jarjestys_tai_siisteys
+   :puutteellinen_patevyys_tai_kelpoisuus
+   :puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys
+   :ohjeiden_vastainen_toiminta_tai_riskinotto
+   :tyomaan_ulkopuolinen_tekija_tai_olosuhde
+   :muu])
+
+(def juurisyyn-kuvaus
+  {:puutteelliset_henkilonsuojaimet "Puutteelliset henkilönsuojaimet"
+   :puutteelliset_tyovalineet_tai_koneet "Puutteelliset työvälineet tai -koneet"
+   :puutteellinen_jarjestys_tai_siisteys "Puutteellinen järjestys tai siisteys"
+   :puutteellinen_patevyys_tai_kelpoisuus "Puutteellinen pätevyys tai kelpoisuus"
+   :puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys "Puutteellinen tai puuttuva ohjeistus tai perehdytys"
+   :ohjeiden_vastainen_toiminta_tai_riskinotto "Ohjeiden vastainen toiminta tai riskinotto"
+   :tyomaan_ulkopuolinen_tekija_tai_olosuhde "Työmaan ulkopuolinen tekijä tai olosuhde"
+   :muu "Muu (avoin kohta)"})
+
+(def juurisyyn-koodi
+  {:puutteelliset_henkilonsuojaimet 0
+   :puutteelliset_tyovalineet_tai_koneet 1
+   :puutteellinen_jarjestys_tai_siisteys 2
+   :puutteellinen_patevyys_tai_kelpoisuus 3
+   :puutteellinen_tai_puuttuva_ohjeistus_tai_perehdytys 4
+   :ohjeiden_vastainen_toiminta_tai_riskinotto 5
+   :tyomaan_ulkopuolinen_tekija_tai_olosuhde 6
+   :muu 7})

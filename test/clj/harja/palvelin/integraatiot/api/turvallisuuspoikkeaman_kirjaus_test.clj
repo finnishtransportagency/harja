@@ -62,7 +62,10 @@
                         tapahtuman_otsikko,
                         paikan_kuvaus,
                         vaarallisten_aineiden_kuljetus,
-                        vaarallisten_aineiden_vuoto
+                        vaarallisten_aineiden_vuoto,
+                        juurisyy1, juurisyy1_selite,
+                        juurisyy2, juurisyy2_selite,
+                        juurisyy3, juurisyy3_selite
                         FROM turvallisuuspoikkeama
                         WHERE ulkoinen_id = " ulkoinen-id
                         " LIMIT 1;")))
@@ -117,7 +120,16 @@
     ;; Tarkistetaan, että data tallentui oikein
     (let [uusin-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
           turpo-id (first uusin-tp)
-          korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
+          korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
+          [juurisyy1 juurisyy1-selite
+           juurisyy2 juurisyy2-selite
+           juurisyy3 juurisyy3-selite] (drop 33 uusin-tp)]
+
+      ;; Testissä on 1 juurisyy, joka on puutteelliset henkilönsuojaimet
+      (is (= juurisyy1 "puutteelliset_henkilonsuojaimet"))
+      (is (= juurisyy1-selite "ei ollut suojaliivit päällä"))
+      (is (= nil juurisyy2 juurisyy2-selite juurisyy3 juurisyy3-selite))
+
       (is (t/year (nth uusin-tp 3)) 2016)
       (is (t/month (nth uusin-tp 3)) 1)
       (is (t/day (nth uusin-tp 3)) 30)
