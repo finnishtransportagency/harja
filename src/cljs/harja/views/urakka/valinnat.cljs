@@ -184,7 +184,6 @@
   (valinnat/urakan-valinnat ur (select-keys shta [:sopimus :hoitokausi :toimenpide])))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki [ur]
-  (println "TOIMENPITEET: " (pr-str @u/urakan-toimenpideinstanssit))
   (let [sopimus-ja-hoitokausi-ja-toimenpide (select-keys shta [:sopimus :hoitokausi :toimenpide])
         sopimus-ja-hoitokausi-ja-toimenpide+kaikki (update-in sopimus-ja-hoitokausi-ja-toimenpide [:toimenpide :urakan-toimenpideinstassit-atom]
                                                            (fn [urakan-toimenpideinstanssit]

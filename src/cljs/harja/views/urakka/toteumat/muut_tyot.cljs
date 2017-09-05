@@ -403,8 +403,7 @@
   [urakka]
   (let [toteutuneet-muut-tyot (reaction
                                 (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
-                                      toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella
-                                      _ (println "TOTEUTUNEET MUUT TYÖT HOITOKAUDELLA: " (pr-str toteutuneet-muut-tyot-hoitokaudella))]
+                                      toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella]
                                   (when toteutuneet-muut-tyot-hoitokaudella
                                     (reverse (sort-by :alkanut (filter #(or (= (get-in % [:tehtava :emo])
                                                                                (:id toimenpideinstanssi))
@@ -416,8 +415,7 @@
         tyorivit
         (reaction
           (let [muutoshintaiset-tyot @u/muutoshintaiset-tyot
-                toteutuneet-muut-tyot @toteutuneet-muut-tyot
-                _ (println "TOTEUTUNEET MUUT TYÖT: " (pr-str toteutuneet-muut-tyot))]
+                toteutuneet-muut-tyot @toteutuneet-muut-tyot]
             (map (fn [muu-tyo]
                    (let [muutoshintainen-tyo
                          (first (filter (fn [muutoshinta]
