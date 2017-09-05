@@ -49,20 +49,20 @@
                                                      {:kommentti :kommentit
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
                                                       :liite :liitteet}))
-                    turpo
-                    (kasittele-vain-yksi-vamma-ja-ruumiinosa turpo)
-                    (assoc turpo :korjaavattoimenpiteet
-                                 (mapv #(assoc % :vastuuhenkilo
-                                                 (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
-                                       (:korjaavattoimenpiteet turpo)))
-                    (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
-                    (assoc turpo :urakan-tyotunnit tyotunnit)
-                    (update-in turpo [:kommentit]
-                               (fn [kommentit]
-                                 (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                                        (dissoc % :liite)
-                                                        %)
-                                                     kommentit)))))]
+                  turpo
+                (kasittele-vain-yksi-vamma-ja-ruumiinosa turpo)
+                (assoc turpo :korjaavattoimenpiteet
+                       (mapv #(assoc % :vastuuhenkilo
+                                     (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
+                             (:korjaavattoimenpiteet turpo)))
+                (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
+                (assoc turpo :urakan-tyotunnit tyotunnit)
+                (update-in turpo [:kommentit]
+                           (fn [kommentit]
+                             (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                                    (dissoc % :liite)
+                                                    %)
+                                                 kommentit)))))]
     (log/debug "Tulos: " (pr-str tulos))
     tulos))
 
@@ -120,6 +120,14 @@
                        :ilmoitukset_lahetetty nil
                        :lahde "harja-ui"})
 
+(defn- juurisyy-kentat [turvallisuuspoikkeama]
+  {:juurisyy1 (some-> turvallisuuspoikkeama :juurisyy1 name)
+   :juurisyy1-selite (:juurisyy1-selite turvallisuuspoikkeama)
+   :juurisyy2 (some-> turvallisuuspoikkeama :juurisyy2 name)
+   :juurisyy2-selite (:juurisyy2-selite turvallisuuspoikkeama)
+   :juurisyy3 (some-> turvallisuuspoikkeama :juurisyy3 name)
+   :juurisyy3-selite (:juurisyy3-selite turvallisuuspoikkeama)})
+
 (defn- luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut tyontekijanammatti tyontekijanammattimuu
                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
@@ -127,7 +135,8 @@
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
                    otsikko paikan-kuvaus vaaralliset-aineet
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
-                   ilmoituksetlahetetty tila]}]
+                   ilmoituksetlahetetty tila]
+            :as turvallisuuspoikkeama}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
                                                        vaaralliset-aineet))
@@ -168,7 +177,8 @@
                                                vaarallisten-aineiden-vuoto?)
                 :tila (name tila)
                 :ilmoitukset_lahetetty (when ilmoituksetlahetetty
-                                         (konv/sql-timestamp ilmoituksetlahetetty))})]
+                                         (konv/sql-timestamp ilmoituksetlahetetty))}
+               (juurisyy-kentat turvallisuuspoikkeama))]
     (if (id-olemassa? id)
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
