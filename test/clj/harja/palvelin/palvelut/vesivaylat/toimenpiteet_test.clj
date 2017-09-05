@@ -74,7 +74,7 @@
     (is (some #(>= (count (::toi/liitteet %)) 2) vastaus))
     (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
-                  (mapcat :"toi/liitteet" vastaus)))
+                  (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
     (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
     (is (= (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus)
