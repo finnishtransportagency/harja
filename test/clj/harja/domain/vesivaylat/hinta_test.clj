@@ -36,13 +36,30 @@
                               {::hinta/summa 3 ::hinta/otsikko "C"}]
                                        "C")
          3))
-  (is (= (hinta/hinnan-yleiskustannuslisa [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
-                                           {::hinta/summa 2 ::hinta/otsikko "B"}
-                                           {::hinta/summa 3 ::hinta/otsikko "C"}]
-                                          "A")
-         666))
+
   (is (= (hinta/hinta-otsikolla "A"
                                 [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
                                  {::hinta/summa 2 ::hinta/otsikko "B"}
                                  {::hinta/summa 3 ::hinta/otsikko "C"}])
+         {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}))
+
+  (is (= (hinta/hinta-idlla 2
+                                [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+                                 {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+                                 {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}])
          {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))
+
+(deftest hintajoukon-paivitus
+  (is (= (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
+           [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+            {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+            {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]
+           {::hinta/id 2 ::hinta/otsikko "C" ::hinta/summa 100})
+         {::hinta/id 2 ::hinta/summa 100 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}))
+
+  (is (= (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
+           [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+            {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+            {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]
+           {::hinta/id 2 ::hinta/otsikko "C" ::hinta/summa 100})
+         {::hinta/id 3 ::hinta/summa 100 ::hinta/otsikko "C"})))

@@ -698,6 +698,361 @@
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma false})))
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma true}))))
 
+(deftest hintakentan-luonti
+  (is (= (tiedot/hintakentta {})
+         {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0}))
+
+  (is (= (tiedot/hintakentta {::hinta/id 1})
+         {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/id 1}))
+
+  (is (= (tiedot/hintakentta {::hinta/summa 10})
+         {::hinta/summa 10
+          ::hinta/yleiskustannuslisa 0}))
+
+  (is (= (tiedot/hintakentta {::hinta/yleiskustannuslisa 10})
+         {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 10}))
+
+  (is (= (tiedot/hintakentta {::hinta/ryhma :tyo})
+         {::hinta/summa nil
+          ::hinta/ryhma :tyo
+          ::hinta/yleiskustannuslisa 0}))
+
+  (is (= (tiedot/hintakentta {::hinta/ryhma :muu})
+         {::hinta/summa 0
+          ::hinta/ryhma :muu
+          ::hinta/yleiskustannuslisa 0}))
+
+  (is (= (tiedot/hintakentta {::hinta/ryhma :tyo
+                              ::hinta/summa 10})
+         ::hinta/ryhma :tyo
+         {::hinta/summa 10
+          ::hinta/yleiskustannuslisa 0}))
+
+  (is (= (tiedot/hintakentta {::hinta/ryhma :muu
+                              ::hinta/summa 10})
+         ::hinta/ryhma :muu
+         {::hinta/summa 10
+          ::hinta/yleiskustannuslisa 0})))
+
+(deftest tyokentan-luonti
+  (is (= (tiedot/tyokentta {})
+         {::tyo/maara 0}))
+
+  (is (= (tiedot/tyokentta {::tyo/maara 10})
+         {::tyo/maara 10}))
+
+  (is (= (tiedot/tyokentta {::tyo/id 1})
+         {::tyo/maara 0
+          ::tyo/id 1})))
+
+(deftest vakiohintakentta?
+  (is (true? (tiedot/vakiohintakentta? "Yleiset materiaalit")))
+  (is (true? (tiedot/vakiohintakentta? "Matkakulut")))
+  (is (true? (tiedot/vakiohintakentta? "Muut kulut")))
+  (is (false? (tiedot/vakiohintakentta? "")))
+  (is (false? (tiedot/vakiohintakentta? nil)))
+  (is (false? (tiedot/vakiohintakentta? "Foobar"))))
+
+(deftest toimenpiteen-hintakentat
+  (is (= (tiedot/toimenpiteen-hintakentat [])
+         [{::hinta/id -1
+           ::hinta/otsikko "Yleiset materiaalit"
+           ::hinta/ryhma :muu
+           ::hinta/summa 0
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id -2
+           ::hinta/otsikko "Matkakulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 0
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id -3
+           ::hinta/otsikko "Muut kulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 0
+           ::hinta/yleiskustannuslisa 0}]))
+
+  (is (= (tiedot/toimenpiteen-hintakentat
+           [{::hinta/id 1
+             ::hinta/otsikko "Yleiset materiaalit"
+             ::hinta/ryhma :muu
+             ::hinta/summa 100
+             ::hinta/yleiskustannuslisa 0}
+            {::hinta/id 2
+             ::hinta/otsikko "Matkakulut"
+             ::hinta/ryhma :muu
+             ::hinta/summa 200
+             ::hinta/yleiskustannuslisa 0}
+            {::hinta/id 3
+             ::hinta/otsikko "Muut kulut"
+             ::hinta/ryhma :muu
+             ::hinta/summa 300
+             ::hinta/yleiskustannuslisa 0}])
+         [{::hinta/id 1
+           ::hinta/otsikko "Yleiset materiaalit"
+           ::hinta/ryhma :muu
+           ::hinta/summa 100
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id 2
+           ::hinta/otsikko "Matkakulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 200
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id 3
+           ::hinta/otsikko "Muut kulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 300
+           ::hinta/yleiskustannuslisa 0}]))
+
+  (is (= (tiedot/toimenpiteen-hintakentat
+           [{::hinta/id 1
+             ::hinta/otsikko "Yleiset materiaalit"
+             ::hinta/ryhma :muu
+             ::hinta/summa 100
+             ::hinta/yleiskustannuslisa 0}
+            {::hinta/id 2
+             ::hinta/otsikko "Matkakulut"
+             ::hinta/ryhma :muu
+             ::hinta/summa 200
+             ::hinta/yleiskustannuslisa 0}
+            {::hinta/id 3
+             ::hinta/otsikko "Muut kulut"
+             ::hinta/ryhma :muu
+             ::hinta/summa 300
+             ::hinta/yleiskustannuslisa 0}
+            {::hinta/id 4
+             ::hinta/otsikko "Foobar"
+             ::hinta/ryhma :muu
+             ::hinta/summa 500
+             ::hinta/yleiskustannuslisa 12}])
+         [{::hinta/id 1
+           ::hinta/otsikko "Yleiset materiaalit"
+           ::hinta/ryhma :muu
+           ::hinta/summa 100
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id 2
+           ::hinta/otsikko "Matkakulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 200
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id 3
+           ::hinta/otsikko "Muut kulut"
+           ::hinta/ryhma :muu
+           ::hinta/summa 300
+           ::hinta/yleiskustannuslisa 0}
+          {::hinta/id 4
+           ::hinta/otsikko "Foobar"
+           ::hinta/ryhma :muu
+           ::hinta/summa 500
+           ::hinta/yleiskustannuslisa 12}])))
+
+(deftest muut-hinnat
+  (is (= (tiedot/muut-hinnat
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/ryhma :muu
+                                                  ::hinta/id 1}
+                                                 {::hinta/ryhma :muu
+                                                  ::m/poistettu? true
+                                                  ::hinta/id 2}
+                                                 {::hinta/ryhma :tyo
+                                                  ::hinta/id 3}
+                                                 {::hinta/ryhma :muu
+                                                  ::hinta/id 4}]}})
+         [{::hinta/ryhma :muu
+           ::hinta/id 1}
+          {::hinta/ryhma :muu
+           ::hinta/id 4}])))
+
+(deftest muut-tyot
+  (is (= (tiedot/muut-tyot
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/ryhma :tyo
+                                                  ::hinta/id 1}
+                                                 {::hinta/ryhma :tyo
+                                                  ::m/poistettu? true
+                                                  ::hinta/id 2}
+                                                 {::hinta/ryhma :muu
+                                                  ::hinta/id 3}
+                                                 {::hinta/ryhma :tyo
+                                                  ::hinta/id 4}]}})
+         [{::hinta/ryhma :tyo
+           ::hinta/id 1}
+          {::hinta/ryhma :tyo
+           ::hinta/id 4}])))
+
+(deftest ainoa-vakiokentta?
+  (is (true? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}]
+               "Yleiset materiaalit")))
+
+  (is (true? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Baz"}]
+               "Yleiset materiaalit")))
+
+  (is (true? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Yleiset materiaalit"}]
+               "Yleiset materiaalit")))
+
+  (is (false? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Baz"}]
+               "Barbar")))
+
+  (is (false? (tiedot/ainoa-otsikon-vakiokentta?
+                [{::hinta/otsikko "Foobar"}
+                 {::hinta/otsikko "Baz"}]
+                "Baz"))))
+
+(deftest hintaryhman-hintakentat
+  (is (= (tiedot/hintaryhman-hintakentat
+           [])
+         [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+           ::hinta/summa 0
+           ::hinta/yleiskustannuslisa 0}]))
+
+  (is (= (tiedot/hintaryhman-hintakentat
+           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+            ::hinta/summa 100
+            ::hinta/yleiskustannuslisa 0})
+         [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+           ::hinta/summa 100
+           ::hinta/yleiskustannuslisa 0}]))
+
+  (is (= (tiedot/hintaryhman-hintakentat
+           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+            ::hinta/summa 100
+            ::hinta/id 10
+            ::hinta/yleiskustannuslisa 0})
+         [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+           ::hinta/summa 100
+           ::hinta/id 10
+           ::hinta/yleiskustannuslisa 0}])))
+
+(deftest voiko-tallentaa?
+  (is (true? (tiedot/hinnoittelun-voi-tallentaa?
+               {:hinnoittele-toimenpide {::h/tyot []
+                                         ::h/hinnat []}})))
+
+  (is (true? (tiedot/hinnoittelun-voi-tallentaa?
+               {:hinnoittele-toimenpide {::h/tyot [{::tyo/toimenpidekoodi-id 1
+                                                    ::tyo/maara 10}]
+                                         ::h/hinnat []}})))
+
+  (testing "Ei saa tallentaa jos työltä puuttuu toimenpidekoodi-id tai määrä"
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                 {:hinnoittele-toimenpide {::h/tyot [{::tyo/toimenpidekoodi-id 1}]
+                                           ::h/hinnat []}})))
+
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot [{::tyo/maara 10}]
+                                            ::h/hinnat []}}))))
+
+  (is (true? (tiedot/hinnoittelun-voi-tallentaa?
+               {:hinnoittele-toimenpide {::h/tyot []
+                                         ::h/hinnat [{::hinta/ryhma :tyo
+                                                      ::hinta/otsikko "Foobar"
+                                                      ::hinta/maara 10
+                                                      ::hinta/yksikkohinta 10
+                                                      ::hinta/yksikko "kpl"}
+                                                     {::hinta/ryhma :tyo
+                                                      ::hinta/otsikko "Barbar"
+                                                      ::hinta/maara 10
+                                                      ::hinta/yksikkohinta 10
+                                                      ::hinta/yksikko "kpl"}]}})))
+
+  (testing "Ei saa tallentaa jos ty-ryhmän hinnalta puuttuu otsikko, määrä, yksikköhinta tai yksikkö"
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                 {:hinnoittele-toimenpide {::h/tyot []
+                                           ::h/hinnat [{::hinta/ryhma :tyo
+                                                        ::hinta/otsikko ""
+                                                        ::hinta/maara 10
+                                                        ::hinta/yksikkohinta 10
+                                                        ::hinta/yksikko "kpl"}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :tyo
+                                                         ::hinta/otsikko nil
+                                                         ::hinta/maara 10
+                                                         ::hinta/yksikkohinta 10
+                                                         ::hinta/yksikko "kpl"}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :tyo
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/yksikkohinta 10
+                                                         ::hinta/yksikko "kpl"}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :tyo
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/maara 10
+                                                         ::hinta/yksikko "kpl"}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :tyo
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/maara 10
+                                                         ::hinta/yksikkohinta 10}]}}))))
+
+  (is (true? (tiedot/hinnoittelun-voi-tallentaa?
+               {:hinnoittele-toimenpide {::h/tyot []
+                                         ::h/hinnat [{::hinta/ryhma  :muu
+                                                      ::hinta/otsikko "Foobar"
+                                                      ::hinta/summa 100}]}})))
+
+  (is (true? (tiedot/hinnoittelun-voi-tallentaa?
+               {:hinnoittele-toimenpide {::h/tyot []
+                                         ::h/hinnat [{::hinta/ryhma  :muu
+                                                      ::hinta/otsikko "Foobar"
+                                                      ::hinta/summa 100}
+                                                     {::hinta/ryhma :tyo
+                                                      ::hinta/otsikko "Barbar"
+                                                      ::hinta/maara 10
+                                                      ::hinta/yksikkohinta 10
+                                                      ::hinta/yksikko "kpl"}]}})))
+
+  (testing "Ei saa tallentaa jos muu-ryhmän hinnalta puuttuu otsikko tai summa"
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :muu
+                                                         ::hinta/otsikko "Foobar"}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :muu
+                                                         ::hinta/otsikko ""
+                                                         ::hinta/summa 100}]}})))
+
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :muu
+                                                         ::hinta/otsikko nil
+                                                         ::hinta/summa 100}]}}))))
+
+  (testing "Ei saa tallentaa, jos hintojen otsikot eivät ole uniikkeja"
+    ;; Pätee siis vain _hintojen_ otsikoihin. Töiden otsikko saa olla kirjoittamisen hetkellä sama
+    ;; TÄhän olisi hyvä tulla ehkä muutos
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma  :muu
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/summa 100}
+                                                        {::hinta/ryhma  :muu
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/summa 200}]}})))
+    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+                  {:hinnoittele-toimenpide {::h/tyot []
+                                            ::h/hinnat [{::hinta/ryhma :tyo
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/maara 10
+                                                         ::hinta/yksikkohinta 10
+                                                         ::hinta/yksikko "kpl"}
+                                                        {::hinta/ryhma  :muu
+                                                         ::hinta/otsikko "Foobar"
+                                                         ::hinta/summa 200}]}})))))
+
 (deftest suunniteltujen-toiden-tyhjennys
   (is (= (e! (tiedot/->TyhjennaSuunnitellutTyot)
              {:suunnitellut-tyot [1 2 3]})
