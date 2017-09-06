@@ -58,10 +58,12 @@
                          ::toi/id toimenpide-id
                          ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                      ::hinta/yleiskustannuslisa 0
-                                                     ::hinta/summa 666}
+                                                     ::hinta/summa 666
+                                                     ::hinta/ryhma :muu}
                                                     {::hinta/otsikko "Testihinta 2"
                                                      ::hinta/yleiskustannuslisa 12
-                                                     ::hinta/summa 123}]
+                                                     ::hinta/summa 123
+                                                     ::hinta/ryhma :muu}]
                          ::h/tallennettavat-tyot []}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
