@@ -62,6 +62,12 @@
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
             vastaus)))))
 
+(def turvalaitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [vastaus (<! (k/post! :hae-turvalaitteet-tekstilla {:hakuteksti teksti}))]
+            vastaus)))))
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [tiedot])
 (defrecord HaeToimenpiteet [valinnat])

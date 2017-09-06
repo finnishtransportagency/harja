@@ -44,7 +44,8 @@
                     :sopimus-id nil
                     :aikavali [nil nil]
                     :vaylatyyppi nil
-                    :vayla nil
+                    :vayla-id nil
+                    :turvalaite-id nil
                     :tyolaji nil
                     :tyoluokka nil
                     :toimenpide nil
@@ -91,6 +92,12 @@
     (hae [_ teksti]
       (go (let [vastaus (<! (k/post! :hae-vaylat {:hakuteksti teksti
                                                   :vaylatyyppi (get-in @tila [:valinnat :vaylatyyppi])}))]
+            vastaus)))))
+
+(def turvalaitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [vastaus (<! (k/post! :hae-turvalaitteet-tekstilla {:hakuteksti teksti}))]
             vastaus)))))
 
 (defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
