@@ -100,6 +100,7 @@
         tiedot/->PaivitaValinnat
         app (:urakka valinnat)
         tiedot/vaylahaku
+        tiedot/turvalaitehaku
         {:urakkatoiminnot (urakkatoiminnot e! app)}]
        [jaettu/tulokset e! app
         [jaettu/listaus e! app

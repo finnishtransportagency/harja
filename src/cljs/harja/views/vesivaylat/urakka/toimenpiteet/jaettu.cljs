@@ -84,10 +84,10 @@
            [:td (::tkomp/sarjanumero turvalaitekomponentti)]
            [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]])]])]])
 
-(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku lisasuodattimet urakkatoiminto-napit]
+(defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
    ^{:key "valintaryhmat"}
-   [valinnat/valintaryhmat-3
+   [valinnat/valintaryhmat-4
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
      urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
 
@@ -105,7 +105,16 @@
                                                       :lahde vaylahaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
                                                          (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:vayla (::va/id uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:vayla-id (::va/id uusi)}))))}]]
+
+    [:div
+     [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
+                                      :kentta-params {:tyyppi :haku
+                                                      :nayta ::tu/nimi
+                                                      :lahde turvalaitehaku}
+                                      :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
+                                                         (fn [uusi]
+                                                           (e! (PaivitaValinnatKonstruktori {:turvalaite-id (::tu/id uusi)}))))}]]
 
     (into
       [:div
@@ -145,9 +154,9 @@
        urakkatoiminto-napit))])
 
 (defn suodattimet
-  [e! PaivitaValinnatKonstruktori app urakka vaylahaku {:keys [lisasuodattimet urakkatoiminnot]}]
+  [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku {:keys [lisasuodattimet urakkatoiminnot]}]
   [:div
-   [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku
+   [suodattimet-ja-toiminnot e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku
     (or lisasuodattimet [])
     (or urakkatoiminnot [])]])
 
@@ -168,14 +177,14 @@
 ;; GRID / LISTAUS
 ;;;;;;;;;;;;;;;;;
 
-(def sarake-tyoluokka {:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
-(def sarake-toimenpide {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
-(def sarake-pvm {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
-(def sarake-turvalaite {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
-(def sarake-turvalaitenumero {:otsikko "Turvalaitenumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
-(def sarake-vikakorjaus {:otsikko "Vikakorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
+(def sarake-tyoluokka {:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
+(def sarake-toimenpide {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
+(def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
+(def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
+(def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
+(def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
 (defn sarake-liitteet [e! app oikeus-fn]
-  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
+  {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
    :komponentti (fn [rivi]
                   [liitteet/liitteet-ja-lisays
                    (get-in app [:valinnat :urakka-id])

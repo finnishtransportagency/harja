@@ -79,7 +79,7 @@
     ; Hoitotuotteet 110 - 150, 536
     (if (nil? tuotenumero)
       (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s)." numero)]
-        (log/error viesti)
+        (log/warn viesti)
         (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                             :viesti viesti}]}))
@@ -96,7 +96,7 @@
           (let [viesti
                 (format "Toimenpidekoodilla '%1$s' ja tuonenumerolla '%2$s' ei voida päätellä LKP-tilinnumeroa kustannussuunnitelmalle (numero: %s)."
                         toimenpidekoodi tuotenumero numero)]
-            (log/error viesti)
+            (log/warn viesti)
             (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                      :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                                 :viesti viesti}]})))))))
@@ -124,9 +124,8 @@
             (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
         (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
       (catch Exception e
-        (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-        (throw e)))
+        (log/warn e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+

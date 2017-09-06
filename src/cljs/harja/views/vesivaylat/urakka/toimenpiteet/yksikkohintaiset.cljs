@@ -483,7 +483,8 @@
         [:div
          [kartta/kartan-paikka]
          [debug/debug app]
-         [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka ulkoiset-valinnat) tiedot/vaylahaku
+         [jaettu/suodattimet e! tiedot/->PaivitaValinnat app (:urakka ulkoiset-valinnat)
+          tiedot/vaylahaku tiedot/turvalaitehaku
           {:urakkatoiminnot (urakkatoiminnot e! app)}]
 
          [jaettu/tulokset e! app
