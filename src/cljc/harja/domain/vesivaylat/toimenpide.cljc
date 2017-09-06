@@ -250,6 +250,10 @@ reimari-tilat
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
 
+(def ^{:doc "Reimarin toimenpiteen komponenttikohtaiset tilat (Reimarin ACTCOMP_STATE_CDE)"}
+  reimari-tp-komponentin-tilat {"1022540401" :kaytossa
+                                "1022540402" :poistetttu
+                                "1022540403" :varastoon})
 (define-tables
   ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
@@ -265,6 +269,7 @@ reimari-tilat
                  :harja.domain.liite/liite
                  :harja.domain.liite/id)}]
 
+  ["reimari_toimenpiteen_komponenttien_tilamuutokset" ::tpk-tilat]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -288,7 +293,6 @@ reimari-tilat
                      ::id
                      ::toimenpide<->liite
                      ::toimenpide-id)}])
-
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
 (s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))

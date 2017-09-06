@@ -51,7 +51,8 @@
                           ::vv-toimenpide/lisatieto
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/turvalaitekomponentit
-                          ::vv-toimenpide/reimari-henkilo-lkm]))))
+                          ::vv-toimenpide/reimari-henkilo-lkm
+                          ::vv-toimenpide/komponenttien-tilat]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
@@ -168,6 +169,17 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
+(defn- lisaa-komponenttikohtaiset-tilat [toimenpiteet db]
+  (let [tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat
+                             #{::vv-toimenpide/toimenpide-id
+                               ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
+                             {::vv-toimenpide/toimenpide-id
+                              (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
+        tilat-toimenpiteen-mukaan (group-by ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
+        tila-toimenpiteelle #(get tilat-toimenpiteen-mukaan (::vv-toimenpide/id %))]
+    (for [tp toimenpiteet]
+      (assoc tp ::vv-toimenpide/komponenttien-tilat (tila-toimenpiteelle tp)))))
+
 (defn- lisaa-turvalaitekomponentit [toimenpiteet db]
   (let [turvalaitekomponentit (fetch
                                 db
@@ -176,9 +188,9 @@
                                            tkomp/komponenttityyppi)
                                 {::tkomp/turvalaitenro
                                  (op/in (set (map
-                                               #(get-in % [::vv-toimenpide/reimari-turvalaite
-                                                           ::vv-turvalaite/r-nro])
-                                               toimenpiteet)))})
+                                              #(get-in % [::vv-toimenpide/reimari-turvalaite
+                                                          ::vv-turvalaite/r-nro])
+                                              toimenpiteet)))})
         toimenpiteet-turvalaitekomponenteilla
         (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
                        (tkomp/turvalaitekomponentit-turvalaitenumerolla
@@ -186,6 +198,8 @@
                          (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
              toimenpiteet)]
     toimenpiteet-turvalaitekomponenteilla))
+
+
 
 (defn- toimenpiteiden-liite-idt
   "Hakee annetuille toimenpiteille liitteet, jotka eivät ole poistettuja.
@@ -273,6 +287,7 @@
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-turvalaitekomponentit db)
+                      (lisaa-komponenttikohtaiset-tilat db)
                       (lisaa-liitteet db))
         toimenpiteet (into [] toimenpiteet-xf fetchattu)]
     (cond
