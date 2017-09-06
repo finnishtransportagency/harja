@@ -332,3 +332,14 @@
     ryhma2]
    [:div.valintaryhma.col-sm-12.col-md-4
     ryhma3]])
+
+(defn valintaryhmat-4 [& [ryhma1 ryhma2 ryhma3 ryhma4]]
+  [:div.row
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma1]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma2]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma3]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma4]])
