@@ -260,7 +260,8 @@
          (every? #(and (not-empty (::hinta/otsikko %))
                        (::hinta/summa %))
                  muut)
-         (apply distinct? hintojen-otsikot))))
+         (or (empty? hintojen-otsikot)
+             (apply distinct? hintojen-otsikot)))))
 
 (extend-protocol tuck/Event
 

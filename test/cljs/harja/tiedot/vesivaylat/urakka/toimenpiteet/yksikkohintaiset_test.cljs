@@ -411,11 +411,9 @@
       (is (= (:hinnoittele-hintaryhma uusi-tila)
              {::h/id 1
               ::h/hinnat
-              [{::hinta/id nil
-                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 0
-                ::hinta/ryhma nil
-                ::hinta/yleiskustannuslisa 0}]}))))
+              [{:harja.domain.vesivaylat.hinta/summa 0
+                :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0
+                :harja.domain.vesivaylat.hinta/otsikko "Ryhmähinta"}]}))))
 
   (testing "Aloita hintaryhmän hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
@@ -428,7 +426,6 @@
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 600
-                ::hinta/ryhma nil
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-kentan-hinnoittelu
@@ -499,7 +496,6 @@
               [{::hinta/id 1
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 123
-                ::hinta/ryhma nil
                 ::hinta/yleiskustannuslisa 0}]})))))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
@@ -728,14 +724,14 @@
 
   (is (= (tiedot/hintakentta {::hinta/ryhma :tyo
                               ::hinta/summa 10})
-         ::hinta/ryhma :tyo
          {::hinta/summa 10
-          ::hinta/yleiskustannuslisa 0}))
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/ryhma :tyo}))
 
   (is (= (tiedot/hintakentta {::hinta/ryhma :muu
                               ::hinta/summa 10})
-         ::hinta/ryhma :muu
          {::hinta/summa 10
+          ::hinta/ryhma :muu
           ::hinta/yleiskustannuslisa 0})))
 
 (deftest tyokentan-luonti
@@ -883,16 +879,33 @@
 
 (deftest ainoa-vakiokentta?
   (is (true? (tiedot/ainoa-otsikon-vakiokentta?
-               [{::hinta/otsikko "Foobar"}]
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Yleiset materiaalit"}]
                "Yleiset materiaalit")))
 
   (is (true? (tiedot/ainoa-otsikon-vakiokentta?
                [{::hinta/otsikko "Foobar"}
-                {::hinta/otsikko "Baz"}]
+                {::hinta/otsikko "Bar"}
+                {::hinta/otsikko "Yleiset materiaalit"}]
                "Yleiset materiaalit")))
 
   (is (true? (tiedot/ainoa-otsikon-vakiokentta?
                [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Yleiset materiaalit"}]
+               "Yleiset materiaalit")))
+
+  (is (true? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Bar"}
+                {::hinta/otsikko "Matkakulut"}
+                {::hinta/otsikko "Matkakulut"}
+                {::hinta/otsikko "Yleiset materiaalit"}]
+               "Yleiset materiaalit")))
+
+  (is (false? (tiedot/ainoa-otsikon-vakiokentta?
+               [{::hinta/otsikko "Foobar"}
+                {::hinta/otsikko "Yleiset materiaalit"}
                 {::hinta/otsikko "Yleiset materiaalit"}]
                "Yleiset materiaalit")))
 
@@ -904,7 +917,13 @@
   (is (false? (tiedot/ainoa-otsikon-vakiokentta?
                 [{::hinta/otsikko "Foobar"}
                  {::hinta/otsikko "Baz"}]
-                "Baz"))))
+                "Baz")))
+
+  (is (false? (tiedot/ainoa-otsikon-vakiokentta?
+                [{::hinta/otsikko "Foobar"}
+                 {::hinta/otsikko "Barbar"}
+                 {::hinta/otsikko "Barbar"}]
+                "Barbar"))))
 
 (deftest hintaryhman-hintakentat
   (is (= (tiedot/hintaryhman-hintakentat
@@ -914,18 +933,18 @@
            ::hinta/yleiskustannuslisa 0}]))
 
   (is (= (tiedot/hintaryhman-hintakentat
-           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-            ::hinta/summa 100
-            ::hinta/yleiskustannuslisa 0})
+           [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+             ::hinta/summa 100
+             ::hinta/yleiskustannuslisa 0}])
          [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
            ::hinta/summa 100
            ::hinta/yleiskustannuslisa 0}]))
 
   (is (= (tiedot/hintaryhman-hintakentat
-           {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-            ::hinta/summa 100
-            ::hinta/id 10
-            ::hinta/yleiskustannuslisa 0})
+           [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+             ::hinta/summa 100
+             ::hinta/id 10
+             ::hinta/yleiskustannuslisa 0}])
          [{::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
            ::hinta/summa 100
            ::hinta/id 10
@@ -1125,7 +1144,8 @@
         uusi-hinta {::hinta/id -1
                     ::hinta/otsikko ""
                     ::hinta/summa 0
-                    ::hinta/ryhma :muu}]
+                    ::hinta/ryhma :muu
+                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
     (is (= (e! (tiedot/->LisaaMuuKulurivi)
               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
@@ -1136,7 +1156,8 @@
         uusi-hinta {::hinta/id -2
                     ::hinta/otsikko ""
                     ::hinta/summa 0
-                    ::hinta/ryhma :muu}]
+                    ::hinta/ryhma :muu
+                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
     (is (= (e! (tiedot/->LisaaMuuKulurivi)
                {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
@@ -1166,8 +1187,9 @@
         uusi-hinta {::hinta/id -1
                     ::hinta/otsikko ""
                     ::hinta/summa nil
-                    ::hinta/ryhma :tyo}]
-    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+                    ::hinta/ryhma :tyo
+                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuTyorivi)
                {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
 
@@ -1177,8 +1199,9 @@
         uusi-hinta {::hinta/id -2
                     ::hinta/otsikko ""
                     ::hinta/summa nil
-                    ::hinta/ryhma :tyo}]
-    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+                    ::hinta/ryhma :tyo
+                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuTyorivi)
                {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
 
