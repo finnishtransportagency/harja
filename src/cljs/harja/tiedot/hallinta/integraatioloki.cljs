@@ -43,16 +43,31 @@
 (defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom nil))
 (defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
+(defonce nayta-uusimmat-tilassa? (atom true))
 
-(defonce haetut-tapahtumat
-  (reaction<! [valittu-jarjestelma @valittu-jarjestelma
-               valittu-integraatio @valittu-integraatio
-               valittu-aikavali @valittu-aikavali
-               nakymassa? @nakymassa?
-               hakuehdot @hakuehdot]
-              {:odota 2000}
-              (when nakymassa?
-                (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))))
+(defn eilen-tanaan-aikavali []
+  [(pvm/aikana (time/yesterday) 0 0 0 0)
+   (pvm/aikana (time/today) 23 59 59 999)])
+
+
+(def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
+
+(defn hae-tapahtumat! []
+  (let  [valittu-jarjestelma @valittu-jarjestelma
+         valittu-integraatio @valittu-integraatio
+         valittu-aikavali (if @nayta-uusimmat-tilassa?
+                            (eilen-tanaan-aikavali)
+                            @valittu-aikavali)
+         nakymassa? @nakymassa?
+         hakuehdot (assoc @hakuehdot
+                          :max-tulokset (if @nayta-uusimmat-tilassa?
+                                          50
+                                          200))]
+    (when nakymassa?
+      (reset! haetut-tapahtumat nil)
+      (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
+            (reset! haetut-tapahtumat tapahtumat)
+            tapahtumat)))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
@@ -69,15 +84,13 @@
                                     maarat)
                             maarat))))))
 
-
-
 (defn nayta-tapahtumat-eilisen-jalkeen []
-  (let [eilen (pvm/aikana (time/yesterday) 0 0 0 0)
-        tanaan (pvm/aikana (time/today) 23 59 59 999)]
-    (reset! valittu-aikavali [eilen tanaan])))
+  (reset! nayta-uusimmat-tilassa? false)
+  (reset! haetut-tapahtumat [])
+  (reset! valittu-aikavali (eilen-tanaan-aikavali)))
 
-(defn nayta-uusimmat-tapahtumat []
-  (reset! valittu-aikavali nil))
-
-(defn paivita-tapahtumat! []
-  (paivita! haetut-tapahtumat))
+(defn nayta-uusimmat-tapahtumat! []
+  (reset! valittu-aikavali nil)
+  (reset! nayta-uusimmat-tilassa? true)
+  (reset! hakuehdot {:tapahtumien-tila :kaikki})
+  (hae-tapahtumat!))

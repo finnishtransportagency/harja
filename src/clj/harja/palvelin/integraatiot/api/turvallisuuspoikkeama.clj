@@ -55,7 +55,10 @@
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
                 tapahtumapaivamaara otsikko kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
                 toteuttaja tilaaja turvallisuuskoordinaattori laatija paikan_kuvaus
-                vaarallisten_aineiden_kuljetus vaarallisten_aineiden_vuoto]} data
+                vaarallisten_aineiden_kuljetus vaarallisten_aineiden_vuoto
+                juurisyy1 juurisyy1-selite
+                juurisyy2 juurisyy2-selite
+                juurisyy3 juurisyy3-selite]} data
         {:keys [tyontekijanammatti ammatinselite vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -108,7 +111,13 @@
                         :laatija (:id kirjaaja)
                         :ulkoinen_id (:id tunniste)
                         :ilmoitukset_lahetetty nil
-                        :lahde "harja-api"}))]
+                        :lahde "harja-api"
+                        :juurisyy1 juurisyy1
+                        :juurisyy1-selite juurisyy1-selite
+                        :juurisyy2 juurisyy2
+                        :juurisyy2-selite juurisyy2-selite
+                        :juurisyy3 juurisyy3
+                        :juurisyy3-selite juurisyy3-selite}))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       tp-id)))
 
@@ -116,7 +125,10 @@
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
                 tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste
                 otsikko paikan_kuvaus vaarallisten_aineiden_kuljetus vaarallisten_aineiden_vuoto
-                toteuttaja tilaaja turvallisuuskoordinaattori]} data
+                toteuttaja tilaaja turvallisuuskoordinaattori
+                juurisyy1 juurisyy1-selite
+                juurisyy2 juurisyy2-selite
+                juurisyy3 juurisyy3-selite]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -168,7 +180,13 @@
        :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
        :laatija (:id kirjaaja)
        :ulkoinen_id (:id tunniste)
-       :luoja (:id kirjaaja)})
+       :luoja (:id kirjaaja)
+       :juurisyy1 juurisyy1
+       :juurisyy1-selite juurisyy1-selite
+       :juurisyy2 juurisyy2
+       :juurisyy2-selite juurisyy2-selite
+       :juurisyy3 juurisyy3
+       :juurisyy3-selite juurisyy3-selite})
     (turvallisuuspoikkeamat/hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
       db {:ulkoinen_id (:id tunniste)
           :luoja (:id kirjaaja)})))
@@ -217,11 +235,21 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"}]})))
 
+(defn juurisyy-parametreilla [{:keys [juurisyy1 juurisyy2 juurisyy3] :as data}]
+  (merge data
+         {:juurisyy1 (get juurisyy1 :juurisyy)
+          :juurisyy1-selite (get juurisyy1 :selite)
+          :juurisyy2 (get juurisyy2 :juurisyy)
+          :juurisyy2-selite (get juurisyy2 :selite)
+          :juurisyy3 (get juurisyy3 :juurisyy)
+          :juurisyy3-selite (get juurisyy3 :selite)}))
+
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
   (jdbc/with-db-transaction [db db]
     (vaadi-turvallisuuspoikkeama-ei-tulevaisuudessa data)
-    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
+    (let [data (juurisyy-parametreilla data)
+          tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)
           liitteet (:liitteet data)]

@@ -1,45 +1,86 @@
--- Toimenpiteen hinnoittelu V3 vaatimat muutokset.
+-- Lisää toimenpidekoodit jääpeitten aikana tehtäville töille
 
--- Lisää ryhmä. Tämä on tarkoitettu pääasiassa frontille, jotta hinnat voidaan näyttää oikeiden otsikoiden alla
--- Frontin tulee jatkossa vv_hintaa lähetettäessään kertoa ryhmä
-CREATE TYPE vv_hinta_ryhma AS ENUM ('tyo', 'komponentti', 'muu');
-ALTER TABLE vv_hinta ADD COLUMN ryhma vv_hinta_ryhma; -- Voi olla null esim. jos kyseessä Ryhmähinta.
+SELECT luo_vv_tpk('VV111-44', 'Viittatyöt: Lähtöhinta viitoissa', 'kerta');
+SELECT luo_vv_tpk('VV111-45', 'Viittatyöt: Siirtoajo', 'maili');
 
--- VV-hinta tauluun voidaan syöttää jatkossa JOKO euromääräinen hinta TAI yksikkö, yksikköhinta ja määrä
-ALTER TABLE vv_hinta RENAME COLUMN maara TO summa;
-ALTER TABLE vv_hinta ALTER COLUMN summa DROP NOT NULL; -- Ks. constraint alta
-ALTER TABLE vv_hinta ADD COLUMN maara NUMERIC(6, 2);
-ALTER TABLE vv_hinta ADD COLUMN yksikko VARCHAR(64);
-ALTER TABLE vv_hinta ADD COLUMN yksikkohinta NUMERIC(6, 2);
+SELECT luo_vv_tpk('VV111-46', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Jääpoiju – poijun vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-47', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Jääpoiju – poijun asennus', 'kpl');
+SELECT luo_vv_tpk('VV111-48', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Jääpoiju – poijun siirto', 'kpl');
+SELECT luo_vv_tpk('VV111-49', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Jääpoiju – poiju kettingin vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-50', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Jääpoiju – painon vaihto (sisältää kettingin vaihdon)', 'kpl');
 
-ALTER TABLE vv_hinta
-  ADD CONSTRAINT validi_hinta CHECK (
-  -- Annetaan joko yksittäinen rahasumma TAI yksikkö, yksikköhinta ja määrä
-  (summa IS NOT NULL OR (maara IS NOT NULL
-                         AND yksikko IS NOT NULL
-                         AND yksikkohinta IS NOT NULL))
-  AND
-  -- Joka tapauksessa on pakko antaa summa tai määrä, ei molempia
-  ((summa IS NOT NULL AND maara IS NULL) OR (maara IS NOT NULL AND summa IS NULL)));
+SELECT luo_vv_tpk('VV111-51', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Esijännitetty – poijuviitan vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-52', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Esijännitetty – poijuviitan asennus', 'kpl');
+SELECT luo_vv_tpk('VV111-53', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Esijännitetty – poijuviitan siirto', 'kpl');
+SELECT luo_vv_tpk('VV111-54', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Esijännitetty – poijuviitan kettingin vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-55', 'Raskaat poijutyöt, jääpeite (ei sis. mat): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)', 'kpl');
 
--- Otsikkoa ei tarvi jos kyseessä komponentin hinta joka linkittyy komponenttiin.
-ALTER TABLE vv_hinta ALTER COLUMN otsikko DROP NOT NULL;
+SELECT luo_vv_tpk('VV111-56', 'Suurviittatyöt 355 - 500 mm, jääpeite (ei sis. mat.): Esijännitetty – suurviitan vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-57', 'Suurviittatyöt 355 - 500 mm, jääpeite (ei sis. mat.): Esijännitetty – suurviitan asennus', 'kpl');
+SELECT luo_vv_tpk('VV111-58', 'Suurviittatyöt 355 - 500 mm, jääpeite (ei sis. mat.): Esijännitetty – suurviitan siirto', 'kpl');
+SELECT luo_vv_tpk('VV111-59', 'Suurviittatyöt 355 - 500 mm, jääpeite (ei sis. mat.): Esijännitetty – suurviitan kettingin vaihto', 'kpl');
+SELECT luo_vv_tpk('VV111-60', 'Suurviittatyöt 355 - 500 mm, jääpeite (ei sis. mat.): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)', 'kpl');
 
--- Lisää olemassa olevat hinnat ryhmiin, mutta vain jos kyseessä toimenpiteen oma hinnoittelu.
-UPDATE vv_hinta
-SET ryhma = 'muu'
-WHERE "hinnoittelu-id" IN (SELECT id
-                           FROM vv_hinnoittelu
-                           WHERE hintaryhma IS NOT TRUE)
-      AND otsikko != 'Päivän hinta' AND otsikko != 'Omakustannushinta';
+-- Päivitetään vanhoihin toimenpiteisiin merkintä avovesikaudesta
 
--- Päivän hinta ja Omakustannushinta oli aiemmit työt-ryhmän alla. Jos näitä on annettu,
--- migratoidaan ne työ-ryhmän alle
-UPDATE vv_hinta
-SET ryhma = 'tyo'
-WHERE "hinnoittelu-id" IN (SELECT id
-                           FROM vv_hinnoittelu
-                           WHERE hintaryhma IS NOT TRUE)
-      AND otsikko = 'Päivän hinta' OR otsikko = 'Omakustannushinta';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Jääpoiju – poijun vaihto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Jääpoiju – poijun vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Jääpoiju – poijun asennus'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Jääpoiju – poijun asennus';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Jääpoiju – poijun siirto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Jääpoiju – poijun siirto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Jääpoiju – poiju kettingin vaihto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Jääpoiju – poiju kettingin vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Jääpoiju – painon vaihto (sisältää kettingin vaihdon)'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Jääpoiju – painon vaihto (sisältää kettingin vaihdon)';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Esijännitetty – poijuviitan vaihto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Esijännitetty – poijuviitan vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Esijännitetty – poijuviitan asennus'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Esijännitetty – poijuviitan asennus';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Esijännitetty – poijuviitan siirto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Esijännitetty – poijuviitan siirto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Esijännitetty – poijuviitan kettingin vaihto'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Esijännitetty – poijuviitan kettingin vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Raskaat poijutyöt, avovesikausi (ei sis. mat): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)'
+WHERE nimi = 'Raskaat poijutyöt (ei sis. mat): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)';
 
--- TODO Tietomallimuutos: vv_hinta linkkaus reimari-toimenpiteessä tehtyyn komponentin toimenpiteeseen
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Suurviittatyöt 355 - 500 mm, avovesikausi (ei sis. mat.): Esijännitetty – suurviitan vaihto'
+WHERE nimi = 'Suurviittatyöt 355 - 500 mm (ei sis. mat.): Esijännitetty – suurviitan vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Suurviittatyöt 355 - 500 mm, avovesikausi (ei sis. mat.): Esijännitetty – suurviitan asennus'
+WHERE nimi = 'Suurviittatyöt 355 - 500 mm (ei sis. mat.): Esijännitetty – suurviitan asennus';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Suurviittatyöt 355 - 500 mm, avovesikausi (ei sis. mat.): Esijännitetty – suurviitan siirto'
+WHERE nimi = 'Suurviittatyöt 355 - 500 mm (ei sis. mat.): Esijännitetty – suurviitan siirto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Suurviittatyöt 355 - 500 mm, avovesikausi (ei sis. mat.): Esijännitetty – suurviitan kettingin vaihto'
+WHERE nimi = 'Suurviittatyöt 355 - 500 mm (ei sis. mat.): Esijännitetty – suurviitan kettingin vaihto';
+UPDATE toimenpidekoodi SET
+  muokattu = NOW(),
+  nimi = 'Suurviittatyöt 355 - 500 mm, avovesikausi (ei sis. mat.): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)'
+WHERE nimi = 'Suurviittatyöt 355 - 500 mm (ei sis. mat.): Esijännitetty – painon vaihto (sisältää kettingin vaihdon)';

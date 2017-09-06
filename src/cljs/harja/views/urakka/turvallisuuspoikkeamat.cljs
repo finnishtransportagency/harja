@@ -195,6 +195,31 @@
        (empty? toimenpiteet-virheet)
        (lomake/voi-tallentaa-ja-muokattu? tp)))
 
+(defn- juurisyy-ryhma [turvallisuuspoikkeama]
+  (apply lomake/ryhma
+         {:otsikko "Juurisyyt"}
+         {:nimi :juurisyy-vihje
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [yleiset/vihje
+                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman."])}
+         (remove
+          nil?
+          (mapcat
+           (fn [n]
+             (let [avain (keyword (str "juurisyy" n))
+                   selite-avain (keyword (str "juurisyy" n "-selite"))]
+               [{:tyyppi :valinta
+                 :uusi-rivi? true
+                 :otsikko (str n ". juurisyy")
+                 :valinnat (into [nil] turpodomain/juurisyyt)
+                 :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
+                 :nimi avain}
+                (when (get turvallisuuspoikkeama avain)
+                  {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                   :pituus-max 200})]))
+           (range 1 4)))))
+
 (defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
         toimenpiteet-virheet (atom nil)
@@ -435,11 +460,14 @@
                             :kokonaisluku? true})
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
+
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
                                                                                (pvm/pvm-aika-opt %)
                                                                                "Ei")
                           :tyyppi :pvm-aika
-                          :muokattava? (constantly false)})]
+                          :muokattava? (constantly false)})
+
+           (juurisyy-ryhma @turvallisuuspoikkeama)]
           @turvallisuuspoikkeama]]))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
