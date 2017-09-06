@@ -23,7 +23,8 @@
                            :sopimus-id nil
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
-                           :vayla nil
+                           :vayla-id nil
+                           :turvalaite-id nil
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
@@ -127,7 +128,7 @@
                                                      :sopimus-id 777
                                                      :aikavali [(t/now) (t/now)]
                                                      :vaylatyyppi :muu
-                                                     :vayla 1
+                                                     :vayla-id 1
                                                      :tyolaji :poijut
                                                      :tyoluokka :asennus-ja-huolto
                                                      :toimenpide :autot-traktorit})
@@ -144,8 +145,8 @@
         (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
         (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-        (is (nil? (get-in vanha-tila [:valinnat :vayla])))
-        (is (= (get-in uusi-tila [:valinnat :vayla]) 1))
+        (is (nil? (get-in vanha-tila [:valinnat :vayla-id])))
+        (is (= (get-in uusi-tila [:valinnat :vayla-id]) 1))
 
         (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
         (is (= (get-in uusi-tila [:valinnat :tyolaji]) :poijut))
@@ -1223,4 +1224,3 @@
            {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
                                                  {::hinta/id 2}
                                                  {::hinta/id -2}]}}))))
-

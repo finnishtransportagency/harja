@@ -254,6 +254,20 @@
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0) "Ei toimenpiteitä tällä väylätyypillä"))))
 
+(deftest toimenpiteiden-haku-toimii-turvalaiteifiltterilla
+  (testing "Virheellinen turvalaitefiltteri ei löydä mitään"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::toi/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/vaylatyyppi :kauppamerenkulku
+                         ::toi/turvalaite-id -1}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+      (is (= (count vastaus) 0)))))
+
 (deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
   (testing ":vikailmoitukset? true, vain vikailmoitukselliset palautuu"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
