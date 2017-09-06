@@ -86,36 +86,13 @@ FROM integraatiotapahtuma it
 WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:integraatio :: VARCHAR IS NULL OR i.nimi = :integraatio) AND
       (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
-      alkanut >= :alkaen AND
-      alkanut <= :paattyen AND
+      ((:alkaen :: TIMESTAMP IS NULL AND alkanut >= current_date) OR alkanut >= :alkaen) AND
+      (:paattyen :: TIMESTAMP IS NULL OR alkanut <= :paattyen) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
       (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
       (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
-ORDER BY it.id DESC, it.alkanut DESC;
+ORDER BY it.id DESC, it.alkanut DESC LIMIT :limit;
 
--- name: hae-uusimmat-integraatiotapahtumat
--- Hakee uusimmat integraatiotapahtumat
-SELECT DISTINCT ON (it.id)
-  it.id,
-  it.ulkoinenid,
-  it.lisatietoja,
-  it.alkanut,
-  it.paattynyt,
-  it.onnistunut,
-  i.id          AS integraatio_id,
-  i.jarjestelma AS integraatio_jarjestelma,
-  i.nimi        AS integraatio_nimi
-FROM integraatiotapahtuma it
-  JOIN integraatio i ON it.integraatio = i.id
-  LEFT JOIN integraatioviesti iv ON it.id = iv.integraatiotapahtuma
-WHERE (:jarjestelma :: VARCHAR IS NULL OR jarjestelma = :jarjestelma) AND
-      (:integraatio :: VARCHAR IS NULL OR nimi = :integraatio) AND
-      (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
-      (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
-      (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
-      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
-ORDER BY it.id DESC, it.alkanut DESC
-LIMIT 50;
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
