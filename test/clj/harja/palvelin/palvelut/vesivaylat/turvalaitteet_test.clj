@@ -42,8 +42,8 @@
           tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-turvalaitteet-kartalle +kayttaja-jvh+
                                 params)]
-      (is (s/valid? ::tu/hae-turvalaitteet-kysely params))
-      (is (s/valid? ::tu/hae-turvalaitteet-vastaus tulos))
+      (is (s/valid? ::tu/hae-turvalaitteet-kartalle-kysely params))
+      (is (s/valid? ::tu/hae-turvalaitteet-kartalle-vastaus tulos))
 
       (is (= 1 (count tulos)))
       (is (true? (contains? (first tulos) ::tu/sijainti)))
@@ -54,8 +54,8 @@
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-turvalaitteet-kartalle +kayttaja-jvh+
                               params)]
-    (is (s/valid? ::tu/hae-turvalaitteet-kysely params))
-    (is (s/valid? ::tu/hae-turvalaitteet-vastaus tulos))
+    (is (s/valid? ::tu/hae-turvalaitteet-kartalle-kysely params))
+    (is (s/valid? ::tu/hae-turvalaitteet-kartalle-vastaus tulos))
 
     (is (= 4 (count tulos)))
     (is (every? #(contains? % ::tu/sijainti) tulos))
@@ -66,7 +66,7 @@
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-turvalaitteet-kartalle +kayttaja-jvh+
                               params)]
-    (is (s/valid? ::tu/hae-turvalaitteet-kysely params))
-    (is (s/valid? ::tu/hae-turvalaitteet-vastaus tulos))
+    (is (s/valid? ::tu/hae-turvalaitteet-kartalle-kysely params))
+    (is (s/valid? ::tu/hae-turvalaitteet-kartalle-vastaus tulos))
 
     (is (= 0 (count tulos)))))
