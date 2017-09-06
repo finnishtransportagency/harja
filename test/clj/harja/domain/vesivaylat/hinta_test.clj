@@ -50,16 +50,20 @@
          {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))
 
 (deftest hintajoukon-paivitus
-  (is (= (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
+  (is (= (#'harja.domain.vesivaylat.hinta/paivita-hintajoukon-hinnan-tiedot-idlla
            [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
             {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
             {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]
-           {::hinta/id 2 ::hinta/otsikko "C" ::hinta/summa 100})
-         {::hinta/id 2 ::hinta/summa 100 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}))
+           {::hinta/id 2 ::hinta/otsikko "A" ::hinta/summa 100})
+         [{::hinta/id 2 ::hinta/summa 100 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+          {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+          {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]))
 
-  (is (= (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
+  (is (= (#'harja.domain.vesivaylat.hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla
            [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
             {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
             {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]
-           {::hinta/id 2 ::hinta/otsikko "C" ::hinta/summa 100})
-         {::hinta/id 3 ::hinta/summa 100 ::hinta/otsikko "C"})))
+           {::hinta/id 3 ::hinta/otsikko "C" ::hinta/summa 100})
+         [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+          {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+          {::hinta/id 3 ::hinta/summa 100 ::hinta/otsikko "C"}])))
