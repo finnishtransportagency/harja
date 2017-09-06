@@ -19,7 +19,7 @@
   (is (= (hinta/hintojen-summa-ilman-yklisaa [{::hinta/summa 1} {::hinta/summa 2} {::hinta/summa 3}])
          6))
   (is (= (hinta/yklisien-osuus [{::hinta/summa 1}
-                                            {::hinta/summa 100 ::hinta/yleiskustannuslisa 10}])
+                                {::hinta/summa 100 ::hinta/yleiskustannuslisa 10}])
          10))
   (is (= (hinta/kokonaishinta-yleiskustannuslisineen [{::hinta/summa 1}
                                                       {::hinta/summa 100 ::hinta/yleiskustannuslisa 10}])
@@ -27,27 +27,27 @@
 
 (deftest hinnan-ominaisuus
   (is (= (hinta/hinnan-ominaisuus-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
-                                   {::hinta/summa 2 ::hinta/otsikko "B"}
-                                   {::hinta/summa 3 ::hinta/otsikko "C"}]
+                                             {::hinta/summa 2 ::hinta/otsikko "B"}
+                                             {::hinta/summa 3 ::hinta/otsikko "C"}]
                                             "B" ::hinta/summa)
          2))
   (is (= (hinta/hinnan-summa-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A"}
-                              {::hinta/summa 2 ::hinta/otsikko "B"}
-                              {::hinta/summa 3 ::hinta/otsikko "C"}]
+                                        {::hinta/summa 2 ::hinta/otsikko "B"}
+                                        {::hinta/summa 3 ::hinta/otsikko "C"}]
                                        "C")
          3))
 
-  (is (= (hinta/hinta-otsikolla "A"
-                                [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+  (is (= (hinta/hinta-otsikolla [{::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
                                  {::hinta/summa 2 ::hinta/otsikko "B"}
-                                 {::hinta/summa 3 ::hinta/otsikko "C"}])
+                                 {::hinta/summa 3 ::hinta/otsikko "C"}]
+                                "A")
          {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}))
 
-  (is (= (hinta/hinta-idlla 2
-                                [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
-                                 {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
-                                 {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}])
-         {::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))
+  (is (= (hinta/hinta-idlla [{::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666}
+                             {::hinta/id 1 ::hinta/summa 2 ::hinta/otsikko "B"}
+                             {::hinta/id 3 ::hinta/summa 3 ::hinta/otsikko "C"}]
+                            2)
+         {::hinta/id 2 ::hinta/summa 1 ::hinta/otsikko "A" ::hinta/yleiskustannuslisa 666})))
 
 (deftest hintajoukon-paivitus
   (is (= (#'harja.domain.vesivaylat.hinta/paivita-hintajoukon-hinnan-tiedot-idlla
