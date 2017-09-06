@@ -184,11 +184,10 @@
     hinta))
 
 (defn- tyokentta
-  "Generoi työkentän annetulla id:llä ja otsikolla. Ottaa annetun työn tiedot (toimenpidekoodi-id & määrä)
-  käyttöön jos tiedot löytyvät."
-  [id tyo]
-  {::tyo/id id
-   ::tyo/maara (or (::tyo/maara tyo) 0)})
+  [tyo]
+  (merge
+    {::tyo/maara 0}
+    tyo))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -582,7 +581,7 @@
     (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           tyo-idt (map ::tyo/id tyot)
           seuraava-vapaa-id (dec (apply min (conj tyo-idt 0)))
-          paivitetyt-tyot (conj tyot (tyokentta seuraava-vapaa-id nil))]
+          paivitetyt-tyot (conj tyot (tyokentta {::tyo/id seuraava-vapaa-id}))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
   LisaaMuuKulurivi
