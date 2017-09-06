@@ -16,7 +16,7 @@ true, true, 'Torni kaatui');
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
  sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste, vahingoittuneet_ruumiinosat, vammat, aiheutuneet_seuraukset, sairauspoissaolo_jatkuu, turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi,
- tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto)
+ tapahtuman_otsikko, paikan_kuvaus, vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto, juurisyy1, juurisyy1_selite)
 VALUES
   ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-01 20:00.00', 'avoin'::turvallisuuspoikkeama_tila,
                                                                     'porari'::tyontekijanammatti, 'Ernolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
@@ -30,7 +30,9 @@ VALUES
    'Torni kaatui Ernon päälle',
    'Outo paikka',
    true,
-   true);
+   true,
+   'puutteelliset_henkilonsuojaimet'::turvallisuuspoikkeama_juurisyy,
+   'Ei ollut turvaliivit päällä');
 
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
