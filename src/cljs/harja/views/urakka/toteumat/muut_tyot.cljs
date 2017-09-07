@@ -452,13 +452,15 @@
              :rivi-klikattu #(reset! muut-tyot/valittu-toteuma %)
              :rivin-luokka #(aseta-rivin-luokka %)
              :tunniste #(get-in % [:toteuma :id])}
-            [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "10%"}
+            [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkanut :leveys "5%"}
              {:otsikko "Tyyppi" :nimi :tyyppi :fmt muun-tyon-tyypin-teksti :leveys "15%"}
              {:otsikko "Tehtävä" :tyyppi :string :nimi :tehtavan_nimi
-              :hae #(get-in % [:tehtava :nimi]) :leveys "25%"}
+              :hae #(get-in % [:tehtava :nimi]) :leveys "20%"}
+             {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :muokattava? (constantly false)
+              :leveys "20%"}
              {:otsikko "Määrä" :pakollinen? true :tyyppi :string :nimi :maara
               :hae #(if (get-in % [:tehtava :maara]) (get-in % [:tehtava :maara]) "-")
-              :leveys "10%" :tasaa :oikea}
+              :leveys "5%" :tasaa :oikea}
              {:otsikko "Yksikkö"
               :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
              {:otsikko "Muutos\u00ADhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero
