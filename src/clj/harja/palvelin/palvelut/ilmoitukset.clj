@@ -140,8 +140,8 @@
          selite-annettu? (boolean (and selite (first selite)))
          selite (if selite-annettu? (name (first selite)) "")
          tilat (into #{} tilat)
-         vain-myohassa? (:myohassa vaikutukset)
-         vain-toimenpiteita-aiheuttaneet? (:aiheutti-toimenpiteita vaikutukset)
+         vain-myohassa? (contains vaikutukset :myohassa)
+         vain-toimenpiteita-aiheuttaneet? (contains vaikutukset :aiheutti-toimenpiteita )
          debug-viesti (str "Haetaan ilmoituksia: "
                            (viesti urakat "urakoista" "ilman urakoita")
                            (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
