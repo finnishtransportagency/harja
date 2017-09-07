@@ -279,7 +279,11 @@
          :komponentti (partial kuittauslista e! pikakuittaus)
          :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 6
+         :hae #(let [selite (tilan-selite (:tila %))]
+                 (if (:aiheutti-toimenpiteita %)
+                   (str selite " (Toimenpitein)")
+                   selite))}]
        (mapv #(if (:yhteydenottopyynto %)
                 (assoc % :lihavoi true)
                 %)

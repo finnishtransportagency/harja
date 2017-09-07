@@ -165,6 +165,7 @@ SELECT
   i.lahettaja_sahkoposti,
 
   i.tunniste,
+  i."aiheutti-toimenpiteita",
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
