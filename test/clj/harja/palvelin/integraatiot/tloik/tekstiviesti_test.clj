@@ -51,6 +51,9 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+(defn ilmoitus-aiheutti-toimenpiteita? [id]
+  (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE id = " id ";"))))
+
 (deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
   (tuo-ilmoitus)
   (let [integraatioloki (:integraatioloki jarjestelma)
@@ -87,7 +90,12 @@
             data (xml/lue xml)]
         (is (= "123456789" (z/xml1-> data :ilmoitusId z/text)) "Kuittaus on tehty oikeaan viestiin.")
         (is (= "vastaanotto" (z/xml1-> data :tyyppi z/text)) "Kuittaus on tehty oikeaan viestiin.")
-        (is (= "Asia selvä." (z/xml1-> data :vapaateksti z/text)) "Kuittaus on tehty oikeaan viestiin.")))
+        (is (= "Asia selvä." (z/xml1-> data :vapaateksti z/text)) "Kuittaus on tehty oikeaan viestiin."))
+
+      (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
+             (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "T1 Lopetettu toimenpitein."))
+          "Lopetus toimenpitein onnistunut")
+      (is (ilmoitus-aiheutti-toimenpiteita? (:id ilmoitus)) "Ilmoitus on merkitty aiheuttaneeksi toimenpiteitä"))
 
     (poista-paivystajatekstiviestit)
     (poista-ilmoitus)))
