@@ -3,6 +3,7 @@
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.maksuerat :as maksuerat-q]
 
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
@@ -386,6 +387,11 @@
                                                kaikki-tuotteittain))
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
+
+        maksueratiedot (when (= :urakka konteksti)
+                         (group-by :tyyppi (maksuerat-q/hae-urakan-maksueratiedot db {:urakka_id urakka-id})))
+        _ (println " maksueratiedot" maksueratiedot)
+
 
         ;; Varoitustekstit raportille
         varoitus-indeksilaskennan-perusluku-puuttuu (varoitus-indeksilaskennan-perusluku-puuttuu urakat-joissa-indeksilaskennan-perusluku-puuttuu)
