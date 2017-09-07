@@ -69,15 +69,13 @@
 (defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id hallintayksikko-id alkupvm loppupvm]
   (let [{:keys [toimenpiteita-aiheuttaneet
                 ei-toimenpiteita-aiheuttaneet
-                yhteensa] :as data} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
+                yhteensa]} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
                                             db
                                             urakka-id
                                             hallintayksikko-id
                                             alkupvm
                                             loppupvm))
         rivit [[toimenpiteita-aiheuttaneet ei-toimenpiteita-aiheuttaneet yhteensa]]]
-    (println "--->>> data" data)
-    (println "--->>> rivit" rivit)
     [:taulukko {:otsikko "Ilmoitukset aiheutuneiden toimenpiteiden mukaan"}
      [{:leveys 2 :otsikko "Aiheutti toimenpiteita"}
       {:leveys 2 :otsikko "Ei aiheuttanut toimenpiteitä"}
