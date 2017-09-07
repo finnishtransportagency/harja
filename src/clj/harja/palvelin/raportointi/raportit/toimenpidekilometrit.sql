@@ -12,8 +12,9 @@ FROM toteuma t
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
                              AND tt.poistettu IS NOT TRUE
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  JOIN reittipiste rp ON t.id = rp.toteuma
-  JOIN reitti_tehtava rt ON rp.id = rt.reittipiste
+  JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+  LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON TRUE
+  LEFT JOIN LATERAL unnest(rp.tehtavat) AS rt ON TRUE
 WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR t.urakka IN (SELECT id
                                                               FROM urakka

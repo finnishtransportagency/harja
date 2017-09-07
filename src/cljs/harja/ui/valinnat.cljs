@@ -164,7 +164,7 @@
                           :valitse-fn valitse-yksikkohintainen-tehtava-fn}
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
-(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali] :as optiot}]
+(defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot] :as optiot}]
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])
@@ -174,7 +174,7 @@
      [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
-   (when-let [{:keys [valittu-aikavali-atom]} aikavali]
+   (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
      [aikavali valittu-aikavali-atom])])
 
 (defn vuosi
@@ -332,3 +332,14 @@
     ryhma2]
    [:div.valintaryhma.col-sm-12.col-md-4
     ryhma3]])
+
+(defn valintaryhmat-4 [& [ryhma1 ryhma2 ryhma3 ryhma4]]
+  [:div.row
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma1]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma2]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma3]
+   [:div.valintaryhma.col-sm-12.col-md-3
+    ryhma4]])

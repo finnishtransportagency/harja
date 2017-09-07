@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+ALTER TABLE ilmoitus
+  ADD COLUMN "aiheutti-toimenpiteita" BOOLEAN;
+=======
 -- Vesiväylien indeksit
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
@@ -15,3 +19,4 @@ UPDATE urakka
 -- tiedostossa R__Indeksilaskenta.sql ja pudotetaan vanha tässä migraatiossa
 DROP FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER, indeksinimi VARCHAR);
 DROP FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER);
+>>>>>>> develop
