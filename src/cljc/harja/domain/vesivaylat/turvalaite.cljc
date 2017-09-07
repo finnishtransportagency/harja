@@ -31,8 +31,14 @@
     ::kiintea
     ::vaylat})
 
-(s/def ::hae-turvalaitteet-kysely
+(s/def ::hae-turvalaitteet-kartalle-kysely
   (s/keys :req []))
 
-(s/def ::hae-turvalaitteet-vastaus
+(s/def ::hae-turvalaitteet-kartalle-vastaus
+  (s/nilable (s/coll-of ::turvalaite)))
+
+(s/def ::hae-turvalaitteet-tekstilla-kysely
+  (s/keys :req []))
+
+(s/def ::hae-turvalaitteet-tekstilla-vastaus
   (s/nilable (s/coll-of ::turvalaite)))

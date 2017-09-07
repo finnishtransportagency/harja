@@ -1,6 +1,6 @@
 #!/bin/sh
 
-### HUOM: tämä ajetaan postgres docker kontin sisällä ###
+### HUOM: tämä ajetaan harjadb-kontin sisällä ###
 
 set -e
 

@@ -61,7 +61,7 @@
                  (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
                        (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
-(defn kasaa-tallennettava-turpo
+(defn tallennettava-turvallisuuspoikkeama
   [tp]
   {:tp (-> tp
            (dissoc :liitteet :kommentit :korjaavattoimenpiteet :uusi-kommentti)
@@ -80,7 +80,7 @@
 
 (defn tallenna-turvallisuuspoikkeama
   [tp]
-  (k/post! :tallenna-turvallisuuspoikkeama (kasaa-tallennettava-turpo tp)))
+  (k/post! :tallenna-turvallisuuspoikkeama (tallennettava-turvallisuuspoikkeama tp)))
 
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]

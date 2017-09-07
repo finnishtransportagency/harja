@@ -67,6 +67,7 @@ BEGIN
   INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
       SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
         FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
+       WHERE t.poistettu IS NOT TRUE and tm.poistettu IS NOT TRUE
 	GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
 END;
 $$ LANGUAGE plpgsql;

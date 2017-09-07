@@ -29,7 +29,8 @@
         (map #(konv/string->keyword % :tila))
         (map #(konv/string->keyword % :vaylamuoto))
         (map #(konv/string->keyword % :tyontekijanammatti))
-        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
+        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))
+        (map #(konv/string->keyword % :juurisyy1 :juurisyy2 :juurisyy3))))
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
