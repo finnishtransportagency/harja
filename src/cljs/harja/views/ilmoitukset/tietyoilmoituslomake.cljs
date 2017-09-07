@@ -36,10 +36,6 @@
                    :muokattava false
                    :tyyppi :tyhja})
 
-(defn dp [val msg]
-  (log msg (with-out-str (cljs.pprint/pprint val)))
-  val)
-
 (defn tienpinnat-komponentti-grid [e! avain tienpinnat-tiedot]
   (let [tp-valinnat [["paallystetty" "Päällystetty"]
                      ["jyrsitty" "Jyrsitty"]
