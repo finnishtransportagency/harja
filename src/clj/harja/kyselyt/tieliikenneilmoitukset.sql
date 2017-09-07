@@ -499,6 +499,24 @@ FROM asiakaspalauteluokka apl
        (:loppupvm :: DATE IS NULL OR i.ilmoitettu <= :loppupvm)
 GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 
+-- name: hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
+SELECT
+  count(*)
+    FILTER (WHERE "aiheutti-toimenpiteita" IS TRUE)     AS "toimenpiteita-aiheuttaneet",
+  count(*)
+    FILTER (WHERE "aiheutti-toimenpiteita" IS NOT TRUE) AS "ei-toimenpiteita-aiheuttaneet",
+  count(*)                                              AS "yhteensa"
+FROM
+  ilmoitus
+WHERE
+  (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
+  (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
+                                                          FROM urakka
+                                                          WHERE hallintayksikko = :hallintayksikko_id)) AND
+  (:alkupvm :: DATE IS NULL OR ilmoitettu >= :alkupvm) AND
+  (:loppupvm :: DATE IS NULL OR ilmoitettu <= :loppupvm);
+
+
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
 SELECT id
 FROM ilmoitustoimenpide
