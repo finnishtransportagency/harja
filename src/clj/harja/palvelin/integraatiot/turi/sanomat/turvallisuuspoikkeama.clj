@@ -186,7 +186,8 @@
    [:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
    [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
    [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]
-   (juurisyyt data)])
+   ;; TODO: palauta juurisyiden lähettäminen, kun TURI on päivitetty
+   #_(juurisyyt data)])
 
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely
