@@ -65,7 +65,7 @@
 
     (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id)
 
-    (is (= "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
+    (is (= "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db "0834" "TESTI"))
         "Tuntematon käyttäjä käsitellään oikein")
     (is (= "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
