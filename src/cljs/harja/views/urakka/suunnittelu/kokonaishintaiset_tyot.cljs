@@ -143,10 +143,21 @@
   (let [summa (reduce big/plus (big/->big 0)
                       (keep (comp big/->big :summa) tyorivit))]
     (with-meta
-      (mapv (fn [{s :summa :as rivi}]
-              (assoc rivi :prosentti (big/mul (big/->big 100)
-                                              (or (:osuus-hoitokauden-summasta rivi)
-                                                  (big/->big 0)))))
+      (mapv (fn [{s :summa osuus :osuus-hoitokauden-summasta :as rivi}]
+              (assoc rivi :prosentti
+                     (cond
+
+                       ;; Osuus tiedossa, muunnetaan se prosenteiksi
+                       osuus
+                       (big/mul (big/->big 100)
+                                (or (:osuus-hoitokauden-summasta rivi)
+                                    (big/->big 0)))
+
+                       ;; Summat tiedossa, lasketaan prosenttimäärä
+                       (and s (big/gt summa (big/->big 0)))
+                       (big/mul (big/->big 100) (big/div (big/->big s) summa))
+
+                       :default nil)))
             tyorivit)
       {:vuosisumma summa})))
 
