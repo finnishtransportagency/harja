@@ -403,9 +403,14 @@
               ;; sarakkeet
               [(when @prosenttijako?
                  {:otsikko "%" :nimi :prosentti
-                  :tyyppi :big :desimaalien-maara 4
+                  :tyyppi :big
+                  :desimaalien-maara 4
+                  :validoi [#(when-not (and %
+                                            (big/gte % (big/->big 0))
+                                            (big/lte % (big/->big 100)))
+                               "Anna prosentti välillä 0 - 100")]
                   :fmt #(when % (big/fmt % 4))
-                  :leveys 10})
+                  :leveys 12})
 
                {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
                {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
