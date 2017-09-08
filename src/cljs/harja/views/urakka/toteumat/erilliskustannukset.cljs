@@ -123,6 +123,9 @@
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
   []
+  (when (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+    (u/valitse-toimenpideinstanssi-kaikille! {:toimenpide-id (:toimenpideinstanssi @valittu-kustannus)}))
+
   (let [ur @nav/valittu-urakka
         urakan-indeksi @u/urakassa-kaytetty-indeksi
         muokattu (atom (if (:id @valittu-kustannus)
@@ -147,7 +150,6 @@
                                                (:rahasumma m))))
         tallennus-kaynnissa (atom false)
         valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
-
     (komp/luo
       (fn []
         [:div.erilliskustannuksen-tiedot

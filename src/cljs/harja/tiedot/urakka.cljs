@@ -60,9 +60,16 @@
       (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
           (first toimenpideinstanssit)))))
 
+(defn- urakan-toimenpideinstanssi-avaimella [avain arvo]
+  (first (filter #(= arvo (avain %)) @urakan-toimenpideinstanssit)))
+
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
-  (first (filter #(= tpk (:id %)) @urakan-toimenpideinstanssit)))
+  (urakan-toimenpideinstanssi-avaimella :id tpk))
+
+(defn urakan-toimenpideinstanssi-tpille [tpi]
+  (have integer? tpi)
+  (urakan-toimenpideinstanssi-avaimella :tpi_id tpi))
 
 (defn valitse-toimenpideinstanssi-koodilla!
   "Valitsee urakan toimenpideinstanssin 3. tason SAMPO koodin perusteella."
@@ -75,6 +82,16 @@
     ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"
     (reset! valittu-toimenpideinstanssi tpi)
     (valitse-toimenpideinstanssi-koodilla! koodi)))
+
+(defn valitse-toimenpideinstanssi-kaikille!
+  "Kun valittu-toimenpideinstanssi on 'Kaikki', niin valitaan toimenpide
+   annetulla toimenpidekoodilla tai -idlla. Jos kummatkin ovat nil, niin valitaan ensimmäinnen toimenpide listasta"
+  [{:keys [toimenpidekoodi toimenpide-id]}]
+  (valitse-toimenpideinstanssi!
+    (cond
+      toimenpidekoodi (urakan-toimenpideinstanssi-toimenpidekoodille toimenpidekoodi)
+      toimenpide-id (urakan-toimenpideinstanssi-tpille toimenpide-id)
+      :else (first @urakan-toimenpideinstanssit))))
 
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
