@@ -120,6 +120,12 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   [urakka]
+  (when (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+    (println "KAIKKI VALITTU")
+    (if-let [toimenpide-id (get-in @muut-tyot/valittu-toteuma [:tehtava :emo])]
+      (u/valitse-toimenpideinstanssi! (some #(when (= toimenpide-id (:id %)) %)
+                                            @u/urakan-toimenpideinstanssit))
+      (u/valitse-toimenpideinstanssi! (first @u/urakan-toimenpideinstanssit))))
   (komp/luo
     (let [muokattu (reaction-writable
                      (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
