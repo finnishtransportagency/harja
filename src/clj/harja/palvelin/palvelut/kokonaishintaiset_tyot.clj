@@ -64,20 +64,18 @@
                                                nykyiset-arvot)))
           uniikit-toimenpideninstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
       (doseq [tyo tyot]
-        (let [params [(:summa tyo) (:maksupvm tyo) (:toimenpideinstanssi tyo)
-                      sopimusnumero (:vuosi tyo) (:kuukausi tyo)]]
-          (if (not (tyot-kannassa (tyo-avain tyo)))
-            ;; insert
-            (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
-                                             (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
-                                             (:toimenpideinstanssi tyo)
-                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo)
-                                             (:id user))
-            ;;update
-            (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
-                                              (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
-                                              (:toimenpideinstanssi tyo)
-                                              sopimusnumero (:vuosi tyo) (:kuukausi tyo)))))
+        (as-> tyo t
+          (update t :summa big/unwrap)
+          (update t :maksupvm #(when % (konv/sql-date %)))
+          (assoc t :sopimus sopimusnumero)
+          (assoc t :osuus-hoitokauden-summasta
+                 (when-let [p (:prosentti t)]
+                   (big/unwrap (big/div p (big/->big 100)))))
+          (assoc t :luoja (:id user))
+
+          (if (not (tyot-kannassa (tyo-avain t)))
+            (q/lisaa-kokonaishintainen-tyo<! c t)
+            (q/paivita-kokonaishintainen-tyo! c t))))
 
       (when (not (empty? uniikit-toimenpideninstanssit))
         (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)

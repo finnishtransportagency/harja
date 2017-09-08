@@ -40,9 +40,10 @@ ORDER BY id;
 
 -- name: paivita-kokonaishintainen-tyo!
 -- Päivittää kokonaishintaisen tyon summan ja maksupvm:n, tunnisteena tpi, sop, vu ja kk
-
 UPDATE kokonaishintainen_tyo
-SET summa = :summa, maksupvm = :maksupvm
+SET summa = :summa,
+    "osuus-hoitokauden-summasta" = :osuus-hoitokauden-summasta,
+    maksupvm = :maksupvm
 WHERE toimenpideinstanssi = :toimenpideinstanssi AND sopimus = :sopimus
       AND vuosi = :vuosi AND kuukausi = :kuukausi;
 
@@ -50,8 +51,8 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi AND sopimus = :sopimus
 -- name: lisaa-kokonaishintainen-tyo<!
 -- Lisää kokonaishintaisen tyon
 INSERT INTO kokonaishintainen_tyo
-(summa, maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi, luoja)
-VALUES (:summa, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja);
+(summa, "osuus-hoitokauden-summasta", maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi, luoja)
+VALUES (:summa, :osuus-hoitokauden-summasta, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee kokonaishintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
