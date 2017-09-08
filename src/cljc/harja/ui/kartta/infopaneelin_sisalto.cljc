@@ -89,39 +89,42 @@
 
 (defn- ilmoituksen-tiedot [ilmoitus]
   (let [nayta-max-kuittausta 10]
-    {:tyyppi :ilmoitus
+    {:tyyppi      :ilmoitus
      :jarjesta-fn :ilmoitettu
-     :otsikko (str
-                (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
-                (condp = (:ilmoitustyyppi ilmoitus)
-                  :toimenpidepyynto "Toimenpidepyyntö"
-                  :tiedoitus "Tiedotus"
-                  (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
-     :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
-              {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
-              {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
-              {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
-              {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
-              {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
-              {:otsikko "Kuittaukset" :nimi :kuittaukset :tyyppi :komponentti
-               :komponentti
-               (fn []
-                 (let [kuittaukset (filterv #(not= :valitys (:kuittaustyyppi %)) (:kuittaukset ilmoitus))
-                       kuittauksien-maara (count kuittaukset)
-                       kaikkia-ei-piirretty? (> kuittauksien-maara nayta-max-kuittausta)]
-                   [:div
-                    (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta kuittaukset))]
-                      ^{:key (:id ilmoitus)}
-                      [:div (str (if (keyword? (:kuittaustyyppi ilmoitus))
-                                    (name (:kuittaustyyppi ilmoitus))
-                                    "-")
-                                 " - " (pvm/pvm (:kuitattu ilmoitus)))])
-                    (when kaikkia-ei-piirretty?
-                      [:div (str "...sekä "
-                                 (- kuittauksien-maara nayta-max-kuittausta)
-                                 " muuta toimenpidettä.")])
-                    ]))}]
-     :data ilmoitus}))
+     :otsikko     (str
+                    (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
+                    (condp = (:ilmoitustyyppi ilmoitus)
+                      :toimenpidepyynto "Toimenpidepyyntö"
+                      :tiedoitus "Tiedotus"
+                      (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
+     :tiedot      [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+                   {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
+                   {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+                   {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
+                   {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
+                   {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
+                   {:otsikko "Kuittaukset" :nimi :kuittaukset :tyyppi :komponentti
+                    :komponentti
+                             (fn []
+                               (let [kuittaukset (filterv #(not= :valitys (:kuittaustyyppi %)) (:kuittaukset ilmoitus))
+                                     kuittauksien-maara (count kuittaukset)
+                                     kaikkia-ei-piirretty? (> kuittauksien-maara nayta-max-kuittausta)]
+                                 [:div
+                                  (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta kuittaukset))]
+                                    ^{:key (:id ilmoitus)}
+                                    [:div.tietorivi.tietorivi-ilman-alaviivaa
+                                     [:span.tietokentta {:style {:display "auto"
+                                                                 :font-weight "normal"}}
+                                      (str (if (keyword? (:kuittaustyyppi ilmoitus))
+                                             (name (:kuittaustyyppi ilmoitus))
+                                             "-"))]
+                                     [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]
+                                     (when kaikkia-ei-piirretty?
+                                       [:div (str "...sekä "
+                                                  (- kuittauksien-maara nayta-max-kuittausta)
+                                                  " muuta toimenpidettä.")])])
+                                  ]))}]
+     :data        ilmoitus}))
 
 (defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
   (ilmoituksen-tiedot ilmoitus))
