@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tyokalut.big :as big]))
 
 (declare hae-urakan-kokonaishintaiset-tyot tallenna-kokonaishintaiset-tyot)
 
@@ -36,8 +37,12 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
-        (map #(assoc %
-                :summa (if (:summa %) (double (:summa %)))))
+        (comp
+         (map #(assoc %
+                      :summa (if (:summa %) (double (:summa %)))))
+         (map #(if (:osuus-hoitokauden-summasta %)
+                 (update % :osuus-hoitokauden-summasta big/->big)
+                 %)))
         (q/listaa-kokonaishintaiset-tyot db urakka-id)))
 
 (defn tallenna-kokonaishintaiset-tyot

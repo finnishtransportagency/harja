@@ -8,6 +8,7 @@ SELECT
   kt.maksupvm,
   kt.toimenpideinstanssi,
   kt.sopimus,
+  kt."osuus-hoitokauden-summasta",
   tpi.id         AS tpi_id,
   tpi.nimi       AS tpi_nimi,
   tpi.toimenpide AS toimenpide
