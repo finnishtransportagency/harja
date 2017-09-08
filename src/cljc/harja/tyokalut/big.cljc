@@ -3,7 +3,13 @@
   Valitettavasti java.math.BigDecimal on transit kerroksessa muunnettu JS numeroksi, koska yleensä
   ei tarvita big decimal laskenta.
 
-  Tämän takia clj puolella on wrapper record."
+  Tämän takia on wrapper record ja molemmilla puolilla toteutettu operaatiot bigdec
+  käsittelyyn.
+
+  Käytä funktiota `->big` kun haluat muuntaa merkkijonon tai normaalin numeron tähän
+  muotoon ja `unwrap` (clj puolella) palauttaaksesi käärityn `java.math.BigDecimal`
+  instanssin esim. tietokantaan tallentamista varten."
+
   (:refer-clojure :exclude [+ - * /])
   #?(:clj (:import java.math.BigDecimal))
   (:require [clojure.string :as str]
