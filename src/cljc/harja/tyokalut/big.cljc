@@ -15,7 +15,11 @@
   (minus [b1 b2])
   (mul [b1 b2])
   (div [b1 b2])
-  (eq [b1 b2])
+  (eq [b1 b2] "True, jos arvot yhtäsuuret")
+  (lt [b1 b2] "True, jos b1 pienenmpi kuin b2")
+  (gt [b1 b2] "True, jos b1 suurempi kuin b2")
+  (lte [b1 b2] "True, jos b1 pienempi tai yhtäsuuri kuin b2")
+  (gte [b1 b2] "True, jos b1 suurempi tai yhäsuuri kuin b2")
   (fmt [b1 decimals] "Formatoi annettuun desimaalitarkkuuten, poistaen loppunollat.")
   (fmt-full [b1 decimals] "Formatoi annetuun desimaalitarkkuuteen."))
 
@@ -45,6 +49,11 @@
   (eq [{b1 :b} {b2 :b}]
     #?(:clj (= b1 b2)
        :cljs (.eq b1 b2)))
+
+  (lt [{b1 :b} {b2 :b}] #?(:clj (< b1 b2) :cljs (.lt b1 b2)))
+  (gt [{b1 :b} {b2 :b}] #?(:clj (> b1 b2) :cljs (.gt b1 b2)))
+  (lte [{b1 :b} {b2 :b}] #?(:clj (<= b1 b2) :cljs (.lte b1 b2)))
+  (gte [{b1 :b} {b2 :b}] #?(:clj (>= b1 b2) :cljs (.gte b1 b2)))
 
   (fmt [{b :b} decimals]
     #?(:clj
@@ -84,3 +93,12 @@
   (-> string
       (str/replace #"," ".")
       (->big)))
+
+#?(:clj
+   (defn unwrap
+     "Jos annettu numero on BigDec, palauttaa sen sisäisen BigDecimal numeron.
+  Muussa tapauksessa palauttaa annetun parametrin sellaisenaan."
+     [b]
+     (if (big? b)
+       (:b b)
+       b)))
