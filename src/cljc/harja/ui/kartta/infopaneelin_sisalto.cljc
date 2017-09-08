@@ -39,6 +39,7 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
@@ -113,10 +114,10 @@
                                   (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta kuittaukset))]
                                     ^{:key (:id ilmoitus)}
                                     [:div.tietorivi.tietorivi-ilman-alaviivaa
-                                     [:span.tietokentta {:style {:display "auto"
+                                     [:span.tietokentta {:style {:display     "auto"
                                                                  :font-weight "normal"}}
                                       (str (if (keyword? (:kuittaustyyppi ilmoitus))
-                                             (name (:kuittaustyyppi ilmoitus))
+                                             (-> ilmoitus :kuittaustyyppi apurit/kuittaustyypin-otsikko)
                                              "-"))]
                                      [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]
                                      (when kaikkia-ei-piirretty?
