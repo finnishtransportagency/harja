@@ -134,8 +134,7 @@
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
    [:urakkatyyppi urakka-tyyppi]
-   (when (and urakka-ely
-              (not (= "Vesiväylä" (urakan-vaylamuoto vaylamuoto))))
+   (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
    [:alueurakkanro alueurakkanro]
    (poikkeamatyypit->numerot tyyppi)
