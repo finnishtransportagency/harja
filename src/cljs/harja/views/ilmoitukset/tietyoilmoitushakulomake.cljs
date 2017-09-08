@@ -78,7 +78,6 @@
        :palstoja 1
        :tyhjennys-sallittu? true
        :validoi [(fn [osoite]
-                   (log "ttihl tr-validointi: osoite" (pr-str osoite))
                    (cond
                      (not (tr/validi-osoite? osoite))
                      "Osoite ei ole validi"
