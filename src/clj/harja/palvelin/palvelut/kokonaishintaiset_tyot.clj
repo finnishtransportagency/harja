@@ -9,8 +9,11 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]
+            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tyokalut.big :as big]))
+            [harja.tyokalut.big :as big]
+            [clojure.set :as set]
+            [harja.domain.roolit :as roolit]))
 
 (declare hae-urakan-kokonaishintaiset-tyot tallenna-kokonaishintaiset-tyot)
 
@@ -62,7 +65,17 @@
                                                   (= (:sopimus %) sopimusnumero)
                                                   (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
                                                nykyiset-arvot)))
-          uniikit-toimenpideninstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
+          urakan-toimenpideinstanssit (into #{}
+                                            (map :id)
+                                            (tpi-q/urakan-toimenpideinstanssi-idt c urakka-id))
+          tallennettavat-toimenpideinstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
+
+      ;; Varmistetaan ettei päivitystä voi tehdä toimenpideinstanssille, joka ei kuulu
+      ;; tähän urakkaan.
+      (when-not (empty? (set/difference tallennettavat-toimenpideinstanssit
+                                        urakan-toimenpideinstanssit))
+        (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
+
       (doseq [tyo tyot]
         (as-> tyo t
           (update t :summa big/unwrap)
@@ -77,7 +90,7 @@
             (q/lisaa-kokonaishintainen-tyo<! c t)
             (q/paivita-kokonaishintainen-tyo! c t))))
 
-      (when (not (empty? uniikit-toimenpideninstanssit))
-        (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)
-        (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit))
+      (when (not (empty? tallennettavat-toimenpideinstanssit))
+        (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " tallennettavat-toimenpideinstanssit)
+        (q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit))
       (hae-urakan-kokonaishintaiset-tyot c user urakka-id))))
