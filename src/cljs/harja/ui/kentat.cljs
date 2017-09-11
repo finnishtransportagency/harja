@@ -27,7 +27,7 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
 
-    ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
+            ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
             [harja.tyokalut.vkm :as vkm]
             [harja.atom :refer [paivittaja]]
             [harja.fmt :as fmt]
@@ -36,7 +36,9 @@
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [harja.ui.yleiset :as y]
             [harja.domain.tierekisteri :as trd]
-            [harja.views.kartta.tasot :as karttatasot])
+            [harja.views.kartta.tasot :as karttatasot]
+            [harja.tyokalut.big :as big]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -295,6 +297,25 @@
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   (nayta-arvo (assoc kentta :tyyppi :numero) data))
+
+
+(defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
+  (let [fmt #(big/fmt % desimaalien-maara)
+        teksti (atom (some-> @data fmt))
+        pattern (re-pattern (str "^(\\d+([.,]\\d{0," desimaalien-maara "})?)?$"))]
+    (fn [{:keys [lomake? desimaalien-maara]} data]
+      [:input {:class (when lomake? "form-control")
+               :placeholder placeholder
+               :type "text"
+               :value @teksti
+               :on-change #(let [txt (-> % .-target .-value)]
+                             (when (re-matches pattern txt)
+                               (reset! teksti txt)
+                               (reset! data (big/parse txt))))
+               :on-blur #(reset! teksti (some-> @data fmt))}])))
+
+(defmethod nayta-arvo :big [{:keys [desimaalien-maara]} data]
+  [:span (some-> @data (big/fmt desimaalien-maara))])
 
 (defmethod tee-kentta :email [{:keys [on-focus lomake?] :as kentta} data]
   [:input {:class (when lomake? "form-control")
@@ -564,18 +585,15 @@
         auki (atom false)
 
         teksti-paivamaaraksi! (fn [data t]
-                                (log "TEKSTI " t)
                                 (reset! teksti t)
                                 (if (str/blank? t)
                                   (reset! data nil)
                                   (let [d (pvm/->pvm t)
                                         eri-pvm? (not (pvm/sama-pvm? @data d))]
                                     (when eri-pvm?
-                                      (log "OLIHAN SE VALIDI JA VIELÄPÄ ERI!")
                                       (reset! data d)))))
 
         muuta! (fn [data t]
-                 (log "MUUTA! pvm")
                  (when (or (re-matches +pvm-regex+ t)
                            (str/blank? t))
                    (reset! teksti t))
