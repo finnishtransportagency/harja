@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.26</b>  
+<b>Nykyinen versio: 1.0.27</b>  
 <b>Julkaistu: 15.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.27 Julkaistu: 11.9.2017:
+    - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:
     - Ylläpitokohteiden päivityksessä ja päällystysilmoituksen kirjauksessa voi antaa karttapäivämäärän, jonka mukaan osoite muunnetaan uusimmalle verkolle. Samoin ylläpitokohteiden mukana välitetään tieto, minkä päivän verkolla ylläpitokohteet ovat Harjassa.
 - Versionumero: 1.0.25 Julkaistu: 15.5.2017:
