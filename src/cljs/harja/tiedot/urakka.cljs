@@ -83,16 +83,6 @@
     (reset! valittu-toimenpideinstanssi tpi)
     (valitse-toimenpideinstanssi-koodilla! koodi)))
 
-(defn valitse-toimenpideinstanssi-kaikille!
-  "Kun valittu-toimenpideinstanssi on 'Kaikki', niin valitaan toimenpide
-   annetulla toimenpidekoodilla tai -idlla. Jos kummatkin ovat nil, niin valitaan ensimmäinnen toimenpide listasta"
-  [{:keys [toimenpidekoodi toimenpide-id]}]
-  (valitse-toimenpideinstanssi!
-    (cond
-      toimenpidekoodi (urakan-toimenpideinstanssi-toimenpidekoodille toimenpidekoodi)
-      toimenpide-id (urakan-toimenpideinstanssi-tpille toimenpide-id)
-      :else (first @urakan-toimenpideinstanssit))))
-
 (defn- vesivaylien-sopimuskaudet [ensimmainen-vuosi viimeinen-vuosi]
   (mapv (fn [vuosi]
           [(pvm/vesivaylien-hoitokauden-alkupvm vuosi)
