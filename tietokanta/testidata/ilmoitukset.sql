@@ -1059,6 +1059,24 @@ VALUES
    (select id from urakka where nimi='Muhoksen päällystysurakka'), 50024666,
     '2017-06-01 00:08:56', null, false, 4, null, null, null, 'tiedoitus', null, null, null, '123456789', null, 'Esko Esimerkki', null, null, 'esimerkki.liikennekeskus@example.org', null, 'Urakoitsijaviesti', 'Tie 4 välillä Jyväskylä - Oulu. Tarkempi paikka: Välillä Ilosjoki, Pihtipudas - maakuntaraja Keski-Suomi/Pohjois-Pohjanmaa, Pyhäjärvi. ', null, '2017-01-25 00:08:59', null, null, null, null, 'lopetettu', '{tieOnLiukas,liukkaudentorjuntatarve}', 'tienkayttaja', 'paallystys');
 
+-- ilmoitus, joka on välitetty
+INSERT INTO ilmoitus
+(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, otsikko, paikankuvaus, lisatieto, sijainti,
+ tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
+ lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'), 50024794, '2017-09-01 10:00:00', '2017-09-01 10:05:13', FALSE,
+        'Tehkää jotain', 'Paikan kuvaus', 'Lisätietoa',
+        point(337374.71, 7108394.69)::GEOMETRY, 775, null, null, null, null, 'tiedoitus',
+        '{hiekoitustarve,liukkaudentorjuntatarve,hoylaystarve}',
+        (SELECT tyyppi
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' ,
+        'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
+
 -- Välitysviesti
 INSERT INTO ilmoitustoimenpide
 (ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
@@ -1066,6 +1084,16 @@ INSERT INTO ilmoitustoimenpide
  kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
 VALUES ((SELECT id
          FROM ilmoitus
-         WHERE ilmoitusid = 50024792), 50024792, '2017-09-01 06:10:07', 'valitys' ,
+         WHERE ilmoitusid = 50024794), 50024794, (SELECT valitetty FROM ilmoitus WHERE ilmoitusid=50024794), 'valitys' ,
         'Mikael', 'Pöytä', '04428671283', '0509288383', 'oulun-mikael.poyta@example.org',
         'Välittävä Urakoitsija', 'Y1242334', 'sisaan'::viestisuunta, 'sms'::viestikanava);
+
+INSERT INTO ilmoitustoimenpide
+(ilmoitus, ilmoitusid, kuitattu, kuittaustyyppi,
+ kuittaaja_henkilo_etunimi, kuittaaja_henkilo_sukunimi, kuittaaja_henkilo_matkapuhelin, kuittaaja_henkilo_tyopuhelin, kuittaaja_henkilo_sahkoposti,
+ kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
+VALUES ((SELECT id
+         FROM ilmoitus
+         WHERE ilmoitusid = 50024794), 50024794, '2017-09-01 10:07:00', 'vastaanotto' ,
+        'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
+        'Välittävä Urakoitsija', '9184629-5', 'sisaan'::viestisuunta, 'sms'::viestikanava);
