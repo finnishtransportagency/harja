@@ -120,18 +120,20 @@
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   [urakka]
-  (when (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
-    (u/valitse-toimenpideinstanssi-kaikille! {:toimenpidekoodi (get-in @muut-tyot/valittu-toteuma [:tehtava :emo])}))
   (komp/luo
     (let [muokattu (reaction-writable
                      (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
                        (assoc @muut-tyot/valittu-toteuma
                          :sopimus @u/valittu-sopimusnumero
-                         :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
+                         :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                (u/urakan-toimenpideinstanssi-toimenpidekoodille (get-in @muut-tyot/valittu-toteuma [:tehtava :emo]))
+                                                @u/valittu-toimenpideinstanssi))
                        ;; alustetaan arvoja uudelle toteumalle
                        (assoc @muut-tyot/valittu-toteuma
                          :sopimus @u/valittu-sopimusnumero
-                         :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                         :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                (first @u/urakan-toimenpideinstanssit)
+                                                @u/valittu-toimenpideinstanssi)
                          :tyyppi :muutostyo
                          :hinnoittelu :yksikkohinta)))]
       (fn []

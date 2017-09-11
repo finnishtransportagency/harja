@@ -123,15 +123,14 @@
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
   []
-  (when (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
-    (u/valitse-toimenpideinstanssi-kaikille! {:toimenpide-id (:toimenpideinstanssi @valittu-kustannus)}))
-
   (let [ur @nav/valittu-urakka
         urakan-indeksi @u/urakassa-kaytetty-indeksi
         muokattu (atom (if (:id @valittu-kustannus)
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                           :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                  (u/urakan-toimenpideinstanssi-tpille (:toimenpideinstanssi @valittu-kustannus))
+                                                  @u/valittu-toimenpideinstanssi)
                            ;; jos maksaja on urakoitsija, rahasumma kannassa miinusmerkkisenä
                            :maksaja (if (neg? (:rahasumma @valittu-kustannus))
                                       :urakoitsija
@@ -139,7 +138,9 @@
                            :rahasumma (Math/abs (:rahasumma @valittu-kustannus)))
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                           :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                  (first @u/urakan-toimenpideinstanssit)
+                                                  @u/valittu-toimenpideinstanssi)
                            :maksaja :tilaaja
                            :indeksin_nimi yleiset/+ei-sidota-indeksiin+)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
