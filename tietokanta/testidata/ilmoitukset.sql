@@ -1067,7 +1067,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Oulun alueurakka 2014-2019'), 50024794, '2017-09-01 10:00:00', '2017-09-01 10:05:13', FALSE,
+         WHERE nimi = 'Oulun alueurakka 2014-2019'), 50024794, '2017-08-01 10:00:00', '2017-08-01 10:05:13', FALSE,
         'Tehkää jotain', 'Paikan kuvaus', 'Lisätietoa',
         point(337374.71, 7108394.69)::GEOMETRY, 775, null, null, null, null, 'tiedoitus',
         '{hiekoitustarve,liukkaudentorjuntatarve,hoylaystarve}',
@@ -1094,6 +1094,6 @@ INSERT INTO ilmoitustoimenpide
  kuittaaja_organisaatio_nimi, kuittaaja_organisaatio_ytunnus, suunta, kanava)
 VALUES ((SELECT id
          FROM ilmoitus
-         WHERE ilmoitusid = 50024794), 50024794, '2017-09-01 10:07:00', 'vastaanotto' ,
+         WHERE ilmoitusid = 50024794), 50024794, '2017-08-01 10:07:00', 'vastaanotto' ,
         'Mikael', 'Pöytä', '04428671283', '0509288383', 'mikael.poyta@valittavaurakoitsija.fi',
         'Välittävä Urakoitsija', '9184629-5', 'sisaan'::viestisuunta, 'sms'::viestikanava);
