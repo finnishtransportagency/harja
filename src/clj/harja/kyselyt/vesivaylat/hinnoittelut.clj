@@ -225,7 +225,7 @@
       (specql/insert! db
                       ::hinta/hinta
                       (merge
-                        hinta
+                        (dissoc hinta ::hinta/id)
                         {::m/luotu (pvm/nyt)
                          ::m/luoja-id (:id user)
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
@@ -246,8 +246,8 @@
                       {::tyo/id (::tyo/id tyo)})
       (specql/insert! db
                       ::tyo/tyo
-                      {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
-                       ::tyo/hinnoittelu-id hinnoittelu-id
-                       ::tyo/maara (::tyo/maara tyo)
-                       ::m/luotu (pvm/nyt)
-                       ::m/luoja-id (:id user)}))))
+                      (merge
+                        (dissoc tyo ::tyo/id)
+                        {::tyo/hinnoittelu-id hinnoittelu-id
+                        ::m/luotu (pvm/nyt)
+                        ::m/luoja-id (:id user)})))))
