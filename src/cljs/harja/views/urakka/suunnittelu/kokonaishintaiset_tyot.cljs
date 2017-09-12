@@ -24,7 +24,9 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.kentat :as kentat]
             [harja.ui.valinnat :as valinnat]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.tyokalut.big :as big]
+            [harja.ui.debug :as debug])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -138,13 +140,24 @@
     "Tehtävät ovat järjestelmän laajuisia ja vain järjestelmän vastuuhenkilö voi muuttaa niitä."]])
 
 (defn- prosenttiosuudet [tyorivit]
-  (let [summa (reduce + 0 (keep :summa tyorivit))]
+  (let [summa (reduce big/plus (big/->big 0)
+                      (keep (comp big/->big :summa) tyorivit))]
     (with-meta
-      (mapv (fn [{s :summa :as rivi}]
+      (mapv (fn [{s :summa osuus :osuus-hoitokauden-summasta :as rivi}]
               (assoc rivi :prosentti
-                          (if (and s (pos? summa))
-                            (Math/round (/ (* 100 s) summa))
-                            0)))
+                     (cond
+
+                       ;; Osuus tiedossa, muunnetaan se prosenteiksi
+                       osuus
+                       (big/mul (big/->big 100)
+                                (or (:osuus-hoitokauden-summasta rivi)
+                                    (big/->big 0)))
+
+                       ;; Summat tiedossa, lasketaan prosenttimäärä
+                       (and s (big/gt summa (big/->big 0)))
+                       (big/mul (big/->big 100) (big/div (big/->big s) summa))
+
+                       :default nil)))
             tyorivit)
       {:vuosisumma summa})))
 
@@ -186,17 +199,19 @@
   (not (#{:tiemerkinta :vesivayla-hoito} tyyppi)))
 
 
-(defn- paivita-kk-arvo-prosentin-mukaan [{:keys [prosentti] :as rivi} vuosihinta]
-  (assoc rivi :summa (if prosentti
-                       (/ (* vuosihinta prosentti) 100)
-                       nil)))
+(defn- paivita-kk-arvo-prosentin-mukaan [{:keys [prosentti] :as rivi} vuosisumma]
+  (let [* (fnil big/mul (big/->big 0) (big/->big 0))]
+    (assoc rivi :summa (if prosentti
+                         (big/div (* prosentti vuosisumma) (big/->big 100))
+                         nil))))
 
 (defn- vuosisumma-kentta [g vuosisumma-atom muokattava-atom?]
   [(if @muokattava-atom?
      kentat/tee-otsikollinen-kentta
      kentat/nayta-otsikollinen-kentta)
    {:otsikko "Vuoden kokonaishintaiset työt"
-    :kentta-params {:tyyppi :positiivinen-numero
+    :kentta-params {:tyyppi :big
+                    :desimaalien-maara 2
                     :fmt fmt/euro-opt
                     :placeholder "Syötä hoitokauden urakkasumma (€)"}
     :arvo-atom (r/wrap @vuosisumma-atom
@@ -235,6 +250,9 @@
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]])
+
+(defn prosentit-yht [rivit]
+  (reduce big/plus (big/->big 0) (keep :prosentti rivit)))
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
@@ -356,7 +374,8 @@
                :tallenna-vain-muokatut false
                :validoi-fn (when @prosenttijako?
                              (fn [rivit]
-                               (when (not= 100 (int (reduce + 0 (keep :prosentti rivit))))
+                               (when (not (big/eq (big/->big 100)
+                                                  (prosentit-yht rivit)))
                                  "Prosenttien tulee olla yhteensä 100")))
                :peruuta #(do
                            (reset! vuosisumma-muokattava? false)
@@ -379,18 +398,30 @@
                                      @tuleville?]]))
                :rivi-jalkeen-fn (when @prosenttijako?
                                   (fn [rivit]
-                                    (let [prosentti-yht (reduce + 0 (map :prosentti rivit))]
+                                    (let [prosentti-yht (prosentit-yht rivit)]
                                       ^{:luokka "yhteenveto"}
-                                      [{:teksti (fmt/prosentti prosentti-yht 0)}
+                                      [{:teksti (big/fmt prosentti-yht 4)}
                                        {:teksti "Yhteensä" :sarakkeita 2}
-                                       {:teksti (fmt/euro (/ (* prosentti-yht @vuosisumma) 100))}
+                                       {:teksti (str (big/fmt
+                                                      (big/div ((fnil big/mul
+                                                                      (big/->big 0)
+                                                                      (big/->big 0))
+                                                                prosentti-yht
+                                                                @vuosisumma)
+                                                               (big/->big 100)) 2) " €")}
                                        {:teksti ""}])))}
 
               ;; sarakkeet
               [(when @prosenttijako?
                  {:otsikko "%" :nimi :prosentti
-                  :tyyppi :positiivinen-numero :kokonaisluku? true
-                  :leveys 10})
+                  :tyyppi :big
+                  :desimaalien-maara 4
+                  :validoi [#(when-not (and %
+                                            (big/gte % (big/->big 0))
+                                            (big/lte % (big/->big 100)))
+                               "Anna prosentti välillä 0 - 100")]
+                  :fmt #(when % (big/fmt % 4))
+                  :leveys 12})
 
                {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
                {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
@@ -398,7 +429,8 @@
                                                        (pvm/kuukauden-nimi (:kuukausi %)))
                 :muokattava? (constantly false)
                 :tyyppi :numero :leveys 25}
-               {:otsikko "Summa" :nimi :summa :fmt fmt/euro-opt :tasaa :oikea
+               {:otsikko "Summa" :nimi :summa :tasaa :oikea
+                :fmt fmt/euro-opt
                 :muokattava? (constantly (not @prosenttijako?))
                 :tyyppi :positiivinen-numero :leveys 25
                 :tayta-alas? #(not (nil? %))
@@ -411,6 +443,8 @@
                 :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
                 :tayta-fn tayta-maksupvm}]
               @tyorivit]
+
+             [debug/debug @tyorivit]
 
              (when (nayta-tehtavalista-ja-kustannukset? (:tyyppi @urakka))
                [kokonaishintaiset-tyot-tehtavalista

@@ -38,7 +38,6 @@
                        (first
                          (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id tyyppi (:id kayttaja)))
                        uusi? (nil? tarkastus-id)]
-
                    (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
                          tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                          geometria (if tr-osoite
@@ -66,7 +65,8 @@
                                                    (nil? yllapitokohde)
                                                    (not (str/blank? (:havainnot tarkastus))))
                                                  alitus))
-                               :nayta-urakoitsijalle true})
+                               :nayta-urakoitsijalle (or (nil? (:naytetaan-urakoitsijalle tarkastus))
+                                                         (boolean (Boolean/valueOf (:naytetaan-urakoitsijalle tarkastus))))})
                          liitteet (:liitteet tarkastus)]
 
                      (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
