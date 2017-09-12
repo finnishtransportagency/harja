@@ -42,4 +42,24 @@ WHERE "hinnoittelu-id" IN (SELECT id
                            WHERE hintaryhma IS NOT TRUE)
       AND otsikko = 'Päivän hinta' OR otsikko = 'Omakustannushinta';
 
--- TODO Tietomallimuutos: vv_hinta linkkaus reimari-toimenpiteessä tehtyyn komponentin toimenpiteeseen
+ALTER TABLE vv_hinta ADD COLUMN "komponentti-id" TEXT REFERENCES reimari_turvalaitekomponentti (id);
+ALTER TABLE vv_hinta ADD COLUMN "komponentti-tilamuutos" TEXT;
+ALTER TABLE vv_hinta
+  ADD CONSTRAINT komponentin_hinnalla_id_ja_tila CHECK (
+  (ryhma = 'komponentti' AND "komponentti-id" IS NOT NULL AND "komponentti-tilamuutos" IS NOT NULL)
+  OR
+  (ryhma != 'komponentti' AND "komponentti-id" IS NULL AND "komponentti-tilamuutos" IS NULL)
+);
+
+-- Toimenpidetaulun reimari-komponentit tyypissä komponentti-id on virheellisesti
+-- INTEGER, vaikka tietomallissa se on TEXT. Tauluun sen muuttaminen olisi hyvin työlästä,
+-- joten muutetaan vain suoraan tähän viewiin.
+DROP VIEW reimari_toimenpiteen_komponenttien_tilamuutokset;
+
+CREATE OR REPLACE VIEW reimari_toimenpiteen_komponenttien_tilamuutokset AS
+  SELECT id AS "toimenpide-id",
+         "reimari-muokattu" AS muokattu,
+         "reimari-luotu" AS luotu,
+         (unnest("reimari-komponentit")).tila AS tilakoodi,
+         (unnest("reimari-komponentit")).id::TEXT AS "komponentti-id"
+  FROM reimari_toimenpide;

@@ -132,7 +132,7 @@ VALUES
     (SELECT id
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
-     '{"(-2139967596,nimitahan,1022540401)","(-567765567,toinennimi,1022540402)"}', -- reimari-komponentit (id, nimi, tila)
+     '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}', -- reimari-komponentit (id, nimi, tila)
     '(8881, Poiju 1, 555)',
     (SELECT id
      FROM vv_turvalaite
