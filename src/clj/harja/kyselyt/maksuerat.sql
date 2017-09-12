@@ -232,3 +232,12 @@ FROM urakka u
   JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
   JOIN maksuera m ON tpi.id = m.toimenpideinstanssi
 WHERE m.numero = :numero;
+
+
+--name: hae-urakan-maksueratiedot
+SELECT numero,
+       toimenpideinstanssi,
+       nimi,
+       tyyppi
+  FROM maksuera
+ WHERE toimenpideinstanssi in (SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka_id);
