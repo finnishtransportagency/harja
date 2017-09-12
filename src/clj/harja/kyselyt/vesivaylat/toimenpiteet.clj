@@ -37,7 +37,6 @@
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
                    ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
                    ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
-    (map #(update % ::vv-toimenpide/hintatyyppi name))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
@@ -249,7 +248,7 @@
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
-        fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
+        fetchattu (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
 
@@ -290,6 +289,7 @@
                                  {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+        fetchattu (-> fetchattu
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-turvalaitekomponentit db)
                       (lisaa-komponenttikohtaiset-tilat db)
