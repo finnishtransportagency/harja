@@ -9,6 +9,8 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
+            [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.muokkaustiedot :as m]
             [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
@@ -139,11 +141,14 @@
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
+(defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tiedot])
 (defrecord LisaaMuuKulurivi [])
 (defrecord PoistaMuuKulurivi [rivi])
 (defrecord LisaaMuuTyorivi [])
 (defrecord PoistaMuuTyorivi [tiedot])
+(defrecord PoistaHinnoiteltavaKomponenttirivi [tiedot])
+(defrecord AsetaKomponenttirivilleTiedot [tiedot])
 ;; Hintaryhmän hinnoittelu
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
@@ -186,7 +191,7 @@
 (defn- hintakentta
   [hinta]
   (merge
-    {::hinta/summa (if (= :tyo (::hinta/ryhma hinta)) nil 0)
+    {::hinta/summa (if (= :muu (::hinta/ryhma hinta)) 0 nil)
      ::hinta/yleiskustannuslisa 0}
     hinta))
 
@@ -217,7 +222,8 @@
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          (map
            hintakentta
-           (filter #(not ((set vakiohinnat) (::hinta/otsikko %))) hinnat)))))
+           (remove #((set vakiohinnat) (::hinta/otsikko %))
+                   hinnat)))))
 
 ;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
@@ -230,6 +236,11 @@
 (defn muut-tyot [app]
   (filter
     #(and (= (::hinta/ryhma %) :tyo) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn komponenttien-hinnat [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :komponentti) (not (::m/poistettu? %)))
     (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
 
 (defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
@@ -252,10 +263,11 @@
 (defn- hinnoittelun-voi-tallentaa? [app]
   (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
         hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+        komponenttien-hinnat (filter #(= :komponentti (::hinta/ryhma %)) hinnat)
         muut-tyot (filter #(= :tyo (::hinta/ryhma %)) hinnat)
         muut (filter #(= :muu (::hinta/ryhma %)) hinnat)
         ;; TODO: Liitä otsikoihin toimenpidekoodien otsikot
-        hintojen-otsikot (map ::hinta/otsikko hinnat)]
+        hintojen-otsikot (map ::hinta/otsikko (concat muut-tyot muut))]
     (and (every? #(and (::tyo/toimenpidekoodi-id %)
                        (::tyo/maara %))
                  tyot)
@@ -269,6 +281,13 @@
                  muut)
          (or (empty? hintojen-otsikot)
              (apply distinct? hintojen-otsikot)))))
+
+(defn hinnoiteltava-toimenpide [app]
+  (some
+    #(when (= (get-in app [:hinnoittele-toimenpide ::to/id])
+              (::to/id %))
+       %)
+    (:toimenpiteet app)))
 
 (extend-protocol tuck/Event
 
@@ -462,20 +481,7 @@
             :tallenna-toimenpiteelle-hinta
             {::to/urakka-id (get-in app [:valinnat :urakka-id])
              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-             ::h/tallennettavat-hinnat (mapv
-                                         (fn [hinta]
-                                           (merge
-                                             (when-let [id (::hinta/id hinta)]
-                                               {::hinta/id id})
-                                             {::hinta/otsikko (::hinta/otsikko hinta)
-                                              ::hinta/summa (::hinta/summa hinta)
-                                              ::hinta/ryhma (::hinta/ryhma hinta)
-                                              ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)
-                                              ::hinta/maara (::hinta/maara hinta)
-                                              ::hinta/yksikkohinta (::hinta/yksikkohinta hinta)
-                                              ::hinta/yksikko (::hinta/yksikko hinta)
-                                              ::m/poistettu? (boolean (::m/poistettu? hinta))}))
-                                         (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
+             ::h/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
              ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
@@ -592,6 +598,17 @@
           paivitetyt-tyot (conj tyot (tyokentta {::tyo/id seuraava-vapaa-id}))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
 
+  LisaaHinnoiteltavaKomponenttirivi
+  (process-event [_ app]
+    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          hinta-idt (map ::hinta/id hinnat)
+          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
+          paivitetyt-hinnat (conj hinnat (hintakentta
+                                           {::hinta/id seuraava-vapaa-id
+                                            ::hinta/otsikko ""
+                                            ::hinta/ryhma :komponentti}))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+
   LisaaMuuKulurivi
   (process-event [_ app]
     (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
@@ -636,7 +653,7 @@
     (let [id (::hinta/id tiedot)
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
-          (if (neg? id)
+          (if (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::hinta/id %) id) hinnat)
             ;; Kannassa oleva rivi merkitään poistetuksi
@@ -652,7 +669,7 @@
           tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           ;; TODO Vaikuttaa pitkälti samalta kuin hintarivin poisto. Tee yhteinen funkkari?
           paivitetyt-tyot
-          (if (neg? id)
+          (if (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::tyo/id %) id) tyot)
             ;; Kannassa oleva rivi merkitään poistetuksi
@@ -661,6 +678,29 @@
                      %)
                   tyot))]
       (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+
+  PoistaHinnoiteltavaKomponenttirivi
+  (process-event [{tiedot :tiedot} app]
+    (let [id (::hinta/id tiedot)
+          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+          paivitetyt-hinnat
+          (if (id-olemassa? id)
+            ;; Uusi lisätty rivi poistetaan kokonaan
+            (filterv #(not= (::hinta/id %) id) hinnat)
+            ;; Kannassa oleva rivi merkitään poistetuksi
+            (mapv #(if (= (::hinta/id %) id)
+                     (assoc % ::m/poistettu? true)
+                     %)
+                  hinnat))]
+      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+
+  AsetaKomponenttirivilleTiedot
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
+              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
+                (get-in app [:hinnoittele-toimenpide
+                             ::h/hinnat])
+                tiedot)))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]
