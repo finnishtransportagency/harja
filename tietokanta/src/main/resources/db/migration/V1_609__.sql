@@ -51,6 +51,10 @@ ALTER TABLE vv_hinta
   (ryhma != 'komponentti' AND "komponentti-id" IS NULL AND "komponentti-tilamuutos" IS NULL)
 );
 
+-- Samassa hinnoittelussa voi yhdelle komponentille, ja sen tilamuutokselle, olla vain yksi hinta.
+CREATE UNIQUE INDEX uniikki_hinta_komponentille on vv_hinta ("hinnoittelu-id", "komponentti-tilamuutos", "komponentti-id")
+  WHERE poistettu IS NOT TRUE;
+
 -- Toimenpidetaulun reimari-komponentit tyypissä komponentti-id on virheellisesti
 -- INTEGER, vaikka tietomallissa se on TEXT. Tauluun sen muuttaminen olisi hyvin työlästä,
 -- joten muutetaan vain suoraan tähän viewiin.
