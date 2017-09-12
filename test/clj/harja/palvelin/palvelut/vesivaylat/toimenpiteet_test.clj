@@ -39,6 +39,14 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(def tp-komponenttien-tilat-referenssidata
+  [{::toi/komponentti-id -2139967596,
+    ::toi/tilakoodi "1022540401",
+    ::toi/toimenpide-id 1}
+   {::toi/komponentti-id -567765567,
+    ::toi/tilakoodi "1022540402",
+    ::toi/toimenpide-id 1}])
+
 (deftest kok-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
@@ -68,7 +76,9 @@
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
-    (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))))
+    (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
+    (is (= (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus)
+            tp-komponenttien-tilat-referenssidata))))
 
 (deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -243,6 +253,20 @@
                                   kysely-params)]
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (= (count vastaus) 0) "Ei toimenpiteitä tällä väylätyypillä"))))
+
+(deftest toimenpiteiden-haku-toimii-turvalaiteifiltterilla
+  (testing "Virheellinen turvalaitefiltteri ei löydä mitään"
+    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+          sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
+          kysely-params {::toi/urakka-id urakka-id
+                         ::toi/sopimus-id sopimus-id
+                         ::toi/vaylatyyppi :kauppamerenkulku
+                         ::toi/turvalaite-id -1}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
+                                  kysely-params)]
+      (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
+      (is (= (count vastaus) 0)))))
 
 (deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
   (testing ":vikailmoitukset? true, vain vikailmoitukselliset palautuu"

@@ -10,7 +10,7 @@
             [harja.domain.vesivaylat.vayla :as vay]))
 
 (defn hae-vaylat [db user {:keys [vaylatyyppi hakuteksti] :as tiedot}]
-  ;; FIXME Kuka saa lukea kaikki väylät?
+  (oikeudet/ei-oikeustarkistusta!)
   (vec (fetch db ::vay/vayla vay/perustiedot
               (op/and
                 (when hakuteksti
