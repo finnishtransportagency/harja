@@ -238,6 +238,7 @@
   (process-event [{toteumat :toteumat}
                   {valittu-toimenpide :valittu-toimenpide
                    valittu-toteumaid :valittu-toteumaid
+                   varustetoteuma :varustetoteuma
                    :as app}]
 
     (hae
@@ -246,9 +247,13 @@
         (assoc app
           :toteumat toteumat
           :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)
-          :varustetoteuma (when valittu-toteumaid
+          :varustetoteuma (if valittu-toteumaid
+                            ;; Jos katsotaan vanhaa, päivitä tiedot palvelimelta
                             (some #(when (= (:toteumaid %) valittu-toteumaid) %)
-                                  toteumat))
+                                  toteumat)
+
+                            ;; Luomassa uutta, ei kosketa toteumaan
+                            varustetoteuma)
           :valittu-toteumaid nil))))
 
   v/ValitseVarusteToteumanTyyppi
