@@ -336,6 +336,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
+
+  Jos :tyyppi:n arvoksi on määritetty :komponentti, niin :komponentti avain ottaa funktion. Tämä funktio ottaa yhden
+  parametrin, joka on map avaimilla :muokkaa-lomaketta ja :data.
+
+  :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
+  :data                 validoitu data
   "
   [_ _ _]
   (let [fokus (atom nil)]
