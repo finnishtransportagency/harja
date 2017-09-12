@@ -267,7 +267,7 @@
         muut-tyot (filter #(= :tyo (::hinta/ryhma %)) hinnat)
         muut (filter #(= :muu (::hinta/ryhma %)) hinnat)
         ;; TODO: Liitä otsikoihin toimenpidekoodien otsikot
-        hintojen-otsikot (map ::hinta/otsikko hinnat)]
+        hintojen-otsikot (map ::hinta/otsikko (remove ::m/poistettu? hinnat))]
     (and (every? #(and (::tyo/toimenpidekoodi-id %)
                        (::tyo/maara %))
                  tyot)
@@ -276,6 +276,11 @@
                        (::hinta/yksikkohinta %)
                        (::hinta/yksikko %))
                  muut-tyot)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/maara %)
+                       (::hinta/yksikkohinta %)
+                       (::hinta/yksikko %))
+                 komponenttien-hinnat)
          (every? #(and (not-empty (::hinta/otsikko %))
                        (::hinta/summa %))
                  muut)
