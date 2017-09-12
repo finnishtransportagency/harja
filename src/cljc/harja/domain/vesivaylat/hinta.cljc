@@ -31,6 +31,8 @@
   #{::otsikko
     ::summa
     ::yleiskustannuslisa
+    ::komponentti-id
+    ::komponentti-tilamuutos
     ::maara
     ::yksikkohinta
     ::yksikko
