@@ -435,7 +435,7 @@
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")
 
-    (is (not-empty? toimenpiteiden-kiintio-idt-jalkeen) "Toimenpiteitä ei irrotettu kiintiöistä")))
+    (is (not-empty toimenpiteiden-kiintio-idt-jalkeen) "Toimenpiteitä ei irrotettu kiintiöistä")))
 
 (deftest siirra-toimenpide-yksikkohintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
