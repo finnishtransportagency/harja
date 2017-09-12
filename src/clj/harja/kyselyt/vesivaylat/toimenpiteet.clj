@@ -22,6 +22,7 @@
             [harja.domain.vesivaylat.turvalaite :as vv-turvalaite]
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
+            [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.urakka :as ur]
             [harja.tyokalut.functor :refer [fmap]]))
 
@@ -50,9 +51,8 @@
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/lisatieto
                           ::vv-toimenpide/liitteet
-                          ::vv-toimenpide/turvalaitekomponentit
-                          ::vv-toimenpide/reimari-henkilo-lkm
-                          ::vv-toimenpide/komponenttien-tilat]))))
+                          ::vv-toimenpide/komponentit
+                          ::vv-toimenpide/reimari-henkilo-lkm]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
@@ -169,37 +169,43 @@
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
-(defn- lisaa-komponenttikohtaiset-tilat [toimenpiteet db]
-  (let [tpk-tilat-seq (fetch db ::vv-toimenpide/tpk-tilat
-                             #{::vv-toimenpide/toimenpide-id
-                               ::vv-toimenpide/komponentti-id ::vv-toimenpide/tilakoodi}
-                             {::vv-toimenpide/toimenpide-id
-                              (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
-        tilat-toimenpiteen-mukaan (group-by ::vv-toimenpide/toimenpide-id tpk-tilat-seq)
-        tila-toimenpiteelle #(get tilat-toimenpiteen-mukaan (::vv-toimenpide/id %))]
+(defn- lisaa-toimenpiteen-komponentit [toimenpiteet db]
+  (let [tilat (fetch db
+                     ::komp-tila/tpk-tilat
+                     #{::komp-tila/toimenpide-id
+                       ::komp-tila/komponentti-id
+                       ::komp-tila/tilakoodi}
+                     {::komp-tila/toimenpide-id
+                      (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
+        komponentit (group-by
+                      ::tkomp/id
+                      (fetch db
+                             ::tkomp/turvalaitekomponentti
+                             (set/union #{::tkomp/id
+                                          ::tkomp/lisatiedot
+                                          ::tkomp/turvalaitenro
+                                          ::tkomp/sarjanumero
+                                          ::tkomp/valiaikainen}
+                                        tkomp/komponenttityyppi)
+                             {::tkomp/id
+                              (op/in (set (map ::komp-tila/komponentti-id tilat)))}))
+        tilat (group-by ::komp-tila/toimenpide-id tilat)]
     (for [tp toimenpiteet]
-      (assoc tp ::vv-toimenpide/komponenttien-tilat (tila-toimenpiteelle tp)))))
-
-(defn- lisaa-turvalaitekomponentit [toimenpiteet db]
-  (let [turvalaitekomponentit (fetch
-                                db
-                                ::tkomp/turvalaitekomponentti
-                                (set/union #{::tkomp/sarjanumero ::tkomp/turvalaitenro}
-                                           tkomp/komponenttityyppi)
-                                {::tkomp/turvalaitenro
-                                 (op/in (set (map
-                                              #(get-in % [::vv-toimenpide/reimari-turvalaite
-                                                          ::vv-turvalaite/r-nro])
-                                              toimenpiteet)))})
-        toimenpiteet-turvalaitekomponenteilla
-        (map #(assoc % ::vv-toimenpide/turvalaitekomponentit
-                       (tkomp/turvalaitekomponentit-turvalaitenumerolla
-                         turvalaitekomponentit
-                         (get-in % [::vv-toimenpide/reimari-turvalaite ::vv-turvalaite/r-nro])))
-             toimenpiteet)]
-    toimenpiteet-turvalaitekomponenteilla))
-
-
+      (assoc tp ::vv-toimenpide/komponentit
+                (mapcat
+                  (fn [tila]
+                    (map
+                      #(select-keys
+                         (merge tila %)
+                         [::komp-tila/tilakoodi
+                          ::tkomp/sarjanumero
+                          ::tkomp/valiaikainen
+                          ::tkomp/id
+                          ::tkomp/lisatiedot
+                          ::tkomp/komponenttityyppi
+                          ::tkomp/turvalaitenro])
+                      (get komponentit (::komp-tila/komponentti-id tila))))
+                  (get tilat (::vv-toimenpide/id tp)))))))
 
 (defn- toimenpiteiden-liite-idt
   "Hakee annetuille toimenpiteille liitteet, jotka eivät ole poistettuja.
@@ -289,8 +295,7 @@
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
                       (suodata-vikakorjaukset vikailmoitukset?)
-                      (lisaa-turvalaitekomponentit db)
-                      (lisaa-komponenttikohtaiset-tilat db)
+                      (lisaa-toimenpiteen-komponentit db)
                       (lisaa-liitteet db))
         toimenpiteet (into [] toimenpiteet-xf fetchattu)]
     (cond
