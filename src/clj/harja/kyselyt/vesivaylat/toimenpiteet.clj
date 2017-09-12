@@ -37,6 +37,7 @@
                    ::vv-toimenpide/tyoluokka (get vv-toimenpide/reimari-tyoluokat (::vv-toimenpide/tyoluokka %))
                    ::vv-toimenpide/toimenpide (get vv-toimenpide/reimari-toimenpidetyypit (::vv-toimenpide/toimenpide %))
                    ::vv-toimenpide/vikakorjauksia? (not (empty? (::vv-toimenpide/vikailmoitukset %)))))
+    (map #(update % ::vv-toimenpide/hintatyyppi name))
     (map #(select-keys % [::vv-toimenpide/id
                           ::vv-toimenpide/tyolaji
                           ::vv-toimenpide/vayla
