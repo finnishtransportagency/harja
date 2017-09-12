@@ -224,7 +224,7 @@
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "Oulun alueurakka 2014-2019")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 2)
+                                             (= (apurit/raporttisolun-arvo tur) 3)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "Kajaanin alueurakka 2014-2019")
