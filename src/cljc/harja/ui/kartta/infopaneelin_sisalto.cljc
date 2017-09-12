@@ -119,11 +119,11 @@
                                       (str (if (keyword? (:kuittaustyyppi ilmoitus))
                                              (-> ilmoitus :kuittaustyyppi apurit/kuittaustyypin-otsikko)
                                              "-"))]
-                                     [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]
-                                     (when kaikkia-ei-piirretty?
-                                       [:div (str "...sekä "
-                                                  (- kuittauksien-maara nayta-max-kuittausta)
-                                                  " muuta toimenpidettä.")])])
+                                     [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]])
+                                  (when kaikkia-ei-piirretty?
+                                    [:div (str "...sekä "
+                                               (- kuittauksien-maara nayta-max-kuittausta)
+                                               " muuta toimenpidettä.")])
                                   ]))}]
      :data        ilmoitus}))
 
