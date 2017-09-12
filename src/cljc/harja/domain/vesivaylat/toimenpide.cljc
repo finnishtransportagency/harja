@@ -19,7 +19,6 @@
             [harja.domain.vesivaylat.sopimus :as reimari-sopimus]
             [harja.domain.vesivaylat.vayla :as vv-vayla]
             [specql.rel :as rel]
-            [specql.transform :as specql-xf]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
             [clojure.future :refer :all]])
@@ -193,7 +192,6 @@ reimari-toimenpidetyypit
   (when lisatyo? "Kyllä"))
 
 (defn hintatyyppi-fmt [hintatyyppi]
-  (println "hintatyyppi-fmt:" hintatyyppi)
   (if (keyword? hintatyyppi)
       (name hintatyyppi)
       ""))
@@ -284,7 +282,7 @@ reimari-tilat
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
     "reimari-lisatyo" ::reimari-lisatyo?
-    ::hintatyyppi (specql-xf/transform (specql-xf/to-keyword))
+    ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
