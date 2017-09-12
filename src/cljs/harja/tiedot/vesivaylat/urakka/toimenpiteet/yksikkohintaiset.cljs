@@ -653,7 +653,7 @@
     (let [id (::hinta/id tiedot)
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
-          (if (id-olemassa? id)
+          (if-not (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::hinta/id %) id) hinnat)
             ;; Kannassa oleva rivi merkitään poistetuksi
@@ -669,7 +669,7 @@
           tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
           ;; TODO Vaikuttaa pitkälti samalta kuin hintarivin poisto. Tee yhteinen funkkari?
           paivitetyt-tyot
-          (if (id-olemassa? id)
+          (if-not (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::tyo/id %) id) tyot)
             ;; Kannassa oleva rivi merkitään poistetuksi
@@ -684,7 +684,7 @@
     (let [id (::hinta/id tiedot)
           hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
           paivitetyt-hinnat
-          (if (id-olemassa? id)
+          (if-not (id-olemassa? id)
             ;; Uusi lisätty rivi poistetaan kokonaan
             (filterv #(not= (::hinta/id %) id) hinnat)
             ;; Kannassa oleva rivi merkitään poistetuksi
