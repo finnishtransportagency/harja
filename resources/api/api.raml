@@ -49,6 +49,7 @@ schemas:
  - urakan-tyotuntien-kirjaus-request: !include schemas/urakan-tyotuntien-kirjaus-request.schema.json
  - toteuman-poisto-request: !include schemas/toteuman-poisto-request.schema.json
  - tarkastuksen-poisto-request: !include schemas/tarkastuksen-poisto-request.schema.json
+ - tieluvan-kirjaus: !include schemas/tieluvan-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -1237,7 +1238,7 @@ documentation:
               example: !include examples/virhe-response.json
               schema: virhe-response
 /tieluvat:
-  description: Tielupien haku
+  description: Tielupien käsittely
   get:
     is: [secured]
     description: Tielupien haku alueurakan tai sijainnin perusteella.
@@ -1281,6 +1282,30 @@ documentation:
             application/json:
               example: !include examples/virhe-response.json
               schema: virhe-response
+  post:
+    is: [secured]
+    description: Tieluvan kirjaaminen
+    body:
+      application/json:
+        example: !include examples/tieluvan-kirjaus-request.json
+        schema: tieluvan-kirjaus-request
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/onnistunut-kirjaus-response.json
+            schema: kirjaus-response
+      400:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+      500:
+        body:
+          application/json:
+            example: !include examples/virhe-response.json
+            schema: virhe-response
+
 /paivystajatiedot:
   is: [secured]
   description: Päivystäjätietojen hallinta
