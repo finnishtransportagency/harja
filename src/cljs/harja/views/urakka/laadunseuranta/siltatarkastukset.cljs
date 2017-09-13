@@ -242,6 +242,7 @@
             (paivita-valittu-silta)
             (reset! tallennus-kaynnissa-atom false)
             (reset! muokattava-tarkastus nil)
+            (reset! uudet-liitteet nil)
             (viesti/nayta! "Siltatarkastus tallennettu" :success))))))
 
 (defn siltatarkastusten-rivit
@@ -391,7 +392,8 @@
             voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
                                 ainakin-yksi-tulos?)]
         [:div.uusi-siltatarkastus
-         [napit/takaisin "Palaa tallentamatta" #(reset! muokattava-tarkastus nil)]
+         [napit/takaisin "Palaa tallentamatta" #(do (reset! muokattava-tarkastus nil)
+                                                    (reset! uudet-liitteet nil))]
 
          [lomake {:otsikko otsikko
                   :muokkaa! (fn [uusi]
