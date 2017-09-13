@@ -456,6 +456,7 @@
                                               (conj (get @uudet-liitteet kohdenro)
                                                     uusi-arvo))))))
                         :lisaa-usea-liite? true
+                        :jo-tallennetut-liitteet (get @uudet-liitteet (:kohdenro rivi))
                         :salli-poistaa-lisatty-liite? true
                         :poista-lisatty-liite-fn (fn [liite-id]
                                                    (let [kohdenro (:kohdenro rivi)]
