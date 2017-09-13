@@ -128,7 +128,9 @@
         muokattu (atom (if (:id @valittu-kustannus)
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                           :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                  (u/urakan-toimenpideinstanssi-tpille (:toimenpideinstanssi @valittu-kustannus))
+                                                  @u/valittu-toimenpideinstanssi)
                            ;; jos maksaja on urakoitsija, rahasumma kannassa miinusmerkkisenä
                            :maksaja (if (neg? (:rahasumma @valittu-kustannus))
                                       :urakoitsija
@@ -136,7 +138,9 @@
                            :rahasumma (Math/abs (:rahasumma @valittu-kustannus)))
                          (assoc @valittu-kustannus
                            :sopimus @u/valittu-sopimusnumero
-                           :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                           :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                  (first @u/urakan-toimenpideinstanssit)
+                                                  @u/valittu-toimenpideinstanssi)
                            :maksaja :tilaaja
                            :indeksin_nimi yleiset/+ei-sidota-indeksiin+)))
         valmis-tallennettavaksi? (reaction (let [m @muokattu]
@@ -147,7 +151,6 @@
                                                (:rahasumma m))))
         tallennus-kaynnissa (atom false)
         valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
-
     (komp/luo
       (fn []
         [:div.erilliskustannuksen-tiedot
@@ -274,11 +277,12 @@
   (let [urakka @nav/valittu-urakka
         valitut-kustannukset
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
-                        toimenpideinstanssi (:tpi_id @u/valittu-toimenpideinstanssi)]
+                        toimenpideinstanssi @u/valittu-toimenpideinstanssi]
                     (when @u/erilliskustannukset-hoitokaudella
                       (reverse (sort-by :pvm (filter #(and
                                                         (= sopimus-id (:sopimus %))
-                                                        (= (:toimenpideinstanssi %) toimenpideinstanssi))
+                                                        (or (= (:toimenpideinstanssi %) (:tpi_id toimenpideinstanssi))
+                                                            (= (:tpi_nimi toimenpideinstanssi) "Kaikki")))
                                                      @u/erilliskustannukset-hoitokaudella))))))]
     (fn []
       (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
@@ -288,7 +292,7 @@
         [:div.erilliskustannusten-toteumat
          [ui-valinnat/urakkavalinnat {:urakka urakka}
           ^{:key "valinnat"}
-          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
           (yleiset/wrap-if
             (not oikeus?)
             [yleiset/tooltip {} :%
