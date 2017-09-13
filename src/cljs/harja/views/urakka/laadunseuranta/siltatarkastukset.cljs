@@ -25,13 +25,19 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
 
-(defonce muokattava-tarkastus (atom nil))
+(defonce muokattava-tarkastus (local-storage/local-storage-atom :muokattava-siltatarkastus
+                                                                nil
+                                                                nil))
+(defonce uudet-liitteet (local-storage/local-storage-atom :uuden-siltatarkastuksen-liitteet
+                                                          nil
+                                                          nil))
 (def +valitse-tulos+ "- Valitse tulos -")
 (def +ei-kirjattu+ "Ei kirjattu")
 
@@ -365,7 +371,6 @@
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
-        uudet-liitteet (atom nil)
         alkuperainen-tarkastusaika (:tarkastusaika @muokattava-tarkastus)]
     (fn [muokattava-tarkastus]
       (let [tarkastus @muokattava-tarkastus
