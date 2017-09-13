@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-09-13",
+    "title": "Urakan työtunnit Harjan kautta TURI:n",
+    "body": "Urakan työtunnit on nyt mahdollista kirjata Harjaan joko urakan yleiset välilehden tai suoraan turvallisuuspoikkeaman kautta. Työtunnit välitetään automaattisesti turvallaisuusasioiden hallintajärjestelmään TURI:n."
+  },
+  {
     "date": "2017-08-07",
     "title": "HARJA:n siltatarkastusraportilla nähtävillä urakan siltamäärä ja tarkastusprosentti",
     "body": "Urakkakohtaiselle siltatarkastusraportille on lisätty urakassa olevien siltojen määrä. Lisäksi raportilla näkyy valitun vuoden aikana tehtyjen tarkastusten määrä ja montako siltaa on vielä tarkastamatta. Tämä ominaisuus tulee käyttöön HARJA:an tämän viikon aikana"
