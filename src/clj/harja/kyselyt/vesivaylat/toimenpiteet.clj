@@ -52,7 +52,8 @@
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/turvalaitekomponentit
                           ::vv-toimenpide/reimari-henkilo-lkm
-                          ::vv-toimenpide/komponenttien-tilat]))))
+                          ::vv-toimenpide/komponenttien-tilat
+                          ::vv-toimenpide/hintatyyppi]))))
 
 (defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
   (when-not (->> (fetch
@@ -247,7 +248,7 @@
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
-        fetchattu (-> (fetch db ::vv-toimenpide/reimari-toimenpide
+        fetchattu (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
 
@@ -288,6 +289,7 @@
                                  {::vv-toimenpide/reimari-tyoluokka (op/in tyoluokat)})
                                (when toimenpiteet
                                  {::vv-toimenpide/reimari-toimenpidetyyppi (op/in toimenpiteet)})))
+        fetchattu (-> fetchattu
                       (suodata-vikakorjaukset vikailmoitukset?)
                       (lisaa-turvalaitekomponentit db)
                       (lisaa-komponenttikohtaiset-tilat db)
