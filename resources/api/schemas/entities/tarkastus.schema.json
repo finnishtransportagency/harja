@@ -28,6 +28,11 @@
       "type": "boolean",
       "required": false
     },
+    "naytetaan-urakoitsijalle": {
+      "id": "urn:harja/tarkastus/naytetaan-urakoitsijalle",
+      "type": "boolean",
+      "required": false
+    },
     "liitteet": {
       "id": "urn:harja/liitteet",
       "type": "object",

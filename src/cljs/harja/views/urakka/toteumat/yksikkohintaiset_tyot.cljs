@@ -356,7 +356,7 @@
   (komp/luo
     (fn []
       [:div
-       [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
+       [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki @nav/valittu-urakka]
        [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
