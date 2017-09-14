@@ -377,12 +377,12 @@
     (komp/luo
       (komp/piirretty
         #(do (when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
-               (let [viimeisin-liite (first (sort-by :luotu pvm/jalkeen? (filter :luotu (apply concat (vals @uudet-liitteet)))))
+               (let [viimeisin-liite (->> (vals @uudet-liitteet) (apply concat) (filter :luotu) (sort-by :luotu pvm/jalkeen?) first)
                      viimeisimman-liitteen-aika (:luotu viimeisin-liite)
-                     tarkastuksen-muokkaus-aika alkuperainen-tarkastusaika
+                     tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)
                      lomakkeen-viimeisin-muokkaus-aika (if (pvm/jalkeen? viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)
                                                          viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)]
-                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dattaa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
+                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
                                 :info
                                 viesti/viestin-nayttoaika-pitka)))
              (swap! muokattava-tarkastus assoc :tultu-sillan-tarkastuksista? false)))
@@ -433,7 +433,9 @@
              :voi-lisata?        false
              :voi-poistaa?       (constantly false)
              :jarjesta           :kohdenro
-             :valiotsikot        siltatarkastuksen-valiotsikot}
+             :valiotsikot        siltatarkastuksen-valiotsikot
+             :muutos (fn [_]
+                       (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt)))}
 
             ;; sarakkeet
             (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
