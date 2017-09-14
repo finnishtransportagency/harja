@@ -134,8 +134,7 @@
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
    [:urakkatyyppi urakka-tyyppi]
-   (when (and urakka-ely
-              (not (= "Vesiväylä" (urakan-vaylamuoto vaylamuoto))))
+   (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
    [:alueurakkanro alueurakkanro]
    (poikkeamatyypit->numerot tyyppi)
@@ -186,8 +185,7 @@
    [:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
    [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
    [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]
-   ;; TODO: palauta juurisyiden lähettäminen, kun TURI on päivitetty
-   #_(juurisyyt data)])
+   (juurisyyt data)])
 
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely

@@ -96,3 +96,7 @@ SELECT exists(SELECT id
               WHERE urakka = :urakka AND toimenpide = (SELECT id
                                                        FROM toimenpidekoodi
                                                        WHERE koodi = :toimenpidekoodi))
+
+-- name: urakan-toimenpideinstanssi-idt
+-- Palauttaa urakan toimenpideinstanssien idt
+SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka
