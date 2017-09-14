@@ -258,7 +258,7 @@
                                        (= (::komp-tila/tilakoodi %) (::hinta/komponentti-tilamuutos komponentin-hinta)))
                               %)
                            (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*)))}
-               (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*))]]
+               (tiedot/hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa app*)]]
              [:td.tasaa-oikealle
               [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
              [:td.tasaa-oikealle
@@ -273,7 +273,7 @@
      [rivinlisays "Lisää komponenttirivi"
       #(e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi))
       {:disabled (= 0
-                    (count (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*))))}]]))
+                    (count (tiedot/hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa app*)))}]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
