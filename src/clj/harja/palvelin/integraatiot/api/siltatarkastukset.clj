@@ -113,7 +113,7 @@
 
 (defn tarkista-siltatarkastus [db siltatunnus silta-id ulkoinen-tarkastus-id tarkastusaika]
   (when (silta-q/onko-olemassa? db silta-id ulkoinen-tarkastus-id tarkastusaika)
-    (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+    (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+duplikaatti-siltatarkastus+
                         :viesti (format "Sillalle (tunnus: %s) ei voi kirjata uutta tarkastusta, sillä samalla aikaleimalla (%s) on jo kirjattu tarkastus. Tarkastusajalle saa olla vain yksi tarkastus."
                                         siltatunnus tarkastusaika)}]})))

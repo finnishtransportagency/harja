@@ -9,7 +9,8 @@
                :cljs
                [harja.pvm :as pvm])
             [clojure.string :as str]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.tyokalut.big :as big])
   (:import #?@(:clj
                [(java.text SimpleDateFormat)
                 (java.time LocalTime)]
@@ -36,6 +37,14 @@
        (let [[t m h] (map js/parseInt (str/split aika #":"))]
          (pvm/->Aika t m h)))))
 
+#?(:cljs
+   (do
+     (deftype BigDecHandler []
+       Object
+       (tag [_ v] "big")
+       (rep [_ v]
+         (.toString (:b v))))))
+
 #?(:clj
    (def write-optiot {:handlers
 
@@ -45,6 +54,9 @@
 
                        java.math.BigDecimal
                        (t/write-handler (constantly "bd") double)
+
+                       harja.tyokalut.big.BigDec
+                       (t/write-handler (constantly "big") (comp str :b))
 
                        org.postgresql.geometric.PGpoint
                        (t/write-handler (constantly "pp") geo/pg->clj)
@@ -63,12 +75,13 @@
                       {DateTime (DateTimeHandler.)
                        UtcDateTime (DateTimeHandler.)
                        pvm/Aika (AikaHandler.)
+                       big/BigDec (BigDecHandler.)
                        }}))
-
 #?(:clj
    (def read-optiot {:handlers
                      {"dt" (t/read-handler #(.parse (SimpleDateFormat. +fi-date-time-format+) %))
-                      "aika" (t/read-handler #(LocalTime/parse %))}})
+                      "aika" (t/read-handler #(LocalTime/parse %))
+                      "big" (t/read-handler big/parse)}})
 
    :cljs
    (def read-optiot {:handlers
@@ -86,7 +99,9 @@
                       ;; EiOikeutta tulee serveriltä "eo" tägillä ja pelkkänä syy stringiä
                       "eo" #(roolit/->EiOikeutta %)
 
-                      "aika" luo-aika}}))
+                      "aika" luo-aika
+
+                      "big" big/parse}}))
 
 
 (defn clj->transit

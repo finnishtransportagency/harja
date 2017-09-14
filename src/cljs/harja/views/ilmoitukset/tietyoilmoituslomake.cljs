@@ -36,10 +36,6 @@
                    :muokattava false
                    :tyyppi :tyhja})
 
-(defn dp [val msg]
-  (log msg (with-out-str (cljs.pprint/pprint val)))
-  val)
-
 (defn tienpinnat-komponentti-grid [e! avain tienpinnat-tiedot]
   (let [tp-valinnat [["paallystetty" "Päällystetty"]
                      ["jyrsitty" "Jyrsitty"]
@@ -116,6 +112,7 @@
            #(e!
               (tiedot/->IlmoitustaMuokattu
                 (assoc ilmoitus ::t/ajoneuvorajoitukset (get % 0)))))])
+
 
 (defn- grid-virheita?
   "Palauttaa true/false onko annetussa muokkaus-grid datassa virheitä"
@@ -422,6 +419,16 @@
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/tienpinnat (tienpinnat-komponentti-grid e! ::t/tienpinnat))
                      }
+                    {:nimi ::t/huomautukset
+                     ;; jostain syystä tuli virheitä disjoin-operaation käytöstä vektorille
+                     ;; ilman set-kutsuja, vaikka muutti :vaihtoehdot-arvot setiksi?
+                     :hae #(set (::t/huomautukset %))
+                     :aseta #(assoc %1 ::t/huomautukset (set %2))
+                     :tyyppi :checkbox-group
+                     :vaihtoehdot #{"avotuli" "tyokoneitaLiikenteenSeassa"}
+                     :vaihtoehto-nayta {"avotuli" "Kuumennin käytössä (avotuli)"
+                                        "tyokoneitaLiikenteenSeassa" "Työkoneita liikenteen seassa"}
+                     :disabloi? (constantly false)}
                     {:otsikko "Kiertotietien pinnat"
                      :nimi ::t/kiertotienpinnat
                      :tyyppi :komponentti

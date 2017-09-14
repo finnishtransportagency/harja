@@ -125,11 +125,15 @@
                      (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
                        (assoc @muut-tyot/valittu-toteuma
                          :sopimus @u/valittu-sopimusnumero
-                         :toimenpideinstanssi @u/valittu-toimenpideinstanssi)
+                         :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                (u/urakan-toimenpideinstanssi-toimenpidekoodille (get-in @muut-tyot/valittu-toteuma [:tehtava :emo]))
+                                                @u/valittu-toimenpideinstanssi))
                        ;; alustetaan arvoja uudelle toteumalle
                        (assoc @muut-tyot/valittu-toteuma
                          :sopimus @u/valittu-sopimusnumero
-                         :toimenpideinstanssi @u/valittu-toimenpideinstanssi
+                         :toimenpideinstanssi (if (= "Kaikki" (:tpi_nimi @u/valittu-toimenpideinstanssi))
+                                                (first @u/urakan-toimenpideinstanssit)
+                                                @u/valittu-toimenpideinstanssi)
                          :tyyppi :muutostyo
                          :hinnoittelu :yksikkohinta)))]
       (fn []
@@ -405,8 +409,9 @@
                                 (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
                                       toteutuneet-muut-tyot-hoitokaudella @u/toteutuneet-muut-tyot-hoitokaudella]
                                   (when toteutuneet-muut-tyot-hoitokaudella
-                                    (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
-                                                                           (:id toimenpideinstanssi))
+                                    (reverse (sort-by :alkanut (filter #(or (= (get-in % [:tehtava :emo])
+                                                                               (:id toimenpideinstanssi))
+                                                                            (= (:tpi_nimi toimenpideinstanssi) "Kaikki"))
                                                                        toteutuneet-muut-tyot-hoitokaudella))))))
         oikeus (if (= (:tyyppi urakka) :tiemerkinta)
                  oikeudet/urakat-toteutus-muutkustannukset
@@ -434,7 +439,7 @@
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
               oikeus? (oikeudet/voi-kirjoittaa? oikeus (:id @nav/valittu-urakka))]
           [:div.muut-tyot-toteumat
-           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
            (yleiset/wrap-if
              (not oikeus?)
              [yleiset/tooltip {} :%

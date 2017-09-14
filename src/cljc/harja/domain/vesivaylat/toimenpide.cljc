@@ -191,6 +191,11 @@ reimari-toimenpidetyypit
 (defn reimari-lisatyo-fmt [lisatyo?]
   (when lisatyo? "Kyllä"))
 
+(defn hintatyyppi-fmt [hintatyyppi]
+  (if (keyword? hintatyyppi)
+      (name hintatyyppi)
+      ""))
+
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide
     :alukset-ja-veneet "Alukset ja veneet"
@@ -252,7 +257,6 @@ reimari-toimenpidetyypit
    "1022541203" :peruttu})
 
 (define-tables
-  ["vv_toimenpide_hintatyyppi" ::toimenpide-hintatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
   ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
   ["reimari_toimenpide_liite" ::toimenpide<->liite
@@ -273,6 +277,7 @@ reimari-toimenpidetyypit
     "poistettu" ::m/poistettu?
     "poistaja" ::m/poistaja-id
     "reimari-lisatyo" ::reimari-lisatyo?
+    ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
