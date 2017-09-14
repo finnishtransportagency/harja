@@ -18,7 +18,8 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
-  (:import (java.util Locale)))
+  (:import (java.util Locale))
+  (:import (org.postgresql.util PSQLException)))
 
 (def jarjestelma nil)
 
@@ -181,9 +182,15 @@
   []
   (with-open [c (.getConnection temppidb)
               ps (.createStatement c)]
+
     (tapa-backend-kannasta ps "harjatest_template")
     (tapa-backend-kannasta ps "harjatest")
-    (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+    (dotimes [n 5]
+      (try
+        (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+        (Thread/sleep 500)
+        (catch PSQLException e
+          (log/warn e "- yritetään uudelleen, yritys" n))))
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
 
